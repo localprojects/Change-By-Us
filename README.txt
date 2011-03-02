@@ -1,0 +1,13 @@
+mysql
+monit
+pcre
+fcgi
+lighttpd
+memcached
+beanstalkd
+flup
+python-memcached
+simplejson
+python-yaml
+python-mysqld
+PIL
