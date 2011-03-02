@@ -1,0 +1,249 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Give A Minute - Register
+{% endblock title %}
+
+{% block continent %}
+<div class='continent register'>
+	<div class='headlands clearfix'>
+		<div class='west'>
+			<h2>Give a Minute is a place to make your city better.</h2>
+			<h3>Share your ideas. Build projects. Make a change.</h3>
+		</div>
+		<div class='east'>
+			<div class='box'>
+				<div class='box merlin-progress clearfix'>
+					<div class='indicator 1 west'>1</div>
+					<div class='indicator 2 west'>2</div>
+					<div class='indicator 3 west'>3</div>
+				</div>
+				<div class='box next'>
+					<a class="ca-btn" href="#">
+						<span>Let's Do it!</span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class='midlands'>
+		<form class='merlin' action='/register' method='POST'>
+			
+			<div class='step start clearfix'>
+				<p>Create a login using <strong>Facebook</strong> or <strong>Twitter</strong></p>
+				<div class='clearfix'>
+					<a href='' class='login-facebook west'>Facebook</a>
+					<a href='' class='login-twitter west'>Twitter</a>
+				</div>
+				<p><a class='step_link' href='#user-info'>Click Here</a> if you want to create a login without Facebook or Twitter</p>
+			</div>
+			
+			<div class='step user-info clearfix' style='display:none;'>
+				<p>Give a Minute users use their real names. <a href='#' class='real-names'><strong>Here's Why</strong></a></p>
+				
+				<input value='' type='text' name='f_name' id='f_name' class='f_name'/>
+				<input value='' type='text' name='l_name' id='l_name' class='l_name'/>
+				<label for='email'>Email</label>
+				<input value='' type='text' name='email' id='email' class='email'/>
+				<label for='password'>Password</label>
+				<input value='' type='password' name='password' id='password' class='password'/>
+				
+				<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info'/>
+				<label for='tos-user-info'>I accept and have read the <a href='/tou' target='_blank'>Terms and Conditions</a></label>
+			</div>
+			
+			<div class='step email-step clearfix ' style='display:none;'>
+				<p><strong>You can opt to receive email notifications from Give a Minute projects.</strong></p>
+				<p>Please Provide an email.</p>
+				
+				<input type='text' name='email' id='email' class='email'/>
+				
+				<input type='checkbox' name='tos-email' id='tos-email' class='tos-email'/>
+				<label for='tos-email'>I accept and have read the <a href='/tou' target='_blank'>Terms and Conditions</a></label>
+			</div>
+			
+			<div class='step sms-lookup clearfix ' style='display:none;'>
+				<div class='west'>
+					<p>If you added any ideas to Give a Minute via SMS, you can link those ideas by entering your phone number below.</p>
+					<p>
+						<input type='text' name='phone_1' id='phone_1' class='phone_1'/>
+						<input type='text' name='phone_2' id='phone_2' class='phone_2'/>
+						-
+						<input type='text' name='phone_3' id='phone_3' class='phone_3'/>
+						<input type='button' class='submit-sms-query' name='lookup_sms' value='Find My Ideas' />
+					</p>
+				</div>
+				<div class='east'>
+					<input type='checkbox' name='no_sms' id='no_sms' class='no_sms'/>
+					<label for='no_sms'>I didn't text any ideas.</label>
+				</div>
+			</div>
+			
+			<div class='step sms-process clearfix ' style='display:none;'>
+				<p>Finding SMS submissions...</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
+			</div>
+			
+			<div class='step sms-results clearfix ' style='display:none;'>
+				<p><strong>We found 2 ideas from that telephone number.</strong></p>
+				<p>We'll add these ideas to your profile and link any new ideas that come in from that number</p>
+			</div>
+			
+			<div class='step sms-no-results clearfix ' style='display:none;'>
+				<p>We couldn't find an ideas associated with</p>
+				<p>(XXX) XXX-XXXX</p>
+			</div>
+			
+			<div class='step sms-already-used clearfix ' style='display:none;'>
+				<p>The number</p>
+				<p>(XXX) XXX-XXXX</p>
+				<p>is already associated with an account.</p>
+			</div>
+			
+			<div class='step finish clearfix ' style='display:none;'>
+				<p>Thank you for joining.</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
+			</div>
+		</form>
+	</div>
+
+	<div class='foothills'>
+		<a class='back' href='#'><p>&larr; Back</p></a>
+	</div>
+	
+	
+	
+</div>
+
+<script>
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Register');
+		app.components.merlin = new tc.merlin(app,{
+			selector:'.merlin',
+			progress_element:tc.jQ('.merlin-progress'),
+			next_button:tc.jQ('.ca-btn'),
+			back_button:tc.jQ('.foothills .back'),
+			watch_keypress:true,
+			first_step:'start',
+			steps:{
+				'start':{
+					progress_selector:'.1',
+					selector:'.start',
+					prev_step:null,
+					next_step:'user-info'
+				},
+				'user-info':{
+					progress_selector:'.2',
+					selector:'.user-info',
+					prev_step:'start',
+					next_step:'email',
+					validators:{
+						'input.f_name':['max-32','min-3','required'],
+						'input.l_name':['max-32','min-3','required'],
+						'input.email':['max-32','min-3','email','required'],
+						'input.password':['password-20','required'],
+						'input.tos-user-info':['required']
+					},
+					init:function(merlin,dom){
+						dom.find('a.real-names').unbind('click').bind('click',function(e,d){
+							$("#modal").overlay({
+								top: 260,
+								left: 'center',
+								speed:75,
+								mask: {
+									color: '#ebecff',
+									opacity: 0.9
+								},
+								closeOnClick: false,
+								load: true
+							});
+						});
+						
+						
+					}
+				},
+				'email':{
+					progress_selector:'.2',
+					selector:'.email-step',
+					prev_step:'user-info',
+					next_step:'sms-lookup',
+					validators:{
+						'input.email':['min-3','max-32','email'],
+						'input.tos-email':function(merlin,element,step){
+							if(step.dom.find('input.email').val().length){
+								return tc.validate(element,['required']);
+							} else {
+								return {
+									valid:true
+								}
+							}
+						}
+					}
+				},
+				'sms-lookup':{
+					progress_selector:'.3',
+					selector:'.sms-lookup',
+					prev_step:'email',
+					next_step:'finish',
+					init:function(merlin,dom){
+						dom.find('.submit-sms-query').one('click',{merlin:merlin},function(e,d){
+							merlin.show_step('sms-process');
+							tc.timer(1000,function(){
+								merlin.show_step('sms-results');
+								e.data.merlin.show_step('sms-results');
+							});
+						});
+					},
+					validators:{
+						'input.phone_1':['min-3','max-3','numeric'],
+						'input.phone_2':['min-3','max-3','numeric'],
+						'input.phone_3':['min-4','max-4','numeric'],
+						'input.no_sms':['required']
+					}
+				},
+				'sms-process':{
+					progress_selector:'.3',
+					selector:'.sms-process',
+					prev_step:'sms-lookup',
+					next_step:null
+				},
+				'sms-results':{
+					progress_selector:'.3',
+					selector:'.sms-results',
+					prev_step:'sms-lookup',
+					next_step:'finish',
+					init:function(merlin,dom){
+						
+					}
+				},
+				'sms-no-results':{
+					progress_selector:'.3',
+					selector:'.sms-no-results',
+					prev_step:'sms-lookup',
+					next_step:'finish'
+				},
+				'sms-already-used':{
+					progress_selector:'.3',
+					selector:'.sms-already-used',
+					prev_step:'sms-lookup',
+					next_step:'finish'
+				},
+				'finish':{
+					progress_selector:'.3',
+					selector:'.finish',
+					prev_step:null,
+					next_step:null,
+					init:function(merlin,dom){
+						tc.timer(1000,function(){
+							window.location = '/login';
+						});
+					}
+				}
+			}
+		});
+	});
+</script>
+
+
+{% endblock continent %}
