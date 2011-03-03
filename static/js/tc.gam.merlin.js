@@ -38,7 +38,7 @@ tc.merlin.prototype.init = function(app,options){
 
 tc.merlin.prototype.setup_events = function(app){
 	tc.util.log('tc.merlin.setup_events');
-	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange)
+	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.find('a.step_link').bind('click',this.event_data,this.handlers.a_click);
 	if(this.options.back_button){
 		this.options.back_button.bind('click',this.event_data,this.handlers.last_step);
@@ -53,15 +53,12 @@ tc.merlin.prototype.setup_events = function(app){
 
 tc.merlin.prototype.handle_controls = function(controls){
 	tc.util.log('tc.merlin.handle_controls');
-	
+	this.options.progress_element.find('a.indicator').bind('click',this.event_data,this.handlers.indicator_click);
 }
 
 tc.merlin.prototype.handle_steps = function(){
 	tc.util.log('tc.merlin.handle_steps');
 	var i;
-	
-	tc.util.dump(this.dom);
-	
 	for(i in this.options.steps){
 		if(this.options.steps[i].selector){
 			this.options.steps[i].dom = this.dom.find(this.options.steps[i].selector);
@@ -78,12 +75,16 @@ tc.merlin.prototype.show_step = function(step){
 		return;
 	}
 	this.current_step = this.options.steps[step];
+	this.current_step.step_name = step;
 	if(this.options.next_button){
 		this.options.next_button.removeClass('disabled');
 	}
 	if(this.current_step.progress_selector){
 		if(this.options.progress_element){
-			this.options.progress_element.find(this.current_step.progress_selector).addClass('cur').siblings().removeClass('cur');
+			this.options.progress_element.find(this.current_step.progress_selector)
+				.addClass('cur')
+				.attr('href','#'+this.current_step.step_name)
+				.nextAll().removeClass('cur').attr('href','#');
 		}
 	}
 	if(tc.jQ.isFunction(this.current_step)){
@@ -91,9 +92,9 @@ tc.merlin.prototype.show_step = function(step){
 		return;
 	}
 	this.current_step.dom.show().siblings('.step').hide();
-	this.current_step.dom.find('input, textarea')
+	this.current_step.dom.find('input, textarea').not('.has-been-focused')
 		.one('focus',function(e){
-			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid');
+			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text]').val('');
 		}).bind('keyup change',this.event_data,this.handlers.keypress);
 	window.location.hash = step;
 	if(tc.jQ.isFunction(this.current_step.init)){
@@ -158,6 +159,10 @@ tc.merlin.prototype.handlers = {
 		if(!e.data.me.options.steps[hash]){
 			
 		}
+	},
+	indicator_click:function(e,d){
+		tc.util.log('tc.merlin.handlers.indicator_click');
+		if(tc.jQ(e.target).parent().attr('href') == '#'){ e.preventDefault(); }
 	},
 	a_click:function(e,d){
 		tc.util.log('tc.merlin.handlers.a_click');
