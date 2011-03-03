@@ -16,14 +16,16 @@ tc.gam.project.prototype.init = function(options){
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	
+	this.widget = new tc.gam.widgets.base();
+	
 	this.components = {
-		info:new tc.gam.widgets.infopane(this,this.dom.find('.mission')),
-		members:new tc.gam.widgets.members(this,this.dom.find('.box.members')),
-		resources:new tc.gam.widgets.resources(this,this.dom.find('.members')),
-		goals:new tc.gam.widgets.goals(this,this.dom.find('.goals')),
-		goals_add:new tc.gam.widgets.goals_add(this,this.dom.find('.goals-add')),
-		conversation:new tc.gam.widgets.conversation(this,this.dom.find('.conversation')),
-		related_ideas:new tc.gam.widgets.fresh_ideas(this,this.dom.find('.fresh-ideas'))
+		info:new tc.gam.widgets.infopane(this,this.dom.find('.mission'),{widget:this.widget}),
+		members:new tc.gam.widgets.members(this,this.dom.find('.box.members'),{widget:this.widget}),
+		resources:new tc.gam.widgets.resources(this,this.dom.find('.members'),{widget:this.widget}),
+		goals:new tc.gam.widgets.goals(this,this.dom.find('.goals'),{widget:this.widget}),
+		goals_add:new tc.gam.widgets.goals_add(this,this.dom.find('.goals-add'),{widget:this.widget}),
+		conversation:new tc.gam.widgets.conversation(this,this.dom.find('.conversation'),{widget:this.widget}),
+		related_ideas:new tc.gam.widgets.fresh_ideas(this,this.dom.find('.fresh-ideas'),{widget:this.widget})
 	}
 }
 
@@ -63,14 +65,14 @@ tc.gam.project.prototype.handlers = {
 tc.gam.widgets = {};
 tc.gam.widgets.base = makeClass();
 tc.gam.widgets.base.prototype.init = function(project){}
-//tc.gam.widgets.base.prototype.show = function(){
-//	if(this.dom){ this.dom.show(); }
-//	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-//}
-//tc.gam.widgets.base.prototype.hide = function(){
-//	if(this.dom){ this.dom.hide(); }
-//	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-//}
+tc.gam.widgets.base.prototype.show = function(){
+	if(this.dom){ this.dom.show(); }
+	this.project.dom.trigger('project-widget-show',{name:this.options.name});
+}
+tc.gam.widgets.base.prototype.hide = function(){
+	if(this.dom){ this.dom.hide(); }
+	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
+}
 
 /*   widgets.info   */
 tc.gam.widgets.infopane = makeClass();
