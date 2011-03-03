@@ -1,263 +1,177 @@
 if(!tc){ var tc = {}; }
 if(!tc.gam){ tc.gam = {}; }
 
-tc.gam.project = makeClass();
 
-tc.gam.project.prototype.options = {
-	dom:null
-}
-
-tc.gam.project.prototype.init = function(options){
+tc.gam.project = function(options){
 	
-	this.options = tc.jQ.extend(this.options,options);
+	this.options = tc.jQ.extend({
+		
+	},options);
+	
 	this.dom = this.options.dom;
 	this.event_data = { project:this };
+	this.widget = new tc.gam.widget(null,this);
+	
+	this.components = {
+		infopane:new tc.gam.project_widgets.infopane(this,this.dom.find('.mission'),{widget:this.widget},{}),
+		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{}),
+		resources:new tc.gam.project_widgets.resources(this,this.dom.find('.members'),{widget:this.widget},{}),
+		goals:new tc.gam.project_widgets.goals(this,this.dom.find('.goals'),{widget:this.widget},{}),
+		goals_add:new tc.gam.project_widgets.goals_add(this,this.dom.find('.goals-add'),{widget:this.widget},{}),
+		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.conversation'),{widget:this.widget},{}),
+		related_ideas:new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.fresh-ideas'),{widget:this.widget},{})
+	}
+	
+	this.handlers = {
+		members_button_clicked:function(e,d){
+			tc.util.dump('project.members_button_clicked');
+			e.data.project.components.members.show(true);
+		},
+		widget_show:function(e,d){
+			tc.util.dump('project.widget_show');
+			tc.util.dump(d.name);
+			switch(d.name){
+				case 'members':
+					e.data.project.components.goals.hide(false);
+					e.data.project.components.goals_add.hide(false);
+					e.data.project.components.conversation.hide(false);
+					break;
+				case 'goals_add':
+					e.data.project.components.goals.hide(false);
+					e.data.project.components.members.hide(false);
+					e.data.project.components.conversation.hide(false);
+					break;
+			}
+		},
+		widget_hide:function(e,d){
+			tc.util.dump('project.widget_hide');
+			switch(d.name){
+				case 'members':
+					e.data.project.components.goals.show(false);
+					e.data.project.components.conversation.show(false);
+					break;
+				case 'goals_add':
+					e.data.project.components.goals.show(false);
+					e.data.project.components.conversation.show(false);
+					break;
+			}
+		}
+	}
+	
 	this.dom.find('.project-header .members a').bind('click',this.event_data,this.handlers.members_button_clicked);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	
-	this.widget = new tc.gam.widgets.base();
-	
-	this.components = {
-		info:new tc.gam.widgets.infopane(this,this.dom.find('.mission'),{widget:this.widget}),
-		members:new tc.gam.widgets.members(this,this.dom.find('.box.members'),{widget:this.widget}),
-		resources:new tc.gam.widgets.resources(this,this.dom.find('.members'),{widget:this.widget}),
-		goals:new tc.gam.widgets.goals(this,this.dom.find('.goals'),{widget:this.widget}),
-		goals_add:new tc.gam.widgets.goals_add(this,this.dom.find('.goals-add'),{widget:this.widget}),
-		conversation:new tc.gam.widgets.conversation(this,this.dom.find('.conversation'),{widget:this.widget}),
-		related_ideas:new tc.gam.widgets.fresh_ideas(this,this.dom.find('.fresh-ideas'),{widget:this.widget})
-	}
-}
+};
 
-tc.gam.project.prototype.handlers = {
-	members_button_clicked:function(e,d){
-		e.data.project.components.members.show();
-	},
-	widget_show:function(e,d){
-		switch(d.name){
-			case 'members':
-				e.data.project.components.goals.hide(false);
-				e.data.project.components.goals_add.hide(false);
-				e.data.project.components.conversation.hide(false);
-				break;
-			case 'goals_add':
-				e.data.project.components.goals.hide(false);
-				e.data.project.components.members.hide(false);
-				e.data.project.components.conversation.hide(false);
-				break;
+
+tc.gam.widget = function(inheritor,project){
+  if(!inheritor){ return; }
+	inheritor.show = function(propagate){
+	  if(inheritor.dom){ inheritor.dom.show(); }
+		if(propagate !== false){
+      project.dom.trigger('project-widget-show',{name:inheritor.options.name});
 		}
-	},
-	widget_hide:function(e,d){
-		switch(d.name){
-			case 'members':
-				e.data.project.components.goals.show(false);
-				e.data.project.components.conversation.show(false);
-				break;
-			case 'goals_add':
-				e.data.project.components.goals.show(false);
-				e.data.project.components.conversation.show(false);
-				break;
-		}
-	}
-}
-
-/*   widgets.base   */
-tc.gam.widgets = {};
-tc.gam.widgets.base = makeClass();
-tc.gam.widgets.base.prototype.init = function(project){}
-tc.gam.widgets.base.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-}
-tc.gam.widgets.base.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-}
-
-/*   widgets.info   */
-tc.gam.widgets.infopane = makeClass();
-//tc.gam.widgets.infopane.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.infopane.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.infopane.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	this.options = {
-		name:'infopane'
+		
 	};
-	this.project = project;
-	this.dom = dom;
-}
-tc.gam.widgets.infopane.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-}
-tc.gam.widgets.infopane.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-}
-tc.gam.widgets.infopane.prototype.handlers = {
-
-}
-
-/*   widgets.members   */
-tc.gam.widgets.members = makeClass();
-//tc.gam.widgets.members.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.members.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.members.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	this.options = {
-		name:'members'
+	inheritor.hide = function(propagate){
+    if(inheritor.dom){ inheritor.dom.hide(); }
+    if(propagate !== false){
+      project.dom.trigger('project-widget-hide',{name:inheritor.options.name}); 
+    }
 	};
-	this.project = project;
-	this.dom = dom;
-	this.dom.find('.actions.back').bind('click',{ project:project,me:this },this.handlers.back);
-}
-tc.gam.widgets.members.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-}
-tc.gam.widgets.members.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-}
-tc.gam.widgets.members.prototype.handlers = {
-	back:function(e,d){
-		e.data.me.hide(true);
-	}
-}
-
-/*   widgets.resources   */
-tc.gam.widgets.resources = makeClass();
-//tc.gam.widgets.resources.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.resources.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.resources.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	this.options = {
-		name:'resources'
-	};
-	this.project = project;
-	this.dom = dom;
-}
-tc.gam.widgets.resources.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-}
-tc.gam.widgets.resources.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-}
-tc.gam.widgets.resources.prototype.handlers = {
+	
+	return inheritor;
 	
 }
 
-/*   widgets.goals   */
-tc.gam.widgets.goals = makeClass();
-//tc.gam.widgets.goals.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.goals.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.goals.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	this.options = {
-		name:'goals'
-	};
-	this.project = project;
-	this.dom = dom;
-	this.dom.find('.actions .add').bind('click',{ project:project,me:this },this.handlers.add_goal);
-}
-tc.gam.widgets.goals.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-}
-tc.gam.widgets.goals.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-}
-tc.gam.widgets.goals.prototype.handlers = {
-	add_goal:function(e,d){
-		e.data.project.components.goals_add.show();
-	}
-}
+tc.gam.project_widgets = {};
 
-/*   widgets.goals_add   */
-tc.gam.widgets.goals_add = makeClass();
-//tc.gam.widgets.goals.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.goals_add.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.goals_add.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	this.options = {
-		name:'goals_add'
-	};
-	this.project = project;
-	this.dom = dom;
-	this.dom.find('.actions.back a').bind('click',{ project:project,me:this },this.handlers.back);
+tc.gam.project_widgets.infopane = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'infopane'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-tc.gam.widgets.goals_add.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
+tc.gam.project_widgets.members = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'members'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  this.handlers = {
+    back:function(e,d){
+      e.data.me.hide(true);
+    }
+  };
+  this.dom.find('.actions.back').bind('click',{ project:project,me:this },this.handlers.back);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-tc.gam.widgets.goals_add.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
+tc.gam.project_widgets.resources = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'resources'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-tc.gam.widgets.goals_add.prototype.handlers = {
-	back:function(e,d){
-		e.data.project.components.goals_add.hide(true);
-	}
+tc.gam.project_widgets.goals = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'goals'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  this.handlers = {
+    add_goal:function(e,d){
+      e.data.project.components.goals_add.show();
+    }
+  };
+  this.dom.find('.actions .add').bind('click',{ project:project,me:this },this.handlers.add_goal);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-
-/*   widgets.conversation   */
-tc.gam.widgets.conversation = makeClass();
-//tc.gam.widgets.conversation.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.conversation.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.goals.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	this.options = {
-		name:'conversation'
-	};
-	this.project = project;
-	this.dom = dom;
+tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'goals_add'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  this.handlers = {
+    back:function(e,d){
+      e.data.project.components.goals_add.hide(true);
+    }
+  };
+  this.dom.find('.actions.back a').bind('click',{ project:project,me:this },this.handlers.back);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-tc.gam.widgets.conversation.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
+tc.gam.project_widgets.conversation = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'conversation'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-tc.gam.widgets.conversation.prototype.hide = function(){
-	tc.util.log('conversation.hide');
-	if(this.dom){ this.dom.hide(); }
-	tc.util.dump(this.project);
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
+tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
+  var widget;
+  this.options = tc.jQ.extend({name:'infopane'},options);
+  this.dom = dom;
+  widget = tc.gam.widget(this,project);
+  return {
+    show:widget.show,
+    hide:widget.hide
+  }
 }
-tc.gam.widgets.conversation.prototype.handlers = {
-	
-}
-
-/*   widgets.fresh_ideas   */
-tc.gam.widgets.fresh_ideas = makeClass();
-//tc.gam.widgets.fresh_ideas.prototype = tc.gam.widgets.base.prototype;
-tc.gam.widgets.fresh_ideas.prototype.init = function(project,dom){
-	tc.util.log('tc.gam.widgets.fresh_ideas.init');
-	tc.util.dump(project);
-	tc.util.dump(dom);
-	tc.util.dump(this);
-	this.options = {
-		name:'fresh_ideas'
-	};
-	this.project = project;
-	this.dom = dom;
-}
-tc.gam.widgets.fresh_ideas.prototype.show = function(){
-	if(this.dom){ this.dom.show(); }
-	this.project.dom.trigger('project-widget-show',{name:this.options.name});
-}
-tc.gam.widgets.fresh_ideas.prototype.hide = function(){
-	if(this.dom){ this.dom.hide(); }
-	this.project.dom.trigger('project-widget-hide',{name:this.options.name});
-}
-tc.gam.widgets.fresh_ideas.prototype.handlers = {
-	
-}
-

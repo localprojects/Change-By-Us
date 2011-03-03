@@ -14,9 +14,9 @@ Give A Minute - Register
 		<div class='east'>
 			<div class='box'>
 				<div class='box merlin-progress no-labels clearfix'>
-					<div class='indicator 1 west'><span class="num">1</span></div>
-					<div class='indicator 2 west inactive'><span class="num">2</span></div>
-					<div class='indicator 3 west inactive'><span class="num">3</span></div>
+					<a href='#'class='indicator 1 west'><span class="num">1</span></a>
+					<a href='#' class='indicator 2 west inactive'><span class="num">2</span></a>
+					<a href='#' class='indicator 3 west inactive'><span class="num">3</span></a>
 				</div>
 				<div class='box next'>
 					<a class="ca-btn" href="#">
@@ -44,19 +44,19 @@ Give A Minute - Register
 				
 				<div class="west">
 					<div class="row">
-						<input value='First name' type='text' name='f_name' id='f_name' class='f_name'/>
+						<input value='First name' type='text' name='f_name' id='f_name' class='f_name' tabindex='1'/>
 					</div>
 					<div class="row">
-						<input value='Last name' type='text' name='l_name' id='l_name' class='l_name'/>
+						<input value='Last name' type='text' name='l_name' id='l_name' class='l_name' tabindex='2'/>
 					</div>
 					<div class="row">
 						<label for='email'>E-mail</label>
-						<input value='' type='text' name='email' id='email' class='email'/>
+						<input value='' type='text' name='email' id='email' class='email' tabindex='3'/>
 					</div>
 					<div class="row row-password">
 						<label for='password'>Password</label>
-						<input value='' type='password' name='password' id='password' class='password'/>
-						<span class="pass-strength">Strong</span>
+						<input value='' type='password' name='password' id='password' class='password' tabindex='4'/>
+						<span class="pass-strength"></span>
 					</div>
 				</div>
 				
@@ -144,10 +144,10 @@ Give A Minute - Register
 					next_step:'user-info'
 				},
 				'user-info':{
-					progress_selector:'.2',
+					progress_selector:'.1',
 					selector:'.user-info',
 					prev_step:'start',
-					next_step:'email',
+					next_step:'email-step',
 					validators:{
 						'input.f_name':['max-32','min-3','required'],
 						'input.l_name':['max-32','min-3','required'],
@@ -156,12 +156,27 @@ Give A Minute - Register
 						'input.tos-user-info':['required']
 					},
 					init:function(merlin,dom){
+						dom.find('input.f_name:not(.has-been-focused)').val('First name');
+						dom.find('input.l_name:not(.has-been-focused)').val('Last name');
+						dom.find('input.email:not(.has-been-focused)').val('');
+						dom.find('input.password:not(.has-been-focused)').val('');
 						dom.find('a.real-names').unbind('click').bind('click',function(e,d){
 							merlin.app.components.modal.show('');
 						});
 					}
 				},
-				'email':{
+				'email-lookup':{
+					progress_selector:'.3',
+					selector:'.email-lookup',
+					prev_step:'user-info',
+					next_step:'email-step',
+					init:function(merlin,dom){
+						tc.timer(1000,function(){
+							e.data.merlin.show_step('email-step');
+						});
+					},
+				},
+				'email-step':{
 					progress_selector:'.2',
 					selector:'.email-step',
 					prev_step:'user-info',
@@ -182,13 +197,13 @@ Give A Minute - Register
 				'sms-lookup':{
 					progress_selector:'.3',
 					selector:'.sms-lookup',
-					prev_step:'email',
+					prev_step:'email-step',
 					next_step:'finish',
 					init:function(merlin,dom){
 						dom.find('.submit-sms-query').one('click',{merlin:merlin},function(e,d){
-							merlin.show_step('sms-process');
+							e.data.merlin.show_step('sms-process');
 							tc.timer(1000,function(){
-								merlin.show_step('sms-results');
+								//merlin.show_step('sms-results');
 								e.data.merlin.show_step('sms-results');
 							});
 						});

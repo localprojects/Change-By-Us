@@ -7,7 +7,7 @@ tc.validator_regex = {
 
 tc.validate = function(element,validators){
 	tc.util.log('tc.validate');
-	var valid, required, empty, value, errors, i, tempvalue;
+	var valid, required, empty, value, errors, i, tempvalue, tempelement;
 	
 	valid = true;
 	required = false;
@@ -34,9 +34,18 @@ tc.validate = function(element,validators){
 		}
 		if(validators[i].substring(0,8) == 'password'){
 			tempvalue = tc.password_strength(value);
+			tempelement = element.siblings('.pass-strength');
 			if(tempvalue < (validators[i].split('-')[1]*1.0)){
 				valid = false;
 				errors.push("Too Weak.");
+				
+				if(tempelement.length){
+					tempelement.text('Too weak').addClass('weak');
+				}
+			} else {
+				if(tempelement.length){
+					tempelement.text('Strong').removeClass('weak');
+				}
 			}
 			continue;
 		}
