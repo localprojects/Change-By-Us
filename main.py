@@ -34,8 +34,8 @@ if __name__ == "__main__":
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
     if Config.get('dev'):
         web.config.debug = True        
-    log.info("Debug: %s" % web.config.debug)        
-    log.info("CONFIG: %s" % Config.get_all())        
+    log.info("Debug: %s" % web.config.debug)
+    log.info("CONFIG: %s" % Config.get_all())
     web.config.session_parameters['cookie_name'] = 'gam'
     app = web.application(ROUTES, globals())
     SessionHolder.set(web.session.Session(app, web.session.DiskStore("sessions")))
