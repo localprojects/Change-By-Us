@@ -28,48 +28,49 @@
 	
 	<body class='earth'>
 		
-		<div class='atmosphere'>
-			<div class='stratosphere'>
-				<ul class="clearfix">
-					<li class="home">
-						<a href="/"><span>NYC SimpliCity | Give A Minute</span></a>
-					</li>
-					<li class="news-about">
-						<a href='/blog'>News</a>
-						<a href='/about'>About</a>
-					</li>
-					<li class="search">
-						<form action='/home' method='GET'>
-							<input type='text' name='query' />
-							<input type='submit' name='hd-search-btn' value='Search' />
-						</form>
-					</li>
-					<li class="userland">
-						<div class='login'><a href='/login'>Login</a></div>
-						<div class="join"><a href='/register'>Join</a></div>
-					</li>
-				</ul>
+		<div class='exosphere'>
+		
+			<div class='atmosphere'>
+				<div class='stratosphere'>
+					<ul class="clearfix">
+						<li class="home">
+							<a href="/"><span>NYC SimpliCity | Give A Minute</span></a>
+						</li>
+						<li class="news-about">
+							<a href='/blog'>News</a>
+							<a href='/about'>About</a>
+						</li>
+						<li class="search">
+							<form action='/home' method='GET'>
+								<input type='text' name='query' />
+								<input type='submit' name='hd-search-btn' value='Search' />
+							</form>
+						</li>
+						<li class="userland">
+							<div class='login'><a href='/login'>Login</a></div>
+							<div class="join"><a href='/register'>Join</a></div>
+						</li>
+					</ul>
+				</div>
 			</div>
-		</div>
 		
 		
-		{% block continent %}
-			<div class='continent'>
-				<div class='headlands'>
+			{% block continent %}
+				<div class='continent'>
+					<div class='headlands'>
 			
-				</div>
+					</div>
 			
-				<div class='midlands'>
+					<div class='midlands'>
 			
-				</div>
+					</div>
 			
-				<div class='foothills'>
-			
+					<div class='foothills'>
 				</div>
 			</div>
 		{% endblock %}
 		
-		<div id='modal' class='modal'>MODAL!</div>
+		<div id='modal' class='modal'></div>
 		
 		<div class='seafloor'>
 			<div class='west'>
@@ -99,13 +100,16 @@
 			</div>
 			<div class='east'>
 				<div class='box social-networking'>
-					<div class="facebook"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.giveaminute.com&amp;layout=standard&amp;show_faces=true&amp;width=275&amp;action=like&amp;font=verdana&amp;colorscheme=light&amp;height=60" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:275px; height:60px;" allowTransparency="true"></iframe></div>
-				</div>
-				<div class='box copyright'>
-					<p>&copy; Copyright <strong>Give a Minute</strong> 2011</p>
+					<div class="facebook"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.giveaminute.com&amp;layout=standard&amp;show_faces=true&amp;width=275&amp;action=like&amp;font=verdana&amp;colorscheme=light&amp;height=60" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:300px; height:60px;" allowTransparency="true"></iframe></div>
+					<div class='box copyright'>
+						<p>&copy; Copyright <strong>Give a Minute</strong> 2011</p>
+					</div>
 				</div>
 			</div>
+		
 		</div>
+		
+		<div id='modal' class='modal'></div>
 		
 		<!-- Javascript goes here -->
 		<script src="/static/js/libs/jquery-1.5.1.js"></script>
@@ -114,15 +118,25 @@
 		<script src="/static/js/libs/jqtools.scrollable.js"></script>
 		<script src="/static/js/libs/jqtools.overlay.js"></script>
 		<script src="/static/js/libs/jqtools.expose.js"></script>
-		<script src="/static/js/libs/jqtools.history.js"></script>
+		<script src="/static/js/libs/jquery.hashchange.js"></script>
 		<script src="/static/js/libs/tc.util.js"></script>
 		
 		<script src="/static/js/tc.gam.validate.js"></script>
 		<script src="/static/js/tc.gam.merlin.js"></script>
+		<script src="/static/js/tc.gam.modal.js"></script>
+		<script src="/static/js/tc.gam.project.js"></script>
 		<script src="/static/js/tc.gam.app.js"></script>
 		
 		<script type='text/javascript'>
 			jQuery(document).one('ready',function(e){
+				
+				app_page.features.push(function(app){
+					tc.util.log('Give A Minute: Base');
+					app.components.modal = new tc.modal(app,{
+						element:tc.jQ('#modal')
+					});
+				});
+				
 				tc.app(app_page);
 			});
 		</script>
