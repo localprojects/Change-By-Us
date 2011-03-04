@@ -1,7 +1,7 @@
 {% extends "./partials/base.html" %}
 
 {% block title %}
-Give A Minute - Register
+Give A Minute - Join
 {% endblock title %}
 
 {% block continent %}
@@ -22,6 +22,9 @@ Give A Minute - Register
 					<a class="ca-btn" href="#">
 						<span>Let's Do it!</span>
 					</a>
+				</div>
+				<div class="oops" style='display:none;'>
+					<span></span>
 				</div>
 			</div>
 		</div>
@@ -178,8 +181,15 @@ Give A Minute - Register
 			progress_element:tc.jQ('.merlin-progress'),
 			next_button:tc.jQ('.ca-btn'),
 			back_button:tc.jQ('.foothills .back'),
+			error_indicator:tc.jQ('.oops'),
 			watch_keypress:true,
 			first_step:'start',
+			data:{
+				f_name:null,
+				l_name:null,
+				email:null,
+				password:null
+			},
 			steps:{
 				'start':{
 					progress_selector:'.1',
@@ -204,16 +214,35 @@ Give A Minute - Register
 						dom.find('input.l_name:not(.has-been-focused)').val('Last name');
 						dom.find('input.email:not(.has-been-focused)').val('');
 						dom.find('input.password:not(.has-been-focused)').val('');
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							f_name:dom.find('input.f_name').val(),
+							l_name:dom.find('input.l_name').val(),
+							email:dom.find('input.email').val(),
+							password:dom.find('input.password').val()
+						});
 					}
 				},
 				'email-lookup':{
-					progress_selector:'.2',
+					progress_selector:null,
 					selector:'.email-lookup',
 					prev_step:'user-info',
 					next_step:'sms-lookup',
 					init:function(merlin,dom){
 						tc.timer(1000,function(){
-							merlin.show_step('sms-lookup');
+							tc.util.dump(merlin.options.data.email);
+							tc.util.dump(merlin.options.steps['user-info'].validators);
+							if(merlin.options.data.email == 'bad@email.com'){
+								merlin.options.steps['user-info'].validators['input.email'].push('not-'+merlin.options.data.email);
+								if(merlin.options.error_indicator){
+									merlin.options.error_indicator.html('<span>Oops! We found someone with that name and e-mail address in our system.</span>').show();
+								}
+								merlin.show_step('user-info');
+							} else {
+								merlin.show_step('sms-lookup');
+							}
+							
 						});
 					},
 				},

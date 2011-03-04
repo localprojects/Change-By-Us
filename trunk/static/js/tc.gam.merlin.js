@@ -56,6 +56,9 @@ tc.merlin.prototype.handle_controls = function(controls){
 	if(this.options.progress_element){
 		this.options.progress_element.find('a.indicator').bind('click',this.event_data,this.handlers.indicator_click);
 	}
+	if(this.options.error_indicator){
+		this.options.error_indicator.html('<span></span>');
+	}
 }
 
 tc.merlin.prototype.handle_steps = function(){
@@ -71,7 +74,10 @@ tc.merlin.prototype.handle_steps = function(){
 tc.merlin.prototype.show_step = function(step){
 	tc.util.log('tc.merlin.show_step');
 	if(this.current_step){
-		this.current_step.dom.find('input, textarea').unbind('keyup change');
+		//this.current_step.dom.find('input, textarea').unbind('keyup change');
+		if(tc.jQ.isFunction(this.current_step.finish)){
+			this.current_step.finish(this,this.current_step.dom);
+		}
 	}
 	if(!this.options.steps[step]){
 		return;
@@ -103,7 +109,7 @@ tc.merlin.prototype.show_step = function(step){
 	this.current_step.dom.find('input, textarea').not('.has-been-focused')
 		.one('focus',function(e){
 			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text]').val('');
-		}).bind('keyup change',this.event_data,this.handlers.keypress);
+		}).unbind('keyup change').bind('keyup change',this.event_data,this.handlers.keypress);
 	window.location.hash = step;
 	if(tc.jQ.isFunction(this.current_step.init)){
 		this.current_step.init(this,this.current_step.dom);
@@ -119,7 +125,7 @@ tc.merlin.prototype.validate = function(validators,force_focus){
 	if(!this.current_step.dom){
 		return;
 	}
-	valid = true; 
+	valid = true;
 	if(!this.current_step.inputs){
 		this.current_step.inputs = {};
 		for(i in validators){
@@ -127,13 +133,13 @@ tc.merlin.prototype.validate = function(validators,force_focus){
 				element:this.current_step.dom.find(i),
 				validators:validators[i]
 			}
-			if(force_focus){
-				this.current_step.inputs[i].element.addClass('has-been-focused');
-			}
 		}
 	}
 	this.current_step.errors = [];
 	for(i in this.current_step.inputs){
+		if(force_focus){
+			this.current_step.inputs[i].element.focus();
+		}
 		if(tc.jQ.isFunction(this.current_step.inputs[i].validators)){
 			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].element,this.current_step).valid;
 		} else {
@@ -193,6 +199,9 @@ tc.merlin.prototype.handlers = {
 			valid = e.data.me.validate(e.data.me.current_step.validators,true);
 		}
 		if(!valid){
+			if(e.data.me.options.error_indicator){
+				e.data.me.options.error_indicator.html('<span>Oops! Please correct the fields marked in red.</span>').show();
+			}
 			return;
 		}
 		if(e.target.className.indexOf('disabled') > 0){
@@ -212,6 +221,9 @@ tc.merlin.prototype.handlers = {
 		tc.util.log('tc.merlin.handlers.valid');
 		if(e.data.me.options.next_button){
 			e.data.me.options.next_button.removeClass('disabled').addClass('enabled');
+		}
+		if(e.data.me.options.error_indicator){
+			e.data.me.options.error_indicator.hide();
 		}
 	},
 	invalid:function(e,d){
