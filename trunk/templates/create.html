@@ -25,6 +25,9 @@ Give A Minute - Create a Project
 						<span>Next step</span>
 					</a>
 				</div>
+				<div class="oops">
+					<span>Oops! We couldn't find a match for that location</span>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -47,6 +50,10 @@ Give A Minute - Create a Project
 						<input value='Name' type='text' name='name' id='name' class='name'/>
 						<span class="charlimit">50</span>
 						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">Shawna Tearsdille</span><span class="edit">Edit</span></div>
+					</div>
+					<div class="row clearfix">
+						<label for='organization'><strong>Organization</strong> (Optional):</label>
+						<input value='' type='text' name='organization' id='organization' class='organization'/>
 					</div>
 					<div class="row clearfix">
 						<label for='describe'><strong>Describe</strong> your project well so that people can find it and join to change!</label>
@@ -91,6 +98,7 @@ Give A Minute - Create a Project
 								<li><strong>So</strong>uth Bronx</li>
 							</ul>
 						</div>
+						<span class="error">Please try entering a neighborhood name, or a nearby borough.</span>
 					</div>
 				</div>
 			</div><!--end step-->
@@ -181,8 +189,8 @@ Give A Minute - Create a Project
 			
 			<div class='step add clearfix' style='display:none;'>
 				<div class="resources-added clearfix">
-					<span class="resource-label">You've added <br /><strong>resources</strong></span>
 					<span class="resource-count">0</span>
+					<span class="resource-label">You've added <br /><strong>resources</strong></span>
 				</div>
 				
 				<ul class="triplewide clearfix">
@@ -224,6 +232,18 @@ Give A Minute - Create a Project
 				</ul>
 			</div><!--end step-->
 			
+			<div class='step check-nosimilar other-step clearfix' style='display:none;'>
+				<h3>Similar Projects</h3>
+				<p><strong>No similar projects found.</strong></p>
+				<p>Wow! Looks like we could really use your help since there aren't any projects like it out there.</p>
+			</div><!--end step-->
+			
+			<div class='step add-noresources other-step clearfix' style='display:none;'>
+				<h3>&nbsp;</h3>
+				<p><strong>No resources found.</strong></p>
+				<p>Sorry about that! Feel free to <a href="">add a link</a></p>
+			</div><!--end step-->
+			
 			<div class='step finish clearfix' style='display:none;'>
 				<p class="west">Thank you for joining.</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
@@ -232,7 +252,7 @@ Give A Minute - Create a Project
 	</div>
 
 	<div class='foothills'>
-		<!--<a class='back' href='#'><p>Back</p></a>-->
+		<a class='back' href='#'>Back</a>
 	</div>
 	
 	<div class='modal-content upload-image'>
@@ -280,7 +300,7 @@ Give A Minute - Create a Project
 			title:tc.jQ('.headlands h1'),
 			sub_title:tc.jQ('.headlands h2'),
 			watch_keypress:true,
-			first_step:'start',
+			first_step:'location',
 			steps:{
 				'start':{
 					progress_selector:'.1',
@@ -320,11 +340,27 @@ Give A Minute - Create a Project
 					prev_step:'location',
 					next_step:'add'
 				},
+				'check-nosimilar':{
+					title:'Wait! Check for similar projects.',
+					sub_title:'It\'s great to start something new but there is also strength in numbers. Have a look at some related projects you may want to be a part of.',
+					progress_selector:'.3',
+					selector:'.step.check-nosimilar',
+					prev_step:'location',
+					next_step:'add'
+				},
 				'add':{
 					title:'Add some resources.',
 					sub_title:'When you add resources, we\'ll introduce your project to that organization. You may get a message from them with more information about how they can help.',
 					progress_selector:'.4',
 					selector:'.step.add',
+					prev_step:'check',
+					next_step:'finish'
+				},
+				'add-noresources':{
+					title:'Add some resources.',
+					sub_title:'When you add resources, we\'ll introduce your project to that organization. You may get a message from them with more information about how they can help.',
+					progress_selector:'.4',
+					selector:'.step.add-noresources',
 					prev_step:'check',
 					next_step:'finish'
 				},
