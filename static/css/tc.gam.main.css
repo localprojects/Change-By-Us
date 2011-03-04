@@ -14,8 +14,9 @@ div.exosphere{ height:100%; overflow-y:scroll; }
 .west{ float:left; }
 .east{ float:right; }
 
-a { text-decoration:none; }
+a { text-decoration:none; color:#55504b; }
 
+.serif { font-family:MetaSerif,Georgia,serif; }
 
 /* headings */
 h1, h2, h3, h4, h5, h6, .above-h1 { font-weight:normal; color: #55504b; }
@@ -35,8 +36,9 @@ div.atmosphere .stratosphere li a { color: #c9b577; text-transform: uppercase;}
 div.atmosphere .stratosphere li a:hover { color: #F3F2F0; }
 div.atmosphere .stratosphere li.home a { background-image: url(../images/header-logo.png); width: 281px; height: 45px; margin-right: 45px; display:block;}
 div.atmosphere .stratosphere li.home a span { visibility: hidden; }
-div.atmosphere .stratosphere li.news-about { font-size: 11px; line-height: 11px; font-weight: bold; margin-top: 16px; margin-right: 85px;} /* the right margin will need to change to 32px when the user is logged in */
-div.atmosphere .stratosphere li.news-about > a { margin-right: 10px; }
+div.atmosphere .stratosphere li.news-about { font-size: 11px; line-height: 11px; font-weight: bold; margin-top: 16px; margin-right: 80px;} /* the right margin will need to change to 32px when the user is logged in */
+div.atmosphere .stratosphere li.news-about > a { margin:0 5px; }
+div.atmosphere .stratosphere li.news-about .ampersand { color:#c9b577; }
 div.atmosphere .stratosphere li.search { margin-top: 7px; }
 div.atmosphere .stratosphere li.search input { border: 1px solid #312e2e;}
 div.atmosphere .stratosphere li.search input[type=text] { width: 214px; margin-right: 8px; background-color: transparent; color: #736b6d; font: 10px/10px Verdana, Helvetica, Arial, sans-serif; padding: 6px;}
@@ -57,8 +59,8 @@ div.continent{ width:960px; margin:35px auto 0; }
 a.close { display:block; position:absolute; }
 a.close > span { display:none; }
 
-span.control { text-transform:uppercase; font-style:italic; font-size:9px; }
-span.control a { color:#878786; }
+span.control { display:block; float:left; text-transform:uppercase; font-style:italic; font-weight:bold; font-size:10px; }
+span.control a { display:block; color:#a6a5a4; }
 
 span.counter { color:#e06420; font-weight:bold; }
 
@@ -84,6 +86,8 @@ div.continent input:hover,
 div.continent input:focus,
 div.continent textarea:focus,
 div.continent textarea:hover,
+div.continent button:focus,
+div.continent button:hover,
 div.seafloor input:hover, 
 div.seafloor input:focus {-webkit-box-shadow: 1px 1px 4px #cfcecc; -moz-box-shadow: 1px 1px 4px #cfcecc; box-shadow: 1px 1px 4px #cfcecc;}
 
@@ -153,8 +157,12 @@ div.seafloor input:focus {-webkit-box-shadow: 1px 1px 4px #cfcecc; -moz-box-shad
 .merlin .step input[type=submit]:hover,
 .merlin .step input[type=button]:hover {color: #F3F2F0; background: #7F7D7A; background: -moz-linear-gradient(top, #7F7D7A 0%, #A8A6A3 100%); background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#7F7D7A), color-stop(100%,#A8A6A3)); filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7F7D7A', endColorstr='#A8A6A3',GradientType=0 );}
 
+div.continent .headlands .next a.ca-btn {display: block; background: url(../images/button_nextActive.png) top left no-repeat transparent; width: 138px; height: 103px; float: right; margin-top: 8px;} 
+div.continent .headlands .next a.ca-btn.disabled {background-image: url(../images/button_nextInactive.png);} 
+div.continent .headlands .next a.ca-btn.disabled:hover { cursor:default; }
+div.continent .headlands .next a.ca-btn span { visibility: hidden }
 
-/* back button (used for merlin */
+/* back button */
 .foothills .back { font-size: 18px; height: 20px; font-weight: bold; line-height: 18px; color: #55504b; text-transform: uppercase; padding-left: 21px; background: url(../images/control_backArrow.png) left center no-repeat transparent;}
 .foothills .back:hover span { border-bottom: 1px solid #55504b; }
 
@@ -176,10 +184,11 @@ div.seafloor input:focus {-webkit-box-shadow: 1px 1px 4px #cfcecc; -moz-box-shad
 
 
 /* empty state */
-.empty-state-box { position:relative; padding:10px 7px; background-color:#d1fdb9; border:1px solid #cae6b5; }
+.empty-state-box { position:relative; margin:5px 0; padding:10px 7px; background-color:#d1fdb9; border:1px solid #cae6b5; font-family:DIN; }
 .empty-state-box .close { top:5px; right:8px; width:7px; height:7px; background-image:url("../images/control_close_7_green.png"); }
 .empty-state-box p { font-size:14px; }
 .empty-state-box p a { font-weight:bold; text-decoration:underline; }
+.empty-state-box button { margin:10px 0 0; padding:3px 5px 1px; }
 .empty-state-box.big {  }
 .empty-state-box.big p { font-size:21px; }
 
@@ -189,6 +198,8 @@ div.seafloor input:focus {-webkit-box-shadow: 1px 1px 4px #cfcecc; -moz-box-shad
 
 
 /* general list styles */
+ul.doublewide { }
+
 ul.triplewide { display: block; border-bottom: 1px solid #e0dedc; width: 960px; }
 ul.triplewide li { padding: 15px 10px 15px; width: 299px; border-top: 1px solid #e0dedc; border-right: 1px solid #e0dedc; float: left;}
 ul.triplewide li.every-third { border-right: 0px; }
@@ -206,6 +217,9 @@ ul.triplewide li.every-third { border-right: 0px; }
 }
 
 .project-header .tools { float:right; width:170px; }
+.project-header .tools .members { padding:0 0 10px; font-size:18px; line-height:1; text-transform:uppercase; }
+.project-header .tools .members > a { display:block; }
+.project-header .tools .members .counter { position:relative; top:-2px; font-size:12px; }
 
 .project-header .main { overflow:hidden; }
 .project-header .main h1 { margin:0; font-family:MetaSerif,Georgia,serif; font-size:38px; font-weight:normal; }
@@ -215,17 +229,22 @@ ul.triplewide li.every-third { border-right: 0px; }
 .continent.project .midlands > .west { width:320px; }
 .continent.project .midlands .box { margin:0 0 30px; }
 
-.continent.project .midlands .box > .hd { margin:0 0 12px; position:relative; overflow:hidden; background-color:#edeceb; border-bottom:1px solid #e6e6e3; }
-.continent.project .midlands .box > .hd h2 { float:left; text-transform:uppercase; color:#55504b; }
-.continent.project .midlands .box > .hd h2 .counter { font-size:14px; }
+.continent.project .midlands .box > .hd { margin:0 0 12px; padding:5px 10px; position:relative; overflow:hidden; background-color:#edeceb; border-bottom:1px solid #e6e6e3; }
+.continent.project .midlands .box > .hd h2 { float:left; padding:0 10px 0 0; line-height:1; text-transform:uppercase; color:#55504b; }
+.continent.project .midlands .box > .hd h2 .counter { position:relative; top:-3px; font-size:14px; }
+.continent.project .midlands .box > .hd span.control { margin:6px 6px 0 0; }
 
 .continent.project .midlands .box .actions { float:right; }
 .continent.project .midlands .actions.detached + div { clear:right; }
-.continent.project .midlands .box .actions a { text-transform:uppercase; }
+.continent.project .midlands .box .actions a { text-transform:uppercase; font-weight:bold; font-size:12px; text-decoration:underline; }
 
-.continent.project .midlands .box .bd .sub-hd { margin:0 0 8px; }
+.continent.project .midlands .box .bd .sub-hd { padding:15px 10px 5px; }
+.continent.project .midlands .box .bd .sub-bd { padding:5px 10px; }
+
 .continent.project .midlands .box h3 { text-transform:uppercase; color:#a6a5a4; }
 
+.continent.project .midlands .our-mission .sub-bd > p { margin:10px 0 0; font-size:15px; }
+.continent.project .midlands .our-mission .sub-bd > p:first-child { margin-top:0; }
 
 /* goals */
 .active-goals {
@@ -291,12 +310,6 @@ div.continent.home { margin-top:0; }
 div.continent.home .headlands { border-bottom:1px solid #ebeae8; }
 .home .headlands .splash { height:635px; background-color:#cccccc; }
 .home .headlands .social-networking { padding:15px 0; color: #55504b;}
-
-/*MERLIN STUFF*/
-div.continent .headlands .next a.ca-btn {display: block; background: url(../images/button_nextActive.png) top left no-repeat transparent; width: 138px; height: 103px; float: right; margin-top: 8px;} 
-div.continent .headlands .next a.ca-btn.disabled {background-image: url(../images/button_nextInactive.png);} 
-div.continent .headlands .next a.ca-btn.disabled:hover { cursor:default; }
-div.continent .headlands .next a.ca-btn span { visibility: hidden }
 
 /* Register */
 div.continent.register {  }
