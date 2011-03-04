@@ -26,6 +26,7 @@ tc.merlin.prototype.init = function(app,options){
 	if(this.options.dom instanceof String){
 		this.options.dom = tc.jQ(options.dom);
 	}
+	this.last_step = null;
 	this.dom = this.options.dom;
 	this.event_data = {app:app,me:this};
 	this.handle_steps();
@@ -83,6 +84,10 @@ tc.merlin.prototype.show_step = function(step){
 		return;
 	}
 	this.current_step = this.options.steps[step];
+	if(this.last_step){
+		this.current_step.last_step = this.last_step;
+	}
+	this.last_step = step;
 	this.current_step.step_name = step;
 	if(this.options.next_button){
 		this.options.next_button.removeClass('disabled');

@@ -62,7 +62,7 @@ Give A Minute - Join
 						<span class="pass-strength"></span>
 					</div>
 					<div class="row row-error">
-						<span class="email-error">Please enter a valid e-mail address</span>
+						<span class="email-error" style='display:none;'>Please enter a valid e-mail address</span>
 					</div>
 				</div>
 				
@@ -214,8 +214,28 @@ Give A Minute - Join
 						'input.tos-user-info':['required']
 					},
 					init:function(merlin,dom){
-						dom.find('input.f_name:not(.has-been-focused)').val('First name');
-						dom.find('input.l_name:not(.has-been-focused)').val('Last name');
+						dom.find('input.f_name:not(.has-been-focused)').val('First name')
+							.unbind('focus').bind('focus',function(e,d){
+								if(e.target.value == 'First name'){
+									tc.jQ(e.target).val('').addClass('has-been-focused');
+								}
+							})
+							.unbind('blur').bind('blur',function(e,d){
+								if(!e.target.value.length){
+									tc.jQ(e.target).val('First name').removeClass('has-been-focused');
+								}
+							});
+						dom.find('input.l_name:not(.has-been-focused)').val('Last name')
+							.unbind('focus').bind('focus',function(e,d){
+								if(e.target.value == 'Last name'){
+									tc.jQ(e.target).val('').addClass('has-been-focused');
+								}
+							})
+							.unbind('blur').bind('blur',function(e,d){
+								if(!e.target.value.length){ 
+									tc.jQ(e.target).val('Last name').removeClass('has-been-focused');
+								}
+							});
 						dom.find('input.email:not(.has-been-focused)').val('');
 						dom.find('input.password:not(.has-been-focused)').val('');
 					},

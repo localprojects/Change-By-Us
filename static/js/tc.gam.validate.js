@@ -41,11 +41,10 @@ tc.validate = function(element,validators){
 		}
 		if(validators[i].substring(0,8) == 'password'){
 			tempvalue = tc.password_strength(value);
-			tempelement = element.siblings('.pass-strength');
+			tempelement = element.filter('.has-been-focused').siblings('.pass-strength');
 			if(tempvalue < (validators[i].split('-')[1]*1.0)){
 				valid = false;
 				errors.push("Too Weak.");
-				
 				if(tempelement.length){
 					tempelement.text('Too weak').addClass('weak');
 				}
@@ -74,9 +73,17 @@ tc.validate = function(element,validators){
 				
 				break;
 			case 'email':
+				tempelement = element.filter('.has-been-focused').parent().parent().find('.email-error');
 				if (!tc.validator_regex.email.test(value)) {
 					valid = false;
+					if(tempelement.length){
+						tempelement.show();
+					}
 					errors.push("Invalid Email.");
+				} else {
+					if(tempelement.length){
+						tempelement.hide();
+					}
 				}
 				break;
 			case 'url':
