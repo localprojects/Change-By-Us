@@ -5,4 +5,4 @@ class Home(Controller):
         if action:
             return self.render(action)
         else:
-            return self.render('main')
+            return self.render('home')
