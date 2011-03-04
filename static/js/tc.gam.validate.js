@@ -32,6 +32,13 @@ tc.validate = function(element,validators){
 			}
 			continue;
 		}
+		if(validators[i].substring(0,3) == 'not'){
+			if(value === validators[i].split('-')[1]){
+				valid = false;
+				errors.push("Invalid value.");
+			}
+			continue;
+		}
 		if(validators[i].substring(0,8) == 'password'){
 			tempvalue = tc.password_strength(value);
 			tempelement = element.siblings('.pass-strength');
