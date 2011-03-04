@@ -53,7 +53,9 @@ tc.merlin.prototype.setup_events = function(app){
 
 tc.merlin.prototype.handle_controls = function(controls){
 	tc.util.log('tc.merlin.handle_controls');
-	this.options.progress_element.find('a.indicator').bind('click',this.event_data,this.handlers.indicator_click);
+	if(this.options.progress_element){
+		this.options.progress_element.find('a.indicator').bind('click',this.event_data,this.handlers.indicator_click);
+	}
 }
 
 tc.merlin.prototype.handle_steps = function(){
@@ -86,6 +88,12 @@ tc.merlin.prototype.show_step = function(step){
 				.attr('href','#'+this.current_step.step_name)
 				.nextAll().removeClass('cur').attr('href','#');
 		}
+	}
+	if(this.current_step.title && this.options.title){
+		this.options.title.html(this.current_step.title);
+	}
+	if(this.current_step.sub_title && this.options.sub_title){
+		this.options.sub_title.html(this.current_step.sub_title);
 	}
 	if(tc.jQ.isFunction(this.current_step)){
 		this.current_step(this);

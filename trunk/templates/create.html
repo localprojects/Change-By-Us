@@ -106,7 +106,7 @@ Give A Minute - Create a Project
 							<span class="member-count">58</span>
 						</div>
 						<div class="project-info">
-							<span class="link"><a href="">Start a Garden on 161st in South Bronx</a></span>
+							<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
 							<span class="creator"><em>Created by </em> Terry Richardson</span>
 							<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 						</div>
@@ -118,7 +118,7 @@ Give A Minute - Create a Project
 							<span class="member-count">58</span>
 						</div>
 						<div class="project-info">
-							<span class="link"><a href="">Start a Garden on 161st in South Bronx</a></span>
+							<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
 							<span class="creator"><em>Created by </em> Terry Richardson</span>
 							<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 						</div>
@@ -134,7 +134,7 @@ Give A Minute - Create a Project
 								<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
 								<span class="overlay-tag"></span>
 							</div>
-							<span class="link"><a href="">Start a Garden on 161st in South Bronx</a></span>
+							<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
 							<span class="creator"><em>Created by </em> Terry Richardson</span>
 							<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 						</div>
@@ -146,7 +146,7 @@ Give A Minute - Create a Project
 							<span class="member-count">58</span>
 						</div>
 						<div class="project-info">
-							<span class="link"><a href="">Start a Garden on 161st in South Bronx</a></span>
+							<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
 							<span class="creator"><em>Created by </em> Terry Richardson</span>
 							<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 						</div>
@@ -158,7 +158,7 @@ Give A Minute - Create a Project
 							<span class="member-count">58</span>
 						</div>
 						<div class="project-info">
-							<span class="link"><a href="">Start a Garden on 161st in South Bronx</a></span>
+							<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
 							<span class="creator"><em>Created by </em> Terry Richardson</span>
 							<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 						</div>
@@ -170,7 +170,7 @@ Give A Minute - Create a Project
 							<span class="member-count">58</span>
 						</div>
 						<div class="project-info">
-							<span class="link"><a href="">Start a Garden on 161st in South Bronx</a></span>
+							<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
 							<span class="creator"><em>Created by </em> Terry Richardson</span>
 							<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 						</div>
@@ -224,8 +224,7 @@ Give A Minute - Create a Project
 				</ul>
 			</div><!--end step-->
 			
-			
-			<div class='step finish clearfix ' style='display:none;'>
+			<div class='step finish clearfix' style='display:none;'>
 				<p class="west">Thank you for joining.</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
@@ -236,16 +235,50 @@ Give A Minute - Create a Project
 		<!--<a class='back' href='#'><p>Back</p></a>-->
 	</div>
 	
+	<div class='modal-content upload-image'>
+		<div class='step add-link-step'>
+			<h2><strong>Upload</strong> a photo for your project.</h2>
+			<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+			
+			<div class="file-uploader"></div>
+			
+		</div>
+		
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
 </div>
 
 <script>
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Create a Project');
+		tc.jQ('.addphoto a').bind('click',{
+			app:app,
+			source_element:tc.jQ('.modal-content.upload-image'),
+			init:function(modal,callback){
+				var uploader = new qq.FileUploader({
+					element: modal.options.element.find('.file-uploader').get(0),
+					action: '/server/upload',
+					onComplete: function(id, fileName, responseJSON){
+						modal.close();
+					}
+				});
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
+				}
+			}
+		},function(e,d){
+			e.preventDefault();
+			e.data.app.components.modal.show(e.data);
+		});
+		
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('form.merlin'),
 			progress_element:tc.jQ('.merlin-progress'),
 			next_button:tc.jQ('.ca-btn'),
 			back_button:tc.jQ('.foothills .back'),
+			title:tc.jQ('.headlands h1'),
+			sub_title:tc.jQ('.headlands h2'),
 			watch_keypress:true,
 			first_step:'start',
 			steps:{
@@ -254,6 +287,8 @@ Give A Minute - Create a Project
 					selector:'.step.start',
 					prev_step:null,
 					next_step:'location',
+					title:'Go from an idea to a solution.',
+					sub_title:'XXXXX,let\'s make it happen. The first step is to start a project that supports your idea.',
 					validators:{
 						'input.name':['max-50','min-3','required'],
 						'textarea.describe':['max-200','min-3','required']
@@ -261,9 +296,9 @@ Give A Minute - Create a Project
 					init:function(merlin,dom){
 						dom.find('input.name:not(.has-been-focused)').val('');
 						dom.find('textarea.describe:not(.has-been-focused)').val('');
-						dom.find('.addphoto a').unbind('click').bind('click',function(e,d){
-							merlin.app.components.modal.show('');
-						});
+						//dom.find('.addphoto a').unbind('click').bind('click',function(e,d){
+						//	merlin.app.components.modal.show('');
+						//});
 					}
 				},
 				'location':{
@@ -271,6 +306,8 @@ Give A Minute - Create a Project
 					selector:'.step.location',
 					prev_step:'start',
 					next_step:'check',
+					title:'Go from an idea to a solution.',
+					sub_title:'We want to provide you with resources and people in your area!',
 					validators:{
 						'input.location-hood-enter':['min-3','max-32','required']
 					},
@@ -279,12 +316,16 @@ Give A Minute - Create a Project
 					}
 				},
 				'check':{
+					title:'Wait! Check for similar projects.',
+					sub_title:'It\'s great to start something new but there is also strength in numbers. Have a look at some related projects you may want to be a part of.',
 					progress_selector:'.3',
 					selector:'.step.check',
 					prev_step:'location',
 					next_step:'add'
 				},
 				'add':{
+					title:'Add some resources.',
+					sub_title:'When you add resources, we\'ll introduce your project to that organization. You may get a message from them with more information about how they can help.',
 					progress_selector:'.4',
 					selector:'.step.add',
 					prev_step:'check',
@@ -304,6 +345,7 @@ Give A Minute - Create a Project
 			}
 		});
 	});
+		
 </script>
 
 
