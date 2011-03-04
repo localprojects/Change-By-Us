@@ -66,6 +66,11 @@ Give A Minute - Register
 				</div>
 			</div><!--end step-->
 			
+			<div class='step email-lookup clearfix ' style='display:none;'>
+				<p class="west">Verifying account information...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
 			<div class='step email-step clearfix ' style='display:none;'>
 				<p><strong>You can opt to receive email notifications from Give a Minute projects.</strong><br />Please Provide an email.</p>
 				
@@ -144,10 +149,10 @@ Give A Minute - Register
 					next_step:'user-info'
 				},
 				'user-info':{
-					progress_selector:'.1',
+					progress_selector:'.2',
 					selector:'.user-info',
 					prev_step:'start',
-					next_step:'email-step',
+					next_step:'email-lookup',
 					validators:{
 						'input.f_name':['max-32','min-3','required'],
 						'input.l_name':['max-32','min-3','required'],
@@ -166,13 +171,13 @@ Give A Minute - Register
 					}
 				},
 				'email-lookup':{
-					progress_selector:'.3',
+					progress_selector:'.2',
 					selector:'.email-lookup',
 					prev_step:'user-info',
-					next_step:'email-step',
+					next_step:'sms-lookup',
 					init:function(merlin,dom){
 						tc.timer(1000,function(){
-							e.data.merlin.show_step('email-step');
+							merlin.show_step('sms-lookup');
 						});
 					},
 				},
@@ -203,7 +208,6 @@ Give A Minute - Register
 						dom.find('.submit-sms-query').one('click',{merlin:merlin},function(e,d){
 							e.data.merlin.show_step('sms-process');
 							tc.timer(1000,function(){
-								//merlin.show_step('sms-results');
 								e.data.merlin.show_step('sms-results');
 							});
 						});
