@@ -13,7 +13,7 @@ sys.path.append("lib/")
 #
 # ROUTES = (  r"/home/?([^/.]*)", Home,
 #             r"/ideasubmission/?([^/.]*)", IdeaSubmission,
-#             r"/register/?([^/.]*)", Register,
+#             r"/join/?([^/.]*)", Join,
 #             r"/login/?([^/.]*)", Login,
 #             r"/feedback/?([^/.]*)", Feeback,
 #             r"/create/?([^/.]*)", Create,

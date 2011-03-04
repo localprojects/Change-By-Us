@@ -62,7 +62,7 @@ Give A Minute - Register
 				
 				<div class="east">
 					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info'/>
-					<label class="tos-user-info-label" for='tos-user-info'>I accept and have read<br />the <a href='/tou' target='_blank'>Terms and Conditions</a></label>
+					<label class="tos-user-info-label" for='tos-user-info'>I accept and have read<br />the <a href='#' target='_blank' class='toc-link'>Terms and Conditions</a></label>
 				</div>
 			</div><!--end step-->
 			
@@ -129,11 +129,50 @@ Give A Minute - Register
 		<a class='back' href='#'><span>Back</span></a>
 	</div>
 	
+	<div class='modal-content real-name'>
+		<h2><strong>This</strong> is why you use your real name.</h2>
+		<p>Blahdy blahdy blah.</p>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<div class='modal-content toc'>
+		<h2><strong>Terms and Conditions</strong></h2>
+		{% include 'partials/toc.html' %}
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
 </div>
 
 <script>
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Register');
+		
+		tc.jQ('a.real-names').bind('click',{
+			app:app,
+			source_element:tc.jQ('.modal-content.real-name'),
+			init:function(modal,callback){
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
+				}
+			}
+		},function(e,d){
+			e.preventDefault();
+			e.data.app.components.modal.show(e.data);
+		});
+		
+		tc.jQ('a.toc-link').bind('click',{
+			app:app,
+			source_element:tc.jQ('.modal-content.toc'),
+			init:function(modal,callback){
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
+				}
+			}
+		},function(e,d){
+			e.preventDefault();
+			e.data.app.components.modal.show(e.data);
+		});
+		
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('form.merlin'),
 			progress_element:tc.jQ('.merlin-progress'),
@@ -165,9 +204,6 @@ Give A Minute - Register
 						dom.find('input.l_name:not(.has-been-focused)').val('Last name');
 						dom.find('input.email:not(.has-been-focused)').val('');
 						dom.find('input.password:not(.has-been-focused)').val('');
-						dom.find('a.real-names').unbind('click').bind('click',function(e,d){
-							merlin.app.components.modal.show('');
-						});
 					}
 				},
 				'email-lookup':{
@@ -205,7 +241,36 @@ Give A Minute - Register
 					prev_step:'email-step',
 					next_step:'finish',
 					init:function(merlin,dom){
-						dom.find('.submit-sms-query').one('click',{merlin:merlin},function(e,d){
+						var inputs;
+						inputs = {
+							1:dom.find('input.phone_1'),
+							2:dom.find('input.phone_2'),
+							3:dom.find('input.phone_3'),
+							'submit':dom.find('.submit-sms-query')
+						}
+						inputs[1].not('.has-been-focused').val('').bind('keyup',{inputs:inputs},function(e,d){
+							if(e.target.value.length == 3 && e.target.className.indexOf('not-valid') == -1){
+								e.data.inputs[2].focus();
+							}
+						});
+						inputs[2].not('.has-been-focused').val('').bind('keyup',{inputs:inputs},function(e,d){
+							if(e.target.value.length == 3 && e.target.className.indexOf('not-valid') == -1){
+								e.data.inputs[3].focus();
+							}
+						});
+						inputs[3].not('.has-been-focused').val('').bind('keypress',{inputs:inputs},function(e,d){
+							tc.util.dump(e.keyCode);
+							if(e.keyCode == 13){
+								e.data.inputs.submit.click();
+							}
+						});
+						inputs.submit.bind('click',{merlin:merlin,inputs:inputs},function(e,d){
+							var i;
+							for(i in e.data.inputs){
+								if((i != 'submit') && !e.data.inputs[i].hasClass('valid')){
+									return false;
+								}
+							}
 							e.data.merlin.show_step('sms-process');
 							tc.timer(1000,function(){
 								e.data.merlin.show_step('sms-results');
