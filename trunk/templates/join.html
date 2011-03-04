@@ -213,29 +213,12 @@ Give A Minute - Join
 						'input.password':['password-20','required'],
 						'input.tos-user-info':['required']
 					},
+					hints:{
+						'f_name':'First name',
+						'l_name':'Last name'
+					},
 					init:function(merlin,dom){
-						dom.find('input.f_name:not(.has-been-focused)').val('First name')
-							.unbind('focus').bind('focus',function(e,d){
-								if(e.target.value == 'First name'){
-									tc.jQ(e.target).val('').addClass('has-been-focused');
-								}
-							})
-							.unbind('blur').bind('blur',function(e,d){
-								if(!e.target.value.length){
-									tc.jQ(e.target).val('First name').removeClass('has-been-focused');
-								}
-							});
-						dom.find('input.l_name:not(.has-been-focused)').val('Last name')
-							.unbind('focus').bind('focus',function(e,d){
-								if(e.target.value == 'Last name'){
-									tc.jQ(e.target).val('').addClass('has-been-focused');
-								}
-							})
-							.unbind('blur').bind('blur',function(e,d){
-								if(!e.target.value.length){ 
-									tc.jQ(e.target).val('Last name').removeClass('has-been-focused');
-								}
-							});
+						dom.find('input.f_name:not(.has-been-focused)').val('First name');
 						dom.find('input.email:not(.has-been-focused)').val('');
 						dom.find('input.password:not(.has-been-focused)').val('');
 					},
