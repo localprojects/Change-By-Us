@@ -30,6 +30,7 @@ tc.modal.prototype.show = function(opts){
 	}
 	var content;
 	content = "";
+	tc.util.dump(opts.source_element);
 	if(opts.source_element){
 		content = opts.source_element.clone();
 	}
@@ -40,7 +41,7 @@ tc.modal.prototype.show = function(opts){
 			content = opts.tempate;
 		}
 	}
-	tc.util.dump(this.options.element);
+	tc.util.dump(content);
 	this.options.element.children().remove();
 	content.show();
 	this.options.element.append(content);
