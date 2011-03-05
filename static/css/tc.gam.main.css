@@ -53,7 +53,7 @@ div.atmosphere .stratosphere li.userland { margin-top: 15px; text-align: right; 
 div.atmosphere .stratosphere li.userland div { float:right; font-weight: bold; font-size: 13px; line-height: 13px; }
 div.atmosphere .stratosphere li.userland div.join { margin-right: 45px; }
 
-div.continent{ width:960px; margin:35px auto 0; }
+div.continent{ width:960px; margin:35px auto 0; position:relative; }
 	div.headlands{ width:100%; position:relative; margin:0 0 20px; }
 	div.midlands{ width:100%; }
 	div.foothills{ width:100%; }
@@ -117,19 +117,31 @@ div.seafloor input:focus {-webkit-box-shadow: 1px 1px 4px #cfcecc; -moz-box-shad
 }
 
 /* tooltip */
-.tooltip { 
+.tooltip {
+	position:absolute; width:360px; z-index:100;
 	background-color:#ffffff; 
 	border:1px solid #dbdad9;
 	border:1px solid rgba(165,165,165,0.4);
 	-moz-box-shadow:-2px 3px 14px rgba(0, 0, 0, 0.4);
 	-webkit-box-shadow:-2px 3px 14px rgba(0, 0, 0, 0.4);
 	box-shadow:-2px 3px 14px rgba(0, 0, 0, 0.4);
-	font-family:MetaSerif,Georgia,serif;
 }
 .tooltip .tooltip-hd { background-color:#3d3a36; padding:5px 15px;}
-.tooltip .tooltip-hd h2 { color:#ccccca; font-size:19px;}
-.tooltip .tooltip-bd { padding:15px; color:#55504b; font-size:14px;}
+.tooltip .tooltip-hd h2 { font-family:MetaSerif,Georgia,serif; color:#ccccca; font-size:19px;}
 
+.tooltip .tooltip-bd { 
+	padding:15px; color:#55504b; font-size:14px;
+}
+
+.tooltip-bd .info { margin:0 0 15px; font-family:MetaSerif,Georgia,serif; }
+.tooltip-bd .info .main { overflow:hidden; }
+.tooltip-bd .info .thumb,
+.tooltip-bd dl dt { width:90px; float:left; clear:left; padding:0 15px 15px 0; }
+
+.tooltip-bd dl dt { text-align:right; text-transform:uppercase; font-weight:bold; font-size:11px; }
+.tooltip-bd dl dd { padding:0 0 15px; overflow:hidden; font-family:MetaSerif,Georgia,serif; }
+.tooltip-bd dl dd a { font-weight:bold; }
+.tooltip-bd dl dd blockquote { font-style:italic; }
 
 /* modal */
 .modal {
@@ -287,6 +299,8 @@ ul.triplewide li.every-third { border-right: 0px; }
 .members .members-stack > li:first-child { margin-top:0; }
 .members .members-stack > li .thumb { height:40px; float:left; margin:0 15px 0 0; }
 .members .members-stack > li .main a { display:block; float:left; margin:5px 0 0; font-family:MetaSerif,Georgia,serif; font-size:17px; }
+
+.ideas-invite .card { background-color:#ffffff; }
 
 /* goals */
 .goals-empty {
