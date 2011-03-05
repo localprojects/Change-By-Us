@@ -238,18 +238,15 @@ Give A Minute - Join
 					next_step:'sms-lookup',
 					init:function(merlin,dom){
 						tc.timer(1000,function(){
-							tc.util.dump(merlin.options.data.email);
-							tc.util.dump(merlin.options.steps['user-info'].validators);
 							if(merlin.options.data.email == 'bad@email.com'){
 								merlin.options.steps['user-info'].validators['input.email'].push('not-'+merlin.options.data.email);
 								if(merlin.options.error_indicator){
 									merlin.options.error_indicator.html('<span>Oops! We found someone with that name and e-mail address in our system.</span>').show();
 								}
-								merlin.show_step('user-info');
+								window.location.hash = 'user-info';
 							} else {
-								merlin.show_step('sms-lookup');
+								window.location.hash = 'sms-lookup';
 							}
-							
 						});
 					},
 				},

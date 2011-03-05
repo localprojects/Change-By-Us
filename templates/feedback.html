@@ -13,22 +13,60 @@ Give A Minute - Feedback
 		</div>
 	</div>
 
-	<div class='midlands clearfix'>
-		<form action='/feedback' method='POST'>
-			<label for='name'>Name</label>
-			<input type='text' name='name' id='name' />
+	<div class='midlands clearfix merlin feedback'>
+		
+		<div class='step feedback-form'>
+				<label for='name'>Name</label>
+				<input type='text' name='name' id='name' class='name'/>
 			
-			<label for='email'>E-mail</label>
-			<input type='text' name='email' id='email' />
+				<label for='email'>E-mail</label>
+				<input type='text' name='email' id='email' class='email'/>
 			
-			<label for='text'>Question/Comment</label>
-			<textarea name='text' id='text' ></textarea>
-			<input type='submit' name='send' value='Send' />
-		</form>
+				<label for='text'>Question/Comment</label>
+				<textarea name='text' id='text' class='text'></textarea>
+				<button class='submit'>Send</button>
+		</div>
+		
+		<div class='finish' style='display:none;'>
+			<p>Thank you for the feedback...</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
 	</div>
 
-	<div class='foothills'>
-		<a class='back' href='#'><p>&larr; Back</p></a>
-	</div>
+	<!--<div class='foothills'>
+		<a class='back' href='#'>Back</a>
+	</div>-->
 </div>
+
+<script>
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Feedback');
+		
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin.feedback'),
+			next_button:tc.jQ('button.submit'),
+			first_step:'feedback-form',
+			steps:{
+				'feedback-form':{
+					selector:'.feedback-form',
+					next_step:'finish',
+					validators:{
+						'input.name':['min-3,max-32','required'],
+						'input.email':['min-3,max-32','email','required'],
+						'textarea.text':['min-3,max-1024','required'],
+					}
+				},
+				'finish':{
+					selector:'.finish',
+					init:function(){
+						tc.timer(1000,function(){
+							window.location = '/feedback';
+						});
+					}
+				}
+			}
+		});
+	});
+</script>
+
 {% endblock continent %}

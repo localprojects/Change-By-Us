@@ -26,7 +26,6 @@ tc.merlin.prototype.init = function(app,options){
 	if(this.options.dom instanceof String){
 		this.options.dom = tc.jQ(options.dom);
 	}
-	this.last_step = null;
 	this.dom = this.options.dom;
 	this.event_data = {app:app,me:this};
 	this.handle_steps();
@@ -73,9 +72,12 @@ tc.merlin.prototype.handle_steps = function(){
 }
 
 tc.merlin.prototype.show_step = function(step){
-	tc.util.log('tc.merlin.show_step');
+	tc.util.log('tc.merlin.show_step['+step+']');
 	if(this.current_step){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
+		if(step == this.current_step.step_name){
+			return;
+		}
 		if(tc.jQ.isFunction(this.current_step.finish)){
 			this.current_step.finish(this,this.current_step.dom);
 		}
@@ -83,12 +85,13 @@ tc.merlin.prototype.show_step = function(step){
 	if(!this.options.steps[step]){
 		return;
 	}
-	this.current_step = this.options.steps[step];
-	if(this.last_step){
-		this.current_step.last_step = this.last_step;
+	
+	this.options.steps[step].step_name = step;
+	if(this.current_step){
+		this.options.steps[step].last_step = this.current_step.step_name;
 	}
-	this.last_step = step;
-	this.current_step.step_name = step;
+	this.current_step = this.options.steps[step];
+	tc.util.dump(this.current_step);
 	if(this.options.next_button){
 		this.options.next_button.removeClass('disabled');
 	}
@@ -110,15 +113,29 @@ tc.merlin.prototype.show_step = function(step){
 		this.current_step(this);
 		return;
 	}
-	this.current_step.dom.show().siblings('.step').hide();
-	this.current_step.dom.find('input, textarea').not('.has-been-focused')
-		.unbind('focus').bind('focus',this.event_data,this.handlers.focus)
-		.unbind('keyup change').bind('keyup change',this.event_data,this.handlers.keypress)
-		.unbind('blur').bind('blur',this.event_data,this.handlers.blur).data({merlin:this}).each(function(i,j){
-			if(tc.jQ(j).data().merlin.current_step.hints[j.name]){
-				j.value = tc.jQ(j).data().merlin.current_step.hints[j.name];
-			}
-		});
+	
+	
+	
+	if(this.current_step.dom){
+		tc.util.dump(this.current_step.dom.siblings('.step'));
+		tc.util.dump(this.current_step.selector);
+		tc.util.dump(this.current_step.dom.siblings('.step').not(this.current_step.selector));
+		this.current_step.dom.show().siblings('.step').not(this.current_step.selector).hide();
+		this.current_step.dom.find('input, textarea').not('.has-been-focused')
+			.unbind('focus').bind('focus',this.event_data,this.handlers.focus)
+			.unbind('keyup change').bind('keyup change',this.event_data,this.handlers.keypress)
+			.unbind('blur').bind('blur',this.event_data,this.handlers.blur).data({merlin:this}).each(function(i,j){
+				var $j;
+				$j = tc.jQ(j);
+				if($j.data().merlin.current_step.hints){
+					if($j.data().merlin.current_step.hints[j.name]){
+						j.value = tc.jQ(j).data().merlin.current_step.hints[j.name];
+					} else {
+						j.value = "";
+					}
+				}
+			});
+	}
 	window.location.hash = step;
 	if(tc.jQ.isFunction(this.current_step.init)){
 		this.current_step.init(this,this.current_step.dom);
@@ -234,12 +251,19 @@ tc.merlin.prototype.handlers = {
 		if(e.data.me.current_step.validators){
 			e.data.me.validate(e.data.me.current_step.validators);
 		}
+		if(e.which == 13){
+			if(e.data.me.options.next_button && e.data.me.options.next_button.hasClass('enabled')){
+				e.data.me.options.next_button.click();
+			}
+		}
 	},
 	blur:function(e,d){
 		if(!e.target.value.length){
 			tc.jQ(e.target).removeClass('has-been-focused');
-			if(e.data.me.current_step.hints[e.target.name]){
-				e.target.value = e.data.me.current_step.hints[e.target.name];
+			if(e.data.me.current_step.hints){
+				if(e.data.me.current_step.hints[e.target.name]){
+					e.target.value = e.data.me.current_step.hints[e.target.name];
+				}
 			}
 		}
 	},
