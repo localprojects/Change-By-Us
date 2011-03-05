@@ -11,7 +11,10 @@ Give A Minute - Add Resource
 
 	</div>
 
-	<div class='midlands'>
+	<div class='midlands merlin resource-addition clearfix'>
+		
+		<div class='step resource-form'>
+		
 		<div class="west">
 			<div class="box">
 				<div class="hd">
@@ -25,58 +28,129 @@ Give A Minute - Add Resource
 			</div>
 		</div>
 		<div class="east">
-			<form action=" " method="POST">
+			<form>
 				<div class="upload-image">
 					<div class="thumb">
 						<img src="http://placehold.it/100x100" alt="" />
 					</div>
 					<div class="upload-image-controls">
-						<a href="#">Upload</a> an image (100px by 100px)
+						<a href="#" class='upload-link'>Upload</a> an image (100px by 100px)
 					</div>
 				</div>
 				<div class="fields">
 					<div>
 						<label>Name</label>
-						<input type="text"/>
+						<input type="text" class='name'/>
 					</div>
 					<div>
 						<label>Description</label>
-						<textarea></textarea>
+						<textarea class='description'></textarea>
 					</div>
 					<div>
 						<label>Physical Address</label>
-						<input type="text"/>
+						<input type="text" class='address'/>
 					</div>
 					<div>
 						<label>Web Address</label>
-						<input type="text"/>
+						<input type="text" class='web'/>
 					</div>
 					<div>
 						<label>Other links (if applicable) Facebook, Twitter, Blog, etc</label>
-						<input type="text"/>
+						<input type="text" class='links'/>
 						<div class="control add-another">
 							<a href="#">Another Link</a>
 						</div>
 					</div>
 					<div>
 						<label>Keywords (separate by commas)</label>
-						<input type="text"/>
+						<input type="text" class='keywords'/>
 					</div>
 					<div>
 						<label>Contact e-mail</label>
-						<input type="text"/>
+						<input type="text" class='contact'/>
 					</div>
 				</div>
 				<div>
-					<input type="submit" value="Add My Organization"/>
+					<button class='submit'>Add My Organization</button>
 				</div>
 			</form>
+		</div>
+		</div>
+		
+		<div class='step finish' style='display:none;'>
+			<p>Thank you for adding your organization...</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
 		</div>
 	</div>
 
 	<div class='foothills'>
 
 	</div>
+	
+	<div class='modal-content upload-image'>
+		<div class='step add-link-step'>
+			<h2><strong>Upload</strong> a photo for your project.</h2>
+			<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+			<div class="file-uploader"></div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+<script>
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Resource Addition');
+		
+		tc.jQ('a.upload-link').bind('click',{
+			app:app,
+			source_element:tc.jQ('.modal-content.upload-image'),
+			init:function(modal,callback){
+				var uploader = new qq.FileUploader({
+					element: modal.options.element.find('.file-uploader').get(0),
+					action: '/server/upload',
+					onComplete: function(id, fileName, responseJSON){
+						modal.close();
+					}
+				});
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
+				}
+			}
+		},function(e,d){
+			e.preventDefault();
+			e.data.app.components.modal.show(e.data);
+		});
+		
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin.resource-addition'),
+			next_button:tc.jQ('button.submit'),
+			first_step:'resource-form',
+			steps:{
+				'resource-form':{
+					selector:'.resource-form',
+					next_step:'finish',
+					validators:{
+						'input.name':['min-3','max-32','required'],
+						'textarea.description':['min-3','max-200','required'],
+						'input.address':['min-3','max-32','required'],
+						'input.web':['min-3','max-32','url'],
+						'input.links':['min-3','max-32','url'],
+						'input.keywords':['min-3','max-200','required'],
+						'input.contact':['min-3','max-32','required']
+					}
+				},
+				'finish':{
+					selector:'.finish',
+					init:function(){
+						tc.timer(1000,function(){
+							window.location = '/resource';
+						});
+					}
+				}
+			}
+		});
+	});
+</script>
+	
 </div>
 
 {% endblock continent %}
