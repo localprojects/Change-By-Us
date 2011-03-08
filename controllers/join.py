@@ -11,7 +11,7 @@ class Join(Controller):
         elif (action == 'ideas'):
             return self.getIdeas()
         else:
-            return self.error("didn't understand request")
+            return self.render('join')
             
             
     def POST(self,*args, **kw):
