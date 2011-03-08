@@ -83,7 +83,7 @@ class Join(Controller):
             
             if (phone and len(phone) > 0):
                 idea.attachIdeasByPhone(self.db, phone)
-        return True;
+        return userId;
     
     #strip leading 1 and any non-numerics
     def cleanPhone(self, phone):
