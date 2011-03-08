@@ -105,7 +105,7 @@ def makePassword(password):
     return [encrypted_password, salt]   
     
 def findUserByEmail(db, email):
-    sql = "select user_id from user where email = $email and is_active = 1"
+    sql = "select user_id from user where email = $email and is_active = 1 limit 1"
     data = list(db.query(sql, vars = locals()))
     
     if len(data) > 0:
@@ -113,6 +113,13 @@ def findUserByEmail(db, email):
     else:
         return None
     
+def findUserByPhone(db, phone):
+    sql = "select user_id from user where phone = $phone and is_active = 1 limit 1"
+    data = list(db.query(sql, vars = locals()))
     
+    if len(data) > 0:
+        return data[0].user_id
+    else:
+        return None  
     
     
