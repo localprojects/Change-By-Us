@@ -248,7 +248,7 @@ tc.merlin.prototype.handlers = {
 		}
 		if(e.which == 13){
 			if(e.data.me.options.next_button && e.data.me.options.next_button.hasClass('enabled')){
-				e.data.me.options.next_button.click();
+				//e.data.me.options.next_button.click();
 			}
 		}
 	},
