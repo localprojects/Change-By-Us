@@ -2,7 +2,11 @@ from framework.log import log
 
 def getLocationDictionary(db):
     try:
-        sql = "select location_id, name, lat, lon from location order by location_id";
+        # TODO
+        # this is temporary until actual scoring is determined
+        sql = """select l.location_id, l.name, l.lat, l.lon, t.score from location l
+                inner join temp_scores t on t.location_id = l.location_id
+                order by location_id""";
         data = list(db.query(sql))
         
         locations = {}
