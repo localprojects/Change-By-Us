@@ -70,6 +70,9 @@ def validate_email(emailaddress):
         return True # Email address is fine.
     else:
         return False # Email address has funny characters.
+        
+def validateUSPhone(phone):
+    return not (re.match("^[1-9]\d{9}$", phone) == None)
                 
 def parse_tags(tagstring):
     quotes = re.findall(r'".*?"', tagstring)
