@@ -159,7 +159,7 @@ tc.merlin.prototype.validate = function(validators,force_focus){
 	this.current_step.errors = [];
 	for(i in this.current_step.inputs){
 		if(force_focus){
-			this.current_step.inputs[i].element.focus();
+			this.current_step.inputs[i].element.addClass('has-been-focused');//focus();
 		}
 		if(tc.jQ.isFunction(this.current_step.inputs[i].validators)){
 			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].element,this.current_step).valid;
@@ -191,9 +191,6 @@ tc.merlin.prototype.handlers = {
 		var hash;
 		hash = window.location.hash.substring(1,window.location.hash.length);
 		e.data.me.show_step(hash);
-		if(!e.data.me.options.steps[hash]){
-			
-		}
 	},
 	indicator_click:function(e,d){
 		tc.util.log('tc.merlin.handlers.indicator_click');
@@ -201,8 +198,6 @@ tc.merlin.prototype.handlers = {
 	},
 	a_click:function(e,d){
 		tc.util.log('tc.merlin.handlers.a_click');
-		//e.preventDefault();
-		//e.data.me.show_step(e.target.href.split('#')[1]);
 	},
 	last_step:function(e,d){
 		tc.util.log('tc.merlin.handlers.last_step');
