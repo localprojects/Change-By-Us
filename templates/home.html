@@ -68,15 +68,15 @@ Give A Minute - Home
 						<div class="east">
 							<span class="col-head">Where is your idea for?</span>
 							<div class="row row-1 clearfix">
-								<input type='checkbox' name='location-city' id='location-city' class='location-city'/>
+								<input type='radio' name='location-check' id='location-city' class='location-city location-group'/>
 								<label class="location-city-label" for='location-city'>It's for the whole city</a></label>
 							</div>
 							<div class="row row-2 clearfix">
-								<input type='checkbox' name='location-hood' id='location-hood' class='location-hood'/>
+								<input type='radio' name='location-check' id='location-hood' class='location-hood location-group'/>
 								<label class="location-hood-label" for='location-hood'>It's about a neighborhood or borough</a></label>
 							</div>
 							<div class="row row-3 clearfix">
-								<input value='Start typing neighboorhood or borough...' type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter'/>
+								<input value='Start typing neighboorhood or borough...' type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
 								<div class="location-hood-list">
 									<ul>
 										<li><strong>So</strong>Ho</li>
@@ -359,11 +359,38 @@ Give A Minute - Home
 					selector:'.step-two',
 					validators:{
 						'input.email':['min-3','max-200','required','email'],
-						'.location-group':['min-3','max-200','required']
+						'.location-group':function(merlin,elements){
+							if(elements.filter('.location-city').filter(':checked').length){
+								return {
+									valid:true,
+									errors:[]
+								}
+							}
+							tc.util.dump(elements.filter('.location-hood-enter'));
+							tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
+							if(elements.filter('.location-hood').filter(':checked').length){
+								tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
+								if(elements.filter('.location-hood-enter').attr('valid-location')){
+									return {
+										valid:true,
+										errors:[]
+									}
+								}
+							}
+							return {
+								valid:false,
+								errors:['Please select a location.']
+							};
+						}
 					},
 					init:function(merlin,dom){
-						tc.util.dump(merlin);
-						tc.util.dump(dom);
+						var dropdown;
+						dropdown = new tc.locationDropdown({
+							radios:dom.find('input[type=radio]'),
+							input:dom.find('input.location-hood-enter'),
+							list:dom.find('div.location-hood-list'),
+							warning:dom.find('span.error')
+						});
 					}
 				},
 				'step-three':{

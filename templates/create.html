@@ -332,7 +332,13 @@ Give A Minute - Create a Project
 								}
 							}
 							if(elements.filter('.location-hood').filter(':checked').length){
-								return tc.validate(elements.filter('.location-hood-enter'),['min-3','max-32','required']);
+								tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
+								if(elements.filter('.location-hood-enter').attr('valid-location')){
+									return {
+										valid:true,
+										errors:[]
+									}
+								}
 							}
 							return {
 								valid:false,
