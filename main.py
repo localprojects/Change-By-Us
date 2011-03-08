@@ -28,7 +28,8 @@ sys.path.append("lib/")
 #             r"/?([^/.]*)", Main			
 #             )
 
-ROUTES = (  r'/join/?([^/.]*)', 'controllers.join.Join',
+ROUTES = (  r'/create/?([^/.]*)', 'controllers.createProject.CreateProject',
+            r'/join/?([^/.]*)', 'controllers.join.Join',
             r'/search/?([^/.]*)', 'controllers.search.Search',
             r'/?([^/.]*)', 'controllers.home.Home' )
 
