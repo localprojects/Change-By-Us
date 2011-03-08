@@ -25,6 +25,7 @@ class Controller():
     def db_connect(cls):
         settings = Config.get('database')
         cls._db = web.database(dbn=settings['dbn'], user=settings['user'], pw=settings['password'], db=settings['db'], host=settings['host'])
+        log.info(str(settings));
         log.info("Connected to db: %s" % cls._db)
     
     def __init__(self):

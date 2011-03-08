@@ -36,7 +36,7 @@ class Join(Controller):
         
     def getIdeas(self):
         try:
-            phone = self.cleanPhone(self.request('sms_phone'))
+            phone = self.cleanPhone(self.request('sms_number'))
             
             dataUser = user.findUserByPhone(self.db, phone)
             
@@ -51,7 +51,7 @@ class Join(Controller):
                 return self.json(dict(sms_number_already_used = False, n_ideas = 0))
         except Exception, e:
             log.error(e)
-            return self.json(dict(sms_number_already_used = False, n_users = 0))
+            return self.json(dict(sms_number_already_used = False, n_ideas = 0))
         
     def newUser(self):
         firstName = self.request('f_name')
