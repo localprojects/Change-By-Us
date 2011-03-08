@@ -36,7 +36,7 @@ class Join(Controller):
         
     def getIdeas(self):
         try:
-            phone = self.cleanPhone(self.request('sms_number'))
+            phone = self.cleanPhone(self.request('sms_phone'))
             
             dataUser = user.findUserByPhone(self.db, phone)
             
