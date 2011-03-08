@@ -115,7 +115,10 @@ tc.merlin.prototype.show_step = function(step){
 	}
 	
 	if(this.current_step.dom){
-		this.current_step.dom.show().siblings('.step').not(this.current_step.selector).hide();
+		tc.util.dump(this.dom.find('.step'));
+		this.dom.find('.step').hide();
+		this.dom.find(this.current_step.selector).show();
+		//this.current_step.dom.show().siblings('.step').not(this.current_step.selector).hide();
 		this.current_step.dom.find('input, textarea').not('.has-been-focused')
 			.unbind('focus').bind('focus',this.event_data,this.handlers.focus)
 			.unbind('keyup change').bind('keyup change',this.event_data,this.handlers.keypress)

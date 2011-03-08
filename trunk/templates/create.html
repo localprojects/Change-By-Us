@@ -324,27 +324,7 @@ Give A Minute - Create a Project
 					title:'Go from an idea to a solution.',
 					sub_title:'We want to provide you with resources and people in your area!',
 					validators:{
-						'.location-group':function(merlin,elements){
-							if(elements.filter('.location-city').filter(':checked').length){
-								return {
-									valid:true,
-									errors:[]
-								}
-							}
-							if(elements.filter('.location-hood').filter(':checked').length){
-								tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
-								if(elements.filter('.location-hood-enter').attr('valid-location')){
-									return {
-										valid:true,
-										errors:[]
-									}
-								}
-							}
-							return {
-								valid:false,
-								errors:['Please select a location.']
-							};
-						}
+						'.location-group':tc.locationDropdown.validator
 					},
 					init:function(merlin,dom){
 						var dropdown;
