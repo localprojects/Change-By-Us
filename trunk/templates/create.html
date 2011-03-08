@@ -83,15 +83,15 @@ Give A Minute - Create a Project
 				<div class="east">
 					<h3>Where is your project located?</h3>
 					<div class="row row-1 clearfix">
-						<input type='checkbox' name='location-city' id='location-city' class='location-city'/>
+						<input type='radio' name='location-check' id='location-city' class='location-group location-city'/>
 						<label class="location-city-label" for='location-city'>It's for the whole city</a></label>
 					</div>
 					<div class="row row-2 clearfix">
-						<input type='checkbox' name='location-hood' id='location-hood' class='location-hood'/>
+						<input type='radio' name='location-check' id='location-hood' class='location-group location-hood'/>
 						<label class="location-hood-label" for='location-hood'>It's about a neighborhood or borough</a></label>
 					</div>
 					<div class="row row-3 clearfix">
-						<input value='Start typing neighboorhood or borough...' type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter'/>
+						<input value='Start typing neighboorhood or borough...' type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter'/>
 						<div class="location-hood-list">
 							<ul>
 								<li><strong>So</strong>Ho</li>
@@ -298,7 +298,7 @@ Give A Minute - Create a Project
 			title:tc.jQ('.headlands h1'),
 			sub_title:tc.jQ('.headlands h2'),
 			watch_keypress:true,
-			first_step:'start',
+			first_step:'location',
 			steps:{
 				'start':{
 					progress_selector:'.1',
@@ -324,10 +324,32 @@ Give A Minute - Create a Project
 					title:'Go from an idea to a solution.',
 					sub_title:'We want to provide you with resources and people in your area!',
 					validators:{
-						'input.location-hood-enter':['min-3','max-32','required']
+						'.location-group':function(merlin,elements){
+							if(elements.filter('.location-city').filter(':checked').length){
+								return {
+									valid:true,
+									errors:[]
+								}
+							}
+							if(elements.filter('.location-hood').filter(':checked').length){
+								return tc.validate(elements.filter('.location-hood-enter'),['min-3','max-32','required']);
+							}
+							return {
+								valid:false,
+								errors:['Please select a location.']
+							};
+						}
 					},
 					init:function(merlin,dom){
+						var dropdown;
+						dom.find('input.location-city, input.location-hood').not('.has-been-focused').removeAttr('checked');
 						dom.find('input.location-hood-enter:not(.has-been-focused)').val('');
+						dropdown = new tc.locationDropdown({
+							radios:dom.find('input[type=radio]'),
+							input:dom.find('input.location-hood-enter'),
+							list:dom.find('div.location-hood-list'),
+							warning:dom.find('span.error')
+						});
 					}
 				},
 				'check':{

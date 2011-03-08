@@ -27,7 +27,7 @@ Give A Minute - Home
 						</div>
 						<div>
 							<!--<label>What's your idea?</label>-->
-							<textarea></textarea>
+							<textarea class='idea'></textarea>
 							<div class="helpers">
 								<a href="">What is this?</a>
 								<a href="">Who's Listening</a>
@@ -345,19 +345,35 @@ Give A Minute - Home
 					prev_step:null,
 					next_step:'step-two',
 					selector:'.step-one',
-					init:function(me){
-						
+					validators:{
+						'textarea.idea':['min-3','max-200','required']
+					},
+					init:function(merlin,dom){
+						tc.util.dump(merlin);
+						tc.util.dump(dom);
 					}
 				},
 				'step-two':{
 					prev_step:'start',
 					next_step:'step-three',
-					selector:'.step-two'
+					selector:'.step-two',
+					validators:{
+						'input.email':['min-3','max-200','required','email'],
+						'.location-group':['min-3','max-200','required']
+					},
+					init:function(merlin,dom){
+						tc.util.dump(merlin);
+						tc.util.dump(dom);
+					}
 				},
 				'step-three':{
 					prev_step:'step-two',
 					next_step:'step-tree',
-					selector:'.step-three'
+					selector:'.step-three',
+					init:function(me){
+						tc.util.dump(merlin);
+						tc.util.dump(dom);
+					}
 				}
 			}
 		});

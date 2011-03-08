@@ -114,12 +114,7 @@ tc.merlin.prototype.show_step = function(step){
 		return;
 	}
 	
-	
-	
 	if(this.current_step.dom){
-		tc.util.dump(this.current_step.dom.siblings('.step'));
-		tc.util.dump(this.current_step.selector);
-		tc.util.dump(this.current_step.dom.siblings('.step').not(this.current_step.selector));
 		this.current_step.dom.show().siblings('.step').not(this.current_step.selector).hide();
 		this.current_step.dom.find('input, textarea').not('.has-been-focused')
 			.unbind('focus').bind('focus',this.event_data,this.handlers.focus)
