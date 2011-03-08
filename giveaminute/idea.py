@@ -59,15 +59,6 @@ where (i.phone is not null and i.phone <> '' and i.phone = u.phone)
         log.info("*** problem updating ideas by phone")
         log.error(e)
         return False
-    
-def findUsersByEmail(db, email):
-    try:
-        sql = "select user_id from user where email = $email"
-        return list(db.query(sql, vars = locals()))
-    except Exception, e:
-        log.info("*** problem getting user by email")
-        log.error(e)    
-        return None    
         
 def findIdeasByPhone(db, phone):
     try:
