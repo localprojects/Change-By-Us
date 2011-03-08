@@ -2,13 +2,37 @@ if(!tc){ var tc = {}; }
 
 tc.locationDropdown = makeClass();
 
+tc.locationDropdown.validator = function(merlin,elements){
+	tc.util.log('tc.locationDropdown.validator');
+	if(elements.filter('.location-city').filter(':checked').length){
+		return {
+			valid:true,
+			errors:[]
+		}
+	}
+	if(elements.filter('.location-hood').filter(':checked').length){
+		tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
+		if(elements.filter('.location-hood-enter').attr('valid-location')){
+			return {
+				valid:true,
+				errors:[]
+			}
+		}
+	}
+	return {
+		valid:false,
+		errors:['Please select a location.']
+	};
+};
+
+
 tc.locationDropdown.prototype.options = {
 	radios:null,
 	input:null,
 	list:null,
 	warning:null,
 	locations:tc.locations
-}
+};
 
 tc.locationDropdown.prototype.init = function(options){
 	tc.util.log('tc.locationDropdown.init');
@@ -17,7 +41,7 @@ tc.locationDropdown.prototype.init = function(options){
 	tc.util.dump(options);
 	this.options.warning.hide();
 	this.options.list.hide().children('ul').children().remove();
-}
+};
 
 tc.locationDropdown.prototype.bindEvents = function(){
 	tc.util.log('tc.locationDropdown.bindEvents');
@@ -46,12 +70,12 @@ tc.locationDropdown.prototype.bindEvents = function(){
 	this.options.radios.bind('change',{dropdown:this},function(e){
 		e.data.dropdown.radioHandler(e);
 	});
-}
+};
 
 tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	this.options.radios.filter('#location-hood').attr('checked',true).removeAttr('valid-location');
-}
+};
 
 tc.locationDropdown.prototype.inputKeyUpHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputKeyUpHandler');
@@ -61,7 +85,7 @@ tc.locationDropdown.prototype.inputKeyUpHandler = function(e){
 		return;
 	}
 	this.superFilterAndUpdateList(e.target.value);
-}
+};
 
 tc.locationDropdown.prototype.inputKeyDownHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputKeyDownHandler');
@@ -80,14 +104,14 @@ tc.locationDropdown.prototype.inputKeyDownHandler = function(e){
 			this.modifySelection(1);
 			break;
 	}
-}
+};
 
 tc.locationDropdown.prototype.inputKeyPressHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputKeyPressHandler');
 	if(e.which == 13){
 		e.preventDefault();
 	}
-}
+};
 
 tc.locationDropdown.prototype.modifySelection = function(direction){
 	tc.util.log('tc.locationDropdown.modifySelection');
@@ -108,7 +132,7 @@ tc.locationDropdown.prototype.modifySelection = function(direction){
 			currently_selected.removeClass('selected').next().addClass('selected');
 			break;
 	}
-}
+};
 
 tc.locationDropdown.prototype.radioHandler = function(e){
 	tc.util.log('tc.locationDropdown.radioHandler');
@@ -128,7 +152,7 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 			}
 			break;
 	}
-}
+};
 
 tc.locationDropdown.prototype.superFilterAndUpdateList = function(text,skipUpdate){
 	tc.util.log('tc.locationDropdown.filterLocations');
@@ -171,4 +195,4 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text,skipUpdat
 			this.options.list.show();
 		}
 	} 
-}
+};

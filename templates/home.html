@@ -9,9 +9,9 @@ Give A Minute - Home
 	<div class='headlands'>
 		<div class='splash merlin'>
 			
-			<div class="splash-inner step-one step-two">
+			<div class="splash-inner step-one step step-two">
 				<!-- post your idea step -->				
-				<div class="top-pane step-one">
+				<div class="top-pane step-one step">
 					<div class="console">
 						<span class="hey"><span>Hey NYC!</span></span>
 						<span class="console-message"><span></span>How can we green our neighborhoods?</span>
@@ -36,7 +36,7 @@ Give A Minute - Home
 					</div>
 				</div><!--end .top-pane.step-one-->
 			
-				<div class="top-pane step-two" style="display:none">
+				<div class="top-pane step-two step" style="display:none">
 					<div class="console">
 						<span class="hey"><span>Hey NYC!</span></span>
 						<span class="after-idea-message">Thanks for your idea<br /><span class="sm">We just need a little more information</span></span>
@@ -154,50 +154,48 @@ Give A Minute - Home
 				
 				
 				
-			<div class="splash-inner step-three" style="display:none">
+			<div class="splash-inner step-three step" style="display:none">
 				<!-- after idea is posted step -->
-				<div class="step" style='display:none;'>
-					<div class="top-pane">
-						<div class="console">
-							<span class="console-message">
-								Go from an idea to a solution: join or start a project.
-							</span>
+				<div class="top-pane">
+					<div class="console">
+						<span class="console-message">
+							Go from an idea to a solution: join or start a project.
+						</span>
+					</div>
+				</div>
+				<div class="projects-pane">
+					<div class="box related-projects">
+						<div class="hd">
+							<h2>Related Projects near South Bronx</h2>
+						</div>
+						<div class="bd">
+							
 						</div>
 					</div>
-					<div class="projects-pane">
-						<div class="box related-projects">
-							<div class="hd">
-								<h2>Related Projects near South Bronx</h2>
-							</div>
-							<div class="bd">
-								
-							</div>
+					<div class="box citywide-projects">
+						<div class="hd">
+							<h2>Citywide Projects</h2>
 						</div>
-						<div class="box citywide-projects">
-							<div class="hd">
-								<h2>Citywide Projects</h2>
-							</div>
-							<div class="bd">
-								
-							</div>
-						</div>
-						<div class="controls">
-							<button>Browse All</button> or <button>Start Your Own</button>
+						<div class="bd">
+							
 						</div>
 					</div>
-					<div class="note-card-pane">
-						<div class="membrane">
-							<div class="note-card">
-								<cite class="note-meta-hd">
-									<strong>You</strong> said &mdash;
-								</cite>
-								<blockquote>
-									<p>More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!</p>
-								</blockquote>
-							</div>
+					<div class="controls">
+						<button>Browse All</button> or <button>Start Your Own</button>
+					</div>
+				</div>
+				<div class="note-card-pane">
+					<div class="membrane">
+						<div class="note-card">
+							<cite class="note-meta-hd">
+								<strong>You</strong> said &mdash;
+							</cite>
+							<blockquote>
+								<p>More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!</p>
+							</blockquote>
 						</div>
 					</div>
-				</div><!--end "thanks" step-->
+				</div>
 			</div><!--end .splash-inner-->
 
 		</div><!--end .splash-->
@@ -320,7 +318,6 @@ Give A Minute - Home
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: HOME');
 		
-		
 		tc.jQ('a.toc-link').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.toc'),
@@ -350,8 +347,7 @@ Give A Minute - Home
 						'textarea.idea':['min-3','max-200','required']
 					},
 					init:function(merlin,dom){
-						tc.util.dump(merlin);
-						tc.util.dump(dom);
+						dom.find('textarea.idea:not(.has-been-focused)').val('');
 					}
 				},
 				'step-two':{
@@ -360,29 +356,7 @@ Give A Minute - Home
 					selector:'.step-two',
 					validators:{
 						'input.email':['min-3','max-200','required','email'],
-						'.location-group':function(merlin,elements){
-							if(elements.filter('.location-city').filter(':checked').length){
-								return {
-									valid:true,
-									errors:[]
-								}
-							}
-							tc.util.dump(elements.filter('.location-hood-enter'));
-							tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
-							if(elements.filter('.location-hood').filter(':checked').length){
-								tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
-								if(elements.filter('.location-hood-enter').attr('valid-location')){
-									return {
-										valid:true,
-										errors:[]
-									}
-								}
-							}
-							return {
-								valid:false,
-								errors:['Please select a location.']
-							};
-						}
+						'.location-group':tc.locationDropdown.validator
 					},
 					init:function(merlin,dom){
 						var dropdown;
@@ -396,9 +370,9 @@ Give A Minute - Home
 				},
 				'step-three':{
 					prev_step:'step-two',
-					next_step:'step-tree',
+					next_step:'finish',
 					selector:'.step-three',
-					init:function(me){
+					init:function(merlin,dom){
 						tc.util.dump(merlin);
 						tc.util.dump(dom);
 					}
