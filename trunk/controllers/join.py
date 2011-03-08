@@ -1,8 +1,10 @@
 import re
 import framework.util as util
 from framework.controller import *
-from giveaminute.user import *
-from giveaminute.idea import *
+import giveaminute.user as user
+import giveaminute.idea as idea
+# from giveaminute.user import *
+# from giveaminute.idea import *
 
 class Join(Controller):
     def GET(self, action=None):
@@ -23,11 +25,11 @@ class Join(Controller):
     def getUsers(self, action=None):
         try:
             email = self.request('email')
-            
-            sql = "select count(user_id) as count from user where email = $email"
-            data = list(self.db.query(sql, vars = locals()))[0]
-            
-            return self.json(dict(n_users = data.count))
+
+            if (user.findUserByEmail(self.db, email)):
+                return self.json(dict(n_users = 1))
+            else:
+                return self.json(dict(n_users = 0))
         except Exception, e:
             log.error(e)
             return self.json(dict(n_users = 0))
@@ -36,20 +38,27 @@ class Join(Controller):
         try:
             phone = self.cleanPhone(self.request('sms_phone'))
             
-            sql = "select count(idea_id) as count from idea where phone = $phone"
-            data = list(self.db.query(sql, vars = locals()))[0]
+            dataUser = user.findUserByPhone(self.db, phone)
             
-            return self.json(dict(n_ideas = data.count))
+            if (dataUser):
+                return self.json(dict(sms_number_already_used = True))
+            
+            data = idea.findIdeasByPhone(self.db, phone)
+            
+            if (data):
+                return self.json(dict(sms_number_already_used = False, n_ideas = len(data)))
+            else:
+                return self.json(dict(sms_number_already_used = False, n_ideas = 0))
         except Exception, e:
             log.error(e)
-            return self.json(dict(n_users = 0))
+            return self.json(dict(sms_number_already_used = False, n_users = 0))
         
     def newUser(self):
         firstName = self.request('f_name')
         lastName = self.request('l_name')
         email = self.request('email')
         password = self.request('password')
-        phone = self.request('sms_phone')
+        phone = self.cleanPhone(self.request('sms_phone'))
                 
         if (len(firstName) == 0): 
             #return self.error("no first name")
@@ -68,12 +77,12 @@ class Join(Controller):
             log.error("no password")
             return False
         else:
-            userId = createUser(self.db, email, password, firstName, lastName, phone)
+            userId = user.createUser(self.db, email, password, firstName, lastName, phone)
             
-            attachIdeasByEmail(self.db, email)
+            idea.attachIdeasByEmail(self.db, email)
             
             if (phone and len(phone) > 0):
-                attachIdeasByPhone(self.db, phone)
+                idea.attachIdeasByPhone(self.db, phone)
         return True;
     
     #strip leading 1 and any non-numerics
