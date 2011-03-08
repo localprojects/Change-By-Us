@@ -28,7 +28,9 @@ sys.path.append("lib/")
 #             r"/?([^/.]*)", Main			
 #             )
 
-ROUTES = ( r'/?([^/.]*)', 'controllers.home.Home' )
+ROUTES = (  r'/join/?([^/.]*)', 'controllers.join.Join',
+            r'/search/?([^/.]*)', 'controllers.search.Search',
+            r'/?([^/.]*)', 'controllers.home.Home' )
 
 if __name__ == "__main__":
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
