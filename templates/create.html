@@ -49,7 +49,7 @@ Give A Minute - Create a Project
 						<label for='name'><strong>Name</strong> your project:</label>
 						<input value='Name' type='text' name='name' id='name' class='name'/>
 						<span class="charlimit">50</span>
-						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">XXXXXX XXXXXX</span><span class="edit">Edit</span></div>
+						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">XXXXXX XXXXXX</span><span class="edit" style='display:none;'>Edit</span></div>
 					</div>
 					<div class="row clearfix">
 						<label for='organization'><strong>Organization</strong> (Optional):</label>
@@ -98,6 +98,10 @@ Give A Minute - Create a Project
 				</div>
 			</div><!--end step-->
 			
+			<div class='step check-projects-process clearfix' style='display:none;'>
+				<p class="west">Please wait while we check for similar projects.</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
 			
 			<div class='step check clearfix' style='display:none;'>
 				<h3>Similar Projects</h3>
@@ -181,6 +185,10 @@ Give A Minute - Create a Project
 				</ul>
 			</div><!--end step-->
 			
+			<div class='step add-resource-process clearfix' style='display:none;'>
+				<p class="west">Please wait while we search for relevant resources.</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
 			
 			<div class='step add clearfix' style='display:none;'>
 				<div class="resources-added clearfix">
@@ -314,31 +322,6 @@ Give A Minute - Create a Project
 					step_data:{
 						timer:null
 					},
-					fn:{
-						stopped:function(){
-							tc.util.dump('stopped');
-							tc.util.dump(this);
-							//tc.jQ.ajax({
-							//	url:'/create/keywords',
-							//	data:{
-							//		title:merlin.current_step.myinputs.title.val(),
-							//		text:merlin.current_step.myinputs.description.val()
-							//	},
-							//	context:merlin,
-							//	dataType:'json',
-							//	success:function(data,ts,xhr){
-							//		var i, temphtml;
-							//		temphtml = '';
-							//		if(data.suggested_keywords.length){
-							//			for(i in data.suggested_keywords){
-							//				temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
-							//			}
-							//		}
-							//		merlin.current_step.myinputs.suggested_keywords.html(temphtml);
-							//	}
-							//});
-						}
-					},
 					inputs:{
 						title:{
 							selector:'input.name',
@@ -347,9 +330,10 @@ Give A Minute - Create a Project
 							handlers:{
 								keyup:function(e){
 									if(e.data.me.current_step.step_data.timer){
-										tc.clearTimer(e.data.me.current_step.step_data.timer);
+										clearTimeout(e.data.me.current_step.step_data.timer);
+										e.data.me.current_step.step_data.timer = null;
 									}
-									e.data.me.current_step.step_data.timer = tc.timer(1000,e.data.me.current_step.fn.stopped);
+									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,1000,[e.data.me]);
 								}
 							}
 						},
@@ -363,10 +347,7 @@ Give A Minute - Create a Project
 							hint:'',
 							handlers:{
 								keyup:function(e){
-									if(e.data.me.current_step.step_data.timer){
-										tc.clearTimer(e.data.me.current_step.step_data.timer);
-									}
-									e.data.me.current_step.step_data.timer = tc.timer(1000,e.data.me.current_step.fn.stopped);
+									
 								}
 							}
 						},
@@ -393,6 +374,38 @@ Give A Minute - Create a Project
 							}
 						}
 					},
+					fn:{
+						inputKeyup:function(e){
+							if(e.data.me.current_step.step_data.timer){
+								clearTimeout(e.data.me.current_step.step_data.timer);
+								e.data.me.current_step.step_data.timer = null;
+							}
+							e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,1000,[e.data.me]);
+						},
+						stopped:function(pars){
+							var merlin;
+							merlin = pars[0];
+							tc.jQ.ajax({
+								url:'/create/keywords',
+								data:{
+									title:merlin.current_step.inputs.title.dom.val(),
+									text:merlin.current_step.inputs.description.dom.val()
+								},
+								context:merlin,
+								dataType:'json',
+								success:function(data,ts,xhr){
+									var i, temphtml;
+									temphtml = '';
+									if(data.suggested_keywords.length){
+										for(i in data.suggested_keywords){
+											temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+										}
+									}
+									merlin.current_step.inputs.suggested_keywords.dom.html(temphtml);
+								}
+							});
+						}
+					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							title:merlin.current_step.inputs.title.dom.val(),
@@ -406,7 +419,7 @@ Give A Minute - Create a Project
 					progress_selector:'.2',
 					selector:'.step.location',
 					prev_step:'start',
-					next_step:'check',
+					next_step:'check-projects-process',
 					title:'Go from an idea to a solution.',
 					sub_title:'We want to provide you with resources and people in your area!',
 					step_data:{},
@@ -432,13 +445,36 @@ Give A Minute - Create a Project
 						});
 					}
 				},
-				'check':{
+				'check-projects-process':{
+					title:'Wait! Check for similar projects.',
+					sub_title:'It\'s great to start something new but there is also strength in numbers. Have a look at some related projects you may want to be a part of.',
+					progress_selector:'.3',
+					selector:'.step.check-projects-process',
+					prev_step:'location',
+					next_step:null,
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							url:'/create/similar',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'json',
+							success:function(data,ts,xhr){
+								if(data.projects.length){
+									window.location.hash = 'check-projects';
+								} else {
+									window.location.hash = 'check-nosimilar';
+								}
+							}
+						});
+					}
+				},
+				'check-projects':{
 					title:'Wait! Check for similar projects.',
 					sub_title:'It\'s great to start something new but there is also strength in numbers. Have a look at some related projects you may want to be a part of.',
 					progress_selector:'.3',
 					selector:'.step.check',
 					prev_step:'location',
-					next_step:'add'
+					next_step:'add-resource-process'
 				},
 				'check-nosimilar':{
 					title:'Wait! Check for similar projects.',
@@ -446,7 +482,30 @@ Give A Minute - Create a Project
 					progress_selector:'.3',
 					selector:'.step.check-nosimilar',
 					prev_step:'location',
-					next_step:'add'
+					next_step:'add-resource-process'
+				},
+				'add-resource-process':{
+					title:'Add some resources.',
+					sub_title:'When you add resources, we\'ll introduce your project to that organization. You may get a message from them with more information about how they can help.',
+					progress_selector:'.4',
+					selector:'.step.add-resource-process',
+					prev_step:'check',
+					next_step:null,
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							url:'/create/resources',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'json',
+							success:function(data,ts,xhr){
+								if(data.resources.length){
+									window.location.hash = 'add';
+								} else {
+									window.location.hash = 'add-noresources';
+								}
+							}
+						});
+					}
 				},
 				'add':{
 					title:'Add some resources.',
@@ -480,8 +539,7 @@ Give A Minute - Create a Project
 								if(data == 'False'){
 									return false;
 								}
-								//window.location = '/project/'+data;
-								window.location = '/project/';
+								window.location = '/project';
 							}
 						});
 					}

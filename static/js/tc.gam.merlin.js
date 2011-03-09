@@ -153,7 +153,7 @@ tc.merlin.prototype.validate = function(force_focus){
 	tc.util.log('tc.merlin.validate');
 	var i, valid, temp_valid, j;
 	if(!this.current_step.inputs){
-		return;
+		return true;
 	}
 	valid = true;
 	this.current_step.errors = [];
