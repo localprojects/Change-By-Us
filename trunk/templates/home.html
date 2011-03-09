@@ -347,33 +347,59 @@ Give A Minute - Home
 			error_indicator:tc.jQ('.oops'),
 			watch_keypress:true,
 			first_step:'start',
+			data:{
+				idea:null,
+				email:null,
+				location:null
+			},
 			steps:{
 				'start':{
 					prev_step:null,
 					next_step:'step-two',
 					selector:'.step-one',
-					validators:{
-						'textarea.idea':['min-3','max-200','required']
+					inputs:{
+						idea:{
+							selector:'textarea.idea',
+							validators:['min-3','max-200','required'],
+							hint:''
+						}
 					},
-					init:function(merlin,dom){
-						dom.find('textarea.idea:not(.has-been-focused)').val('');
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							idea:merlin.current_step.inputs.idea.dom.val()
+						});
 					}
 				},
 				'step-two':{
 					prev_step:'start',
 					next_step:'step-three',
 					selector:'.step-two',
-					validators:{
-						'input.email':['min-3','max-200','required','email'],
-						'.location-group':tc.locationDropdown.validator
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-200','required','email'],
+							hint:''
+						},
+						location:{
+							selector:'.location-group',
+							validators:tc.locationDropdown.validator
+						}
 					},
+					step_data:{},
 					init:function(merlin,dom){
-						var dropdown;
-						dropdown = new tc.locationDropdown({
-							radios:dom.find('input[type=radio]'),
-							input:dom.find('input.location-hood-enter'),
-							list:dom.find('div.location-hood-list'),
-							warning:dom.find('span.error')
+						if(!merlin.current_step.step_data.locationDropdown){
+							merlin.current_step.step_data.locationDropdown = new tc.locationDropdown({
+								radios:dom.find('input[type=radio]'),
+								input:dom.find('input.location-hood-enter'),
+								list:dom.find('div.location-hood-list'),
+								warning:dom.find('span.error')
+							});
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							email:merlin.current_step.inputs.email.dom.val(),
+							location:merlin.current_step.step_data.locationDropdown.getLocation()
 						});
 					}
 				},

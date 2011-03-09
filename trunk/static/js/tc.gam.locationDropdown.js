@@ -31,6 +31,7 @@ tc.locationDropdown.prototype.options = {
 	input:null,
 	list:null,
 	warning:null,
+	step:null,
 	locations:tc.locations
 };
 
@@ -42,6 +43,11 @@ tc.locationDropdown.prototype.init = function(options){
 	this.options.warning.hide();
 	this.options.list.hide().children('ul').children().remove();
 };
+
+tc.locationDropdown.prototype.getLocation = function(){
+	tc.util.log('tc.locationDropdown.prototype.getLocation','error');
+	return 0;
+}
 
 tc.locationDropdown.prototype.bindEvents = function(){
 	tc.util.log('tc.locationDropdown.bindEvents');

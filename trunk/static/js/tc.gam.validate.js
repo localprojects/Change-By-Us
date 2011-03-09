@@ -106,8 +106,10 @@ tc.validate = function(element,validators){
 	}
 	
 	if(valid){
-		element.removeClass('not-valid').addClass('valid');
-		element.trigger('validator-invalid',errors);
+		element.removeClass('not-valid')
+		if(required || value.trim()){
+			element.addClass('valid');
+		}
 		return {
 			valid:true
 		};
