@@ -46,7 +46,7 @@ tc.locationDropdown.prototype.init = function(options){
 
 tc.locationDropdown.prototype.getLocation = function(){
 	tc.util.log('tc.locationDropdown.prototype.getLocation','error');
-	return 0;
+	return 98;
 }
 
 tc.locationDropdown.prototype.bindEvents = function(){

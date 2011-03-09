@@ -329,11 +329,18 @@ Give A Minute - Create a Project
 							hint:'',
 							handlers:{
 								keyup:function(e){
+									if(!e.data.me.current_step.step_data.loading){
+										e.data.me.current_step.inputs.suggested_keywords.dom.prepend('<img class="loading" src="/static/images/loader16x16.gif" />');
+										e.data.me.current_step.step_data.loading = true;
+									}
 									if(e.data.me.current_step.step_data.timer){
 										clearTimeout(e.data.me.current_step.step_data.timer);
 										e.data.me.current_step.step_data.timer = null;
 									}
-									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,1000,[e.data.me]);
+									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500,[e.data.me]);
+									//e.data.me.current_step.step_data.timer = setTimeout(function(){
+									//	e.data.me.current_step.fn.stopped([e.data.me]);
+									//},1000);
 								}
 							}
 						},
@@ -347,7 +354,19 @@ Give A Minute - Create a Project
 							hint:'',
 							handlers:{
 								keyup:function(e){
-									
+									if(!e.data.me.current_step.step_data.loading){
+										e.data.me.current_step.inputs.suggested_keywords.dom.prepend('<img class="loading" src="/static/images/loader16x16.gif" />');
+										e.data.me.current_step.step_data.loading = true;
+									}
+									if(e.data.me.current_step.step_data.timer){
+										clearTimeout(e.data.me.current_step.step_data.timer);
+										e.data.me.current_step.step_data.timer = null;
+									}
+									//DOES NOT WORK IN IE
+									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500,[e.data.me]);
+									//e.data.me.current_step.step_data.timer = setTimeout(function(){
+									//	e.data.me.current_step.fn.stopped([e.data.me]);
+									//},1000);
 								}
 							}
 						},
@@ -356,31 +375,31 @@ Give A Minute - Create a Project
 							hint:''
 						},
 						suggested_keywords:{
-							selector:'span.suggested_keywords',
+							selector:'span.suggested-keywords',
 							handlers:{
 								click:function(e){
 									var tempval;
-									tc.util.dump(e.target);
-									//if(e.target.nodeName == 'A'){
-									//	e.preventDefault();
-									//	tempval = e.data.merlin.current_step.myinputs.keywords.val();
-									//	if(!tempval.length){
-									//		e.data.merlin.current_step.myinputs.keywords.val(e.target.text);
-									//	} else {
-									//		e.data.merlin.current_step.myinputs.keywords.val(tempval += ', '+e.target.text);
-									//	}
-									//}
+									if(e.target.nodeName == 'A'){
+										e.preventDefault();
+										tempval = tc.jQ.trim(e.data.me.current_step.inputs.keywords.dom.val());
+										if(!tempval.length){
+											e.data.me.current_step.inputs.keywords.dom.val(e.target.text).addClass('has-been-focused');
+										} else {
+											if(tempval.substring(tempval.length-1,tempval.length) == ','){
+												e.data.me.current_step.inputs.keywords.dom.val(tempval += ' '+e.target.text);
+											} else {
+												e.data.me.current_step.inputs.keywords.dom.val(tempval += ', '+e.target.text);
+											}
+										}
+										e.target.innerHTML = "";
+									}
 								}
 							}
 						}
 					},
 					fn:{
 						inputKeyup:function(e){
-							if(e.data.me.current_step.step_data.timer){
-								clearTimeout(e.data.me.current_step.step_data.timer);
-								e.data.me.current_step.step_data.timer = null;
-							}
-							e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,1000,[e.data.me]);
+							
 						},
 						stopped:function(pars){
 							var merlin;
@@ -394,14 +413,18 @@ Give A Minute - Create a Project
 								context:merlin,
 								dataType:'json',
 								success:function(data,ts,xhr){
-									var i, temphtml;
+									var i, existingtags, temphtml;
+									existingtags = merlin.current_step.inputs.keywords.dom.val();
 									temphtml = '';
 									if(data.suggested_keywords.length){
 										for(i in data.suggested_keywords){
-											temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+											if(existingtags.indexOf(data.suggested_keywords[i]) == -1){
+												temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+											}
 										}
 									}
-									merlin.current_step.inputs.suggested_keywords.dom.html(temphtml);
+									this.current_step.inputs.suggested_keywords.dom.html(temphtml);
+									this.current_step.step_data.loading = false;
 								}
 							});
 						}
