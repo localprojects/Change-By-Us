@@ -1,3 +1,4 @@
+# find keywords in a string
 def getKeywords(db, s):
     sql = "select keyword from keyword"
     data = list(db.query(sql))
