@@ -10,7 +10,7 @@ Give A Minute - Create a Project
 		<div class='west'>
 			<span class="above-h1">Create <em>a</em> Project</span>
 			<h1>Go from an idea to a solution.</h1>
-			<h2><strong>Shawna,</strong> let's make it happen. The first step is to start a project that supports your idea.</h2>
+			<h2><strong>XXXXXXX,</strong> let's make it happen. The first step is to start a project that supports your idea.</h2>
 		</div>
 		<div class='east'>
 			<div class='box'>
@@ -49,7 +49,7 @@ Give A Minute - Create a Project
 						<label for='name'><strong>Name</strong> your project:</label>
 						<input value='Name' type='text' name='name' id='name' class='name'/>
 						<span class="charlimit">50</span>
-						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">Shawna Tearsdille</span><span class="edit">Edit</span></div>
+						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">XXXXXX XXXXXX</span><span class="edit">Edit</span></div>
 					</div>
 					<div class="row clearfix">
 						<label for='organization'><strong>Organization</strong> (Optional):</label>
@@ -65,12 +65,7 @@ Give A Minute - Create a Project
 						<input value='Seperate keywords by comma' type='text' name='keywords' id='keywords' class='keywords'/>
 						<div class="below-input clearfix">
 							<span class="suggested-keywords-label">Suggested Keywords</span>
-							<span class="suggested-keywords">
-								<span>Lorem</span>
-								<span>ipsum</span>
-								<span>dolor</span>
-								<span>amet</span>
-							</span>
+							<span class="suggested-keywords"></span>
 						</div>
 					</div>
 				</div>
@@ -298,7 +293,16 @@ Give A Minute - Create a Project
 			title:tc.jQ('.headlands h1'),
 			sub_title:tc.jQ('.headlands h2'),
 			watch_keypress:true,
-			first_step:'location',
+			first_step:'start',
+			data:{
+				title:null,
+				organization:null,
+				text:null,
+				keywords:null,
+				location_id:null,
+				sms_phone:null,
+				resources:null
+			},
 			steps:{
 				'start':{
 					progress_selector:'.1',
@@ -312,8 +316,65 @@ Give A Minute - Create a Project
 						'textarea.describe':['max-200','min-3','required']
 					},
 					init:function(merlin,dom){
-						dom.find('input.name:not(.has-been-focused)').val('');
-						dom.find('textarea.describe:not(.has-been-focused)').val('');
+						var timer;
+						timer = null;
+						merlin.current_step.myinputs = {
+							'title':dom.find('input.name:not(.has-been-focused)'),
+							'organization':dom.find('input.organization:not(.has-been-focused)'),
+							'description':dom.find('textarea.describe:not(.has-been-focused)'),
+							'keywords':dom.find('input.keywords:not(.has-been-focused)'),
+							'suggested_keywords':dom.find('span.suggested-keywords')
+						}
+						merlin.current_step.myinputs.title.val('');
+						merlin.current_step.myinputs.organization.val('');
+						merlin.current_step.myinputs.description.val('');
+						merlin.current_step.myinputs.suggested_keywords.bind('click',{merlin:merlin,dom:dom},function(e){
+							var tempval;
+							if(e.target.nodeName == 'A'){
+								e.preventDefault();
+								tempval = e.data.merlin.current_step.myinputs.keywords.val();
+								if(!tempval.length){
+									e.data.merlin.current_step.myinputs.keywords.val(e.target.text);
+								} else {
+									e.data.merlin.current_step.myinputs.keywords.val(tempval += ', '+e.target.text);
+								}
+							}
+						});
+						function stopped(){
+							tc.jQ.ajax({
+								url:'/create/keywords',
+								data:{
+									title:merlin.current_step.myinputs.title.val(),
+									text:merlin.current_step.myinputs.description.val()
+								},
+								context:merlin,
+								dataType:'json',
+								success:function(data,ts,xhr){
+									var i, temphtml;
+									temphtml = '';
+									if(data.suggested_keywords.length){
+										for(i in data.suggested_keywords){
+											temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+										}
+									}
+									merlin.current_step.myinputs.suggested_keywords.html(temphtml);
+								}
+							});
+						}
+						dom.find('input, textarea').bind('keyup',{merlin:merlin,dom:dom,stopped:stopped,timer:timer},function(e){
+							if(e.data.timer){
+								tc.clearTimer(e.data.timer);
+							}
+							e.data.timer = tc.timer(1000,e.data.stopped);
+						});
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							title:merlin.current_step.myinputs.title.val(),
+							organization:merlin.current_step.myinputs.organization.val(),
+							text:merlin.current_step.myinputs.description.val(),
+							keywords:merlin.current_step.myinputs.keywords.val()
+						});
 					}
 				},
 				'location':{
@@ -376,8 +437,19 @@ Give A Minute - Create a Project
 					prev_step:null,
 					next_step:null,
 					init:function(merlin,dom){
-						tc.timer(1000,function(){
-							window.location = '/project';
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/create',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								//window.location = '/project/'+data;
+								window.location = '/project/';
+							}
 						});
 					}
 				}
