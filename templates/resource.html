@@ -125,26 +125,72 @@ Give A Minute - Add Resource
 			dom:tc.jQ('.merlin.resource-addition'),
 			next_button:tc.jQ('#add-org'),
 			first_step:'resource-form',
+			data:{
+				name:null,
+				description:null,
+				address:null,
+				web:null,
+				links:null,
+				keywords:null,
+				contact:null
+			},
 			steps:{
 				'resource-form':{
 					selector:'.resource-form',
 					next_step:'finish',
-					validators:{
-						'input.name':['min-3','max-32','required'],
-						'textarea.description':['min-3','max-200','required'],
-						'input.address':['min-3','max-32','required'],
-						'input.web':['min-3','max-32','url'],
-						'input.links':['min-3','max-32','url'],
-						'input.keywords':['min-3','max-200','required'],
-						'input.contact':['min-3','max-32','required']
+					inputs:{
+						name:{
+							selector:'inputs.name',
+							validators:['min-3','max-32','required'],
+							hint:''
+						},
+						description:{
+							selector:'textarea.description',
+							validators:['min-3','max-200','required'],
+							hint:''
+						},
+						address:{
+							selector:'input.address',
+							validators:['min-3','max-32','required'],
+							hint:''
+						},
+						web:{
+							selector:'input.web',
+							validators:['min-3','max-32','url'],
+							hint:''
+						},
+						links:{
+							selector:'input.links',
+							validators:['min-3','max-32','url'],
+							hint:''
+						},
+						keywords:{
+							selector:'input.keywords',
+							validators:['min-3','max-200','required'],
+							hint:''
+						},
+						contact:{
+							selector:'input.contact',
+							validators:['min-3','max-32','required'],
+							hint:''
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							name:merlin.current_step.inputs.name.dom.val(),
+							description:merlin.current_step.inputs.description.dom.val(),
+							address:merlin.current_step.inputs.address.dom.val(),
+							web:merlin.current_step.inputs.web.dom.val(),
+							links:merlin.current_step.inputs.links.dom.val(),
+							keywords:merlin.current_step.inputs.keywords.dom.val(),
+							contact:merlin.current_step.inputs.contact.dom.val()
+						});
 					}
 				},
 				'finish':{
 					selector:'.finish',
-					init:function(){
-						tc.timer(1000,function(){
-							window.location = '/resource';
-						});
+					init:function(merlin,dom){
+						tc.util.dump(merlin.options.data);
 					}
 				}
 			}

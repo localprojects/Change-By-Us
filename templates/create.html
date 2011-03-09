@@ -311,69 +311,94 @@ Give A Minute - Create a Project
 					next_step:'location',
 					title:'Go from an idea to a solution.',
 					sub_title:'XXXXX, let\'s make it happen. The first step is to start a project that supports your idea.',
-					validators:{
-						'input.name':['max-50','min-3','required'],
-						'textarea.describe':['max-200','min-3','required']
+					step_data:{
+						timer:null
 					},
-					init:function(merlin,dom){
-						var timer;
-						timer = null;
-						merlin.current_step.myinputs = {
-							'title':dom.find('input.name:not(.has-been-focused)'),
-							'organization':dom.find('input.organization:not(.has-been-focused)'),
-							'description':dom.find('textarea.describe:not(.has-been-focused)'),
-							'keywords':dom.find('input.keywords:not(.has-been-focused)'),
-							'suggested_keywords':dom.find('span.suggested-keywords')
+					fn:{
+						stopped:function(){
+							tc.util.dump('stopped');
+							tc.util.dump(this);
+							//tc.jQ.ajax({
+							//	url:'/create/keywords',
+							//	data:{
+							//		title:merlin.current_step.myinputs.title.val(),
+							//		text:merlin.current_step.myinputs.description.val()
+							//	},
+							//	context:merlin,
+							//	dataType:'json',
+							//	success:function(data,ts,xhr){
+							//		var i, temphtml;
+							//		temphtml = '';
+							//		if(data.suggested_keywords.length){
+							//			for(i in data.suggested_keywords){
+							//				temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+							//			}
+							//		}
+							//		merlin.current_step.myinputs.suggested_keywords.html(temphtml);
+							//	}
+							//});
 						}
-						merlin.current_step.myinputs.title.val('');
-						merlin.current_step.myinputs.organization.val('');
-						merlin.current_step.myinputs.description.val('');
-						merlin.current_step.myinputs.suggested_keywords.bind('click',{merlin:merlin,dom:dom},function(e){
-							var tempval;
-							if(e.target.nodeName == 'A'){
-								e.preventDefault();
-								tempval = e.data.merlin.current_step.myinputs.keywords.val();
-								if(!tempval.length){
-									e.data.merlin.current_step.myinputs.keywords.val(e.target.text);
-								} else {
-									e.data.merlin.current_step.myinputs.keywords.val(tempval += ', '+e.target.text);
-								}
-							}
-						});
-						function stopped(){
-							tc.jQ.ajax({
-								url:'/create/keywords',
-								data:{
-									title:merlin.current_step.myinputs.title.val(),
-									text:merlin.current_step.myinputs.description.val()
-								},
-								context:merlin,
-								dataType:'json',
-								success:function(data,ts,xhr){
-									var i, temphtml;
-									temphtml = '';
-									if(data.suggested_keywords.length){
-										for(i in data.suggested_keywords){
-											temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
-										}
+					},
+					inputs:{
+						title:{
+							selector:'input.name',
+							validators:['max-50','min-3','required'],
+							hint:'',
+							handlers:{
+								keyup:function(e){
+									if(e.data.me.current_step.step_data.timer){
+										tc.clearTimer(e.data.me.current_step.step_data.timer);
 									}
-									merlin.current_step.myinputs.suggested_keywords.html(temphtml);
+									e.data.me.current_step.step_data.timer = tc.timer(1000,e.data.me.current_step.fn.stopped);
 								}
-							});
-						}
-						dom.find('input, textarea').bind('keyup',{merlin:merlin,dom:dom,stopped:stopped,timer:timer},function(e){
-							if(e.data.timer){
-								tc.clearTimer(e.data.timer);
 							}
-							e.data.timer = tc.timer(1000,e.data.stopped);
-						});
+						},
+						organization:{
+							selector:'input.organization',
+							hint:''
+						},
+						description:{
+							selector:'textarea.describe',
+							validators:['max-200','min-3','required'],
+							hint:'',
+							handlers:{
+								keyup:function(e){
+									if(e.data.me.current_step.step_data.timer){
+										tc.clearTimer(e.data.me.current_step.step_data.timer);
+									}
+									e.data.me.current_step.step_data.timer = tc.timer(1000,e.data.me.current_step.fn.stopped);
+								}
+							}
+						},
+						keywords:{
+							selector:'input.keywords',
+							hint:''
+						},
+						suggested_keywords:{
+							selector:'span.suggested_keywords',
+							handlers:{
+								click:function(e){
+									var tempval;
+									tc.util.dump(e.target);
+									//if(e.target.nodeName == 'A'){
+									//	e.preventDefault();
+									//	tempval = e.data.merlin.current_step.myinputs.keywords.val();
+									//	if(!tempval.length){
+									//		e.data.merlin.current_step.myinputs.keywords.val(e.target.text);
+									//	} else {
+									//		e.data.merlin.current_step.myinputs.keywords.val(tempval += ', '+e.target.text);
+									//	}
+									//}
+								}
+							}
+						}
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							title:merlin.current_step.myinputs.title.val(),
-							organization:merlin.current_step.myinputs.organization.val(),
-							text:merlin.current_step.myinputs.description.val(),
-							keywords:merlin.current_step.myinputs.keywords.val()
+							title:merlin.current_step.inputs.title.dom.val(),
+							organization:merlin.current_step.inputs.organization.dom.val(),
+							text:merlin.current_step.inputs.description.dom.val(),
+							keywords:merlin.current_step.inputs.keywords.dom.val()
 						});
 					}
 				},
@@ -384,18 +409,26 @@ Give A Minute - Create a Project
 					next_step:'check',
 					title:'Go from an idea to a solution.',
 					sub_title:'We want to provide you with resources and people in your area!',
-					validators:{
-						'.location-group':tc.locationDropdown.validator
+					step_data:{},
+					inputs:{
+						location:{
+							selector:'.location-group',
+							validators:tc.locationDropdown.validator
+						}
 					},
 					init:function(merlin,dom){
-						var dropdown;
-						dom.find('input.location-city, input.location-hood').not('.has-been-focused').removeAttr('checked');
-						dom.find('input.location-hood-enter:not(.has-been-focused)').val('');
-						dropdown = new tc.locationDropdown({
-							radios:dom.find('input[type=radio]'),
-							input:dom.find('input.location-hood-enter'),
-							list:dom.find('div.location-hood-list'),
-							warning:dom.find('span.error')
+						if(!merlin.current_step.step_data.locationDropdown){
+							merlin.current_step.step_data.locationDropdown = new tc.locationDropdown({
+								radios:dom.find('input[type=radio]'),
+								input:dom.find('input.location-hood-enter'),
+								list:dom.find('div.location-hood-list'),
+								warning:dom.find('span.error')
+							});
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							location:merlin.current_step.step_data.locationDropdown.getLocation()
 						});
 					}
 				},

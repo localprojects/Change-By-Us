@@ -73,7 +73,6 @@ tc.merlin.prototype.handle_steps = function(){
 
 tc.merlin.prototype.show_step = function(step){
 	tc.util.log('tc.merlin.show_step['+step+']');
-	var i, j;
 	if(this.current_step){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
 		if(step == this.current_step.step_name){
@@ -92,6 +91,7 @@ tc.merlin.prototype.show_step = function(step){
 		this.options.steps[step].prev_step = this.current_step.step_name;
 	}
 	this.current_step = this.options.steps[step];
+	tc.util.dump(this.current_step);
 	if(this.options.next_button){
 		this.options.next_button.removeClass('disabled');
 	}
@@ -114,62 +114,62 @@ tc.merlin.prototype.show_step = function(step){
 		return;
 	}
 	
-	this.dom.find('.step').hide();
-	this.dom.find(this.current_step.selector).show();
-		
-	if(this.current_step.inputs && !this.current_step.has_been_initialized){
-		for(i in this.current_step.inputs){
-			if(!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector){
-				this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
-			}
-			this.current_step.inputs[i].dom
-				.bind('focus',this.event_data,this.handlers.focus)
-				.bind('keyup change',this.event_data,this.handlers.keypress)
-				.bind('blur',this.event_data,this.handlers.blur).data({merlin:this,input:this.current_step.inputs[i]}).each(function(i,j){
-					var $j;
-					$j = tc.jQ(j);
-					if($j.data().input.hint || ($j.data().input.hint == "")){
-						j.value = $j.data().input.hint;
+	if(this.current_step.dom){
+		tc.util.dump(this.dom.find('.step'));
+		this.dom.find('.step').hide();
+		this.dom.find(this.current_step.selector).show();
+		//this.current_step.dom.show().siblings('.step').not(this.current_step.selector).hide();
+		this.current_step.dom.find('input, textarea').not('.has-been-focused')
+			.unbind('focus').bind('focus',this.event_data,this.handlers.focus)
+			.unbind('keyup change').bind('keyup change',this.event_data,this.handlers.keypress)
+			.unbind('blur').bind('blur',this.event_data,this.handlers.blur).data({merlin:this}).each(function(i,j){
+				var $j;
+				$j = tc.jQ(j);
+				if($j.data().merlin.current_step.hints){
+					if($j.data().merlin.current_step.hints[j.name]){
+						j.value = tc.jQ(j).data().merlin.current_step.hints[j.name];
+					} else {
+						j.value = "";
 					}
-				});
-			if(this.current_step.inputs[i].handlers){
-				for(j in this.current_step.inputs[i].handlers){
-					this.current_step.inputs[i].dom.bind(j,this.event_data,this.current_step.inputs[i].handlers[j]);
 				}
-			}
-		}
+			});
 	}
-	
 	window.location.hash = step;
-	
 	if(tc.jQ.isFunction(this.current_step.init)){
 		this.current_step.init(this,this.current_step.dom);
 	}
-	this.validate(false);
-	this.current_step.has_been_initialized = true;
+	if(this.current_step.validators){
+		this.validate(this.current_step.validators,false);
+	}
 }
 
-tc.merlin.prototype.validate = function(force_focus){
+tc.merlin.prototype.validate = function(validators,force_focus){
 	tc.util.log('tc.merlin.validate');
 	var i, valid, temp_valid, j;
-	if(!this.current_step.inputs){
+	if(!this.current_step.dom){
 		return;
 	}
 	valid = true;
+	if(!this.current_step.inputs){
+		this.current_step.inputs = {};
+		for(i in validators){
+			this.current_step.inputs[i] = {
+				element:this.current_step.dom.find(i),
+				validators:validators[i]
+			}
+		}
+	}
 	this.current_step.errors = [];
 	for(i in this.current_step.inputs){
-		if(!this.current_step.inputs[i].validators){
-			continue;
-		}
 		if(force_focus){
-			this.current_step.inputs[i].dom.addClass('has-been-focused');//focus();
+			this.current_step.inputs[i].element.addClass('has-been-focused');//focus();
 		}
 		if(tc.jQ.isFunction(this.current_step.inputs[i].validators)){
-			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].dom,this.current_step);
+			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].element,this.current_step).valid;
 		} else {
-			temp_valid = tc.validate(this.current_step.inputs[i].dom,this.current_step.inputs[i].validators);
+			temp_valid = tc.validate(this.current_step.inputs[i].element,this.current_step.inputs[i].validators).valid;
 		}
-		if(!temp_valid.valid){
+		if(!temp_valid){
 			valid = false;
 		}
 	}
@@ -213,7 +213,10 @@ tc.merlin.prototype.handlers = {
 		tc.util.log('tc.merlin.handlers.next_step');
 		var valid;
 		e.preventDefault();
-		valid = e.data.me.validate(true);
+		valid = true;
+		if(e.data.me.current_step.validators){
+			valid = e.data.me.validate(e.data.me.current_step.validators,true);
+		}
 		if(!valid){
 			if(e.data.me.options.error_indicator){
 				e.data.me.options.error_indicator.html('<span>Oops! Please correct the fields marked in red.</span>').show();
@@ -231,10 +234,16 @@ tc.merlin.prototype.handlers = {
 		if(e.target.className.indexOf('has-been-focused') == -1){
 			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text]').val('');
 		}
+		//if(e.data.me.current_step.hints[e.target.name]){
+		//	if(e.target.value == e.data.me.current_step.hints[e.target.name]){
+		//		e.target.value = "";
+		//	}
+		//}
 	},
 	keypress:function(e,d){
-		tc.util.dump(e);
-		e.data.me.validate(false);
+		if(e.data.me.current_step.validators){
+			e.data.me.validate(e.data.me.current_step.validators);
+		}
 		if(e.which == 13){
 			if(e.data.me.options.next_button && e.data.me.options.next_button.hasClass('enabled')){
 				//e.data.me.options.next_button.click();

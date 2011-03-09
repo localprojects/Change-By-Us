@@ -189,7 +189,7 @@ Give A Minute - Join
 			back_button:tc.jQ('.foothills .back'),
 			error_indicator:tc.jQ('.oops'),
 			watch_keypress:true,
-			first_step:'start',
+			first_step:'sms-lookup',
 			data:{
 				f_name:null,
 				l_name:null,
@@ -209,28 +209,38 @@ Give A Minute - Join
 					selector:'.user-info',
 					prev_step:'start',
 					next_step:'email-lookup',
-					validators:{
-						'input.f_name':['max-32','min-3','required'],
-						'input.l_name':['max-32','min-3','required'],
-						'input.email':['max-32','min-3','email','required'],
-						'input.password':['password-20','required'],
-						'input.tos-user-info':['required']
-					},
-					hints:{
-						'f_name':'First name',
-						'l_name':'Last name'
-					},
-					init:function(merlin,dom){
-						dom.find('input.f_name:not(.has-been-focused)').val('First name');
-						dom.find('input.email:not(.has-been-focused)').val('');
-						dom.find('input.password:not(.has-been-focused)').val('');
+					inputs:{
+						f_name:{
+							selector:'input.f_name',
+							validators:['max-32','min-3','required'],
+							hint:'First Name'
+						},
+						l_name:{
+							selector:'input.l_name',
+							validators:['max-32','min-3','required'],
+							hint:'Last Name'
+						},
+						email:{
+							selector:'input.email',
+							validators:['max-32','min-3','email','required'],
+							hint:''
+						},
+						password:{
+							selector:'input.password',
+							validators:['password-20','required'],
+							hint:''
+						},
+						tos_user_info:{
+							selector:'input.tos-user-info',
+							validators:['required']
+						},
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							f_name:dom.find('input.f_name').val(),
-							l_name:dom.find('input.l_name').val(),
-							email:dom.find('input.email').val(),
-							password:dom.find('input.password').val()
+							f_name:merlin.current_step.inputs.f_name.dom.val(),
+							l_name:merlin.current_step.inputs.l_name.dom.val(),
+							email:merlin.current_step.inputs.email.dom.val(),
+							password:merlin.current_step.inputs.password.dom.val()
 						});
 					}
 				},
@@ -264,16 +274,24 @@ Give A Minute - Join
 					selector:'.email-step',
 					prev_step:'user-info',
 					next_step:'sms-lookup',
-					validators:{
-						'input.email':['min-3','max-32','email'],
-						'input.tos-email':function(merlin,element,step){
-							if(step.dom.find('input.email').val().length){
-								return tc.validate(element,['required']);
-							} else {
-								return {
-									valid:true
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-32','email'],
+							hint:''
+						},
+						tos_email:{
+							selector:'input.tos-email',
+							validators:function(merlin,element,step){
+								if(step.dom.find('input.email').val().length){
+									return tc.validate(element,['required']);
+								} else {
+									return {
+										valid:true
+									}
 								}
-							}
+							},
+							hint:''
 						}
 					}
 				},
@@ -282,46 +300,66 @@ Give A Minute - Join
 					selector:'.sms-lookup',
 					prev_step:'email-step',
 					next_step:'finish',
-					init:function(merlin,dom){
-						var inputs;
-						inputs = {
-							1:dom.find('input.phone_1'),
-							2:dom.find('input.phone_2'),
-							3:dom.find('input.phone_3'),
-							'submit':dom.find('.submit-sms-query')
-						}
-						inputs[1].not('.has-been-focused').val('').bind('keyup',{inputs:inputs},function(e,d){
-							if(e.target.value.length == 3 && e.target.className.indexOf('not-valid') == -1){
-								e.data.inputs[2].focus();
-							}
-						});
-						inputs[2].not('.has-been-focused').val('').bind('keyup',{inputs:inputs},function(e,d){
-							if(e.target.value.length == 3 && e.target.className.indexOf('not-valid') == -1){
-								e.data.inputs[3].focus();
-							}
-						});
-						inputs[3].not('.has-been-focused').val('').bind('keypress',{inputs:inputs},function(e,d){
-							tc.util.dump(e.keyCode);
-							if(e.keyCode == 13){
-								e.data.inputs.submit.click();
-							}
-						});
-						inputs.submit.bind('click',{merlin:merlin,inputs:inputs},function(e,d){
-							var i;
-							for(i in e.data.inputs){
-								if((i != 'submit') && !e.data.inputs[i].hasClass('valid')){
-									return false;
+					inputs:{
+						phone_1:{
+							selector:'input.phone_1',
+							validators:['min-3','max-3','numeric'],
+							hint:'',
+							handlers:{
+								keyup:function(e,d){
+									if(e.target.value.length == 3 && e.target.className.indexOf('not-valid') == -1){
+										e.data.me.current_step.inputs.phone_2.dom.focus();
+									}
 								}
 							}
-							e.data.merlin.options.data.sms_phone = inputs[1].val()+inputs[2].val()+inputs[3].val();
-							window.location.hash = 'sms-process';
-						});
-					},
-					validators:{
-						'input.phone_1':['min-3','max-3','numeric'],
-						'input.phone_2':['min-3','max-3','numeric'],
-						'input.phone_3':['min-4','max-4','numeric'],
-						'input.no_sms':['required']
+						},
+						phone_2:{
+							selector:'input.phone_2',
+							validators:['min-3','max-3','numeric'],
+							hint:'',
+							handlers:{
+								keyup:function(e,d){
+									if(e.target.value.length == 3 && e.target.className.indexOf('not-valid') == -1){
+										e.data.me.current_step.inputs.phone_3.dom.focus();
+									} else if(e.target.value.length == 0 && e.which == 8){
+										e.data.me.current_step.inputs.phone_1.dom.focus();
+									}
+								}
+							}
+						},
+						phone_3:{
+							selector:'input.phone_3',
+							validators:['min-4','max-4','numeric'],
+							hint:'',
+							handlers:{
+								keyup:function(e,d){
+									if(e.keyCode == 13){
+										e.data.me.current_step.inputs.submit.dom.click();
+									} else if(e.target.value.length == 0 && e.which == 8){
+										e.data.me.current_step.inputs.phone_2.dom.focus();
+									}
+								}
+							}
+						},
+						submit:{
+							selector:'.submit-sms-query',
+							handlers:{
+								click:function(e,d){
+									var i;
+									for(i in e.data.me.current_step.inputs){
+										if((i != 'submit' && i != 'no_sms') && !e.data.me.current_step.inputs[i].dom.hasClass('valid')){
+											return false;
+										}
+									}
+									e.data.me.options.data.sms_phone = e.data.me.current_step.inputs.phone_1.dom.val()+e.data.me.current_step.inputs.phone_2.dom.val()+e.data.me.current_step.inputs.phone_3.dom.val();
+									window.location.hash = 'sms-process';
+								}
+							}
+						},
+						no_sms:{
+							selector:'input.no_sms',
+							validators:['required']
+						}
 					}
 				},
 				'sms-process':{
