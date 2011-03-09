@@ -21,7 +21,7 @@ class CreateProject(Controller):
     def newProject(self):
         title = self.request('title')
         description = self.request('text')
-        locationId = self.request('location')
+        locationId = self.request('location_id')
         imageId = self.request('image')
         keywords = self.request('keywords').split(',')
         resourceIds = self.request('resources').split(',')
@@ -50,7 +50,7 @@ class CreateProject(Controller):
         return self.json(obj)    
         
     def getSimilarProjectsJSON(self):
-        locationId = self.request('location')
+        locationId = self.request('location_id')
         keywords = self.request('keywords').split(',') if self.request('keywords') else []
                 
         if (locationId and len(keywords) > 0):
