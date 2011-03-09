@@ -694,9 +694,11 @@ Give A Minute - Project
 		<div class='step invite-message-step'>
 			<h2>Invite <strong>XXXXXX</strong> To Your Project</h2>
 			<p>You can send a message to XXXXXX telling them more about your new project and why he or she should join (optional).</p>
-			<form action='#'>
-				<textarea name='invite-message' class='invite-message'></textarea>
-				<button class='submit'>Invite</button>
+			<form action='#' class="form-pane">
+				<div class="fields">
+					<textarea name='invite-message' class='invite-message'></textarea>
+				</div>
+				<a class='submit rounded-button' href="#">Invite</a>
 			</form>
 		</div>
 		
@@ -712,20 +714,27 @@ Give A Minute - Project
 		<div class='step add-link-step'>
 			<h2><strong>Add</strong> a link</h2>
 			<p>You can add links to blogs, news items, or one of our recommended links.</p>
-			<form action='#'>
-				<input name='link-url' class='link-url'></input>
-				<button class='submit'>Add</button>
+			<form action='#' class="form-pane">
+				<div class="fields">
+					<div class="row">
+						<input name='link-label' class='link-url' type="text"></input>
+					</div>
+					<div class="row">
+						<input name='link-url' class='link-url' type="text"></input>
+					</div>
+				</div>
+				<a href="#" class='submit rounded-button'>Add</a>
 			</form>
-			<div class='box'>
-				<a class='partner_link' href='http://www.facebook.com'>Facebook</a>
+			<div class='box link-to-facebook'>
+				<a class='partner-link' href='http://www.facebook.com'><span>Facebook</span></a>
 				<p>Create a <strong>Facebook group</strong> and link it here. You can have the option to make the feed from the group show up in your group as well.</p>
 			</div>
-			<div class='box'>
-				<a class='partner_link' href='http://www.kickstarter.com'>Kickstarter</a>
+			<div class='box link-to-kickstarter'>
+				<a class='partner-link' href='http://www.kickstarter.com'><span>Kickstarter</span></a>
 				<p><strong>Raise money</strong> for your project on Kickstarter.</p>
 			</div>
-			<div class='box'>
-				<a class='partner_link' href='http://www.meetup.com'>Meetup</a>
+			<div class='box link-to-meetup'>
+				<a class='partner-link' href='http://www.meetup.com'><span>Meetup</span></a>
 				<p>A popular way of <strong>managing complex groups</strong>.</p>
 			</div>
 		</div>
@@ -750,7 +759,7 @@ Give A Minute - Project
 		
 		tc.util.dump(app.components.project);
 		
-		tc.jQ('.join-project').bind('click',{
+		tc.jQ('a.join-project').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.introduce-yourself'),
 			init:function(modal,callback){
@@ -792,7 +801,7 @@ Give A Minute - Project
 			e.data.app.components.modal.show(e.data);
 		});
 		
-		tc.jQ('.invite').bind('click',{
+		tc.jQ('a.invite').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.invite-user'),
 			init:function(modal,callback){
@@ -809,7 +818,7 @@ Give A Minute - Project
 							init:function(merlin,dom){
 								var data;
 								data = {merlin:merlin,dom:dom};
-								dom.find('button.submit').bind('click',data,function(e,d){
+								dom.find('a.submit').bind('click',data,function(e,d){
 									e.preventDefault();
 									if(dom.hasClass('invalid')){
 										return;
@@ -834,7 +843,7 @@ Give A Minute - Project
 			e.data.app.components.modal.show(e.data);
 		});
 		
-		tc.jQ('.add-link').bind('click',{
+		tc.jQ('a.add-link').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.add-link'),
 			init:function(modal,callback){
@@ -851,7 +860,7 @@ Give A Minute - Project
 							init:function(merlin,dom){
 								var data;
 								data = {merlin:merlin,dom:dom};
-								dom.find('a.partner_link').bind('click',data,function(e,d){
+								dom.find('a.partner-link').bind('click',data,function(e,d){
 									e.preventDefault();
 									if(dom.hasClass('invalid')){
 										return;
@@ -863,7 +872,7 @@ Give A Minute - Project
 									});
 									e.data.merlin.show_step('finish');
 								});
-								dom.find('button.submit').bind('click',data,function(e,d){
+								dom.find('a.submit').bind('click',data,function(e,d){
 									e.preventDefault();
 									if(dom.hasClass('invalid')){
 										return;
