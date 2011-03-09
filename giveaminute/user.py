@@ -9,8 +9,6 @@ class User():
         self.id = userId
         self.data = self.populateUserData()
         
-        log.info("*** self.data = %s" % str(self.data))
-        
         self.userKey = self.data.user_key
         self.email = self.data.email
         self.phone = self.data.phone
