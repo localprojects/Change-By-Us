@@ -84,7 +84,7 @@ class Controller():
         
     def render(self, template_name, template_values=None, suffix="html"):
         if template_values is None: template_values = {}        
-        # log.info("TEMPLATE %s: %s" % (template_name, template_values))
+        log.info("TEMPLATE %s: %s" % (template_name, template_values))
         config = Config.get_all()       
         config['base_url'] = Config.base_url()
         for key in config:      

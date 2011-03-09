@@ -35,7 +35,7 @@ class CreateProject(Controller):
             project.attachResourceToProject(self.db, projectId, resourceId)
             
         if (projectId):
-            return True
+            return projectId
         else:
             return False
             
