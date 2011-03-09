@@ -68,6 +68,9 @@ tc.locationDropdown.prototype.bindEvents = function(){
 		} else if(e.target.nodeName == 'A'){
 			t = e.target;
 		}
+		if(!t){
+			return;
+		}
 		e.preventDefault();
 		e.data.dropdown.options.warning.hide();
 		e.data.dropdown.options.input.val(t.hash.substring(1,t.hash.length)).removeClass('not-valid').addClass('valid').attr('valid-location','true');
