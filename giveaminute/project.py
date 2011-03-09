@@ -6,6 +6,9 @@ class Project():
 
 def createProject(db, title, description, keywords, locationId, imageId):
     try:
+        if (not locationId or locationId < 1):
+            locationId = -1
+    
         projectId = db.insert('project', title = title,
                                     description = description, 
                                     image_id = imageId, 
@@ -32,11 +35,12 @@ def attachResourceToProject(db, projectId, resourceId):
         log.error(e)    
         return False 
         
-def getProjectsByLocation(db, locationId):
+def getProjectsByLocation(db, locationId, limit = 100):
     try:
         sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
-                    from project p where p.is_active = 1 and p.location_id = $locationId"""
-        data = list(db.query(sql, {'locationId':locationId}))
+                    from project p where p.is_active = 1 and p.location_id = $locationId
+                    limit $limit"""
+        data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
         
         return data
     except Exception, e:
@@ -44,33 +48,33 @@ def getProjectsByLocation(db, locationId):
         log.error(e)
         return None
     
-def getProjectsByKeywords(db, keywords):
+def getProjectsByKeywords(db, keywords, limit = 100):
     # there's a better way to do this
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
     
     try:
         sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
-                    from project p where p.is_active = 1 and (p.keywords like '%%%%%s%%%%')""" % keywordClause
-        data = list(db.query(sql))
+                    from project p where p.is_active = 1 and (p.keywords like '%%%%%s%%%%')
+                    limit $limit""" % keywordClause
+        data = list(db.query(sql, {'limit':limit}))
         
         return data
     except Exception, e:
         log.info("*** couldn't get projects by keywords")
         log.error(e)
         return None
-        
-def getProjects(db, keywords, locationId):
+                 
+def getProjects(db, keywords, locationId, limit = 100):
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
     
     try:
         sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
-                    from project p where p.is_active = 1 and (p.location_id = $locationId or (p.keywords like '%%%%%s%%%%'))""" % keywordClause
-        data = list(db.query(sql, {'locationId':locationId}))
-        
-        log.info("*** kw sql = %s" % sql)
-    
+                from project p where p.is_active = 1 and (p.location_id = $locationId and (p.keywords like '%%%%%s%%%%'))
+                limit $limit""" % keywordClause
+        data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
+            
         return data
     except Exception, e:
-        log.info("*** couldn't get projects by keywords")
+        log.info("*** couldn't get projects")
         log.error(e)
         return None
