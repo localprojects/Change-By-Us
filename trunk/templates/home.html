@@ -9,7 +9,7 @@ Give A Minute - Home
 	<div class='headlands'>
 		<div class='splash merlin'>
 			
-			<div class="splash-inner step-one step step-two">
+			<div class="splash-inner step-one step step-two idea-processing">
 				<!-- post your idea step -->				
 				<div class="top-pane step-one step">
 					<div class="console">
@@ -87,6 +87,10 @@ Give A Minute - Home
 					</div>
 				</div><!--end .top-pane.step-two-->
 				
+				<div class="top-pane step idea-processing" style="display:none">
+					<p class="west">Thank you for your idea!</p>
+					<img class="loading" src='/static/images/loader32x32.gif' />
+				</div><!--end .top-pane.step-one-->
 					
 				<div class="projects-pane">
 					<div class="projects-pane-hd">
@@ -639,14 +643,14 @@ Give A Minute - Home
 			watch_keypress:true,
 			first_step:'step-three',
 			data:{
-				idea:null,
+				text:null,
 				email:null,
-				location:null
+				location_id:null
 			},
 			steps:{
 				'start':{
 					prev_step:null,
-					next_step:'step-two',
+					next_step:'idea-details',
 					selector:'.step-one',
 					inputs:{
 						idea:{
@@ -657,13 +661,13 @@ Give A Minute - Home
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							idea:merlin.current_step.inputs.idea.dom.val()
+							text:merlin.current_step.inputs.idea.dom.val()
 						});
 					}
 				},
-				'step-two':{
+				'idea-details':{
 					prev_step:'start',
-					next_step:'step-three',
+					next_step:'idea-processing',
 					selector:'.step-two',
 					inputs:{
 						email:{
@@ -690,29 +694,72 @@ Give A Minute - Home
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							email:merlin.current_step.inputs.email.dom.val(),
-							location:merlin.current_step.step_data.locationDropdown.getLocation()
+							location_id:merlin.current_step.step_data.locationDropdown.getLocation()
 						});
 					}
 				},
-				'step-three':{
-					prev_step:'step-two',
-					next_step:'finish',
+				'idea-processing':{
+					prev_step:'idea-details',
+					next_step:'related',
+					selector:'.idea-processing',
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/idea',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.options.data.idea_id = data;
+								window.location.hash = '#related-processing';
+							}
+						});
+					}
+				},
+				'related-processing':{
+					prev_step:'idea-details',
+					next_step:null,
 					selector:'.step-three',
 					init:function(merlin,dom){
-						tc.util.dump(merlin);
-						tc.util.dump(dom);
+						tc.jQ.ajax({
+							url:'/idea/related',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'json',
+							success:function(data,ts,xhr){
+								if(data.citywide.length || data.related.length){
+									this.options.steps['related'].step_data = data;
+									window.location.hash = 'related';
+								} else {
+									window.location.hash = 'related-not-found';
+								}
+							}
+						});
+					}
+				},
+				'related':{
+					prev_step:'idea-details',
+					next_step:null,
+					selector:'.step-three',
+					init:function(merlin,dom){
+						tc.util.dump(merlin.current_step.step_data);
+					}
+				},
+				'related-not-found':{
+					prev_step:'idea-details',
+					next_step:null,
+					selector:'.step-three',
+					init:function(merlin,dom){
+						
 					}
 				}
 			}
 		});
-	});
-</script>
-
-{% endblock continent %}
-
-{% block javascript_footer %}
-<script type="text/javascript">
-	$(document).ready(function(){ 										
+		
+		
 		//area1
 		for(var i = 0; i < $('.area1 .small-note').length; i++) {
 			var maxX = $('.project-cards .area1').width() - 40;
@@ -722,8 +769,8 @@ Give A Minute - Home
 			var randomY = Math.floor(Math.random()*(maxY + 1));
 			
 			$('.area1 .small-note').eq(i).css({'top' : randomY, 'left' : randomX});
-    	};
-    	//area2
+		};
+		//area2
 		for(var i = 0; i < $('.area2 .small-note').length; i++) {
 			var maxX = $('.project-cards .area2').width() - 40;
 			var maxY = $('.project-cards .area2').height() - $('.project-cards .area2 .hd').height() - 46;
@@ -732,8 +779,8 @@ Give A Minute - Home
 			var randomY = Math.floor(Math.random()*(maxY + 1));
 			
 			$('.area2 .small-note').eq(i).css({'top' : randomY, 'left' : randomX});
-    	};
-    	//area3
+		};
+		//area3
 		for(var i = 0; i < $('.area3 .small-note').length; i++) {
 			var maxX = $('.project-cards .area3').width() - 40;
 			var maxY = $('.project-cards .area3').height() - $('.project-cards .area3 .hd').height() - 46;
@@ -742,8 +789,8 @@ Give A Minute - Home
 			var randomY = Math.floor(Math.random()*(maxY + 1));
 			
 			$('.area3 .small-note').eq(i).css({'top' : randomY, 'left' : randomX});
-    	};
-    	//area4
+		};
+		//area4
 		for(var i = 0; i < $('.area4 .small-note').length; i++) {
 			var maxX = $('.project-cards .area4').width() - 40;
 			var maxY = $('.project-cards .area4').height() - $('.project-cards .area4 .hd').height() - 46;
@@ -752,8 +799,8 @@ Give A Minute - Home
 			var randomY = Math.floor(Math.random()*(maxY + 1));
 			
 			$('.area4 .small-note').eq(i).css({'top' : randomY, 'left' : randomX});
-    	};
-    	//area5
+		};
+		//area5
 		for(var i = 0; i < $('.area5 .small-note').length; i++) {
 			var maxX = $('.project-cards .area5').width() - 40;
 			var maxY = $('.project-cards .area5').height() - $('.project-cards .area5 .hd').height() - 46;
@@ -762,7 +809,10 @@ Give A Minute - Home
 			var randomY = Math.floor(Math.random()*(maxY + 1));
 			
 			$('.area5 .small-note').eq(i).css({'top' : randomY, 'left' : randomX});
-    	};
+		};
+		
+		
 	});
 </script>
-{% endblock javascript_footer %}
+
+{% endblock continent %}

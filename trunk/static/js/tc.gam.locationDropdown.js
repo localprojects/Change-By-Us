@@ -46,7 +46,7 @@ tc.locationDropdown.prototype.init = function(options){
 
 tc.locationDropdown.prototype.getLocation = function(){
 	tc.util.log('tc.locationDropdown.prototype.getLocation','error');
-	return 98;
+	return 501;
 }
 
 tc.locationDropdown.prototype.bindEvents = function(){
@@ -62,7 +62,6 @@ tc.locationDropdown.prototype.bindEvents = function(){
 	});
 	this.options.list.bind('click',{dropdown:this},function(e){
 		var t;
-		tc.util.dump(e.target);
 		if(e.target.nodeName == 'SPAN'){
 			t = e.target.parentNode;
 		} else if(e.target.nodeName == 'A'){
@@ -104,7 +103,7 @@ tc.locationDropdown.prototype.inputKeyDownHandler = function(e){
 			e.stopPropagation();
 			this.modifySelection(0);
 			break;
-	  case 38:
+		case 38:
 			e.preventDefault();
 			this.modifySelection(-1);
 			break;
