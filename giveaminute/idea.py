@@ -1,8 +1,35 @@
 import framework.util as util
+from framework.log import log
 
-def createIdea(db, idea, submissionType, userId=None, email=None, phone=None):
+class Idea:
+    def __init__(self, db, ideaId):
+        self.id = ideaId
+        self.db = db
+        self.data = self.populateIdeaData()
+        self.description = self.data.description
+        self.locationId = self.data.location_id
+        
+    def populateIdeaData(self):
+        sql = """select idea_id, description, location_id, submission_type, user_id, email, phone, num_flags
+                from idea where idea_id = $id"""
+        
+        try:
+            data = list(self.db.query(sql, {'id':self.id}))
+            
+            if len(data) > 0:
+                return data[0]
+            else:
+                return None
+        except Exception, e:
+            log.info("*** couldn't get idea into")
+            log.error(e)
+            return None        
+        
+
+def createIdea(db, description, locationId, submissionType, userId=None, email=None, phone=None):
     try:
-        ideaId = db.insert('idea', idea = idea,
+        ideaId = db.insert('idea', description = description,
+                                    location_id = locationId,
                                     submission_type = submissionType,
                                     user_id = userId,
                                     email = email,
