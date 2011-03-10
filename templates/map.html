@@ -2,34 +2,7 @@
 
 {% block javascript_header %}
 {{ super() }}
-
-	<style type="text/css">
-		#map_canvas {
-			width: 960px;
-			height:545px;
-		}
-		#infobox {
-			width: 155px;
-			height: 135px;
-			background: url('map-infobox-bg.png') no-repeat;
-			padding-left: 35px;
-			padding-top: 26px;
-		}
-		#ib-title {
-			font-family: "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, serif;
-			font-size: 17px;
-			color: #555046;
-			margin-bottom: 8px;
-			width: 140px;
-		}
-		.ib-num {
-			margin-left: 4px;
-			font-family: "DIN", "Arial Narrow";
-			font-size: 9px;
-			color: #E06420;
-		}
-	</style>
-	
+	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 	<script type="text/javascript" src="/static/js/gam-map-style.js"></script>
 	<script type="text/javascript" src="/static/js/libs/infobox_packed.js"></script>
     <script type="text/javascript">
@@ -40,7 +13,9 @@
 		var ib;
 		var currentMarker;
 		
-		function initialize() {
+		function initialize(app) {
+			tc.util.log('Give A Minute: Map Search Init');
+			
 			var mapOptions = {
 				zoom: 11,
 				center: brooklyn,
@@ -180,7 +155,7 @@
 			
 			var boxText = document.createElement("div");
 			boxText.id = "infobox";
-			boxText.innerHTML = "<div id='ib-content'><div id='ib-title'>"+this.title+"</div><img src='map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div>";
+			boxText.innerHTML = "<div id='ib-content'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div>";
 			ib.setContent(boxText);
 			ib.open(map, this);
 		}
@@ -193,6 +168,8 @@
 			}
 			ib.close();
 		}
+		
+		app_page.features.push(initialize);
     	
     </script>
 {% endblock %}
