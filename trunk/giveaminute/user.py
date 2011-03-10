@@ -16,6 +16,15 @@ class User():
         self.lastName = self.data.last_name
         self.imageId = self.data.image_id
         self.locationId = self.data.location_id
+    
+    def getDictionary(self):
+        data = dict(u_id = 37,
+                    f_name = "Andrew",
+                    l_name = "Mahon",
+                    email = "andrew@typeslashcode.com",
+                    mobile = "9173241470")
+                    
+        return data
         
     def populateUserData(self):
         sql = """select user_key 
@@ -120,4 +129,12 @@ def findUserByPhone(db, phone):
     else:
         return None  
     
-    
+#temp get dummy data
+def getDummyDictionary():
+    data = dict(u_id = 37,
+                f_name = "Andrew",
+                l_name = "Mahon",
+                email = "andrew@typeslashcode.com",
+                mobile = "9173241470")
+                
+    return data    
