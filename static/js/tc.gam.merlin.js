@@ -214,7 +214,8 @@ tc.merlin.prototype.handlers = {
 		tc.util.log('tc.merlin.handlers.last_step');
 		e.preventDefault();
 		if(e.data.me.current_step && e.data.me.current_step.prev_step){
-			e.data.me.show_step(e.data.me.current_step.prev_step);
+			window.location.hash = e.data.me.current_step.prev_step;
+			//e.data.me.show_step(e.data.me.current_step.prev_step);
 		}
 	},
 	next_step:function(e,d){
@@ -232,7 +233,8 @@ tc.merlin.prototype.handlers = {
 			return;
 		}
 		if(e.data.me.current_step && e.data.me.current_step.next_step){
-			e.data.me.show_step(e.data.me.current_step.next_step);
+			window.location.hash = e.data.me.current_step.next_step;
+			//e.data.me.show_step(e.data.me.current_step.next_step);
 		}
 	},
 	focus:function(e,d){
