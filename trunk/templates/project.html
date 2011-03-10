@@ -253,10 +253,10 @@ Give A Minute - Project
 					<div class="west">
 						
 						<!-- Begin Members.Empty -->
-						<div class="empty-state-box" style='display:none;'>
+						<div class="empty-state-box" style=' '>
 							<a class="close" href="#"><span>Close</span></a>
 							<p>Use the tools at the right to get some members listed in here!</p>
-							<button>Add Link</button>
+							<a href="#" class="rounded-button small">Add Link</a>
 						</div>
 						<!-- End Members.Empty -->
 						
@@ -269,6 +269,7 @@ Give A Minute - Project
 								<div class="main">
 									<a href="">XXXX</a>
 								</div>
+								<a class="close" href="#"><span>Close</span></a>
 							</li>
 							<li>
 								<div class="thumb">
@@ -277,6 +278,7 @@ Give A Minute - Project
 								<div class="main">
 									<a href="">XXXX</a>
 								</div>
+								<a class="close" href="#"><span>Close</span></a>
 							</li>
 							<li>
 								<div class="thumb">
@@ -285,6 +287,7 @@ Give A Minute - Project
 								<div class="main">
 									<a href="">XXXX</a>
 								</div>
+								<a class="close" href="#"><span>Close</span></a>
 							</li>
 							<li>
 								<div class="thumb">
@@ -293,6 +296,7 @@ Give A Minute - Project
 								<div class="main">
 									<a href="">XXXX</a>
 								</div>
+								<a class="close" href="#"><span>Close</span></a>
 							</li>
 							<li>
 								<div class="thumb">
@@ -301,6 +305,7 @@ Give A Minute - Project
 								<div class="main">
 									<a href="">XXXX</a>
 								</div>
+								<a class="close" href="#"><span>Close</span></a>
 							</li>
 						</ul>
 						<!-- End Members.Stack -->
@@ -697,8 +702,9 @@ Give A Minute - Project
 			<form action='#' class="form-pane">
 				<div class="fields">
 					<textarea name='invite-message' class='invite-message'></textarea>
+					<span class="charlimit">200</span>
 				</div>
-				<a class='submit rounded-button' href="#">Invite</a>
+				<a class='submit rounded-button' href="#">Send</a>
 			</form>
 		</div>
 		
@@ -709,7 +715,7 @@ Give A Minute - Project
 		
 		<a class='close' href="#"><span>close</span></a>
 	</div>
-	
+
 	<div class='modal-content add-link'>
 		<div class='step add-link-step'>
 			<h2><strong>Add</strong> a link</h2>
@@ -744,6 +750,20 @@ Give A Minute - Project
 			<p><img src='/static/images/loader32x32.gif' /></p>
 		</div>
 		
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<div class="modal-content confirm-delete member-delete">
+		<div class="step">
+			<h2><strong>Delete</strong> this Project Member?</h2>
+			<div>
+				<p>This deletes <span class="person-name serif">XXXXXX</span> from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete Member</a>
+				<a class="cancel" href="#">No, keep them.</a>
+			</div>
+		</div>
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
@@ -896,6 +916,19 @@ Give A Minute - Project
 		},function(e,d){
 			e.data.app.components.modal.show(e.data);
 		});
+		
+		tc.jQ(".members-stack li a.close").bind("click", {
+			app:app,
+			source_element:tc.jQ(".modal-content.member-delete"),
+			init:function(modal, callback) {
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
+				}
+			}
+		},function(e,d) {
+			e.data.app.components.modal.show(e.data);
+		});
+		
 		
 	});
 </script>
