@@ -45,7 +45,7 @@ tc.locationDropdown.prototype.init = function(options){
 };
 
 tc.locationDropdown.prototype.getLocation = function(){
-	tc.util.log('tc.locationDropdown.prototype.getLocation','error');
+	tc.util.log('tc.locationDropdown.prototype.getLocation','warn');
 	return 501;
 }
 

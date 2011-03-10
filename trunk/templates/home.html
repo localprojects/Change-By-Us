@@ -373,16 +373,18 @@ Give A Minute - Home
 				
 				
 				
-			<div class="splash-inner step-three step" style="display:none">
+			<div class="splash-inner step-three related-processing step" style="display:none">
 				<!-- after idea is posted step -->
-				<div class="top-pane">
+				
+				<div class="top-pane related-processing step-three step">
 					<div class="console">
 						<span class="console-message">
 							Go from an idea to a solution: join or start a project.
 						</span>
 					</div>
 				</div>
-				<div class="projects-pane found">
+				
+				<div class="projects-pane step-three step found">
 					<div class="box related-projects">
 						<div class="hd">
 							<h2>Related Projects <em>near</em> <span class="serif"><strong>South Bronx</strong></span></h2>
@@ -404,7 +406,9 @@ Give A Minute - Home
 						<a href="" class="rounded-button">Browse All</a><span>or</span><a href="" class="rounded-button">Start Your Own</a>
 					</div>
 				</div>
-				<div class="projects-pane not-found" style="display:none;">
+				
+				
+				<div class="projects-pane step not-found" style="display:none;">
 					<div class="box related-projects">
 						<div class="hd">
 							<h2>Related Projects near South Bronx</h2>
@@ -425,6 +429,7 @@ Give A Minute - Home
 						<button>Browse All</button> or <button>Start Your Own</button>
 					</div>
 				</div>
+				
 				<div class="note-card-pane">
 					<div class="membrane">
 						<div class="note-card-splash">
@@ -687,7 +692,10 @@ Give A Minute - Home
 				'related-processing':{
 					prev_step:'idea-details',
 					next_step:null,
-					selector:'.step-three',
+					selector:'.related-processing',
+					transition:function(merlin,dom){
+						tc.util.dump('!HELLO')
+					},
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							url:'/idea/related',
@@ -709,9 +717,6 @@ Give A Minute - Home
 					prev_step:'idea-details',
 					next_step:null,
 					selector:'.step-three',
-					transition:function(merlin,dom){
-						tc.util.dump('!HELLO')
-					},
 					init:function(merlin,dom){
 						tc.util.dump(merlin.current_step.step_data);
 						var i, temphtml;
