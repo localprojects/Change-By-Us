@@ -9,8 +9,8 @@ Give A Minute - Home
 	<div class='headlands'>
 		<span class="hey"><span>Hey NYC!</span></span>
 		<div class='splash-container'>
+			<div class='splash-background'></div>
 			<div class='splash merlin'>
-				<div class='splash-background'></div>
 				<div class="splash-inner">
 					<!-- post your idea step -->
 					<div class="top-pane step-one step">
@@ -39,7 +39,6 @@ Give A Minute - Home
 			
 					<div class="top-pane step-two step" style="display:none">
 						<div class="console">
-							<span class="hey"><span>Hey NYC!</span></span>
 							<span class="after-idea-message">Thanks for your idea<br /><span class="sm">We just need a little more information</span></span>
 						</div>
 						<div class="idea-input">
@@ -422,21 +421,22 @@ Give A Minute - Home
 				
 				
 				</div><!--end .splash-inner-->
+
+			</div><!--end .splash-->
 			
-				<div class="note-card-pane">
-					<div class="membrane">
-						<div class="note-card-splash">
-							<cite class="note-meta-hd">
-								<strong>You</strong> said &mdash;
-							</cite>
-							<blockquote>
-								<p>More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!</p>
-							</blockquote>
-						</div>
+			<div class="note-card-pane">
+				<div class="membrane">
+					<div class="note-card-splash">
+						<cite class="note-meta-hd">
+							<strong>You</strong> said &mdash;
+						</cite>
+						<blockquote>
+							<p>More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!</p>
+						</blockquote>
 					</div>
 				</div>
-			
-			</div><!--end .splash-->
+			</div>
+				
 		</div><!--end .splash-container-->
 		
 		<div class="social-networking">
@@ -676,7 +676,7 @@ Give A Minute - Home
 									return false;
 								}
 								this.options.data.idea_id = data;
-								window.location.hash = '#related-processing';
+								window.location.hash = 'related-processing';
 							}
 						});
 					}
@@ -684,13 +684,35 @@ Give A Minute - Home
 				'related-processing':{
 					prev_step:'idea-details',
 					next_step:null,
-					selector:'.related-processing',
+					//selector:'.related-processing',
 					transition:function(merlin,dom){
 						merlin.dom.find('.grouping').hide();
+						var elements = {
+							hey:merlin.dom.parent().siblings('.hey'),
+							note:merlin.dom.siblings('.note-card-pane'),
+							bkg:merlin.dom.siblings('.splash-background')
+						};
+						elements.hey.animate({
+							top:'-100px'
+						},1000,'easeOutExpo');
+						elements.note.css('zIndex',10000).animate({
+							width:'366px',
+							height:'609px'
+						},1200,'easeOutExpo');
+						elements.bkg.animate({
+							marginLeft:'-82.5px'
+						},1000,'easeOutExpo');
 						merlin.dom.animate({
 							marginLeft:'-960px'
-						}, 1000);
-					},
+						}, 1000,"easeOutExpo",function(){
+							window.location.hash = 'related-processing-2';
+						});
+					}
+				},
+				'related-processing-2':{
+					prev_step:'idea-details',
+					next_step:null,
+					selector:'.related-processing',
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							url:'/idea/related',
@@ -712,16 +734,11 @@ Give A Minute - Home
 					prev_step:'idea-details',
 					next_step:null,
 					selector:'.step-three',
-					transition:function(merlin,dom){
-						merlin.dom.find('.grouping').hide();
-						merlin.dom.animate({
-							marginLeft:'-960px'
-						}, 1000);
-					},
 					init:function(merlin,dom){
 						var i, temphtml;
 						if(merlin.current_step.step_data){
 							for(i in merlin.current_step.step_data.related){
+								if(i == 2){ break; }
 								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
 								temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
 								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
@@ -733,6 +750,7 @@ Give A Minute - Home
 								dom.find('.related-projects').find('ul').append(temphtml);
 							}
 							for(i in merlin.current_step.step_data.citywide){
+								if(i == 2){ break; }
 								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
 								temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
 								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
