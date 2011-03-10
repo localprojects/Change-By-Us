@@ -1,20 +1,23 @@
 from framework.controller import *
 import giveaminute.location as mLocation
 import giveaminute.user as mUser
+import giveaminute.project as mProject
 
 class Home(Controller):
     def GET(self, action=None):
-        self.template_data['user'] = dict(object = self.json(mUser.getDummyDictionary()),
+        self.template_data['user'] = dict(json = self.json(mUser.getDummyDictionary()),
                                             is_admin = True,
                                             is_moderator = True,
                                             is_leader = True)
         self.template_data['project_user'] = dict(is_member = True,
                                                 is_project_admin = True)                                            
-                                            
-        if (action and action != 'home'):
-            return self.render(action)
-        else:
+        if (not action or action == 'home'):
             return self.showHome()
+        elif (action == 'project'):
+            return self.showProject()                                        
+        else:
+            return self.render(action)
+            
             
     def POST(self, action=None):
         if (action == 'login'):
@@ -40,6 +43,14 @@ class Home(Controller):
         self.template_data['all_ideas'] = self.json(self.getAllProjectIdeas())
         
         return self.render('home',  {'locations':locations})    
+        
+    def showProject(self):
+        project_id = 1
+        project = mProject.Project(self.db, project_id)
+        
+        self.template_data['project'] = dict(json = self.json(project.getFullDictionary()))
+    
+        return self.render('project')
         
     def getAllProjectIdeas(self):
         data = []
