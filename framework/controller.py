@@ -41,6 +41,9 @@ class Controller():
         # session
         self.session = SessionHolder.get_session()
         log.info("SESSION: %s " % self.session)    
+        
+        # template data
+        self.template_data = {}
 
         # user
         self.user = None
@@ -94,6 +97,10 @@ class Controller():
             else:
                 template_values[key] = config[key]              
         if self.user: template_values['user'] = self.user
+        
+        #add template data object
+        if self.template_data: template_values['template_data'] = self.template_data 
+        
         if hasattr(self.session, 'flash') and self.session.flash is not None:
             template_values['flash'] = self.session.flash
             log.info('showing flash message: "' + self.session.flash + '"')
@@ -110,7 +117,7 @@ class Controller():
         return (renderer[template_name + "." + suffix](template_values)).encode('utf-8')
 
     def json(self, data):
-        output = json.dumps(data, indent=4)
+        output = json.dumps(data)
         web.header("Content-Type", "text/plain")
         log.info("200: text/plain (JSON)")                                
         return output
