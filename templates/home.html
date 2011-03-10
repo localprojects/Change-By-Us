@@ -597,7 +597,7 @@ Give A Minute - Home
 			next_button:tc.jQ('.primary-action .ca-btn'),
 			error_indicator:tc.jQ('.oops'),
 			watch_keypress:true,
-			first_step:'start',
+			first_step:'related',
 			data:{
 				text:null,
 				email:null,
@@ -682,6 +682,7 @@ Give A Minute - Home
 					next_step:null,
 					selector:'.related-processing',
 					transition:function(merlin,dom){
+						merlin.dom.find('.grouping').hide();
 						merlin.dom.animate({
 							marginLeft:'-960px'
 						}, 1000);
@@ -707,30 +708,37 @@ Give A Minute - Home
 					prev_step:'idea-details',
 					next_step:null,
 					selector:'.step-three',
+					transition:function(merlin,dom){
+						merlin.dom.find('.grouping').hide();
+						merlin.dom.animate({
+							marginLeft:'-960px'
+						}, 1000);
+					},
 					init:function(merlin,dom){
-						tc.util.dump(merlin.current_step.step_data);
 						var i, temphtml;
-						for(i in merlin.current_step.step_data.related){
-							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-							temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
-							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
-							temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
-							temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
-							if(merlin.current_step.step_data.related[i].endorsement){
-								temphtml.find('.endorser-thumb').show();
+						if(merlin.current_step.step_data){
+							for(i in merlin.current_step.step_data.related){
+								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+								temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
+								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
+								temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
+								temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
+								if(merlin.current_step.step_data.related[i].endorsement){
+									temphtml.find('.endorser-thumb').show();
+								}
+								dom.find('.related-projects').find('ul').append(temphtml);
 							}
-							dom.find('.related-projects').find('ul').append(temphtml);
-						}
-						for(i in merlin.current_step.step_data.citywide){
-							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-							temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
-							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
-							temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
-							temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);
-							if(merlin.current_step.step_data.citywide[i].endorsement){
-								temphtml.find('.endorser-thumb').show();
+							for(i in merlin.current_step.step_data.citywide){
+								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+								temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
+								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
+								temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
+								temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);
+								if(merlin.current_step.step_data.citywide[i].endorsement){
+									temphtml.find('.endorser-thumb').show();
+								}
+								dom.find('.citywide-projects').find('ul').append(temphtml);
 							}
-							dom.find('.citywide-projects').find('ul').append(temphtml);
 						}
 					}
 				},
