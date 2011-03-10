@@ -1,6 +1,7 @@
 import giveaminute.keywords as keywords
 import giveaminute.project as project
 import giveaminute.projectResource as resource
+import giveaminute.location as mLocation
 from framework.controller import *
 import lib.web
 
@@ -13,7 +14,9 @@ class CreateProject(Controller):
         elif (action == 'resources'):
             return self.getSimilarResourcesJSON()
         else:
-            return self.render('create')
+            locations = self.json(mLocation.getSimpleLocationDictionary(self.db))
+            
+            return self.render('create', {'locations':locations})
             
     def POST(self,*args, **kw):
         return self.newProject()  
