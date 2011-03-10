@@ -114,8 +114,13 @@ tc.merlin.prototype.show_step = function(step){
 		return;
 	}
 	
-	this.dom.find('.step').hide();
-	this.dom.find(this.current_step.selector).show();
+	if(tc.jQ.isFunction(this.current_step.transition)){
+		this.current_step.transition(this);
+	} else {
+		this.dom.find('.step').hide();
+		this.dom.find(this.current_step.selector).show();
+	}
+	
 		
 	if(this.current_step.inputs && !this.current_step.has_been_initialized){
 		for(i in this.current_step.inputs){

@@ -94,7 +94,7 @@ Give A Minute - Home
 					
 				<div class="projects-pane">
 					<div class="projects-pane-hd">
-						<h2><span class="text">Featured Projects</span><a class="ca-btn" href="#"><span>See all projects</span></a></h2>
+						<h2><span class="text">Featured Projects</span><a class="ca-btn" href="/search"><span>See all projects</span></a></h2>
 					</div>
 					<div class="project-cards">
 						<div class="membrane">
@@ -388,33 +388,7 @@ Give A Minute - Home
 							<h2>Related Projects <em>near</em> <span class="serif"><strong>South Bronx</strong></span></h2>
 						</div>
 						<div class="bd">
-							<ul class="projects-list">
-								<li>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</li>
-								<li>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">More Bronx Trees</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</li>
-							</ul>
-							<a href="" class="see-more">See more projects <em>near</em> you &rarr;</a>
+							<ul class="projects-list"></ul>
 						</div>
 					</div>
 					<div class="box citywide-projects">
@@ -422,36 +396,7 @@ Give A Minute - Home
 							<h2>Citywide Projects</h2>
 						</div>
 						<div class="bd">
-							<ul class="projects-list">
-								<li>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<div class="endorser-thumb clearfix">
-											<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
-											<span class="overlay-tag"></span>
-										</div>
-										<span class="link"><a href="/project">Plant a Million Trees</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson<br /><em>from </em> <strong>MillionTreesNYC</strong></span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</li>
-								<li>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">NYC Tree Collection</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</li>
-							</ul>
+							<ul class="projects-list"></ul>
 							<a href="" class="see-more">See more citywide projects &rarr;</a>
 						</div>
 					</div>
@@ -498,7 +443,7 @@ Give A Minute - Home
 		
 		
 		<div class="social-networking">
-			<div class="facebook"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.giveaminute.com&amp;layout=standard&amp;show_faces=true&amp;width=600&amp;action=like&amp;font=verdana&amp;colorscheme=light&amp;height=25" scrolling="no" frameborder="0" style="border:none; overflow:hidden; height:25px; width: 600px;" allowTransparency="true"></iframe></div>
+			<div class="facebook"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.giveaminute.com&amp;layout=standard&amp;show_faces=true&amp;width=275&amp;action=like&amp;font=verdana&amp;colorscheme=light&amp;height=25" scrolling="no" frameborder="0" style="border:none; overflow:hidden; height:25px;" allowTransparency="true"></iframe></div>
 		</div>
 	</div>
 
@@ -617,6 +562,23 @@ Give A Minute - Home
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
+	<li class='template-content project-item'>
+		<div class="thumb">
+			<img src="http://placehold.it/50x50" alt="" class="proj"/>
+			<span class="overlay-tag"></span>
+			<span class="member-count">58</span>
+		</div>
+		<div class="project-info">
+			<div class="endorser-thumb clearfix" style='display:none;'>
+				<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
+				<span class="overlay-tag"></span>
+			</div>
+			<span class="link"><a href="/project">Plant a Million Trees</a></span>
+			<span class="creator"><em>Created by </em> Terry Richardson<br /><em>from </em> <strong>MillionTreesNYC</strong></span>
+			<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
+		</div>
+	</li>
+	
 </div>
 
 <script>
@@ -657,7 +619,8 @@ Give A Minute - Home
 						idea:{
 							selector:'textarea.idea',
 							validators:['min-3','max-200','required'],
-							hint:''
+							hint:'',
+							focus_first:true
 						}
 					},
 					finish:function(merlin,dom){
@@ -674,7 +637,8 @@ Give A Minute - Home
 						email:{
 							selector:'input.email',
 							validators:['min-3','max-200','required','email'],
-							hint:''
+							hint:'',
+							focus_first:true
 						},
 						location:{
 							selector:'.location-group',
@@ -718,11 +682,6 @@ Give A Minute - Home
 								window.location.hash = '#related-processing';
 							}
 						});
-					},
-					transitions:{
-						out:function(merlin){
-							
-						}
 					}
 				},
 				'related-processing':{
@@ -750,8 +709,34 @@ Give A Minute - Home
 					prev_step:'idea-details',
 					next_step:null,
 					selector:'.step-three',
+					transition:function(merlin,dom){
+						tc.util.dump('!HELLO')
+					},
 					init:function(merlin,dom){
 						tc.util.dump(merlin.current_step.step_data);
+						var i, temphtml;
+						for(i in merlin.current_step.step_data.related){
+							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+							temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
+							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
+							temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
+							temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
+							if(merlin.current_step.step_data.related[i].endorsement){
+								temphtml.find('.endorser-thumb').show();
+							}
+							dom.find('.related-projects').find('ul').append(temphtml);
+						}
+						for(i in merlin.current_step.step_data.citywide){
+							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+							temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
+							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
+							temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
+							temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);
+							if(merlin.current_step.step_data.citywide[i].endorsement){
+								temphtml.find('.endorser-thumb').show();
+							}
+							dom.find('.citywide-projects').find('ul').append(temphtml);
+						}
 					}
 				},
 				'related-not-found':{
