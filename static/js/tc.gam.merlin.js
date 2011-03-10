@@ -137,6 +137,9 @@ tc.merlin.prototype.show_step = function(step){
 					this.current_step.inputs[i].dom.bind(j,this.event_data,this.current_step.inputs[i].handlers[j]);
 				}
 			}
+			if(this.current_step.inputs[i].focus_first){
+				//this.current_step.inputs[i].dom.focus();
+			}
 		}
 	}
 	

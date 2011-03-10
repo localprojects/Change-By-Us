@@ -151,6 +151,7 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 	switch(e.target.id){
 		case 'location-city':
 			this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid').removeAttr('valid-location');
+			this.options.list.hide();
 			break;
 		case 'location-hood':
 			lastvalue = this.options.input.data('last-value');
