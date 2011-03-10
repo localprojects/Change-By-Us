@@ -278,12 +278,18 @@ div.continent .headlands div.oops { float: right; padding: 9px 6px 11px 0; margi
 div.continent .headlands div.oops span { position: relative; display: block; padding-right: 18px; right: -18px /*bg image is 12px, padding is 6*/; background: url(../images/error_tail.png) center right no-repeat transparent; }
 
 
-/* back button */
-a.back { font-size: 18px; height: 20px; font-weight: bold; line-height: 18px; color: #55504b; text-transform: uppercase; padding-left: 21px; background: url(../images/control_backArrow.png) left center no-repeat transparent; text-decoration:none; }
-a.back:hover > span { border-bottom: 1px solid #55504b; }
+/* back & forward button */
+a.back,
+a.forward { font-size: 18px; height: 20px; font-weight: bold; line-height: 18px; color: #55504b; text-transform: uppercase; text-decoration:none; }
+a.back { padding-left: 21px; background: url(../images/control_backArrow.png) left center no-repeat transparent;  }
+a.forward { padding-right: 21px; background: url(../images/control_forwardArrow.png) right center no-repeat transparent;  }
+a.back:hover > span,
+a.forward:hover > span { border-bottom: 1px solid #55504b; }
 
-a.back.fancy-caps > span { text-transform:uppercase; font-style:normal; }
-a.back.fancy-caps > span > span { text-transform:none; font-style:italic; }
+a.back.fancy-caps > span, 
+a.forward.fancy-caps > span { text-transform:uppercase; font-style:normal; }
+a.back.fancy-caps > span > span,
+a.forward.fancy-caps > span > span, { text-transform:none; font-style:italic; }
 
 /* carousel */
 .carousel { position:relative; }
@@ -322,9 +328,12 @@ a.back.fancy-caps > span > span { text-transform:none; font-style:italic; }
 
 
 /* specialized list styles */
-ul.doublewide { display: block; border-bottom: 1px solid #e0dedc; }
+ul.doublewide { display: block; }
 ul.doublewide li { padding:15px 10px 15px 0; width:134px; height:46px; border-top: 1px solid #e0dedc; border-right: 1px solid #e0dedc; float: left;}
 ul.doublewide li.every-second { padding-left:10px; border-right:0; }
+ul.doublewide li.last-two { border-bottom: 1px solid #e0dedc; }
+ul.doublewide li.last,
+ul.triplewide li.last { border-right: 0px; }
 
 ul.doublewide.resources-list li .thumb { width:auto; }
 ul.doublewide.resources-list li .resource-name { width:90px; margin-top:3px; font-size:14px; line-height:1.23; }
@@ -332,7 +341,6 @@ ul.doublewide.resources-list li .resource-name { width:90px; margin-top:3px; fon
 ul.triplewide { display: block; }
 ul.triplewide li { padding: 15px 10px 15px; width: 299px; border-top: 1px solid #e0dedc; border-right: 1px solid #e0dedc; float: left;}
 ul.triplewide li.every-third,
-ul.triplewide li.last { border-right: 0px; }
 ul.triplewide li.last-three { border-bottom: 1px solid #e0dedc; }
 
 
@@ -362,11 +370,11 @@ ul.resources-list li span { display: block; }
 ul.resources-list > li > .thumb { width: 37px; margin-right: 12px; float: left; }
 ul.resources-list li .thumb img { border: 1px solid #e0dedc; }
 ul.resources-list li .resource-name { width: 120px; float: left; font: 17px/21px "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, Times, Times New Roman, serif; margin-top: -2px; font-weight: bold; margin-top: -1px;] }
-ul.triplewide.resources-list li .resource-name > span { display: table; vertical-align: middle; }
-ul.triplewide.resources-list li .resource-name > span span { display: table-cell; vertical-align: middle; height: 42px; }
-ul.resources-list.doublewide li .add-button {
-	float:left; margin:10px 0 0 15px;
-}
+ul.resources-list li .resource-name > span { display: table; vertical-align: middle; }
+ul.resources-list li .resource-name > span span { display: table-cell; vertical-align: middle; height: 42px; }
+ul.resources-list.doublewide li .resource-name { width: 130px; margin-top: -2px; } 
+ul.resources-list.doublewide li .resource-name > span span { height: 34px; font-size: 15px; line-height: 18px; } 
+ul.resources-list.doublewide li .add-button { float:right; margin:0 0 0 15px; }
 ul.resources-list.triplewide li .add-button { 
 	float: right; display:block; font-size: 22px; line-height: 22px; height: 22px; padding: 2px 6px 4px; border: 1px solid #cccbc8; 
 	color: #878786; margin-right: 10px; font-weight: bold; text-transform: uppercase; background-color: #e5e4e1; 
@@ -392,6 +400,8 @@ ul.resources-list li.added div.added-dialog .added-close:hover { background-imag
 ul.projects-list li.last,
 ul.resources-list li.last { border-left: none; } 
 
+.continent.project .east ul.doublewide li { float: left; width: 269px; padding-right: 20px; padding-left: 0px; height: 48px; border-right:1px solid #e0dedc; border-top:1px solid #e0dedc; }
+.continent.project .east ul.doublewide li.every-other {border-right: none; padding-right: 0; padding-left: 20px;}
 
 /* project */
 .project-header { padding:16px 0; background-color:#edeceb; border-bottom:1px solid #e6e6e3; }
