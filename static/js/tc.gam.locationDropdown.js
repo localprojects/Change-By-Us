@@ -11,8 +11,8 @@ tc.locationDropdown.validator = function(merlin,elements){
 		}
 	}
 	if(elements.filter('.location-hood').filter(':checked').length){
-		tc.util.dump(elements.filter('.location-hood-enter').attr('valid-location'));
-		if(elements.filter('.location-hood-enter').attr('valid-location')){
+		tc.util.dump(elements.filter('.location-hood-enter').attr('location_id'));
+		if(elements.filter('.location-hood-enter').attr('location_id')){
 			return {
 				valid:true,
 				errors:[]
@@ -46,7 +46,11 @@ tc.locationDropdown.prototype.init = function(options){
 
 tc.locationDropdown.prototype.getLocation = function(){
 	tc.util.log('tc.locationDropdown.prototype.getLocation','warn');
-	return 501;
+	if(this.options.input.attr('location_id')){
+		return this.options.input.attr('location_id');
+	} else {
+		return false;
+	}
 }
 
 tc.locationDropdown.prototype.bindEvents = function(){
@@ -61,7 +65,7 @@ tc.locationDropdown.prototype.bindEvents = function(){
 		}
 	});
 	this.options.list.bind('click',{dropdown:this},function(e){
-		var t;
+		var t, location_tuple;
 		if(e.target.nodeName == 'SPAN'){
 			t = e.target.parentNode;
 		} else if(e.target.nodeName == 'A'){
@@ -72,7 +76,10 @@ tc.locationDropdown.prototype.bindEvents = function(){
 		}
 		e.preventDefault();
 		e.data.dropdown.options.warning.hide();
-		e.data.dropdown.options.input.val(t.hash.substring(1,t.hash.length)).removeClass('not-valid').addClass('valid').attr('valid-location','true');
+		
+		location_tuple = t.hash.substring(1,t.hash.length).split(',');
+		
+		e.data.dropdown.options.input.val(location_tuple[0]).removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]);
 		e.data.dropdown.options.list.hide();
 	});
 	this.options.radios.bind('change',{dropdown:this},function(e){
@@ -82,7 +89,7 @@ tc.locationDropdown.prototype.bindEvents = function(){
 
 tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
-	this.options.radios.filter('#location-hood').attr('checked',true).removeAttr('valid-location');
+	this.options.radios.filter('#location-hood').attr('checked',true);
 };
 
 tc.locationDropdown.prototype.inputKeyUpHandler = function(e){
@@ -92,6 +99,7 @@ tc.locationDropdown.prototype.inputKeyUpHandler = function(e){
 		e.stopPropagation();
 		return;
 	}
+	this.options.input.removeClass('valid').addClass('not-valid').removeAttr('location_id');
 	this.superFilterAndUpdateList(e.target.value);
 };
 
@@ -150,14 +158,19 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 	}
 	switch(e.target.id){
 		case 'location-city':
-			this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid').removeAttr('valid-location');
+			this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid');//.removeAttr('location_id');
 			this.options.list.hide();
 			break;
 		case 'location-hood':
 			lastvalue = this.options.input.data('last-value');
+			if(this.options.input.attr('location_id')){
+				this.options.input.removeClass('not-valid').addClass('valid');
+			} else {
+				this.options.list.show();
+			}
 			if(lastvalue){
 				this.options.input.val(lastvalue);
-				this.superFilterAndUpdateList(lastvalue,true)
+				this.superFilterAndUpdateList(lastvalue,true);
 			}
 			break;
 	}
@@ -170,21 +183,21 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text,skipUpdat
 	n_filtered = 0;
 	html = "";
 	for(i = 0; i < this.options.locations.length; i++){
-		temp_start = this.options.locations[i].search(filter);
+		temp_start = this.options.locations[i].name.search(filter);
 		if(temp_start == -1){
 			continue;
 		}
 		if(temp_start == 0){
-			temp_string = '<li><a href="#'+this.options.locations[i]+'">'+
+			temp_string = '<li><a href="#'+this.options.locations[i].name+','+this.options.locations[i].location_id+'">'+
 										'<span>' + 
-										this.options.locations[i].substring(0,text.length) + '</span>' + 
-										this.options.locations[i].substring(text.length,this.options.locations[i].length) +
+										this.options.locations[i].name.substring(0,text.length) + '</span>' + 
+										this.options.locations[i].name.substring(text.length,this.options.locations[i].name.length) +
 									'</a></li>';
 		} else {
-			temp_string = '<li><a href="#'+this.options.locations[i]+'">'+
-										(''+this.options.locations[i].substring(0,temp_start)) + '<span>' + 
-										this.options.locations[i].substring(temp_start,temp_start+text.length) + '</span>' + 
-										this.options.locations[i].substring(temp_start+text.length,this.options.locations[i].length) +
+			temp_string = '<li><a href="#'+this.options.locations[i].name+','+this.options.locations[i].location_id+'">'+
+										(''+this.options.locations[i].name.substring(0,temp_start)) + '<span>' + 
+										this.options.locations[i].name.substring(temp_start,temp_start+text.length) + '</span>' + 
+										this.options.locations[i].name.substring(temp_start+text.length,this.options.locations[i].name.length) +
 									'</a></li>';
 		}
 		
@@ -194,13 +207,15 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text,skipUpdat
 	
 	if(!n_filtered){
 		this.options.warning.show();
-		this.options.input.removeClass('valid').addClass('not-valid');
+		this.options.input.removeClass('valid').addClass('not-valid').removeAttr('location_id');
 	} else {
 		this.options.list.children('ul').get(0).innerHTML = html;
 		if(n_filtered == 1){
-			this.options.input.removeClass('not-valid').addClass('valid').attr('valid-location','true');
+			//this.options.input.removeClass('not-valid').addClass('valid').attr('valid-location','true');
 			this.options.list.find('li:first').addClass('selected');
-		} else {
+		}
+		tc.util.dump(this.options.input.attr('location_id'));
+		if(!this.options.input.attr('location_id')){
 			this.options.list.show();
 		}
 	} 

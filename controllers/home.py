@@ -23,7 +23,6 @@ class Home(Controller):
         if (action == 'login'):
             email = self.request('email')
             password = self.request('password')
-            
             if (email and password):
                 return True
             else:
@@ -42,13 +41,13 @@ class Home(Controller):
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = self.json(self.getAllProjectIdeas())
         
-        return self.render('home',  {'locations':locations})    
+        return self.render('home',  self.template_data)
         
     def showProject(self):
         project_id = 1
         project = mProject.Project(self.db, project_id)
         
-        self.template_data['project'] = dict(json = self.json(project.getFullDictionary()))
+        self.template_data['project'] = dict(json = self.json(project.getFullDictionary()), data = project.getFullDictionary())
     
         return self.render('project')
         
@@ -73,4 +72,3 @@ class Home(Controller):
                             submitted_by = "web"))
             
         return data
-        

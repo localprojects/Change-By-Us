@@ -4,13 +4,6 @@
 Give A Minute - Home
 {% endblock title %}
 
-{% block javascript_header %}
-{{ super() }}
-    <script type="text/javascript">
-    var locations = {{ locations }};    
-    </script>
-{% endblock %}
-
 {% block continent %}
 <div class='continent home'>
 	<div class='headlands'>
@@ -20,13 +13,24 @@ Give A Minute - Home
 			<div class='splash merlin'>
 				<div class="splash-inner">
 					<!-- post your idea step -->
-					<div class='top-pane'>
+					<div class='top-pane start'>
 						
-						<div class="step-one step">
-							<div class="console">
-								<span class="console-message"><span></span>How can we green our neighborhoods?</span>
-							</div>
-							<div class="idea-input">
+						<div class="console">
+							<span class="start console-message"><span></span>How can we green our neighborhoods?</span>
+							<span class="more-info after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">We just need a little more information</span></span>
+							<span class="thanks after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">Please wait while we process your idea!</span></span>
+						</div>
+						
+						<!-- <div class="console">
+							
+						</div>
+						
+						<div class="console">
+							
+						</div> -->
+						
+						<div class="step-one step-two step">
+							<div class="idea-input idea-input-one">
 								<div class="primary-action">
 									<a class="ca-btn" href="#">
 										<span>Post</span>
@@ -35,7 +39,7 @@ Give A Minute - Home
 								<div class="oops" style="display:none;">
 									<span>Oops! Please correct the fields marked in red.</span>
 								</div>
-								<div>
+								<div class='idea-input-inner-wrapper'>
 									<!--<label>What's your idea?</label>-->
 									<textarea class='idea'></textarea>
 									<div class="helpers">
@@ -44,23 +48,8 @@ Give A Minute - Home
 									</div>
 								</div>
 							</div>
-						</div><!--end .top-pane.step-one-->
-			
-						<div class="step-two step" style="display:none">
-							<div class="console">
-								<span class="after-idea-message">Thanks for your idea<br /><span class="sm">We just need a little more information</span></span>
-							</div>
-							<div class="idea-input">
-								<div class="primary-action">
-									<a class="ca-btn" href="#">
-										<span>Post</span>
-									</a>
-								</div>
-								<div class="oops" style="display:none;">
-									<span>Oops! Please correct the fields marked in red.</span>
-								</div>
-							</div>
-							<div class="info-input">
+						
+							<div class="info-input" style='display:none;'>
 								<div class="west">
 									<div>
 										<span class="col-head">What's your e-mail?</span>
@@ -96,11 +85,7 @@ Give A Minute - Home
 							</div>
 						</div><!--end .top-pane.step-two-->
 				
-						<div class="step idea-processing" style="display:none">
-							<div class="console">
-								<span class="console-message after-idea-message">Thanks for your idea<br /><span class="sm">Please wait while we process your idea!</span></span>
-							</div>
-						</div><!--end .top-pane.step-one-->
+						<div class="step idea-processing" style="display:none"></div><!--end .top-pane.step-one-->
 					</div>
 					
 					<div class="projects-pane">
@@ -571,6 +556,9 @@ Give A Minute - Home
 </div>
 
 <script>
+	app_page.locations = {{ d.locations }};
+	app_page.all_ideas = {{ d.all_ideas }};
+	
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: HOME');
 		
@@ -638,21 +626,30 @@ Give A Minute - Home
 					transition:function(merlin,dom){
 						var elements = {
 							pane:merlin.dom.find('.top-pane'),
+							idea_input:merlin.dom.find('.idea-input-inner-wrapper'),
+							console:merlin.dom.find('.console'),
 							start:merlin.dom.find('.step-one'),
-							two:merlin.dom.find('.step-two')
+							two:merlin.dom.find('.info-input')
 						};
-						tc.util.dump(elements.next);
-						elements.pane.animate({
-							height:'225px'
-						},1000,'easeOutExpo');
-						elements.start.animate({
-							opacity:0.0
-						},400,'easeOutExpo',function(){
-							elements.start.hide();
+						tc.util.dump(elements);
+						
+						
+						
+						elements.idea_input.css('height','93.2px').animate({
+							width:'0px',
+							opacity:0
+						},400,'easeOutCubic',function(){
+							tc.jQ(this).hide();
+							elements.console.css('width','775px').children('.more-info').show().siblings().hide();
+							animate_bg(elements.pane,5,7.5);
+							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
+								opacity:1.0,
+								height:'142px'
+							},400,'easeOutCubic',function(){
+								
+							});
 						});
-						elements.two.css('opacity',0.0).show().delay(200).animate({
-							opacity:1.0
-						},800,'easeOutExpo');
+						
 					},
 					init:function(merlin,dom){
 						if(!merlin.current_step.step_data.locationDropdown){
@@ -660,7 +657,8 @@ Give A Minute - Home
 								radios:dom.find('input[type=radio]'),
 								input:dom.find('input.location-hood-enter'),
 								list:dom.find('div.location-hood-list'),
-								warning:dom.find('span.error')
+								warning:dom.find('span.error'),
+								locations:{{ d.locations }}
 							});
 						}
 					},
@@ -675,6 +673,7 @@ Give A Minute - Home
 					prev_step:'idea-details',
 					next_step:'related',
 					selector:'.idea-processing',
+					transition:function(merlin,dom){},
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							type:'POST',
@@ -705,17 +704,17 @@ Give A Minute - Home
 						};
 						elements.hey.animate({
 							top:'-100px'
-						},1000,'easeOutExpo');
+						},1000,'easeOutCubic');
 						elements.note.css('zIndex',10000).animate({
 							width:'366px',
 							height:'609px'
-						},1200,'easeOutExpo');
+						},1200,'easeOutCubic');
 						elements.bkg.animate({
 							marginLeft:'-165px'
-						},1000,'easeOutExpo');
+						},1000,'easeInOutCubic');
 						merlin.dom.animate({
 							marginLeft:'-960px'
-						}, 1000,"easeOutExpo",function(){
+						}, 1000,"easeInOutCubic",function(){
 							window.location.hash = 'related-processing-2';
 						});
 					}
@@ -818,10 +817,6 @@ Give A Minute - Home
 					if (randomY > maxY || randomY < 0) { randomY = Math.floor(Math.random()*(maxY + 1)); }
 				}
 			};
-			
-			tc.util.dump(randomX);
-			tc.util.dump(randomY);
-			tc.util.dump('---');
 			
 			area1X[i] = randomX;// * (maxX/2);
 			area1Y[i] = randomY;// * (maxY/2);
