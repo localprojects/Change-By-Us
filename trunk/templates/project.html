@@ -111,60 +111,71 @@ Give A Minute - Project
 			<div class="box goals">
 				<div class="hd clearfix">
 					<h2>
-						<span>Goals 
-							
-							{% for goal in d.template_data.project.data.info.goals['items'] if goal.active %}
-								<span class="counter">{{ loop.length }}</span>
-							{% endfor %}
-							
+						<span>
+							Goals 
+							<span class="counter">{{ d.template_data.project.data.info.goals['items']|length }}</span>
 							{% if d.template_data.project.data.editable %}
 								<span class="control"><a href="#">Manage</a></span>
 							{% endif %}
 						</span>
 					</h2>
 					<div class="actions">
-						<a href="#" class="see-all">See all the Goals</a> <em>or</em>
+						{% if d.template_data.project.data.info.goals['items']|length > 0 %}
+							<a href="#" class="see-all">See all the Goals</a> <em>or</em>
+						{% endif %}
 						<a href="#" class='add'>Propose Your Own</a>
 					</div>
 				</div>
 				
-				<div class="goals-empty" style=" ">
-					<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
-					<div class="empty-state-box big">
-						<a class="close" href="#"><span>Close</span></a>
-						<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="#">add a goal now?</a></p>
-					</div>
-				</div>
-			
-				<div class="goals-active">
-					<h3 class="fancy-caps"><span>The</span> Active Goal <span>for this</span> Project</h3>
-					<div class="carousel">
-						<div class="scrollable">
-							<ul class="items">
-								<li>
-									<div class="goal-card">
-										<a class="close" href="#"><span>Close</span></a>
-										<p>Contact the city parks dept and find out about the permit situation for planting trees in the area.</p>
-										<div class="meta">
-											<dl>
-												<dt>Timeframe</dt>
-												<dd>1 Month</dd>
-											
-												<dt>Point Person</dt>
-												<dd>Aaron A.</dd>
-											</dl>
-										</div>
-									</div>
-								</li>
-							</ul>
+				{% if d.template_data.project.data.info.goals['items']|length > 0 %}
+				
+					<div class="goals-display">
+						<h3 class="fancy-caps"><span>The</span> Active Goal <span>for this</span> Project</h3>
+						<div class="carousel">
+							<div class="scrollable">
+								<ul class="items">
+									
+									{% for goal in d.template_data.project.data.info.goals['items'] %}
+										<li>
+											<div class="goal-card">
+												{% if d.template_data.project.data.editable %}
+													<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+												{% endif %}
+												<p>{{ goal.text }}</p>
+												<div class="meta">
+													<dl>
+														<dt>Timeframe</dt>
+														<dd>{{ goal.timeframe }}</dd>
+
+														<dt>Point Person</dt>
+														<dd>{{ goal.owner.name }}</dd>
+													</dl>
+												</div>
+											</div>
+										</li>
+									{% endfor %}
+									
+								</ul>
+							</div>
+							<div class="carousel-controls">
+								<a class="next" href="#">
+									<span>Next</span>
+								</a>
+							</div>
 						</div>
-						<div class="carousel-controls">
-							<a class="next" href="#">
-								<span>Next</span>
-							</a>
+					</div>
+				
+				{% else %}
+					
+					<div class="goals-empty">
+						<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
+						<div class="empty-state-box big">
+							<a class="close" href="#"><span>Close</span></a>
+							<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="#">add a goal now?</a></p>
 						</div>
 					</div>
-				</div>
+					
+				{% endif %}	
 			
 			</div>
 		
@@ -203,49 +214,57 @@ Give A Minute - Project
 					</form>
 				</div>
 			</div>
-		
-			<div class="box goals-cards">
-				<ul class="goals-stack">
+			
+			{% if d.template_data.project.data.editable %}
+				<div class="box goals-cards">
+					<ul class="goals-stack">
 					
-					{% for goal in d.template_data.project.data.info.goals['items'] if not goal.active %}
-						<li>
-							<div class="goal-card">
-								{% if d.template_data.project.data.editable %}
+						{% for goal in d.template_data.project.data.info.goals['items'] %}
+							<li>
+								<div class="goal-card">
 									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
-								{% endif %}
-								<div class="make-this-active">
-									<a href="#makeActive,{{ goal.goal_id }}" class="fancy-caps">Make <span>this the</span> Active Goal</a>
-								</div>
-								<p>{{ goal.text }}</p>
-								<div class="meta">
-									<dl>
-										<dt>Timeframe</dt>
-										<dd>{{ goal.timeframe }}</dd>
+									<div class="make-this-active">
+										<a href="#makeActive,{{ goal.goal_id }}" class="fancy-caps">Make <span>this the</span> Active Goal</a>
+									</div>
+									<p>{{ goal.text }}</p>
+									<div class="meta">
+										<dl>
+											<dt>Timeframe</dt>
+											<dd>{{ goal.timeframe }}</dd>
 					
-										<dt>Point Person</dt>
-										<dd>{{ goal.owner.name }}</dd>
-									</dl>
+											<dt>Point Person</dt>
+											<dd>{{ goal.owner.name }}</dd>
+										</dl>
+									</div>
 								</div>
-							</div>
-						</li>
-					{% endfor %}
+							</li>
+						{% endfor %}
 					
-				</ul>
-			</div>
+					</ul>
+				</div>
+			{% endif %}
 		
 			<div class="box conversation">
 				<div class="conversation-controls clearfix">
 					<a class="rss-btn" href="#"><span><abbr>RSS</abbr></span></a>
-					<div class="filters">
-						<select>
-							<option>All messages</option>
-							<option>All messages</option>
-							<option>All messages</option>
-						</select>
-					</div>
+					
+					{% if d.template_data.project.data.info.messages['total'] > 0 %}
+						<div class="filters">
+							<select>
+								<option>All messages</option>
+								<option>XXXX</option>
+								<option>XXXX</option>
+							</select>
+						</div>
+					{% endif %}
+					
 					<div class="main">
 						<div class="conversation-input">
-							<label class="fancy-caps">Start <span>the</span> Conversation</label>
+							{% if d.template_data.project.data.info.messages['total'] > 0 %}
+								<label class="fancy-caps">Join <span>the</span> Conversation</label>
+							{% else %}
+								<label class="fancy-caps">Start <span>the</span> Conversation</label>
+							{% endif %}
 							<textarea></textarea>
 							<p class="hint">Post your update as a comment or add links to photos and videos.</p>
 						</div>
@@ -257,48 +276,50 @@ Give A Minute - Project
 						</div>
 					</div>
 				</div>
-				<ol class="comment-stack">
-					<li>
-						<a class="close" href="#"><span>Close</span></a>
-						<div class="membrane">
-							<div class="thumb">
-								<img src="../static/images/thumb_genAvatar.jpg" alt="" class="avatar"/>
-							</div>
-							<div class="main">
-								<cite class="meta-hd"><strong>Administrator</strong> says</cite>
-								<blockquote class="serif">
-									<p>Hey - welcome to give a minute! I'm the adminstrator of the site. If there is anything we can help with, please email us at <a href="">info@giveaminute.info</a>.</p>
-								</blockquote>
-								<cite class="meta-ft">30 minutes ago</cite>
-							</div>
-						</div>
-					</li>
-					<li class="intro">
-						<a class="close" href="#"><span>Close</span></a>
-						<div class="membrane">
-							<div class="thumb">
-								<img src="http://placehold.it/50x50" alt="" class="avatar"/>
-							</div>
-							<div class="main">
-								<cite class="meta-hd"><strong>Drew H.</strong> joined the project!</cite>
-								<div class="note-card">
-									<cite class="note-meta-hd"></cite>
-									<blockquote>
-										<p>There's a big need on my street for a garden. I think that it will be a great community builder as well! Definitely more gardens on 161st street in the South Bronx!</p>
-									</blockquote>
-									<cite class="note-meta-ft"></cite>
+				
+				{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+					<ol class="comment-stack">
+						{% for message in d.template_data.project.data.info.messages['items'] %}
+							<li class=" ">
+								{% if d.template_data.project.data.editable %}
+									<a class="close" href="#"><span>Close</span></a>
+								{% endif %}
+								<div class="membrane">
+									<div class="thumb">
+										<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
+									</div>
+									<div class="main">
+										{% if message.message_type == 'join' %}
+											<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
+										{% elif message.message_type == 'comment' %}
+											<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> says</cite>
+										{% endif %}
+										
+										{% if message.idea %}
+											<div class="note-card">
+												<cite class="note-meta-hd"></cite>
+												<blockquote>
+													<p>{{ message.idea.message }}</p>
+												</blockquote>
+												<cite class="note-meta-ft"></cite>
+											</div>
+										{% endif %}
+										
+										<blockquote class="serif">
+											<p>{{ message.body }}</p>
+										</blockquote>
+										<!-- TODO calculate time since based on {{ message.created }} -->
+										<cite class="meta-ft">XXXX ago</cite>
+									</div>
 								</div>
-								<blockquote class="serif">
-									<p>There's a big need on my street for a garden. I think that it will be a great community builder as well! Definitely more gardens on 161st street in the South Bronx!</p>
-								</blockquote>
-								<cite class="meta-ft">5 hours ago</cite>
-							</div>
-						</div>
-					</li>
-				</ol>
-				<div class="load-more">
-					<a href="#"><span>Load older posts</span></a>
-				</div>
+							</li>
+						{% endfor %}
+					</ol>
+					<div class="load-more">
+						<a href="#"><span>Load older posts</span></a>
+					</div>
+				{% endif %}
+
 			</div>
 		
 			<!-- begin members -->
@@ -318,7 +339,7 @@ Give A Minute - Project
 				<div class="bd">
 					<div class="west">
 					
-						{% if d.template_data.project.data.info.members['items'] %}
+						{% if d.template_data.project.data.info.members['items']|length > 0 %}
 							
 							<!-- Begin Members.Stack -->
 							<ul class="members-stack">
