@@ -806,20 +806,18 @@ Give A Minute - Home
 				if (j % 2 == 0) { PosOrNeg = -1 } else { PosOrNeg = -1 }
 				
 				if (Math.abs(randomX - area1X[j]) < minDistance) {
-					//randomX = randomX + ((minDistance - Math.abs(randomX - area1X[j])) * PosOrNeg);
-					randomX = randomX + (minDistance - randomX - area1X[j]);
+					randomX = randomX + ((minDistance - Math.abs(randomX - area1X[j])) * PosOrNeg);
 					if (randomX > maxX || randomX < 0) { randomX = Math.floor(Math.random()*(maxX + 1)); }
 				}
 				
 				if (Math.abs(randomY - area1Y[j]) < minDistance) {
-					//randomY = randomY + ((minDistance - Math.abs(randomY - area1Y[j])) * (PosOrNeg*-1) );
-					randomY = randomY + (minDistance - randomY - area1Y[j]);
+					randomY = randomY + ((minDistance - Math.abs(randomY - area1Y[j])) * (PosOrNeg*-1) );
 					if (randomY > maxY || randomY < 0) { randomY = Math.floor(Math.random()*(maxY + 1)); }
 				}
 			};
 			
-			area1X[i] = randomX;// * (maxX/2);
-			area1Y[i] = randomY;// * (maxY/2);
+			area1X[i] = randomX;
+			area1Y[i] = randomY;
 			
 			$('.area1 .small-note').eq(i).css({'top' : randomY, 'left' : randomX});
 		};
