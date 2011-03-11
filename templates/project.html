@@ -19,17 +19,19 @@ Give A Minute - Project
 			</a>
 			<div class="members">
 				<a href='#'>Members <span class="counter">0</span></a>
-			</div>
-			<span class="control"><a href="#">Manage</a></span>
+			</div>			
+			{% if d.template_data.project.data.editable is sameas True %}
+				<span class="control"><a href="#">Manage</a></span>
+			{% endif %}
 		</div>
 		<div class="main">
-			<h1>Start a Garden on 161st and Melrose Ave</h1>
+			<h1>{{ d.template_data.project.data.info.title }}</h1>
 			<cite class="meta">
-				<span class="fancy-caps">Created <span>by</span></span> <strong>You!</strong>
+				<span class="fancy-caps">Created <span>by</span></span> <strong>{{ d.template_data.project.data.info.owner.name }}</strong>
 			</cite>
 			<div class="sub-ft">
 				<div class="twitter">
-				
+					<!-- TODO -->
 				</div>
 				<div class="facebook">
 					<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
@@ -37,19 +39,21 @@ Give A Minute - Project
 				</div>
 			</div>
 		</div>
-	</div>
+	</div><!-- end .headlands -->
 
 	<div class='midlands clearfix'>
 	
 		<!-- Begin Project.East -->
 		<div class="east">
 		
-			<div class="box resources">
+			<div class="box resources related-resources">
 				<div class="hd clearfix">
 					<h2>
 						<span>
 							Related Resources <span class="counter">6</span>
-							<span class="control"><a href="#">Manage</a></span>
+							{% if d.template_data.project.data.editable is sameas True %}
+								<span class="control"><a href="#">Manage</a></span>
+							{% endif %}
 						</span>
 					</h2>
 					<div class="actions">
@@ -103,14 +107,19 @@ Give A Minute - Project
 					</div>
 				</div>
 			</div>
-		
-		
+				
 			<div class="box goals">
 				<div class="hd clearfix">
 					<h2>
 						<span>Goals 
-							<span class="counter">0</span>
-							<span class="control"><a href="#">Manage</a></span>
+							
+							{% for goal in d.template_data.project.data.info.goals['items'] if goal.active %}
+								<span class="counter">{{ loop.length }}</span>
+							{% endfor %}
+							
+							{% if d.template_data.project.data.editable %}
+								<span class="control"><a href="#">Manage</a></span>
+							{% endif %}
 						</span>
 					</h2>
 					<div class="actions">
@@ -118,6 +127,7 @@ Give A Minute - Project
 						<a href="#" class='add'>Propose Your Own</a>
 					</div>
 				</div>
+				
 				<div class="goals-empty" style=" ">
 					<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
 					<div class="empty-state-box big">
@@ -197,21 +207,23 @@ Give A Minute - Project
 			<div class="box goals-cards">
 				<ul class="goals-stack">
 					
-					{% for g in d.template_data.project.data.info.goals['items'] %}
+					{% for goal in d.template_data.project.data.info.goals['items'] if not goal.active %}
 						<li>
 							<div class="goal-card">
-								<a class="close" href="#close,{{ g.goal_id }}"><span>Close</span></a>
+								{% if d.template_data.project.data.editable %}
+									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+								{% endif %}
 								<div class="make-this-active">
-									<a href="#makeActive,{{ g.goal_id }}" class="fancy-caps">Make <span>this the</span> Active Goal</a>
+									<a href="#makeActive,{{ goal.goal_id }}" class="fancy-caps">Make <span>this the</span> Active Goal</a>
 								</div>
-								<p>{{g.text}}</p>
+								<p>{{ goal.text }}</p>
 								<div class="meta">
 									<dl>
 										<dt>Timeframe</dt>
-										<dd>{{ g.timeframe }}</dd>
+										<dd>{{ goal.timeframe }}</dd>
 					
 										<dt>Point Person</dt>
-										<dd>{{ g.owner.name }}</dd>
+										<dd>{{ goal.owner.name }}</dd>
 									</dl>
 								</div>
 							</div>
@@ -294,7 +306,7 @@ Give A Minute - Project
 				<div class="hd clearfix">
 					<h2>
 						<span>
-							Members <span class="counter">0</span>
+							Members <span class="counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
 						</span>
 					</h2>
 					<div class="actions">
@@ -306,33 +318,40 @@ Give A Minute - Project
 				<div class="bd">
 					<div class="west">
 					
-						<!-- Begin Members.Empty -->
-						<div class="empty-state-box" style=' '>
-							<a class="close" href="#"><span>Close</span></a>
-							<p>Use the tools at the right to get some members listed in here!</p>
-							<a href="#" class="rounded-button small">Add Link</a>
-						</div>
-						<!-- End Members.Empty -->
-					
-						<!-- Begin Members.Stack -->
-						<ul class="members-stack">
+						{% if d.template_data.project.data.info.members['items'] %}
 							
-							{% for m in d.template_data.project.data.info.members['items'] %}
+							<!-- Begin Members.Stack -->
+							<ul class="members-stack">
+							{% for member in d.template_data.project.data.info.members['items'] %}
+							
 								<li>
 									<div class="thumb">
 										<img src="http://placehold.it/40x40" alt="" />
 									</div>
 									<div class="main">
-										<a href="">{{ m.name }}</a>
+										<a href="">{{ member.name }}</a>
 									</div>
-									<a class="close" href="#removeMember,{{m.u_id}}"><span>Close</span></a>
+									{% if d.template_data.project.data.editable %}
+										<a class="close" href="#removeMember,{{member.u_id}}"><span>Close</span></a>
+									{% endif %}
 								</li>
+							
 							{% endfor %}
-						</ul>
-						<!-- End Members.Stack -->
+							</ul>
+							<!-- End Members.Stack -->
+						{% else %}
+						
+							<!-- Begin Members.Empty -->
+							<div class="empty-state-box" style=' '>
+								<a class="close" href="#"><span>Close</span></a>
+								<p>Use the tools at the right to get some members listed in here!</p>
+								<a href="#" class="rounded-button small">Add Link</a>
+							</div>
+							<!-- End Members.Empty -->
+							
+						{% endif %}
 					
 					</div>
-				
 					<div class="east">
 					
 						<!-- Begin Members.email-invite -->
@@ -360,41 +379,47 @@ Give A Minute - Project
 							<div class="sub-hd">
 								<h3 class="fancy-caps">Invite People <span>with</span> Similar Ideas</h3>
 								<div class="pagination">
-									<span class="cur-index">1</span> <em>of</em>
-									<span class="total">34</span>
+									<span class="cur-index">XXXX</span> <em>of</em>
+									<span class="total">XXXX</span>
 								</div>
 							</div>
 							<div class="sub-bd">
-								<div class="carousel">
-									<div class="scrollable">
-										<ul class="items">
-											<li>
-												<div class="note-card-public-controls">
-													<a class="invite rounded-button" href="#">Invite</a>
-													<a href="#"><span class="flag">Flag as Inappropriate</span></a>
-												</div>
-												<div class="note-card">
-													<div class="membrane">
-														<cite class="note-meta-hd">
-															<strong>Shawna</strong> says &mdash;
-														</cite>
-														<blockquote>
-															<p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p>
-														</blockquote>
-														<cite class="note-meta-ft">
-															Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong>
-														</cite>
-													</div>
-												</div>
-											</li>
-										</ul>
+																
+								{% if d.template_data.project.data.info.related_ideas['items']  %}
+									<div class="carousel">
+										<div class="scrollable">
+											<ul class="items">
+												{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
+													<li>
+														<div class="note-card-public-controls">
+															<a class="invite rounded-button" href="#">Invite</a>
+															<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+														</div>
+														<div class="note-card">
+															<div class="membrane">
+																<cite class="note-meta-hd">
+																	<strong>{{ idea.owner.name }}</strong> says &mdash;
+																</cite>
+																<blockquote>
+																	<p>{{ idea.message }}</p>
+																</blockquote>
+																<cite class="note-meta-ft">
+																	Posted <strong>{{ idea.created }}</strong>
+																</cite>
+															</div>
+														</div>
+													</li>
+												{% endfor %}
+											</ul>
+										</div>
+										<div class="carousel-controls">
+											<a class="next" href="#">
+												<span>Next</span>
+											</a>
+										</div>
 									</div>
-									<div class="carousel-controls">
-										<a class="next" href="#">
-											<span>Next</span>
-										</a>
-									</div>
-								</div>
+								{% endif %}
+								
 							</div>
 						</div>
 						<!-- End Members.ideas-invite -->
@@ -403,7 +428,6 @@ Give A Minute - Project
 				</div>
 			</div>
 			<!-- end Members -->
-		
 		
 		</div>
 		<!-- End Project.East -->
@@ -418,7 +442,9 @@ Give A Minute - Project
 					<h2>
 						<span>
 							Mission
-							<span class="control"><a href="#">Manage</a></span>
+							{% if d.template_data.project.data.editable %}
+								<span class="control"><a href="#">Manage</a></span>
+							{% endif %}
 						</span>
 					</h2>
 				</div>
@@ -429,7 +455,7 @@ Give A Minute - Project
 							<h3>Our Mission</h3>
 						</div>
 						<div class="sub-bd serif">
-							<p>(project.info.mission) Tired of the empty lot at 161st and Melrose? Let's start a community gardgen to help out the Bronx and get the kids up here involved!</p>
+							<p>{{ d.template_data.project.data.info.mission }}</p>
 						</div>
 					</div>
 					<div class="endorsements">
@@ -438,17 +464,17 @@ Give A Minute - Project
 						</div>
 						<div class="sub-bd">
 							<ul class="endorsements-stack">
-								{% for e in d.template_data.project.data.info.endorsements['items'] %}
+								{% for endorsement in d.template_data.project.data.info.endorsements['items'] %}
 									<li>
-									<div class="thumb">
-										<img class="endorser-photo" alt="" src="http://placehold.it/30x30"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class="main">
-										<strong>{{e.name}},</strong>
-										<cite>{{e.title}} {{e.organization}}</cite>
-									</div>
-								</li>
+										<div class="thumb">
+											<img class="endorser-photo" alt="{{ endorsement.name }}" src="http://placehold.it/30x30"/>
+											<span class="overlay-tag"></span>
+										</div>
+										<div class="main">
+											<strong>{{ endorsement.name }}</strong>,
+											<cite>{{ endorsement.title }} {{ endorsement.organization }}</cite>
+										</div>
+									</li>
 								{% endfor %}
 							</ul>
 						</div>
@@ -458,7 +484,7 @@ Give A Minute - Project
 							<h3>Location</h3>
 						</div>
 						<div class="sub-bd">
-							<div class="map-holder">Location Map</div>
+							<div class="map-holder">Location Map placeholder</div>
 						</div>
 					</div>
 					<div class="keywords">
@@ -467,11 +493,11 @@ Give A Minute - Project
 						</div>
 						<div class="sub-bd">
 							<ul class="tag-cloud serif">
-								{% for k in d.template_data.project.data.info.keywords %}
-									{% if d.template_data.project.data.editable is sameas True %}
-										<li class="admin"><a href="#keyword,{{ k }}">{{ k }}</a> <a href="#" class="remove-btn"><span>Remove</span></a></li>
+								{% for keyword in d.template_data.project.data.info.keywords %}
+									{% if d.template_data.project.data.editable %}
+										<li class="admin"><a href="#keyword,{{ keyword }}">{{ keyword }}</a> <a href="#" class="remove-btn"><span>Remove</span></a></li>
 									{% else %}
-										<li><a href="#keyword,{{ k }}">{{ k }}</a></li>
+										<li><a href="#keyword,{{ keyword }}">{{ keyword }}</a></li>
 									{% endif %}
 								{% endfor %}
 							</ul>
@@ -652,37 +678,43 @@ Give A Minute - Project
 				<div class="bd">
 					<div class="ideas-invite">
 						<div class="sub-bd">
-							<div class="carousel">
-								<div class="scrollable">
-									<ul class="items">
-										<li>
-											<div class="note-card-public-controls">
-												<a class="invite rounded-button" href="#">Invite</a>
-												<a href="#"><span class="flag">Flag as Inappropriate</span></a>
-											</div>
-											<div class="note-card">
-												<div class="membrane">
-													<blockquote>
-														<p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p>
-													</blockquote>
-													<cite class="note-meta-ft">
-														Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong>
-													</cite>
-												</div>
-											</div>
-										</li>
-									</ul>
+							
+							{% if d.template_data.project.data.info.related_ideas['items']  %}
+								<div class="carousel">
+									<div class="scrollable">
+										<ul class="items">
+											{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
+												<li>
+													<div class="note-card-public-controls">
+														<a class="invite rounded-button" href="#">Invite</a>
+														<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+													</div>
+													<div class="note-card">
+														<div class="membrane">
+															<blockquote>
+																<p>{{ idea.message }}</p>
+															</blockquote>
+															<cite class="note-meta-ft">
+																Posted <strong>{{ idea.created }}</strong>
+															</cite>
+														</div>
+													</div>
+												</li>
+											{% endfor %}
+										</ul>
+									</div>
+									<div class="carousel-controls">
+										<a class="next" href="#">
+											<span>Next</span>
+										</a>
+									</div>
 								</div>
-								<div class="carousel-controls">
-									<a class="next" href="#">
-										<span>Next</span>
-									</a>
-								</div>
-							</div>
-							<div class="pagination">
-								<span class="cur-index">1</span> <em>of</em>
-								<span class="total">45</span>
-							</div>
+								<div class="pagination">
+									<span class="cur-index">XXXX</span> <em>of</em>
+									<span class="total">XXXX</span>
+								</div>	
+							{% endif %}
+							
 						</div>
 					</div>
 				</div>
