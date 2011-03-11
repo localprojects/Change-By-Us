@@ -4,13 +4,6 @@
 Give A Minute - Create a Project
 {% endblock title %}
 
-{% block javascript_header %}
-{{ super() }}
-    <script type="text/javascript">
-    var locations = {{ locations }};    
-    </script>
-{% endblock %}
-
 {% block continent %}
 <div class='continent create'>
 	<div class='headlands clearfix'>
@@ -188,6 +181,8 @@ Give A Minute - Create a Project
 </div>
 
 <script>
+	app_page.locations = {{ d.locations }};
+	app_page.user = {{ d.user.object }};
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Create a Project');
 		tc.jQ('.addphoto a').bind('click',{

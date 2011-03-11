@@ -13,7 +13,8 @@ class Join(Controller):
         elif (action == 'ideas'):
             return self.getIdeas()
         else:
-            return self.render('join')
+            
+            return self.render('join',{'user':None})
             
             
     def POST(self,*args, **kw):
