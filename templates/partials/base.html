@@ -83,8 +83,24 @@
 							<div class="join"><a href='/join'>Join</a></div>
 							<div class='login'><a href='/login'>Login</a></div>
 							<div class='messages has-messages'><a href='/useraccount#messages'>&nbsp;</a></div>
-							<div class='username'><a href='/useraccount'><span class="unbold">Hi, </span>Xxxxxxx!</a></div>
-							<div class='myprojects'><a href='/useraccount'><span class="unbold">My </span>Projects</a></div>
+							<div class='username'>
+								<a href='/useraccount'><span class="unbold">Hi, </span>Xxxxxxx!</a>
+								<div class="dropdown">
+									<div class="membrane">
+										<a href="">Account</a>
+										<a href="">Log out</a>
+									</div>
+								</div>
+							</div>
+							<div class='myprojects'>
+								<a href='/useraccount'><span class="unbold">My </span>Projects</a>
+								<div class="dropdown">
+									<div class="membrane">
+										<a href="">More Trees in the South Bronx</a>
+										<a href="">Start a garden on 161st and Melrose Ave</a>
+									</div>
+								</div>
+							</div>
 						</li>
 					</ul>
 				</div>
@@ -178,6 +194,17 @@
 				});
 				
 				tc.app(app_page);
+				
+				// navbar dropdowns
+				$("ul.navbar .username, ul.navbar .myprojects").hover(
+					function () {
+						$(this).children(".dropdown").slideDown(250);
+					},
+					function () {
+						$(this).children(".dropdown").fadeOut(200); 
+					}
+				);
+			
 				
 				/* DELETE THIS LATER!!!!!!! */
 				$('body').delay(3000).queue(function() {
