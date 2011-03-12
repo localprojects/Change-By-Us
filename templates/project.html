@@ -363,7 +363,7 @@ Give A Minute - Project
 						{% else %}
 						
 							<!-- Begin Members.Empty -->
-							<div class="empty-state-box" style=' '>
+							<div class="empty-state-box">
 								<a class="close" href="#"><span>Close</span></a>
 								<p>Use the tools at the right to get some members listed in here!</p>
 								<a href="#" class="rounded-button small">Add Link</a>
@@ -401,12 +401,12 @@ Give A Minute - Project
 								<h3 class="fancy-caps">Invite People <span>with</span> Similar Ideas</h3>
 								<div class="pagination">
 									<span class="cur-index">XXXX</span> <em>of</em>
-									<span class="total">XXXX</span>
+									<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
 								</div>
 							</div>
 							<div class="sub-bd">
 																
-								{% if d.template_data.project.data.info.related_ideas['items']  %}
+								{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
 									<div class="carousel">
 										<div class="scrollable">
 											<ul class="items">
@@ -505,6 +505,7 @@ Give A Minute - Project
 							<h3>Location</h3>
 						</div>
 						<div class="sub-bd">
+							<!-- TODO {{ location }} -->
 							<div class="map-holder">Location Map placeholder</div>
 						</div>
 					</div>
@@ -525,9 +526,7 @@ Give A Minute - Project
 						</div>
 					</div>
 				</div>
-			</div> <!-- end .box.mission -->
-		
-		
+			</div> <!-- end .box.mission -->		
 		
 			<div class="box resources">
 			
@@ -546,50 +545,32 @@ Give A Minute - Project
 							<h3>External Links</h3>
 						</div>
 						<div class="sub-bd">
-						
-							<ul class="doublewide resources-list clearfix">
-								<li>
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" "><span>Our Facebook Page</span></a></span>
-										</span>
-									</span>
-								</li>
-								<li class="every-other">
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" "><span>Our Kickstarter Project</span></a></span>
-										</span>
-									</span>
-								</li>
-								<li class="last-two">
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" "><span>Our Google Calendar</span></a></span>
-										</span>
-									</span>
-								</li>
-								<li class="every-other last-two">
-									<a href="#" class="add-button add-link rounded-button small">Add Link</a>
-								</li>
-							</ul>
-						
-							<div class="empty-state-box" style=' '>
-								<a class="close" href="#"><span>Close</span></a>
-								<p><a href="">Add links</a> to anything, including some of our recommended links like Facebook groups and Kickstarter.</p>
-								<a href="#" class='rounded-button small add-link'>Add Link</a>
-							</div>
-						
-					
+							
+							{% if d.template_data.project.data.info.resources.links['items']|length > 0 %}
+								<ul class="doublewide resources-list clearfix">
+									{% for link in d.template_data.project.data.info.resources.links['items'] %}
+										<li class="{% if loop.index is even %} every-other {% endif %} {% if loop.revindex < 2 %} last-two {% endif %}">
+											<span class="thumb">
+												<img src="http://placehold.it/30x30" alt=""/>
+											</span>
+											<span class="resource-name">
+												<span>
+													<span><a href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
+												</span>
+											</span>
+										</li>
+									{% endfor %}
+								</ul>
+							{% else %}
+								
+								<div class="empty-state-box">
+									<a class="close" href="#"><span>Close</span></a>
+									<p><a href="">Add links</a> to anything, including some of our recommended links like Facebook groups and Kickstarter.</p>
+									<a href="#" class='rounded-button small add-link'>Add Link</a>
+								</div>
+								
+							{% endif %}
+
 						</div>
 					</div>
 					<div class="organizations">
@@ -597,88 +578,61 @@ Give A Minute - Project
 							<h3>Organizations</h3>
 						</div>
 						<div class="sub-bd">
-						
-							<ul class="doublewide resources-list clearfix">
-								<li>
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" ">Bronx River Alliance</a></span>
-										</span>
-									</span>
+							
+							{% if d.template_data.project.data.info.resources.organizations['items']|length > 0 %}
 								
+								<ul class="doublewide resources-list clearfix">
+									{% for org in d.template_data.project.data.info.resources.organizations['items'] %}
+										<li class="{% if loop.index is even %} every-other {% endif %} {% if loop.revindex < 2 %} last-two {% endif %}">
+											<span class="thumb">
+												<img src="http://placehold.it/30x30" alt=""/>
+											</span>
+											<span class="resource-name">
+												<span>
+													<span><a href="{{ org.url }}"><span>{{ org.title }}</span></a></span>
+												</span>
+											</span>
+										</li>
+									{% endfor %}
+								</ul>
 								
+							{% else %}
+							
+								<div class="empty-state-box">
+									<a class="close" href="#"><span>Close</span></a>
+									<p>When you <a href="">add organizations</a>, we'll introduce your project to the people over there.</p>
+									<a href="#" class="rounded-button small">Add Organizations</a>
+								</div>
 								
-								</li>
-								<li class="every-other">
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" "><span>Grow NYC</span></a></span>
-										</span>
-									</span>
-								
-									<!-- add the class "right" to the tooltip to change its orientation accordingly -->
-									<div class="tooltip" style=' '>
-										<div class="tooltip-hd">
-											<h2>Bronx River Alliance</h2>
+							{% endif %}
+							
+							<!-- add the class "right" to the tooltip to change its orientation accordingly -->
+							<div class="tooltip" style='display:none;'>
+								<div class="tooltip-hd">
+									<h2>Bronx River Alliance</h2>
+								</div>
+								<div class="tooltip-bd">
+									<div class="info">
+										<div class="thumb">
+											<img src="http://placehold.it/90x90" alt=""/>
 										</div>
-										<div class="tooltip-bd">
-											<div class="info">
-												<div class="thumb">
-													<img src="http://placehold.it/90x90" alt=""/>
-												</div>
-												<div class="main">
-													<p>In collaboration with Alliance partners, we maintain a full-time presence on the river, monitoring river conditions and doing ecological restoration projects that improve water quality, stabilize the riverbanks and improve river habitat.</p>
-												</div>
-											</div>
-											<dl class="details">
-												<dt>Visit Us</dt>
-												<dd><a href="">bronxriver.org</a></dd>
-												<dt>Latest Update</dt>
-												<dd>
-													<blockquote>
-														<p>Wally Arias is an intern from the Phipps Community Development Corporation. For the past few weeks he has been alongside&hellip;</p>
-													</blockquote>
-												</dd>
-											</dl>
+										<div class="main">
+											<p>In collaboration with Alliance partners, we maintain a full-time presence on the river, monitoring river conditions and doing ecological restoration projects that improve water quality, stabilize the riverbanks and improve river habitat.</p>
 										</div>
 									</div>
-								
-								</li>
-								<li class="last-two">
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" "><abbr>SSBX</abbr></a></span>
-										</span>
-									</span>
-								</li>
-								<li class="every-other last-two">
-									<span class="thumb">
-										<img src="http://placehold.it/30x30" alt=""/>
-									</span>
-									<span class="resource-name">
-										<span>
-											<span><a href=" "><span>NYC 311</span></a></span>
-										</span>
-									</span>
-								</li>
-							</ul>
-						
-							<div class="empty-state-box" style=' '>
-								<a class="close" href="#"><span>Close</span></a>
-								<p>When you <a href="">add organizations</a>, we'll introduce your project to the people over there.</p>
-								<a href="#" class="rounded-button small">Add Organizations</a>
+									<dl class="details">
+										<dt>Visit Us</dt>
+										<dd><a href="">bronxriver.org</a></dd>
+										<dt>Latest Update</dt>
+										<dd>
+											<blockquote>
+												<p>Wally Arias is an intern from the Phipps Community Development Corporation. For the past few weeks he has been alongside&hellip;</p>
+											</blockquote>
+										</dd>
+									</dl>
+								</div>
 							</div>
-						
-						
+							
 						</div>
 					</div>
 				</div>
@@ -693,14 +647,17 @@ Give A Minute - Project
 				<p class="hint">Check out some new ideas related to your project!</p>
 				<div class="hd clearfix">
 					<h2>
-						<span>Fresh Ideas</span>
+						<span>
+							Fresh Ideas
+							<span class="counter">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
+						</span>
 					</h2>
 				</div>
 				<div class="bd">
 					<div class="ideas-invite">
 						<div class="sub-bd">
 							
-							{% if d.template_data.project.data.info.related_ideas['items']  %}
+							{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
 								<div class="carousel">
 									<div class="scrollable">
 										<ul class="items">
@@ -732,7 +689,7 @@ Give A Minute - Project
 								</div>
 								<div class="pagination">
 									<span class="cur-index">XXXX</span> <em>of</em>
-									<span class="total">XXXX</span>
+									<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
 								</div>	
 							{% endif %}
 							
