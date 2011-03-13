@@ -182,7 +182,9 @@ Give A Minute - Create a Project
 
 <script>
 	app_page.locations = {{ d.locations }};
-	app_page.user = {{ d.user.object }};
+	{% if d.user %}
+		app_page.user = {{ d.user.object }};
+	{% endif %}
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Create a Project');
 		tc.jQ('.addphoto a').bind('click',{
