@@ -11,6 +11,12 @@
 		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" charset="utf-8" />
 		<link rel="stylesheet" href="/static/css/tc.gam.mobile.css" type="text/css" media="screen" charset="utf-8" />
 		
+		<script>
+			var app_page = {
+				features:[]
+			};
+		</script>
+		
 	</head>
 	
 	<body class='earth'>
@@ -34,6 +40,22 @@
 			{% block continent %}Main{% endblock %}
 			
 		</div>
+		
+		<script src="/static/js/libs/jquery-1.5.1.js"></script>
+		<script src="/static/js/libs/tc.util.js"></script>
+		
+		<script src="/static/js/tc.gam.app.js"></script>
+		
+		<script>
+			$(document).one('ready',function(){
+				
+				tc.util.dump(window.outerWidth)
+				
+				tc.jQ('.step').css('width',window.outerWidth+'px').show();
+				
+				tc.app(app_page);
+			});
+		</script>
 		
 	</body>
 	
