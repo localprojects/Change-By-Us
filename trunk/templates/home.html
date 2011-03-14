@@ -85,7 +85,7 @@ Give A Minute - Home
 							</div>
 						</div><!--end .top-pane.step-two-->
 				
-						<div class="step idea-processing" style="display:none"></div><!--end .top-pane.step-one-->
+						<div class="step idea-processing" style="display:none"></div>
 					</div>
 					
 					<div class="projects-pane">
@@ -749,6 +749,7 @@ Give A Minute - Home
 		arrangeNotes("4");
 		arrangeNotes("5");
 		
+		// .small-note arrange
 		function arrangeNotes(areaNum) {
 			var areaSelector = ".area"+areaNum;
 			var theArea = $(areaSelector);
@@ -787,172 +788,15 @@ Give A Minute - Home
 			};
 		};
 		
-		/*
-		// area1 version 2 (needed inline style positions)
-		for(var i = 0; i < $('.area1 .small-note').length; i++) {
 		
-			var maxOffset = 15;
-			
-			var posOrNeg = 1;
-			//if (Math.floor(Math.random()*10) > 5) { posOrNeg = 1 } else { posOrNeg = -1 }
-			
-			var randomZindex = Math.floor(Math.random()*(100)) + 5;
-			var maxX = $('.project-cards .area1').width() - 40;
-			var maxY = $('.project-cards .area1').height() - $('.project-cards .area1 .hd').height() - 46;
-			
-			var notePosition =  $('.area1 .small-note').eq(i).position();
-			var newX = notePosition.left + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			var newY = notePosition.top + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			
-			if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
-			if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
-			
-			//bg image
-			var bgImageName;
-			if (i%5==0) {bgImageName = "url(/static/images/small-notes/note-bg-3a.png)"};
-			if (i%5==1) {bgImageName = "url(/static/images/small-notes/note-bg-3b.png)"};
-			if (i%5==2) {bgImageName = "url(/static/images/small-notes/note-bg-3c.png)"};
-			if (i%5==3) {bgImageName = "url(/static/images/small-notes/note-bg-3d.png)"};
-			if (i%5==4) {bgImageName = "url(/static/images/small-notes/note-bg-3e.png)"};
-		
-			$('.area1 .small-note').eq(i).css({'visibility' : 'visible', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex, 'backgroundImage' : bgImageName});
-		};
-		
-		
-		// AREA2 version 2 
-		for(var i = 0; i < $('.area2 .small-note').length; i++) {
-		
-			var maxOffset = 15;
-			
-			var posOrNeg = 1;
-			//if (Math.floor(Math.random()*10) > 5) { posOrNeg = 1 } else { posOrNeg = -1 }
-			
-			var randomZindex = Math.floor(Math.random()*(100)) + 5;
-			var maxX = $('.project-cards .area2').width() - 40;
-			var maxY = $('.project-cards .area2').height() - $('.project-cards .area2 .hd').height() - 46;
-			
-			var notePosition =  $('.area2 .small-note').eq(i).position();
-			var newX = notePosition.left + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			var newY = notePosition.top + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			
-			if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
-			if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
-			
-			//bg image
-			var bgImageName;
-			if (i%5==0) {bgImageName = "url(/static/images/small-notes/note-bg-1a.png)"};
-			if (i%5==1) {bgImageName = "url(/static/images/small-notes/note-bg-1b.png)"};
-			if (i%5==2) {bgImageName = "url(/static/images/small-notes/note-bg-1c.png)"};
-			if (i%5==3) {bgImageName = "url(/static/images/small-notes/note-bg-1d.png)"};
-			if (i%5==4) {bgImageName = "url(/static/images/small-notes/note-bg-1e.png)"};
-		
-			$('.area2 .small-note').eq(i).css({'visibility' : 'visible', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex, 'backgroundImage' : bgImageName});
-		};
-		
-		
-		// AREA3 version 2 
-		for(var i = 0; i < $('.area3 .small-note').length; i++) {
-		
-			var maxOffset = 15;
-			
-			var posOrNeg = 1;
-			//if (Math.floor(Math.random()*10) > 5) { posOrNeg = 1 } else { posOrNeg = -1 }
-			
-			var randomZindex = Math.floor(Math.random()*(100)) + 5;
-			var maxX = $('.project-cards .area3').width() - 40;
-			var maxY = $('.project-cards .area3').height() - $('.project-cards .area3 .hd').height() - 46;
-			
-			var notePosition =  $('.area3 .small-note').eq(i).position();
-			var newX = notePosition.left + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			var newY = notePosition.top + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			
-			if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
-			if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
-			
-			//bg image
-			var bgImageName;
-			if (i%5==0) {bgImageName = "url(/static/images/small-notes/note-bg-4a.png)"};
-			if (i%5==1) {bgImageName = "url(/static/images/small-notes/note-bg-4b.png)"};
-			if (i%5==2) {bgImageName = "url(/static/images/small-notes/note-bg-4c.png)"};
-			if (i%5==3) {bgImageName = "url(/static/images/small-notes/note-bg-4d.png)"};
-			if (i%5==4) {bgImageName = "url(/static/images/small-notes/note-bg-4e.png)"};
-		
-			$('.area3 .small-note').eq(i).css({'visibility' : 'visible', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex, 'backgroundImage' : bgImageName});
-		};
-		
-		
-		// AREA4 version 2 
-		for(var i = 0; i < $('.area4 .small-note').length; i++) {
-		
-			var maxOffset = 15;
-			
-			var posOrNeg = 1;
-			//if (Math.floor(Math.random()*10) > 5) { posOrNeg = 1 } else { posOrNeg = -1 }
-			
-			var randomZindex = Math.floor(Math.random()*(100)) + 5;
-			var maxX = $('.project-cards .area4').width() - 40;
-			var maxY = $('.project-cards .area4').height() - $('.project-cards .area4 .hd').height() - 46;
-			
-			var notePosition =  $('.area4 .small-note').eq(i).position();
-			var newX = notePosition.left + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			var newY = notePosition.top + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			
-			if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
-			if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
-			
-			//bg image
-			var bgImageName;
-			if (i%5==0) {bgImageName = "url(/static/images/small-notes/note-bg-2a.png)"};
-			if (i%5==1) {bgImageName = "url(/static/images/small-notes/note-bg-2b.png)"};
-			if (i%5==2) {bgImageName = "url(/static/images/small-notes/note-bg-2c.png)"};
-			if (i%5==3) {bgImageName = "url(/static/images/small-notes/note-bg-2d.png)"};
-			if (i%5==4) {bgImageName = "url(/static/images/small-notes/note-bg-2e.png)"};
-		
-			$('.area4 .small-note').eq(i).css({'visibility' : 'visible', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex, 'backgroundImage' : bgImageName});
-		};
-		
-		
-		// AREA5 version 2 
-		for(var i = 0; i < $('.area5 .small-note').length; i++) {
-		
-			var maxOffset = 15;
-			
-			var posOrNeg = 1;
-			//if (Math.floor(Math.random()*10) > 5) { posOrNeg = 1 } else { posOrNeg = -1 }
-			
-			var randomZindex = Math.floor(Math.random()*(100)) + 5;
-			var maxX = $('.project-cards .area5').width() - 40;
-			var maxY = $('.project-cards .area5').height() - $('.project-cards .area5 .hd').height() - 46;
-			
-			var notePosition =  $('.area5 .small-note').eq(i).position();
-			var newX = notePosition.left + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			var newY = notePosition.top + (Math.floor(Math.random()*maxOffset) * posOrNeg);
-			
-			if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
-			if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
-			
-			//bg image
-			var bgImageName;
-			if (i%5==0) {bgImageName = "url(/static/images/small-notes/note-bg-5a.png)"};
-			if (i%5==1) {bgImageName = "url(/static/images/small-notes/note-bg-5b.png)"};
-			if (i%5==2) {bgImageName = "url(/static/images/small-notes/note-bg-5c.png)"};
-			if (i%5==3) {bgImageName = "url(/static/images/small-notes/note-bg-5d.png)"};
-			if (i%5==4) {bgImageName = "url(/static/images/small-notes/note-bg-5e.png)"};
-		
-			$('.area5 .small-note').eq(i).css({'visibility' : 'visible', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex, 'backgroundImage' : bgImageName});
-		};
-		*/
-		
-		
-		
-		// hover counter
+		// .small-note hover
 		var hoverZindexCounter = 106;
 		$(".small-note").hover(
 			function () {
 				$(this).css({'zIndex' : hoverZindexCounter});
 				var theContents = $(this).children('span').html();
-				$(".note-card-splash").fadeOut(25);
-				$(".note-card-splash").html( theContents ).fadeIn(100);
+				$(".note-card-splash").hide();
+				$(".note-card-splash").html( theContents ).show();
 			},
 			function () {
 				hoverZindexCounter++;
