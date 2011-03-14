@@ -1,5 +1,6 @@
 from framework.log import log
 
+# deprecated ?
 def getLocationDictionary(db):
     locations = {}
 
@@ -21,13 +22,15 @@ def getLocationDictionary(db):
   
 def getLocationsWithScoring(db):
     data = []
+    
+    log.info("*** hit locations")
 
     try:
         # TODO
         # this is temporary until actual scoring is determined
         sql = """select l.location_id, l.name, l.lat, l.lon, t.score from location l
                 left join temp_scores t on t.location_id = l.location_id
-                order by l.location_id""";
+                order by t.score desc""";
         data = list(db.query(sql))
     except Exception, e:
         log.info("*** couldn't get locations")
@@ -48,6 +51,26 @@ def getLocations(db):
 
     return data 
 
+def getLocationInfo(db, locationId):
+    info = {}
+    
+    try:
+        sql = """select 'n_projects' as key_name, count(*) as num from project where location_id = $id
+union
+select 'n_ideas' as key_name, count(*) as num from idea where location_id = $id
+union
+select 'n_resources' as key_name, count(*) as num from project_resource where location_id = $id;"""
+        data = list(db.query(sql, {'id':locationId}))
+
+        for item in data:
+            info[item.key_name] = item.num
+    except Exception, e:
+        log.info("*** couldn't get location info")
+        log.error(e)
+
+    return info
+
+# deprecated ?
 def getSimpleLocationDictionary(db):
     data = getLocations(db)
     
