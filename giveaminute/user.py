@@ -18,11 +18,11 @@ class User():
         self.locationId = self.data.location_id
     
     def getDictionary(self):
-        data = dict(u_id = 37,
-                    f_name = "Andrew",
-                    l_name = "Mahon",
-                    email = "andrew@typeslashcode.com",
-                    mobile = "9173241470")
+        data = dict(u_id = self.id,
+                    f_name = self.firstName,
+                    l_name = self.lastName,
+                    email = self.email,
+                    mobile = self.phone)
                     
         return data
         
@@ -105,11 +105,35 @@ def deleteUser(db, userId):
         return False
         
     return True
+    
+def authenticateUser(db, email, password):
+    sql = "select user_id, email, password, salt from user where email = $email"
+    data = db.query(sql, {'email':email})
+    
+    if (len(data) > 0):
+        user = list(data)[0]
+        hashed_password = makePassword(password, user.salt)
         
-def makePassword(password):
-    salt = util.random_string(10)
-    encrypted_password = hashlib.md5(password + salt).hexdigest()
-    return [encrypted_password, salt]   
+        log.info("*** hashed_password = %s" % hashed_password)
+        log.info("*** user.password = %s" % user.password)
+    
+        if (hashed_password[0] == user.password):
+            log.info("*** User authenticated")
+            return user.user_id
+        else:
+            log.warning("*** User not authenticated for email = %s" % email)
+            return None
+    else:
+        log.warning("*** No record for email= %s" % email)
+        return None
+        
+        
+def makePassword(password, salt = None):
+    if (not salt):
+        salt = util.random_string(10)
+        
+    hashed_password = hashlib.md5(password + salt).hexdigest()
+    return [hashed_password, salt]   
     
 def findUserByEmail(db, email):
     sql = "select user_id from user where email = $email and is_active = 1 limit 1"
