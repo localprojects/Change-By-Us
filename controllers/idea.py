@@ -16,11 +16,14 @@ class Idea(Controller):
         
     def newIdea(self):
         description = self.request('text')
-        email = self.request('email')
         locationId = self.request('location_id')
-        
-        #get user id
-        userId = None
+
+        if (self.user):
+            userId = self.user.id
+            email = self.user.email
+        else:
+            userId = None
+            email = self.request('email')
         
         ideaId = mIdea.createIdea(self.db, description, locationId, 'web', userId, email)
         
