@@ -6,6 +6,7 @@ from framework.log import log
 from framework.config import *
 from framework.session_holder import *
 from framework.task_manager import *
+import giveaminute.user as mUser
 
 class Controller():
     
@@ -25,7 +26,6 @@ class Controller():
     def db_connect(cls):
         settings = Config.get('database')
         cls._db = web.database(dbn=settings['dbn'], user=settings['user'], pw=settings['password'], db=settings['db'], host=settings['host'])
-        log.info(str(settings));
         log.info("Connected to db: %s" % cls._db)
     
     def __init__(self):
@@ -48,11 +48,17 @@ class Controller():
         # user
         self.user = None
         if hasattr(self.session, 'user_id'):
-            try:
-                self.user = list(self.db.query("SELECT id, email, admin, oncall, ip, created FROM users WHERE id=$id", {'id': self.session['user_id']}))[0]
-            except Exception, e:
-                log.error(e)
-                self.session.user_id = None
+            self.user = mUser.User(self.db, self.session['user_id'])
+            
+            self.template_data['user'] = dict(json = self.json(self.user.getDictionary()),
+                                            is_admin = True,
+                                            is_moderator = True,
+                                            is_leader = True)            
+#             try:
+#                 self.user = list(self.db.query("SELECT id, email, admin, oncall, ip, created FROM users WHERE id=$id", {'id': self.session['user_id']}))[0]
+#             except Exception, e:
+#                 log.error(e)
+#                 self.session.user_id = None
                 
     def require_login(self, url="/", admin=False):
         if not self.user:
