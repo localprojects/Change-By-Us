@@ -48,18 +48,18 @@ class Controller():
         # user
         self.user = None
         if hasattr(self.session, 'user_id'):
-            self.user = mUser.User(self.db, self.session['user_id'])
-            
-            self.template_data['user'] = dict(json = self.json(self.user.getDictionary()),
-                                            is_admin = True,
-                                            is_moderator = True,
-                                            is_leader = True)            
-#             try:
-#                 self.user = list(self.db.query("SELECT id, email, admin, oncall, ip, created FROM users WHERE id=$id", {'id': self.session['user_id']}))[0]
-#             except Exception, e:
-#                 log.error(e)
-#                 self.session.user_id = None
+            # todo would like to move gam-specific user attrs out of controller module
+            try:
+                self.user = mUser.User(self.db, self.session['user_id'])
                 
+                self.template_data['user'] = dict(json = self.json(self.user.getDictionary()),
+                                                is_admin = self.user.isAdmin,
+                                                is_moderator = self.user.isModerator,
+                                                is_leader = self.user.isLeader)            
+            except Exception, e:
+                log.error(e)
+                self.session.user_id = None                
+
     def require_login(self, url="/", admin=False):
         if not self.user:
             log.info("--> not logged in")
