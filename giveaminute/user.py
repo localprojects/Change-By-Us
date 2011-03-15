@@ -16,6 +16,9 @@ class User():
         self.lastName = self.data.last_name
         self.imageId = self.data.image_id
         self.locationId = self.data.location_id
+        self.isAdmin = bool(self.data.is_admin)
+        self.isModerator = bool(self.data.is_moderator)
+        self.isLeader = bool(self.data.is_leader)
     
     def getDictionary(self):
         data = dict(u_id = self.id,
@@ -27,16 +30,24 @@ class User():
         return data
         
     def populateUserData(self):
-        sql = """select user_key 
-                      ,email
-                      ,password
-                      ,salt
-                      ,phone
-                      ,first_name
-                      ,last_name
-                      ,image_id
-                      ,location_id
-                from user where user_id = $id"""
+        sql = """
+select u.user_key 
+      ,u.email
+      ,u.password
+      ,u.salt
+      ,u.phone
+      ,u.first_name
+      ,u.last_name
+      ,u.image_id
+      ,u.location_id
+      ,if(ug1.user_group_id, 1, 0) as is_admin
+      ,if(ug2.user_group_id, 1, 0) as is_moderator
+      ,if(ug3.user_group_id, 1, 0) as is_leader
+from user u 
+left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id = 1
+left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
+left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
+where u.user_id = $id"""
         
         try:
             data = list(self.db.query(sql, {'id':self.id}))[0]
