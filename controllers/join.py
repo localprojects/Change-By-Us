@@ -13,7 +13,6 @@ class Join(Controller):
         elif (action == 'ideas'):
             return self.getIdeas()
         else:
-            
             return self.render('join',{'user':None})
             
             
