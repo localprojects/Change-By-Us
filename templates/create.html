@@ -234,6 +234,7 @@ Give A Minute - Create a Project
 					next_step:'location',
 					title:'Go from an idea to a solution.',
 					sub_title:'XXXXX, let\'s make it happen. The first step is to start a project that supports your idea.',
+					use_for_history:true,
 					step_data:{
 						timer:null
 					},
@@ -360,6 +361,7 @@ Give A Minute - Create a Project
 					next_step:'check-projects-process',
 					title:'Go from an idea to a solution.',
 					sub_title:'We want to provide you with resources and people in your area!',
+					use_for_history:true,
 					step_data:{},
 					inputs:{
 						location:{
@@ -374,7 +376,8 @@ Give A Minute - Create a Project
 								radios:dom.find('input[type=radio]'),
 								input:dom.find('input.location-hood-enter'),
 								list:dom.find('div.location-hood-list'),
-								warning:dom.find('span.error')
+								warning:dom.find('span.error'),
+								locations:{{ d.locations }}
 							});
 						}
 					},
@@ -415,6 +418,7 @@ Give A Minute - Create a Project
 					selector:'.step.check',
 					prev_step:'location',
 					next_step:'add-resource-process',
+					use_for_history:true,
 					step_data:{},
 					init:function(merlin,dom){
 						var i, temphtml;
@@ -479,6 +483,7 @@ Give A Minute - Create a Project
 					selector:'.step.add',
 					prev_step:'check',
 					next_step:'finish',
+					use_for_history:true,
 					init:function(merlin,dom){
 						var i, temphtml;
 						for(i in merlin.current_step.step_data.resources){
@@ -490,7 +495,7 @@ Give A Minute - Create a Project
 							if(i >= (merlin.current_step.step_data.resources.length-3)){
 								temphtml.addClass('last-three');
 							}
-							if(i==merlin.current_step.step_data.projects.length-1){
+							if(i==merlin.current_step.step_data.resources.length-1){
 								temphtml.addClass('last');
 							}
 							dom.find('ul.resources-list').append(temphtml);

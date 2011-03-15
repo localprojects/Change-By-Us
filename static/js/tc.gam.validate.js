@@ -7,6 +7,7 @@ tc.validator_regex = {
 
 tc.validate = function(element,validators){
 	tc.util.log('tc.validate');
+	tc.util.dump(element);
 	var valid, required, empty, value, errors, i, tempvalue, tempelement;
 	
 	valid = true;

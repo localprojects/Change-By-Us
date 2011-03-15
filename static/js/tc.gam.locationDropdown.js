@@ -11,7 +11,6 @@ tc.locationDropdown.validator = function(merlin,elements){
 		}
 	}
 	if(elements.filter('.location-hood').filter(':checked').length){
-		tc.util.dump(elements.filter('.location-hood-enter').attr('location_id'));
 		if(elements.filter('.location-hood-enter').attr('location_id')){
 			return {
 				valid:true,

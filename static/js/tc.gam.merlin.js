@@ -88,8 +88,10 @@ tc.merlin.prototype.show_step = function(step){
 	}
 	
 	this.options.steps[step].step_name = step;
-	if(this.current_step){
+	if(this.current_step && this.current_step.use_for_history){
 		this.options.steps[step].prev_step = this.current_step.step_name;
+	} else if(this.current_step){
+		this.options.steps[step].prev_step = this.current_step.prev_step;
 	}
 	this.current_step = this.options.steps[step];
 	if(this.options.next_button){
@@ -127,6 +129,8 @@ tc.merlin.prototype.show_step = function(step){
 			if(!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector){
 				this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
 			}
+			tc.util.dump(this.current_step.dom);
+			tc.util.dump(this.current_step.inputs[i].dom);
 			this.current_step.inputs[i].dom
 				.bind('focus',this.event_data,this.handlers.focus)
 				.bind('keyup change',this.event_data,this.handlers.keypress)

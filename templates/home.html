@@ -749,12 +749,72 @@ Give A Minute - Home
 			}
 		});
 		
+		var note_source = {{ d.all_ideas }};
+		
+		
+		generateAndArrangeNotes(1);
 		
 		arrangeNotes("1");
 		arrangeNotes("2");
 		arrangeNotes("3");
 		arrangeNotes("4");
 		arrangeNotes("5");
+		
+		function generateAndArrangeNotes(area_index){
+			//settings
+			var gridDistance = 46; // in pixels
+			var maxOffset = 15; // in pixels
+			
+			// selectors
+			var areaSelector = ".area"+areaNum;
+			var theArea = $(areaSelector);
+			var smallNote = $(areaSelector+' .small-note');
+			
+			// initial values
+			var positionX = 0 - gridDistance;
+			var positionY = 0;
+			var rowCount = 0;
+			
+			var maxX = theArea.width() - 45;
+			var maxY = theArea.height() - theArea.children('.hd').height() - 46;
+			var noteColorId = areaNum;
+						
+			for(var i = 0; i < smallNote.length; i++) {
+				// set initial position according to gridDistance
+				positionX = positionX + gridDistance;
+				if (positionX > maxX) { 
+					if (rowCount%2 == 0) { positionX = gridDistance / 2 } 
+					else { positionX = 0 - gridDistance };
+					positionY = positionY + (gridDistance / 2);
+					rowCount++;
+				};
+				
+				// z-index & new position
+				var posOrNegOffset = 1;
+				var randomZindex = Math.floor(Math.random()*(100)) + 5;
+				var newX = positionX + (Math.floor(Math.random()*maxOffset) * posOrNegOffset);
+				var newY = positionY + (Math.floor(Math.random()*maxOffset) * posOrNegOffset);
+				
+				// randomly place note if it falls out-of-bounds
+				if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
+				if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
+			
+				// background image
+				var bgImageName;
+				var bgImageCounter = i%5;
+				if (bgImageCounter==0) {bgImageName = "url(/static/images/small-notes/note-bg-"+noteColorId+"a.png)"}
+				else if (bgImageCounter==1) {bgImageName = "url(/static/images/small-notes/note-bg-"+noteColorId+"b.png)"}
+				else if (bgImageCounter==2) {bgImageName = "url(/static/images/small-notes/note-bg-"+noteColorId+"c.png)"}
+				else if (bgImageCounter==3) {bgImageName = "url(/static/images/small-notes/note-bg-"+noteColorId+"d.png)"}
+				else {bgImageName = "url(/static/images/small-notes/note-bg-"+noteColorId+"e.png)"};
+				
+				// set style
+				smallNote.eq(i).css({/*'display' : 'block', */'top' : newY, 'left' : newX, 'zIndex' : randomZindex, 'backgroundImage' : bgImageName});			
+			};
+			
+			smallNote.fadeIn(2000);
+			
+		}
 		
 		// .small-note arrange
 		function arrangeNotes(areaNum) {

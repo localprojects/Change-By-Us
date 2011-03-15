@@ -13,8 +13,9 @@ Give A Minute - Login
 		</div>
 	</div>
 
-	<div class='midlands merlin clearfix'>
-		<div class="step start" >	
+	<div class='midlands merlin login clearfix'>
+		
+		<div class="step start" >
 			<div class='west'>
 				<h4>Login</h4>
 				<div class='oauth-login'>
@@ -25,20 +26,19 @@ Give A Minute - Login
 					<em>or</em>
 				</div>
 				<div class='email-login'>
-					<form action='/login' method='POST'>
 						<div class="row">
 							<label for='email'>E-mail</label>
-							<input type='text' name='email' id='email' />
+							<input type='text' name='email' id='email' class='email' />
 						</div>
 						<div class="row">
 							<label for='password'>Password</label>
-							<input type='text' name='password' id='password' />
-							<a class="forgot-pass-link" href="">Forgot your password?</a>
+							<input type='password' name='password' id='password'  class='password'/>
+							<a class="forgot-pass-link" href="#forgot-password">Forgot your password?</a>
 						</div>
 						<div class="row">
-							<input type='submit' name='submit' value='Login' />
+							<button id='login-button' class='next-button'>Login</button>
+							<!-- <input type='submit' name='submit' value='Login' /> -->
 						</div>
-					</form>
 				</div>
 			</div>
 			
@@ -48,19 +48,27 @@ Give A Minute - Login
 			</div>
 		</div><!--end .step-->
 		
-		<div class="step forgot-pass" style="display:none;">	
+		<div class="step login-process" style="display:none;">	
+			<p>Thank you for logging in...</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div><!--end .step-->
+		
+		<div class="step login-failure" style="display:none;">	
+			<p>There was an error logging you in.</p>
+		</div><!--end .step-->
+		
+		<div class="step forgot-password" style="display:none;">	
 			<div class='west'>
 				<h4>Forgot your password? <span>We'll send you an e-mail with a instructions to reset your password.</span></h4>
 				<div class='email-login'>
-					<form action='/login' method='POST'>
 						<div class="row">
 							<label for='email'>Enter your e-mail</label>
-							<input type='text' name='email-forgot-pass' id='email-forgot-pass' />
+							<input type='text' name='email-forgot-pass' id='email-forgot-pass' class='email' />
 						</div>
 						<div class="row">
-							<input type='submit' name='send-instructions' value='Send Instructions' />
+							<button id='login-button' class='next-button'>Send Instructions</button>
+							<!-- <input type='submit' name='send-instructions' value='Send Instructions' /> -->
 						</div>
-					</form>
 				</div>
 			</div>
 			
@@ -71,10 +79,116 @@ Give A Minute - Login
 				</div>
 			</div>
 		</div><!--end .step-->
+		
+		<div class="step forgot-password-process" style="display:none;">	
+			<p>Please wait...</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div><!--end .step-->
+		
+		<div class="step forgot-password-finished" style="display:none;">	
+			<p>You will receive an email with further details on retrieving your password.</p>
+		</div><!--end .step-->
+		
 	</div>
 
 	<div class='foothills'>
-		<a class='back' href='#'><span>Back</span></a>
+		<!-- <a class='back' href='#'><span>Back</span></a> -->
 	</div>
+	
+	
+	<script>
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Login');
+
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin.login'),
+			next_button:tc.jQ('button.next-button'),
+			first_step:'start',
+			data:{
+				email:null,
+				password:null
+			},
+			steps:{
+				'start':{
+					selector:'.start',
+					next_step:'login-process',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-32','required'],
+							hint:''
+						},
+						password:{
+							selector:'input.password',
+							validators:['min-3','max-200','required'],
+							hint:''
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							email:merlin.current_step.inputs.email.dom.val(),
+							password:merlin.current_step.inputs.password.dom.val()
+						});
+					}
+				},
+				'login-process':{
+					selector:'.login-process',
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/login',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									window.location.hash = 'login-failure';
+									return;
+								}
+								window.location = '/useraccount';
+							}
+						});
+					}
+				},
+				'login-failure':{
+					selector:'.login-failure',
+					init:function(merlin,dom){
+						
+					}
+				},
+				'forgot-password':{
+					selector:'.forgot-password',
+					next_step:'forgot-password-process',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-32','required'],
+							hint:''
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							email:merlin.current_step.inputs.email.dom.val()
+						});
+					}
+				},
+				'forgot-password-process':{
+					selector:'.forgot-password-process',
+					init:function(merlin,dom){
+						window.location.hash = 'forgot-password-finished';
+					}
+				},
+				'forgot-password-finished':{
+					selector:'.forgot-password-finished',
+					init:function(merlin,dom){
+						
+					}
+				}
+				
+			}
+		});
+	});
+</script>
+	
 </div>
 {% endblock continent %}
