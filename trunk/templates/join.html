@@ -109,7 +109,7 @@ Give A Minute - Join
 			</div><!--end step-->
 			
 			<div class='step sms-results clearfix ' style='display:none;'>
-				<p><strong>We found 2 ideas from that telephone number.</strong></p>
+				<p><strong>We found <span class='n_ideas'>X</span> ideas from that telephone number.</strong></p>
 				<p>We'll add these ideas to your profile and link any new ideas that come in from that number.</p>
 			</div><!--end step-->
 			
@@ -204,13 +204,15 @@ Give A Minute - Join
 					progress_selector:'.1',
 					selector:'.start',
 					prev_step:null,
-					next_step:'user-info'
+					next_step:'user-info',
+					use_for_history:true
 				},
 				'user-info':{
 					progress_selector:'.2',
 					selector:'.user-info',
 					prev_step:'start',
 					next_step:'email-lookup',
+					use_for_history:true,
 					inputs:{
 						f_name:{
 							selector:'input.f_name',
@@ -259,7 +261,7 @@ Give A Minute - Join
 							dataType:'json',
 							success:function(data,ts,xhr){
 								if(data.n_users){
-									merlin.options.steps['user-info'].validators['input.email'].push('not-'+merlin.options.data.email);
+									merlin.options.steps['user-info'].inputs['email'].validators.push('not-'+merlin.options.data.email);
 									if(merlin.options.error_indicator){
 										merlin.options.error_indicator.html('<span>Oops! We found someone with that name and e-mail address in our system.</span>').show();
 									}
@@ -276,6 +278,7 @@ Give A Minute - Join
 					selector:'.email-step',
 					prev_step:'user-info',
 					next_step:'sms-lookup',
+					use_for_history:true,
 					inputs:{
 						email:{
 							selector:'input.email',
@@ -302,6 +305,7 @@ Give A Minute - Join
 					selector:'.sms-lookup',
 					prev_step:'email-step',
 					next_step:'finish',
+					use_for_history:true,
 					inputs:{
 						phone_1:{
 							selector:'input.phone_1',
@@ -376,9 +380,10 @@ Give A Minute - Join
 							context:merlin,
 							dataType:'json',
 							success:function(data,ts,xhr){
-								if(data.sms_phone_already_used){
+								if(data.sms_number_already_used){
 									window.location.hash = 'sms-already-used';
 								}else if(data.n_ideas){
+									this.options.steps['sms-results'].data = data;
 									window.location.hash = 'sms-results';
 								} else {
 									window.location.hash = 'sms-no-results';
@@ -392,7 +397,11 @@ Give A Minute - Join
 					selector:'.sms-results',
 					prev_step:'sms-lookup',
 					next_step:'finish',
+					data:{
+						n_ideas:null
+					},
 					init:function(merlin,dom){
+						dom.find('span.n_ideas').text(merlin.current_step.data.n_ideas);
 						dom.find('p.phone-num').html('('+merlin.options.data.sms_phone.substring(0,3)+') '+merlin.options.data.sms_phone.substring(3,6)+'-'+merlin.options.data.sms_phone.substring(6,10));
 					}
 				},
@@ -411,7 +420,8 @@ Give A Minute - Join
 					prev_step:'sms-lookup',
 					next_step:'finish',
 					init:function(merlin,dom){
-						
+						dom.find('p.phone-num').html('('+merlin.options.data.sms_phone.substring(0,3)+') '+merlin.options.data.sms_phone.substring(3,6)+'-'+merlin.options.data.sms_phone.substring(6,10));
+						merlin.options.data.sms_phone = null;
 					}
 				},
 				'finish':{
