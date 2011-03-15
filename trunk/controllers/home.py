@@ -5,12 +5,9 @@ import giveaminute.project as mProject
 
 class Home(Controller):
     def GET(self, action=None):
-        self.template_data['user'] = dict(json = self.json(mUser.getDummyDictionary()),
-                                            is_admin = True,
-                                            is_moderator = True,
-                                            is_leader = True)
         self.template_data['project_user'] = dict(is_member = True,
-                                                is_project_admin = True)                                            
+                                                is_project_admin = True)          
+                                          
         if (not action or action == 'home'):
             return self.showHome()
         elif (action == 'project'):
@@ -21,27 +18,22 @@ class Home(Controller):
             
     def POST(self, action=None):
         if (action == 'login'):
-            email = self.request('email')
-            password = self.request('password')
-            if (email and password):
-                return True
-            else:
-                return False
-         
-            return True
+             return self.login()
         elif (action == 'logout'):
-            return True
+            return self.logout()
         else:
             return self.not_found()
             
             
     def showHome(self):
+        #temp fix
         locations = self.json(mLocation.getSimpleLocationDictionary(self.db))
+        allIdeas = self.json(self.getAllProjectIdeas())
         
         self.template_data['locations'] = locations
-        self.template_data['all_ideas'] = self.json(self.getAllProjectIdeas())
+        self.template_data['all_ideas'] = allIdeas
         
-        return self.render('home',  self.template_data)
+        return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
     def showProject(self):
         project_id = 1
@@ -50,6 +42,29 @@ class Home(Controller):
         self.template_data['project'] = dict(json = self.json(project.getFullDictionary()), data = project.getFullDictionary())
     
         return self.render('project')
+    
+    def login(self):
+        email = self.request("email")
+        password = self.request("password")
+        
+        if (email and password):
+            userId = mUser.authenticateUser(self.db, email, password)
+                
+            if (userId):        
+                self.session.user_id = userId
+                self.session.invalidate()
+                
+                return userId
+            else:
+                return False    
+        else:
+            log.warning("Missing email or password")                        
+            return False
+            
+    def logout(self):
+        self.session.kill()
+
+        return True    
         
     def getAllProjectIdeas(self):
         data = []
