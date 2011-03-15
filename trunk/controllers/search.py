@@ -5,36 +5,42 @@ from framework.controller import *
 class Search(Controller):
     def GET(self, action=None):
         if action == 'map':
-            return self.render('map', {'neighborhoodJSON':self.getLocationJSON()})
+            return self.showMap()
         else:
-            log.info("*** render search")
             return self.render('search')
+                        
+    def showMap(self):
+        locationData = self.getLocationData()
+    
+        self.template_data['locations_scored'] = self.json(locationData)
+        self.template_data['max_score'] = locationData[0]['score']
+    
+        return self.render('map')
             
-    def POST(self, action=None):
-        if (action == 'info'):
-            return self.getLocationInfoJSON()
-        else:
-            return self.not_found()
-            
-    def getLocationJSON(self):
+    def getLocationData(self):
         data = mLocation.getLocationsWithScoring(self.db)
         
         locations = []
         
         for item in data:
+            score = self.calcScore(item.num_projects, item.num_ideas, item.num_project_resources)
+        
             locations.append(dict(name = item.name, 
                                 location_id = item.location_id, 
                                 lat = str(item.lat), 
                                 lon = str(item.lon),
-                                score = (item.score if item.score else 0)))
-            
-        return self.json(locations)
+                                n_projects = item.num_projects,
+                                n_ideas = item.num_ideas,
+                                n_resources = item.num_project_resources,
+                                score = score))
+                                
+        sortedLocations = sorted(locations, key = lambda k:k['score'], reverse = True) 
         
-    def getLocationInfoJSON(self):
-        locationId = self.request('location_id')
-    
-        info = mLocation.getLocationInfo(self.db, locationId)
+        return sortedLocations
         
-        return self.json(info)
+    def calcScore(self, numProjects, numIdeas, numResources):
+        score = numProjects + numIdeas + numResources
+        
+        return score 
             
             
