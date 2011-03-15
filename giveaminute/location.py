@@ -28,9 +28,15 @@ def getLocationsWithScoring(db):
     try:
         # TODO
         # this is temporary until actual scoring is determined
-        sql = """select l.location_id, l.name, l.lat, l.lon, t.score from location l
-                left join temp_scores t on t.location_id = l.location_id
-                order by t.score desc""";
+        sql = """
+select l.location_id
+    ,l.name
+    ,l.lat
+    ,l.lon
+    ,(select count(*) from project p where p.location_id = l.location_id) as num_projects
+    ,(select count(*) from idea i where i.location_id = l.location_id) as num_ideas
+    ,(select count(*) from project_resource r where r.location_id = l.location_id) as num_project_resources
+from location l""";
         data = list(db.query(sql))
     except Exception, e:
         log.info("*** couldn't get locations")
