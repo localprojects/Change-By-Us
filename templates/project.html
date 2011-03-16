@@ -18,9 +18,9 @@ Give A Minute - Project
 				<span>Join</span>
 			</a>
 			<div class="members">
-				<a href='#'>Members <span class="counter">0</span></a>
-			</div>			
-			{% if d.template_data.project.data.editable is sameas True %}
+				<a href='#'>Members <span class="counter">{{ d.template_data.project.data.info.members['items']|length }}</span></a>
+			</div>
+			{% if d.template_data.project.data.editable %}
 				<span class="control"><a href="#">Manage</a></span>
 			{% endif %}
 		</div>
@@ -47,7 +47,7 @@ Give A Minute - Project
 		<div class="east">
 			
 			<!-- TODO!!! -->
-			<div class="box resources related-resources">
+			<div class="box resources related-resources" style="">
 				<div class="hd clearfix">
 					<h2>
 						<span>
@@ -63,7 +63,7 @@ Give A Minute - Project
 				</div>
 			
 				<div class="bd clearfix">		
-					<table class="resources-list doublewide clearfix">
+					<table class="resources-list doublewide">
 						<tr>
 							<td>
 								<a href="" class="add-button rounded-button">Add</a>
@@ -108,7 +108,7 @@ Give A Minute - Project
 					</table>
 										
 					<div class="actions">
-						<a href="#" class="forward fancy-caps">
+						<a href="/search" class="forward fancy-caps">
 							<span>Find more resources</span>
 						</a>
 					</div>
@@ -554,20 +554,30 @@ Give A Minute - Project
 						<div class="sub-bd">
 							
 							{% if d.template_data.project.data.info.resources.links['items']|length > 0 %}
-								<ul class="doublewide resources-list clearfix">
-									{% for link in d.template_data.project.data.info.resources.links['items'] %}
-										<li class="{% if loop.index is even %} every-other {% endif %} {% if loop.revindex < 2 %} last-two {% endif %}">
-											<span class="thumb">
-												<img src="http://placehold.it/30x30" alt=""/>
-											</span>
-											<span class="resource-name">
-												<span>
-													<span><a href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
+								
+								<table class="resources-list doublewide">
+									<tbody>
+										{% for link in d.template_data.project.data.info.resources.links['items'] %}
+											{% if loop.index is odd %}
+												<tr>
+											{% endif %}
+											<td>
+												<span class="thumb">
+													<img src="http://placehold.it/30x30" alt=""/>
 												</span>
-											</span>
-										</li>
-									{% endfor %}
-								</ul>
+												<span class="resource-name">
+													<span>
+														<span><a href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
+													</span>
+												</span>
+											</td>
+											{% if loop.index is even %}
+												</tr>
+											{% endif %}
+										{% endfor %}
+									</tbody>
+								</table>
+								
 							{% else %}
 								
 								<div class="empty-state-box">
@@ -579,6 +589,9 @@ Give A Minute - Project
 							{% endif %}
 
 						</div>
+						<div class="sub-ft clearfix">
+							<a href="#" class="rounded-button small add-link">Add a Link</a>
+						</div>
 					</div>
 					<div class="organizations">
 						<div class="sub-hd">
@@ -588,20 +601,28 @@ Give A Minute - Project
 							
 							{% if d.template_data.project.data.info.resources.organizations['items']|length > 0 %}
 								
-								<ul class="doublewide resources-list clearfix">
-									{% for org in d.template_data.project.data.info.resources.organizations['items'] %}
-										<li class="{% if loop.index is even %} every-other {% endif %} {% if loop.revindex < 2 %} last-two {% endif %}">
-											<span class="thumb">
-												<img src="http://placehold.it/30x30" alt=""/>
-											</span>
-											<span class="resource-name">
-												<span>
-													<span><a href="{{ org.url }}"><span>{{ org.title }}</span></a></span>
+								<table class="resources-list doublewide">
+									<tbody>
+										{% for org in d.template_data.project.data.info.resources.organizations['items'] %}
+											{% if loop.index is odd %}
+												<tr>
+											{% endif %}
+											<td>
+												<span class="thumb">
+													<img src="http://placehold.it/30x30" alt=""/>
 												</span>
-											</span>
-										</li>
-									{% endfor %}
-								</ul>
+												<span class="resource-name">
+													<span>
+														<span><a href="{{ org.url }}"><span>{{ org.title }}</span></a></span>
+													</span>
+												</span>
+											</td>
+											{% if loop.index is even %}
+												</tr>
+											{% endif %}
+										{% endfor %}
+									</tbody>
+								</table>
 								
 							{% else %}
 							
@@ -614,7 +635,7 @@ Give A Minute - Project
 							{% endif %}
 							
 							<!-- add the class "right" to the tooltip to change its orientation accordingly -->
-							<div class="tooltip" style='display:none;'>
+							<div class="tooltip" style=' '>
 								<div class="tooltip-hd">
 									<h2>Bronx River Alliance</h2>
 								</div>
@@ -641,14 +662,12 @@ Give A Minute - Project
 							</div>
 							
 						</div>
+						<div class="sub-ft clearfix">
+							<a href="#" class="rounded-button small">Add a Resource</a>
+						</div>
 					</div>
 				</div>
-			
-			
-				<div class="ft clearfix">
-					<a href="#" class="rounded-button small">Add a Resource</a>
-				</div>
-			
+				
 			</div>
 			<div class="box fresh-ideas">
 				<p class="hint">Check out some new ideas related to your project!</p>
@@ -827,6 +846,7 @@ Give A Minute - Project
 		
 		tc.util.dump(app.components.project);
 		
+		// Join
 		tc.jQ('a.join-project').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.introduce-yourself'),
@@ -869,6 +889,7 @@ Give A Minute - Project
 			e.data.app.components.modal.show(e.data);
 		});
 		
+		// Invite
 		tc.jQ('a.invite').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.invite-user'),
@@ -911,6 +932,7 @@ Give A Minute - Project
 			e.data.app.components.modal.show(e.data);
 		});
 		
+		// Add a link
 		tc.jQ('a.add-link').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.add-link'),
