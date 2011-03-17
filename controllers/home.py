@@ -4,14 +4,14 @@ import giveaminute.user as mUser
 import giveaminute.project as mProject
 
 class Home(Controller):
-    def GET(self, action=None):
+    def GET(self, action=None, page=None):
         self.template_data['project_user'] = dict(is_member = True,
                                                 is_project_admin = True)          
                                           
         if (not action or action == 'home'):
             return self.showHome()
         elif (action == 'project'):
-            return self.showProject()                                        
+            return self.showProject(page)                                        
         else:
             return self.render(action)
             
@@ -35,11 +35,15 @@ class Home(Controller):
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
-    def showProject(self):
-        project_id = 1
-        project = mProject.Project(self.db, project_id)
+    def showProject(self, projectId):
+        if (not projectId or projectId == -1):
+            projDictionary = mProject.getTestData()
+        else:
+            project = mProject.Project(self.db, project_id)
+            
+            projDictionary = project.getFullDictionary()
         
-        self.template_data['project'] = dict(json = self.json(project.getFullDictionary()), data = project.getFullDictionary())
+        self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
     
         return self.render('project')
     
