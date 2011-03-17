@@ -22,26 +22,32 @@ class CreateProject(Controller):
         return self.newProject()  
         
     def newProject(self):
-        title = self.request('title')
-        description = self.request('text')
-        locationId = self.request('location_id')
-        imageId = self.request('image')
-        keywords = self.request('keywords').split(',')
-        resourceIds = self.request('resources').split(',')
-        
-        projectId = project.createProject(self.db, title, description, ' '.join(keywords), locationId, imageId)
-        
-        ##TODO add keywords to dictionary, hence the splitting and joining
-        
-        for resourceId in resourceIds:
-            log.info("*** insert resource id %s" % resourceId)
-            project.attachResourceToProject(self.db, projectId, resourceId)
+        if (self.session.user_id):
+            owner_user_id = self.session.user_id
+            title = self.request('title')
+            description = self.request('text')
+            locationId = self.request('location_id')
+            imageId = self.request('image')
+            keywords = self.request('keywords').split(',')
+            resourceIds = self.request('resources').split(',')
             
-        if (projectId):
-            return projectId
+            projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId)
+            
+            ##TODO add keywords to dictionary, hence the splitting and joining
+            
+            for resourceId in resourceIds:
+                log.info("*** insert resource id %s" % resourceId)
+                project.attachResourceToProject(self.db, projectId, resourceId)
+                
+            if (projectId):
+                return projectId
+            else:
+                log.error("*** couldn't create project")
+                return False
         else:
+            log.error("*** only logged in users can create projects")
             return False
-            
+                    
     def getKeywordsJSON(self):
         s = "%s %s" % (self.request('text'), self.request('title'))
         kw = keywords.getKeywords(self.db, s)
