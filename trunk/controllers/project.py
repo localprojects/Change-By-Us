@@ -22,7 +22,15 @@ class Project(Controller):
         elif (action == 'endorse'):
             return self.endorse()
         elif (action == 'link'):
-            return self.link()
+            if (param0 == 'add'):
+                return self.addLink()
+            else:
+                return self.not_found()
+        elif (action == 'resource'):
+            if (param0 == 'add'):
+                return self.addResource()
+            else:
+                return self.not_found()
         else:
             return self.not_found()
         
@@ -46,7 +54,7 @@ class Project(Controller):
             log.error("*** join submitted w/o logged in user")
             return False
         elif (not projectId):
-            log.error("*** join submitted w/o logged in user")
+            log.error("*** join submitted w/o logged project id")
             return False
         elif (util.strNullOrEmpty(description)):
             log.error("*** join submitted w/o idea")
@@ -72,5 +80,25 @@ class Project(Controller):
         else:
             return mProject.endorse(self.db, projectId, self.user.id)
             
-    def link(self):
-        pass  
+    def addLink(self):
+        projectId = self.request('project_id')
+        title = self.request('title')
+        url = self.request('url')
+        
+        if (not projectId or util.strNullOrEmpty(title) or util.strNullOrEmpty(url)):
+            log.error("*** link submitted w/o id, title, or url")
+            return False
+        else:
+            return mProject.addLinkToProject(self.db, projectId, title, url)
+        
+    def addResource(self):
+        projectId = self.request('project_id')
+        projectResourceId = self.request('project_resource_id')
+        
+        if (not projectId or not projectResourceId):
+            log.error("*** resource submitted missing an id")
+            return False
+        else:
+            return mProject.addResourceToProject(self.db, projectId, projectResourceId)
+        
+        
