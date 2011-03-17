@@ -46,7 +46,7 @@ where p.project_id = $id;"""
         endorsements = self.getEndorsements()
         links = self.getLinks()
         projectResources = self.getResources()
-        goals = []
+        goals = self.getGoals()
         messages = []
         relatedIdeas = self.getRelatedIdeas()
     
@@ -63,36 +63,7 @@ where p.project_id = $id;"""
                                 members = dict(items = members),
                                 resources = dict(links = dict(items = links),
                                                 organizations = dict(items = projectResources)),
-                                goals = dict(items = [dict(goal_id = 12345,
-                                                        active = True,
-                                                        text = "Contact the City Parks Department and find out the situation for planting trees in the area.",
-                                                        timeframe = "1 month",
-                                                        owner = dict(u_id = 39,
-                                                                    name = "Steven M.")),
-                                                    dict(goal_id = 3412,
-                                                        active = False,
-                                                        text = "Some other goal with Short descriptive text",
-                                                        timeframe = "1 day",
-                                                        owner = dict(u_id = 39,
-                                                                    name = "Steven M.")),
-                                                    dict(goal_id = 56,
-                                                        active = True,
-                                                        text = "Short text",
-                                                        timeframe = "1 week",
-                                                        owner = dict(u_id = 41,
-                                                                    name = "Hasim Q.")),
-                                                    dict(goal_id = 434,
-                                                        active = True,
-                                                        text = "REPEAT 1: Contact the City Parks Department and find out the situation for planting trees in the area.",
-                                                        timeframe = "1 month",
-                                                        owner = dict(u_id = 39,
-                                                                    name = "Steven M.")),
-                                                    dict(goal_id = 44,
-                                                        active = False,
-                                                        text = "REPEAT 2: Contact the City Parks Department and find out the situation for planting trees in the area.",
-                                                        timeframe = "1 month",
-                                                        owner = dict(u_id = 39,
-                                                                    name = "Steven M."))]),
+                                goals = dict(items = goals),
                                 messages = dict(n_returned = 10,
                                                 offset = 0,
                                                 total = 30,
@@ -226,6 +197,36 @@ where p.project_id = $id;"""
             log.error(e)                  
             
         return ideas
+        
+    def getGoals(self):
+        goals = []
+        
+        sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
+                      u.user_id, u.first_name, u.last_name
+                from project_goal g
+                inner join user u on u.user_id = g.user_id
+                where g.project_id = $id"""
+                
+        try:
+            data = list(self.db.query(sql, {'id':self.id}))
+
+        
+            if len(data) > 0:
+                for item in data:
+                    goals.append(goal(item.project_goal_id, 
+                                      item.description, 
+                                      bool(item.is_featured),
+                                      bool(item.is_accomplished),
+                                      item.time_frame_numeric,
+                                      item.time_frame_unit,
+                                      item.user_id, 
+                                      item.first_name, 
+                                      item.last_name))
+        except Exception, e:
+            log.info("*** couldn't get related")
+            log.error(e)                  
+            
+        return goals
                                                 
 def smallUser(id, first, last):
     return dict(u_id = id,
@@ -250,6 +251,14 @@ def idea(id, description, userId, firstName, lastName, createdDatetime, submissi
                 owner = smallUser(userId, firstName, lastName),
                 created = str(createdDatetime),
                 submission_type = submissionType)
+                
+def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, firstName, lastName):
+    return dict(goal_id = id,
+                text = description,
+                active = isFeatured,
+                accomplished = isAccomplished,
+                timeframe = "%s %s" % (str(time_n), time_unit),
+                owner = smallUser(userId, firstName, lastName))
 
     
 def getTestData():
@@ -570,3 +579,62 @@ def getProjects(db, keywords, locationId, limit = 100):
         log.info("*** couldn't get projects")
         log.error(e)
         return None
+        
+def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
+    try:
+        db.insert('project_goal', project_id = projectId,
+                                    description = description,
+                                    time_frame_numeric = int(timeframeNumber),
+                                    time_frame_unit = timeframeUnit,
+                                    user_id = userId)
+                                    
+        return True;
+    except Exception, e:
+        log.info("*** problem adding goal to project")
+        log.error(e)    
+        return False     
+        
+def featureProjectGoal(db, projectGoalId):
+    # TODO should put rollback/commit here
+    try:
+        sqlupdate1 = """update project_goal g1, project_goal g2 set g1.is_featured = 0 
+                where g1.project_id = g2.project_id and g2.project_goal_id = $id"""
+        db.query(sqlupdate1, {'id':projectGoalId})
+        
+        sqlupdate2 = "update project_goal set is_featured = 1 where project_goal_id = $id"
+        db.query(sqlupdate2, {'id':projectGoalId})
+
+        return True           
+    except Exception, e:
+        log.info("*** problem featuring goal")
+        log.error(e)    
+        return False     
+
+def accomplishProjectGoal(db, projectGoalId):
+    # TODO should put rollback/commit here
+    try:
+        sql = "update project_goal set is_accomplished = 1 where project_goal_id = $id"
+        db.query(sql, {'id':projectGoalId})
+
+        return True           
+    except Exception, e:
+        log.info("*** problem accomplishing goal")
+        log.error(e)    
+        return False 
+        
+def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None):
+    try:
+        db.insert('project_message', project_id = projectId,
+                                    message = message,
+                                    user_id = user_id,
+                                    idea_id = ideaId,
+                                    project_goal_id = projectGoalId,
+                                    message_type  = message_type)
+                                    
+        return True;
+    except Exception, e:
+        log.info("*** problem adding message to project")
+        log.error(e)    
+        return False  
+
+
