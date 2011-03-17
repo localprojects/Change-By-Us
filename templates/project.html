@@ -752,6 +752,11 @@ Give A Minute - Project
 	
 		<a class='close' href="#"><span>close</span></a>
 	</div>
+	
+	<div class='modal-content join-no-user'>
+		<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Give a Minute in order to Join this project.</p>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
 
 	<div class='modal-content invite-user'>
 		<div class='step invite-message-step'>
@@ -826,7 +831,10 @@ Give A Minute - Project
 	</div>
 
 </div><!-- end .continent.project -->
+{% endblock continent %}
 
+
+{% block page_js %}
 <script>
 	app_page.data = {{ d.template_data.project.json }};
 
@@ -841,49 +849,78 @@ Give A Minute - Project
 			dom:tc.jQ('.continent.project')
 		});
 		
-		tc.util.dump(app.components.project);
-		
 		// Join
 		tc.jQ('a.join-project').bind('click',{
 			app:app,
-			source_element:tc.jQ('.modal-content.introduce-yourself'),
-			init:function(modal,callback){
-				var modal_merlin;
-				modal_merlin = new tc.merlin(app,{
-					dom:modal.options.element.find('.introduce-yourself'),
-					first_step:'introduce-message-step',
-					steps:{
-						'introduce-message-step':{
-							selector:'.introduce-message-step',
-							validators:{
-								'textarea.introduce-message':['max-200']
-							},
-							init:function(merlin,dom){
-								var data;
-								data = {merlin:merlin,dom:dom};
-								dom.find('.submit').bind('click',data,function(e,d){
-									e.preventDefault();
-									if(dom.hasClass('invalid')){
-										return;
-									}
-									tc.timer(1000,function(){
-										modal.hide();
-									});
-									e.data.merlin.show_step('finish');
-								});
-							}
-						},
-						'finish':{
-							selector:'.finish'
-						}
+			no_user:{
+				source_element:tc.jQ('.modal-content.join-no-user'),
+				init:function(modal,callback){
+					
+					if(tc.jQ.isFunction(callback)){
+						callback(modal);
 					}
-				});
-				if(tc.jQ.isFunction(callback)){
-					callback(modal);
+				}
+			},
+			user:{
+				source_element:tc.jQ('.modal-content.introduce-yourself'),
+				init:function(modal,callback){
+					var modal_merlin;
+					modal_merlin = new tc.merlin(app,{
+						dom:modal.options.element.find('.introduce-yourself'),
+						first_step:'introduce-message-step',
+						data:{
+							project_id:null,
+							message:null
+						},
+						steps:{
+							'introduce-message-step':{
+								selector:'.introduce-message-step',
+								inputs:{
+									message:{
+										selector:'textarea.introduce-message',
+										validators:['max-200']
+									}
+								},
+								init:function(merlin,dom){
+									dom.find('.submit').bind('click',{merlin:merlin,dom:dom},function(e,d){
+										e.preventDefault();
+										if(dom.hasClass('invalid')){
+											return;
+										}
+										window.location.hash = 'finish';
+									});
+								},
+								finish:function(merlin,dom){
+									merlin.options.data.message = merlin.current_step.inputs.message.dom.val();
+								}
+							},
+							'finish':{
+								selector:'.finish',
+								init:function(merlin,dom){
+									tc.jQ.ajax({
+										url:'/create/resources',
+										data:merlin.options.data,
+										context:merlin,
+										dataType:'json',
+										success:function(data,ts,xhr){
+											
+										}
+									});
+								}
+							}
+						}
+					});
+					if(tc.jQ.isFunction(callback)){
+						callback(modal);
+					}
 				}
 			}
 		},function(e,d){
-			e.data.app.components.modal.show(e.data);
+			if(!e.data.app.app_page.user){
+				e.data.app.components.modal.show(e.data.no_user);
+			} else {
+				e.data.app.components.modal.show(e.data.user);
+			}
 		});
 		
 		// Invite
@@ -999,4 +1036,4 @@ Give A Minute - Project
 		
 	});
 </script>
-{% endblock continent %}
+{% endblock page_js %}

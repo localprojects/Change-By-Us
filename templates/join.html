@@ -143,8 +143,7 @@ Give A Minute - Join
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
-	
-	
+
 </div>
 <div class='modal-content toc'>
 	<h2><strong>Terms and Conditions</strong></h2>
@@ -153,8 +152,18 @@ Give A Minute - Join
 	</div>
 	<a class='close' href="#"><span>close</span></a>
 </div>
+{% endblock continent %}
 
+
+{% block page_js %}
 <script>
+	
+	app_page.features.push(tc.user_handler({
+		user_handler:function(){
+			window.location = '/useraccount';
+		}
+	}));
+	
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Register');
 		
@@ -449,6 +458,4 @@ Give A Minute - Join
 		});
 	});
 </script>
-
-
-{% endblock continent %}
+{% endblock page_js %}

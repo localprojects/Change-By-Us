@@ -38,7 +38,7 @@ tc.merlin.prototype.init = function(app,options){
 
 tc.merlin.prototype.setup_events = function(app){
 	tc.util.log('tc.merlin.setup_events');
-	tc.jQ(window).unbind('hashchange').bind('hashchange',this.event_data,this.handlers.hashchange);
+	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.find('a.step_link').unbind('click').bind('click',this.event_data,this.handlers.a_click);
 	if(this.options.back_button){
 		this.options.back_button.unbind('click').bind('click',this.event_data,this.handlers.last_step);

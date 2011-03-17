@@ -107,6 +107,8 @@ tc.gam.widget = function(inheritor,project){
 
 tc.gam.project_widgets = {};
 
+
+
 tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 	var widget;
 	this.options = tc.jQ.extend({name:'infopane'},options);
@@ -127,6 +129,8 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 		hide:widget.hide
 	};
 };
+
+
 
 tc.gam.project_widgets.resources = function(project,dom,deps,options){
 	var widget, me;
@@ -163,6 +167,8 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 	};
 };
 
+
+
 tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
 	var widget;
 	this.options = tc.jQ.extend({name:'infopane'},options);
@@ -183,6 +189,8 @@ tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
 	};
 };
 
+
+
 tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 	var widget;
 	this.options = tc.jQ.extend({name:'related_resources'},options);
@@ -200,6 +208,8 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 		hide:widget.hide
 	};
 };
+
+
 
 tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 	var widget;
@@ -233,6 +243,8 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 	};
 };
 
+
+
 tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
 	var widget; 
 	this.options = tc.jQ.extend({name:'goals_add'},options);
@@ -250,6 +262,8 @@ tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
 		hide:widget.hide
 	};
 };
+
+
 
 tc.gam.project_widgets.goals_stack = function(project,dom,deps,options){
 	var widget, me;
@@ -277,6 +291,8 @@ tc.gam.project_widgets.goals_stack = function(project,dom,deps,options){
 		hide:widget.hide
 	};
 };
+
+
 
 tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 	var widget;
@@ -319,6 +335,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		hide:widget.hide
 	};
 };
+
+
 
 tc.gam.project_widgets.members = function(project,dom,deps,options){
 	var widget, me;

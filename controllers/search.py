@@ -26,7 +26,7 @@ class Search(Controller):
         
         results = dict(projects = projects, resources = resources, ideas = ideas)
         
-        self.template_data['results'] = dict(json = self.json(results))
+        self.template_data['results'] = dict(json = self.json(results), data = results)
         
         return self.render('search')
             
