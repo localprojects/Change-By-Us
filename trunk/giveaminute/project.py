@@ -1,4 +1,5 @@
 from framework.log import log
+import giveaminute.idea as mIdea
 
 class Project():
     def __init__(self, db, projectId):
@@ -47,9 +48,7 @@ where p.project_id = $id;"""
         projectResources = self.getResources()
         goals = []
         messages = []
-        relatedIdeas = []
-    
-        log.info("*** %s" % str(endorsements))
+        relatedIdeas = self.getRelatedIdeas()
     
         data = dict(project_id = self.id,
                     editable = True,
@@ -137,31 +136,8 @@ where p.project_id = $id;"""
                                                                                 name = "Hasim Q."),
                                                                     message = "Theres a big need on my street for a garden...",
                                                                     created = "2011-02-12 12:30:02"))]),
-                                related_ideas = dict(items = [dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02"),
-                                                              dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02"),
-                                                              dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02"),
-                                                              dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02"),
-                                                              dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02")])))
+                                related_ideas = dict(items = relatedIdeas)))
+                                
         return data                                                    
         
     def getMembers(self):
@@ -235,7 +211,21 @@ where p.project_id = $id;"""
             log.error(e)                  
             
         return resources
-                                                           
+        
+    def getRelatedIdeas(self):
+        ideas = []
+        
+        try: 
+            data = mIdea.findIdeas(self.db, self.data.keywords.split(), self.data.location_id)
+        
+            if len(data) > 0:
+                for item in data:
+                    ideas.append(idea(item.idea_id, item.description, item.user_id, item.first_name, item.last_name, item.created_datetime, item.submission_type))
+        except Exception, e:
+            log.info("*** couldn't get related")
+            log.error(e)                  
+            
+        return ideas
                                                 
 def smallUser(id, first, last):
     return dict(u_id = id,
@@ -253,6 +243,14 @@ def link(id, title, url, imageId):
     
 def resource(id, title, url, imageId):
     return dict(organization = id, title = title, url = url, image_id = imageId)
+    
+def idea(id, description, userId, firstName, lastName, createdDatetime, submissionType):
+    return dict(idea_id = id,
+                message = description,
+                owner = smallUser(userId, firstName, lastName),
+                created = str(createdDatetime),
+                submission_type = submissionType)
+
     
 def getTestData():
     data = dict(project_id = 12, 
