@@ -2,12 +2,13 @@ from framework.controller import *
 import framework.util as util
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
+import giveaminute.projectResource as mProjectResource
 
 class Project(Controller):
     def GET(self, action=None, param0=None):
         if (action == 'resource'):
             if (param0 == 'info'):
-                return self.json({"image_id": 1, "project_resource_id": 1, "description": "some descriptive text about the project no longer than 250 or so chars", "title": "First Ever Resource", "url": "http://www.myurl.com/", "location_id": 501 })
+                return self.getResourceInfo()
             else:
                 return self.not_found()
         else:
@@ -100,5 +101,26 @@ class Project(Controller):
             return False
         else:
             return mProject.addResourceToProject(self.db, projectId, projectResourceId)
+        
+    def getResourceInfo(self):
+        projectResourceId = self.request('project_resource_id')
+        info = None
+        resource = mProjectResource.ProjectResource(self.db, projectResourceId)
+        
+        if (resource.data):
+            info = self.json(resource.getFullDictionary())
+        
+        return info
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
