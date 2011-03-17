@@ -31,6 +31,7 @@ sys.path.append("lib/")
 ROUTES = (  r'/create/?([^/.]*)', 'controllers.createProject.CreateProject',
             r'/idea/?([^/.]*)/?([^/.]*)', 'controllers.idea.Idea',
             r'/join/?([^/.]*)', 'controllers.join.Join',
+            r'/project/?([^/.]*)/?([^/.]*)', 'controllers.project.Project',
             r'/search/?([^/.]*)', 'controllers.search.Search',
             r'/?([^/.]*)', 'controllers.home.Home' )
 
