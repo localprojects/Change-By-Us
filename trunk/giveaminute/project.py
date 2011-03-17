@@ -43,8 +43,8 @@ where p.project_id = $id;"""
     def getFullDictionary(self):
         members = self.getMembers()
         endorsements = self.getEndorsements()
-        links = []
-        projectResources = []
+        links = self.getLinks()
+        projectResources = self.getResources()
         goals = []
         messages = []
         relatedIdeas = []
@@ -62,30 +62,8 @@ where p.project_id = $id;"""
                                                 name = self.data.location_name,
                                                 position = {}),
                                 members = dict(items = members),
-                                resources = dict(links = dict(items = [dict(link_id = 1,
-                                                                            title = "Our Facebook Page",
-                                                                            url = "http://www.facebook.com/",
-                                                                            image_id = 1),
-                                                                        dict(link_id = 2,
-                                                                            title = "Our Google Group",
-                                                                            url = "http://www.google.com/",
-                                                                            image_id = 2),
-                                                                        dict(link_id = 3,
-                                                                            title = "Local Projects",
-                                                                            url = "http://www.localprojects.net/",
-                                                                            image_id = 3)]),
-                                                organizations = dict(items = [dict(organization_id = 1,
-                                                                            title = "Bronx River Alliance",
-                                                                            url = "http://www.bronxriver.org/",
-                                                                            image_id = 4),
-                                                                        dict(organization_id = 2,
-                                                                            title = "NYC 311",
-                                                                            url = "http://www.nyc.gov/311/",
-                                                                            image_id = 5),
-                                                                        dict(organization_id = 3,
-                                                                            title = "Local Projects",
-                                                                            url = "http://www.localprojects.net/",
-                                                                            image_id = 6)])),
+                                resources = dict(links = dict(items = links),
+                                                organizations = dict(items = projectResources)),
                                 goals = dict(items = [dict(goal_id = 12345,
                                                         active = True,
                                                         text = "Contact the City Parks Department and find out the situation for planting trees in the area.",
@@ -222,6 +200,41 @@ where p.project_id = $id;"""
             log.error(e)                  
             
         return endorsements
+        
+    def getLinks(self):
+        links = []
+        
+        sql = "select project_link_id, title, url, image_id from project_link where project_id = $id"
+                
+        try:
+            data = list(self.db.query(sql, {'id':self.id}))
+            
+            if len(data) > 0:
+                for item in data:
+                    links.append(link(item.project_link_id, item.title, item.url, item.image_id))
+        except Exception, e:
+            log.info("*** couldn't get links")
+            log.error(e)                  
+            
+        return links
+        
+    def getResources(self):
+        resources = []
+        
+        sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id from project_resource pr 
+                inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id"""
+                
+        try:
+            data = list(self.db.query(sql, {'id':self.id}))
+            
+            if len(data) > 0:
+                for item in data:
+                    resources.append(resource(item.project_resource_id, item.title, item.url, item.image_id))
+        except Exception, e:
+            log.info("*** couldn't get project resources")
+            log.error(e)                  
+            
+        return resources
                                                            
                                                 
 def smallUser(id, first, last):
@@ -234,6 +247,12 @@ def endorsementUser(id, first, last, image_id, title, org):
                 image_id = image_id,
                 title = title,
                 organization = org)
+                
+def link(id, title, url, imageId):
+    return dict(link_id = id, title = title, url = url, image_id = imageId)
+    
+def resource(id, title, url, imageId):
+    return dict(organization = id, title = title, url = url, image_id = imageId)
     
 def getTestData():
     data = dict(project_id = 12, 
@@ -446,6 +465,17 @@ def isUserInProject(db, projectId, userId):
         log.error(e)
         return False
  
+def isResourceInProject(db, projectId, projectResourceId):
+    try:
+        sql = "select project_resource_id from project__project_resource where project_id = $projectId and project_resource_id = $projectResourceId"
+        data = db.query(sql, {'projectId':projectId, 'projectResourceId':projectResourceId})
+        
+        return len(data) > 0
+    except Exception, e:
+        log.info("*** couldn't determine if resource in project")
+        log.error(e)
+        return False 
+ 
 def hasUserEndorsedProject(db, projectId, userId):
     try:
         sql = "select user_id from project_endorsement where project_id = $projectId and user_id = $userId"
@@ -456,7 +486,7 @@ def hasUserEndorsedProject(db, projectId, userId):
         log.info("*** couldn't determine if user endorsed project")
         log.error(e)
         return False 
-    
+
 def getProjectLocation(db, projectId):
     try:
         sql = """select l.location_id, l.name, l.lat, l.lon from location l
@@ -472,16 +502,32 @@ def getProjectLocation(db, projectId):
         log.error(e)
         return None
     
-def attachResourceToProject(db, projectId, resourceId):
+def addResourceToProject(db, projectId, resourceId):
     try:
-        db.insert('project__project_resource', project_id = projectId,
-                                    project_resource_id = resourceId)
-                                    
-        return True;
+        if (not isResourceInProject(db, projectId, resourceId)): 
+            db.insert('project__project_resource', project_id = projectId,
+                                        project_resource_id = resourceId)
+        
+            return True
+        else:
+            log.error("*** resource already in project")
+            return False
     except Exception, e:
         log.info("*** problem attaching resource to project")
         log.error(e)    
         return False 
+        
+def addLinkToProject(db, projectId, title, url):
+    try:
+        db.insert('project_link', project_id = projectId,
+                                    title = title,
+                                    url = url)
+                                    
+        return True;
+    except Exception, e:
+        log.info("*** problem adding link to project")
+        log.error(e)    
+        return False     
         
 def getProjectsByLocation(db, locationId, limit = 100):
     try:
