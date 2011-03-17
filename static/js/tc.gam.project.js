@@ -27,6 +27,7 @@ tc.gam.project = function(options){
 		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{})
 	};
 	
+	// return project page to initial state
 	function go_home(e) {
 		e.data.project.components.goals_main.show(false);
 		e.data.project.components.conversation.show(false);
@@ -110,7 +111,17 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 	var widget;
 	this.options = tc.jQ.extend({name:'infopane'},options);
 	this.dom = dom;
+	// TODO { edit mode }
+	this.edit_mode = false;
 	widget = tc.gam.widget(this,project);
+	/*this.elements = {
+		mission: this.dom.find(".our-mission"),
+		location: this.dom.find(".location"),
+		keywords: this.dom.find(".keywords")
+	};*/
+	this.handlers = {
+		
+	};
 	return {
 		show:widget.show,
 		hide:widget.hide
@@ -124,6 +135,10 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 	this.dom = dom; 
 	widget = tc.gam.widget(this,project);
 	this.handlers = {
+		add_link: function(e, d) {
+			e.preventDefault();
+			//TODO
+		},
 		add_organization: function(e, d) {
 			e.preventDefault();
 			e.data.project.components.related_resources.show(true);
@@ -140,6 +155,7 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 			}
 		});
 	});
+	//this.dom.find("a.add-link").bind('click',{ project:project,me:this },this.handlers.add_link);
 	this.dom.find("a.add-organization").bind('click',{ project:project,me:this },this.handlers.add_organization);
 	return {
 		show:widget.show,
@@ -191,7 +207,7 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 	this.dom = dom;
 	widget = tc.gam.widget(this,project);
 	this.handlers = {
-		see_all:function(e,d) {
+		manage:function(e,d) {
 			e.preventDefault();
 			e.data.project.components.goals_stack.show();
 		},
@@ -209,7 +225,7 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 	}).carousel;
 	this.carousel.onSeek(this.handlers.carousel_scrolled);
 	
-	this.dom.find('.actions .see-all').bind('click',{ project:project,me:this },this.handlers.see_all);
+	this.dom.find('.control .manage').bind('click',{ project:project,me:this },this.handlers.manage);
 	this.dom.find('.actions .add').bind('click',{ project:project,me:this },this.handlers.add_goal);
 	return {
 		show:widget.show,
@@ -244,6 +260,7 @@ tc.gam.project_widgets.goals_stack = function(project,dom,deps,options){
 	this.handlers = {
 		make_goal_active: function(e, d) {
 			e.preventDefault();
+			//e.data.goal_card
 		},
 		remove_goal: function(e, d) {
 			e.preventDefault();
@@ -269,8 +286,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 	this.elements = {
 		userprompt: this.dom.find(".conversation-input label"),
 		textpane: this.dom.find(".conversation-input textarea"),
-		post_btn: this.dom.find(".conversation-controls .primary-action .ca-btn"),
-		load_more_btn: this.dom.find(".load-more > a")
+		post_btn: this.dom.find(".conversation-controls .primary-action .ca-btn")
 	};
 	this.handlers = {
 		userprompt_click: function(e, d) {
@@ -288,9 +304,6 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		},
 		post_click: function(e, d) {
 			e.preventDefault();
-		},
-		load_more_click: function(e, d) {
-			e.preventDefault();
 		}
 	};
 	
@@ -300,7 +313,6 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 	this.elements.textpane.bind("focus", { project:project,me:this },this.handlers.textpane_focus);
 	this.elements.textpane.bind("blur", { project:project,me:this },this.handlers.textpane_blur);
 	this.elements.post_btn.bind("click", { project:project,me:this },this.handlers.post_click);
-	this.elements.load_more_btn.bind("click", { project:project,me:this },this.handlers.load_more_click);
 	
 	return { 
 		show:widget.show,
@@ -315,6 +327,8 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
 	this.dom = dom;
 	widget = tc.gam.widget(this,project);
 	this.elements = {
+		members_list: { },
+		email_invite: { },
 		ideas_invite: {
 			elements: {
 				carousel: null

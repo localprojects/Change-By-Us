@@ -3,7 +3,7 @@ if (!tc) { var tc = {}; }
 tc.resource_tooltip = makeClass();
 
 tc.resource_tooltip.prototype.options = {
-	trigger: null,
+	element: null,
 	get_url: null,
 	get_params: null
 };
@@ -15,10 +15,11 @@ tc.resource_tooltip.prototype.init = function(options) {
 	tc.util.log("tc.resource_tooltip.init");
 	me = this;
 	this.options = tc.jQ.extend(this.options, options);
-	
-	this.options.trigger.tooltip({
+		
+	this.options.element.tooltip({
 		position: "center right",
 		offset: [-10, -20],
+		predelay: 100,
 		onShow: function(e) {
 			var tip, trig;
 			tip = this.getTip();
@@ -33,7 +34,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 					dataType:'json',
 					success:function(data,ts,xhr){
 						var html;
-						tc.util.dump(data);
+						//tc.util.dump(data);
 						
 						html = 
 							"<div class='tooltip-hd'>"+ 
@@ -64,5 +65,5 @@ tc.resource_tooltip.prototype.init = function(options) {
 		}
 	});
 	
-	this.tooltip = this.options.trigger.data("tooltip");
+	this.tooltip = this.options.element.data("tooltip");
 };
