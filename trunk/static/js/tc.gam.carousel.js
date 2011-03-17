@@ -5,14 +5,16 @@ tc.carousel = makeClass();
 tc.carousel.prototype.options = {
 	element: null,
 	scrollPaneSelector: ".scrollable:first",
-	itemsSelector: ".items"
+	itemsSelector: ".items",
+	pagination: null // { current: jQuery obj, total: jQuery obj }
 };
 
 tc.carousel.prototype.carousel = null;
 
 tc.carousel.prototype.init = function(options) {
-	var scrollPane, w, h;
+	var me, scrollPane, w, h;
 	tc.util.log("tc.carousel.init");
+	me = this;
 	this.options = tc.jQ.extend(this.options, options);
 	
 	scrollPane = this.options.element.find(this.options.scrollPaneSelector);
@@ -35,4 +37,12 @@ tc.carousel.prototype.init = function(options) {
 		circular: true
 	});
 	this.carousel = scrollPane.data("scrollable");
+	
+	if (this.options.pagination) {
+		this.carousel.onSeek(function(e, i) {
+			me.options.pagination.current.text(i + 1);
+			me.options.pagination.total.text(this.getSize());
+		});
+	}
+	
 };
