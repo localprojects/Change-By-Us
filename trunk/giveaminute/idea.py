@@ -95,6 +95,44 @@ def findIdeasByPhone(db, phone):
         log.info("*** problem getting ideas by phone")
         log.error(e)    
         return None
+
+def findIdeasByKeywords(db, keywords):
+    ideas = []
+    
+    try:
+        clauseList = []
+    
+        for word in keywords:
+            clauseList.append("match(i.description) against ('%s')" % word)
+
+        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.first_name, i.last_name, i.created_datetime
+from idea i where %s and i.is_active = 1""" % ' and '.join(clauseList)
+        
+        ideas = list(db.query(sql))
+    except Exception, e:
+        log.info("*** problem getting ideas by keywords")
+        log.error(e)    
+    
+    return ideas
+
+def findIdeas(db, keywords, locationId):
+    ideas = []
+    
+    try:
+        clauseList = []
+    
+        for word in keywords:
+            clauseList.append("match(i.description) against ('%s')" % word)
+
+        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.first_name, i.last_name, i.created_datetime
+from idea i where i.is_active = 1 and i.location_id = $locationId and %s""" % ' and '.join(clauseList)
+        
+        ideas = list(db.query(sql, { 'locationId':locationId}))
+    except Exception, e:
+        log.info("*** problem getting ideas")
+        log.error(e)    
+    
+    return ideas 
         
 def flagIdea(db, ideaId):
     try:
