@@ -11,6 +11,8 @@ class Project(Controller):
                 return self.getResourceInfo()
             else:
                 return self.not_found()
+        elif (action == 'goals'):
+            return self.getGoals()
         else:
             self.template_data['project_user'] = dict(is_member = True,
                                                 is_project_admin = True)      
@@ -155,6 +157,11 @@ class Project(Controller):
             return False              
         else:
             return mProject.accomplishProjectGoal(self.db, projectGoalId)        
+            
+    def getGoals(self):
+        projectId = self.request('project_id')
+        
+        return self.json(mProject.getGoals(self.db, projectId))
         
     def addMessage(self):
         projectId = self.request('project_id')
