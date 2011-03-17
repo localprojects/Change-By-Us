@@ -33,7 +33,7 @@ tc.gam.project = function(options){
 	}
 	
 	this.handlers = {
-		members_button_clicked:function(e,d){
+		manage_members_clicked:function(e,d){
 			tc.util.dump('project.members_button_clicked');
 			e.data.project.components.members.show(true);
 		},
@@ -77,7 +77,7 @@ tc.gam.project = function(options){
 		}
 	};
 	
-	this.dom.find('.project-header .members a').bind('click',this.event_data,this.handlers.members_button_clicked);
+	this.dom.find('.project-header .tools .control a').bind('click',this.event_data,this.handlers.manage_members_clicked);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	
@@ -118,17 +118,29 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 };
 
 tc.gam.project_widgets.resources = function(project,dom,deps,options){
-	var widget;
+	var widget, me;
+	me = this;
 	this.options = tc.jQ.extend({name:'resources'},options);
 	this.dom = dom; 
 	widget = tc.gam.widget(this,project);
 	this.handlers = {
-		add_resource: function(e, d) {
+		add_organization: function(e, d) {
 			e.preventDefault();
 			e.data.project.components.related_resources.show(true);
 		}
 	};
-	this.dom.find("a.add-resource").bind('click',{ project:project,me:this },this.handlers.add_resource);
+	this.dom.find(".resources-list td").each(function() {
+		var trig;
+		trig = tc.jQ(this);
+		tc.resource_tooltip({
+			element: trig,
+			get_url: "/project/resource/info",
+			get_params: {
+				project_resource_id: trig.attr("rel").split(",")[1]
+			}
+		});
+	});
+	this.dom.find("a.add-organization").bind('click',{ project:project,me:this },this.handlers.add_organization);
 	return {
 		show:widget.show,
 		hide:widget.hide
@@ -224,13 +236,25 @@ tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
 };
 
 tc.gam.project_widgets.goals_stack = function(project,dom,deps,options){
-	var widget; 
+	var widget, me;
+	me = this; 
 	this.options = tc.jQ.extend({name:'goals_stack'},options);
 	this.dom = dom;
 	widget = tc.gam.widget(this,project); 
 	this.handlers = {
-
+		make_goal_active: function(e, d) {
+			e.preventDefault();
+		},
+		remove_goal: function(e, d) {
+			e.preventDefault();
+		}
 	};
+		
+	this.dom.find(".goal-card").each(function() {
+		var card = tc.jQ(this);
+		card.find(".make-this-active a").bind("click", { project:project, me:me, goal_card:card }, me.handlers.make_goal_active);
+		card.find("a.close").bind("click", { project:project, me:me, goal_card:card }, me.handlers.remove_goal);
+	});
 	return {
 		show:widget.show,
 		hide:widget.hide
@@ -269,11 +293,15 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			e.preventDefault();
 		}
 	};
+	
+	this.elements.textpane.autoGrow();
+	
 	this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
 	this.elements.textpane.bind("focus", { project:project,me:this },this.handlers.textpane_focus);
 	this.elements.textpane.bind("blur", { project:project,me:this },this.handlers.textpane_blur);
 	this.elements.post_btn.bind("click", { project:project,me:this },this.handlers.post_click);
 	this.elements.load_more_btn.bind("click", { project:project,me:this },this.handlers.load_more_click);
+	
 	return { 
 		show:widget.show,
 		hide:widget.hide
