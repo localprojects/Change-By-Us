@@ -414,3 +414,6 @@ def check_bad_words(data):
             if " "+w+" " in data:
                 return True
     return False
+    
+def strNullOrEmpty(s):
+    return not s or len(s) == 0
