@@ -32,6 +32,20 @@ class Project(Controller):
                 return self.addResource()
             else:
                 return self.not_found()
+        elif (action == 'goal'):
+            if (param0 == 'add'):
+                return self.addGoal()
+            elif (param0 == 'active'):
+                return self.featureGoal()
+            elif (param0 == 'accomplish'):
+                return self.accomplishGoal()
+            else:
+                return self.not_found()
+        elif (action == 'message'):
+            if (param0 == 'add'):
+                return self.addMessage()
+            else:
+                return self.not_found()
         else:
             return self.not_found()
         
@@ -112,8 +126,48 @@ class Project(Controller):
         
         return info
         
+    def addGoal(self):
+        projectId = self.request('project_id')
+        description = self.request('text')
+        timeframeNumber = self.request('timeframe_n')
+        timeframeUnit = self.request('timeframe_unit')
         
+        if (not self.user):
+            log.error("*** goal submitted w/o logged in user")
+            return False
+        else:
+            return mProject.addGoalToProject(self.db, projectId, description, timeframeNumber, timeframeUnit, self.user.id)
         
+    def featureGoal(self):
+        projectGoalId = self.request('goal_id')
+        
+        if (not projectGoalId):
+            log.error("*** goal feature attempted w/o goal id")
+            return False              
+        else:
+            return mProject.featureProjectGoal(self.db, projectGoalId)
+        
+    def accomplishGoal(self):
+        projectGoalId = self.request('goal_id')
+        
+        if (not projectGoalId):
+            log.error("*** goal accomplish attempted w/o goal id")
+            return False              
+        else:
+            return mProject.accomplishProjectGoal(self.db, projectGoalId)        
+        
+    def addMessage(self):
+        projectId = self.request('project_id')
+        message = self.request('message')
+        
+        if (not projectGoalId):
+            log.error("*** message add attempted w/o project id")
+            return False
+        elif (util.strNullOrEmpty(message)):
+            log.error("*** message add attempted w/ no message")
+            return False
+        else:
+            return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id)
         
         
         
