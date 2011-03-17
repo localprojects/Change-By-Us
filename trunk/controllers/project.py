@@ -5,16 +5,24 @@ import giveaminute.idea as mIdea
 
 class Project(Controller):
     def GET(self, action=None, param0=None):
-        self.template_data['project_user'] = dict(is_member = True,
-                                                is_project_admin = True)          
-                                          
-        return self.showProject(action)                                        
+        if (action == 'resource'):
+            if (param0 == 'info'):
+                return self.json({"image_id": 1, "project_resource_id": 1, "description": "some descriptive text about the project no longer than 250 or so chars", "title": "First Ever Resource", "url": "http://www.myurl.com/", "location_id": 501 })
+            else:
+                return self.not_found()
+        else:
+            self.template_data['project_user'] = dict(is_member = True,
+                                                is_project_admin = True)      
+                                                
+            return self.showProject(action)                                        
             
-    def POST(self, action=None, page=None):
+    def POST(self, action=None, param0=None):
         if (action == 'join'):
             return self.join()
         elif (action == 'endorse'):
             return self.endorse()
+        elif (action == 'link'):
+            return self.link()
         else:
             return self.not_found()
         
@@ -64,4 +72,5 @@ class Project(Controller):
         else:
             return mProject.endorse(self.db, projectId, self.user.id)
             
-        
+    def link(self):
+        pass  
