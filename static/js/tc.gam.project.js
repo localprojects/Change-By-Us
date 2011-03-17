@@ -142,7 +142,11 @@ tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
 	widget = tc.gam.widget(this,project);
 	
 	this.carousel = new tc.carousel({
-		element: this.dom.find(".carousel")
+		element: this.dom.find(".carousel"),
+		pagination: {
+			current: this.dom.find(".pagination .cur-index"),
+			total: this.dom.find(".pagination .total")
+		}
 	}).carousel;
 	
 	return {
@@ -286,7 +290,11 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
 	// this widget is rendered
 	function init_carousels() {
 		me.elements.ideas_invite.elements.carousel = new tc.carousel({
-			element: me.dom.find(".ideas-invite .carousel")
+			element: me.dom.find(".ideas-invite .carousel"),
+			pagination: {
+				current: me.dom.find(".ideas-invite .pagination .cur-index"),
+				total: me.dom.find(".ideas-invite .pagination .total")
+			}
 		}).carousel;
 	}
 	
