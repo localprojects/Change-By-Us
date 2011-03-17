@@ -199,7 +199,7 @@ where p.project_id = $id;"""
         return ideas
         
     def getGoals(self):
-        return getGoals(self.db, projectId)
+        return getGoals(self.db, self.id)
                                                 
 def smallUser(id, first, last):
     return dict(u_id = id,
