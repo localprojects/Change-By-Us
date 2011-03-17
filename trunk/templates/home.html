@@ -519,11 +519,10 @@ Give A Minute - Home
 	</li>
 	
 </div>
+{% endblock continent %}
 
+{% block page_js %}
 <script>
-	app_page.locations = {{ d.locations }};
-	app_page.all_ideas = {{ d.all_ideas }};
-	
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: HOME');
 		
@@ -592,20 +591,16 @@ Give A Minute - Home
 						var elements = {
 							pane:merlin.dom.find('.top-pane'),
 							idea_input:merlin.dom.find('.idea-input-inner-wrapper'),
-							console:merlin.dom.find('.console'),
+							cons:merlin.dom.find('.console'),
 							start:merlin.dom.find('.step-one'),
 							two:merlin.dom.find('.info-input')
 						};
-						tc.util.dump(elements);
-						
-						
-						
 						elements.idea_input.css('height','93.2px').animate({
 							width:'0px',
 							opacity:0
 						},400,'easeOutCubic',function(){
 							tc.jQ(this).hide();
-							elements.console.css('width','775px').children('.more-info').show().siblings().hide();
+							elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
 							animate_bg(elements.pane,5,7.5);
 							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
 								opacity:1.0,
@@ -651,6 +646,8 @@ Give A Minute - Home
 									return false;
 								}
 								this.options.data.idea_id = data;
+								this.dom.siblings('.note-card-pane').find('strong').text(merlin.options.data.email);
+								this.dom.siblings('.note-card-pane').find('blockquote').html('<p>'+merlin.options.data.text+'</p>');
 								window.location.hash = 'related-processing';
 							}
 						});
@@ -711,31 +708,41 @@ Give A Minute - Home
 					selector:'.step-three',
 					init:function(merlin,dom){
 						var i, temphtml;
+						
 						if(merlin.current_step.step_data){
-							for(i in merlin.current_step.step_data.related){
-								if(i == 2){ break; }
-								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-								temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
-								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
-								temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
-								temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
-								if(merlin.current_step.step_data.related[i].endorsement){
-									temphtml.find('.endorser-thumb').show();
+							if(!merlin.current_step.step_data.related.length){
+								dom.find('.related-projects').hide();
+							} else {
+								for(i in merlin.current_step.step_data.related){
+									if(i == 2){ break; }
+									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+									temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
+									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
+									temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
+									temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
+									if(merlin.current_step.step_data.related[i].endorsement){
+										temphtml.find('.endorser-thumb').show();
+									}
+									dom.find('.related-projects').find('ul').append(temphtml);
 								}
-								dom.find('.related-projects').find('ul').append(temphtml);
 							}
-							for(i in merlin.current_step.step_data.citywide){
-								if(i == 2){ break; }
-								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-								temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
-								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
-								temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
-								temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);
-								if(merlin.current_step.step_data.citywide[i].endorsement){
-									temphtml.find('.endorser-thumb').show();
+							if(!merlin.current_step.step_data.citywide.length){
+								dom.find('.citywide-projects').hide();
+							} else {
+								for(i in merlin.current_step.step_data.citywide){
+									if(i == 2){ break; }
+									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+									temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
+									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
+									temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
+									temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);
+									if(merlin.current_step.step_data.citywide[i].endorsement){
+										temphtml.find('.endorser-thumb').show();
+									}
+									dom.find('.citywide-projects').find('ul').append(temphtml);
 								}
-								dom.find('.citywide-projects').find('ul').append(temphtml);
 							}
+							
 						}
 					}
 				},
@@ -890,6 +897,4 @@ Give A Minute - Home
 
 	});
 </script>
-
-
-{% endblock continent %}
+{% endblock page_js %}

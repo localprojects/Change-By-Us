@@ -44,7 +44,6 @@ class Home(Controller):
             projDictionary = project.getFullDictionary()
         
         self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
-    
         return self.render('project')
     
     def login(self):

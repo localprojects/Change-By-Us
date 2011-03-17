@@ -180,11 +180,17 @@ Give A Minute - Create a Project
 	
 </div>
 
+{% endblock continent %}
+
+{% block page_js %}
 <script>
-	app_page.locations = {{ d.locations }};
-	{% if d.user %}
-		app_page.user = {{ d.user.object }};
-	{% endif %}
+	
+	app_page.features.push(tc.user_handler({
+		no_user_handler:function(){
+			window.location = '/join';
+		}
+	}));
+	
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Create a Project');
 		tc.jQ('.addphoto a').bind('click',{
@@ -528,7 +534,7 @@ Give A Minute - Create a Project
 								if(data == 'False'){
 									return false;
 								}
-								window.location = '/project';
+								window.location = '/project/'+data;
 							}
 						});
 					}
@@ -538,6 +544,4 @@ Give A Minute - Create a Project
 	});
 		
 </script>
-
-
-{% endblock continent %}
+{% endblock page_js %}

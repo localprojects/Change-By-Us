@@ -11,13 +11,38 @@ tc.app.prototype.init = function(page){
 	var _me;
 	_me = this;
 	this.app_page = page;
+	
+	tc.util.dump(page);
+	
 	if(page.features){
 		for(i in page.features){
+			
+			tc.util.dump(page.features[i]);
+			
 			if(tc.jQ.isFunction(page.features[i])){
+				
+				
+				
 				page.features[i](_me);
 			}
 		}
 	}
+	
+	tc.jQ(window).bind('hashchange',{app:this}, function(){
+		if(window.location.hash.substring(1,window.location.hash.length) == 'logout'){
+			tc.jQ.ajax({
+				type:'POST',
+				url:'/logout',
+				context:this,
+				dataType:'text',
+				success:function(data,ts,xhr){
+					window.location.hash = '';
+					location.reload(true);
+				}
+			});
+		}
+	});
+	
 }
 
 function animate_bg(ele, from, to) {

@@ -19,7 +19,7 @@ class CreateProject(Controller):
             return self.render('create', {'locations':locations})
             
     def POST(self,*args, **kw):
-        return self.newProject()  
+        return self.newProject()
         
     def newProject(self):
         if (self.session.user_id):
