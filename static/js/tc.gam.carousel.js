@@ -10,7 +10,7 @@ tc.carousel.prototype.options = {
 
 tc.carousel.prototype.carousel = null;
 
-tc.carousel.prototype.init = function(app, options) {
+tc.carousel.prototype.init = function(options) {
 	var scrollPane, w, h;
 	tc.util.log("tc.carousel.init");
 	this.options = tc.jQ.extend(this.options, options);

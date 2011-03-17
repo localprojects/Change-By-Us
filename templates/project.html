@@ -37,8 +37,8 @@ Give A Minute - Project
 					<!-- TODO -->
 				</div>
 				<div class="facebook">
-					<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-					<fb:like layout="button_count" show_faces="true" width="100"></fb:like>
+					<!--<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+					<fb:like layout="button_count" show_faces="true" width="100"></fb:like>-->
 				</div>
 			</div>
 		</div>
@@ -61,7 +61,9 @@ Give A Minute - Project
 						</span>
 					</h2>
 					<div class="actions">
-						<a href="#" class="see-all">&larr; Back <em>to</em> project home</a>
+						<a href="#" class="back fancy-caps">
+							<span>Back <span>to</span> Project Home</span>
+						</a>
 					</div>
 				</div>
 			
@@ -117,8 +119,9 @@ Give A Minute - Project
 					</div>
 				</div>
 			</div>
-				
-			<div class="box goals">
+			
+			<!-- begin goals-main -->	
+			<div class="box goals-main">
 				<div class="hd clearfix">
 					<h2>
 						<span>
@@ -138,7 +141,6 @@ Give A Minute - Project
 				</div>
 				
 				{% if d.template_data.project.data.info.goals['items']|length > 0 %}
-				
 					<div class="goals-display">
 						<h3 class="fancy-caps"><span>The</span> Active Goal <span>for this</span> Project</h3>
 						<div class="carousel">
@@ -174,9 +176,7 @@ Give A Minute - Project
 							</div>
 						</div>
 					</div>
-				
 				{% else %}
-					
 					<div class="goals-empty">
 						<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
 						<div class="empty-state-box big">
@@ -184,12 +184,11 @@ Give A Minute - Project
 							<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="  ">add a goal now?</a></p>
 						</div>
 					</div>
-					
 				{% endif %}	
-			
 			</div>
-		
-			<div class='box goals-add' style='display:none;'>
+			<!-- end .goals-main -->
+					
+			<div class='box goals-add' style="display:none;">
 				<div class="actions">
 					<a href="#" class="back fancy-caps">
 						<span>Back <span>to</span> Project Home</span>
@@ -226,9 +225,9 @@ Give A Minute - Project
 			</div>
 			
 			{% if d.template_data.project.data.editable %}
-				<div class="box goals-cards" style="display:none;">
+				<div class="box goals-stack-holder" style="display:none;">
 					<ul class="goals-stack">
-					
+				
 						{% for goal in d.template_data.project.data.info.goals['items'] %}
 							<li>
 								<div class="goal-card">
@@ -241,7 +240,7 @@ Give A Minute - Project
 										<dl>
 											<dt>Timeframe</dt>
 											<dd>{{ goal.timeframe }}</dd>
-					
+				
 											<dt>Point Person</dt>
 											<dd>{{ goal.owner.name }}</dd>
 										</dl>
@@ -249,7 +248,7 @@ Give A Minute - Project
 								</div>
 							</li>
 						{% endfor %}
-					
+				
 					</ul>
 				</div>
 			{% endif %}
@@ -637,8 +636,9 @@ Give A Minute - Project
 								
 							{% endif %}
 							
+							<!-- TODO -->
 							<!-- add the class "right" to the tooltip to change its orientation accordingly -->
-							<div class="tooltip" style=' '>
+							<div class="tooltip" style='display:none;'>
 								<div class="tooltip-hd">
 									<h2>Bronx River Alliance</h2>
 								</div>
@@ -666,7 +666,7 @@ Give A Minute - Project
 							
 						</div>
 						<div class="sub-ft clearfix">
-							<a href="#" class="rounded-button small">Add a Resource</a>
+							<a href="#" class="rounded-button small add-resource">Add a Resource</a>
 						</div>
 					</div>
 				</div>
