@@ -244,9 +244,14 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 	widget = tc.gam.widget(this,project);
 	this.elements = {
 		userprompt: this.dom.find(".conversation-input label"),
-		textpane: this.dom.find(".conversation-input textarea")
+		textpane: this.dom.find(".conversation-input textarea"),
+		post_btn: this.dom.find(".conversation-controls .primary-action .ca-btn"),
+		load_more_btn: this.dom.find(".load-more > a")
 	};
 	this.handlers = {
+		userprompt_click: function(e, d) {
+			e.data.me.elements.textpane.focus();
+		},
 		textpane_focus: function(e, d) {
 			if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
 				e.data.me.elements.userprompt.hide();
@@ -256,10 +261,19 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
 				e.data.me.elements.userprompt.show();
 			}
+		},
+		post_click: function(e, d) {
+			e.preventDefault();
+		},
+		load_more_click: function(e, d) {
+			e.preventDefault();
 		}
 	};
+	this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
 	this.elements.textpane.bind("focus", { project:project,me:this },this.handlers.textpane_focus);
 	this.elements.textpane.bind("blur", { project:project,me:this },this.handlers.textpane_blur);
+	this.elements.post_btn.bind("click", { project:project,me:this },this.handlers.post_click);
+	this.elements.load_more_btn.bind("click", { project:project,me:this },this.handlers.load_more_click);
 	return { 
 		show:widget.show,
 		hide:widget.hide
