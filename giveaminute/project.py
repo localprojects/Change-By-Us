@@ -199,34 +199,7 @@ where p.project_id = $id;"""
         return ideas
         
     def getGoals(self):
-        goals = []
-        
-        sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
-                      u.user_id, u.first_name, u.last_name
-                from project_goal g
-                inner join user u on u.user_id = g.user_id
-                where g.project_id = $id"""
-                
-        try:
-            data = list(self.db.query(sql, {'id':self.id}))
-
-        
-            if len(data) > 0:
-                for item in data:
-                    goals.append(goal(item.project_goal_id, 
-                                      item.description, 
-                                      bool(item.is_featured),
-                                      bool(item.is_accomplished),
-                                      item.time_frame_numeric,
-                                      item.time_frame_unit,
-                                      item.user_id, 
-                                      item.first_name, 
-                                      item.last_name))
-        except Exception, e:
-            log.info("*** couldn't get related")
-            log.error(e)                  
-            
-        return goals
+        return getGoals(self.db, projectId)
                                                 
 def smallUser(id, first, last):
     return dict(u_id = id,
@@ -638,3 +611,32 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
         return False  
 
 
+def getGoals(db, projectId):
+    goals = []
+    
+    sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
+                  u.user_id, u.first_name, u.last_name
+            from project_goal g
+            inner join user u on u.user_id = g.user_id
+            where g.project_id = $id"""
+            
+    try:
+        data = list(db.query(sql, {'id':projectId}))
+
+    
+        if len(data) > 0:
+            for item in data:
+                goals.append(goal(item.project_goal_id, 
+                                  item.description, 
+                                  bool(item.is_featured),
+                                  bool(item.is_accomplished),
+                                  item.time_frame_numeric,
+                                  item.time_frame_unit,
+                                  item.user_id, 
+                                  item.first_name, 
+                                  item.last_name))
+    except Exception, e:
+        log.info("*** couldn't get goals")
+        log.error(e)                  
+        
+    return goals
