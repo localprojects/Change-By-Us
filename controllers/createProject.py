@@ -3,6 +3,8 @@ import giveaminute.project as project
 import giveaminute.projectResource as resource
 import giveaminute.location as mLocation
 from framework.controller import *
+from framework.image_server import *
+from PIL import Image
 import lib.web
 
 class CreateProject(Controller):
@@ -18,18 +20,25 @@ class CreateProject(Controller):
             
             return self.render('create', {'locations':locations})
             
-    def POST(self,*args, **kw):
-        return self.newProject()
+    def POST(self, action=None):
+        if (action == 'photo'):
+            image_id = ImageServer.add(self.db, web.data(), 'giveaminute', [100, 100])
+                        
+            return self.json(dict(thumbnail_id = image_id))
+        else:
+            return self.newProject()  
         
     def newProject(self):
         if (self.session.user_id):
             owner_user_id = self.session.user_id
             title = self.request('title')
             description = self.request('text')
-            locationId = self.request('location_id')
+            locationId = self.request('location_id') if self.request('location_id') else -1
             imageId = self.request('image')
             keywords = self.request('keywords').split(',')
             resourceIds = self.request('resources').split(',')
+            
+            log.info("*** %s" % str(locationId))
             
             projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId)
             
@@ -37,7 +46,7 @@ class CreateProject(Controller):
             
             for resourceId in resourceIds:
                 log.info("*** insert resource id %s" % resourceId)
-                project.attachResourceToProject(self.db, projectId, resourceId)
+                project.addResourceToProject(self.db, projectId, resourceId)
                 
             if (projectId):
                 return projectId
