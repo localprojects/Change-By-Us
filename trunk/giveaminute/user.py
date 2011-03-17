@@ -43,10 +43,13 @@ select u.user_key
       ,if(ug1.user_group_id, 1, 0) as is_admin
       ,if(ug2.user_group_id, 1, 0) as is_moderator
       ,if(ug3.user_group_id, 1, 0) as is_leader
+      ,pl.title
+      ,pl.organization
 from user u 
 left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id = 1
 left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
 left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
+left join project_leader pl on pl.user_id = u.user_id
 where u.user_id = $id"""
         
         try:
