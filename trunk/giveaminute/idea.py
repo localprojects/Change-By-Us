@@ -125,7 +125,7 @@ def findIdeas(db, keywords, locationId):
             clauseList.append("match(i.description) against ('%s')" % word)
 
         sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.first_name, i.last_name, i.created_datetime
-from idea i where i.is_active = 1 and i.location_id = $locationId and %s""" % ' and '.join(clauseList)
+from idea i where i.is_active = 1 and i.location_id = $locationId and (%s)""" % ' or '.join(clauseList)
         
         ideas = list(db.query(sql, { 'locationId':locationId}))
     except Exception, e:
