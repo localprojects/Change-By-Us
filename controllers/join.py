@@ -92,5 +92,8 @@ class Join(Controller):
         phone = re.sub("\D", "", phone)
         phone = re.sub("^1", "", phone)
         
-        return phone
+        if (util.validateUSPhone(phone)):
+            return phone
+        else:
+            return None
     
