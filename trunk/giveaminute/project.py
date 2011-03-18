@@ -1,4 +1,6 @@
 from framework.log import log
+from framework.config import *
+from framework.emailer import *
 import giveaminute.idea as mIdea
 
 class Project():
@@ -206,6 +208,13 @@ where p.project_id = $id;"""
 def smallUser(id, first, last):
     return dict(u_id = id,
                 name = "%s %s" % (first, last))
+                
+def smallIdea(ideaId, description, firstName, lastName, submissionType):
+    return dict(idea_id = ideaId,
+                text = description,
+                f_name = firstName,
+                l_name = lastName,
+                submitted_by = submissionType)
                 
 def endorsementUser(id, first, last, image_id, title, org):
     return dict(u_id = id,
@@ -642,3 +651,74 @@ def getGoals(db, projectId):
         log.error(e)                  
         
     return goals
+    
+def getProjectIdeas(db, projectId, limit = 100):
+    ideas = []
+    
+    try:
+        sql = """select i.idea_id, i.description, i.user_id, u.first_name, u.last_name, item.submission_type
+                    from idea i 
+                    left join user u on u.user_id = i.user_id
+                    where project_id = $projectId and is_active = 1
+                    limit $limit"""
+        data = list(db.query(sql, { 'projectId':projectId, 'limit':limit }))          
+        
+        if len(data) > 0:
+            for item in data:
+                ideas.append(smallIdea(item.idea_id, item.description, item.first_name, item.last_name, item.submission_type))
+    except Exception, e:
+        log.info("*** couldn't get project ideas")
+        log.error(e)            
+                    
+def inviteByIdea(db, projectId, ideaId, message, inviterUserId):
+    createInviteRecord(db, projectId, message, inviterUserId, ideaId)
+    
+    try:
+        idea = mIdea.Idea(db, ideaId)
+        
+        Emailer.send(idea.data.idea_email, 
+                    "You've been invited to join our project", 
+                    createInviteBody(message, projectId), 
+                    None, 
+                    None, 
+                    "ethan@localprojects.net")
+        return True
+    except Exception, e:
+        log.info("*** couldn't get send email")
+        log.error(e) 
+        return False
+
+def inviteByEmail(db, projectId, emails, message, inviterUserId):
+    try:
+        for email in emails:
+            createInviteRecord(db, projectId, message, inviterUserId, None, email)
+            
+            Emailer.send(email, 
+                        "You've been invited to join our project", 
+                        createInviteBody(message, projectId), 
+                        None, 
+                        None, 
+                        "ethan@localprojects.net")    
+    except Exception, e:
+        log.info("*** couldn't get send one or more emails email")
+        log.error(e) 
+        return False
+
+    
+def createInviteRecord(db, projectId, message, inviterUserId, ideaId, email = None):
+    try:
+        db.insert('project_invite', project_id = projectId,
+                                    message = message,
+                                    inviter_user_id = inviterUserId,
+                                    invitee_idea_id = ideaId,
+                                    invitee_email = email)
+                                    
+        return True;
+    except Exception, e:
+        log.info("*** problem adding invite to project")
+        log.error(e)    
+        return False  
+        
+def createInviteBody(message, projectId):
+    return "%s\n\n%sproject/%s" % (message, Config.get('default_host'), str(projectId))
+            
