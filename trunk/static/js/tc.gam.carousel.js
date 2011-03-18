@@ -17,7 +17,7 @@ tc.carousel.prototype.init = function(options) {
 	me = this;
 	this.options = tc.jQ.extend(this.options, options);
 	
-	tc.util.dump(this.options);
+	//tc.util.dump(this.options);
 	
 	scrollPane = this.options.element.find(this.options.scrollPaneSelector);
 	
