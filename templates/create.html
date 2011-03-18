@@ -10,7 +10,7 @@ Give A Minute - Create a Project
 		<div class='west'>
 			<span class="above-h1">Create <em>a</em> Project</span>
 			<h1>Go from an idea to a solution.</h1>
-			<h2><strong>XXXXXXX,</strong> let's make it happen. The first step is to start a project that supports your idea.</h2>
+			<h2><strong>{% if d.template_data and d.template_data.user %}{{ d.template_data['user'].data.f_name }}{% endif %},</strong> let's make it happen. The first step is to start a project that supports your idea.</h2>
 		</div>
 		<div class='east'>
 			<div class='box'>
@@ -49,7 +49,7 @@ Give A Minute - Create a Project
 						<label for='name'><strong>Name</strong> your project:</label>
 						<input value='Name' type='text' name='name' id='name' class='name'/>
 						<span class="charlimit">50</span>
-						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">XXXXXX XXXXXX</span><span class="edit" style='display:none;'>Edit</span></div>
+						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">{% if d.template_data and d.template_data.user %}{{ d.template_data['user'].data.f_name }} {{ d.template_data['user'].data.l_name }}{% endif %}</span><span class="edit" style='display:none;'>Edit</span></div>
 					</div>
 					<div class="row clearfix">
 						<label for='organization'><strong>Organization</strong> (Optional):</label>
@@ -180,14 +180,20 @@ Give A Minute - Create a Project
 	
 </div>
 
+<div class='modal-content join-no-user'>
+	<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Give a Minute in order to Join this project.</p>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
 {% endblock continent %}
 
 {% block page_js %}
 <script>
 	
 	app_page.features.push(tc.user_handler({
-		no_user_handler:function(){
-			window.location = '/join';
+		no_user_handler:function(app){
+			//window.location = '/join';
+			app.components.modal.show(e.data.no_user);
 		}
 	}));
 	
@@ -383,7 +389,7 @@ Give A Minute - Create a Project
 								input:dom.find('input.location-hood-enter'),
 								list:dom.find('div.location-hood-list'),
 								warning:dom.find('span.error'),
-								locations:{{ d.locations }}
+								locations:merlin.app.app_page.data.locations
 							});
 						}
 					},

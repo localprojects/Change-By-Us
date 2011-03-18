@@ -57,7 +57,7 @@ Give A Minute - Home
 										<div class="email-info">
 											<p class="email-error">Please enter a valid email address</p>
 											<p>We will never send spam or sell your e-mail address.</p>
-											<p><em>See our <a href="" class='toc-link'>privacy policy</a> for more details.</em></p>
+											<p><em>See our <a href="/tou" class='toc-link'>privacy policy</a> for more details.</em></p>
 										</div>
 									</div>
 								</div>
@@ -266,12 +266,12 @@ Give A Minute - Home
 					<div class="projects-pane step-three found">
 						<div class="box related-projects">
 							<div class="hd">
-								<h2>Related Projects <em>near</em> <span class="serif"><strong>XXneighborhoodXX</strong></span></h2>
+								<h2>Related Projects <!-- <em>near</em> <span class="serif"><strong></strong></span> --></h2>
 							</div>
 							<div class="bd">
 								<ul class="projects-list">
 								</ul>
-								<a href="" class="see-more">See more projects <em>near</em> you &rarr;</a>
+								<a href="/search" class="see-more">See more projects <em>near</em> you &rarr;</a>
 							</div>
 						</div>
 						<div class="box citywide-projects">
@@ -281,11 +281,11 @@ Give A Minute - Home
 							<div class="bd">
 								<ul class="projects-list">
 								</ul>
-								<a href="" class="see-more">See more citywide projects &rarr;</a>
+								<a href="/search" class="see-more">See more citywide projects &rarr;</a>
 							</div>
 						</div>
 						<div class="controls">
-							<a href="" class="rounded-button">Browse All</a><span>or</span><a href="" class="rounded-button">Start Your Own</a>
+							<a href="/search" class="rounded-button">Browse All</a><span>or</span><a href="/create" class="rounded-button">Start Your Own</a>
 						</div>
 					</div>
 				
@@ -571,7 +571,7 @@ Give A Minute - Home
 								input:dom.find('input.location-hood-enter'),
 								list:dom.find('div.location-hood-list'),
 								warning:dom.find('span.error'),
-								locations:{{ d.locations }}
+								locations:merlin.app.app_page.data.locations
 							});
 						}
 					},
@@ -599,7 +599,7 @@ Give A Minute - Home
 									return false;
 								}
 								this.options.data.idea_id = data;
-								this.dom.siblings('.note-card-pane').find('strong').text(merlin.options.data.email);
+								this.dom.siblings('.note-card-pane').find('strong').text('You');
 								this.dom.siblings('.note-card-pane').find('blockquote').html('<p>'+merlin.options.data.text+'</p>');
 								window.location.hash = 'related-processing';
 							}
@@ -668,6 +668,7 @@ Give A Minute - Home
 							} else {
 								for(i in merlin.current_step.step_data.related){
 									if(i == 2){ break; }
+									//dom.find('.related-projects').find('.serif').html("<strong>"++"</strong>")
 									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
 									temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
 									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
@@ -678,6 +679,9 @@ Give A Minute - Home
 									}
 									dom.find('.related-projects').find('ul').append(temphtml);
 								}
+								dom.find('.related-projects').css('opacity',0.0).show().animate({
+									opacity:1.0
+								},1000,'easeOutCubic');
 							}
 							if(!merlin.current_step.step_data.citywide.length){
 								dom.find('.citywide-projects').hide();
@@ -694,6 +698,9 @@ Give A Minute - Home
 									}
 									dom.find('.citywide-projects').find('ul').append(temphtml);
 								}
+								dom.find('.citywide-projects').css('opacity',0.0).show().animate({
+									opacity:1.0
+								},1000,'easeOutCubic');
 							}
 							
 						}

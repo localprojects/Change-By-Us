@@ -17,7 +17,11 @@ tc.carousel.prototype.init = function(options) {
 	me = this;
 	this.options = tc.jQ.extend(this.options, options);
 	
+	tc.util.dump(this.options);
+	
 	scrollPane = this.options.element.find(this.options.scrollPaneSelector);
+	
+	tc.util.dump(scrollPane);
 	w = this.options.element.width();
 	h = 0;
 	this.options.element.width(w);
@@ -38,7 +42,7 @@ tc.carousel.prototype.init = function(options) {
 	});
 	this.carousel = scrollPane.data("scrollable");
 	
-	if (this.options.pagination) {
+	if (this.carousel && this.options.pagination) {
 		this.carousel.onSeek(function(e, i) {
 			me.options.pagination.current.text(i + 1);
 			me.options.pagination.total.text(this.getSize());
