@@ -49,6 +49,11 @@
 	</div>
 </div>
 
+<div class='modal-content add-goal-no-user'>
+	<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Give a Minute in order to add a goal to this project.</p>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
 <script>
 	if(!tc){ var tc = {}; }
 	if(!tc.gam){ tc.gam = {}; }
@@ -69,6 +74,17 @@
 		}
 		
 		function build_merlin(){
+			if(!options.app.app_page.user){
+				options.app.components.modal.show({
+					source_element:tc.jQ('.modal-content.add-goal-no-user'),
+					init:function(modal,callback){
+						if(tc.jQ.isFunction(callback)){
+							callback(modal);
+						}
+					}
+				});
+				return false;
+			}
 			return new tc.merlin(options.app,{
 				dom:dom.find('.merlin.add-goal'),
 				next_button:dom.find('a.ca-btn'),
@@ -124,10 +140,9 @@
 									if(data == 'False'){
 										return false;
 									}
-									window.location = '/project/'+data;
+									//window.location = '/project/'+data;
 								}
-							});
-							tc.util.dump(merlin.options.data);
+							});s
 						}
 					}
 				}
