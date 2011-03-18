@@ -836,13 +836,15 @@ Give A Minute - Project
 
 {% block page_js %}
 <script>
-	app_page.data = {{ d.template_data.project.json }};
+	{% if d.template_data and d.template_data.project %}
+		app_page.data.project = {{ d.template_data.project.json }};
+	{% endif %}
 
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Project');
 		
 		tc.util.log('PROJECT DATA');
-		tc.util.dump(app.app_page.data);
+		tc.util.dump(app.app_page.data.project);
 		tc.util.log(' ');
 		
 		app.components.project = new tc.gam.project({
@@ -869,7 +871,7 @@ Give A Minute - Project
 						dom:modal.options.element.find('.introduce-yourself'),
 						first_step:'introduce-message-step',
 						data:{
-							project_id:null,
+							project_id:app.app_page.data.project.project_id,
 							message:null
 						},
 						steps:{
@@ -898,7 +900,8 @@ Give A Minute - Project
 								selector:'.finish',
 								init:function(merlin,dom){
 									tc.jQ.ajax({
-										url:'/create/resources',
+										type:'POST',
+										url:'/project/join',
 										data:merlin.options.data,
 										context:merlin,
 										dataType:'json',
