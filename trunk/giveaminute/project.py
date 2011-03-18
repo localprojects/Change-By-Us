@@ -19,6 +19,8 @@ select p.project_id
     ,p.updated_datetime
     ,l.location_id
     ,l.name as location_name
+    ,l.lat as location_lat
+    ,l.lon as location_lon
     ,u.user_id as owner_user_id
     ,u.first_name as owner_first_name
     ,u.last_name as owner_last_name
@@ -59,7 +61,7 @@ where p.project_id = $id;"""
                                 endorsements = dict(items = endorsements),
                                 location = dict(location_id = self.data.location_id,
                                                 name = self.data.location_name,
-                                                position = {}),
+                                                position = dict(lat = str(self.data.location_lat), lng = str(self.data.location_lon))),
                                 members = dict(items = members),
                                 resources = dict(links = dict(items = links),
                                                 organizations = dict(items = projectResources)),
