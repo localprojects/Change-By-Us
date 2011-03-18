@@ -1,0 +1,147 @@
+<div class='box goals-add' style="display:none;">
+	<div class="actions">
+		<a href="#hide,goals_add" class="back fancy-caps">
+			<span>Back <span>to</span> Project Home</span>
+		</a>
+	</div>
+	
+	<div class="merlin add-goal form-pane">
+		<h2><strong>Add</strong> a Goal</h2>
+		
+		<div class='step info'>
+			<div class="fields">
+				<div class="row">
+					<label>What's the goal?</label>
+					<textarea class='message'></textarea>
+				</div>
+				<div class="row">
+					<label>How quickly can it get done?</label>
+					<select class='duration'>
+						<option value='-1'></option>
+						<option value='1,week'>1 week or less</option>
+						<option value='1,month'>1 months or less</option>
+						<option value='3,month'>3 months or less</option>
+						<option value='1,year'>1 year or less</option>
+						<option value='3,year'>1 years or less</option>
+					</select>
+				</div>
+				<div class="row">
+					<label>Who will be the point person for getting it done?</label>
+					<select class='point_person'>
+						<option value='-1'></option>
+						{% for member in d.template_data.project.data.info.members['items'] %}
+							<option value='{{ member.u_id }}'>{{ member.name }}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn" href="#">
+					<span>Let's Do it!</span>
+				</a>
+			</div>
+		</div>
+		
+		<div class='step finish' style='display:none;'>
+			<p>Thank you for submitting an idea!</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
+	</div>
+</div>
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
+		var widget, me, merlin;
+		this.options = tc.jQ.extend({name:'goals_add'},options);
+		this.dom = dom;
+		widget = tc.gam.widget(this,project);
+		me = this;
+		this.handlers = {
+			
+		};
+		
+		this.components = {
+			merlin:null
+		}
+		
+		function build_merlin(){
+			return new tc.merlin(options.app,{
+				dom:dom.find('.merlin.add-goal'),
+				next_button:dom.find('a.ca-btn'),
+				first_step:'info',
+				data:{
+					project_id:null,
+					text:null,
+					timeframe_n:null,
+					timeframe_unit:null,
+					user_id:null
+				},
+				steps:{
+					'info':{
+						selector:'.step.info',
+						next_step:'finish',
+						inputs:{
+							message:{
+								selector:'textarea.message',
+								validators:['min-3','max-32','required'],
+								hint:''
+							},
+							duration:{
+								selector:'select.duration',
+								validators:['selected'],
+								hint:''
+							},
+							point_person:{
+								selector:'select.point_person',
+								validators:['selected'],
+								hint:''
+							}
+						},
+						finish:function(merlin,dom){
+							merlin.options.data = tc.jQ.extend(merlin.options.data,{
+								project_id:merlin.app.app_page.user.u_id,
+								text:merlin.current_step.inputs.message.dom.val(),
+								timeframe_n:merlin.current_step.inputs.duration.dom.val().split(',')[0],
+								timeframe_unit:merlin.current_step.inputs.duration.dom.val().split(',')[0],
+								user_id:merlin.current_step.inputs.point_person.dom.val()
+							});
+						}
+					},
+					'finish':{
+						selector:'.step.finish',
+						init:function(merlin,dom){
+							tc.jQ.ajax({
+								type:'POST',
+								url:'/project/goal/add',
+								data:merlin.options.data,
+								context:merlin,
+								dataType:'text',
+								success:function(data,ts,xhr){
+									if(data == 'False'){
+										return false;
+									}
+									window.location = '/project/'+data;
+								}
+							});
+							tc.util.dump(merlin.options.data);
+						}
+					}
+				}
+			});
+		}
+		
+		return {
+			show:function(propagate){
+				widget.show(propagate);
+				if (!me.components.merlin) {
+					me.components.merlin = build_merlin();
+				}
+			},
+			hide:widget.hide
+		};
+	};
+</script>

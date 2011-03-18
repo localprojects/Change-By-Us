@@ -107,7 +107,7 @@ class Home(Controller):
         elif index == 4:
           data['title'] = 'French'
           for i in range(num):
-            data['ideas'].append(dict(text = "This place needs more more culture, more joie de vivre. Lets import some culture experts from Paris.",
+            data['ideas'].append(dict(text = "This place needs more culture, more joie de vivre. Lets import some culture experts from Paris.",
                             f_name = "Lev",
                             l_name = "Kanter",
                             submitted_by = "web"))

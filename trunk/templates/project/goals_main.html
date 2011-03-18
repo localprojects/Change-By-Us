@@ -1,0 +1,108 @@
+<!-- begin goals-main -->	
+<div class="box goals-main">
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Goals 
+				<span class="counter">{{ d.template_data.project.data.info.goals['items']|length }}</span>
+				{% if d.template_data.project.data.editable %}
+					<span class="control"><a href="#" class="manage">Manage</a></span>
+				{% endif %}
+			</span>
+		</h2>
+		<div class="actions">
+			<a href="#" class='add'>Propose Your Own</a>
+		</div>
+	</div>
+	
+	{% if d.template_data.project.data.info.goals['items']|length > 0 %}
+		<div class="goals-display">
+			<h3 class="fancy-caps"><span>The</span> Active Goal <span>for this</span> Project</h3>
+			<div class="carousel">
+				<div class="scrollable">
+					<ul class="items">
+						
+						{% for goal in d.template_data.project.data.info.goals['items'] %}
+							<li>
+								<div class="goal-card">
+									{% if d.template_data.project.data.editable %}
+										<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+									{% endif %}
+									<p>{{ goal.text }}</p>
+									<div class="meta">
+										<dl>
+											<dt>Timeframe</dt>
+											<dd>{{ goal.timeframe }}</dd>
+											
+											<dt>Point Person</dt>
+											<dd>{{ goal.owner.name }}</dd>
+										</dl>
+									</div>
+								</div>
+							</li>
+						{% endfor %}
+						
+					</ul>
+				</div>
+				<div class="carousel-controls">
+					<a class="next" href="#">
+						<span>Next</span>
+					</a>
+				</div>
+			</div>
+		</div>
+	{% else %}
+		<div class="goals-empty">
+			<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
+			<div class="empty-state-box big">
+				<a class="close" href="#"><span>Close</span></a>
+				<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="#show,goals_add">add a goal now?</a></p>
+			</div>
+		</div>
+	{% endif %}	
+</div>
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
+		var widget;
+		this.options = tc.jQ.extend({name:'goals_main'},options);
+		this.dom = dom;
+		widget = tc.gam.widget(this,project);
+		this.handlers = {
+			manage:function(e,d) {
+				e.preventDefault();
+				e.data.project.components.goals_stack.show();
+			},
+			add_goal:function(e,d){
+				e.preventDefault();
+				e.data.project.components.goals_add.show();
+			},
+			carousel_scrolled: function(e, index) {
+			
+			}
+		};
+	
+		if(this.dom.find(".carousel").length){
+			this.carousel = new tc.carousel({
+				element: this.dom.find(".carousel")
+			}).carousel;
+			if(this.carousel){
+				this.carousel.onSeek(this.handlers.carousel_scrolled);
+			}
+		}
+	
+	
+		this.dom.find('.control .manage').bind('click',{ project:project,me:this },this.handlers.manage);
+		this.dom.find('.actions .add').bind('click',{ project:project,me:this },this.handlers.add_goal);
+		return {
+			show:widget.show,
+			hide:widget.hide
+		};
+	};
+	
+</script>
+<!-- end .goals-main -->

@@ -1,0 +1,125 @@
+<div class="box conversation">
+	<div class="conversation-controls clearfix">
+		<a class="rss-btn" href="#"><span><abbr>RSS</abbr></span></a>
+		
+		{% if d.template_data.project.data.info.messages['total'] > 0 %}
+			<div class="filters">
+				<select>
+					<option>All messages</option>
+					<option>XXXX</option>
+					<option>XXXX</option>
+				</select>
+			</div>
+		{% endif %}
+		
+		<div class="main">
+			<div class="conversation-input">
+				{% if d.template_data.project.data.info.messages['total'] > 0 %}
+					<label class="fancy-caps">Join <span>the</span> Conversation</label>
+				{% else %}
+					<label class="fancy-caps">Start <span>the</span> Conversation</label>
+				{% endif %}
+				<textarea cols="54" rows="1"></textarea>
+				<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+			</div>
+			<div class="primary-action">
+				<!--<button class="rounded-button">Update</button>-->
+				<a class="ca-btn" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div>
+	
+	{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+		<ol class="comment-stack">
+			{% for message in d.template_data.project.data.info.messages['items'] %}
+				<li class=" ">
+					{% if d.template_data.project.data.editable %}
+						<a class="close" href="#"><span>Close</span></a>
+					{% endif %}
+					<div class="membrane">
+						<div class="thumb">
+							<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
+						</div>
+						<div class="main">
+							{% if message.message_type == 'join' %}
+								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
+							{% elif message.message_type == 'comment' %}
+								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> says</cite>
+							{% endif %}
+							
+							{% if message.idea %}
+								<div class="note-card">
+									<cite class="note-meta-hd"></cite>
+									<blockquote>
+										<p>{{ message.idea.message }}</p>
+									</blockquote>
+									<cite class="note-meta-ft"></cite>
+								</div>
+							{% endif %}
+							
+							<blockquote class="serif">
+								<p>{{ message.body }}</p>
+							</blockquote>
+							<!-- TODO calculate time since based on {{ message.created }} -->
+							<cite class="meta-ft">XXXX ago</cite>
+						</div>
+					</div>
+				</li>
+			{% endfor %}
+		</ol>
+		<div class="load-more">
+			<a href="#"><span>Load older posts</span></a>
+		</div>
+	{% endif %}
+
+</div>
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	tc.gam.project_widgets.conversation = function(project,dom,deps,options){
+		var widget;
+		this.options = tc.jQ.extend({name:'conversation'},options);
+		this.dom = dom;
+		widget = tc.gam.widget(this,project);
+		this.elements = {
+			userprompt: this.dom.find(".conversation-input label"),
+			textpane: this.dom.find(".conversation-input textarea"),
+			post_btn: this.dom.find(".conversation-controls .primary-action .ca-btn")
+		};
+		this.handlers = {
+			userprompt_click: function(e, d) {
+				e.data.me.elements.textpane.focus();
+			},
+			textpane_focus: function(e, d) {
+				if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
+					e.data.me.elements.userprompt.hide();
+				}
+			},
+			textpane_blur: function(e, d) {
+				if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
+					e.data.me.elements.userprompt.show();
+				}
+			},
+			post_click: function(e, d) {
+				e.preventDefault();
+			}
+		};
+	
+		this.elements.textpane.autoGrow();
+	
+		this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
+		this.elements.textpane.bind("focus", { project:project,me:this },this.handlers.textpane_focus);
+		this.elements.textpane.bind("blur", { project:project,me:this },this.handlers.textpane_blur);
+		this.elements.post_btn.bind("click", { project:project,me:this },this.handlers.post_click);
+	
+		return { 
+			show:widget.show,
+			hide:widget.hide
+		};
+	};
+</script>
+
