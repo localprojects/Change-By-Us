@@ -84,10 +84,10 @@ class Search(Controller):
                         (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
                         from project p
                         where
-                        p.is_active = 1 and %s
+                        p.is_active = 1 %s
                         %s
-                        order by p.created_datetime desc""" % ((("p.location_id = %s and " % str(locationId)) if locationId else ""),
-                                                                clause)
+                        order by p.created_datetime desc""" % ((("and p.location_id = %s " % str(locationId)) if locationId else ""),
+                                                                "and %s" % clause if len(clause) > 0 else "")
                         
             data = list(self.db.query(sql))
         except Exception, e:
@@ -105,10 +105,10 @@ class Search(Controller):
             sql = """select project_resource_id as link_id, title, url, image_id 
                     from project_resource
                         where
-                        is_active = 1 and %s
+                        is_active = 1 %s
                         %s
-                        order by created_datetime desc""" % ((("location_id = %s and " % str(locationId)) if locationId else ""),
-                                                                clause)
+                        order by created_datetime desc""" % ((("and location_id = %s " % str(locationId)) if locationId else ""),
+                                                                "and %s" % clause if len(clause) > 0 else "")
 
             data = list(self.db.query(sql))
         except Exception, e:
@@ -130,10 +130,10 @@ class Search(Controller):
                 from idea i
                 left join user u on u.user_id = i.user_id
                 where
-                i.is_active = 1 and %s
+                i.is_active = 1 %s
                 %s
-                order by i.created_datetime desc""" % ((("i.location_id = %s and " % str(locationId)) if locationId else ""),
-                                                                clause)
+                order by i.created_datetime desc""" % ((("and i.location_id = %s " % str(locationId)) if locationId else ""),
+                                                        "and %s" % clause if len(clause) > 0 else "")
 
 
         data = list(self.db.query(sql))
