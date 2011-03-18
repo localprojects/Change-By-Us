@@ -11,8 +11,12 @@
 
 	<div class="bd clearfix">
 		<div class="our-mission">
-			<div class="sub-hd">
+			<div class="sub-hd clearfix">
 				<h3>Our Mission</h3>
+				<div class="edit-controls" style="display:none;">
+					<a href="#" class="ca-btn save-btn">Save</a>
+					<a href="#" class="cancel-btn">Cancel</a>
+				</div>
 			</div>
 			<div class="sub-bd serif">
 				<p>{{ d.template_data.project.data.info.mission }}</p>
@@ -65,10 +69,147 @@
 		</div>
 	</div>
 </div> <!-- end .box.mission -->
-	
+
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/static/js/gam-map-style.js"></script>
+<script type="text/javascript" src="/static/js/libs/infobox_packed.js"></script>
 <script>
 	if(!tc){ var tc = {}; }
 	if(!tc.gam){ tc.gam = {}; }
 	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.infopane = function(project,dom,deps,options){
+		var widget, data, me;
+		me = this;
+		this.options = tc.jQ.extend({name:'infopane'},options);
+		data = this.options.app.app_page.data;
+		this.dom = dom;
+		this.editable = false;
+		this.edit_mode = false;
+		if (data.project.editable) {
+			this.editable = true;
+			this.dom.addClass("can-edit");
+		}
+		widget = tc.gam.widget(this,project);
+		this.elements = {
+			mission: {
+				edit_controls: null,
+				textpane: null,
+				init: function(element) {
+					if (me.editable) {
+						me.elements.mission.edit_controls = element.find(".edit-controls");
+						me.elements.mission.textpane = element.find(".sub-bd");
+						
+						me.elements.mission.edit_controls.children(".save-btn").bind(
+							"click",
+							{ project:project, me:me },
+							me.handlers.our_mission_save
+						);
+						me.elements.mission.edit_controls.children(".cancel-btn").bind(
+							"click",
+							{ project:project, me:me },
+							me.handlers.our_mission_cancel
+						);
+						
+						me.elements.mission.textpane.bind("click", { project:project, me:me }, me.handlers.our_mission_clicked);
+					} else {
+						
+					}
+				},
+				edit: function() {
+					me.edit_mode = true;
+					me.elements.mission.edit_controls.show();
+					me.elements.mission.textpane.html("<div class='form-pane'><div class='fields'><textarea>"+ 
+							data.project.info.mission +
+							"</textarea></div></div>");
+				},
+				display: function() {
+					me.edit_mode = false;
+					me.elements.mission.edit_controls.hide();
+					me.elements.mission.textpane.html("<p>"+ data.project.info.mission +"</p>");
+				},
+				save: function() {
+					var text;
+					text = me.elements.mission.textpane.find("textarea").val();
+					tc.jQ.ajax({
+						url: "/project/description",
+						data: {
+							project_id: me.data.project.project_id,
+							text: text
+						},
+						context: me,
+						type: "POST",
+						dataType: "text",
+						success: function(data,ts,xhr) {
+							if (data === "true") {
+								this.data.project.info.mission = text;
+							} else {
+								
+							}
+						}
+					});
+				}
+			},
+			endorsements: {
+				
+			},
+			location_map: {
+				map: null,
+				init: function() {
+					var coords, map;
+					tc.util.log("project.infopane.location_map.init");
+
+					coords = [data.project.info.location.position.lat, 
+					          data.project.info.location.position.lng];
+
+					// tc.util.dump(coords);
+					// TODO handle null/empty location data
+
+					map = new google.maps.Map(document.getElementById("location-map"), {
+						center: new google.maps.LatLng(coords[0], coords[1]),
+						zoom: 11,
+						disableDefaultUI: true,
+						mapTypeControlOptions: {
+						   mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'GAM']
+						},
+						draggable: false
+					});
+
+					map.mapTypes.set("GAM", new google.maps.StyledMapType(gamMapStyle, { name: "Give a Minite" }));
+					map.setMapTypeId("GAM");
+
+					me.elements.location_map.map = map;
+				}
+			},
+			keywords: {
+				
+			}
+		};
+		this.handlers = {
+			our_mission_save: function(e, d) {
+				e.preventDefault();
+				e.data.me.elements.mission.save();
+			},
+			our_mission_cancel: function(e, d) {
+				e.preventDefault();
+				e.data.me.elements.mission.display();
+			},
+			our_mission_clicked: function(e, d) {
+				if (e.data.me.edit_mode) {
+					
+				} else {
+					e.data.me.elements.mission.edit();
+				}
+			}
+		};
+		
+		this.elements.mission.init( this.dom.find(".our-mission") );
+		this.elements.location_map.init();
+		
+		return {
+			show:widget.show,
+			hide:widget.hide
+		};
+	};
 		
 </script>
