@@ -128,6 +128,10 @@ Give A Minute - Join
 				<p class="west">Thank you for joining.</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
+			
+			<div class='step error clearfix ' style='display:none;'>
+				<p class="west">There was a problem creating your account.</p>
+			</div><!--end step-->
 		</form>
 	</div>
 
@@ -446,13 +450,17 @@ Give A Minute - Join
 							context:merlin,
 							dataType:'text',
 							success:function(data,ts,xhr){
-								if(data == 'False'){
-									return false;
+								if(data == 'False' || data == 'None'){
+									window.location.hash = 'error';
+									return;
 								}
-								//window.location = '/login';
+								window.location = '/login';
 							}
 						});
 					}
+				},
+				'error':{
+					selector:'.step.error'
 				}
 			}
 		});
