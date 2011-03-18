@@ -1,0 +1,181 @@
+<!-- begin members -->
+<div class="box members" style='display:none;'>
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Members <span class="counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
+			</span>
+		</h2>
+		<div class="actions">
+			<a class="back fancy-caps" href="#">
+				<span>Back <span>to</span> Project Home</span>
+			</a>
+		</div>
+	</div>
+	<div class="bd">
+		<div class="west">
+		
+			{% if d.template_data.project.data.info.members['items']|length > 0 %}
+				
+				<!-- Begin Members.Stack -->
+				<ul class="members-stack">
+				{% for member in d.template_data.project.data.info.members['items'] %}
+				
+					<li>
+						<div class="thumb">
+							<img src="http://placehold.it/40x40" alt="" />
+						</div>
+						<div class="main">
+							<a href="">{{ member.name }}</a>
+						</div>
+						{% if d.template_data.project.data.editable %}
+							<a class="close" href="#removeMember,{{member.u_id}}"><span>Close</span></a>
+						{% endif %}
+					</li>
+				
+				{% endfor %}
+				</ul>
+				<!-- End Members.Stack -->
+			{% else %}
+			
+				<!-- Begin Members.Empty -->
+				<div class="empty-state-box">
+					<a class="close" href="#"><span>Close</span></a>
+					<p>Use the tools at the right to get some members listed in here!</p>
+					<a href="#show,link_add" class="rounded-button small">Add Link</a>
+				</div>
+				<!-- End Members.Empty -->
+				
+			{% endif %}
+		
+		</div>
+		<div class="east">
+		
+			<!-- Begin Members.email-invite -->
+			<div class="email-invite">
+				<div class="sub-hd">
+					<h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
+				</div>
+				<div class="sub-bd form-pane">
+					<form action="" method="POST">
+						<div class="fields">
+							<div class="row">
+								<textarea>Add emails separated by commas</textarea>
+							</div>
+							<div>
+								<input class="rounded-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<!-- End Members.email-invite -->
+		
+			<!-- Begin Members.ideas-invite -->
+			<div class="ideas-invite">
+				<div class="sub-hd">
+					<h3 class="fancy-caps">Invite People <span>with</span> Similar Ideas</h3>
+					<div class="pagination">
+						<span class="cur-index">1</span> <em>of</em>
+						<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
+					</div>
+				</div>
+				<div class="sub-bd">
+													
+					{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
+						<div class="carousel">
+							<div class="scrollable">
+								<ul class="items">
+									{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
+										<li>
+											<div class="note-card-public-controls">
+												<a class="invite rounded-button" href="#">Invite</a>
+												<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+											</div>
+											<div class="note-card">
+												<div class="membrane">
+													<cite class="note-meta-hd">
+														<strong>{{ idea.owner.name }}</strong> says &mdash;
+													</cite>
+													<blockquote>
+														<p>{{ idea.message }}</p>
+													</blockquote>
+													<cite class="note-meta-ft">
+														Posted <strong>{{ idea.created }}</strong>
+													</cite>
+												</div>
+											</div>
+										</li>
+									{% endfor %}
+								</ul>
+							</div>
+							<div class="carousel-controls">
+								<a class="next" href="#">
+									<span>Next</span>
+								</a>
+							</div>
+						</div>
+					{% endif %}
+					
+				</div>
+			</div>
+			<!-- End Members.ideas-invite -->
+		
+		</div>
+	</div>
+</div>
+<!-- end Members -->
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.members = function(project,dom,deps,options){
+		var widget, me;
+		me = this;
+		this.options = tc.jQ.extend({name:'members'},options);
+		this.dom = dom;
+		widget = tc.gam.widget(this,project);
+		this.elements = {
+			members_list: { },
+			email_invite: { },
+			ideas_invite: {
+				elements: {
+					carousel: null
+				}
+			}
+		};
+		this.handlers = {
+			back:function(e,d){
+				e.preventDefault();
+				e.data.me.hide(true);
+			}
+		};
+	
+		// initialize carousels the first time
+		// this widget is rendered
+		function init_carousels() {
+			//me.elements.ideas_invite.elements.carousel = new tc.carousel({
+			//	element: me.dom.find(".ideas-invite .carousel"),
+			//	pagination: {
+			//		current: me.dom.find(".ideas-invite .pagination .cur-index"),
+			//		total: me.dom.find(".ideas-invite .pagination .total")
+			//	}
+			//}).carousel;
+		}
+	
+		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
+		return {
+			show:function(propagate) {
+				widget.show(propagate);
+				if (!me.elements.ideas_invite.elements.carousel) {
+					init_carousels();
+				}
+			},
+			hide:widget.hide
+		};
+	};
+
+	
+</script>

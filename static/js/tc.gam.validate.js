@@ -105,6 +105,12 @@ tc.validate = function(element,validators){
 					errors.push('Not a number.')
 				}
 				break;
+			case 'selected':
+				if(value == '-1'){
+					valid = false;
+					errors.push('Must select a value.')
+				}
+				break;
 		}
 	}
 	

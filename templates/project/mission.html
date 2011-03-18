@@ -1,0 +1,77 @@
+<!-- Begin Project.West -->
+<div class="box mission">
+
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Mission
+			</span>
+		</h2>
+	</div>
+
+	<div class="bd clearfix">
+		<div class="our-mission">
+			<div class="sub-hd">
+				<h3>Our Mission</h3>
+			</div>
+			<div class="sub-bd serif">
+				<p>{{ d.template_data.project.data.info.mission }}</p>
+			</div>
+		</div>
+		<div class="endorsements">
+			<div class="sub-hd">
+				<h3>Endorsements</h3>
+			</div>
+			<div class="sub-bd">
+				<ul class="endorsements-stack">
+					{% for endorsement in d.template_data.project.data.info.endorsements['items'] %}
+						<li>
+							<div class="thumb">
+								<img class="endorser-photo" alt="{{ endorsement.name }}" src="http://placehold.it/30x30"/>
+								<span class="overlay-tag"></span>
+							</div>
+							<div class="main">
+								<strong>{{ endorsement.name }}</strong>,
+								<cite>{{ endorsement.title }} {{ endorsement.organization }}</cite>
+							</div>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+		<div class="location">
+			<div class="sub-hd">
+				<h3>Location</h3>
+			</div>
+			<div class="sub-bd">
+				<!-- TODO {{ location }} -->
+				<div class="map-holder">Location Map placeholder</div>
+			</div>
+		</div>
+		<div class="keywords">
+			<div class="sub-hd">
+				<h3>Keywords</h3>
+			</div>
+			<div class="sub-bd">
+				<ul class="tag-cloud serif">
+					{% for keyword in d.template_data.project.data.info.keywords %}
+						{% if d.template_data.project.data.editable %}
+							<li class="admin"><a href="#keyword,{{ keyword }}">{{ keyword }}</a> <a href="#" class="remove-btn"><span>Remove</span></a></li>
+						{% else %}
+							<li><a href="#keyword,{{ keyword }}">{{ keyword }}</a></li>
+						{% endif %}
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+	</div>
+</div> <!-- end .box.mission -->
+	
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	
+	
+</script>

@@ -1,0 +1,95 @@
+<!-- TODO, hook up with service!!! -->
+<div class="box related-resources" style="display:none;">
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Related Resources <span class="counter"></span>
+				{% if d.template_data.project.data.editable %}
+					<!--<span class="control"><a href="#">Manage</a></span>-->
+				{% endif %}
+			</span>
+		</h2>
+		<div class="actions">
+			<a href="#" class="back fancy-caps">
+				<span>Back <span>to</span> Project Home</span>
+			</a>
+		</div>
+	</div>
+
+	<div class="bd clearfix">
+		<table class="resources-list doublewide">
+			<tr>
+				<td>
+					<a href="" class="add-button rounded-button">Add</a>
+					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
+				</td>
+				<td>
+					<a href="" class="add-button rounded-button">Add</a>
+					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+					<span class="resource-name"><span><span>NYC 311</span></span></span>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<a href="" class="add-button rounded-button">Add</a>
+					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
+				</td>
+				<td>
+					<a href="" class="add-button rounded-button">Add</a>
+					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<a href="" class="add-button rounded-button">Add</a>
+					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
+				</td>
+				<td class="added">
+					<a href="" class="add-button rounded-button">Add</a>
+					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
+					<div class="added-dialog">
+						<span class="added-header">Added <em>to</em> your project</span>
+						<span class="added-text">We sent an introduction to this organization with a link to this project. <a href="">?</a></span>
+						<span class="added-close"></span>
+					</div>
+				</td>
+			</tr>
+		</table>
+							
+		<div class="actions">
+			<a href="/search" class="forward fancy-caps">
+				<span>Find more resources</span>
+			</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
+		var widget;
+		this.options = tc.jQ.extend({name:'related_resources'},options);
+		this.dom = dom; 
+		widget = tc.gam.widget(this,project);
+		this.handlers = {
+			back:function(e,d){
+				e.preventDefault();
+				e.data.project.components.related_resources.hide(true);
+			}
+		};
+		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
+		return {
+			show:widget.show,
+			hide:widget.hide
+		};
+	};
+	
+</script>
