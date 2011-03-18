@@ -18,7 +18,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 		
 	this.options.element.tooltip({
 		position: "center right",
-		offset: [-10, -20],
+		offset: [0, -20],
 		predelay: 100,
 		onShow: function(e) {
 			var tip, trig;
@@ -63,7 +63,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 		onHide: function(e) {
 			
 		}
-	});
+	}).dynamic( {} );
 	
 	this.tooltip = this.options.element.data("tooltip");
 };

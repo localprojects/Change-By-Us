@@ -156,13 +156,17 @@
 		// initialize carousels the first time
 		// this widget is rendered
 		function init_carousels() {
-			//me.elements.ideas_invite.elements.carousel = new tc.carousel({
-			//	element: me.dom.find(".ideas-invite .carousel"),
-			//	pagination: {
-			//		current: me.dom.find(".ideas-invite .pagination .cur-index"),
-			//		total: me.dom.find(".ideas-invite .pagination .total")
-			//	}
-			//}).carousel;
+			var ideas_carousel;
+			ideas_carousel = me.dom.find(".ideas-invite .carousel");
+			if (ideas_carousel.length === 1) {
+				me.elements.ideas_invite.elements.carousel = new tc.carousel({
+					element: me.dom.find(".ideas-invite .carousel"),
+					pagination: {
+						current: me.dom.find(".ideas-invite .pagination .cur-index"),
+						total: me.dom.find(".ideas-invite .pagination .total")
+					}
+				}).carousel;
+			}
 		}
 	
 		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
