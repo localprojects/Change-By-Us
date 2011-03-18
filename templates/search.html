@@ -33,225 +33,119 @@ Give A Minute - Search Results
 		<!-- LIST VIEW -->
 		<div class="list-view">
 			<div class="west sidebar">
-				<span class="sidebar-item all active">All<span class="counter">4</span></span>
-				<span class="sidebar-item projects">Projects<span class="counter">15</span></span>
-				<span class="sidebar-item ideas">Ideas<span class="counter">34</span></span>
-				<span class="sidebar-item resources">Resources<span class="counter">2</span></span>
+				<span class="sidebar-item all active">All<span class="counter">{{ d.template_data.results.data.projects|length + d.template_data.results.data.ideas|length + d.template_data.results.data.resources|length }}</span></span>
+				<span class="sidebar-item projects">Projects<span class="counter">{{ d.template_data.results.data.projects|length }}</span></span>
+				<span class="sidebar-item ideas">Ideas<span class="counter">{{ d.template_data.results.data.ideas|length }}</span></span>
+				<span class="sidebar-item resources">Resources<span class="counter">{{ d.template_data.results.data.resources|length }}</span></span>
 			</div>
 			<div class="east">
-				<div class="box results-box results-projects tab-view clearfix">
+				<div class="box results-box results-projects tab-view clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">23</span> Projects</h2>
-						<span class="control"><a href="#">See all &rarr;</a></span>
+						<h2><span class="counter">{{ d.template_data.results.data.projects|length }}</span> Projects</h2>
+						<span class="control"><a href="#">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
-					<div class="bd">							
+					<div class="bd">		
+						{% if d.template_data.results.data.projects|length > 0 %}
 						<table class="projects-list doublewide clearfix">
-							<tr>
-								<td>
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</td>
-								<td>
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</td>
-								<td>
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="endorser-thumb">
-										<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
-										<span class="overlay-tag"></span>
-									</div>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</td>
-								<td>
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-										<span class="member-count">58</span>
-									</div>
-									<div class="project-info">
-										<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-										<span class="creator"><em>Created by </em> Terry Richardson</span>
-										<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-									</div>
-								</td>
-							</tr>
+							<tbody>
+								{% for project in d.template_data.results.data.projects %}
+									{% if loop.index is odd %}
+									<tr>
+									{% endif %}
+										<td>
+											<a class="close" href="#"><span>Close</span></a>
+											<div class="thumb">
+												<img src="http://placehold.it/50x50" alt="" class="proj"/>
+												<span class="overlay-tag"></span>
+												<span class="member-count">{{ project.num_members }}</span>
+											</div>
+											<div class="project-info">
+												<span class="link"><a href="/project">{{ project.title }}</a></span>
+												<span class="creator"><em>Created by </em> XXXXXX</span>
+												<span class="description">{{ project.description }}</span>
+											</div>
+										</td>
+									{% if loop.index is even %}
+									</tr>
+									{% endif %}
+								{% endfor %}
+							</tbody>
 						</table>
+						{% endif %}
 						<div class="none-found-message clearfix">
 							<h2>There were <span class="counter">0</span> <strong>Projects</strong> found</h2>
-							<a class="rounded-button fancy-caps more-link" href="">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
+							<a class="rounded-button fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
 						</div>
 					</div>
 					<div class="ft">
-						<a class="rounded-button fancy-caps more-link" href="">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
+						<a class="rounded-button fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
 					</div>
-				</div>
+				</div><!-- end results-box -->
 				
-				<div class="box results-box results-resources clearfix">
+				
+				<div class="box results-box results-resources clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">18</span> Resources</h2>
-						<span class="control"><a href="#">See all &rarr;</a></span>
+						<h2><span class="counter">{{ d.template_data.results.data.resources|length }}</span> Resources</h2>
+						<span class="control"><a href="#">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
-					<div class="bd">
+					<div class="bd">		
+						{% if d.template_data.results.data.projects|length > 0 %}
 						<table class="resources-list triplewide clearfix">
-							<tr>
-								<td>
-									<a href="" class="add-button rounded-button">Add</a>
-									<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-									<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-								</td>
-								<td>
-									<a href="" class="add-button rounded-button">Add</a>
-									<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-									<span class="resource-name"><span><span>NYC 311</span></span></span>
-								</td>
-								<td>
-									<a href="" class="add-button rounded-button">Add</a>
-									<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-									<span class="resource-name"><span><span>Bronx River Alliance</span></span></span>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<a href="" class="add-button rounded-button">Add</a>
-									<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-									<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-								</td>
-								<td>
-									<a href="" class="add-button rounded-button">Add</a>
-									<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-									<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-								</td>
-								<td class="added">
-									<a href="" class="add-button rounded-button">Add</a>
-									<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-									<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-									<div class="added-dialog">
-										<span class="added-header">Added <em>to</em> your project</span>
-										<span class="added-text">We sent an introduction to this organization with a link to this project. <a href="">?</a></span>
-										<span class="added-close"></span>
-									</div>
-								</td>
-							</tr>
+							<tbody>
+								{% for resource in d.template_data.results.data.resources %}
+									{% if loop.index % 3 == 1 %}
+									<tr>
+									{% endif %}
+										<td>
+											<a href="" class="add-button rounded-button" href="">Add</a>
+											<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
+											<span class="resource-name"><span><span>{{ resource.title }}</span></span></span>
+										</td>
+									{% if loop.index % 3 == 0 %}
+									</tr>
+									{% endif %}
+								{% endfor %}
+							</tbody>
 						</table>
+						{% endif %}
 						<div class="none-found-message clearfix">
 							<h2>There were <span class="counter">0</span> <strong>Resources</strong> found</h2>
-							<a class="rounded-button fancy-caps more-link" href="">Add <span>an</span> Organization <span class="sm-arrow-forward"></span></a>
+							<a class="rounded-button fancy-caps more-link" href="/resource">Add <span>an</span> Organization <span class="sm-arrow-forward"></span></a>
 						</div>
 					</div>
 					<div class="ft">
-						<a class="rounded-button fancy-caps more-link" href="">Add <span>an</span> Organization <span class="sm-arrow-forward"></span></a>
-					</div>
-				</div>
+						<a class="rounded-button fancy-caps more-link" href="/resource">Add <span>an</span> Organization <span class="sm-arrow-forward"></span></a>
+					</div>					
+				</div><!-- end results-box -->
 				
-				<div class="box results-box results-ideas clearfix">
+				
+				<div class="box results-box results-ideas clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">18</span> Ideas</h2>
-						<span class="control"><a href="#">See all &rarr;</a></span>
+						<h2><span class="counter">{{ d.template_data.results.data.ideas|length }}</span> Ideas</h2>
+						<span class="control"><a href="#">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
-					<div class="bd">
+					<div class="bd">		
+						{% if d.template_data.results.data.ideas|length > 0 %}
 						<ul class="ideas-list clearfix">
-							<li>
-								<div class="note-card-public-controls">
-									<a class="invite rounded-button" href="">Invite</a>
-									<span class="flag">Flag as Inappropriate</span>
-								</div>
-								<div class="note-card">
-									<div class="membrane">
-										<a class="close" href="#"><span>Close</span></a>
-										<cite class="note-meta-hd"><strong>Shawna</strong> says &mdash;</cite>
-										<blockquote><p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p></blockquote>
-										<cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite>
+							{% for idea in d.template_data.results.data.ideas %}
+								<li {% if loop.index % 3 == 0  %}class="every-third"{% endif %}>
+									<div class="note-card-public-controls">
+										<a class="invite rounded-button" href="">Invite</a>
+										<span class="flag">Flag as Inappropriate</span>
 									</div>
-								</div>
-							</li>
-							<li>
-								<div class="note-card-public-controls">
-									<a class="invite rounded-button" href="">Invite</a>
-									<span class="flag">Flag as Inappropriate</span>
-								</div>
-								<div class="note-card">
-									<div class="membrane">
-										<a class="close" href="#"><span>Close</span></a>
-										<cite class="note-meta-hd"><strong>Shawna</strong> says &mdash;</cite>
-										<blockquote><p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p></blockquote>
-										<cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite>
+									<div class="note-card">
+										<div class="membrane">
+											<a class="close" href="#"><span>Close</span></a>
+											<cite class="note-meta-hd"><strong>{{ idea.owner.name|capitalize() }}</strong> says &mdash;</cite>
+											<blockquote><p>{{ idea.message|truncate(250) }}</p></blockquote>
+											<!-- <cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite> -->
+											<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
+										</div>
 									</div>
-								</div>
-							</li>
-							<li class="every-third">
-								<div class="note-card-public-controls">
-									<a class="invite rounded-button" href="">Invite</a>
-									<span class="flag">Flag as Inappropriate</span>
-								</div>
-								<div class="note-card">
-									<div class="membrane">
-										<a class="close" href="#"><span>Close</span></a>
-										<cite class="note-meta-hd"><strong>Shawna</strong> says &mdash;</cite>
-										<blockquote><p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p></blockquote>
-										<cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite>
-									</div>
-								</div>
-							</li>
+								</li>
+							{% endfor %}
 						</ul>
+						{% endif %}
 						<div class="none-found-message clearfix">
 							<h2>There were <span class="counter">0</span> <strong>Ideas</strong> found</h2>
 							<a class="rounded-button fancy-caps more-link" href="">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
@@ -260,7 +154,8 @@ Give A Minute - Search Results
 					<div class="ft">
 						<a class="rounded-button fancy-caps more-link" href="">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
 					</div>
-				</div>
+				</div><!-- end results-box -->
+				
 				
 			</div><!--end .east -->
 		</div><!-- end .list-view-->
