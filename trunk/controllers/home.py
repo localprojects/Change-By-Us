@@ -27,7 +27,7 @@ class Home(Controller):
             
     def showHome(self):
         #temp fix
-        locations = dict(data = mLocation.getSimpleLocationDictionary(), json = self.json(mLocation.getSimpleLocationDictionary()))
+        locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = self.json(mLocation.getSimpleLocationDictionary(self.db)))
         allIdeas = dict(data = self.getAllProjectIdeas(), json = self.json(self.getAllProjectIdeas()))
         
         self.template_data['locations'] = locations
