@@ -133,12 +133,13 @@ class Project(Controller):
         description = self.request('text')
         timeframeNumber = self.request('timeframe_n')
         timeframeUnit = self.request('timeframe_unit')
+        userId = self.request('user_id')
         
         if (not self.user):
             log.error("*** goal submitted w/o logged in user")
             return False
         else:
-            return mProject.addGoalToProject(self.db, projectId, description, timeframeNumber, timeframeUnit, self.user.id)
+            return mProject.addGoalToProject(self.db, projectId, description, timeframeNumber, timeframeUnit, userId)
         
     def featureGoal(self):
         projectGoalId = self.request('goal_id')
