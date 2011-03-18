@@ -215,7 +215,7 @@ class Project(Controller):
         projectId = self.request('project_id')
         message = self.request('message')
         
-        if (not projectGoalId):
+        if (not projectId):
             log.error("*** message add attempted w/o project id")
             return False
         elif (util.strNullOrEmpty(message)):
