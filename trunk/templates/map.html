@@ -1,5 +1,7 @@
 {% extends "./partials/base.html" %}
 
+{% block title %}Give a Minute - Search{% endblock %}
+
 {% block javascript_header %}
 {{ super() }}
 	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
@@ -8,6 +10,9 @@
     <script type="text/javascript">
     	var nychoods = {{ d.template_data.locations_scored }};
     	var max_score = {{ d.template_data.max_score }};
+    	var max_marker_size = 75;	// px
+    	var min_marker_size = 20;	// px
+    	var marker_ratio = (max_marker_size - min_marker_size) / max_score;
     	
     	var map;
 		var brooklyn = new google.maps.LatLng(40.6743890, -73.9455);
@@ -21,7 +26,7 @@
 				zoom: 11,
 				center: brooklyn,
 				minZoom: 11,
-				maxZoom: 13,
+				maxZoom: 15,
 				disableDefaultUI: true,
 				mapTypeControlOptions: {
 				   mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'GAM']
@@ -35,18 +40,26 @@
 			for (hood in nychoods){
 				thisHood = nychoods[hood];
 				if (thisHood.score > 0){
-					var rad = thisHood.score / 2;
+					var m_size = (thisHood.score * marker_ratio) + min_marker_size;
+					var rad = m_size / 2;
 					var marker = new google.maps.Marker({
 						position: new google.maps.LatLng(thisHood.lat, thisHood.lon),
 						map: map,
-						icon: getIconUp(thisHood.score),
+						icon: getIconUp(m_size),
 						shape: {
 							coords:[rad,rad,rad],
 							type:"circle"
 						},
-						title:hood
+						title:thisHood.name,
+						zIndex:parseInt(hood) + 1
 					});
-					marker.score = thisHood.score;
+					// Custom Marker properties
+					marker.m_size = m_size;
+					marker.n_ideas = thisHood.n_ideas;
+					marker.n_resources = thisHood.n_resources;
+					marker.n_projects = thisHood.n_projects;
+					
+					// Event Listeners
 					google.maps.event.addListener(marker, 'mouseover', markerOver);
 					google.maps.event.addListener(marker, 'mouseout', markerOut);
 					google.maps.event.addListener(marker, "click", markerClick);
@@ -56,7 +69,7 @@
 			// InfoBox //
 			var boxText = document.createElement("div");
 			boxText.id = "infobox";
-			boxText.innerHTML = "<div id='ib-content'><div id='ib-title'>Neighborhood</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>10</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>55</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>3</span></div>";
+			boxText.innerHTML = "<div id='ib-content'><div id='ib-title'><div class='outer'><div class='inner'>Neighborhood</div></div></div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>10</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>55</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>3</span></div>";
 	 
 			var myOptions = {
 				content: boxText,
@@ -128,35 +141,36 @@
 		
 		function markerOver(e){
 			//console.log(this);
-			this.setIcon(getIconOver(this.score));
+			this.setIcon(getIconOver(this.m_size));
 		}
 		
 		function markerOut(e){
 			if(this.isSelected) return;
-			this.setIcon(getIconUp(this.score));
+			this.setIcon(getIconUp(this.m_size));
 			this.isSelected = false;
 		}
 		
 		function markerClick(e){
 			if(this == currentMarker) return;
 			
-			var num_projects = 10;
-			var num_ideas = 55;
-			var num_resources = 3;
-			
 			if(currentMarker && currentMarker != this){
-				currentMarker.setIcon(getIconUp(currentMarker.score));
+				currentMarker.setIcon(getIconUp(currentMarker.m_size));
 				currentMarker.isSelected = false;
 			}
 			
 			this.isSelected = true;
 			currentMarker = this;
 			
+			var num_projects = this.n_projects;
+			var num_ideas = this.n_ideas;
+			var num_resources = this.n_resources;
+
+			
 			// Can't use jQuery for this because of the way Infobox works, apparently
 			
 			var boxText = document.createElement("div");
 			boxText.id = "infobox";
-			boxText.innerHTML = "<div id='ib-content'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div>";
+			boxText.innerHTML = "<div class='vCenter' id='ib-content'><div class='outer'><div class='inner'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div></div></div>";
 			ib.setContent(boxText);
 			ib.open(map, this);
 		}
@@ -181,7 +195,3 @@
 	<div id="map_canvas"></div>
 </div>
 {% endblock continent %}
-
-{% block page_js %}
-
-{% endblock page_js %}
