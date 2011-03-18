@@ -51,7 +51,7 @@ where p.project_id = $id;"""
         links = self.getLinks()
         projectResources = self.getResources()
         goals = self.getGoals()
-        messages = []
+        messages = self.getMessages()
         relatedIdeas = self.getRelatedIdeas()
     
         data = dict(project_id = self.id,
@@ -68,49 +68,10 @@ where p.project_id = $id;"""
                                 resources = dict(links = dict(items = links),
                                                 organizations = dict(items = projectResources)),
                                 goals = dict(items = goals),
-                                messages = dict(n_returned = 10,
+                                messages = dict(n_returned = len(messages),
                                                 offset = 0,
-                                                total = 30,
-                                                items = [dict(message_id = 87634,
-                                                             message_type = "join", 
-                                                             owner = dict(u_id = 39,
-                                                                        name = "Steven M."),
-                                                             body = "Hasim Q. joined our group",
-                                                            created = "2011-02-12 12:30:02",
-                                                            idea = dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02")),
-                                                        dict(message_id = 87634,
-                                                             message_type = "join", 
-                                                             owner = dict(u_id = 39,
-                                                                        name = "Steven M."),
-                                                             body = "Hey this is great, I think we should set up weekly meetings so we can me more efficient. <img src='http://someimagehere.html'></img>",
-                                                            created = "2011-02-12 12:30:02",
-                                                            idea = None),
-                                                        dict(message_id = 87634,
-                                                             message_type = "join", 
-                                                             owner = dict(u_id = 39,
-                                                                        name = "Steven M."),
-                                                             body = "Hey this is great, I think we should set up weekly meetings so we can me more efficient. <img src='http://someimagehere.html'></img>",
-                                                            created = "2011-02-12 12:30:02",
-                                                            idea = dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02")),
-                                                        dict(message_id = 87634,
-                                                             message_type = "join", 
-                                                             owner = dict(u_id = 39,
-                                                                        name = "Steven M."),
-                                                             body = "Hey this is great, I think we should set up weekly meetings so we can me more efficient. <img src='http://someimagehere.html'></img>",
-                                                            created = "2011-02-12 12:30:02",
-                                                            idea = dict(idea_id = 78634,
-                                                                    owner = dict(u_id = 41,
-                                                                                name = "Hasim Q."),
-                                                                    message = "Theres a big need on my street for a garden...",
-                                                                    created = "2011-02-12 12:30:02"))]),
+                                                total = len(messages),
+                                                items = messages),
                                 related_ideas = dict(items = relatedIdeas)))
                                 
         return data                                                    
@@ -204,7 +165,64 @@ where p.project_id = $id;"""
         
     def getGoals(self):
         return getGoals(self.db, self.id)
-                                                
+        
+    def getMessages(self):
+        messages = []
+    
+        try:
+            sql = """select 
+                        m.project_message_id,
+                        m.message_type,
+                        m.message,
+                        m.created_datetime,
+                        u.user_id,
+                        u.first_name,
+                        u.last_name,
+                        i.idea_id,
+                        i.description as idea_description,
+                        i.submission_type as idea_submission_type,
+                        i.created_datetime as idea_created_datetime
+                    from project_message m
+                    inner join user u on u.user_id = m.user_id
+                    left join idea i on i.idea_id = m.idea_id
+                    where m.project_id = $id and m.is_active = 1
+                    order by m.created_datetime desc"""
+            data = list(self.db.query(sql, {'id':self.id}))
+            
+            for item in data:
+                messages.append(message(item.project_message_id, 
+                                        item.message_type, 
+                                        item.message, 
+                                        item.created_datetime, 
+                                        item.user_id, 
+                                        item.first_name, 
+                                        item.last_name, 
+                                        item.idea_id, 
+                                        item.idea_description, 
+                                        item.idea_submission_type, 
+                                        item.idea_created_datetime))
+        except Exception, e:
+            log.info("*** couldn't get messages")
+            log.error(e)
+            
+        return messages    
+        
+        
+def message(id, type, message, createdDatetime, userId, firstName, lastName, ideaId, idea, ideaSubType, ideaCreatedDatetime):
+    if (ideaId):
+        ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
+    else:
+        ideaObj = None
+         
+    #something for goals here
+    
+    return dict(message_id = id,
+                message_type = type,
+                owner = smallUser(userId, firstName, lastName),
+                body = message,
+                created = str(createdDatetime),
+                idea = ideaObj)
+                                                        
 def smallUser(id, first, last):
     return dict(u_id = id,
                 name = "%s %s" % (first, last))
@@ -570,7 +588,8 @@ def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit,
                                     description = description,
                                     time_frame_numeric = int(timeframeNumber),
                                     time_frame_unit = timeframeUnit,
-                                    user_id = userId)
+                                    user_id = userId,
+                                    created_datetime = None)
                                     
         return True;
     except Exception, e:
@@ -610,7 +629,7 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
     try:
         db.insert('project_message', project_id = projectId,
                                     message = message,
-                                    user_id = user_id,
+                                    user_id = userId,
                                     idea_id = ideaId,
                                     project_goal_id = projectGoalId,
                                     message_type  = message_type)
