@@ -47,6 +47,8 @@ class Project(Controller):
                 return self.addMessage()
             else:
                 return self.not_found()
+        elif (action == 'invite'):
+            return self.invite()
         else:
             return self.not_found()
         
@@ -105,6 +107,33 @@ class Project(Controller):
                     mIdea.addIdeaToProject(self.db, newIdeaId, projectId)
                 
         return isJoined                        
+    
+    def invite(self):
+        projectId = self.request('project_id')
+        ideaId = self.request('idea_id')
+        emails = self.request('email_list')
+        message = self.request('message')
+        
+        log.info("*** %s" % emails)
+        
+        if (not self.user):
+            log.error("*** invite w/o logged in user")
+            return False
+        elif (not projectId):
+            log.error("***invite w/o project id")
+            return False
+        elif (util.strNullOrEmpty(message)):
+            log.error("*** invite submitted w/o message")
+            return False        
+        else:
+            if (ideaId):
+                return mProject.inviteByIdea(self.db, projectId, ideaId, message, self.user.id)
+            elif (emails):
+                return mProject.inviteByEmail(self.db, projectId, emails.split(','), message, self.user.id)
+            else:
+                log.error("*** invite w/o idea or email")
+                return False
+        
             
     def endorse(self):
         projectId = self.request('project_id')
