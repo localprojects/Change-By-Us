@@ -19,10 +19,18 @@ class Search(Controller):
         return self.render('map')
         
     def showSearch(self):
-        # dummied up from real data
-        projects = mProject.getProjectsByKeywords(self.db, 'bicycle')
-        resources = self.getDummyResources()        
-        ideas = self.getDummyIdeas()
+        if (self.request('terms')):
+            terms = self.request('terms').split(',')
+        else:
+            terms = []
+            
+        locationId = self.request('location_id')
+        
+        log.info("*** search for '%s', %s" % (terms, locationId))
+
+        projects = self.searchProjects(terms, locationId)
+        resources = self.searchProjectResources(terms, locationId)
+        ideas = self.searchIdeas(terms, locationId)
         
         results = dict(projects = projects, resources = resources, ideas = ideas)
         
@@ -56,28 +64,79 @@ class Search(Controller):
         
         return score 
 
-    # temp dummy functions
+    ## DEBUG ONLY
     def getDummyResources(self):
         limit = 10
         sql = "select project_resource_id as link_id, title, url, image_id from project_resource limit $limit"
         data = list(self.db.query(sql, {'limit':limit}))
                 
         return data
-        
-    def getDummyIdeas(self):
-        limit = 10
-        sql = """
-select i.idea_id
-       ,i.description
-      ,i.submission_type
-      ,i.created_datetime
-      ,u.user_id
-      ,u.first_name
-      ,u.last_name
-from idea i
-left join user u on u.user_id = i.user_id limit $limit"""
+    ## END DEBUG ONLY
 
-        data = list(self.db.query(sql, {'limit':limit}))
+    def searchProjects(self, terms, locationId):
+        data = []
+        
+        clause = self.makeMatchClause(terms, "p.title, p.description")
+    
+        #obviously must optimize here
+        try:
+            sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 
+                        (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
+                        from project p
+                        where
+                        p.is_active = 1 and %s
+                        %s
+                        order by p.created_datetime desc""" % ((("p.location_id = %s and " % str(locationId)) if locationId else ""),
+                                                                clause)
+                        
+            data = list(self.db.query(sql))
+        except Exception, e:
+            log.info("*** couldn't get project search data")
+            log.error(e)
+            
+        return data
+        
+    def searchProjectResources(self, terms, locationId):
+        data = []
+
+        clause = self.makeMatchClause(terms, "title, description")
+        
+        try:
+            sql = """select project_resource_id as link_id, title, url, image_id 
+                    from project_resource
+                        where
+                        is_active = 1 and %s
+                        %s
+                        order by created_datetime desc""" % ((("location_id = %s and " % str(locationId)) if locationId else ""),
+                                                                clause)
+
+            data = list(self.db.query(sql))
+        except Exception, e:
+            log.info("*** couldn't get resources search data")
+            log.error(e)
+                    
+        return data
+
+    def searchIdeas(self, terms, locationId):
+        clause = self.makeMatchClause(terms, "i.description")
+                
+        sql = """select i.idea_id
+                       ,i.description
+                      ,i.submission_type
+                      ,i.created_datetime
+                      ,u.user_id
+                      ,u.first_name
+                      ,u.last_name
+                from idea i
+                left join user u on u.user_id = i.user_id
+                where
+                i.is_active = 1 and %s
+                %s
+                order by i.created_datetime desc""" % ((("i.location_id = %s and " % str(locationId)) if locationId else ""),
+                                                                clause)
+
+
+        data = list(self.db.query(sql))
         
         betterData = []
         
@@ -85,23 +144,24 @@ left join user u on u.user_id = i.user_id limit $limit"""
             owner = None
             
             if (item.user_id):
-                name = "%s %s." % (item.first_name, item.last_name[0])
-                
-                owner = dict(name = name, user_id = item.user_id)
+                owner = mProject.smallUser(item.user_id, item.first_name, item.last_name)
         
             betterData.append(dict(idea_id = item.idea_id,
                             message = item.description,
                             created = str(item.created_datetime),
                             submission_type = item.submission_type,
                             owner = owner))
-                            
-        log.info("*** %s" % str(betterData))
                 
         return betterData
-        
-        
-        
-        
-        
-        
-        
+
+    def makeMatchClause(self, words, fieldstring):
+        clauseList = []
+    
+        for word in words:
+            clauseList.append("match(%s) against ('%s')" % (fieldstring, word))
+            
+        return ' or '.join(clauseList)
+            
+            
+            
+                
