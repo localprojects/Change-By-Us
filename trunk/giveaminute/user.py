@@ -22,13 +22,20 @@ class User():
         self.isLeader = bool(self.data.is_leader)
     
     def getDictionary(self):
+        projects = []
+        
+        for item in self.projectData:
+            projects.append(dict(project_id = item.project_id,
+                            title = item.title,
+                            is_project_admin = item.is_project_admin))
+    
         data = dict(u_id = self.id,
                     f_name = self.firstName,
                     l_name = self.lastName,
                     email = self.email,
                     mobile = self.phone,
-                    projects = self.projectData)
-                    
+                    projects = projects)
+                                        
         return data
         
     def populateUserData(self):
