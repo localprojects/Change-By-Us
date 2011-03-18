@@ -31,7 +31,7 @@ Give A Minute - Search Results
 	<div class='midlands clearfix'>
 		
 		<!-- LIST VIEW -->
-		<div id="list-view">
+		<div class="list-view">
 			<div class="west sidebar">
 				<span class="sidebar-item all active">All<span class="counter">{{ d.template_data.results.data.projects|length + d.template_data.results.data.ideas|length + d.template_data.results.data.resources|length }}</span></span>
 				<span class="sidebar-item projects">Projects<span class="counter">{{ d.template_data.results.data.projects|length }}</span></span>
@@ -50,7 +50,7 @@ Give A Minute - Search Results
 							<tbody>
 								{% for project in d.template_data.results.data.projects %}
 									{% if loop.index is odd %}
-									<tr class="{% if loop.index > 6 %}hidden-result {% endif %}{% if loop.index == 5 %}last-initial-row{% endif %}">
+									<tr>
 									{% endif %}
 										<td>
 											<a class="close" href="#"><span>Close</span></a>
@@ -60,9 +60,9 @@ Give A Minute - Search Results
 												<span class="member-count">{{ project.num_members }}</span>
 											</div>
 											<div class="project-info">
-												<span class="link"><a href="/project">{{ project.title|truncate(50) }}</a></span>
+												<span class="link"><a href="/project">{{ project.title }}</a></span>
 												<span class="creator"><em>Created by </em> XXXXXX</span>
-												<span class="description">{{ project.description|truncate(90) }}</span>
+												<span class="description">{{ project.description }}</span>
 											</div>
 										</td>
 									{% if loop.index is even %}
@@ -94,12 +94,12 @@ Give A Minute - Search Results
 							<tbody>
 								{% for resource in d.template_data.results.data.resources %}
 									{% if loop.index % 3 == 1 %}
-									<tr class="{% if loop.index > 6 %}hidden-result {% endif %}{% if loop.index == 4 %}last-initial-row{% endif %}">
+									<tr>
 									{% endif %}
 										<td>
 											<a href="" class="add-button rounded-button" href="">Add</a>
 											<span class="thumb"><a class="close" href="#"><span>Close</span></a><img src="http://placehold.it/35x35" alt="" /></span>
-											<span class="resource-name"><span><span>{{ resource.title|truncate(50) }}</span></span></span>
+											<span class="resource-name"><span><span>{{ resource.title }}</span></span></span>
 										</td>
 									{% if loop.index % 3 == 0 %}
 									</tr>
@@ -128,7 +128,7 @@ Give A Minute - Search Results
 						{% if d.template_data.results.data.ideas|length > 0 %}
 						<ul class="ideas-list clearfix">
 							{% for idea in d.template_data.results.data.ideas %}
-								<li class="{% if loop.index % 3 == 0  %}every-third {% endif %}{% if loop.index > 3 %}hidden-result{% endif %}">
+								<li {% if loop.index % 3 == 0  %}class="every-third"{% endif %}>
 									<div class="note-card-public-controls">
 										<a class="invite rounded-button" href="">Invite</a>
 										<span class="flag">Flag as Inappropriate</span>
@@ -137,7 +137,7 @@ Give A Minute - Search Results
 										<div class="membrane">
 											<a class="close" href="#"><span>Close</span></a>
 											<cite class="note-meta-hd"><strong>{{ idea.owner.name|capitalize() }}</strong> says &mdash;</cite>
-											<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
+											<blockquote><p>{{ idea.message|truncate(250) }}</p></blockquote>
 											<!-- <cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite> -->
 											<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
 										</div>
@@ -170,7 +170,7 @@ Give A Minute - Search Results
 {% endblock continent %}
 
 {% block page_js %}
-<script type="text/javascript">
+<script>
 	console.log('Search Data');
 	console.log({{ d.template_data.results['json'] }})
 </script>

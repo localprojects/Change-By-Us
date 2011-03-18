@@ -235,7 +235,7 @@ Give A Minute - Create a Project
 				text:null,
 				keywords:null,
 				location_id:null,
-				sms_phone:null,
+				links:null,
 				resources:null
 			},
 			steps:{
@@ -411,11 +411,18 @@ Give A Minute - Create a Project
 							url:'/create/similar',
 							data:merlin.options.data,
 							context:merlin,
-							dataType:'json',
+							dataType:'text',
 							success:function(data,ts,xhr){
-								if(data.projects.length){
-									this.options.steps['check-projects'].step_data = data;
-									window.location.hash = 'check-projects';
+								var d;
+								try{
+									d = tc.jQ.parseJSON(data);
+								}catch(e){
+									window.location.hash = 'check-nosimilar';
+									return;
+								}
+								if(d.resources.length){
+									this.options.steps['add'].step_data = d;
+									window.location.hash = 'add';
 								} else {
 									window.location.hash = 'check-nosimilar';
 								}
@@ -476,10 +483,17 @@ Give A Minute - Create a Project
 							url:'/create/resources',
 							data:merlin.options.data,
 							context:merlin,
-							dataType:'json',
+							dataType:'text',
 							success:function(data,ts,xhr){
-								if(data.resources.length){
-									this.options.steps['add'].step_data = data;
+								var d;
+								try{
+									d = tc.jQ.parseJSON(data);
+								}catch(e){
+									window.location.hash = 'add-noresources';
+									return;
+								}
+								if(d.resources.length){
+									this.options.steps['add'].step_data = d;
 									window.location.hash = 'add';
 								} else {
 									window.location.hash = 'add-noresources';

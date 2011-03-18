@@ -24,7 +24,6 @@ tc.locationDropdown.validator = function(merlin,elements){
 	};
 };
 
-
 tc.locationDropdown.prototype.options = {
 	radios:null,
 	input:null,
@@ -78,7 +77,7 @@ tc.locationDropdown.prototype.bindEvents = function(){
 		
 		location_tuple = t.hash.substring(1,t.hash.length).split(',');
 		
-		e.data.dropdown.options.input.val(location_tuple[0]).removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]);
+		e.data.dropdown.options.input.removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]).val(location_tuple[0]).trigger('change');
 		e.data.dropdown.options.list.hide();
 	});
 	this.options.radios.bind('change',{dropdown:this},function(e){
