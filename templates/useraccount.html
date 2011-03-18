@@ -11,7 +11,7 @@ Give A Minute - User Account
 
 	</div>
 
-	<div class='midlands tab-view clearfix'>
+	<div class='midlands merlin tab-view clearfix'>
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
@@ -24,9 +24,9 @@ Give A Minute - User Account
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="active"><a href="">Messages</a></li>
-						<li class="unread"><a href="">Activity <span class="counter">4</span></a></li>
-						<li><a href="">Account</a></li>
+						<li class="messages active"><a href="#messages">Messages</a></li>
+						<li class="activity unread"><a href="#activity">Activity <span class="counter">4</span></a></li>
+						<li class="account"><a href="#account">Account</a></li>
 					</ul>
 				</div>
 			</div>
@@ -34,7 +34,7 @@ Give A Minute - User Account
 		<div class="east">
 			<div class="panes">
 			
-				<div class="messages-view" >
+				<div class="messages-view step" >
 					<div class="box messages">
 						<div class="hd">
 							<h2>Messages</h2>
@@ -109,7 +109,7 @@ Give A Minute - User Account
 				</div><!-- end messages-view -->
 				
 				
-				<div class="activity-view" style="display:none">
+				<div class="activity-view step">
 					<div class="box my-projects">
 						<div class="hd">
 							<h2><span class="light">My</span> Projects <span class="counter">1</span></h2>
@@ -207,7 +207,7 @@ Give A Minute - User Account
 				</div><!--end activity-view-->
 				
 				
-				<div class="account-view" style="display:none">
+				<div class="account-view step">
 					<div class="box user-account">
 						<div class="hd">
 							<h2>Account</h2>
@@ -230,11 +230,11 @@ Give A Minute - User Account
 											<label>Last name</label>
 											<input type="text" value="Tearsdille" />
 										</div>
-										<div class="row row-email">
+										<div class="row row-email clearfix">
 											<label>E-mail address</label>
 											<input type="text" value="shawna1890@gmail.com" />
 										</div>
-										<div class="row row-change-pass">
+										<div class="row row-change-pass clearfix">
 											<label>Change Password</label>
 											<input type="text" value="" />
 										</div>
@@ -270,4 +270,42 @@ Give A Minute - User Account
 
 {% endblock continent %}
 
-{% block page_js %}{% endblock page_js %}
+{% block page_js %}
+<script>
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: User Account');
+
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin'),
+			first_step:'activity',
+			data:{
+				email:null,
+				password:null
+			},
+			steps:{
+				'activity':{
+					selector:'.activity-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active');
+						tc.jQ('ul.tabs li.activity').addClass('active');
+					}
+				},
+				'messages':{
+					selector:'.messages-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active');
+						tc.jQ('ul.tabs li.messages').addClass('active');
+					}
+				},
+				'account':{
+					selector:'.account-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active');
+						tc.jQ('ul.tabs li.account').addClass('active');
+					}
+				}
+			}
+		});
+	});
+</script>
+{% endblock page_js %}
