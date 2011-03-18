@@ -18,6 +18,7 @@ tc.locationDropdown.validator = function(merlin,elements){
 			}
 		}
 	}
+	elements.filter('.location-hood-enter').addClass('not-valid').removeClass('valid');
 	return {
 		valid:false,
 		errors:['Please select a location.']
