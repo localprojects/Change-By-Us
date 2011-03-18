@@ -10,8 +10,11 @@ class Idea:
         self.locationId = self.data.location_id
         
     def populateIdeaData(self):
-        sql = """select idea_id, description, location_id, submission_type, user_id, email, phone, num_flags
-                from idea where idea_id = $id"""
+        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.email as idea_email, i.phone, i.num_flags,
+                        u.first_name, u.last_name, u.email as user_email
+                from idea  i               
+                left join user u on u.user_id = i.user_id
+                                where idea_id = $id"""
         
         try:
             data = list(self.db.query(sql, {'id':self.id}))
