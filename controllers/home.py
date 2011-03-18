@@ -2,6 +2,7 @@ from framework.controller import *
 import giveaminute.location as mLocation
 import giveaminute.user as mUser
 import giveaminute.project as mProject
+import framework.util as util
 
 class Home(Controller):
     def GET(self, action=None, page=None):
@@ -21,12 +22,14 @@ class Home(Controller):
              return self.login()
         elif (action == 'logout'):
             return self.logout()
+        elif (action == 'resource'):
+            #todo move this to its own controller
+            return self.addResource()
         else:
             return self.not_found()
             
             
     def showHome(self):
-        #temp fix
 #         locations = mLocation.getSimpleLocationDictionary(self.db)
 #         allIdeas = self.getAllProjectIdeas();
 #         
@@ -35,7 +38,8 @@ class Home(Controller):
         
 #         self.template_data['locations'] = locationsObj
 #         self.template_data['all_ideas'] = allIdeasObj
-        
+
+        #temp fix
         locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = self.json(mLocation.getSimpleLocationDictionary(self.db)))
         allIdeas = dict(data = self.getFeaturedProjectIdeas(), json = self.json(self.getFeaturedProjectIdeas()))
         
@@ -77,6 +81,36 @@ class Home(Controller):
         self.session.kill()
 
         return True    
+        
+    def addResource(self):
+        title = self.request('title')
+        description = self.request('description')
+        physical_address = self.request('physical_address')
+        location_id = self.request('location_id') if not util.strNullOrEmpty(self.request('keywords')) else -1
+        url = self.request('url')
+        keywords = self.request('keywords').replace(',', ' ') if not util.strNullOrEmpty(self.request('keywords')) else None
+        contact_name = self.request('contact_name')
+        contact_email = self.request('contact_email')
+        other_urls = self.request('other_urls').split(',') if not util.strNullOrEmpty(self.request('other_urls')) else []
+
+        try:
+            projectResourceId = self.db.insert('project_resource', 
+                                        title = title,
+                                        description = description,
+                                        physical_address = physical_address,
+                                        location_id = location_id,
+                                        url = url,
+                                        keywords = keywords,
+                                        contact_name = contact_name,
+                                        contact_email = contact_email,
+                                        created_datetime = None)
+            
+            return True
+        except Exception,e:
+            log.info("*** couldn't add resource to system")
+            log.error(e)
+            return False
+    
         
     def getFeaturedProjectIdeas(self):
         data = []
