@@ -14,8 +14,7 @@ class Project(Controller):
         elif (action == 'goals'):
             return self.getGoals()
         else:
-            self.template_data['project_user'] = dict(is_member = True,
-                                                is_project_admin = True)      
+            self.template_data['project_user'] = self.getProjectUser(action)  
                                                 
             return self.showProject(action)                                        
             
@@ -63,6 +62,21 @@ class Project(Controller):
     
         return self.render('project')
         
+    def getProjectUser(self, projectId):
+        projectUser = dict(is_project_admin = False, is_member = False)
+        
+        if (self.user):
+            sql = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId limit 1"
+            data = list(self.db.query(sql, {'userId':self.user.id, 'projectId':projectId}))
+            
+            if (len(data)== 1):
+                projectUser['is_member'] = True
+                
+                if (data[0].is_project_admin == 1):
+                    projectUser['is_project_admin'] = True
+                
+        return projectUser
+        
     def join(self):
         projectId = self.request('project_id')
         description = self.request('message')
@@ -80,13 +94,17 @@ class Project(Controller):
             isJoined = mProject.join(self.db, projectId, self.user.id)
                     
             if (isJoined):
-                mIdea.createIdea(self.db, 
-                            description, 
-                            mProject.getProjectLocation(self.db, projectId).location_id,
-                            'web',
-                            self.user.id,
-                            self.user.email)
-            return isJoined                        
+                newIdeaId = mIdea.createIdea(self.db, 
+                                            description, 
+                                            mProject.getProjectLocation(self.db, projectId).location_id,
+                                            'web',
+                                            self.user.id,
+                                            self.user.email)
+                                            
+                if (newIdeaId):
+                    mIdea.addIdeaToProject(self.db, newIdeaId, projectId)
+                
+        return isJoined                        
             
     def endorse(self):
         projectId = self.request('project_id')
