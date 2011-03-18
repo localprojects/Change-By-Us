@@ -137,24 +137,3 @@ if(!tc.gam.project_widgets){
 	tc.gam.project_widgets = {};
 }
 
-tc.gam.project_widgets.infopane = function(project,dom,deps,options){
-	var widget;
-	this.options = tc.jQ.extend({name:'infopane'},options);
-	this.dom = dom;
-	// TODO { edit mode }
-	this.edit_mode = false;
-	widget = tc.gam.widget(this,project);
-	/*this.elements = {
-		mission: this.dom.find(".our-mission"),
-		location: this.dom.find(".location"),
-		keywords: this.dom.find(".keywords")
-	};*/
-	this.handlers = {
-		
-	};
-	return {
-		show:widget.show,
-		hide:widget.hide
-	};
-};
-
