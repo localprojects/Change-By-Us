@@ -9,8 +9,8 @@ Give A Minute - Search Results
 <div class='continent search-results'>
 	<div class='headlands clearfix'>
 		<ul class="tabs">
-			<li class="tab tab-map">Map</li>
-			<li class="tab tab-list active">List</li>
+			<li class="tab tab-map"><a href="#map">Map</a></li>
+			<li class="tab tab-list active"><a href="#all">List</a></li>
 		</ul>
 		<form class="search-results-header" action="" method="GET">
 			<label>Search results for:</label>
@@ -31,7 +31,7 @@ Give A Minute - Search Results
 	<div class='midlands merlin clearfix'>
 		
 		<!-- LIST VIEW -->
-		<div id="list-view">
+		<div id="list-view" class="step">
 			<div class="west sidebar">
 				<a class="sidebar-item all active" href="#all"><span>All</span><span class="counter">{{ d.template_data.results.data.projects|length + d.template_data.results.data.ideas|length + d.template_data.results.data.resources|length }}</span></a>
 				<a class="sidebar-item projects" href="#projects"><span>Projects</span><span class="counter">{{ d.template_data.results.data.projects|length }}</span></a>
@@ -158,8 +158,13 @@ Give A Minute - Search Results
 				
 				
 			</div><!--end .east -->
-		</div><!-- end .list-view-->
-			
+		</div><!-- end #list-view-->
+		
+		
+		<div id="map-view" class="step">
+		</div><!-- end #map-view -->
+		
+		
 	</div>
 
 	<div class='foothills'>
@@ -180,9 +185,11 @@ Give A Minute - Search Results
 		tc.util.log('Give A Minute: Search');
 		
 		function changeListCat(theCat) {
+			tc.jQ('ul.tabs .tab-map').removeClass('active');
+			tc.jQ('ul.tabs .tab-list').addClass('active');
 			tc.jQ('.sidebar').children('.sidebar-item').removeClass('active');
 			tc.jQ('.sidebar').children('.'+theCat).addClass('active');
-			tc.jQ('#list-view').removeClass().addClass(theCat);
+			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
 		};
 
 		app.components.merlin = new tc.merlin(app,{
@@ -190,23 +197,34 @@ Give A Minute - Search Results
 			first_step:'all',
 			steps:{
 				'all':{
+					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('all')
 					}
 				},
 				'projects':{
+					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('projects')
 					}
 				},
 				'resources':{
+					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('resources')
 					}
 				},
 				'ideas':{
+					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('ideas')
+					}
+				},
+				'map':{
+					selector:'#map-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs .tab-list').removeClass('active');
+						tc.jQ('ul.tabs .tab-map').addClass('active');
 					}
 				}
 			}
