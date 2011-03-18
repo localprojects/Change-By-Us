@@ -81,12 +81,42 @@ class Home(Controller):
         return data
         
     def getProjectIdeas(self, index, num):
-        data = []
+        data = dict(title = '',ideas = [])
         
-        for i in range(num):
-            data.append(dict(text = "More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!",
+        if index == 1:
+          data['title'] = 'More Trees in NYC'
+          for i in range(num):
+            data['ideas'].append(dict(text = "More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!",
                             f_name = "John",
                             l_name = "Smith",
+                            submitted_by = "web"))
+        elif index == 2:
+          data['title'] = 'Outta There'
+          for i in range(num):
+            data['ideas'].append(dict(text = "Phew, this Austin place is way nicer anyways.",
+                            f_name = "Ethan",
+                            l_name = "Holda",
+                            submitted_by = "web"))
+        elif index == 3:
+          data['title'] = 'Continuous Climbing'
+          for i in range(num):
+            data['ideas'].append(dict(text = "There arent enough opportunities to climb in this city. Lets turn the whole place into a gym by selling tower climbing permits.",
+                            f_name = "Zeke",
+                            l_name = "Shore",
+                            submitted_by = "web"))
+        elif index == 4:
+          data['title'] = 'French'
+          for i in range(num):
+            data['ideas'].append(dict(text = "This place needs more more culture, more joie de vivre. Lets import some culture experts from Paris.",
+                            f_name = "Lev",
+                            l_name = "Kanter",
+                            submitted_by = "web"))
+        elif index == 5:
+          data['title'] = 'Clean Up Canal'
+          for i in range(num):
+            data['ideas'].append(dict(text = "The bag-sellers outside my apartment are terrible. Out with the bags, in with the schwarma.",
+                            f_name = "Ian",
+                            l_name = "Lord",
                             submitted_by = "web"))
             
         return data
