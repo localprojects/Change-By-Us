@@ -99,7 +99,7 @@
 				steps:{
 					'info':{
 						selector:'.step.info',
-						next_step:'finish',
+						next_step:'submit',
 						inputs:{
 							message:{
 								selector:'textarea.message',
@@ -117,17 +117,22 @@
 								hint:''
 							}
 						},
+						init:function(merlin,dom){
+							merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+							merlin.current_step.inputs.duration.dom.val('-1').removeClass('has-been-focused').removeClass('has-attempted-submit');
+							merlin.current_step.inputs.point_person.dom.val('-1').removeClass('has-been-focused').removeClass('has-attempted-submit');
+						},
 						finish:function(merlin,dom){
 							merlin.options.data = tc.jQ.extend(merlin.options.data,{
-								project_id:merlin.app.app_page.user.u_id,
+								project_id:merlin.app.app_page.data.project.project_id,
 								text:merlin.current_step.inputs.message.dom.val(),
 								timeframe_n:merlin.current_step.inputs.duration.dom.val().split(',')[0],
-								timeframe_unit:merlin.current_step.inputs.duration.dom.val().split(',')[0],
+								timeframe_unit:merlin.current_step.inputs.duration.dom.val().split(',')[1],
 								user_id:merlin.current_step.inputs.point_person.dom.val()
 							});
 						}
 					},
-					'finish':{
+					'submit':{
 						selector:'.step.finish',
 						init:function(merlin,dom){
 							tc.jQ.ajax({
@@ -140,11 +145,19 @@
 									if(data == 'False'){
 										return false;
 									}
-									//window.location = '/project/'+data;
+									project.dom.trigger('goals-refresh',{},this.handlers.goals_refresh);
+									window.location.hash = 'hide,goals_add';
 								}
 							});
 						}
+					},
+					'finish':{
+						selector:'.step.finish',
+						init:function(merlin,dom){
+							
+						}
 					}
+					
 				}
 			});
 		}
