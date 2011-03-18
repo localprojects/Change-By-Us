@@ -35,7 +35,7 @@
 											<dd>{{ goal.timeframe }}</dd>
 											
 											<dt>Point Person</dt>
-											<dd>{{ goal.owner.name }}</dd>
+											<dd><a href='/useraccount/{{ goal.owner.u_id }}'>{{ goal.owner.name }}</a></dd>
 										</dl>
 									</div>
 								</div>
@@ -62,12 +62,12 @@
 	{% endif %}	
 </div>
 
-<li class='template-content goal-carda'>
+<li class='template-content goal-card'>
 	<div class="goal-card">
 		{% if d.template_data.project.data.editable %}
-			<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+			<a class="close" href="#close,"><span>Close</span></a>
 		{% endif %}
-		<p class='goal'></p>
+		<p class='goal-title'></p>
 		<div class="meta">
 			<dl>
 				<dt>Timeframe</dt>
@@ -118,10 +118,15 @@
 		};
 		
 		this.handle_goals = function(data){
-			tc.util.dump('goals_main.handle_goals');
-			var i;
+			tc.util.dump('goals_main.goal-card');
+			var i, temphtml;
+			this.dom.find('ul.items').children().remove();
 			for(i in data){
-				tc.util.dump(data[i]);
+				temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+				temphtml.find('.goal-title').text(data[i].text);
+				temphtml.find('.timeframe').text(data[i].timeframe);
+				temphtml.find('.owner-name').html("<a href='/useraccount/"+data[i].owner.u_id+"'>"+data[i].owner.name+"</a>");
+				this.dom.find('ul.items').append(temphtml);
 			}
 		};
 		
