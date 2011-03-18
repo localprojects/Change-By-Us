@@ -171,6 +171,12 @@ Give A Minute - Project
 
 
 {% block page_js %}
+
+<!-- google maps stuff -->
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/static/js/gam-map-style.js"></script>
+<script type="text/javascript" src="/static/js/libs/infobox_packed.js"></script>
+
 <script>
 	{% if d.template_data and d.template_data.project %}
 		app_page.data.project = {{ d.template_data.project.json }};
@@ -376,6 +382,29 @@ Give A Minute - Project
 			e.data.app.components.modal.show(e.data);
 		});
 		
+		function init_location_map() {
+			var coords, map;
+			tc.util.log("init_location_map");
+			
+			coords = [app.app_page.data.project.info.location.position.lat, 
+			          app.app_page.data.project.info.location.position.lng];
+			
+			//tc.util.dump(coords);
+			// TODO handle null/empty location data
+			
+			map = new google.maps.Map(document.getElementById("location-map"), {
+				center: new google.maps.LatLng(coords[0], coords[1]),
+				zoom: 11,
+				disableDefaultUI: true,
+				mapTypeControlOptions: {
+				   mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'GAM']
+				}
+			});
+			
+			map.mapTypes.set("GAM", new google.maps.StyledMapType(gamMapStyle, { name: "Give a Minite" }));
+			map.setMapTypeId("GAM");
+		}
+		init_location_map();
 		
 	});
 </script>
