@@ -80,7 +80,7 @@ tc.validate = function(element,validators){
 				
 				break;
 			case 'email':
-				tempelement = element.filter('.has-been-focused').parent().parent().find('.email-error');
+				tempelement = element.filter('.has-attempted-submit').parent().parent().find('.email-error');
 				if (!tc.validator_regex.email.test(value)) {
 					valid = false;
 					if(tempelement.length){
