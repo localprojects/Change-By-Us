@@ -28,21 +28,21 @@ Give A Minute - Search Results
 	
 	
 
-	<div class='midlands clearfix'>
+	<div class='midlands merlin clearfix'>
 		
 		<!-- LIST VIEW -->
 		<div id="list-view">
 			<div class="west sidebar">
-				<span class="sidebar-item all active">All<span class="counter">{{ d.template_data.results.data.projects|length + d.template_data.results.data.ideas|length + d.template_data.results.data.resources|length }}</span></span>
-				<span class="sidebar-item projects">Projects<span class="counter">{{ d.template_data.results.data.projects|length }}</span></span>
-				<span class="sidebar-item ideas">Ideas<span class="counter">{{ d.template_data.results.data.ideas|length }}</span></span>
-				<span class="sidebar-item resources">Resources<span class="counter">{{ d.template_data.results.data.resources|length }}</span></span>
+				<a class="sidebar-item all active" href="#all"><span>All</span><span class="counter">{{ d.template_data.results.data.projects|length + d.template_data.results.data.ideas|length + d.template_data.results.data.resources|length }}</span></a>
+				<a class="sidebar-item projects" href="#projects"><span>Projects</span><span class="counter">{{ d.template_data.results.data.projects|length }}</span></a>
+				<a class="sidebar-item resources" href="#resources"><span>Resources</span><span class="counter">{{ d.template_data.results.data.resources|length }}</span></a>
+				<a class="sidebar-item ideas" href="#ideas"><span>Ideas</span><span class="counter">{{ d.template_data.results.data.ideas|length }}</span></a>
 			</div>
 			<div class="east">
 				<div class="box results-box results-projects tab-view clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
 						<h2><span class="counter">{{ d.template_data.results.data.projects|length }}</span> Projects</h2>
-						<span class="control"><a href="#">See all <span class="sm-arrow-forward light"></span></a></span>
+						<span class="control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
 					<div class="bd">		
 						{% if d.template_data.results.data.projects|length > 0 %}
@@ -86,7 +86,7 @@ Give A Minute - Search Results
 				<div class="box results-box results-resources clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
 						<h2><span class="counter">{{ d.template_data.results.data.resources|length }}</span> Resources</h2>
-						<span class="control"><a href="#">See all <span class="sm-arrow-forward light"></span></a></span>
+						<span class="control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
 					<div class="bd">		
 						{% if d.template_data.results.data.projects|length > 0 %}
@@ -122,7 +122,7 @@ Give A Minute - Search Results
 				<div class="box results-box results-ideas clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
 						<h2><span class="counter">{{ d.template_data.results.data.ideas|length }}</span> Ideas</h2>
-						<span class="control"><a href="#">See all <span class="sm-arrow-forward light"></span></a></span>
+						<span class="control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
 					<div class="bd">		
 						{% if d.template_data.results.data.ideas|length > 0 %}
@@ -173,22 +173,42 @@ Give A Minute - Search Results
 <script type="text/javascript">
 	console.log('Search Data');
 	console.log({{ d.template_data.results['json'] }})
-</script>
-{% endblock page_js %}
-
-{% block javascript_footer %}
-<script type="text/javascript">
-	jQuery(document).ready(function(){ 
-		function changeListCat(theCat) {
-			$('.sidebar').children('.sidebar-item').removeClass('active');
-			$('.sidebar').children('.'+theCat).addClass('active');
-			$('#list-view').removeClass().addClass(theCat);
-		}
+	
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Search');
 		
-		$('.sidebar-item.all').click(function() { changeListCat('all') });
-		$('.sidebar-item.projects, .results-projects .hd .control a').click(function() { changeListCat('projects') });
-		$('.sidebar-item.resources, .results-resources .hd .control a').click(function() { changeListCat('resources') });
-		$('.sidebar-item.ideas, .results-ideas .hd .control a').click(function() { changeListCat('ideas') });
+		function changeListCat(theCat) {
+			tc.jQ('.sidebar').children('.sidebar-item').removeClass('active');
+			tc.jQ('.sidebar').children('.'+theCat).addClass('active');
+			tc.jQ('#list-view').removeClass().addClass(theCat);
+		};
+
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin'),
+			first_step:'all',
+			steps:{
+				'all':{
+					init:function(merlin,dom){
+						changeListCat('all')
+					}
+				},
+				'projects':{
+					init:function(merlin,dom){
+						changeListCat('projects')
+					}
+				},
+				'resources':{
+					init:function(merlin,dom){
+						changeListCat('resources')
+					}
+				},
+				'ideas':{
+					init:function(merlin,dom){
+						changeListCat('ideas')
+					}
+				}
+			}
+		});
 	});
 </script>
-{% endblock javascript_footer %}
+{% endblock page_js %}
