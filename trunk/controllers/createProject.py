@@ -16,7 +16,7 @@ class CreateProject(Controller):
         elif (action == 'resources'):
             return self.getSimilarResourcesJSON()
         else:
-            locations = self.json(mLocation.getSimpleLocationDictionary(self.db))
+            locations = dict(json = self.json(mLocation.getSimpleLocationDictionary(self.db)), data = mLocation.getSimpleLocationDictionary(self.db))
             
             return self.render('create', {'locations':locations})
             
