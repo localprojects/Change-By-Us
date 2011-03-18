@@ -105,8 +105,10 @@ def findIdeasByKeywords(db, keywords):
         for word in keywords:
             clauseList.append("match(i.description) against ('%s')" % word)
 
-        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.first_name, i.last_name, i.created_datetime
-from idea i where %s and i.is_active = 1""" % ' and '.join(clauseList)
+        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, u.first_name, u.last_name, i.created_datetime
+                    from idea i 
+                    left join user u on u.user_id = i.user_id
+                    where %s and i.is_active = 1""" % ' and '.join(clauseList)
         
         ideas = list(db.query(sql))
     except Exception, e:
@@ -124,8 +126,10 @@ def findIdeas(db, keywords, locationId):
         for word in keywords:
             clauseList.append("match(i.description) against ('%s')" % word)
 
-        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.first_name, i.last_name, i.created_datetime
-from idea i where i.is_active = 1 and i.location_id = $locationId and (%s)""" % ' or '.join(clauseList)
+        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, u.first_name, u.last_name, i.created_datetime
+                from idea i 
+                left join user u on u.user_id = i.user_id
+                where i.is_active = 1 and i.location_id = $locationId and (%s)""" % ' or '.join(clauseList)
         
         ideas = list(db.query(sql, { 'locationId':locationId}))
     except Exception, e:
@@ -143,4 +147,16 @@ def flagIdea(db, ideaId):
         log.info("*** problem flagging idea")
         log.error(e)    
         return False
+        
+def addIdeaToProject(db, ideaId, projectId):
+    try:
+        db.insert('project__idea', idea_id = ideaId, project_id = projectId)
+        log.info("*** did we get here? ids asdfasdf asd")
+                    
+        return True
+    except Exception, e:
+        log.info("*** problem adding idea to project")
+        log.error(e)    
+        return False
+    
     
