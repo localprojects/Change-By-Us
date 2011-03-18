@@ -13,6 +13,7 @@ tc.gam.project = function(options){
 	
 	this.dom = this.options.dom;
 	this.event_data = { project:this };
+	this.data = this.options.data;
 	this.widget = new tc.gam.widget(null,this);
 	
 	this.components = {
@@ -73,6 +74,26 @@ tc.gam.project = function(options){
 					break;
 			}
 		},
+		hashchanged:function(e){
+			tc.util.log('tc.project.handlers.hashchange');
+			var hash;
+			hash = window.location.hash.substring(1,window.location.hash.length);
+			switch(hash.split(',')[0]){
+				case 'show':
+					if(e.data.project.components[hash.split(',')[1]]){
+						e.data.project.components[hash.split(',')[1]].show();
+					}
+					break;
+				case 'hide':
+					e.preventDefault();
+					if(e.data.project.components[hash.split(',')[1]]){
+						e.data.project.components[hash.split(',')[1]].hide();
+					}
+					break;
+				default:
+					break;
+			}
+		},
 		link_clicked:function(e,d){
 			var t;
 			t = e.target;
@@ -106,7 +127,8 @@ tc.gam.project = function(options){
 		}
 	};
 	
-	this.dom.find('a').bind('click',this.event_data,this.handlers.link_clicked);
+	//this.dom.find('a').bind('click',this.event_data,this.handlers.link_clicked);
+	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchanged);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	

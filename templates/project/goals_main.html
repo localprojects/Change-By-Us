@@ -6,12 +6,12 @@
 				Goals 
 				<span class="counter">{{ d.template_data.project.data.info.goals['items']|length }}</span>
 				{% if d.template_data.project.data.editable %}
-					<span class="control"><a href="#" class="manage">Manage</a></span>
+					<span class="control"><a href="#show,goals_stack" class="manage">Manage</a></span>
 				{% endif %}
 			</span>
 		</h2>
 		<div class="actions">
-			<a href="#" class='add'>Propose Your Own</a>
+			<a href="#show,goals_add" class='add'>Propose Your Own</a>
 		</div>
 	</div>
 	
@@ -62,6 +62,23 @@
 	{% endif %}	
 </div>
 
+<li class='template-content goal-carda'>
+	<div class="goal-card">
+		{% if d.template_data.project.data.editable %}
+			<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+		{% endif %}
+		<p class='goal'></p>
+		<div class="meta">
+			<dl>
+				<dt>Timeframe</dt>
+				<dd class='timeline'></dd>
+				<dt>Point Person</dt>
+				<dd class='owner-name'></dd>
+			</dl>
+		</div>
+	</div>
+</li>
+
 <script>
 	if(!tc){ var tc = {}; }
 	if(!tc.gam){ tc.gam = {}; }
@@ -69,23 +86,45 @@
 	
 	tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 		var widget;
+		this.project = project;
 		this.options = tc.jQ.extend({name:'goals_main'},options);
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
 		this.handlers = {
-			manage:function(e,d) {
-				e.preventDefault();
-				e.data.project.components.goals_stack.show();
-			},
-			add_goal:function(e,d){
-				e.preventDefault();
-				e.data.project.components.goals_add.show();
-			},
 			carousel_scrolled: function(e, index) {
-			
+				
+			},
+			goals_refresh:function(e){
+				tc.util.dump('goals_main.goals-refresh');
+				tc.jQ.ajax({
+					type:'GET',
+					url:'/project/goals',
+					data:{
+						project_id:e.data.me.project.data.project_id
+					},
+					context:e.data.me,
+					dataType:'text',
+					success:function(data,ts,xhr){
+						var d;
+						try{
+							d = tc.jQ.parseJSON(data);
+						}catch(e){
+							return;
+						}
+						this.handle_goals(d);
+					}
+				});
 			}
 		};
-	
+		
+		this.handle_goals = function(data){
+			tc.util.dump('goals_main.handle_goals');
+			var i;
+			for(i in data){
+				tc.util.dump(data[i]);
+			}
+		};
+		
 		if(this.dom.find(".carousel").length){
 			this.carousel = new tc.carousel({
 				element: this.dom.find(".carousel")
@@ -94,10 +133,9 @@
 				this.carousel.onSeek(this.handlers.carousel_scrolled);
 			}
 		}
-	
-	
-		this.dom.find('.control .manage').bind('click',{ project:project,me:this },this.handlers.manage);
-		this.dom.find('.actions .add').bind('click',{ project:project,me:this },this.handlers.add_goal);
+		
+		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
+		
 		return {
 			show:widget.show,
 			hide:widget.hide
