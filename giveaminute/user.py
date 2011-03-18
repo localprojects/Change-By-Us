@@ -8,6 +8,7 @@ class User():
         self.db = db
         self.id = userId
         self.data = self.populateUserData()
+        self.projectData = self.getUserProjects()
         
         self.userKey = self.data.user_key
         self.email = self.data.email
@@ -25,7 +26,8 @@ class User():
                     f_name = self.firstName,
                     l_name = self.lastName,
                     email = self.email,
-                    mobile = self.phone)
+                    mobile = self.phone,
+                    projects = self.projectData)
                     
         return data
         
@@ -85,6 +87,21 @@ where u.user_id = $id"""
             log.info("*** problem updating user info")
             log.error(e)
             return False
+            
+    def getUserProjects(self):
+        data = []
+        
+        try:
+            sql = """select p.project_id, p.title, pu.is_project_admin 
+                    from project p
+                    inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id"""
+            data  = list(self.db.query(sql, { 'id': self.id }))
+        except Exception,e:
+            log.info("*** couldn't get user data")
+            log.error(e)
+            
+        return data    
+                    
         
 def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
     key = util.random_string(10)
