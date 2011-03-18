@@ -12,9 +12,10 @@ tc.modal.prototype.init = function(app,options){
 	tc.util.log('tc.modal.init');
 	this.options = tc.jQ.extend(this.options,options);
 	this.options.element.overlay({
-		top: 260,
+		top: "30%",
 		left: 'center',
-		speed:75,
+		fixed: false,
+		speed: 75,
 		mask: {
 			color: '#55504b',
 			opacity: 0.5
