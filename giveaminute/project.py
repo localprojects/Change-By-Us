@@ -698,7 +698,9 @@ def inviteByEmail(db, projectId, emails, message, inviterUserId):
                         createInviteBody(message, projectId), 
                         None, 
                         None, 
-                        "ethan@localprojects.net")    
+                        "ethan@localprojects.net") 
+                        
+        return True   
     except Exception, e:
         log.info("*** couldn't get send one or more emails email")
         log.error(e) 
