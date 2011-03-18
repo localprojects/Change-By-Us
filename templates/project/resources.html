@@ -28,7 +28,7 @@
 									</span>
 									<span class="resource-name">
 										<span>
-											<span><a href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
+											<span><a target='_blank' href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
 										</span>
 									</span>
 								</td>
@@ -61,7 +61,7 @@
 				
 				{% if d.template_data.project.data.info.resources.organizations['items']|length > 0 %}
 				<div class="sub-bd">
-					<table class="resources-list doublewide">
+					<table class="resources-list organization-list doublewide">
 						<tbody>
 							{% for org in d.template_data.project.data.info.resources.organizations['items'] %}
 								{% if loop.index is odd %}
@@ -73,7 +73,7 @@
 									</span>
 									<span class="resource-name">
 										<span>
-											<span><a href="{{ org.url }}"><span>{{ org.title }}</span></a></span>
+											<span><a target='_blank' href="{{ org.url }}"><span>{{ org.title }}</span></a></span>
 										</span>
 									</span>
 								</td>
@@ -129,6 +129,26 @@
 	
 </div>
 
+<div class='template-content tooltip'>
+	<div class='tooltip-hd'>
+		<h2></h2>
+	</div>
+	<div class='tooltip-bd'>
+		<div class='info'>
+			<div class='thumb'>
+				<img alt='' src='http://placehold.it/90x90'/>
+			</div>
+			<div class='main'>
+				<p></p>
+			</div>
+		</div>
+		<dl class='details'>
+			<dt>Visit Us</dt>
+			<dd><a href='"+ data.url +"'></a></dd>
+		</dl>
+	</div>
+</div>
+
 <script>
 	if(!tc){ var tc = {}; }
 	if(!tc.gam){ tc.gam = {}; }
@@ -150,11 +170,11 @@
 				e.data.project.components.related_resources.show(true);
 			}
 		};
-		this.dom.find(".resources-list td").each(function() {
+		this.dom.find(".organization-list td").each(function() {
 			var trig;
 			trig = tc.jQ(this);
 			tc.resource_tooltip({
-				element: trig,
+				trigger: trig,
 				get_url: "/project/resource/info",
 				get_params: {
 					project_resource_id: trig.attr("rel").split(",")[1]
