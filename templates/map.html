@@ -58,6 +58,7 @@
 					marker.n_ideas = thisHood.n_ideas;
 					marker.n_resources = thisHood.n_resources;
 					marker.n_projects = thisHood.n_projects;
+					marker.location_id = thisHood.location_id;
 					
 					// Event Listeners
 					google.maps.event.addListener(marker, 'mouseover', markerOver);
@@ -164,13 +165,13 @@
 			var num_projects = this.n_projects;
 			var num_ideas = this.n_ideas;
 			var num_resources = this.n_resources;
-
+			var location_id = this.location_id;
 			
 			// Can't use jQuery for this because of the way Infobox works, apparently
 			
 			var boxText = document.createElement("div");
 			boxText.id = "infobox";
-			boxText.innerHTML = "<div class='vCenter' id='ib-content'><div class='outer'><div class='inner'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div></div></div>";
+			boxText.innerHTML = "<div class='vCenter' id='ib-content' onClick='infoboxClick("+location_id+");'><div class='outer'><div class='inner'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div></div></div>";
 			ib.setContent(boxText);
 			ib.open(map, this);
 		}
@@ -182,6 +183,11 @@
 				currentMarker = null;
 			}
 			ib.close();
+		}
+		
+		function infoboxClick(lid){
+			console.log("location: "+lid);
+			location.href = "/search?location_id="+lid;
 		}
 		
 		app_page.features.push(initialize);
