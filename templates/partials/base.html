@@ -145,7 +145,7 @@
 		
 		<div id='modal' class='modal'></div>
 		
-		'{% if d.locations %}{{ d.locations }}{% endif %}'
+		{% if d.locations %}{{ d.locations }}{% endif %}
 		
 		<!-- Javascript goes here -->
 		<script src="/static/js/libs/jquery-1.5.1.js"></script>
@@ -164,6 +164,7 @@
 				
 		<script src="/static/js/tc.gam.validate.js"></script>
 		<script src="/static/js/tc.gam.merlin.js"></script>
+		<script src="/static/js/tc.gam.topbar.js"></script>
 		<script src="/static/js/tc.gam.modal.js"></script>
 		<script src="/static/js/tc.gam.carousel.js"></script>
 		<script src="/static/js/tc.gam.tooltip.js"></script>
@@ -189,17 +190,11 @@
 					app.components.modal = new tc.modal(app,{
 						element:tc.jQ('#modal')
 					});
+					
+					app.components.top_bar = tc.top_bar(tc.jQ(".stratosphere"), {});
 				});
 				
 				tc.app(app_page);
-				
-				$("ul.navbar .username, ul.navbar .myprojects").mouseenter(function () {
-					$(this).children(".dropdown").stop(true, true).slideDown(250);
-				});
-				
-				$("ul.navbar .username, ul.navbar .myprojects").mouseleave(function () {
-					$(this).children(".dropdown").fadeOut(200);
-				});
 				
 				/* DELETE THIS LATER!!!!!!! */
 				$('body').delay(3000).queue(function() {
