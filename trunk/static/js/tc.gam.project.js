@@ -27,6 +27,11 @@ tc.gam.project = function(options){
 		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{})
 	};
 	
+	tc.util.dump(options);
+	if(options.app.app_page.user){
+		
+	}
+	
 	// return project page to initial state
 	function go_home(e) {
 		e.data.project.components.goals_main.show(false);
@@ -34,10 +39,6 @@ tc.gam.project = function(options){
 	}
 	
 	this.handlers = {
-		manage_members_clicked:function(e,d){
-			tc.util.dump('project.members_button_clicked');
-			e.data.project.components.members.show(true);
-		},
 		widget_show:function(e,d){
 			tc.util.dump('project.widget_show');
 			tc.util.dump(d.name);
@@ -66,19 +67,38 @@ tc.gam.project = function(options){
 			tc.util.dump('project.widget_hide');
 			switch(d.name){
 				case 'members':
-					go_home(e);
-					break;
 				case 'goals_add':
-					go_home(e);
-					break;
 				case 'related_resources':
 					go_home(e);
 					break;
 			}
+		},
+		link_clicked:function(e,d){
+			var t;
+			t = e.target;
+			if(e.target.hash){
+				tc.util.dump(e.target.hash.substring(1,e.target.hash.length).split(','));
+				switch(e.target.hash.substring(1,e.target.hash.length).split(',')[0]){
+					case 'show':
+						e.preventDefault();
+						if(e.data.project.components[e.target.hash.substring(1,e.target.hash.length).split(',')[1]]){
+							e.data.project.components[e.target.hash.substring(1,e.target.hash.length).split(',')[1]].show();
+						}
+						break;
+					case 'hide':
+						e.preventDefault();
+						if(e.data.project.components[e.target.hash.substring(1,e.target.hash.length).split(',')[1]]){
+							e.data.project.components[e.target.hash.substring(1,e.target.hash.length).split(',')[1]].hide();
+						}
+						break;
+					default:
+						break;
+				}
+			}
 		}
 	};
 	
-	this.dom.find('.project-header .tools .control a').bind('click',this.event_data,this.handlers.manage_members_clicked);
+	this.dom.find('a').bind('click',this.event_data,this.handlers.link_clicked);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	
@@ -175,13 +195,15 @@ tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
 	this.dom = dom;
 	widget = tc.gam.widget(this,project);
 	
-	this.carousel = new tc.carousel({
-		element: this.dom.find(".carousel"),
-		pagination: {
-			current: this.dom.find(".pagination .cur-index"),
-			total: this.dom.find(".pagination .total")
-		}
-	}).carousel;
+	if(this.dom.find(".carousel").length){
+		this.carousel = new tc.carousel({
+			element: this.dom.find(".carousel"),
+			pagination: {
+				current: this.dom.find(".pagination .cur-index"),
+				total: this.dom.find(".pagination .total")
+			}
+		}).carousel;
+	}
 	
 	return {
 		show:widget.show,
@@ -230,10 +252,15 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 		}
 	};
 	
-	this.carousel = new tc.carousel({
-		element: this.dom.find(".carousel")
-	}).carousel;
-	this.carousel.onSeek(this.handlers.carousel_scrolled);
+	if(this.dom.find(".carousel").length){
+		this.carousel = new tc.carousel({
+			element: this.dom.find(".carousel")
+		}).carousel;
+		if(this.carousel){
+			this.carousel.onSeek(this.handlers.carousel_scrolled);
+		}
+	}
+	
 	
 	this.dom.find('.control .manage').bind('click',{ project:project,me:this },this.handlers.manage);
 	this.dom.find('.actions .add').bind('click',{ project:project,me:this },this.handlers.add_goal);
@@ -363,13 +390,13 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
 	// initialize carousels the first time
 	// this widget is rendered
 	function init_carousels() {
-		me.elements.ideas_invite.elements.carousel = new tc.carousel({
-			element: me.dom.find(".ideas-invite .carousel"),
-			pagination: {
-				current: me.dom.find(".ideas-invite .pagination .cur-index"),
-				total: me.dom.find(".ideas-invite .pagination .total")
-			}
-		}).carousel;
+		//me.elements.ideas_invite.elements.carousel = new tc.carousel({
+		//	element: me.dom.find(".ideas-invite .carousel"),
+		//	pagination: {
+		//		current: me.dom.find(".ideas-invite .pagination .cur-index"),
+		//		total: me.dom.find(".ideas-invite .pagination .total")
+		//	}
+		//}).carousel;
 	}
 	
 	this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);

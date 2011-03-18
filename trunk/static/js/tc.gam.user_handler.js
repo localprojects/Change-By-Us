@@ -5,12 +5,17 @@ tc.user_handler = function(options){
 		tc.util.log('tc.user_handler');
 		if(app.app_page.user){
 			if(typeof options.user_handler == 'function'){
-				options.user_handler();
+				if(options.user_handler(app) === false){
+					return false;
+				}
 			}
 		} else {
 			if(typeof options.no_user_handler == 'function'){
-				options.no_user_handler();
+				if(options.no_user_handler(app) === false){
+					return false;
+				}
 			}
 		}
+		return true;
 	};
 }

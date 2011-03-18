@@ -24,7 +24,7 @@ Give A Minute - Project
 				Members <span class="counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
 			</div>
 			{% if d.template_data.project.data.editable %}
-				<span class="control"><a href="#">Manage</a></span>
+				<span class="control"><a href="#show,members">Manage</a></span>
 			{% endif %}
 		</div>
 		<div class="main">
@@ -178,7 +178,7 @@ Give A Minute - Project
 						<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
 						<div class="empty-state-box big">
 							<a class="close" href="#"><span>Close</span></a>
-							<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="  ">add a goal now?</a></p>
+							<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="#show,goals_add">add a goal now?</a></p>
 						</div>
 					</div>
 				{% endif %}	
@@ -372,7 +372,7 @@ Give A Minute - Project
 							<div class="empty-state-box">
 								<a class="close" href="#"><span>Close</span></a>
 								<p>Use the tools at the right to get some members listed in here!</p>
-								<a href="#" class="rounded-button small">Add Link</a>
+								<a href="#show,link_add" class="rounded-button small">Add Link</a>
 							</div>
 							<!-- End Members.Empty -->
 							
@@ -547,10 +547,9 @@ Give A Minute - Project
 						<div class="sub-hd">
 							<h3>External Links</h3>
 						</div>
+						
+						{% if d.template_data.project.data.info.resources.links['items']|length > 0 %}
 						<div class="sub-bd">
-							
-							{% if d.template_data.project.data.info.resources.links['items']|length > 0 %}
-								
 								<table class="resources-list doublewide">
 									<tbody>
 										{% for link in d.template_data.project.data.info.resources.links['items'] %}
@@ -573,30 +572,29 @@ Give A Minute - Project
 										{% endfor %}
 									</tbody>
 								</table>
-								
-							{% else %}
-								
-								<div class="empty-state-box">
-									<a class="close" href="#"><span>Close</span></a>
-									<p><a href="">Add links</a> to anything, including some of our recommended links like Facebook groups and Kickstarter.</p>
-									<a href="#" class='rounded-button small add-link'>Add Link</a>
+								<div class="sub-ft clearfix">
+									<a href="#" class="rounded-button small add-link">Add a Link</a>
 								</div>
-								
+							</div>	
+							{% else %}
+							<div class="sub-bd">
+								<div class="empty-state-box">
+									<!-- <a class="close" href="#"><span>Close</span></a> -->
+									<p><a href="#show,link_add">Add links</a> to anything, including some of our recommended links like Facebook groups and Kickstarter.</p>
+									<a href="#show,link_add" class='rounded-button small add-link'>Add Link</a>
+								</div>
+							</div>
+							
 							{% endif %}
-
-						</div>
-						<div class="sub-ft clearfix">
-							<a href="#" class="rounded-button small add-link">Add a Link</a>
-						</div>
 					</div>
 					<div class="organizations">
 						<div class="sub-hd">
 							<h3>Organizations</h3>
 						</div>
-						<div class="sub-bd">
+						
 							
 							{% if d.template_data.project.data.info.resources.organizations['items']|length > 0 %}
-								
+							<div class="sub-bd">
 								<table class="resources-list doublewide">
 									<tbody>
 										{% for org in d.template_data.project.data.info.resources.organizations['items'] %}
@@ -619,15 +617,18 @@ Give A Minute - Project
 										{% endfor %}
 									</tbody>
 								</table>
-								
+							</div>
+							<div class="sub-ft clearfix">
+								<a href="#show,related_resources" class="rounded-button small add-organization">Add Organization</a>
+							</div>
 							{% else %}
-							
+							<div class="sub-bd">
 								<div class="empty-state-box">
-									<a class="close" href="#"><span>Close</span></a>
-									<p>When you <a href="">add organizations</a>, we'll introduce your project to the people over there.</p>
-									<a href="#" class="rounded-button small">Add Organizations</a>
+									<!-- <a class="close" href="#"><span>Close</span></a> -->
+									<p>When you <a href="#show,related_resources">add organizations</a>, we'll introduce your project to the people over there.</p>
+									<a href="#show,related_resources" class="rounded-button small">Add Organizations</a>
 								</div>
-								
+							</div>
 							{% endif %}
 							
 							<!-- TODO -->
@@ -657,11 +658,6 @@ Give A Minute - Project
 									</dl>
 								</div>
 							</div>
-							
-						</div>
-						<div class="sub-ft clearfix">
-							<a href="#" class="rounded-button small add-organization">Add Organization</a>
-						</div>
 					</div>
 				</div>
 				
@@ -838,6 +834,8 @@ Give A Minute - Project
 <script>
 	{% if d.template_data and d.template_data.project %}
 		app_page.data.project = {{ d.template_data.project.json }};
+	{% else %}
+		app_page.data.project = null;
 	{% endif %}
 
 	app_page.features.push(function(app){
@@ -848,6 +846,8 @@ Give A Minute - Project
 		tc.util.log(' ');
 		
 		app.components.project = new tc.gam.project({
+			app:app,
+			data:app_page.data.project,
 			dom:tc.jQ('.continent.project')
 		});
 		
@@ -970,7 +970,7 @@ Give A Minute - Project
 		});
 		
 		// Add a link
-		tc.jQ('a.add-link').bind('click',{
+		tc.jQ('a.add-link-defunct').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.add-link'),
 			init:function(modal,callback){

@@ -20,10 +20,9 @@ tc.app.prototype.init = function(page){
 			tc.util.dump(page.features[i]);
 			
 			if(tc.jQ.isFunction(page.features[i])){
-				
-				
-				
-				page.features[i](_me);
+				if(page.features[i](_me) === false){
+					break;
+				}
 			}
 		}
 	}
