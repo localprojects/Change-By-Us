@@ -41,7 +41,7 @@ Give A Minute - Search Results
 			<div class="east">
 				<div class="box results-box results-projects tab-view clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">{{ d.template_data.results.data.projects|length }}</span> Projects</h2>
+						<h2><span class="counter">{{ d.template_data.results.data.projects|length }}</span> Project{% if d.template_data.results.data.projects|length > 1 %}s{% endif %}</h2>
 						<span class="control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
 					<div class="bd">		
@@ -89,7 +89,7 @@ Give A Minute - Search Results
 				
 				<div class="box results-box results-resources clearfix {% if d.template_data.results.data.resources|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">{{ d.template_data.results.data.resources|length }}</span> Resources</h2>
+						<h2><span class="counter">{{ d.template_data.results.data.resources|length }}</span> Resource{% if d.template_data.results.data.resources|length > 1 %}s{% endif %}</h2>
 						<span class="control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
 					<div class="bd">		
@@ -131,7 +131,7 @@ Give A Minute - Search Results
 				
 				<div class="box results-box results-ideas clearfix {% if d.template_data.results.data.ideas|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">{{ d.template_data.results.data.ideas|length }}</span> Ideas</h2>
+						<h2><span class="counter">{{ d.template_data.results.data.ideas|length }}</span> Idea{% if d.template_data.results.data.ideas|length > 1 %}s{% endif %}</h2>
 						<span class="control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
 					</div>
 					<div class="bd">		
@@ -162,7 +162,7 @@ Give A Minute - Search Results
 						{% endif %}
 						<div class="none-found-message clearfix">
 							<h2>There were <span class="counter">0</span> <strong>Ideas</strong> found</h2>
-							<a class="rounded-button fancy-caps more-link" href="">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+							<a class="rounded-button fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
 						</div>
 					</div>
 					<div class="ft">
@@ -276,6 +276,7 @@ Give A Minute - Search Results
 		tc.util.log('Give A Minute: Search');
 		
 		function changeListCat(theCat) {
+			tc.jQ('.results-box').removeClass('single');
 			tc.jQ('ul.tabs .tab-map').removeClass('active');
 			tc.jQ('ul.tabs .tab-list').addClass('active');
 			tc.jQ('.sidebar').children('.sidebar-item').removeClass('active');
@@ -296,19 +297,22 @@ Give A Minute - Search Results
 				'projects':{
 					selector:'#list-view',
 					init:function(merlin,dom){
-						changeListCat('projects')
+						changeListCat('projects');
+						tc.jQ('.results-projects').addClass('single');
 					}
 				},
 				'resources':{
 					selector:'#list-view',
 					init:function(merlin,dom){
-						changeListCat('resources')
+						changeListCat('resources');
+						tc.jQ('.results-resources').addClass('single');
 					}
 				},
 				'ideas':{
 					selector:'#list-view',
 					init:function(merlin,dom){
-						changeListCat('ideas')
+						changeListCat('ideas');
+						tc.jQ('.results-ideas').addClass('single');
 					}
 				},
 				'map':{
