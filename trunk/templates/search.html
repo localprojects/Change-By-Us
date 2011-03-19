@@ -60,7 +60,7 @@ Give A Minute - Search Results
 												<span class="member-count">{{ project.num_members }}</span>
 											</div>
 											<div class="project-info">
-												<span class="link"><a href="/project">{{ project.title|truncate(50) }}</a></span>
+												<span class="link"><a href="/project/{{ project.project_id }}">{{ project.title|truncate(50) }}</a></span>
 												<span class="creator"><em>Created by </em> XXXXXX</span>
 												<span class="description">{{ project.description|truncate(70) }}</span>
 											</div>
@@ -183,7 +183,9 @@ Give A Minute - Search Results
 				<div class="box results-box results-projects">
 					<div class="hd">
 						<h2><span class="uncaps">Citywide</span> Projects <span class="counter">{{ d.template_data.results.data.projects|length }}</span></h2>
+						{% if d.template_data.results.data.projects|length > 0 %}
 						<span class="control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
 					</div>
 					<div class="bd">
 						{% if d.template_data.results.data.projects|length > 0 %}
@@ -202,7 +204,7 @@ Give A Minute - Search Results
 													<span class="member-count">{{ project.num_members }}</span>
 												</div>
 												<div class="project-info">
-													<span class="link"><a href="/project">{{ project.title|truncate(50) }}</a></span>
+													<span class="link"><a href="/project/{{ project.project_id }}">{{ project.title|truncate(50) }}</a></span>
 													<span class="creator"><em>Created by </em> XXXXXX</span>
 													<span class="description">{{ project.description|truncate(70) }}</span>
 												</div>
@@ -221,7 +223,9 @@ Give A Minute - Search Results
 				<div class="box results-box results-resources">
 					<div class="hd">
 						<h2><span class="uncaps">Citywide</span> Resources <span class="counter">{{ d.template_data.results.data.resources|length }}</span></h2>
+						{% if d.template_data.results.data.resources|length > 0 %}
 						<span class="control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
 					</div>
 					<div class="bd">
 						{% if d.template_data.results.data.resources|length > 0 %}
