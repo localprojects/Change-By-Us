@@ -67,7 +67,7 @@
 								{% if loop.index is odd %}
 									<tr>
 								{% endif %}
-								<td rel="#organization,{{ org.organization_id }}" title="{{ org.title }}">
+								<td rel="#organization,{{ org.organization }}" title="{{ org.title }}">
 									<span class="thumb">
 										<img src="http://placehold.it/30x30" alt=""/>
 									</span>
@@ -129,7 +129,9 @@
 	
 </div>
 
-<div class='tooltip' style='display:none;'>
+<div class='tooltip' id='tooltip' style='display:none;position:absolute;'></div>
+
+<div class='template-markup' id='organization-markup-source' style='display:none;'>
 	<div class='tooltip-hd'>
 		<h2></h2>
 	</div>
@@ -144,7 +146,7 @@
 		</div>
 		<dl class='details'>
 			<dt>Visit Us</dt>
-			<dd><a href='"+ data.url +"'></a></dd>
+			<dd><a href=''></a></dd>
 		</dl>
 	</div>
 </div>
@@ -171,17 +173,14 @@
 				e.data.project.components.related_resources.show(true);
 			}
 		};
-		this.dom.find(".resources-list td").each(function() {
-			var trig;
-			trig = tc.jQ(this);
-			/*tc.resource_tooltip({
-				element: trig,
-				get_url: "/project/resource/info",
-				get_params: {
-					project_resource_id: trig.attr("rel").split(",")[1]
-				}
-			});*/
+		
+		tc.resource_tooltip({
+			triggers: this.dom.find(".resources-list td"),
+			tooltip_element:tc.jQ('#tooltip'),
+			markup_source_element:tc.jQ('#organization-markup-source'),
+			get_url: "/project/resource/info"
 		});
+		
 		//this.dom.find("a.add-link").bind('click',{ project:project,me:this },this.handlers.add_link);
 		this.dom.find("a.add-organization").bind('click',{ project:project,me:this },this.handlers.add_organization);
 		return {
