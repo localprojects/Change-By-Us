@@ -30,10 +30,7 @@ tc.gam.project = function(options){
 	};
 	
 	tc.util.dump(options);
-	if(options.app.app_page.user){
-		
-	}
-	
+
 	// return project page to initial state
 	function go_home(e) {
 		e.data.project.components.goals_main.show(false);
