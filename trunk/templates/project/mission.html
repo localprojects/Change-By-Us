@@ -58,7 +58,7 @@
 			<div class="sub-bd">
 				<ul class="tag-cloud serif">
 					{% for keyword in d.template_data.project.data.info.keywords %}
-						{% if d.template_data.project_user.is_project_admin %}
+						{% if d.template_data.project_user.data.is_project_admin %}
 							<li class="admin"><a href="#keyword,{{ keyword }}">{{ keyword }}</a> <a href="#" class="remove-btn"><span>Remove</span></a></li>
 						{% else %}
 							<li><a href="#keyword,{{ keyword }}">{{ keyword }}</a></li>
@@ -129,7 +129,7 @@
 					me.elements.mission.edit_controls.hide();
 					me.elements.mission.textpane.html("<p>"+ data.project.info.mission +"</p>");
 				},
-				save: function() {
+				save: function() { // TODO
 					var text;
 					text = me.elements.mission.textpane.find("textarea").val();
 					tc.jQ.ajax({
