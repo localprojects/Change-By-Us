@@ -14,7 +14,8 @@ class Project(Controller):
         elif (action == 'goals'):
             return self.getGoals()
         else:
-            self.template_data['project_user'] = self.getProjectUser(action)  
+            project_user = self.getProjectUser(action)  
+            self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
                                                 
             return self.showProject(action)                                        
             

@@ -62,7 +62,7 @@
 	{% endif %}	
 </div>
 
-<li class='template-content goal-card'>
+<li class='template-content goal'>
 	<div class="goal-card">
 		{% if d.template_data.project.data.editable %}
 			<a class="close" href="#close,"><span>Close</span></a>
@@ -71,7 +71,7 @@
 		<div class="meta">
 			<dl>
 				<dt>Timeframe</dt>
-				<dd class='timeline'></dd>
+				<dd class='timeframe'></dd>
 				<dt>Point Person</dt>
 				<dd class='owner-name'></dd>
 			</dl>
@@ -118,16 +118,19 @@
 		};
 		
 		this.handle_goals = function(data){
-			tc.util.dump('goals_main.goal-card');
-			var i, temphtml;
-			this.dom.find('ul.items').children().remove();
+			var i, list, temphtml;
+			list = this.dom.find('ul.items');
+			this.dom.find('.counter').text(data.length);
+			this.carousel.getItems().remove();
 			for(i in data){
-				temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+				temphtml = tc.jQ('.template-content.goal').clone().removeClass('template-content');
+				temphtml.css('width','512px');
 				temphtml.find('.goal-title').text(data[i].text);
 				temphtml.find('.timeframe').text(data[i].timeframe);
 				temphtml.find('.owner-name').html("<a href='/useraccount/"+data[i].owner.u_id+"'>"+data[i].owner.name+"</a>");
-				this.dom.find('ul.items').append(temphtml);
+				this.carousel.addItem(temphtml);
 			}
+			this.carousel.end();
 		};
 		
 		if(this.dom.find(".carousel").length){
