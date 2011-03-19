@@ -26,6 +26,13 @@
 				data:{},
 				features:[]
 			};
+			app_page.features.push(function(app){
+				tc.util.log('Give A Minute: Base');
+				app.components.modal = new tc.modal(app,{
+					element:tc.jQ('#modal')
+				});
+				app.components.top_bar = tc.top_bar(tc.jQ(".stratosphere"), {});
+			});
 		</script>
 		{% endblock %}
 		
@@ -191,15 +198,6 @@
 				{% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
 				
 				tc.util.dump(app_page);
-				
-				app_page.features.push(function(app){
-					tc.util.log('Give A Minute: Base');
-					app.components.modal = new tc.modal(app,{
-						element:tc.jQ('#modal')
-					});
-					
-					app.components.top_bar = tc.top_bar(tc.jQ(".stratosphere"), {});
-				});
 				
 				tc.app(app_page);
 				
