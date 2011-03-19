@@ -68,13 +68,13 @@
 							{% if loop.index is odd %}
 								<tr>
 							{% endif %}
-							<td rel="#organization,{{ org.organization }}" title="{{ org.title }}">
+							<td title="{{ org.title }}">
 								<span class="thumb">
 									<img src="http://placehold.it/30x30" alt=""/>
 								</span>
 								<span class="resource-name">
 									<span>
-										<span><a href="{{ org.url }}" class='tooltip_trigger'><span>{{ org.title }}</span></a></span>
+										<span><a rel="#organization,{{ org.organization }}" href="{{ org.url }}" class='tooltip_trigger'><span>{{ org.title }}</span></a></span>
 									</span>
 								</span>
 							</td>
@@ -104,9 +104,7 @@
 	</div>
 </div>
 
-<div class='tooltip' id='tooltip' style='display:none;position:absolute;'></div>
-
-<div class='template-markup' id='organization-markup-source' style='display:none;'>
+<div class='template-content' id='organization-markup-source' style='display:none;'>
 	<div class='tooltip-hd'>
 		<h2></h2>
 	</div>
@@ -151,7 +149,6 @@
 		
 		tc.resource_tooltip({
 			triggers: this.dom.find(".resources-list .tooltip_trigger"),
-			tooltip_element:tc.jQ('#tooltip'),
 			markup_source_element:tc.jQ('#organization-markup-source'),
 			get_url: "/project/resource/info"
 		});
