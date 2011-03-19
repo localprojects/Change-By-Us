@@ -185,6 +185,26 @@ Give A Minute - Create a Project
 	<a class='close' href="#"><span>close</span></a>
 </div>
 
+<div class='template-content' id='organization-markup-source'>
+	<div class='tooltip-hd'>
+		<h2></h2>
+	</div>
+	<div class='tooltip-bd'>
+		<div class='info'>
+			<div class='thumb'>
+				<img alt='' src='http://placehold.it/90x90'/>
+			</div>
+			<div class='main'>
+				<p></p>
+			</div>
+		</div>
+		<dl class='details'>
+			<dt>Visit Us</dt>
+			<dd><a href=''></a></dd>
+		</dl>
+	</div>
+</div>
+
 {% endblock continent %}
 
 {% block page_js %}
@@ -192,7 +212,6 @@ Give A Minute - Create a Project
 	
 	app_page.features.push(tc.user_handler({
 		no_user_handler:function(app){
-			tc.util.dump(app);
 			app.components.modal.show({
 				source_element:tc.jQ('.modal-content.join-no-user')
 			});
@@ -231,6 +250,9 @@ Give A Minute - Create a Project
 			sub_title:tc.jQ('.headlands h2'),
 			watch_keypress:true,
 			first_step:'start',
+			components:{
+				organization_tooltip:null
+			},
 			data:{
 				title:null,
 				organization:null,
@@ -515,6 +537,17 @@ Give A Minute - Create a Project
 					use_for_history:true,
 					init:function(merlin,dom){
 						var i, temphtml;
+						
+						if(!merlin.options.components.organization_tooltip){
+							merlin.options.components.organization_tooltip = tc.resource_tooltip({
+								triggers: this.dom.find(".resources-list .tooltip_trigger"),
+								markup_source_element:tc.jQ('#organization-markup-source'),
+								get_url: "/project/resource/info"
+							});
+						} else {
+							merlin.options.components.organization_tooltip.clear_triggers();
+						}
+						
 						dom.find('ul.resources-list').children().remove();
 						for(i in merlin.current_step.step_data.resources){
 							temphtml = tc.jQ('.template-content.organization-item').clone().removeClass('template-content');
@@ -529,7 +562,10 @@ Give A Minute - Create a Project
 							if(i==merlin.current_step.step_data.resources.length-1){
 								temphtml.addClass('last');
 							}
+							temphtml.find('.organization-name').attr('rel','#organization,'+merlin.current_step.step_data.resources[i].project_resource_id);
+							merlin.options.components.organization_tooltip.add_trigger(temphtml.find('.organization-name'));
 							dom.find('ul.resources-list').append(temphtml);
+							
 						}
 						dom.find('ul.resources-list').find('a').bind('click',{merlin:merlin},function(e){
 							e.preventDefault();

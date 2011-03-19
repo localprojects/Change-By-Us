@@ -9,8 +9,8 @@ tc.resource_tooltip.prototype.init = function(options) {
 	tc.util.log("tc.resource_tooltip.init");
 	me = this;
 	this.options = tc.jQ.extend({
-		triggers: null,
-		tooltip_element:null,
+		triggers: tc.jQ('.tooltip_trigger'),
+		tooltip_element:tc.jQ('#organization-tooltip'),
 		markup_source_element: null,
 		get_url: null
 	}, options);
@@ -20,7 +20,28 @@ tc.resource_tooltip.prototype.init = function(options) {
 	this.triggers.bind('mouseout',{me:this},this.handlers.trigger_mouseout);
 	this.tooltip.bind('mouseover',{me:this},this.handlers.tooltip_mouseover);
 	this.tooltip.bind('mouseout',{me:this},this.handlers.tooltip_mouseout);
+	this.has_been_shown = false;
 	this.current_trigger = null;
+};
+
+tc.resource_tooltip.prototype.add_trigger = function(trigger){
+	tc.util.log("tc.resource_tooltip.add_trigger");
+	trigger.bind('mouseover', {me:this}, this.handlers.trigger_mouseover);
+	trigger.bind('mouseout', {me:this}, this.handlers.trigger_mouseout);
+	tc.util.dump(trigger);
+	if(!this.triggers.length){
+		this.triggers = trigger;
+	} else {
+		this.triggers.add(trigger);
+	}
+};
+
+tc.resource_tooltip.prototype.clear_triggers = function(trigger){
+	tc.util.log("tc.resource_tooltip.clear_triggers");
+	var i;
+	this.triggers.each(function(i,j){
+		tc.jQ(j).unbind('mouseover').unbind('mouseout');
+	});
 };
 
 tc.resource_tooltip.prototype.handlers = {
@@ -28,10 +49,19 @@ tc.resource_tooltip.prototype.handlers = {
 		//tc.util.log("tc.resource_tooltip.trigger_mouseover");
 		var t;
 		t = e.target;
-		while (t.nodeName != 'TD' && t.nodeName != 'BODY'){
-			t = t.parentNode;
-		}
-		if(t != e.data.me.current_trigger){
+		if(e.data.me.current_trigger){
+			while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
+				t = t.parentNode;
+			}
+			if(t != e.data.me.current_trigger){
+				e.data.me.current_trigger = tc.jQ(t);
+				e.data.me.tooltip.stop();
+				e.data.me.show();
+			}
+		} else {
+			while (t.className != e.data.me.triggers.get(0).className && t.nodeName != 'BODY'){
+				t = t.parentNode;
+			}
 			e.data.me.current_trigger = tc.jQ(t);
 			e.data.me.tooltip.stop();
 			e.data.me.show();
@@ -42,10 +72,12 @@ tc.resource_tooltip.prototype.handlers = {
 		var t, rt;
 		t = e.target;
 		rt = (e.relatedTarget) ? e.relatedTarget : e.toElement;
-		while(rt != t && rt.nodeName != 'BODY'){
-			rt = rt.parentNode;
-			if(rt == t){
-				return;
+		if(rt){
+			while(rt != t && rt.nodeName != 'BODY'){
+				rt = rt.parentNode;
+				if(rt == t){
+					return;
+				}
 			}
 		}
 		e.data.me.tooltip.stop();
@@ -63,10 +95,12 @@ tc.resource_tooltip.prototype.handlers = {
 		var t, rt;
 		t = e.target;
 		rt = (e.relatedTarget) ? e.relatedTarget : e.toElement;
-		while(rt != t && rt.nodeName != 'BODY'){
-			rt = rt.parentNode;
-			if(rt == t){
-				return;
+		if(rt){
+			while(rt != t && rt.nodeName != 'BODY'){
+				rt = rt.parentNode;
+				if(rt == t){
+					return;
+				}
 			}
 		}
 		e.data.me.tooltip.stop();
@@ -77,7 +111,7 @@ tc.resource_tooltip.prototype.handlers = {
 tc.resource_tooltip.prototype.generate_markup = function(data){
 	tc.util.log("tc.resource_tooltip.generate_markup");
 	var markup;
-	markup = this.options.markup_source_element.clone().css('display','block');
+	markup = this.options.markup_source_element.clone().css('display','block').removeClass('template-content');
 	markup.find('h2').text(data.title);
 	markup.find('img').attr('src','/images/'+data.image_id);
 	markup.find('.main p').text(data.description);
@@ -89,22 +123,17 @@ tc.resource_tooltip.prototype.show = function(){
 	//tc.util.log("tc.resource_tooltip.show");
 	var target_pos, me;
 	target_pos = {
-		top:this.current_trigger.offset().top-(this.tooltip.height()/2)-40,
-		left:this.current_trigger.offset().left+this.current_trigger.width()
+		top:this.current_trigger.offset().top-70,
+		left:this.current_trigger.offset().left+this.current_trigger.width()+20
 	}
 	me = this;
 	
 	if(this.current_trigger.data('cached-data')){
 		this.tooltip.html(this.current_trigger.data('cached-data'));
-		this.tooltip.stop().show().animate({
-			'opacity':1.0,
-			'top':target_pos.top,
-			'left':target_pos.left
-		},500,'easeOutCubic',function(){
-			
-		});
+		this.move_to_target(target_pos, this.has_been_shown ? true : false);
 	} else {
 		this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
+		this.move_to_target(target_pos, this.has_been_shown ? true : false);
 		tc.jQ.ajax({
 			url: this.options.get_url,
 			data: {
@@ -118,16 +147,30 @@ tc.resource_tooltip.prototype.show = function(){
 			}
 		});
 		this.tooltip.html(this.current_trigger.data('cached-data'));
-		
+	}
+}
+
+tc.resource_tooltip.prototype.move_to_target = function(target_pos,animate){
+	if(animate){
 		this.tooltip.stop().show().animate({
 			'opacity':1.0,
 			'top':target_pos.top,
 			'left':target_pos.left
 		},500,'easeOutCubic',function(){
-			
+		
+		});
+	} else {
+		this.tooltip.stop().css({
+			'opacity':0.0,
+			'top':target_pos.top,
+			'left':target_pos.left
+		}).show().animate({
+			'opacity':1.0
+		},500,'easeOutCubic',function(){
+		
 		});
 	}
-	
+	this.has_been_shown = true;
 }
 
 tc.resource_tooltip.prototype.hide = function(){
