@@ -12,10 +12,10 @@
 		<div class="ideas-invite">
 			<div class="sub-bd">
 				
-				{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
-					<div class="carousel">
-						<div class="scrollable">
-							<ul class="items">
+				<div class="carousel">
+					<div class="scrollable">
+						<ul class="items">
+							{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
 								{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
 									<li>
 										<div class="note-card-public-controls">
@@ -34,20 +34,22 @@
 										</div>
 									</li>
 								{% endfor %}
-							</ul>
-						</div>
-						<div class="carousel-controls">
-							<a class="next" href="#">
-								<span>Next</span>
-							</a>
-						</div>
+							{% else %}
+							
+							{% endif %}
+						</ul>
 					</div>
-					<div class="pagination">
-						<span class="cur-index">1</span> <em>of</em>
-						<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
-					</div>	
-				{% endif %}
-				
+					<div class="carousel-controls">
+						<a class="next" href="#">
+							<span>Next</span>
+						</a>
+					</div>
+				</div>
+				<div class="pagination">
+					<span class="cur-index">0</span> <em>of</em>
+					<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
+				</div>
+			
 			</div>
 		</div>
 	</div>
@@ -60,19 +62,18 @@
 	
 	tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
 		var widget;
-		this.options = tc.jQ.extend({name:'infopane'},options);
+		tc.util.log("project.fresh_ideas");
+		this.options = tc.jQ.extend({name:'fresh_ideas'},options);
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
 	
-		if(this.dom.find(".carousel").length){
-			this.carousel = new tc.carousel({
-				element: this.dom.find(".carousel"),
-				pagination: {
-					current: this.dom.find(".pagination .cur-index"),
-					total: this.dom.find(".pagination .total")
-				}
-			}).carousel;
-		}
+		this.carousel = new tc.carousel({
+			element: this.dom.find(".carousel"),
+			pagination: {
+				current: this.dom.find(".pagination .cur-index"),
+				total: this.dom.find(".pagination .total")
+			}
+		}).carousel;
 	
 		return {
 			show:widget.show,

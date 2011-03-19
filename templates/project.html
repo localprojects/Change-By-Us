@@ -17,15 +17,15 @@ Give A Minute - Project
 			<span class="overlay-tag"></span>
 		</div>
 		<div class="tools">
-			{%  if d.template_data.project_user.is_member == False %}
-			<a class="ca-btn join-project" href="#">
-				<span>Join</span>
-			</a>
+			{%  if not d.template_data.project_user.is_member %}
+				<a class="ca-btn join-project" href="#">
+					<span>Join</span>
+				</a>
 			{%  endif %}
 			<div class="members">
 				Members <span class="counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
 			</div>
-			{% if d.template_data.project.data.editable %}
+			{% if d.template_data.project_user.is_project_admin %}
 				<span class="control"><a href="#show,members">Manage</a></span>
 			{% endif %}
 		</div>
@@ -184,13 +184,17 @@ Give A Minute - Project
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Project');
 		
-		tc.util.log('PROJECT DATA');
+		tc.util.log(' ');
+		tc.util.log('PROJECT DATA!!!');
 		tc.util.dump(app.app_page.data.project);
+		tc.util.log("PROJECT USER");
+		tc.util.dump(app.app_page.project_user);
 		tc.util.log(' ');
 		
 		app.components.project = new tc.gam.project({
 			app:app,
 			data:app_page.data.project,
+			project_user:app_page.project_user,
 			dom:tc.jQ('.continent.project')
 		});
 		

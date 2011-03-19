@@ -35,7 +35,7 @@
 		<ol class="comment-stack">
 			{% for message in d.template_data.project.data.info.messages['items'] %}
 				<li class=" ">
-					{% if d.template_data.project.data.editable %}
+					{% if d.template_data.project_user.is_project_admin %}
 						<a class="close" href="#"><span>Close</span></a>
 					{% endif %}
 					<div class="membrane">
@@ -83,6 +83,7 @@
 	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
 	tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		var widget;
+		tc.util.log("project.conversation");
 		this.options = tc.jQ.extend({name:'conversation'},options);
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
