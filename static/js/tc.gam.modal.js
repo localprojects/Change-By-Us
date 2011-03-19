@@ -12,7 +12,7 @@ tc.modal.prototype.init = function(app,options){
 	tc.util.log('tc.modal.init');
 	this.options = tc.jQ.extend(this.options,options);
 	this.options.element.overlay({
-		top: "30%",
+		top: "15%",
 		left: 'center',
 		fixed: false,
 		speed: 75,
