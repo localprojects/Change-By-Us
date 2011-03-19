@@ -2,7 +2,7 @@
 	<div class="hd clearfix">
 		<h2>
 			<span>
-				Related Resources
+				Related Resources <span class="counter"></span>
 			</span>
 		</h2>
 		<div class="actions">
@@ -13,49 +13,12 @@
 	</div>
 
 	<div class="bd clearfix">
-		<table class="resources-list doublewide">
-			<tr>
-				<td>
-					<a href="" class="add-button rounded-button">Add</a>
-					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
-					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-				</td>
-				<td>
-					<a href="" class="add-button rounded-button">Add</a>
-					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
-					<span class="resource-name"><span><span>NYC 311</span></span></span>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<a href="" class="add-button rounded-button">Add</a>
-					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
-					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-				</td>
-				<td>
-					<a href="" class="add-button rounded-button">Add</a>
-					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
-					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<a href="" class="add-button rounded-button">Add</a>
-					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
-					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-				</td>
-				<td class="added">
-					<a href="" class="add-button rounded-button">Add</a>
-					<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
-					<span class="resource-name"><span><span>GreenThumb NYC</span></span></span>
-					<div class="added-dialog">
-						<span class="added-header">Added <em>to</em> your project</span>
-						<span class="added-text">We sent an introduction to this organization with a link to this project. <a href="">?</a></span>
-						<span class="added-close"></span>
-					</div>
-				</td>
-			</tr>
-		</table>
+		<table class="resources-list doublewide"></table>
+		
+		<div class="empty-state-box">
+			<!-- <a class="close" href="#"><span>Close</span></a> -->
+			<p>No resources found.</p>
+		</div>
 							
 		<div class="actions">
 			<a href="/search#resources" class="forward fancy-caps">
@@ -63,6 +26,7 @@
 			</a>
 		</div>
 	</div>
+
 </div>
 
 <script>
@@ -71,18 +35,123 @@
 	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
 	
 	tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
-		var widget;
+		var widget, data, me;
 		tc.util.log("project.related_resources");
+		me = this;
 		this.options = tc.jQ.extend({name:'related_resources'},options);
-		this.dom = dom; 
+		this.dom = dom;
+		data = this.options.app.app_page.data;
 		widget = tc.gam.widget(this,project);
+		this.elements = {
+			resource_counter: this.dom.find(".counter"),
+			resources_table: this.dom.find("table.resources-list"),
+			empty_box: this.dom.find(".empty-state-box")
+		};
 		this.handlers = {
 			back:function(e,d){
 				e.preventDefault();
 				e.data.project.components.related_resources.hide(true);
+			},
+			resources_loaded: function(data, ts, xhr) {
+				var d;
+				try {
+					d = tc.jQ.parseJSON(data);
+				} catch(err) {
+					no_resources();
+					return;
+				}
+				if (d.resources.length) {
+					populate(d);
+				} else {
+					no_resources();
+				}
+			},
+			add_resource_click: function(e, d) {
+				var add_btn, my_id;
+				e.preventDefault();
+				
+				add_btn = tc.jQ(e.target);
+				my_id = add_btn.attr("href").split(",")[1];
+				
+				tc.jQ.ajax({
+					url: "/project/resource/add",
+					type: "POST",
+					dataType: "text",
+					data: {
+						project_id: e.data.project.data.project_id,
+						project_resource_id: my_id
+					},
+					context: e.data.me,
+					success: function(data, ts, xhr) {
+						if (data === "true") {
+							tc.util.log("resource add success");
+						} else {
+							tc.util.log("resource add failed");
+						}
+					}
+				});
 			}
 		};
 		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
+		
+		function get() {
+			tc.jQ.ajax({
+				url: '/create/resources',
+				data: {
+					text: data.project.info.mission,
+					title: data.project.info.title,
+					keywords: data.project.info.keywords.join(","),
+					location_id: data.project.info.location.location_id
+				},
+				context: me,
+				dataType:'text',
+				success: me.handlers.resources_loaded
+			});
+		}
+		
+		function populate(d) {
+			var tbody;
+			
+			tbody = "<tbody>";
+			tc.jQ.each(d.resources, function(i, resource) {
+				var temp, even;
+				
+				temp = "";
+				even = (i % 2 === 0);
+				
+				if (even) { temp = "<tr>"; }
+				temp += "<td>";
+				
+				temp += '<a href="#add,'+ resource.project_resource_id +'" class="add-button rounded-button">Add</a>'+
+				        '<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>'+
+				        '<span class="resource-name" ><span>'+
+				            '<span class="organization-name" rel="#organization,'+ resource.project_resource_id +'">'+ 
+				                resource.title +
+				            '</span></span></span>';
+				
+				temp += "</td>";
+				if (!even) { temp += "</tr>"; }
+				
+				tbody += temp;
+			});
+			tbody += "</tbody>";
+			tbody = tc.jQ(tbody);
+			
+			tbody.find("a.add-button").bind("click", {project:project, me:me}, me.handlers.add_resource_click);
+			
+			me.elements.resources_table.empty().append(tbody);
+			me.elements.empty_box.hide();
+			me.elements.resource_counter.text(d.resources.length);
+		}
+		
+		function no_resources() {
+			me.elements.resources_table.hide();
+			me.elements.empty_box.show();
+			me.elements.resource_counter.text("0");
+		}
+		
+		get();
+		
 		return {
 			show:widget.show,
 			hide:widget.hide
