@@ -20,21 +20,63 @@ tc.resource_tooltip.prototype.init = function(options) {
 	this.cached_data = {};
 	this.options.trigger.bind('mouseover',{me:this},this.handlers.mouseover);
 	this.options.trigger.bind('mouseout',{me:this},this.handlers.mouseout);
+	this.tooltip = tc.jQ('.tooltip');
+	
 };
 
 tc.resource_tooltip.prototype.handlers = {
 	mouseover:function(e){
-		tc.util.dump(e.target.nodeName);
-		if(e.target.nodeName == 'TD'){
-			e.data.me.tooltip.show();
-		}
+		if(!e.data.me.current)
+		e.data.me.show();
 	},
 	mouseout:function(e){
-		tc.util.dump(e.target.nodeName);
-		if(e.target.nodeName == 'TD'){
-			e.data.me.tooltip.hide();
-		}
+		e.data.me.hide();
 	}
+}
+
+tc.resource_tooltip.prototype.show = function(){
+	tc.util.log("tc.resource_tooltip.show");
+	tc.util.dump(this.options.trigger);
+	var target_pos;
+	target_pos = {
+		top:this.options.trigger.offset().top+this.options.trigger.height(),
+		left:this.options.trigger.offset().left+this.options.trigger.width()
+	}
+	
+	this.tooltip.css('position','absolute').css('opacity',1).removeClass('template-content').show();
+	this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
+	if(this.options.trigger.data('cached-data')){
+		this.tooltip.animate({
+			'top':target_pos.top,
+			'left':target_pos.left
+		},1000,'easeOutElastic').text(this.options.trigger.data('cached-data'));
+	} else {
+		tc.jQ.ajax({
+			url: this.options.get_url,
+			data: this.options.get_params,
+			async:false,
+			context: this,
+			dataType:'json',
+			success:function(data,ts,xhr){
+				this.options.trigger.data('cached-data',data);
+			}
+		});
+		this.tooltip.animate({
+			'top':target_pos.top,
+			'left':target_pos.left
+		},1000,'easeOutElastic').text(this.options.trigger.data('cached-data'));
+	}
+	
+}
+
+tc.resource_tooltip.prototype.hide = function(){
+	tc.util.log("tc.resource_tooltip.hide");
+	tc.util.dump(this.options.trigger);
+	this.tooltip.animate({
+		'opacity':0.0
+	},300,'easeOutCirc',function(){
+		tc.jQ(this).hide();
+	});
 }
 
 tc.resource_tooltip.prototype.build_tooltip = function(){
@@ -42,10 +84,10 @@ tc.resource_tooltip.prototype.build_tooltip = function(){
 	var me;
 	me = this;
 	this.tooltip = this.options.trigger.tooltip({
-		position: "",
+		position: "center right",
 		offset: [0, 0],
 		predelay: 100,
-		tip:'.template-content.tooltip',
+		tip:'.tooltip',
 		events: {
 			def: ",",    // default show/hide events for an element
 			tooltip: ","     // the tooltip element
@@ -53,21 +95,21 @@ tc.resource_tooltip.prototype.build_tooltip = function(){
 		onBeforeShow: function(e) {
 			var tip, trig, target_pos;
 			tip = this.getTip();
-			tip.css('position','fixed').show();
+			tip.css('position','absolute').removeClass('template-content').show();
 			trig = this.getTrigger();
 			target_pos = {
-				top:this.getTrigger().offset().top+this.getTrigger().height(),
-				left:this.getTrigger().offset().left+this.getTrigger().width()
+				top:trig.offset().top+trig.height(),
+				left:trig.offset().left+trig.width()
 			}
 			
-			tip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
+			tc.util.dump(target_pos);
 			
-			tc.util.dump(this.getTip().data('cached-data'));
+			tip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
 			if(this.getTip().data('cached-data')){
 				this.getTip().animate({
-					'top':target_pos.top,
+					'top':target_pos.top-50,
 					'left':target_pos.left
-				},1000,'easeOutElastic');
+				},1000,'easeOutElastic').text(this.getTip().data('cached-data'));
 			} else {
 				tc.jQ.ajax({
 					url: me.options.get_url,
@@ -84,15 +126,22 @@ tc.resource_tooltip.prototype.build_tooltip = function(){
 					'left':target_pos.left
 				},1000,'easeOutElastic').text(this.getTip().data('cached-data'));
 			}
-			
 			return false;
 		},
 		onBeforeHide:function(e){
-			//this.getTip().hide();
+			this.getTip().animate({
+				'opacity':0.0
+			},300,'easeOutCirc',function(){
+				tc.jQ(this).hide();
+			});
 			return true;
 		},
 		onHide: function(e) {
-			
+			this.getTip().animate({
+				'opacity':0.0
+			},1000,'easeOutCirc',function(){
+				tc.jQ(this).hide();
+			});
 		}
 	}).data("tooltip");//.dynamic( {} );
 }
