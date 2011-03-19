@@ -25,7 +25,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 
 tc.resource_tooltip.prototype.handlers = {
 	trigger_mouseover:function(e){
-		tc.util.log("tc.resource_tooltip.trigger_mouseover");
+		//tc.util.log("tc.resource_tooltip.trigger_mouseover");
 		var t;
 		t = e.target;
 		while (t.nodeName != 'TD' && t.nodeName != 'BODY'){
@@ -38,7 +38,7 @@ tc.resource_tooltip.prototype.handlers = {
 		}
 	},
 	trigger_mouseout:function(e){
-		tc.util.log("tc.resource_tooltip.trigger_mouseout");
+		//tc.util.log("tc.resource_tooltip.trigger_mouseout");
 		var t, rt;
 		t = e.target;
 		rt = (e.relatedTarget) ? e.relatedTarget : e.toElement;
@@ -52,14 +52,14 @@ tc.resource_tooltip.prototype.handlers = {
 		e.data.me.hide();
 	},
 	tooltip_mouseover:function(e){
-		tc.util.log("tc.resource_tooltip.tooltip_mouseover");
+		//tc.util.log("tc.resource_tooltip.tooltip_mouseover");
 		if(e.data.me.current_trigger){
 			e.data.me.tooltip.stop();
 			e.data.me.show();
 		}
 	},
 	tooltip_mouseout:function(e){
-		tc.util.log("tc.resource_tooltip.tooltip_mouseout");
+		//tc.util.log("tc.resource_tooltip.tooltip_mouseout");
 		var t, rt;
 		t = e.target;
 		rt = (e.relatedTarget) ? e.relatedTarget : e.toElement;
@@ -78,8 +78,6 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	tc.util.log("tc.resource_tooltip.generate_markup");
 	var markup;
 	markup = this.options.markup_source_element.clone().css('display','block');
-	tc.util.dump(data);
-	tc.util.dump(markup);
 	markup.find('h2').text(data.title);
 	markup.find('img').attr('src','/images/'+data.image_id);
 	markup.find('.main p').text(data.description);
@@ -88,10 +86,10 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 }
 
 tc.resource_tooltip.prototype.show = function(){
-	tc.util.log("tc.resource_tooltip.show");
+	//tc.util.log("tc.resource_tooltip.show");
 	var target_pos, me;
 	target_pos = {
-		top:this.current_trigger.offset().top-(this.tooltip.height()/2),
+		top:this.current_trigger.offset().top-(this.tooltip.height()/2)-40,
 		left:this.current_trigger.offset().left+this.current_trigger.width()
 	}
 	me = this;
@@ -102,7 +100,7 @@ tc.resource_tooltip.prototype.show = function(){
 			'opacity':1.0,
 			'top':target_pos.top,
 			'left':target_pos.left
-		},300,'easeInOutQuint',function(){
+		},500,'easeOutCubic',function(){
 			
 		});
 	} else {
@@ -125,7 +123,7 @@ tc.resource_tooltip.prototype.show = function(){
 			'opacity':1.0,
 			'top':target_pos.top,
 			'left':target_pos.left
-		},300,'easeInOutQuint',function(){
+		},500,'easeOutCubic',function(){
 			
 		});
 	}
@@ -133,13 +131,12 @@ tc.resource_tooltip.prototype.show = function(){
 }
 
 tc.resource_tooltip.prototype.hide = function(){
-	tc.util.log("tc.resource_tooltip.hide");
+	//tc.util.log("tc.resource_tooltip.hide");
 	var me = this;
 	this.tooltip.animate({
 		'opacity':0.0
-	},300,'easeOutCirc',function(){
+	},200,'easeOutCirc',function(){
 		tc.jQ(this).hide();
 		me.current_trigger = null;
-		
 	});
 }
