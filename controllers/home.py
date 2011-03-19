@@ -6,8 +6,9 @@ import framework.util as util
 
 class Home(Controller):
     def GET(self, action=None, page=None):
-        self.template_data['project_user'] = dict(is_member = True,
-                                                is_project_admin = True)          
+        project_user = dict(is_member = True,
+                              is_project_admin = True)
+        self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
                                           
         if (not action or action == 'home'):
             return self.showHome()
