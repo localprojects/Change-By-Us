@@ -56,6 +56,9 @@ tc.gam.project = function(options){
 					e.data.project.components.members.hide(false);
 					e.data.project.components.conversation.hide(false);
 					break;
+				case 'goals_stack':
+					e.data.project.components.goals_main.hide(false);
+					break;
 				case 'related_resources':
 					e.data.project.components.goals_main.hide(false);
 					e.data.project.components.goals_stack.hide(false);
@@ -69,6 +72,7 @@ tc.gam.project = function(options){
 			switch(d.name){
 				case 'members':
 				case 'goals_add':
+				case 'goals_stack':
 				case 'related_resources':
 					go_home(e);
 					break;
