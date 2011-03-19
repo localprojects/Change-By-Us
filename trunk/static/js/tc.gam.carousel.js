@@ -4,61 +4,68 @@ tc.carousel = makeClass();
 
 tc.carousel.prototype.options = {
 	element: null,
+	scrollable: {
+		items: ".items",
+		speed: 300,
+		circular: true
+	},
 	scrollPaneSelector: ".scrollable:first",
-	itemsSelector: ".items",
 	pagination: null // { current: jQuery obj, total: jQuery obj }
 };
 
 tc.carousel.prototype.carousel = null;
 
 tc.carousel.prototype.init = function(options) {
-	var me, scrollPane, w, h;
 	tc.util.log("tc.carousel.init");
-	me = this;
+	
 	this.options = tc.jQ.extend(this.options, options);
+	this.has_finished_init = false;
 	
-	//tc.util.dump(this.options);
-	
-	scrollPane = this.options.element.find(this.options.scrollPaneSelector);
-	
-	//tc.util.dump(scrollPane);
+	if (this.options.element.find(this.options.scrollPaneSelector)
+	        .children(this.options.scrollable.items)
+	        .children("li").length) {
+		this.init_carousel();
+	}
+};
+
+tc.carousel.prototype.init_carousel = function() {
+	var me, scrollpane, w, h;
+	tc.util.log("tc.carousel.init_carousel");
+	if (this.has_finished_init) { 
+		tc.util.log("carousel already rendered", "warn");
+	}
+	me = this;
 	w = this.options.element.width();
 	h = 0;
 	this.options.element.width(w);
-	scrollPane.children(this.options.itemsSelector).children("li").each(function() {
-		var item, itemHeight;
+	scrollpane = this.options.element.find(this.options.scrollPaneSelector);
+	scrollpane.children(this.options.scrollable.items).children("li").each(function() {
+		var item, item_height;
 		item = tc.jQ(this);
 		item.width(w);
-		itemHeight = item.height();
-		if (itemHeight > h) {
-			h = itemHeight;
+		item_height = item.height();
+		if (item_height > h) {
+			h = item_height;
 		}
 	});
-	scrollPane.height(h);
+	scrollpane.height(h);
+	this.carousel = scrollpane.scrollable(this.options.scrollable).data("scrollable");
 	
-	try {
-		scrollPane.scrollable({
-			speed: 300,
-			circular: true
-		});
-		this.carousel = scrollPane.data("scrollable");
-	} catch(err) {
-		tc.util.log("Problem initializing carousel: likely because this carousel contains no items!", "warn");
-		//tc.util.dump(err);
-	}
-	/*
-	//if (this.carousel && this.options.pagination) {
+	if (this.options.pagination) {
 		this.carousel.onSeek(function(e, i) {
-			me.updatePagination();
+			me.update_pagination();
 		});
-	//}
-	this.updatePagination();*/
+	}
+	
+	this.has_finished_init = true;
+	me.update_pagination();
 };
 
-tc.carousel.prototype.updatePagination = function() {
-	if (this.carousel && this.options.pagiination) {
-		tc.util.log("tc.carousel.updatePagination");
-		this.options.pagination.current.text( this.carousel.getIndex() );
+tc.carousel.prototype.update_pagination = function() {
+	if (!this.has_finished_init) { return; }
+	
+	if (this.options.pagiination) {
+		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
 		this.options.pagination.total.text( this.carousel.getSize() );
 	}
 };
