@@ -26,7 +26,7 @@
 			</a>
 		</div>
 	</div>
-
+	
 </div>
 
 <script>
@@ -83,11 +83,12 @@
 					},
 					context: e.data.me,
 					success: function(data, ts, xhr) {
-						if (data === "true") {
-							tc.util.log("resource add success");
-						} else {
+						if(data == 'False'){
 							tc.util.log("resource add failed");
+							return false;
 						}
+						tc.util.log("resource add success");
+						add_btn.parent().addClass("added");
 					}
 				});
 			}
@@ -128,6 +129,12 @@
 				            '<span class="organization-name" rel="#organization,'+ resource.project_resource_id +'">'+ 
 				                resource.title +
 				            '</span></span></span>';
+				
+				// hidden added dialog
+				temp += '<div class="added-dialog">'+
+				            '<span class="added-header">Added <em>to</em> your project</span>'+
+				            '<span class="added-text">We sent an introduction to this organization with a link to this project.'+
+				            ' <a href="">?</a></span></div>';
 				
 				temp += "</td>";
 				if (!even) { temp += "</tr>"; }
