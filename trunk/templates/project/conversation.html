@@ -12,21 +12,27 @@
 			</div>
 		{% endif %}
 		
-		<div class="main">
-			<div class="conversation-input">
-				{% if d.template_data.project.data.info.messages['total'] > 0 %}
-					<label class="fancy-caps">Join <span>the</span> Conversation</label>
-				{% else %}
-					<label class="fancy-caps">Start <span>the</span> Conversation</label>
-				{% endif %}
-				<textarea cols="54" rows="1"></textarea>
-				<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+		<div class="main merlin submit-message">
+			<div class='step message clearfix'>
+				<div class="conversation-input">
+					{% if d.template_data.project.data.info.messages['total'] > 0 %}
+						<label class="fancy-caps">Join <span>the</span> Conversation</label>
+					{% else %}
+						<label class="fancy-caps">Start <span>the</span> Conversation</label>
+					{% endif %}
+					<textarea class='message-input' cols="54" rows="1"></textarea>
+					<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+				</div>
+				<div class="primary-action">
+					<!--<button class="rounded-button">Update</button>-->
+					<a class="ca-btn submit-button" href="#">
+						<span>Post</span>
+					</a>
+				</div>
 			</div>
-			<div class="primary-action">
-				<!--<button class="rounded-button">Update</button>-->
-				<a class="ca-btn" href="#">
-					<span>Post</span>
-				</a>
+			<div class='step submit clearfix' style='display:none;'>
+				<p>Thank you for submitting a message!</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
 			</div>
 		</div>
 	</div>
@@ -77,6 +83,31 @@
 
 </div>
 
+<li class='template-content message-markup'>
+	{% if d.template_data.project_user.data.is_project_admin %}
+		<a class="close" href="#"><span>Close</span></a>
+	{% endif %}
+	<div class="membrane">
+		<div class="thumb">
+			<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
+		</div>
+		<div class="main">
+			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
+			<!-- <cite class="meta-hd"><strong>XXXX XXXX</strong> says</cite> -->
+			
+			<blockquote class="serif">
+				<p class='message-body'></p>
+			</blockquote>
+			<cite class="meta-ft">Created Just Now...</cite>
+		</div>
+	</div>
+</li>
+
+<div class='modal-content add-message-no-user'>
+	<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Give a Minute in order to add a goal to this project.</p>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
 <script>
 	if(!tc){ var tc = {}; }
 	if(!tc.gam){ tc.gam = {}; }
@@ -87,39 +118,133 @@
 		this.options = tc.jQ.extend({name:'conversation'},options);
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
+		
+		this.components = {
+			merlin:null
+		};
+		
 		this.elements = {
 			userprompt: this.dom.find(".conversation-input label"),
 			textpane: this.dom.find(".conversation-input textarea"),
-			post_btn: this.dom.find(".conversation-controls .primary-action .ca-btn")
+			message_stack:this.dom.find("ol.comment-stack")
 		};
+		
 		this.handlers = {
 			userprompt_click: function(e, d) {
 				e.data.me.elements.textpane.focus();
 			},
-			textpane_focus: function(e, d) {
-				if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
-					e.data.me.elements.userprompt.hide();
-				}
-			},
-			textpane_blur: function(e, d) {
-				if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
-					e.data.me.elements.userprompt.show();
-				}
-			},
-			post_click: function(e, d) {
-				e.preventDefault();
+			add_new_message:function(e,d){
+				tc.util.dump('conversation.handlers.add_new_message');
+				tc.util.dump(e.data.me.elements.message_stack);
+				var message;
+				message = generate_message_markup(d);
+				message.hide();
+				e.data.me.elements.message_stack.prepend(message);
+				message.slideDown(500);
 			}
 		};
-	
-		this.elements.textpane.autoGrow();
-	
+		
+		project.dom.bind('add-new-message',{me:this},this.handlers.add_new_message);
 		this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
-		this.elements.textpane.bind("focus", { project:project,me:this },this.handlers.textpane_focus);
-		this.elements.textpane.bind("blur", { project:project,me:this },this.handlers.textpane_blur);
-		this.elements.post_btn.bind("click", { project:project,me:this },this.handlers.post_click);
-	
+		this.elements.textpane.autoGrow();
+		
+		function generate_message_markup(data){
+			var markup;
+			markup = tc.jQ('.template-content.message-markup').clone().removeClass('template-content');
+			markup.find('p.message-body').text(data.message);
+			return markup;
+		}
+		
+		function build_merlin(){
+			//if(!options.app.app_page.user){
+			//	options.app.components.modal.show({
+			//		source_element:tc.jQ('.modal-content.add-message-no-user'),
+			//		init:function(modal,callback){
+			//			if(tc.jQ.isFunction(callback)){
+			//				callback(modal);
+			//			}
+			//		}
+			//	});
+			//	return false;
+			//}
+			tc.util.log('conversation.build_merlin')
+			return new tc.merlin(options.app,{
+				dom:dom.find('.merlin.submit-message'),
+				next_button:dom.find('a.submit-button'),
+				first_step:'message',
+				data:{
+					message:null,
+					project_id:null
+				},
+				steps:{
+					'message':{
+						selector:'.step.message',
+						next_step:'submit',
+						inputs:{
+							message:{
+								selector:'textarea.message-input',
+								validators:['min-3','max-200','required'],
+								hint:'',
+								handlers:{
+									focus:function(e,d){
+										if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
+											e.data.me.dom.find(".conversation-input label").hide();
+										}
+									},
+									blur:function(e,d){
+										if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
+											e.data.me.dom.find(".conversation-input label").show();
+										}
+									}
+								}
+							}
+						},
+						init:function(merlin,dom){
+							merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+						},
+						finish:function(merlin,dom){
+							tc.util.dump(merlin.current_step.dom.height());
+							merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height())
+							merlin.options.data = tc.jQ.extend(merlin.options.data,{
+								project_id:merlin.app.app_page.data.project.project_id,
+								message:merlin.current_step.inputs.message.dom.val()
+							});
+						}
+					},
+					'submit':{
+						selector:'.step.submit',
+						init:function(merlin,dom){
+							tc.jQ.ajax({
+								type:'POST',
+								url:'/project/message/add',
+								data:merlin.options.data,
+								context:merlin,
+								dataType:'text',
+								success:function(data,ts,xhr){
+									if(data == 'False'){
+										return false;
+									}
+									project.dom.trigger('add-new-message',this.options.data);
+									window.location.hash = 'message';
+								}
+							});
+						}
+					}
+				}
+			});
+		}
+		
+		if (!this.components.merlin) {
+			this.components.merlin = build_merlin();
+		}
+		
 		return { 
-			show:widget.show,
+			show:function(propagate){
+				widget.show(propagate);
+				if (!me.components.merlin) {
+					me.components.merlin = build_merlin();
+				}
+			},
 			hide:widget.hide
 		};
 	};
