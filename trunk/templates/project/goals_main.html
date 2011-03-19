@@ -5,13 +5,15 @@
 			<span>
 				Goals 
 				<span class="counter">{{ d.template_data.project.data.info.goals['items']|length }}</span>
-				{% if d.template_data.project.data.editable %}
+				{% if d.template_data.project_user.data.is_project_admin %}
 					<span class="control"><a href="#show,goals_stack" class="manage">Manage</a></span>
 				{% endif %}
 			</span>
 		</h2>
 		<div class="actions">
-			<a href="#show,goals_add" class='add'>Propose Your Own</a>
+			{% if d.template_data.project_user.data.is_member %}
+				<a href="#show,goals_add" class='add'>Propose Your Own</a>
+			{% endif %}
 		</div>
 	</div>
 	
@@ -25,7 +27,7 @@
 						{% for goal in d.template_data.project.data.info.goals['items'] %}
 							<li>
 								<div class="goal-card">
-									{% if d.template_data.project.data.editable %}
+									{% if d.template_data.project_user.is_project_admin %}
 										<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
 									{% endif %}
 									<p>{{ goal.text }}</p>
@@ -52,19 +54,21 @@
 			</div>
 		</div>
 	{% else %}
-		<div class="goals-empty">
-			<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
-			<div class="empty-state-box big">
-				<a class="close" href="#"><span>Close</span></a>
-				<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="#show,goals_add">add a goal now?</a></p>
+		{% if d.template_data.project_user.data.is_member %}
+			<div class="goals-empty">
+				<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
+				<div class="empty-state-box big">
+					<a class="close" href="#"><span>Close</span></a>
+					<p>Goals help you define what you want to do and get your project done more efficiently. Why not <a href="#show,goals_add">add a goal now?</a></p>
+				</div>
 			</div>
-		</div>
+		{% endif %}
 	{% endif %}	
 </div>
 
 <li class='template-content goal'>
 	<div class="goal-card">
-		{% if d.template_data.project.data.editable %}
+		{% if d.template_data.project_user.data.is_project_admin %}
 			<a class="close" href="#close,"><span>Close</span></a>
 		{% endif %}
 		<p class='goal-title'></p>
@@ -86,6 +90,7 @@
 	
 	tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 		var widget;
+		tc.util.log("project.goals_main");
 		this.project = project;
 		this.options = tc.jQ.extend({name:'goals_main'},options);
 		this.dom = dom;

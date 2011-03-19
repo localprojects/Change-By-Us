@@ -58,7 +58,7 @@
 			<div class="sub-bd">
 				<ul class="tag-cloud serif">
 					{% for keyword in d.template_data.project.data.info.keywords %}
-						{% if d.template_data.project.data.editable %}
+						{% if d.template_data.project_user.is_project_admin %}
 							<li class="admin"><a href="#keyword,{{ keyword }}">{{ keyword }}</a> <a href="#" class="remove-btn"><span>Remove</span></a></li>
 						{% else %}
 							<li><a href="#keyword,{{ keyword }}">{{ keyword }}</a></li>
@@ -80,13 +80,14 @@
 	
 	tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 		var widget, data, me;
+		tc.util.log("project.infopane");
 		me = this;
 		this.options = tc.jQ.extend({name:'infopane'},options);
 		data = this.options.app.app_page.data;
 		this.dom = dom;
 		this.editable = false;
 		this.edit_mode = false;
-		if (data.project.editable) {
+		if (this.options.app.app_page.project_user.is_project_admin) {
 			this.editable = true;
 			this.dom.addClass("can-edit");
 		}
@@ -163,7 +164,7 @@
 					          data.project.info.location.position.lng];
 
 					// tc.util.dump(coords);
-					// TODO handle null/empty location data
+					// TODO handle null/empty location data (?)
 
 					map = new google.maps.Map(document.getElementById("location-map"), {
 						center: new google.maps.LatLng(coords[0], coords[1]),

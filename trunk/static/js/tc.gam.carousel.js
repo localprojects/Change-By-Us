@@ -21,7 +21,7 @@ tc.carousel.prototype.init = function(options) {
 	
 	scrollPane = this.options.element.find(this.options.scrollPaneSelector);
 	
-	tc.util.dump(scrollPane);
+	//tc.util.dump(scrollPane);
 	w = this.options.element.width();
 	h = 0;
 	this.options.element.width(w);
@@ -36,17 +36,29 @@ tc.carousel.prototype.init = function(options) {
 	});
 	scrollPane.height(h);
 	
-	scrollPane.scrollable({
-		speed: 300,
-		circular: true
-	});
-	this.carousel = scrollPane.data("scrollable");
-	
-	if (this.carousel && this.options.pagination) {
-		this.carousel.onSeek(function(e, i) {
-			me.options.pagination.current.text(i + 1);
-			me.options.pagination.total.text(this.getSize());
+	try {
+		scrollPane.scrollable({
+			speed: 300,
+			circular: true
 		});
+		this.carousel = scrollPane.data("scrollable");
+	} catch(err) {
+		tc.util.log("Problem initializing carousel: likely because this carousel contains no items!", "warn");
+		//tc.util.dump(err);
 	}
-	
+	/*
+	//if (this.carousel && this.options.pagination) {
+		this.carousel.onSeek(function(e, i) {
+			me.updatePagination();
+		});
+	//}
+	this.updatePagination();*/
+};
+
+tc.carousel.prototype.updatePagination = function() {
+	if (this.carousel && this.options.pagiination) {
+		tc.util.log("tc.carousel.updatePagination");
+		this.options.pagination.current.text( this.carousel.getIndex() );
+		this.options.pagination.total.text( this.carousel.getSize() );
+	}
 };
