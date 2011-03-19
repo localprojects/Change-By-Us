@@ -50,6 +50,7 @@ tc.gam.project = function(options){
 					e.data.project.components.goals_stack.hide(false);
 					e.data.project.components.goals_add.hide(false);
 					e.data.project.components.conversation.hide(false);
+					e.data.project.components.add_link.hide(false);
 					break;
 				case 'goals_add':
 					e.data.project.components.goals_main.hide(false);
@@ -65,6 +66,7 @@ tc.gam.project = function(options){
 					e.data.project.components.goals_stack.hide(false);
 					e.data.project.components.members.hide(false);
 					e.data.project.components.conversation.hide(false);
+					e.data.project.components.add_link.hide(false);
 					break;
 				case 'add_link':
 					e.data.project.components.goals_main.hide(false);
