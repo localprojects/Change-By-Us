@@ -549,7 +549,8 @@ Give A Minute - Home
 							success:function(data,ts,xhr){
 								if(data.citywide.length || data.related.length){
 									this.options.steps['related'].step_data = data;
-									window.location.hash = 'related';
+									window.location.hash = 'related-not-found';
+									//window.location.hash = 'related';
 								} else {
 									window.location.hash = 'related-not-found';
 								}
@@ -567,6 +568,7 @@ Give A Minute - Home
 						if(merlin.current_step.step_data){
 							if(!merlin.current_step.step_data.related.length){
 								dom.find('.related-projects').hide();
+								dom.find('.citywide-projects').addClass('single');
 							} else {
 								for(i in merlin.current_step.step_data.related){
 									if(i == 2){ break; }
@@ -587,6 +589,7 @@ Give A Minute - Home
 							}
 							if(!merlin.current_step.step_data.citywide.length){
 								dom.find('.citywide-projects').hide();
+								dom.find('.related-projects').addClass('single');
 							} else {
 								for(i in merlin.current_step.step_data.citywide){
 									if(i == 2){ break; }
