@@ -56,6 +56,10 @@ tc.carousel.prototype.init_carousel = function() {
 			me.update_pagination();
 		});
 	}
+	this.carousel.onAddItem(function(e, i) {
+		me.update_pagination();
+		// TODO (update "next" button if we've gone from have 1 item to having 2)
+	});
 	
 	this.has_finished_init = true;
 	me.update_pagination();
@@ -64,7 +68,7 @@ tc.carousel.prototype.init_carousel = function() {
 tc.carousel.prototype.update_pagination = function() {
 	if (!this.has_finished_init) { return; }
 	
-	if (this.options.pagiination) {
+	if (this.options.pagination) {
 		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
 		this.options.pagination.total.text( this.carousel.getSize() );
 	}
