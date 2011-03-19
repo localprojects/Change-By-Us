@@ -77,7 +77,15 @@
 								<a href='/useraccount'><span class="unbold">My </span>Projects</a>
 								<div class="dropdown">
 									<div class="membrane">
-										<a href="/project">Start a Garden on 161st and Melrose Ave</a>
+										{% if d.template_data.user %}
+											{% if d.template_data.user.data.projects|length > 0 %}
+												{% for project in d.template_data.user.data.projects %}
+													<a href="/project/{{ project.project_id }}">{{ project.title }}</a>
+												{% endfor %}
+											{% else %}
+													<a href="/create"><em>Create a project!</em></a>
+											{% endif %}
+										{% endif %}
 									</div>
 								</div>
 							</div>
