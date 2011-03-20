@@ -48,7 +48,11 @@ tc.modal.prototype.show = function(opts, event_target){
 		e.data.me.hide();
 	});
 	if(tc.jQ.isFunction(opts.init)){
-		opts.init(this,event_target,load);
+		if (event_target) {
+			opts.init(this,event_target,load);
+		} else {
+			opts.init(this, load);
+		}
 	} else {
 		load(this);
 	}
