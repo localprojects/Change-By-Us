@@ -132,6 +132,7 @@ class Search(Controller):
                       ,u.user_id
                       ,u.first_name
                       ,u.last_name
+                      ,u.image_id
                 from idea i
                 left join user u on u.user_id = i.user_id
                 where
@@ -149,7 +150,7 @@ class Search(Controller):
             owner = None
             
             if (item.user_id):
-                owner = mProject.smallUser(item.user_id, item.first_name, item.last_name)
+                owner = mProject.smallUser(item.user_id, item.first_name, item.last_name, item.image_id)
         
             betterData.append(dict(idea_id = item.idea_id,
                             message = item.description,

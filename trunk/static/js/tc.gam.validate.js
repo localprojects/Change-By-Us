@@ -14,7 +14,7 @@ tc.validator_utils = {
 tc.validate = function(element,validators){
 	tc.util.log('tc.validate');
 	tc.util.dump(element);
-	var valid, required, empty, value, errors, i, tempvalue, tempelement;
+	var valid, required, empty, value, errors, i, tempvalue, tempelement, j;
 	
 	valid = true;
 	required = false;
@@ -79,6 +79,15 @@ tc.validate = function(element,validators){
 			case 'password':
 				
 				break;
+			case 'csv-email':
+				value = value.split(',');
+				for(j in value){
+					if (!tc.validator_regex.email.test(tc.jQ.trim(value[j]))) {
+						valid = false;
+						errors.push("Invalid Email.");
+					}
+				}
+				break;
 			case 'email':
 				tempelement = element.filter('.has-attempted-submit').parent().parent().find('.email-error');
 				if (!tc.validator_regex.email.test(value)) {
@@ -90,6 +99,15 @@ tc.validate = function(element,validators){
 				} else {
 					if(tempelement.length){
 						tempelement.hide();
+					}
+				}
+				break;
+			case 'csv-url':
+				value = value.split(',');
+				for(j in value){
+					if (!tc.validator_regex.url.test(tc.jQ.trim(value[j]))) {
+						valid = false;
+						errors.push("Invalid Url.");
 					}
 				}
 				break;
@@ -114,13 +132,13 @@ tc.validate = function(element,validators){
 		}
 	}
 	
-	if(!valid && !required && !value.trim()){
+	if(!valid && !required && !tc.jQ.trim(value).length){
 		valid = true;
 	}
 	
 	if(valid){
 		element.removeClass('not-valid')
-		if(required || value.trim()){
+		if(required || tc.jQ.trim(value).length){
 			element.addClass('valid');
 		}
 		return {
