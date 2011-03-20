@@ -48,7 +48,7 @@ Give A Minute - Create a Project
 					<div class="row clearfix">
 						<label for='name'><strong>Name</strong> your project:</label>
 						<input value='Name' type='text' name='name' id='name' class='name'/>
-						<span class="charlimit">50</span>
+						<span class="charlimit title">50</span>
 						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">{% if d.template_data and d.template_data.user %}{{ d.template_data['user'].data.f_name }} {{ d.template_data['user'].data.l_name }}{% endif %}</span><span class="edit" style='display:none;'>Edit</span></div>
 					</div>
 					<div class="row clearfix">
@@ -58,7 +58,7 @@ Give A Minute - Create a Project
 					<div class="row clearfix">
 						<label for='describe'><strong>Describe</strong> your project well so that people can find it and join to change!</label>
 						<textarea cols="20" rows="6" name='describe' id='describe' class='describe'></textarea>
-						<span class="charlimit">200</span>
+						<span class="charlimit description">200</span>
 					</div>
 					<div class="row clearfix">
 						<label for='keywords'><strong>Add</strong> keywords to help people find your project:</label>
@@ -288,6 +288,10 @@ Give A Minute - Create a Project
 							selector:'input.name',
 							validators:['max-50','min-3','required'],
 							hint:'',
+							counter:{
+								selector:'.charlimit.title',
+								limit:50
+							},
 							handlers:{
 								keyup:function(e){
 									if(!e.data.me.current_step.step_data.loading){
@@ -313,6 +317,10 @@ Give A Minute - Create a Project
 							selector:'textarea.describe',
 							validators:['max-200','min-3','required'],
 							hint:'',
+							counter:{
+								selector:'.charlimit.description',
+								limit:200
+							},
 							handlers:{
 								keyup:function(e){
 									if(!e.data.me.current_step.step_data.loading){
