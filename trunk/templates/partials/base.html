@@ -164,7 +164,7 @@
 		<div class='tooltip' id='organization-tooltip' style='display:none;position:absolute;'></div>
 		
 		<!-- invite ideas merlin template -->
-		<div class='modal-content invite-user'>
+		<div class='modal-content merlin invite-user'>
 			<div class='step invite-message-info'>
 				<h2>Invite <strong><span class="name">XXXXXX</span></strong> To Your Project</h2>
 				<p>You can send a message to <span class="name">XXXXXX</span> telling them more about your new project and why he or she should join (optional).</p>
@@ -172,6 +172,29 @@
 					<div class="fields">
 						<textarea name='invite-message' class='invite-message'></textarea>
 						<span class="charlimit">200</span>
+					</div>
+					<a class='submit rounded-button' href="#">Send</a>
+				</form>
+			</div>
+			
+			<div class="step invite-message-project-info">
+				<h2>Invite <strong><span class="name">XXXXXX</span></strong> To Your Project</h2>
+				<p>Since you are a part of multiple projects we need to know which projects you would like to invite <span class="name">XXXXXX</span> to?</p>
+				<form action='#' class="form-pane non-float checklist">
+					<div class="fields">
+						{% if d.template_data and d.template_data.user %}
+							{% if d.template_data.user.data.projects|length > 0 %}
+								{% for project in d.template_data.user.data.projects %}
+									<div class="row">
+										<input type="checkbox" class="project-checkbox" rel="#project,{{ project.project_id }}" name="project-label-{{ project.title }}" id="project-label-{{ project.title }}" />
+										<label for="project-label-{{ project.title }}">{{ project.title }}</label>
+									</div>
+								{% endfor %}
+							{% else %}
+						
+						
+							{% endif %}
+						{% endif %}
 					</div>
 					<a class='submit rounded-button' href="#">Send</a>
 				</form>
