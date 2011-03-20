@@ -60,7 +60,7 @@
 	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
 	
 	tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
-		var widget, me, merlin;
+		var widget, me;
 		tc.util.log("project.goals_add");
 		this.options = tc.jQ.extend({name:'goals_add'},options);
 		this.dom = dom;
@@ -74,7 +74,7 @@
 			merlin:null
 		}
 		
-		function build_merlin(){
+		this.build_merlin = function(){
 			if(!options.app.app_page.user){
 				options.app.components.modal.show({
 					source_element:tc.jQ('.modal-content.add-goal-no-user'),
@@ -86,10 +86,15 @@
 				});
 				return false;
 			}
-			return new tc.merlin(options.app,{
+			tc.util.dump(this.components.merlin);
+			if(this.components.merlin){
+				return;
+			}
+			this.components.merlin = new tc.merlin(options.app,{
+				name:'goals_add',
 				dom:dom.find('.merlin.add-goal'),
 				next_button:dom.find('a.ca-btn'),
-				first_step:'info',
+				first_step:null,//'goal-info',
 				data:{
 					project_id:null,
 					text:null,
@@ -98,9 +103,9 @@
 					user_id:null
 				},
 				steps:{
-					'info':{
+					'goal-info':{
 						selector:'.step.info',
-						next_step:'submit',
+						next_step:'goal-submit',
 						inputs:{
 							message:{
 								selector:'textarea.message',
@@ -133,8 +138,9 @@
 							});
 						}
 					},
-					'submit':{
+					'goal-submit':{
 						selector:'.step.finish',
+						next_step:'goal-info',
 						init:function(merlin,dom){
 							tc.jQ.ajax({
 								type:'POST',
@@ -147,28 +153,21 @@
 										return false;
 									}
 									project.dom.trigger('goals-refresh');
-									window.location.hash = 'info';
+									window.location.hash = 'goals_add,goal-info';
 								}
 							});
 						}
-					},
-					'finish':{
-						selector:'.step.finish',
-						init:function(merlin,dom){
-							
-						}
 					}
-					
 				}
 			});
-		}
+		};
+		
+		this.build_merlin();
 		
 		return {
 			show:function(propagate){
 				widget.show(propagate);
-				if (!me.components.merlin) {
-					me.components.merlin = build_merlin();
-				}
+				window.location.hash = 'goals_add,goal-info';
 			},
 			hide:widget.hide
 		};

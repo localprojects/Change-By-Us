@@ -54,22 +54,35 @@
 		<div class="east">
 		
 			<!-- Begin Members.email-invite -->
-			<div class="email-invite">
-				<div class="sub-hd">
-					<h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
-				</div>
-				<div class="sub-bd form-pane">
-					<form action="" method="POST">
-						<div class="fields">
-							<div class="row">
-								<textarea>Add emails separated by commas</textarea>
+			<div class="email-invite merlin">
+				
+				<div class='step email-invite-info'>
+					<div class="sub-hd">
+						<h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
+					</div>
+					<div class="sub-bd form-pane">
+						<form action="" method="POST">
+							<div class="fields">
+								<div class="row clearfix">
+									<textarea class='email-list'></textarea>
+								</div>
+								<div class='row clearfix'>
+									<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+								</div>
 							</div>
-							<div>
-								<input class="rounded-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
-							</div>
-						</div>
-					</form>
+						</form>
+					</div>
 				</div>
+				
+				<div class='step email-invite-submit clearfix spinner-message'>
+					<p>Thank you for inviting more users!</p>
+					<p><img src='/static/images/loader32x32.gif' /></p>
+				</div>
+				
+				<div class='step email-invite-error'>
+					<p>There was an error sending the email invites!</p>
+				</div>
+				
 			</div>
 			<!-- End Members.email-invite -->
 		
@@ -83,7 +96,7 @@
 					</div>
 				</div>
 				<div class="sub-bd">
-													
+					
 					{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
 						<div class="carousel">
 							<div class="scrollable">
@@ -155,6 +168,79 @@
 				e.data.me.hide(true);
 			}
 		};
+		
+		
+		this.components = {
+			merlin:null
+		}
+		
+		this.build_merlin = function(){
+			if(this.components.merlin){
+				return;
+			}
+			this.components.merlin = new tc.merlin(options.app,{
+				name:'email_invite',
+				dom:tc.jQ('.email-invite'),
+				next_button:tc.jQ('input.email-invite-submit-button'),
+				first_step:null,//'email-invite-info',
+				data:{
+					email_list:null,
+					project_id:null
+				},
+				steps:{
+					'email-invite-info':{
+						selector:'.step.email-invite-info',
+						next_step:'email-invite-submit',
+						inputs:{
+							email_list:{
+								selector:'.email-list',
+								validators:['min-3','max-32','required'],
+								hint:'Add emails separated by commas'
+							}
+						},
+						init:function(merlin,dom){
+							merlin.current_step.inputs.email_list.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+						},
+						finish:function(merlin,dom){
+							merlin.options.data = tc.jQ.extend(merlin.options.data,{
+								project_id:merlin.app.app_page.data.project.project_id,
+								email_list:','+merlin.current_step.inputs.email_list.dom.val()
+							});
+						}
+					},
+					'email-invite-submit':{
+						selector:'.step.email-invite-submit',
+						next_step:'email-invite-info',
+						init:function(merlin,dom){
+							tc.jQ.ajax({
+								type:'POST',
+								url:'/project/invite',
+								data:merlin.options.data,
+								context:merlin,
+								dataType:'text',
+								success:function(data,ts,xhr){
+									if(data == 'False'){
+										window.location.hash = 'email_invite,email-invite-error';
+										return false;
+									}
+									tc.timer(1000,function(){
+										window.location.hash = 'email_invite,email-invite-info';
+									});
+								}
+							});
+						}
+					},
+					'email-invite-error':{
+						selector:'.step.email-invite-error'
+					}
+				}
+			});
+		};
+		
+		this.build_merlin();
+		
+		
+		
 	
 		// initialize carousels the first time
 		// this widget is rendered
@@ -179,6 +265,7 @@
 				if (!me.elements.ideas_invite.elements.carousel) {
 					init_carousels();
 				}
+				window.location.hash = 'email_invite,email-invite-info';
 			},
 			hide:widget.hide
 		};

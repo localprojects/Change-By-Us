@@ -24,22 +24,24 @@ tc.gam.project = function(options){
 		add_link:new tc.gam.project_widgets.add_link(this,this.dom.find('.box.add-link'),{widget:this.widget},{app:options.app}),
 		goals_main:new tc.gam.project_widgets.goals_main(this,this.dom.find('.box.goals-main'),{widget:this.widget},{app:options.app}),
 		goals_add:new tc.gam.project_widgets.goals_add(this,this.dom.find('.box.goals-add'),{widget:this.widget},{app:options.app}),
-		goals_stack:new tc.gam.project_widgets.goals_stack(this,this.dom.find('.box.goals-stack-holder'),{widget:this.widget},{app:options.app}),
 		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
 		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{app:options.app})
 	};
 	
-	tc.util.dump(options);
-
+	if(tc.gam.project_widgets.goals_stack){
+		this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this,this.dom.find('.box.goals-stack-holder'),{widget:this.widget},{app:options.app});
+	}
+	
 	// return project page to initial state
 	function go_home(e) {
 		e.data.project.components.goals_main.show(false);
 		e.data.project.components.conversation.show(false);
 	}
 	
+	window.location.hash = '';
+	
 	this.handlers = {
 		widget_show:function(e,d){
-			tc.util.dump('project.widget_show');
 			tc.util.dump(d.name);
 			switch(d.name){
 				case 'members':
@@ -86,7 +88,7 @@ tc.gam.project = function(options){
 					break;
 			}
 		},
-		hashchanged:function(e){
+		hashchange:function(e){
 			tc.util.log('tc.project.handlers.hashchange');
 			var hash;
 			hash = window.location.hash.substring(1,window.location.hash.length);
@@ -140,7 +142,7 @@ tc.gam.project = function(options){
 	};
 	
 	//this.dom.find('a').bind('click',this.event_data,this.handlers.link_clicked);
-	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchanged);
+	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	

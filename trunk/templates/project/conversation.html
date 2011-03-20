@@ -34,52 +34,58 @@
 				<p>Thank you for submitting a message!</p>
 				<p><img src='/static/images/loader32x32.gif' /></p>
 			</div>
+			
+			<div class='step submit-error clearfix' style='display:none;'>
+				<p>There was an error submitting your message!</p>
+			</div>
 		</div>
 	</div>
 	
-	{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+	
 		<ol class="comment-stack">
-			{% for message in d.template_data.project.data.info.messages['items'] %}
-				<li>
-					{% if d.template_data.project_user.data.is_project_admin %}
-						<a class="close" href="#"><span>Close</span></a>
-					{% endif %}
-					<div class="membrane">
-						<div class="thumb">
-							<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
-						</div>
-						<div class="main">
-							{% if message.message_type == 'join' %}
-								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
-							{% elif message.message_type == 'comment' %}
-								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> says</cite>
-							{% endif %}
+			{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+				{% for message in d.template_data.project.data.info.messages['items'] %}
+					<li>
+						{% if d.template_data.project_user.data.is_project_admin %}
+							<a class="close" href="#"><span>Close</span></a>
+						{% endif %}
+						<div class="membrane">
+							<div class="thumb">
+								<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
+							</div>
+							<div class="main">
+								{% if message.message_type == 'join' %}
+									<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
+								{% elif message.message_type == 'comment' %}
+									<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> says</cite>
+								{% endif %}
 							
-							{% if message.idea %}
-								<div class="note-card">
-									<cite class="note-meta-hd"></cite>
-									<blockquote>
-										<p>{{ message.idea.message }}</p>
-									</blockquote>
-									<cite class="note-meta-ft"></cite>
-								</div>
-							{% endif %}
+								{% if message.idea %}
+									<div class="note-card">
+										<cite class="note-meta-hd"></cite>
+										<blockquote>
+											<p>{{ message.idea.message }}</p>
+										</blockquote>
+										<cite class="note-meta-ft"></cite>
+									</div>
+								{% endif %}
 							
-							<blockquote class="serif">
-								<p>{{ message.body }}</p>
-							</blockquote>
-							<!-- TODO calculate time since based on {{ message.created }} -->
-							<!--<cite class="meta-ft">XXXX ago</cite>-->
-							<cite class="meta-ft">Created {{ message.created }}</cite>
+								<blockquote class="serif">
+									<p>{{ message.body }}</p>
+								</blockquote>
+								<!-- TODO calculate time since based on {{ message.created }} -->
+								<!--<cite class="meta-ft">XXXX ago</cite>-->
+								<cite class="meta-ft">Created {{ message.created }}</cite>
+							</div>
 						</div>
-					</div>
-				</li>
-			{% endfor %}
+					</li>
+				{% endfor %}
+			{% endif %}
 		</ol>
 		<div class="load-more">
 			<a href="#"><span>Load older posts</span></a>
 		</div>
-	{% endif %}
+	
 
 </div>
 
@@ -113,12 +119,12 @@
 	if(!tc.gam){ tc.gam = {}; }
 	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
 	tc.gam.project_widgets.conversation = function(project,dom,deps,options){
-		var widget;
+		var widget, me;
 		tc.util.log("project.conversation");
 		this.options = tc.jQ.extend({name:'conversation'},options);
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
-		
+		me = this;
 		this.components = {
 			merlin:null
 		};
@@ -134,8 +140,6 @@
 				e.data.me.elements.textpane.focus();
 			},
 			add_new_message:function(e,d){
-				tc.util.dump('conversation.handlers.add_new_message');
-				tc.util.dump(e.data.me.elements.message_stack);
 				var message;
 				message = generate_message_markup(d);
 				message.hide();
@@ -155,7 +159,7 @@
 			return markup;
 		}
 		
-		function build_merlin(){
+		this.build_merlin = function(){
 			//if(!options.app.app_page.user){
 			//	options.app.components.modal.show({
 			//		source_element:tc.jQ('.modal-content.add-message-no-user'),
@@ -168,7 +172,11 @@
 			//	return false;
 			//}
 			tc.util.log('conversation.build_merlin')
-			return new tc.merlin(options.app,{
+			if(this.components.merlin){
+				return;
+			}
+			this.components.merlin = new tc.merlin(options.app,{
+				name:'project_conversation',
 				dom:dom.find('.merlin.submit-message'),
 				next_button:dom.find('a.submit-button'),
 				first_step:'message',
@@ -179,7 +187,7 @@
 				steps:{
 					'message':{
 						selector:'.step.message',
-						next_step:'submit',
+						next_step:'message-submit',
 						inputs:{
 							message:{
 								selector:'textarea.message-input',
@@ -211,7 +219,7 @@
 							});
 						}
 					},
-					'submit':{
+					'message-submit':{
 						selector:'.step.submit',
 						init:function(merlin,dom){
 							tc.jQ.ajax({
@@ -222,28 +230,32 @@
 								dataType:'text',
 								success:function(data,ts,xhr){
 									if(data == 'False'){
+										window.location.hash = 'project_conversation,message-submit-error';
 										return false;
 									}
 									project.dom.trigger('add-new-message',this.options.data);
-									window.location.hash = 'message';
+									window.location.hash = 'project_conversation,message';
 								}
+							});
+						}
+					},
+					'message-submit-error':{
+						selector:'.step.submit-error',
+						init:function(){
+							tc.timer(1000,function(){
+								window.location.hash = 'project_conversation,message';
 							});
 						}
 					}
 				}
 			});
-		}
+		};
 		
-		if (!this.components.merlin) {
-			this.components.merlin = build_merlin();
-		}
+		this.build_merlin();
 		
 		return { 
 			show:function(propagate){
 				widget.show(propagate);
-				if (!me.components.merlin) {
-					me.components.merlin = build_merlin();
-				}
 			},
 			hide:widget.hide
 		};

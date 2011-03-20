@@ -107,7 +107,7 @@ class Project(Controller):
                 if (newIdeaId):
                     mIdea.addIdeaToProject(self.db, newIdeaId, projectId)
                 
-        return isJoined                        
+        return isJoined
     
     def invite(self):
         projectId = self.request('project_id')
@@ -125,7 +125,8 @@ class Project(Controller):
             return False
         elif (util.strNullOrEmpty(message)):
             log.error("*** invite submitted w/o message")
-            return False        
+            message = ""
+            #return False
         else:
             if (ideaId):
                 return mProject.inviteByIdea(self.db, projectId, ideaId, message, self.user.id)

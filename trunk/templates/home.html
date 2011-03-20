@@ -573,7 +573,11 @@ Give A Minute - Home
 									if(i == 2){ break; }
 									//dom.find('.related-projects').find('.serif').html("<strong>"++"</strong>")
 									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-									temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title);
+									if(merlin.current_step.step_data.related[i].image_id){
+										temphtml.find('img').attr('src','/giveaminute/images/'+(merlin.current_step.step_data.related[i].image_id % 10)+'/'+merlin.current_step.step_data.related[i].image_id+'.png')
+									}
+									temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title)
+										.attr('href','/project/'+merlin.current_step.step_data.related[i].project_id);
 									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
 									temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
 									temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
@@ -593,7 +597,11 @@ Give A Minute - Home
 								for(i in merlin.current_step.step_data.citywide){
 									if(i == 2){ break; }
 									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-									temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title);
+									if(merlin.current_step.step_data.citywide[i].image_id){
+										temphtml.find('img').attr('src','/giveaminute/images/'+(merlin.current_step.step_data.citywide[i].image_id % 10)+'/'+merlin.current_step.step_data.citywide[i].image_id+'.png')
+									}
+									temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title)
+										.attr('href','/project/'+merlin.current_step.step_data.citywide[i].project_id);
 									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
 									temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
 									temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);

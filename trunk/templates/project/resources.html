@@ -25,11 +25,15 @@
 							{% endif %}
 							<td rel="#link,{{ link.link_id }}" title="{{ link.title }}">
 								<span class="thumb">
-									<img src="http://placehold.it/30x30" alt=""/>
+									{% if link.image_id %}
+										<img src='/giveaminute/images/{{ link.image_id % 10 }}/{{ link.image_id }}.png' alt=""/>
+									{% else %}
+										<img src="http://placehold.it/30x30" alt=""/>
+									{% endif %}
 								</span>
 								<span class="resource-name">
 									<span>
-										<span><a href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
+										<span><a target='_blank' href="{{ link.url }}"><span>{{ link.title }}</span></a></span>
 									</span>
 								</span>
 							</td>
@@ -70,11 +74,15 @@
 							{% endif %}
 							<td title="{{ org.title }}">
 								<span class="thumb">
-									<img src="http://placehold.it/30x30" alt=""/>
+									{% if org.image_id %}
+										<img src='/giveaminute/images/{{ org.image_id % 10 }}/{{ org.image_id }}.png' alt=""/>
+									{% else %}
+										<img src="http://placehold.it/30x30" alt=""/>
+									{% endif %}
 								</span>
 								<span class="resource-name">
 									<span>
-										<span><a rel="#organization,{{ org.organization }}" href="{{ org.url }}" class='tooltip_trigger'><span>{{ org.title }}</span></a></span>
+										<span><a target='_blank' rel="#organization,{{ org.organization }}" href="{{ org.url }}" class='tooltip_trigger'><span>{{ org.title }}</span></a></span>
 									</span>
 								</span>
 							</td>
@@ -119,7 +127,7 @@
 		</div>
 		<dl class='details'>
 			<dt>Visit Us</dt>
-			<dd><a href=''></a></dd>
+			<dd><a target='_blank' href='#'></a></dd>
 		</dl>
 	</div>
 </div>

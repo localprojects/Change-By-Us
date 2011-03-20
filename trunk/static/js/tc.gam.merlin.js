@@ -3,6 +3,7 @@ if(!tc){ var tc = {}; }
 tc.merlin = makeClass();
 
 tc.merlin.prototype.options = {
+	name:null,
 	dom:null,
 	progress_element:null,
 	next_button:null,
@@ -21,7 +22,7 @@ tc.merlin.prototype.options = {
 
 tc.merlin.prototype.init = function(app,options){
 	tc.util.log('tc.merlin.init');
-	this.options = tc.jQ.extend(this.options,options);
+	this.options = tc.jQ.extend({},this.options,options);
 	this.app = app;
 	if(this.options.dom instanceof String){
 		this.options.dom = tc.jQ(options.dom);
@@ -31,14 +32,23 @@ tc.merlin.prototype.init = function(app,options){
 	this.handle_steps();
 	this.handle_controls(options.controls);
 	this.setup_events(app);
+	tc.util.dump(this.options);
 	if(this.options.first_step){
 		this.show_step(this.options.first_step);
+		//if(this.options.name){
+		//	window.location.hash = this.options.name+','+this.options.first_step;
+		//} else {
+		//	window.location.hash = this.options.first_step;
+		//}
 	}
+	this.current_hash = null;
 }
 
 tc.merlin.prototype.setup_events = function(app){
 	tc.util.log('tc.merlin.setup_events');
-	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
+	tc.jQ(window)
+		.unbind('hashchange',this.event_data,this.handlers.hashchange)
+		.bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.find('a.step_link').unbind('click').bind('click',this.event_data,this.handlers.a_click);
 	if(this.options.back_button){
 		this.options.back_button.unbind('click').bind('click',this.event_data,this.handlers.last_step);
@@ -74,8 +84,10 @@ tc.merlin.prototype.handle_steps = function(){
 tc.merlin.prototype.show_step = function(step){
 	tc.util.log('tc.merlin.show_step['+step+']');
 	var i, j;
+	
 	if(this.current_step){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
+		
 		if(step == this.current_step.step_name){
 			return;
 		}
@@ -123,14 +135,11 @@ tc.merlin.prototype.show_step = function(step){
 		this.dom.find(this.current_step.selector).show();
 	}
 	
-		
 	if(this.current_step.inputs && !this.current_step.has_been_initialized){
 		for(i in this.current_step.inputs){
 			if(!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector){
 				this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
 			}
-			tc.util.dump(this.current_step.dom);
-			tc.util.dump(this.current_step.inputs[i].dom);
 			this.current_step.inputs[i].dom
 				.bind('focus',this.event_data,this.handlers.focus)
 				.bind('keyup change',this.event_data,this.handlers.keypress)
@@ -152,10 +161,13 @@ tc.merlin.prototype.show_step = function(step){
 		}
 	}
 	
-	window.location.hash = step;
-	
 	if(tc.jQ.isFunction(this.current_step.init)){
 		this.current_step.init(this,this.current_step.dom);
+	}
+	if(this.options.name){
+		window.location.hash = this.options.name+','+step;
+	} else {
+		window.location.hash = step;
 	}
 	this.validate(false);
 	this.current_step.has_been_initialized = true;
@@ -206,7 +218,18 @@ tc.merlin.prototype.handlers = {
 		tc.util.log('tc.merlin.handlers.hashchange');
 		var hash;
 		hash = window.location.hash.substring(1,window.location.hash.length);
-		e.data.me.show_step(hash);
+		
+		if(e.data.me.options.name){
+			if(hash.split(',')[0] != e.data.me.options.name){
+				return;
+			}
+			hash = hash.split(',')[1];
+		}
+		
+		if(e.data.me.current_hash != hash){
+			e.data.me.current_hash = hash;
+			e.data.me.show_step(e.data.me.current_hash);
+		}
 	},
 	indicator_click:function(e,d){
 		tc.util.log('tc.merlin.handlers.indicator_click');
@@ -238,7 +261,12 @@ tc.merlin.prototype.handlers = {
 			return;
 		}
 		if(e.data.me.current_step && e.data.me.current_step.next_step){
-			window.location.hash = e.data.me.current_step.next_step;
+			if(e.data.me.options.name){
+				window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
+			} else {
+				window.location.hash = e.data.me.current_step.next_step;
+			}
+			
 			//e.data.me.show_step(e.data.me.current_step.next_step);
 		}
 	},
