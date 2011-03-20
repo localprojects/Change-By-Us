@@ -177,6 +177,6 @@ function mapClick(e){
 }
 
 function infoboxClick(lid){
-	console.log("location: "+lid);
+	//console.log("location: "+lid);
 	location.href = "/search?location_id="+lid;
 }
