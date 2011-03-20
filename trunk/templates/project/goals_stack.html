@@ -8,7 +8,7 @@
 				</span>
 			</h2>
 			<div class="actions">
-				<a class="back fancy-caps" href="#">
+				<a class="back fancy-caps" href="#hide,goals_stack">
 					<span>Back <span>to</span> Project Home</span>
 				</a>
 			</div>
@@ -98,10 +98,6 @@
 		this.dom = dom;
 		widget = tc.gam.widget(this,project); 
 		this.handlers = {
-			back:function(e,d){
-				e.preventDefault();
-				e.data.me.hide(true);
-			},
 			make_goal_active: function(e, d) {
 				e.preventDefault();
 				var t;
@@ -205,7 +201,6 @@
 			card.find(".make-this-active a").bind("click", { project:project, me:me, goal_card:card }, me.handlers.make_goal_active);
 			card.find("a.close").bind("click", { project:project, me:me, goal_card:card }, me.handlers.remove_goal);
 		});
-		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
 		
 		return {
 			show:widget.show,

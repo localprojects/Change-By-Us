@@ -34,8 +34,13 @@ tc.gam.project = function(options){
 	
 	// return project page to initial state
 	function go_home(e) {
-		e.data.project.components.goals_main.show(false);
-		e.data.project.components.conversation.show(false);
+		if(e){
+			e.data.project.components.goals_main.show(false);
+			e.data.project.components.conversation.show(false);
+		} else {
+			this.components.goals_main.show(false);
+			this.components.conversation.show(false);
+		}
 	}
 	
 	window.location.hash = '';
@@ -92,6 +97,10 @@ tc.gam.project = function(options){
 			tc.util.log('tc.project.handlers.hashchange');
 			var hash;
 			hash = window.location.hash.substring(1,window.location.hash.length);
+			if(hash == ''){
+				go_home(e);
+				return;
+			}
 			switch(hash.split(',')[0]){
 				case 'show':
 					if(e.data.project.components[hash.split(',')[1]]){
