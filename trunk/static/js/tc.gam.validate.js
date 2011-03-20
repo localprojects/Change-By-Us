@@ -133,7 +133,7 @@ tc.validate = function(element,validators){
 			errors:errors
 		}
 	}
-}
+};
 
 // Password strength meter v2.0
 // Matthew R. Miller - 2007
@@ -188,7 +188,7 @@ tc.validate = function(element,validators){
 		'm_strLowerCase':"abcdefghijklmnopqrstuvwxyz",
 		'm_strNumber':"0123456789",
 		'm_strCharacters':"!@#$%^&*?_~"
-	}
+	};
 		
 	// Check password
 	tc.password_strength = function(strPassword){
@@ -273,7 +273,7 @@ tc.validate = function(element,validators){
 		}
 	
 		return nScore;
-	}
+	};
 	
 	tc.countContain = function(strPassword, strCheck){ 
 		var nCount = 0;
@@ -283,4 +283,4 @@ tc.validate = function(element,validators){
 			} 
 		}
 		return nCount; 
-	}
+	};

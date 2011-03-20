@@ -2,37 +2,39 @@ if (!tc) { var tc = {}; }
 
 tc.carousel = makeClass();
 
-tc.carousel.prototype.options = {
-	element: null,
-	scrollable: {
-		items: ".items",
-		speed: 300,
-		circular: true
-	},
-	scrollPaneSelector: ".scrollable:first",
-	pagination: null // { current: jQuery obj, total: jQuery obj }
-};
-
 tc.carousel.prototype.carousel = null;
 
 tc.carousel.prototype.init = function(options) {
 	tc.util.log("tc.carousel.init");
 	
-	this.options = tc.jQ.extend(this.options, options);
-	this.has_finished_init = false;
+	this.options = tc.jQ.extend({
+		element: null,
+		scrollable: {
+			items: ".items",
+			speed: 300,
+			circular: true
+		},
+		scrollPaneSelector: ".scrollable:first",
+		pagination: false // { current: jQuery obj, total: jQuery obj }
+	}, options);
+	
+	this.is_rendered = false;
 	
 	if (this.options.element.find(this.options.scrollPaneSelector)
 	        .children(this.options.scrollable.items)
 	        .children("li").length) {
-		this.init_carousel();
+		this.render();
+	} else {
+		tc.util.log("postponing carousel rendering because there are no items", "warn");
 	}
 };
 
-tc.carousel.prototype.init_carousel = function() {
+tc.carousel.prototype.render = function() {
 	var me, scrollpane, w, h;
-	tc.util.log("tc.carousel.init_carousel");
-	if (this.has_finished_init) { 
-		tc.util.log("carousel already rendered", "warn");
+	tc.util.log("tc.carousel.render");
+	if (this.is_rendered === true) { 
+		tc.util.log("carousel already rendered!!!", "warn");
+		return;
 	}
 	me = this;
 	w = this.options.element.width();
@@ -61,14 +63,13 @@ tc.carousel.prototype.init_carousel = function() {
 		// TODO (update "next" button if we've gone from have 1 item to having 2)
 	});
 	
-	this.has_finished_init = true;
-	me.update_pagination();
+	this.is_rendered = true;
+	this.update_pagination();
 };
 
 tc.carousel.prototype.update_pagination = function() {
-	if (!this.has_finished_init) { return; }
+	if (!this.is_rendered) { return; }
 	tc.util.log("tc.carousel.update_pagination");
-	
 	if (this.options.pagination) {
 		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
 		this.options.pagination.total.text( this.carousel.getSize() );
