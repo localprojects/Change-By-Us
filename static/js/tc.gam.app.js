@@ -42,9 +42,9 @@ tc.app.prototype.init = function(page){
 		}
 	});
 	
-}
+};
 
-function animate_bg(ele, from, to) {
+tc.animate_bg = function(ele, from, to) {
 	from += from > to ? -0.25 : 0.25;
 		if(!$.support.opacity){
 			if(from != to){
@@ -57,6 +57,6 @@ function animate_bg(ele, from, to) {
 			ele.css("backgroundColor", "rgba(255, 255, 255, " + (from) / 10 + ")"); 
 		}
 		if(from != to){
-			setTimeout(function() { animate_bg(ele, from, to) }, 50);
+			setTimeout(function() { tc.animate_bg(ele, from, to) }, 50);
 		}
-}
+};

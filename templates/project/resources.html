@@ -144,16 +144,7 @@
 		this.options = tc.jQ.extend({name:'resources'},options);
 		this.dom = dom; 
 		widget = tc.gam.widget(this,project);
-		this.handlers = {
-			add_link: function(e, d) {
-				e.preventDefault();
-				//TODO
-			},
-			add_organization: function(e, d) {
-				e.preventDefault();
-				e.data.project.components.related_resources.show(true);
-			}
-		};
+		this.handlers = {};
 		
 		tc.resource_tooltip({
 			triggers: this.dom.find(".resources-list .tooltip_trigger"),
@@ -161,8 +152,6 @@
 			get_url: "/project/resource/info"
 		});
 		
-		//this.dom.find("a.add-link").bind('click',{ project:project,me:this },this.handlers.add_link);
-		this.dom.find("a.add-organization").bind('click',{ project:project,me:this },this.handlers.add_organization);
 		return {
 			show:widget.show,
 			hide:widget.hide

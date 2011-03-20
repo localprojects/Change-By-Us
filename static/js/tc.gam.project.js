@@ -117,7 +117,7 @@ tc.gam.project = function(options){
 					break;
 			}
 		},
-		link_clicked:function(e,d){
+		link_clicked:function(e,d){ //(DEPRECATED)
 			var t;
 			t = e.target;
 			if(t.nodeName == 'SPAN'){

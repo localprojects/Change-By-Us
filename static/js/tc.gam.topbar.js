@@ -20,4 +20,4 @@ tc.top_bar = function(element, options) {
 	return {
 		
 	};
-}
+};

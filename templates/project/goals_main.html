@@ -92,9 +92,6 @@
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
 		this.handlers = {
-			carousel_scrolled: function(e, index) {
-				
-			},
 			goals_refresh:function(e){
 				tc.util.dump('goals_main.goals-refresh');
 				tc.jQ.ajax({
@@ -119,16 +116,7 @@
 		};
 		
 		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
-		
-		this.build_carousel = function(){
-			this.carousel = new tc.carousel({
-				element: this.dom.find(".carousel")
-			}).carousel;
-			if(this.carousel){
-				this.carousel.onSeek(this.handlers.carousel_scrolled);
-			}
-		};
-		
+				
 		this.generate_markup = function(data){
 			var temphtml;
 			temphtml = tc.jQ('.template-content.goal').clone().removeClass('template-content');
@@ -142,7 +130,7 @@
 		this.handle_goals = function(data){
 			var i, list, temphtml;
 			this.dom.find('.counter').text(data.length);
-			if(!this.carousel){
+			if (!this.carousel.is_rendered) {
 				list = this.dom.find('ul.items');
 				for(i in data){
 					if(data[i].active){
@@ -154,32 +142,38 @@
 				for(i in data){
 					list.append(this.generate_markup(data[i]));
 				}
+				
 			} else {
-				this.carousel.getItems().remove();
+				this.carousel.carousel.getItems().remove();
 				for(i in data){
 					if(data[i].active){
-						this.carousel.addItem(this.generate_markup(data[i]));
+						this.carousel.carousel.addItem(this.generate_markup(data[i]));
 						delete data[i];
 						break;
 					}
 				}
 				for(i in data){
-					this.carousel.addItem(this.generate_markup(data[i]));
+					this.carousel.carousel.addItem(this.generate_markup(data[i]));
 				}
-				this.carousel.end();
+				this.carousel.carousel.end();
 			}
 		};
 		
-		this.build_carousel();
+		this.carousel = new tc.carousel({
+			element: this.dom.find(".carousel")
+		});
 		
 		return {
 			show:function(propagate){
-				if(me.dom.find('li.goal').length){
+				var has_items;
+				has_items = me.dom.find("li.goal").length;
+				if (has_items) {
 					me.dom.find('.goals-empty').hide().siblings('.goals-display').show();
 				}
 				widget.show(propagate);
-				if(!me.carousel){
-					me.build_carousel();
+				if (has_items) {
+					// this should only be called after the carousel container is visible
+					me.carousel.render();
 				}
 			},
 			hide:widget.hide

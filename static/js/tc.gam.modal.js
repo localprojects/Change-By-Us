@@ -2,15 +2,13 @@ if(!tc){ var tc = {}; }
 
 tc.modal = makeClass();
 
-tc.modal.prototype.options = {
-	element:null
-}
-
 tc.modal.prototype.modal = null;
 
 tc.modal.prototype.init = function(app,options){
 	tc.util.log('tc.modal.init');
-	this.options = tc.jQ.extend(this.options,options);
+	this.options = tc.jQ.extend({
+		element:null
+	},options);
 	this.options.element.overlay({
 		top: "15%",
 		left: 'center',

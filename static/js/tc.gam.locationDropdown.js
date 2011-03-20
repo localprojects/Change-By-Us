@@ -25,18 +25,16 @@ tc.locationDropdown.validator = function(merlin,elements){
 	};
 };
 
-tc.locationDropdown.prototype.options = {
-	radios:null,
-	input:null,
-	list:null,
-	warning:null,
-	step:null,
-	locations:tc.locations
-};
-
 tc.locationDropdown.prototype.init = function(options){
 	tc.util.log('tc.locationDropdown.init');
-	this.options = tc.jQ.extend(this.options,options);
+	this.options = tc.jQ.extend({
+		radios:null,
+		input:null,
+		list:null,
+		warning:null,
+		step:null,
+		locations:tc.locations
+	},options);
 	this.bindEvents();
 	tc.util.dump(options);
 	this.options.warning.hide();
