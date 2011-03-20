@@ -67,6 +67,7 @@ tc.carousel.prototype.init_carousel = function() {
 
 tc.carousel.prototype.update_pagination = function() {
 	if (!this.has_finished_init) { return; }
+	tc.util.log("tc.carousel.update_pagination");
 	
 	if (this.options.pagination) {
 		this.options.pagination.current.text( this.carousel.getIndex() + 1 );

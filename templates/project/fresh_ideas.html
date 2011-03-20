@@ -14,28 +14,24 @@
 				<div class="carousel">
 					<div class="scrollable">
 						<ul class="items">
-							{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
-								{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
-									<li>
-										<div class="note-card-public-controls">
-											<a class="invite rounded-button" href="#">Invite</a>
-											<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+							{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
+								<li>
+									<div class="note-card-public-controls">
+										<a class="invite rounded-button" href="#">Invite</a>
+										<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+									</div>
+									<div class="note-card">
+										<div class="membrane">
+											<blockquote>
+												<p>{{ idea.message }}</p>
+											</blockquote>
+											<cite class="note-meta-ft">
+												Posted <strong>{{ idea.created }}</strong>
+											</cite>
 										</div>
-										<div class="note-card">
-											<div class="membrane">
-												<blockquote>
-													<p>{{ idea.message }}</p>
-												</blockquote>
-												<cite class="note-meta-ft">
-													Posted <strong>{{ idea.created }}</strong>
-												</cite>
-											</div>
-										</div>
-									</li>
-								{% endfor %}
-							{% else %}
-								
-							{% endif %}
+									</div>
+								</li>
+							{% endfor %}
 						</ul>
 					</div>
 					<div class="carousel-controls">
