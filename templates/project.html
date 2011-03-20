@@ -118,43 +118,6 @@ Give A Minute - Project
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 
-	<div class='modal-content add-link'>
-		<div class='step add-link-step'>
-			<h2><strong>Add</strong> a link</h2>
-			<p>You can add links to blogs, news items, or one of our recommended links.</p>
-			<form action='#' class="form-pane">
-				<div class="fields">
-					<div class="row">
-						<input name='link-label' class='link-url' type="text"></input>
-					</div>
-					<div class="row">
-						<input name='link-url' class='link-url' type="text"></input>
-					</div>
-				</div>
-				<a href="#" class='submit rounded-button'>Add</a>
-			</form>
-			<div class='box link-to-facebook'>
-				<a class='partner-link' href='http://www.facebook.com'><span>Facebook</span></a>
-				<p>Create a <strong>Facebook group</strong> and link it here. You can have the option to make the feed from the group show up in your group as well.</p>
-			</div>
-			<div class='box link-to-kickstarter'>
-				<a class='partner-link' href='http://www.kickstarter.com'><span>Kickstarter</span></a>
-				<p><strong>Raise money</strong> for your project on Kickstarter.</p>
-			</div>
-			<div class='box link-to-meetup'>
-				<a class='partner-link' href='http://www.meetup.com'><span>Meetup</span></a>
-				<p>A popular way of <strong>managing complex groups</strong>.</p>
-			</div>
-		</div>
-	
-		<div class='step finish spinner-message'>
-			<p>Thank you for adding a link to this group...</p>
-			<p><img src='/static/images/loader32x32.gif' /></p>
-		</div>
-	
-		<a class='close' href="#"><span>close</span></a>
-	</div>
-
 	<div class="modal-content confirm-delete member-delete">
 		<div class="step">
 			<h2><strong>Delete</strong> this Project Member?</h2>
@@ -292,61 +255,6 @@ Give A Minute - Project
 							init:function(merlin,dom){
 								var data;
 								data = {merlin:merlin,dom:dom};
-								dom.find('a.submit').bind('click',data,function(e,d){
-									e.preventDefault();
-									if(dom.hasClass('invalid')){
-										return;
-									}
-									tc.timer(1000,function(){
-										modal.hide();
-									});
-									e.data.merlin.show_step('finish');
-								});
-							}
-						},
-						'finish':{
-							selector:'.finish'
-						}
-					}
-				});
-				if(tc.jQ.isFunction(callback)){
-					callback(modal);
-				}
-			}
-		},function(e,d){
-			e.data.app.components.modal.show(e.data);
-		});
-		
-		// Add a link
-		tc.jQ('a.add-link-defunct').bind('click',{
-			app:app,
-			source_element:tc.jQ('.modal-content.add-link'),
-			init:function(modal,callback){
-				var modal_merlin;
-				modal_merlin = new tc.merlin(app,{
-					dom:modal.options.element.find('.add-link'),
-					first_step:'add-link-step',
-					steps:{
-						'add-link-step':{
-							selector:'.add-link-step',
-							validators:{
-								'input.link-url':['max-200','url']
-							},
-							init:function(merlin,dom){
-								var data;
-								data = {merlin:merlin,dom:dom};
-								dom.find('a.partner-link').bind('click',data,function(e,d){
-									e.preventDefault();
-									if(dom.hasClass('invalid')){
-										return;
-									}
-									tc.util.dump(e.target.href);
-									window.open(e.target.href);
-									tc.timer(1000,function(){
-										modal.hide();
-									});
-									e.data.merlin.show_step('finish');
-								});
 								dom.find('a.submit').bind('click',data,function(e,d){
 									e.preventDefault();
 									if(dom.hasClass('invalid')){

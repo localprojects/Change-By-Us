@@ -18,21 +18,19 @@ tc.carousel.prototype.init = function(options) {
 		pagination: false // { current: jQuery obj, total: jQuery obj }
 	}, options);
 	
-	this.is_rendered = false;
+	this.rendered = false;
 	
-	if (this.options.element.find(this.options.scrollPaneSelector)
-	        .children(this.options.scrollable.items)
-	        .children("li").length) {
+	if (this.has_items() && this.options.element.is(":visible")) {
 		this.render();
 	} else {
-		tc.util.log("postponing carousel rendering because there are no items", "warn");
+		tc.util.log("postponing carousel rendering", "warn");
 	}
 };
 
 tc.carousel.prototype.render = function() {
 	var me, scrollpane, w, h;
 	tc.util.log("tc.carousel.render");
-	if (this.is_rendered === true) { 
+	if (this.rendered === true) { 
 		tc.util.log("carousel already rendered!!!", "warn");
 		return;
 	}
@@ -57,21 +55,35 @@ tc.carousel.prototype.render = function() {
 		this.carousel.onSeek(function(e, i) {
 			me.update_pagination();
 		});
+		this.carousel.onAddItem(function(e, i) {
+			me.update_pagination();
+			// TODO (update "next" button if we've gone from have 1 item to having 2)
+		});
 	}
-	this.carousel.onAddItem(function(e, i) {
-		me.update_pagination();
-		// TODO (update "next" button if we've gone from have 1 item to having 2)
+	
+	this.options.element.find(".next, .prev").bind("click", function(e) {
+		e.preventDefault();
 	});
 	
-	this.is_rendered = true;
+	this.rendered = true;
 	this.update_pagination();
 };
 
 tc.carousel.prototype.update_pagination = function() {
-	if (!this.is_rendered) { return; }
+	if (!this.rendered) { return; }
 	tc.util.log("tc.carousel.update_pagination");
 	if (this.options.pagination) {
 		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
 		this.options.pagination.total.text( this.carousel.getSize() );
 	}
+};
+
+tc.carousel.prototype.has_items = function() {
+	return ( this.options.element.find(this.options.scrollPaneSelector).
+	         children(this.options.scrollable.items).
+	         children("li").length > 0 );
+};
+
+tc.carousel.prototype.is_rendered = function() {
+	return this.rendered;
 };

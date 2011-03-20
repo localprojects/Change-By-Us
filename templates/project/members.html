@@ -167,14 +167,16 @@
 		};
 		
 		this.components = {
-			merlin:null
-		}
+			email_merlin:null,
+			ideas_merlin:null,
+			ideas_carousel:null
+		};
 		
-		this.build_merlin = function(){
-			if(this.components.merlin){
+		this.build_email_merlin = function(){
+			if(this.components.email_merlin){
 				return;
 			}
-			this.components.merlin = new tc.merlin(options.app,{
+			this.components.email_merlin = new tc.merlin(options.app,{
 				name:'email_invite',
 				dom:tc.jQ('.email-invite'),
 				next_button:tc.jQ('input.email-invite-submit-button'),
@@ -233,29 +235,21 @@
 			});
 		};
 		
-		this.build_merlin();
+		this.build_email_merlin();
 		
-		// initialize carousels the first time
-		// this widget is rendered
-		function init_carousels() {
-			var ideas_carousel;
-			ideas_carousel = me.dom.find(".ideas-invite .carousel");
-			if (ideas_carousel.length === 1) {
-				me.elements.ideas_invite.elements.carousel = new tc.carousel({
-					element: me.dom.find(".ideas-invite .carousel"),
-					pagination: {
-						current: me.dom.find(".ideas-invite .pagination .cur-index"),
-						total: me.dom.find(".ideas-invite .pagination .total")
-					}
-				}).carousel;
+		this.components.ideas_carousel = new tc.carousel({
+			element: this.dom.find(".ideas-invite .carousel"),
+			pagination: {
+				current: this.dom.find(".ideas-invite .pagination .cur-index"),
+				total: this.dom.find(".ideas-invite .pagination .total")
 			}
-		}
+		});
 		
 		return {
 			show:function(propagate) {
 				widget.show(propagate);
-				if (!me.elements.ideas_invite.elements.carousel) {
-					init_carousels();
+				if (me.components.ideas_carousel.has_items() && !me.components.ideas_carousel.is_rendered()) {
+					me.components.ideas_carousel.render();
 				}
 				window.location.hash = 'email_invite,email-invite-info';
 			},

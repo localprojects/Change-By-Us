@@ -130,7 +130,7 @@
 		this.handle_goals = function(data){
 			var i, list, temphtml;
 			this.dom.find('.counter').text(data.length);
-			if (!this.carousel.is_rendered) {
+			if (!this.carousel.is_rendered()) {
 				list = this.dom.find('ul.items');
 				for(i in data){
 					if(data[i].active){
@@ -166,13 +166,12 @@
 		return {
 			show:function(propagate){
 				var has_items;
-				has_items = me.dom.find("li.goal").length;
+				has_items = me.carousel.has_items();
 				if (has_items) {
 					me.dom.find('.goals-empty').hide().siblings('.goals-display').show();
 				}
 				widget.show(propagate);
-				if (has_items) {
-					// this should only be called after the carousel container is visible
+				if (has_items && !me.carousel.is_rendered()) {
 					me.carousel.render();
 				}
 			},
