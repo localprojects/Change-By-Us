@@ -64,7 +64,7 @@
 						</li>
 						<li class="search">
 							<form action='/search' method='GET'>
-								<input type='text' name='terms' />
+								<input type='text' name='terms' value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
 								<input type='submit' value='Search' />
 							</form>
 						</li>
@@ -137,7 +137,7 @@
 					</ul>
 					<div class="search generic-search">
 						<form action='/home' method='GET'>
-							<input type='text' name='terms' />
+							<input type='text' name='terms' value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
 							<input type='submit' id='ft-search-btn' class='ft-search-btn' value='Search' />
 						</form>
 					</div>
@@ -191,8 +191,7 @@
 									</div>
 								{% endfor %}
 							{% else %}
-						
-						
+							
 							{% endif %}
 						{% endif %}
 					</div>

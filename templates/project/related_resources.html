@@ -6,7 +6,7 @@
 			</span>
 		</h2>
 		<div class="actions">
-			<a href="#" class="back fancy-caps">
+			<a href="#hide,related_resources" class="back fancy-caps">
 				<span>Back <span>to</span> Project Home</span>
 			</a>
 		</div>
@@ -48,10 +48,6 @@
 			empty_box: this.dom.find(".empty-state-box")
 		};
 		this.handlers = {
-			back:function(e,d){
-				e.preventDefault();
-				e.data.project.components.related_resources.hide(true);
-			},
 			resources_loaded: function(data, ts, xhr) {
 				var d;
 				try {
@@ -93,7 +89,6 @@
 				});
 			}
 		};
-		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
 		
 		function get() {
 			tc.jQ.ajax({
