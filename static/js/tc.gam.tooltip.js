@@ -113,7 +113,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	var markup;
 	markup = this.options.markup_source_element.clone().css('display','block').removeClass('template-content');
 	markup.find('h2').text(data.title);
-	markup.find('img').attr('src','/giveaminute/images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
+	markup.find('img').attr('src','/images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
 	markup.find('.main p').text(data.description);
 	markup.find('dd a').attr('href',data.url).text(data.url);
 	return markup;

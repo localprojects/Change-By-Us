@@ -32,7 +32,7 @@ Give A Minute - Add Resource
 				<form>
 					<div class="upload-image clearfix">
 						<div class="thumb">
-							<img src="http://placehold.it/100x100" alt="" />
+							<img class='proj' src="http://placehold.it/100x100" alt="" />
 						</div>
 						<div class="upload-image-controls">
 							<a href="#" class='upload-link'>Upload</a> an image (100px by 100px)
@@ -79,8 +79,12 @@ Give A Minute - Add Resource
 		</div><!--end step-->
 		
 		<div class='step finish' style='display:none;'>
-			<p>Thank you for adding your organization...</p>
+			<p>Please hold while we process your request...</p>
 			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
+		
+		<div class='step thank-you' style='display:none;'>
+			<p>Thank you for adding your organization. You will receive an email confirming its addition.</p>
 		</div>
 	</div>
 
@@ -110,9 +114,17 @@ Give A Minute - Add Resource
 			init:function(modal,callback){
 				var uploader = new qq.FileUploader({
 					element: modal.options.element.find('.file-uploader').get(0),
-					action: '/server/upload',
+					action: '/create/photo',
 					onComplete: function(id, fileName, responseJSON){
-						modal.close();
+						
+						tc.jQ(document).trigger('create-image-uploaded',{
+							id:id,
+							fileName:fileName,
+							responseJSON:responseJSON
+						});
+						
+						return true;
+						
 					}
 				});
 				if(tc.jQ.isFunction(callback)){
@@ -129,13 +141,16 @@ Give A Minute - Add Resource
 			next_button:tc.jQ('#add-org'),
 			first_step:'resource-form',
 			data:{
-				name:null,
+				title:null,
 				description:null,
-				address:null,
-				web:null,
-				links:null,
-				keywords:null,
-				contact:null
+				physical_address:null,
+				location_id: null,
+				url: null,
+				keywords: null,
+				contact_name: null,
+				contact_email: null,
+				other_urls: null,
+				image: null
 			},
 			steps:{
 				'resource-form':{
@@ -143,7 +158,7 @@ Give A Minute - Add Resource
 					next_step:'finish',
 					inputs:{
 						name:{
-							selector:'inputs.name',
+							selector:'input.name',
 							validators:['min-3','max-32','required'],
 							hint:''
 						},
@@ -164,7 +179,7 @@ Give A Minute - Add Resource
 						},
 						links:{
 							selector:'input.links',
-							validators:['min-3','max-32','url'],
+							validators:['min-3','max-32','csv-url'],
 							hint:''
 						},
 						keywords:{
@@ -174,26 +189,50 @@ Give A Minute - Add Resource
 						},
 						contact:{
 							selector:'input.contact',
-							validators:['min-3','max-32','required'],
+							validators:['min-3','max-32','required','email'],
 							hint:''
 						}
 					},
+					init:function(merlin,dom){
+						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
+							e.data.merlin.app.components.modal.hide();
+							if(d.responseJSON.thumbnail_id){
+								merlin.dom.find('img.proj').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.options.data.image = d.responseJSON.thumbnail_id;
+							}
+						});
+					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							name:merlin.current_step.inputs.name.dom.val(),
+							title:merlin.current_step.inputs.name.dom.val(),
 							description:merlin.current_step.inputs.description.dom.val(),
-							address:merlin.current_step.inputs.address.dom.val(),
-							web:merlin.current_step.inputs.web.dom.val(),
-							links:merlin.current_step.inputs.links.dom.val(),
+							physical_address:merlin.current_step.inputs.address.dom.val(),
+							url:merlin.current_step.inputs.web.dom.val(),
+							other_urls:merlin.current_step.inputs.links.dom.val(),
 							keywords:merlin.current_step.inputs.keywords.dom.val(),
-							contact:merlin.current_step.inputs.contact.dom.val()
+							contact_email:merlin.current_step.inputs.contact.dom.val()
 						});
 					}
 				},
 				'finish':{
 					selector:'.finish',
 					init:function(merlin,dom){
-						tc.util.dump(merlin.options.data);
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/resource',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								window.location.hash = 'thank-you';
+							}
+						});
+					},
+					'thank-you':{
+						selector:'.thank-you'
 					}
 				}
 			}

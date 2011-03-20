@@ -38,7 +38,7 @@ Give A Minute - Create a Project
 			<div class='step start describe clearfix'>
 				<div class="west">
 					<div class="thumb">
-						<img src="http://placehold.it/100x100" alt="" class="proj"/>
+						<img width='100' src="http://placehold.it/100x100" alt="" class="proj"/>
 						<span class="overlay-tag"></span>
 					</div>
 					<div class="addphoto"><a href="">&#43; Add A Photo</a></div>
@@ -152,13 +152,13 @@ Give A Minute - Create a Project
 	
 	<li class='template-content project-item'>
 		<div class="thumb">
-			<img src="http://placehold.it/50x50" alt="" class="proj"/>
+			<img width='50' src="http://placehold.it/50x50" alt="" class="proj"/>
 			<span class="overlay-tag"></span>
 			<span class="member-count">58</span>
 		</div>
 		<div class="project-info">
 			<div class="endorser-thumb clearfix" style='display:none;'>
-				<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
+				<img width='30' src="http://placehold.it/30x30" alt="" class="endorser-photo" />
 				<span class="overlay-tag"></span>
 			</div>
 			<span class="link"><a href="/project" target='_blank'>Start a Garden on 161st in South Bronx</a></span>
@@ -168,7 +168,7 @@ Give A Minute - Create a Project
 	</li>
 	
 	<li class="template-content organization-item">
-		<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>
+		<span class="thumb"><img width='35' src="http://placehold.it/35x35" alt="" /></span>
 		<span class="resource-name"><span><span class='organization-name'></span></span></span>
 		<a href="#add" class="add-button">Add</a>
 		<div class="added-dialog">
@@ -193,7 +193,7 @@ Give A Minute - Create a Project
 	<div class='tooltip-bd'>
 		<div class='info'>
 			<div class='thumb'>
-				<img alt='' src='http://placehold.it/90x90'/>
+				<img width='90' alt='' src='http://placehold.it/90x90'/>
 			</div>
 			<div class='main'>
 				<p></p>
@@ -394,7 +394,7 @@ Give A Minute - Create a Project
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
-								merlin.dom.find('img.proj').attr('src','/giveaminute/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.dom.find('img.proj').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image = d.responseJSON.thumbnail_id;
 							}
 						});
@@ -487,7 +487,7 @@ Give A Minute - Create a Project
 						for(i in merlin.current_step.step_data.projects){
 							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
 							if(merlin.current_step.step_data.projects[i].image_id){
-								temphtml.find('img').attr('src','/giveaminute/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
+								temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
 							}
 							temphtml.find('.link a').text(merlin.current_step.step_data.projects[i].title).attr('href','/project/'+merlin.current_step.step_data.projects[i].project_id);
 							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
@@ -573,7 +573,7 @@ Give A Minute - Create a Project
 						for(i in merlin.current_step.step_data.resources){
 							temphtml = tc.jQ('.template-content.organization-item').clone().removeClass('template-content');
 							if(merlin.current_step.step_data.resources[i].image_id){
-								temphtml.find('img').attr('src','/giveaminute/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
+								temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
 							}
 							temphtml.find('.organization-name').text(merlin.current_step.step_data.resources[i].title);
 							temphtml.find('.add-button').attr('href','#add,'+merlin.current_step.step_data.resources[i].project_resource_id);

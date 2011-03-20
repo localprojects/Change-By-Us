@@ -93,6 +93,7 @@ class Home(Controller):
         contact_name = self.request('contact_name')
         contact_email = self.request('contact_email')
         other_urls = self.request('other_urls').split(',') if not util.strNullOrEmpty(self.request('other_urls')) else []
+        image_id = self.request('image')
 
         try:
             projectResourceId = self.db.insert('project_resource', 
@@ -104,7 +105,8 @@ class Home(Controller):
                                         keywords = keywords,
                                         contact_name = contact_name,
                                         contact_email = contact_email,
-                                        created_datetime = None)
+                                        created_datetime = None,
+                                        image_id = image_id)
             
             return True
         except Exception,e:
@@ -122,8 +124,9 @@ class Home(Controller):
         featured = list(self.db.query(sql))
         
         for project in featured:
-            data.append(dict(title = str(project.title),
-                            ideas = self.getProjectIdeas(project.project_id, 30)))   
+            data.append(dict(project_id = str(project.project_id),
+                            title = str(project.title),
+                            ideas = self.getProjectIdeas(project.project_id, 30)))
         
         return data
         

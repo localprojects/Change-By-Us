@@ -26,6 +26,7 @@ select p.project_id
     ,u.user_id as owner_user_id
     ,u.first_name as owner_first_name
     ,u.last_name as owner_last_name
+    ,u.image_id as owner_image_id
 from project p
 left join location l on l.location_id = p.location_id
 left join project__user pu on pu.project_id = p.project_id
@@ -57,7 +58,8 @@ where p.project_id = $id;"""
         data = dict(project_id = self.id,
                     editable = True,
                     info = dict(title = self.data.title,
-                                owner = smallUser(self.data.owner_user_id, self.data.owner_first_name, self.data.owner_last_name),
+                                image_id = self.data.image_id,
+                                owner = smallUser(self.data.owner_user_id, self.data.owner_first_name, self.data.owner_last_name, self.data.owner_image_id),
                                 mission = self.data.description,
                                 keywords = (self.data.keywords.split() if self.data.keywords else []),
                                 endorsements = dict(items = endorsements),
@@ -79,7 +81,7 @@ where p.project_id = $id;"""
     def getMembers(self):
         members = []
         
-        sql = """select u.user_id, u.first_name, u.last_name from user u
+        sql = """select u.user_id, u.first_name, u.last_name, u.image_id from user u
                 inner join project__user pu on pu.user_id = u.user_id and pu.project_id = $id"""
                 
         try:
@@ -87,7 +89,7 @@ where p.project_id = $id;"""
             
             if len(data) > 0:
                 for item in data:
-                    members.append(smallUser(item.user_id, item.first_name, item.last_name))
+                    members.append(smallUser(item.user_id, item.first_name, item.last_name, item.image_id))
         except Exception, e:
             log.info("*** couldn't get project members")
             log.error(e)                  
@@ -218,13 +220,14 @@ def message(id, type, message, createdDatetime, userId, firstName, lastName, ide
     
     return dict(message_id = id,
                 message_type = type,
-                owner = smallUser(userId, firstName, lastName),
+                owner = smallUser(userId, firstName, lastName, None),
                 body = message,
                 created = str(createdDatetime),
                 idea = ideaObj)
                                                         
-def smallUser(id, first, last):
+def smallUser(id, first, last, image):
     return dict(u_id = id,
+                image_id = image,
                 name = "%s %s" % (first, last))
                 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
@@ -250,17 +253,17 @@ def resource(id, title, url, imageId):
 def idea(id, description, userId, firstName, lastName, createdDatetime, submissionType):
     return dict(idea_id = id,
                 message = description,
-                owner = smallUser(userId, firstName, lastName),
+                owner = smallUser(userId, firstName, lastName, None),
                 created = str(createdDatetime),
                 submission_type = submissionType)
                 
-def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, firstName, lastName):
+def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, firstName, lastName, imageId):
     return dict(goal_id = id,
                 text = description,
                 active = isFeatured,
                 accomplished = isAccomplished,
                 timeframe = "%s %s" % (str(time_n), time_unit),
-                owner = smallUser(userId, firstName, lastName))
+                owner = smallUser(userId, firstName, lastName, imageId))
 
     
 def getTestData():
@@ -645,7 +648,7 @@ def getGoals(db, projectId):
     goals = []
     
     sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
-                  u.user_id, u.first_name, u.last_name
+                  u.user_id, u.first_name, u.last_name, u.image_id
             from project_goal g
             inner join user u on u.user_id = g.user_id
             where g.project_id = $id"""
@@ -664,7 +667,8 @@ def getGoals(db, projectId):
                                   item.time_frame_unit,
                                   item.user_id, 
                                   item.first_name, 
-                                  item.last_name))
+                                  item.last_name,
+                                  item.image_id))
     except Exception, e:
         log.info("*** couldn't get goals")
         log.error(e)                  

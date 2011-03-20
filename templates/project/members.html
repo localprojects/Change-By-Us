@@ -23,10 +23,10 @@
 				
 					<li>
 						<div class="thumb">
-							<img src="http://placehold.it/40x40" alt="" />
+							<img width='40' src="/static/images/thumb_genAvatar.jpg" alt="" />
 						</div>
 						<div class="main">
-							<a href="">{{ member.name }}</a>
+							<a href="/useraccount/{{ member.u_id }}">{{ member.name }}</a>
 						</div>
 						{% if d.template_data.project_user.data.is_project_admin %}
 							<a class="close" href="#removeMember,{{member.u_id}}"><span>Close</span></a>
@@ -61,25 +61,50 @@
 						<h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
 					</div>
 					<div class="sub-bd form-pane">
-						<form action="" method="POST">
-							<div class="fields">
-								<div class="row clearfix">
-									<textarea class='email-list'></textarea>
-								</div>
-								<div class='row clearfix'>
-									<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
-								</div>
+						<div class="fields">
+							<div class="row clearfix">
+								<textarea class='email-list'></textarea>
 							</div>
-						</form>
+						</div>
+					</div>
+					
+					<div class="sub-hd" style='padding-top:0px;'>
+						<h3 class="fancy-caps">Add <span>a</span> Message</h3>
+					</div>
+					<div class="sub-bd form-pane">
+						<div class="fields">
+							<div class="row clearfix" style='margin-top:0px;'>
+								<textarea class='email-message'></textarea>
+							</div>
+							<div class='row clearfix' style='margin-top:0px;'>
+								<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+							</div>
+						</div>
 					</div>
 				</div>
 				
-				<div class='step email-invite-submit clearfix spinner-message'>
+				<div class='step email-invite-message' style='display:none;'>
+					<div class="sub-hd">
+						<h3 class="fancy-caps">Add <span>a</span> Message</h3>
+					</div>
+					<div class="sub-bd form-pane">
+						<div class="fields">
+							<div class="row clearfix">
+								<textarea class='email-message'></textarea>
+							</div>
+							<div class='row clearfix' style='margin-top:0px;'>
+								<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class='step email-invite-submit clearfix spinner-message' style='display:none;'>
 					<p>Thank you for inviting more users!</p>
 					<p><img src='/static/images/loader32x32.gif' /></p>
 				</div>
 				
-				<div class='step email-invite-error'>
+				<div class='step email-invite-error' style='display:none;'>
 					<p>There was an error sending the email invites!</p>
 				</div>
 				
@@ -190,17 +215,43 @@
 						inputs:{
 							email_list:{
 								selector:'.email-list',
-								validators:['min-3','max-32','required'],
+								validators:['min-3','max-200','required','csv-email'],
 								hint:'Add emails separated by commas'
+							},
+							email_message:{
+								selector:'.email-message',
+								validators:['min-3','max-200','required'],
+								hint:'Add a message'
 							}
 						},
 						init:function(merlin,dom){
-							merlin.current_step.inputs.email_list.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+							merlin.current_step.inputs.email_list.dom.removeClass('has-been-focused').removeClass('has-attempted-submit');
+							merlin.current_step.inputs.email_message.dom.removeClass('has-been-focused').removeClass('has-attempted-submit');
 						},
 						finish:function(merlin,dom){
 							merlin.options.data = tc.jQ.extend(merlin.options.data,{
 								project_id:merlin.app.app_page.data.project.project_id,
-								email_list:','+merlin.current_step.inputs.email_list.dom.val()
+								email_list:merlin.current_step.inputs.email_list.dom.val(),
+								message:merlin.current_step.inputs.email_message.dom.val()
+							});
+						}
+					},
+					'email-invite-message':{
+						selector:'.step.email-invite-message',
+						next_step:'email-invite-submit',
+						inputs:{
+							email_message:{
+								selector:'.email-message',
+								validators:['min-3','max-200','required'],
+								hint:'Add a message'
+							}
+						},
+						init:function(merlin,dom){
+							merlin.current_step.inputs.email_message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+						},
+						finish:function(merlin,dom){
+							merlin.options.data = tc.jQ.extend(merlin.options.data,{
+								message:merlin.current_step.inputs.email_message.dom.val()
 							});
 						}
 					},

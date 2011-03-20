@@ -13,7 +13,12 @@ Give A Minute - Project
 			<span>Official Project</span>
 		</div>
 		<div class="thumb">
-			<img src="http://placehold.it/100x100" alt="" class="proj"/>
+			{% if d.template_data.project.data.info.image_id %}
+				<img width='100' src='/images/{{ d.template_data.project.data.info.image_id % 10 }}/{{ d.template_data.project.data.info.image_id }}.png' alt="" class='proj'/>
+			{% else %}
+				<img width='100' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+			{% endif %}
+			
 			<span class="overlay-tag"></span>
 		</div>
 		<div class="tools">

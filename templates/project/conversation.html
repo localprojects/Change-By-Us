@@ -47,11 +47,15 @@
 				{% for message in d.template_data.project.data.info.messages['items'] %}
 					<li>
 						{% if d.template_data.project_user.data.is_project_admin %}
-							<a class="close" href="#"><span>Close</span></a>
+							<!-- <a class="close" href="#"><span>Close</span></a> -->
 						{% endif %}
 						<div class="membrane">
 							<div class="thumb">
-								<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
+								{% if message.owner.image_id %}
+									<img src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
+								{% else %}
+									<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+								{% endif %}
 							</div>
 							<div class="main">
 								{% if message.message_type == 'join' %}
@@ -82,7 +86,9 @@
 				{% endfor %}
 			{% endif %}
 		</ol>
-		<div class="load-more">
+		
+		
+		<div class="load-more" {% if d.template_data.project.data.info.messages['n_returned'] < 10 %} style='display:none;' {% endif %}>
 			<a href="#"><span>Load older posts</span></a>
 		</div>
 	
@@ -91,7 +97,7 @@
 
 <li class='template-content message-markup'>
 	{% if d.template_data.project_user.data.is_project_admin %}
-		<a class="close" href="#"><span>Close</span></a>
+		<!-- <a class="close" href="#"><span>Close</span></a> -->
 	{% endif %}
 	<div class="membrane">
 		<div class="thumb">

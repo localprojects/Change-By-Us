@@ -139,6 +139,9 @@ tc.merlin.prototype.show_step = function(step){
 		for(i in this.current_step.inputs){
 			if(!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector){
 				this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
+				if(!this.current_step.inputs[i].dom.length){
+					tc.util.dump(this.current_step.inputs[i].selector);
+				}
 			}
 			this.current_step.inputs[i].dom
 				.bind('focus',this.event_data,this.handlers.focus)
@@ -272,7 +275,7 @@ tc.merlin.prototype.handlers = {
 	},
 	focus:function(e,d){
 		if(e.target.className.indexOf('has-been-focused') == -1){
-			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text]').val('');
+			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text], textarea').val('');
 		}
 	},
 	keypress:function(e,d){
@@ -280,17 +283,17 @@ tc.merlin.prototype.handlers = {
 		e.data.me.validate(false);
 		if(e.which == 13){
 			if(e.data.me.options.next_button && e.data.me.options.next_button.hasClass('enabled')){
-				//e.data.me.options.next_button.click();
+				e.data.me.options.next_button.click();
 			}
 		}
 	},
 	blur:function(e,d){
+		var $t;
+		$t = tc.jQ(e.target);
 		if(!e.target.value.length){
 			tc.jQ(e.target).removeClass('has-been-focused');
-			if(e.data.me.current_step.hints){
-				if(e.data.me.current_step.hints[e.target.name]){
-					e.target.value = e.data.me.current_step.hints[e.target.name];
-				}
+			if($t.data().input.hint || ($t.data().input.hint == "")){
+				$t.val($t.data().input.hint);
 			}
 		}
 	},
