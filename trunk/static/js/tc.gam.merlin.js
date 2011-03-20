@@ -83,7 +83,7 @@ tc.merlin.prototype.handle_steps = function(){
 
 tc.merlin.prototype.show_step = function(step){
 	tc.util.log('tc.merlin.show_step['+step+']');
-	var i, j;
+	var i, j, temp_e_data;
 	
 	if(this.current_step){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
@@ -137,16 +137,21 @@ tc.merlin.prototype.show_step = function(step){
 	
 	if(this.current_step.inputs && !this.current_step.has_been_initialized){
 		for(i in this.current_step.inputs){
+			temp_e_data = tc.jQ.extend({},this.event_data,{input:this.current_step.inputs[i]});
 			if(!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector){
 				this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
 				if(!this.current_step.inputs[i].dom.length){
 					tc.util.dump(this.current_step.inputs[i].selector);
 				}
 			}
+			if(this.current_step.inputs[i].counter && !this.current_step.inputs[i].counter.dom){
+				this.current_step.inputs[i].counter.dom = this.current_step.dom.find(this.current_step.inputs[i].counter.selector)
+				this.current_step.inputs[i].counter.dom.text('0/'+this.current_step.inputs[i].counter.limit);
+			}
 			this.current_step.inputs[i].dom
-				.bind('focus',this.event_data,this.handlers.focus)
-				.bind('keyup change',this.event_data,this.handlers.keypress)
-				.bind('blur',this.event_data,this.handlers.blur).data({merlin:this,input:this.current_step.inputs[i]}).each(function(i,j){
+				.bind('focus',temp_e_data,this.handlers.focus)
+				.bind('keyup change',temp_e_data,this.handlers.keypress)
+				.bind('blur',temp_e_data,this.handlers.blur).data({merlin:this,input:this.current_step.inputs[i]}).each(function(i,j){
 					var $j;
 					$j = tc.jQ(j);
 					if($j.data().input.hint || ($j.data().input.hint == "")){
@@ -279,12 +284,14 @@ tc.merlin.prototype.handlers = {
 		}
 	},
 	keypress:function(e,d){
-		tc.util.dump(e);
 		e.data.me.validate(false);
 		if(e.which == 13){
 			if(e.data.me.options.next_button && e.data.me.options.next_button.hasClass('enabled')){
 				e.data.me.options.next_button.click();
 			}
+		}
+		if(e.data.input.counter && e.data.input.counter.dom){
+			e.data.input.counter.dom.text(e.data.input.dom.val().length+'/'+e.data.input.counter.limit);
 		}
 	},
 	blur:function(e,d){

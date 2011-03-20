@@ -23,7 +23,11 @@ tc.gam.ideas_invite = function(app) {
 						inputs:{
 							invite_message:{
 								selector:'textarea.invite-message',
-								validators:['max-200']
+								validators:['max-200'],
+								counter:{
+									selector:'.charlimit.invite-message',
+									limit:200
+								}
 							}
 						},
 						init:function(merlin,dom){

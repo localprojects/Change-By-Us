@@ -12,8 +12,8 @@ tc.validator_utils = {
 };
 
 tc.validate = function(element,validators){
-	tc.util.log('tc.validate');
-	tc.util.dump(element);
+	//tc.util.log('tc.validate');
+	//tc.util.dump(element);
 	var valid, required, empty, value, errors, i, tempvalue, tempelement, j;
 	
 	valid = true;
