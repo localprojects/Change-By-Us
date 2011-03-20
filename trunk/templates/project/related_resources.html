@@ -126,7 +126,7 @@
 				temp += '<a href="#add,'+ resource.project_resource_id +'" class="add-button rounded-button">Add</a>'+
 				        '<span class="thumb"><img src="http://placehold.it/35x35" alt="" /></span>'+
 				        '<span class="resource-name" ><span>'+
-				            '<span class="organization-name" rel="#organization,'+ resource.project_resource_id +'">'+ 
+				            '<span class="organization-name tooltip_trigger" rel="#organization,'+ resource.project_resource_id +'">'+ 
 				                resource.title +
 				            '</span></span></span>';
 				
@@ -149,6 +149,13 @@
 			me.elements.resources_table.empty().append(tbody);
 			me.elements.empty_box.hide();
 			me.elements.resource_counter.text(d.resources.length);
+			
+			tc.resource_tooltip({
+				triggers: me.elements.resources_table.find(".tooltip_trigger"),
+				markup_source_element:tc.jQ('#organization-markup-source'),
+				get_url: "/project/resource/info"
+			});
+			
 		}
 		
 		function no_resources() {
