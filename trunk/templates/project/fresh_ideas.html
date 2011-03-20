@@ -10,7 +10,7 @@
 	</div>
 	<div class="bd">
 		<div class="ideas-invite">
-			<div class="sub-bd">
+			<div class="sub-bd" style="{% if d.template_data.project.data.info.related_ideas['items']|length == 0 %}display:none;{% endif %}">
 				<div class="carousel">
 					<div class="scrollable">
 						<ul class="items">
@@ -45,6 +45,12 @@
 					<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
 				</div>
 			</div>
+		
+			<div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
+				<!-- <a class="close" href="#"><span>Close</span></a> -->
+				<p>No similar ideas found.</p>
+			</div>
+		
 		</div>
 	</div>
 </div>

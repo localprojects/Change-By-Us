@@ -95,7 +95,7 @@
 						<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
 					</div>
 				</div>
-				<div class="sub-bd">
+				<div class="sub-bd" style="{% if d.template_data.project.data.info.related_ideas['items']|length == 0 %}display:none;{% endif %}">
 					
 					{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
 						<div class="carousel">
@@ -133,6 +133,12 @@
 					{% endif %}
 					
 				</div>
+				
+				<div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
+					<!-- <a class="close" href="#"><span>Close</span></a> -->
+					<p>No similar ideas found.</p>
+				</div>
+				
 			</div>
 			<!-- End Members.ideas-invite -->
 		
@@ -160,7 +166,8 @@
 		
 		this.components = {
 			email_merlin:null,
-			ideas_carousel:null
+			ideas_carousel:null,
+			ideas_pagination: this.dom.find(".ideas-invite .pagination")
 		};
 		
 		this.build_email_merlin = function(){
@@ -231,16 +238,20 @@
 		this.components.ideas_carousel = new tc.carousel({
 			element: this.dom.find(".ideas-invite .carousel"),
 			pagination: {
-				current: this.dom.find(".ideas-invite .pagination .cur-index"),
-				total: this.dom.find(".ideas-invite .pagination .total")
+				current: this.components.ideas_pagination.find(".cur-index"),
+				total: this.components.ideas_pagination.find(".total")
 			}
 		});
+		if (!this.components.ideas_carousel.is_rendered()) {
+			this.components.ideas_pagination.hide();
+		}
 		
 		return {
 			show:function(propagate) {
 				widget.show(propagate);
 				if (me.components.ideas_carousel.has_items() && !me.components.ideas_carousel.is_rendered()) {
 					me.components.ideas_carousel.render();
+					me.components.ideas_pagination.show();
 				}
 				window.location.hash = 'email_invite,email-invite-info';
 			},

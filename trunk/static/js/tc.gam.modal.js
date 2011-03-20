@@ -20,7 +20,7 @@ tc.modal.prototype.init = function(app,options){
 		}
 	});
 	this.modal = this.options.element.data('overlay');
-}
+};
 
 tc.modal.prototype.show = function(opts, event_target){
 	tc.util.log('tc.modal.show');
@@ -52,7 +52,7 @@ tc.modal.prototype.show = function(opts, event_target){
 	} else {
 		load(this);
 	}
-}
+};
 
 tc.modal.prototype.hide = function(){
 	tc.util.log('tc.modal.hide');
@@ -60,4 +60,4 @@ tc.modal.prototype.hide = function(){
 		e.data.me.options.element.children().remove();
 	});
 	this.modal.close();
-}
+};
