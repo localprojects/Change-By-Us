@@ -242,7 +242,7 @@ Give A Minute - Project
 							},
 							init:function(merlin,dom){
 								dom.find(".name").text( tc.jQ(event_target).attr("href").split(",")[2] );
-								
+									
 								dom.find('a.submit').bind('click',{merlin:merlin,dom:dom},function(e,d){
 									e.preventDefault();
 									if(dom.hasClass('invalid')){
@@ -252,10 +252,13 @@ Give A Minute - Project
 								});
 							},
 							finish: function(merlin, dom) {
+								var message;
+								message = merlin.current_step.inputs.invite_message.dom.val();
+								
 								merlin.options.data = tc.jQ.extend(merlin.options.data, {
 									project_id:merlin.app.app_page.data.project.project_id,
 									idea_id: tc.jQ(event_target).attr("href").split(",")[1],
-									message: merlin.current_step.inputs.invite_message.dom.val()
+									message: message
 								});
 							}
 						},
@@ -276,7 +279,7 @@ Give A Minute - Project
 											modal.hide();
 										});
 									}
-								})
+								});
 							}
 						}
 					}
