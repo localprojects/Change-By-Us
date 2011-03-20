@@ -71,7 +71,11 @@ Give A Minute - Search Results
 										<td>
 											<!-- <a class="close" href="#"><span>Close</span></a> -->
 											<div class="thumb">
-												<img src="http://placehold.it/50x50" alt="" class="proj"/>
+												{% if project.image_id %}
+												<img width='50' height='50' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+												{% else %}
+												<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+												{% endif %}
 												<span class="overlay-tag"></span>
 												<span class="member-count">{{ project.num_members }}</span>
 											</div>
@@ -120,7 +124,11 @@ Give A Minute - Search Results
 											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
 												<a href="" class="add-button rounded-button" href="">Add</a>
 											{% endif %}
-											<span class="thumb"><!-- <a class="close" href="#"><span>Close</span> --></a><img src="http://placehold.it/35x35" alt="" /></span>
+											{% if resource.image_id %}
+											<span class="thumb"><!-- <a class="close" href="#"><span>Close</span> --></a><img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+											{% else %}
+											<span class="thumb"><!-- <a class="close" href="#"><span>Close</span> --></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											{% endif %}
 											<span class="resource-name"><span><span>{{ resource.title|truncate(50) }}</span></span></span>
 										</td>
 									{% if loop.index % 3 == 0 %}
@@ -223,7 +231,11 @@ Give A Minute - Search Results
 											<td>
 												<!-- <a class="close" href="#"><span>Close</span></a> -->
 												<div class="thumb">
-													<img src="http://placehold.it/50x50" alt="" class="proj"/>
+													{% if project.image_id %}
+													<img width='50' height='50' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+													{% else %}
+													<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+													{% endif %}
 													<span class="overlay-tag"></span>
 													<span class="member-count">{{ project.num_members }}</span>
 												</div>
@@ -262,7 +274,11 @@ Give A Minute - Search Results
 											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
 												<a href="" class="add-button rounded-button" href="">Add</a>
 											{% endif %}
-											<span class="thumb"><!-- <a class="close" href="#"><span>Close</span></a> --><img src="http://placehold.it/35x35" alt="" /></span>
+											{% if resource.image_id %}
+											<span class="thumb"><!-- <a class="close" href="#"><span>Close</span> --></a><img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+											{% else %}
+											<span class="thumb"><!-- <a class="close" href="#"><span>Close</span> --></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											{% endif %}
 											<span class="resource-name"><span><span>{{ resource.title|truncate(50) }}</span></span></span>
 										</td>
 										{% endif %}
