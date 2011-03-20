@@ -27,6 +27,7 @@ class Search(Controller):
         locationId = self.request('location_id')
         
         self.template_data['search_terms'] = self.request('terms')
+        self.template_data['search_location_id'] = locationId
         
         log.info("*** search for '%s', %s" % (terms, locationId))
         
@@ -37,6 +38,9 @@ class Search(Controller):
         results = dict(projects = projects, resources = resources, ideas = ideas)
         
         self.template_data['results'] = dict(json = self.json(results), data = results)
+        
+        locations_list = mLocation.getSimpleLocationDictionary(self.db)
+        self.template_data['locations'] = dict(json = self.json(locations_list), data = locations_list)
         
         locationData = self.getLocationData()
         

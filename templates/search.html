@@ -38,7 +38,10 @@ Give A Minute - Search Results
 					<a class="clear-field" href=""></a>
 				</div>
 				<span class="in">in</span>
-				<input type="text" class="search-location" />
+				<!-- <input type="text" class="search-location" /> -->
+				<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %}/>
+				<div class="location-hood-list"><ul></ul></div>
+				
 				<input type="submit" class="rounded-button search-submit" value="Search" />
 			</div>
 		</form>
@@ -331,7 +334,29 @@ Give A Minute - Search Results
 			tc.jQ('.sidebar').children('.'+theCat).addClass('active');
 			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
 		};
-
+		
+		tc.jQ('a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
+			e.preventDefault();
+			e.data.input.val('');
+		});
+		
+		tc.jQ('input.search-submit').bind('click',{terms:tc.jQ('input.search-terms'),location:tc.jQ('input.location-hood-enter')},function(e){
+			e.preventDefault();
+			if(e.data.terms.val().length){
+				if(e.data.location.attr('location_id')){
+					window.location = '/search?terms='+e.data.terms.val()+'&location_id='+e.data.location.attr('location_id');
+				} else {
+					window.location = '/search?terms='+e.data.terms.val();
+				}
+			}
+		});
+		
+		new tc.locationDropdown({
+			input:tc.jQ('input.location-hood-enter'),
+			list:tc.jQ('div.location-hood-list'),
+			locations:app.app_page.data.locations
+		});
+		
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('.merlin'),
 			first_step:'all',
