@@ -615,7 +615,8 @@ qq.extend(qq.FileUploader.prototype, {
         qq.remove(this._find(item, 'cancel'));
         qq.remove(this._find(item, 'spinner'));
         
-        if (result.success){
+				//modified amahon type/code for give a minutev2
+        if (result.thumbnail_id){
             qq.addClass(item, this._classes.success);    
         } else {
             qq.addClass(item, this._classes.fail);

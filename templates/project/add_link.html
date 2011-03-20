@@ -6,22 +6,22 @@
 			</span>
 		</h2>
 		<div class="actions">
-			<a href="#" class="back fancy-caps">
+			<a href="#hide,add_link" class="back fancy-caps">
 				<span>Back <span>to</span> Project Home</span>
 			</a>
 		</div>
 	</div>
 
-	<div class="bd clearfix">
+	<div class="bd clearfix merlin add-link">
 		<div class='step add-link-step'>
 			<p>You can add links to blogs, news items, or one of our recommended links.</p>
 			<form action='#' class="form-pane">
 				<div class="fields">
 					<div class="row">
-						<input name='link-label' class='link-url' type="text"></input>
+						<input name='link-title' class='link-url link-title' type="text"></input>
 					</div>
 					<div class="row">
-						<input name='link-url' class='link-url' type="text"></input>
+						<input name='link-url' class='link-url link-href' type="text"></input>
 					</div>
 				</div>
 				<a href="#" class='submit rounded-button'>Add</a>
@@ -39,6 +39,11 @@
 				<p>A popular way of <strong>managing complex groups</strong>.</p>
 			</div>
 		</div>
+		
+		<div class='step submit-link-step spinner-message'>
+			<p>Thank you for submitting a link!</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
 	</div>
 </div>
 
@@ -54,14 +59,87 @@
 		this.dom = dom; 
 		widget = tc.gam.widget(this,project);
 		this.handlers = {
-			back:function(e,d){
-				e.preventDefault();
-				e.data.project.components.add_link.hide(true);
-			}
+			
 		};
-		this.dom.find('.actions a.back').bind('click',{ project:project,me:this },this.handlers.back);
+		
+		this.components = {
+			merlin:null
+		}
+		
+		this.build_merlin = function(){
+			if(this.components.merlin){
+				return;
+			}
+			this.components.merlin = new tc.merlin(options.app,{
+				name:'add-link',
+				dom:dom.find('.merlin.add-link'),
+				next_button:dom.find('a.submit'),
+				first_step:'link-info',
+				data:{
+					project_id:null,
+					title:null,
+					url:null
+				},
+				steps:{
+					'link-info':{
+						selector:'.step.add-link-step',
+						next_step:'link-submit',
+						inputs:{
+							title:{
+								selector:'input.link-title',
+								validators:['min-3','max-32','required'],
+								hint:'Title'
+							},
+							url:{
+								selector:'input.link-href',
+								validators:['min-3','max-32','required','url'],
+								hint:'URL'
+							}
+						},
+						init:function(merlin,dom){
+							merlin.current_step.inputs.title.dom.val('Title').removeClass('has-been-focused').removeClass('has-attempted-submit');
+							merlin.current_step.inputs.url.dom.val('URL').removeClass('has-been-focused').removeClass('has-attempted-submit');
+						},
+						finish:function(merlin,dom){
+							merlin.options.data = tc.jQ.extend(merlin.options.data,{
+								project_id:merlin.app.app_page.data.project.project_id,
+								title:merlin.current_step.inputs.title.dom.val(),
+								url:merlin.current_step.inputs.url.dom.val()
+							});
+						}
+					},
+					'link-submit':{
+						selector:'.step.submit-link-step',
+						next_step:'goal-info',
+						init:function(merlin,dom){
+							tc.jQ.ajax({
+								type:'POST',
+								url:'/project/link/add',
+								data:merlin.options.data,
+								context:merlin,
+								dataType:'text',
+								success:function(data,ts,xhr){
+									if(data == 'False'){
+										return false;
+									}
+									tc.timer(1000,function(){
+										window.location.hash = 'add-link,link-info';
+									})
+								}
+							});
+						}
+					}
+				}
+			});
+		};
+		
+		this.build_merlin();
+		
 		return {
-			show:widget.show,
+			show:function(propagate){
+				widget.show(propagate);
+				window.location.hash = 'add-link,link-info';
+			},
 			hide:widget.hide
 		};
 	};

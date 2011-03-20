@@ -26,7 +26,7 @@
 						<li>
 							<div class="goal-card">
 								{% if d.template_data.project_user.is_project_admin %}
-									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+									<!-- <a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a> -->
 								{% endif %}
 								<p>{{ goal.text }}</p>
 								<div class="meta">
@@ -118,6 +118,8 @@
 			}
 		};
 		
+		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
+		
 		this.build_carousel = function(){
 			this.carousel = new tc.carousel({
 				element: this.dom.find(".carousel")
@@ -139,17 +141,28 @@
 		
 		this.handle_goals = function(data){
 			var i, list, temphtml;
-			
 			this.dom.find('.counter').text(data.length);
-			
 			if(!this.carousel){
 				list = this.dom.find('ul.items');
-				tc.util.dump(list);
+				for(i in data){
+					if(data[i].active){
+						list.append(this.generate_markup(data[i]));
+						delete data[i];
+						break;
+					}
+				}
 				for(i in data){
 					list.append(this.generate_markup(data[i]));
 				}
 			} else {
 				this.carousel.getItems().remove();
+				for(i in data){
+					if(data[i].active){
+						this.carousel.addItem(this.generate_markup(data[i]));
+						delete data[i];
+						break;
+					}
+				}
 				for(i in data){
 					this.carousel.addItem(this.generate_markup(data[i]));
 				}
@@ -158,13 +171,13 @@
 		};
 		
 		this.build_carousel();
-		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
+		
 		return {
-			show:function(){
+			show:function(propagate){
 				if(me.dom.find('li.goal').length){
 					me.dom.find('.goals-empty').hide().siblings('.goals-display').show();
 				}
-				widget.show();
+				widget.show(propagate);
 				if(!me.carousel){
 					me.build_carousel();
 				}

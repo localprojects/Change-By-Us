@@ -229,7 +229,14 @@ Give A Minute - Create a Project
 					element: modal.options.element.find('.file-uploader').get(0),
 					action: '/create/photo',
 					onComplete: function(id, fileName, responseJSON){
-						modal.close();
+						
+						tc.jQ(document).trigger('create-image-uploaded',{
+							id:id,
+							fileName:fileName,
+							responseJSON:responseJSON
+						});
+						
+						return true;
 					}
 				});
 				if(tc.jQ.isFunction(callback)){
@@ -261,7 +268,8 @@ Give A Minute - Create a Project
 				keywords:null,
 				location_id:null,
 				links:null,
-				resources:null
+				resources:null,
+				image:'-1'
 			},
 			steps:{
 				'start':{
@@ -382,6 +390,15 @@ Give A Minute - Create a Project
 							});
 						}
 					},
+					init:function(merlin,dom){
+						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
+							e.data.merlin.app.components.modal.hide();
+							if(d.responseJSON.thumbnail_id){
+								merlin.dom.find('img.proj').attr('src','/giveaminute/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.options.data.image = d.responseJSON.thumbnail_id;
+							}
+						});
+					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							title:merlin.current_step.inputs.title.dom.val(),
@@ -469,6 +486,9 @@ Give A Minute - Create a Project
 						dom.find('ul.projects-list').children().remove();
 						for(i in merlin.current_step.step_data.projects){
 							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+							if(merlin.current_step.step_data.projects[i].image_id){
+								temphtml.find('img').attr('src','/giveaminute/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
+							}
 							temphtml.find('.link a').text(merlin.current_step.step_data.projects[i].title).attr('href','/project/'+merlin.current_step.step_data.projects[i].project_id);
 							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
 							temphtml.find('.description').text(merlin.current_step.step_data.projects[i].description);
@@ -552,6 +572,9 @@ Give A Minute - Create a Project
 						dom.find('ul.resources-list').children().remove();
 						for(i in merlin.current_step.step_data.resources){
 							temphtml = tc.jQ('.template-content.organization-item').clone().removeClass('template-content');
+							if(merlin.current_step.step_data.resources[i].image_id){
+								temphtml.find('img').attr('src','/giveaminute/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
+							}
 							temphtml.find('.organization-name').text(merlin.current_step.step_data.resources[i].title);
 							temphtml.find('.add-button').attr('href','#add,'+merlin.current_step.step_data.resources[i].project_resource_id);
 							if(i!= 0 && (i-1)%3==0){
