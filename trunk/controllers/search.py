@@ -26,8 +26,10 @@ class Search(Controller):
             
         locationId = self.request('location_id')
         
+        self.template_data['search_terms'] = self.request('terms')
+        
         log.info("*** search for '%s', %s" % (terms, locationId))
-
+        
         projects = self.searchProjects(terms, locationId)
         resources = self.searchProjectResources(terms, locationId)
         ideas = self.searchIdeas(terms, locationId)
@@ -37,7 +39,7 @@ class Search(Controller):
         self.template_data['results'] = dict(json = self.json(results), data = results)
         
         locationData = self.getLocationData()
-    
+        
         self.template_data['locations_scored'] = self.json(locationData)
         self.template_data['max_score'] = locationData[0]['score']
         
