@@ -4,6 +4,24 @@
 Give A Minute - Search Results
 {% endblock title %}
 
+
+{% block javascript_header %}
+{{ super() }}
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/static/js/gam-map-style.js"></script>
+<script type="text/javascript" src="/static/js/libs/infobox_packed.js"></script>
+<script type="text/javascript">
+	var nychoods = {{ d.template_data.locations_scored }};
+	var max_score = {{ d.template_data.max_score }};
+</script>
+<script type="text/javascript" src="/static/js/tc.gam.map.js"></script>
+<script type="text/javascript">
+	app_page.features.push(initialize);
+</script>
+{% endblock %}<!--end javascript_header-->
+
+
+
 {% block continent %}
 
 <div class='continent search-results'>
@@ -178,6 +196,14 @@ Give A Minute - Search Results
 		
 		
 		
+		
+		
+		
+		
+		
+		
+		
+		
 		<div id="map-view" class="step">
 			<div class="map-results clearfix">
 				<div class="box results-box results-projects">
@@ -250,14 +276,30 @@ Give A Minute - Search Results
 					</div>
 				</div>
 			</div><!-- end map-results-->
-
+			
 			
 			<div class="box results-map themap">
-				<img src="http://placehold.it/960x545&text=map"/>	
+				<div id="map_canvas"></div>
+				<!--<iframe src="/search/map" style="width: 960px; height: 545px"></iframe>-->
 			</div>
 			
 			
 		</div><!-- end #map-view -->
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		
 	</div>
