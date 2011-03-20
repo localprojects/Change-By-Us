@@ -97,27 +97,6 @@ Give A Minute - Project
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 
-	<div class='modal-content invite-user'>
-		<div class='step invite-message-step'>
-			<h2>Invite <strong>XXXXXX</strong> To Your Project</h2>
-			<p>You can send a message to XXXXXX telling them more about your new project and why he or she should join (optional).</p>
-			<form action='#' class="form-pane">
-				<div class="fields">
-					<textarea name='invite-message' class='invite-message'></textarea>
-					<span class="charlimit">200</span>
-				</div>
-				<a class='submit rounded-button' href="#">Send</a>
-			</form>
-		</div>
-	
-		<div class='step finish'>
-			<p>Thanks for sending an invitation...</p>
-			<p><img src='/static/images/loader32x32.gif' /></p>
-		</div>
-	
-		<a class='close' href="#"><span>close</span></a>
-	</div>
-
 	<div class="modal-content confirm-delete member-delete">
 		<div class="step">
 			<h2><strong>Delete</strong> this Project Member?</h2>
@@ -167,7 +146,7 @@ Give A Minute - Project
 			app:app,
 			no_user:{
 				source_element:tc.jQ('.modal-content.join-no-user'),
-				init:function(modal,callback){
+				init:function(modal,event_target,callback){
 					
 					if(tc.jQ.isFunction(callback)){
 						callback(modal);
@@ -176,7 +155,7 @@ Give A Minute - Project
 			},
 			user:{
 				source_element:tc.jQ('.modal-content.introduce-yourself'),
-				init:function(modal,callback){
+				init:function(modal,event_target,callback){
 					var modal_merlin;
 					modal_merlin = new tc.merlin(app,{
 						dom:modal.options.element.find('.introduce-yourself'),
@@ -231,9 +210,9 @@ Give A Minute - Project
 			}
 		},function(e,d){
 			if(!e.data.app.app_page.user){
-				e.data.app.components.modal.show(e.data.no_user);
+				e.data.app.components.modal.show(e.data.no_user, e.target);
 			} else {
-				e.data.app.components.modal.show(e.data.user);
+				e.data.app.components.modal.show(e.data.user, e.target);
 			}
 		});
 		
@@ -241,34 +220,64 @@ Give A Minute - Project
 		tc.jQ('a.invite').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.invite-user'),
-			init:function(modal,callback){
+			init:function(modal,event_target,callback){
 				var modal_merlin;
 				modal_merlin = new tc.merlin(app,{
+					name:'ideas_invite',
 					dom:modal.options.element.find('.invite-user'),
-					first_step:'invite-message-step',
+					first_step:'invite-message-info',
+					data:{
+						project_id: null,
+						idea_id: null,
+						message: ""
+					},
 					steps:{
-						'invite-message-step':{
-							selector:'.invite-message-step',
-							validators:{
-								'textarea.invite-message':['max-200']
+						'invite-message-info':{
+							selector:'.invite-message-info',
+							inputs:{
+								invite_message:{
+									selector:'textarea.invite-message',
+									validators:['max-200']
+								}
 							},
 							init:function(merlin,dom){
-								var data;
-								data = {merlin:merlin,dom:dom};
-								dom.find('a.submit').bind('click',data,function(e,d){
+								dom.find(".name").text( tc.jQ(event_target).attr("href").split(",")[2] );
+								
+								dom.find('a.submit').bind('click',{merlin:merlin,dom:dom},function(e,d){
 									e.preventDefault();
 									if(dom.hasClass('invalid')){
 										return;
 									}
-									tc.timer(1000,function(){
-										modal.hide();
-									});
-									e.data.merlin.show_step('finish');
+									e.data.merlin.show_step('invite-message-submit');
+								});
+							},
+							finish: function(merlin, dom) {
+								merlin.options.data = tc.jQ.extend(merlin.options.data, {
+									project_id:merlin.app.app_page.data.project.project_id,
+									idea_id: tc.jQ(event_target).attr("href").split(",")[1],
+									message: merlin.current_step.inputs.invite_message.dom.val()
 								});
 							}
 						},
-						'finish':{
-							selector:'.finish'
+						'invite-message-submit':{
+							selector:'.invite-message-submit',
+							init: function(merlin, dom) {
+								tc.jQ.ajax({
+									type:"POST",
+									url:"/project/invite",
+									data:merlin.options.data,
+									context:merlin,
+									dataType:"text",
+									success: function(data, ts, xhr) {
+										if (data == "False") {
+											return false;
+										}
+										tc.timer(1000, function() {
+											modal.hide();
+										});
+									}
+								})
+							}
 						}
 					}
 				});
@@ -277,7 +286,7 @@ Give A Minute - Project
 				}
 			}
 		},function(e,d){
-			e.data.app.components.modal.show(e.data);
+			e.data.app.components.modal.show(e.data, e.target);
 		});
 		
 		tc.jQ(".members-stack li a.close").bind("click", {
@@ -289,7 +298,7 @@ Give A Minute - Project
 				}
 			}
 		},function(e,d) {
-			e.data.app.components.modal.show(e.data);
+			e.data.app.components.modal.show(e.data, e.target);
 		});
 
 	});

@@ -22,7 +22,7 @@ tc.modal.prototype.init = function(app,options){
 	this.modal = this.options.element.data('overlay');
 }
 
-tc.modal.prototype.show = function(opts){
+tc.modal.prototype.show = function(opts, event_target){
 	tc.util.log('tc.modal.show');
 	function load(me){
 		me.modal.load();
@@ -48,7 +48,7 @@ tc.modal.prototype.show = function(opts){
 		e.data.me.hide();
 	});
 	if(tc.jQ.isFunction(opts.init)){
-		opts.init(this,load);
+		opts.init(this,event_target,load);
 	} else {
 		load(this);
 	}
