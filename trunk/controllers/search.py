@@ -36,6 +36,11 @@ class Search(Controller):
         
         self.template_data['results'] = dict(json = self.json(results), data = results)
         
+        locationData = self.getLocationData()
+    
+        self.template_data['locations_scored'] = self.json(locationData)
+        self.template_data['max_score'] = locationData[0]['score']
+        
         return self.render('search')
             
     def getLocationData(self):
