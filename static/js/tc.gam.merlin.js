@@ -264,6 +264,10 @@ tc.merlin.prototype.handlers = {
 				e.data.me.options.error_indicator.html('<span>Oops! Please correct the fields marked in red.</span>').show();
 			}
 			return;
+		} else {
+			if(e.data.me.options.error_indicator){
+				e.data.me.options.error_indicator.hide();
+			}
 		}
 		if(e.target.className.indexOf('disabled') > 0){
 			return;
@@ -282,6 +286,9 @@ tc.merlin.prototype.handlers = {
 		if(e.target.className.indexOf('has-been-focused') == -1){
 			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text], textarea').val('');
 		}
+		//if(e.data.me.options.error_indicator){
+		//	e.data.me.options.error_indicator.hide();
+		//}
 	},
 	keypress:function(e,d){
 		e.data.me.validate(false);
