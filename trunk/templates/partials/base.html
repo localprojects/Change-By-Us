@@ -16,7 +16,7 @@
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
 		
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-		<!--<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" charset="utf-8" />-->
+		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" charset="utf-8" />
 		<link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
 		<link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" charset="utf-8"/>
 		<link rel="stylesheet" href="/static/css/gam.search.map.css" type="text/css" media="screen" charset="utf-8"/>
@@ -64,7 +64,7 @@
 						</li>
 						<li class="search">
 							<form action='/search' method='GET'>
-								<input type='text' name='terms' value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
+								<input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
 								<input type='submit' value='Search' />
 							</form>
 						</li>
@@ -137,7 +137,7 @@
 					</ul>
 					<div class="search generic-search">
 						<form action='/home' method='GET'>
-							<input type='text' name='terms' value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
+							<input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
 							<input type='submit' id='ft-search-btn' class='ft-search-btn' value='Search' />
 						</form>
 					</div>
@@ -242,8 +242,9 @@
 				
 				{% if d.template_data and d.template_data.user %} app_page.user = {{ d.template_data.user.json }}; {% else %} app_page.user = null; {% endif %}
 				{% if d.template_data and d.template_data.project_user %} app_page.project_user = {{ d.template_data.project_user.json }}; {% else %} app_page.project_user = null; {% endif %}
-				{% if d.locations %} app_page.data.locations = {{ d.locations.json }}; {% else %} app_page.data.locations = null; {% endif %}
-				{% if d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% else %} app_page.data.locations = null; {% endif %}
+				{% if d.locations %} app_page.data.locations = {{ d.locations.json }}; {% endif %}
+				{% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
+				if(!app_page.data.locations){ app_page.data.locations = []; }
 				{% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
 				
 				tc.util.dump(app_page);
