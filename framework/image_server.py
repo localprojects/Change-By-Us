@@ -34,7 +34,10 @@ class ImageServer(Controller):
         if image.format != "PNG":
             log.info("--> converting %s to PNG" % image.format)
         if max_size and (image.size[0] > max_size[0] or image.size[1] > max_size[1]):
-            image = ImageServer.resizeToFit(image, max_size)
+            #image = ImageServer.resizeToFit(image, max_size)
+            image = ImageServer.resizeToMax(image, max_size)
+            image = ImageServer.cropToBox(image, max_size[0])
+        
         if grayscale:
             image = ImageOps.grayscale(image)                
         if thumb_max_size:    
@@ -52,6 +55,21 @@ class ImageServer(Controller):
         #if Config.get('mirror')['active'] and mirror:
         #    Tasks().add(tube=Config.get('mirror')['tube'], data={'image_id': id, 'app': app}, timeout=120)  
         return id
+        
+    #
+    @classmethod
+    def cropToBox(cls, image, max_length):
+        if (image.size[0] > image.size[1]):
+            top = 0
+            left = int(float(image.size[0] - max_length)/float(2))
+        else:
+            top = int(float(image.size[1] - max_length)/float(2))
+            left = 0
+            
+        box = (left, top, left + max_length, top + max_length)
+        
+        return image.crop(box)
+         
         
     # old resize method    
     @classmethod
