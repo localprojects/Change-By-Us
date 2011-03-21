@@ -34,9 +34,8 @@ class ImageServer(Controller):
         if image.format != "PNG":
             log.info("--> converting %s to PNG" % image.format)
         if max_size and (image.size[0] > max_size[0] or image.size[1] > max_size[1]):
-            #image = ImageServer.resizeToFit(image, max_size)
-            image = ImageServer.resizeToMax(image, max_size)
-            image = ImageServer.cropToBox(image, max_size[0])
+            image = ImageServer.cropToBox(image)
+            image = image.resize(max_size)
         
         if grayscale:
             image = ImageOps.grayscale(image)                
@@ -58,11 +57,13 @@ class ImageServer(Controller):
         
     #
     @classmethod
-    def cropToBox(cls, image, max_length):
+    def cropToBox(cls, image):
         if (image.size[0] > image.size[1]):
+            max_length = image.size[1]
             top = 0
             left = int(float(image.size[0] - max_length)/float(2))
         else:
+            max_length = image.size[0]
             top = int(float(image.size[1] - max_length)/float(2))
             left = 0
             
