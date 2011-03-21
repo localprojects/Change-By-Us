@@ -570,6 +570,10 @@ Give A Minute - Home
 						var i, temphtml;
 						
 						if(merlin.current_step.step_data){
+							if(!merlin.current_step.step_data.related.length && !merlin.current_step.step_data.citywide.length){
+								window.location.hash = 'related-not-found';
+								return;
+							}
 							if(!merlin.current_step.step_data.related.length){
 								dom.find('.related-projects').hide();
 								dom.find('.citywide-projects').addClass('single');
