@@ -1,3 +1,4 @@
+{% if d.template_data.project_user.data.is_member == True or d.template_data.project.data.info.resources.links['items']|length > 0 or d.template_data.project.data.info.resources.organizations['items']|length > 0 %}
 <div class="box resources">
 	<div class="hd clearfix">
 		<h2>
@@ -11,12 +12,12 @@
 		<p class="hint">The resources listed below are separate entities not run by the Give a Minute Projects but used by this Project</p>
 		
 		<!-- begin .external-links -->
+		{% if d.template_data.project_user.data.is_member == True or d.template_data.project.data.info.resources.links['items']|length > 0 %}
 		<div class="external-links">
 			<div class="sub-hd">
 				<h3>External Links</h3>
 			</div>
 			
-			{% if d.project_user.data.is_member or d.template_data.project.data.info.resources.links|length > 0 %}
 			<div class="sub-bd" style="{% if d.template_data.project.data.info.resources.links['items']|length == 0 %}display:none;{% endif %}">
 				<table class="resources-list doublewide">
 					<tbody>
@@ -45,7 +46,7 @@
 					</tbody>
 				</table>
 			</div>
-			{% endif %}
+			
 			
 			<div class="sub-ft clearfix" style="{% if d.template_data.project.data.info.resources.links['items']|length == 0 %}display:none;{% endif %}">
 				<a href="#show,add_link" class="rounded-button small add-link">Add a Link</a>
@@ -59,9 +60,11 @@
 				</div>
 			</div>
 		</div>
+		{% endif %}
 		<!-- end .external-links -->
 		
 		<!-- begin .organizations -->
+		{% if d.template_data.project_user.data.is_member == True or d.template_data.project.data.info.resources.organizations['items']|length > 0 %}
 		<div class="organizations">
 			<div class="sub-hd">
 				<h3>Organizations</h3>
@@ -109,6 +112,7 @@
 			</div>
 			
 		</div>
+		{% endif %}
 		<!-- end .organizations -->
 		
 	</div>
@@ -133,6 +137,7 @@
 		</dl>
 	</div>
 </div>
+{% endif %}
 
 <script>
 	if(!tc){ var tc = {}; }
@@ -159,6 +164,4 @@
 			hide:widget.hide
 		};
 	};
-
-	
 </script>
