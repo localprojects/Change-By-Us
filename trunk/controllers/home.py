@@ -12,6 +12,8 @@ class Home(Controller):
                                           
         if (not action or action == 'home'):
             return self.showHome()
+        elif (action == 'mobile'):
+            return self.showMobile()
         elif (action == 'project'):
             return self.showProject(page)                                        
         else:
@@ -48,6 +50,11 @@ class Home(Controller):
         self.template_data['all_ideas'] = allIdeas
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
+        
+    def showMobile(self):
+        locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = self.json(mLocation.getSimpleLocationDictionary(self.db)))
+        self.template_data['locations'] = locations
+        return self.render('mobile')
         
     def showProject(self, projectId):
         if (not projectId or projectId == -1):
