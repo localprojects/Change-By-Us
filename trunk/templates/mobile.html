@@ -5,8 +5,8 @@
 <div class='merlin mobile clearfix'>
 
 	<ul class="nav clearfix">
-		<li><a class="current" href="#mobile,add-idea">Add an Idea</a></li>
-		<li><a href="#mobile,join">Join a Project</a></li>
+		<li><a class="current" href="#mobile,idea-merlin">Add an Idea</a></li>
+		<li><a href="#mobile,featured">Join a Project</a></li>
 	</ul>
 	<ul class="page step add-idea merlin">
 		<li class="step idea">
@@ -269,26 +269,48 @@
 			dom:tc.jQ('.merlin.mobile'),
 			first_step:'idea',
 			steps:{
-				'idea':{
+				'idea-merlin':{
 					selector:'.step.add-idea',
 					init:function(){
-						window.location.hash = 'idea-submission,idea'
+						window.scroll(0,0);
+						window.location.hash = 'idea-submission,idea';
 					}
 				},
 				'related':{
-					selector:'.step.join-list-related'
+					selector:'.step.join-list-related',
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					}
+				},
+				'featured':{
+					selector:'.step.join-list-related',
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					}
 				},
 				'invited':{
-					selector:'.step.join-list-invite'
+					selector:'.step.join-list-invite',
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					}
 				},
 				'joined':{
-					selector:'.step.join-list-joined'
+					selector:'.step.join-list-joined',
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					}
 				},
 				'login':{
-					selector:'.step.login'
+					selector:'.step.login',
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					}
 				},
 				'join':{
-					selector:'.step.signup'
+					selector:'.step.signup',
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					}
 				}
 			}
 		});
@@ -319,6 +341,10 @@
 							}
 						}
 					},
+					init:function(merlin,dom){
+						window.scroll(0,0);
+						tc.util.dump('HERE');
+					},
 					finish:function(merlin,dom){
 						merlin.options.data.text = merlin.current_step.inputs.idea.dom.val();
 					}
@@ -334,7 +360,7 @@
 						}
 					},
 					init:function(merlin,dom){
-						
+						window.scroll(0,0);
 					},
 					finish:function(merlin,dom){
 						merlin.options.data.email = merlin.current_step.inputs.email.dom.val();
@@ -354,6 +380,7 @@
 						locationDropdown:null
 					},
 					init:function(merlin,dom){
+						window.scroll(0,0);
 						if(!merlin.current_step.step_data.locationDropdown){
 							merlin.current_step.step_data.locationDropdown = new tc.locationDropdown({
 								radios:dom.find('input[type=radio]'),
@@ -383,7 +410,7 @@
 									return false;
 								}
 								tc.util.dump(data);
-								window.location.hash = 'mobile,related-ideas'
+								window.location.hash = 'mobile,related'
 							}
 						});
 					}

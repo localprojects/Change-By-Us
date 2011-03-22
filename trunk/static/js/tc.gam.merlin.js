@@ -81,11 +81,11 @@ tc.merlin.prototype.handle_steps = function(){
 	}
 }
 
-tc.merlin.prototype.show_step = function(step){
+tc.merlin.prototype.show_step = function(step,force){
 	tc.util.log('tc.merlin.show_step['+step+']');
 	var i, j, temp_e_data;
 	
-	if(this.current_step){
+	if(this.current_step && !force){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
 		
 		if(step == this.current_step.step_name){
@@ -95,6 +95,7 @@ tc.merlin.prototype.show_step = function(step){
 			this.current_step.finish(this,this.current_step.dom);
 		}
 	}
+	
 	if(!this.options.steps[step]){
 		return;
 	}
@@ -169,13 +170,13 @@ tc.merlin.prototype.show_step = function(step){
 		}
 	}
 	
-	if(tc.jQ.isFunction(this.current_step.init)){
-		this.current_step.init(this,this.current_step.dom);
-	}
 	if(this.options.name){
 		window.location.hash = this.options.name+','+step;
 	} else {
 		window.location.hash = step;
+	}
+	if(tc.jQ.isFunction(this.current_step.init)){
+		this.current_step.init(this,this.current_step.dom);
 	}
 	this.validate(false);
 	this.current_step.has_been_initialized = true;
@@ -223,20 +224,22 @@ tc.merlin.prototype.validate = function(on_submit){
 
 tc.merlin.prototype.handlers = {
 	hashchange:function(e,d){
-		tc.util.log('tc.merlin.handlers.hashchange');
-		var hash;
+		tc.util.log('tc.merlin.handlers.hashchange['+window.location.hash+']');
+		var hash, force;
 		hash = window.location.hash.substring(1,window.location.hash.length);
-		
+		force = false;
 		if(e.data.me.options.name){
 			if(hash.split(',')[0] != e.data.me.options.name){
+				e.data.me.current_hash = null;
 				return;
 			}
 			hash = hash.split(',')[1];
+			force = true;
 		}
 		
 		if(e.data.me.current_hash != hash){
 			e.data.me.current_hash = hash;
-			e.data.me.show_step(e.data.me.current_hash);
+			e.data.me.show_step(e.data.me.current_hash,force);
 		}
 	},
 	indicator_click:function(e,d){
