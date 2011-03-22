@@ -105,7 +105,7 @@ tc.locationDropdown.prototype.bindEvents = function(){
 tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	//tc.util.log('tc.locationDropdown.inputFocusHandler');
 	if(this.options.radios){
-		this.options.radios.filter('#location-hood').attr('checked',true);
+		this.options.radios.filter('.location-hood').attr('checked',true);
 	}
 };
 

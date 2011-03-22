@@ -5,7 +5,7 @@
 		<title>{% block title %}Give A Minute{% endblock title %}</title>
 		
 		<meta name="viewport" content="width=device-width" />
-		
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 		
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
 		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" charset="utf-8" />
@@ -13,6 +13,7 @@
 		
 		<script>
 			var app_page = {
+				data:{},
 				features:[]
 			};
 		</script>
@@ -25,11 +26,11 @@
 			<div class='stratosphere'>
 				<ul class="clearfix">
 					<li class="home">
-						<a href="/"><span>NYC SimpliCity | Give A Minute</span></a>
+						<a href="/mobile"><span>NYC SimpliCity | Give A Minute</span></a>
 					</li>
 					<li class="userland">
-						<div class='login'><a href='/login'>Login</a></div>
-						<div class="join"><a href='/join'>Join</a></div>
+						<div class='login'><a href='#mobile,login'>Login</a></div>
+						<div class="join"><a href='#mobile,join'>Join</a></div>
 					</li>
 				</ul>
 			</div>
@@ -44,7 +45,16 @@
 		<script src="/static/js/libs/jquery-1.5.1.js"></script>
 		<script src="/static/js/libs/tc.util.js"></script>
 		
+		<script src="/static/js/tc.gam.validate.js"></script>
+		<script src="/static/js/tc.gam.merlin.js"></script>
+		<script src="/static/js/tc.gam.locationDropdown.js"></script>
+		
 		<script src="/static/js/tc.gam.app.js"></script>
+		
+		
+		{% block page_js %}{% endblock %}
+		
+		
 		<script>
 			$(document).one('ready',function(){
 				

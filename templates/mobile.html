@@ -2,23 +2,23 @@
 
 {% block continent %}
 
-<div class='merlin clearfix'>
+<div class='merlin mobile clearfix'>
 
 	<ul class="nav clearfix">
-		<li><a class="current" href="#">Add an Idea</a></li>
-		<li><a href="#">Join a Project</a></li>
+		<li><a class="current" href="#mobile,add-idea">Add an Idea</a></li>
+		<li><a href="#mobile,join">Join a Project</a></li>
 	</ul>
-	<ul class="page add-idea">
-		<li class="step">
+	<ul class="page step add-idea merlin">
+		<li class="step idea">
 			<div class="console">
 				<span class="hey"><span>Hey NYC!</span></span>
 				<span class="console-message"><span></span>How can we green our neighborhoods?</span>
 			</div>
 			<div class="idea-input">
-		
+				
 				<div class="row">
 					<!--<label>What's your idea?</label>-->
-					<textarea></textarea>
+					<textarea class='idea'></textarea>
 					<div class="char-count">200</div>
 				</div>
 				<div class="primary-action">
@@ -31,8 +31,8 @@
 				</div>
 			</div>
 		</li>
-
-		<li class="step user-details">
+		
+		<li class="step email-input user-details">
 			<div class="about">
 				<p class="m18"><strong>Thanks for your idea!</strong></p>
 				<p class="m18">We need a little more information.</p>
@@ -41,7 +41,7 @@
 				
 				<div class="row">
 					<label for='email'>E-mail</label>
-					<input value='' type='email' name='email' id='email' class='email' tabindex='3'/>
+					<input value='' type='email' name='email' class='email' tabindex='3'/>
 				</div>
 				<div class="primary-action">
 					<a class="ca-btn" href="#">
@@ -50,23 +50,29 @@
 				</div>
 			</div>
 		</li>
-
-		<li class="step idea-location">
+		
+		<li class="step location idea-location">
 			<div class="about">
 				<p class="m18"><strong>Where is your idea located?</strong></p>
 			</div>
 			<div class="location-input">
 				<div class="row">
-						<input type='radio' name='city' id='city' class='tos-user-info'/>
+						<input type='radio' name='city' id='city' class='location-group location-city'/>
 						<label class="tos-user-info-label" for='city'>It's for the whole city</label>
 				</div>
 				<div class="row">
-						<input type='radio' name='city' id='city' class='tos-user-info'/>
+						<input type='radio' name='city' id='city' class='location-group location-hood'/>
 						<label class="tos-user-info-label" for='city'>It's for a specific neighborhood</label>
 				</div>
-		
 				<div class="row">
-					<input value='' type='text' name='neighborhood' id='neighborhood' class='neighborhood' tabindex='2'/>
+					<input value='' type='text' name='neighborhood' id='neighborhood' class='location-group neighborhood location-hood-enter' tabindex='2'/>
+					<div class="location-hood-list">
+						<ul>
+							<li><strong>So</strong>Ho</li>
+							<li><strong>So</strong>uth Bronx</li>
+						</ul>
+					</div>
+					<span class="error">Please try entering a neighborhood name, or a nearby borough.</span>
 				</div>
 				<div class="row">
 					<p><strong>Ex.</strong> East Village, Bronx, Harlem, etc.</p>
@@ -78,8 +84,14 @@
 				</div>
 			</div>
 		</li>
+		
+		<li class="step finish">
+			<p>Thank you for your idea</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</li>
 	</ul>
-	<div class="page join-list">
+	
+	<div class="page step join-list join-list-related">
 		<div class="about">
 			<p class="m24"><strong>Be a part of the solution.</strong></p> 
 			<p class="m18">Join a project or <strong>visit the full site</strong> to start your own.</p>
@@ -116,7 +128,7 @@
 		</div>
 	</div>
 
-	<div class="page join-list">
+	<div class="page step join-list join-list-invite">
 		<div class="about">
 			<p class="m28"><strong>You've been invited to join a project!</strong></p>
 		</div>
@@ -146,7 +158,7 @@
 		</div>
 	</div>
 	
-	<div class="page join-list">
+	<div class="page step join-list join-list-joined">
 		<div class="about">
 			<p class="m28"><strong>Thanks, you've joined:</strong></p>
 		</div>
@@ -175,7 +187,7 @@
 		</div>
 	</div>
 
-	<div class="page login">
+	<div class="page login step">
 		<div class="about">
 			<p class="m24"><strong>Give a minute is a place to make your city better.</strong> </p>
 			<p>Share your ideas. Build projects. Make a change.</p>
@@ -214,7 +226,7 @@
 		</div>
 	</div>
 	
-	<div class="page signup">
+	<div class="page signup step">
 		<div class="about">
 			<p class="m24"><strong>Give a minute is a place to make your city better.</strong> </p>
 			<p>Share your ideas. Build projects. Make a change.</p>
@@ -227,7 +239,6 @@
 					<p class="mid-strong">SIGN UP</p>
 					<a href='' class='login-facebook west'><span>Facebook</span></a>
 					<a href='' class='login-twitter west'><span>Twitter</span></a>
-					
 				</div>
 			
 			</div>
@@ -245,4 +256,143 @@
 {% endblock continent %}
 
 
-{% block page_js %}{% endblock page_js %}
+{% block page_js %}
+<script>
+	
+	{% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
+	
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Mobile');
+		
+		app.components.idea_submission = new tc.merlin(app,{
+			name:'mobile',
+			dom:tc.jQ('.merlin.mobile'),
+			first_step:'idea',
+			steps:{
+				'idea':{
+					selector:'.step.add-idea',
+					init:function(){
+						window.location.hash = 'idea-submission,idea'
+					}
+				},
+				'related':{
+					selector:'.step.join-list-related'
+				},
+				'invited':{
+					selector:'.step.join-list-invite'
+				},
+				'joined':{
+					selector:'.step.join-list-joined'
+				},
+				'login':{
+					selector:'.step.login'
+				},
+				'join':{
+					selector:'.step.signup'
+				}
+			}
+		});
+			
+		
+		app.components.idea_submission = new tc.merlin(app,{
+			name:'idea-submission',
+			dom:tc.jQ('.merlin.add-idea'),
+			next_button:tc.jQ('a.ca-btn'),
+			first_step:'idea',
+			data:{
+				text:null,
+				email:null,
+				location_id:null
+			},
+			steps:{
+				'idea':{
+					selector:'.step.idea',
+					prev_step:null,
+					next_step:'email',
+					inputs:{
+						idea:{
+							selector:'textarea.idea',
+							validators:['min-3','max-180','required'],
+							counter:{
+								selector:'.char-count',
+								limit:200
+							}
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data.text = merlin.current_step.inputs.idea.dom.val();
+					}
+				},
+				'email':{
+					selector:'.step.email-input',
+					prev_step:'start',
+					next_step:'location',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-32','email']
+						}
+					},
+					init:function(merlin,dom){
+						
+					},
+					finish:function(merlin,dom){
+						merlin.options.data.email = merlin.current_step.inputs.email.dom.val();
+					}
+				},
+				'location':{
+					selector:'.step.location',
+					prev_step:'email',
+					next_step:'finish',
+					inputs:{
+						location:{
+							selector:'.location-group',
+							validators:tc.locationDropdown.validator
+						}
+					},
+					step_data:{
+						locationDropdown:null
+					},
+					init:function(merlin,dom){
+						if(!merlin.current_step.step_data.locationDropdown){
+							merlin.current_step.step_data.locationDropdown = new tc.locationDropdown({
+								radios:dom.find('input[type=radio]'),
+								input:dom.find('input.location-hood-enter'),
+								list:dom.find('div.location-hood-list'),
+								warning:dom.find('span.error'),
+								locations:merlin.app.app_page.data.locations
+							});
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data.location_id = merlin.current_step.step_data.locationDropdown.getLocation();
+					}
+				},
+				'finish':{
+					selector:'.step.finish',
+					init:function(merlin,dom){
+						tc.util.dump('----ifnishing');
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/idea',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								tc.util.dump(data);
+								window.location.hash = 'mobile,related-ideas'
+							}
+						});
+					}
+				}
+			}
+		});
+		
+	});
+	
+</script>
+
+{% endblock page_js  %}
