@@ -38,7 +38,7 @@
 				<!-- End Members.Stack -->
 			{% else %}
 				
-				{% if d.template_data.project_user.data.is_project_admin %}
+				{% if d.template_data.project_user.data.is_member or d.template_data.project_user.data.is_project_admin %}
 					<!-- Begin Members.Empty -->
 					<div class="empty-state-box">
 						<a class="close" href="#"><span>Close</span></a>
@@ -52,120 +52,120 @@
 		
 		</div>
 		<div class="east">
-		
-			<!-- Begin Members.email-invite -->
-			<div class="email-invite merlin">
+			
+				<!-- Begin Members.email-invite -->
+				<div class="email-invite merlin" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
 				
-				<div class='step email-invite-info'>
-					<div class="sub-hd">
-						<h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
-					</div>
-					<div class="sub-bd form-pane">
-						<div class="fields">
-							<div class="row clearfix">
-								<textarea class='email-list'></textarea>
+					<div class='step email-invite-info'>
+						<div class="sub-hd">
+							<h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
+						</div>
+						<div class="sub-bd form-pane">
+							<div class="fields">
+								<div class="row clearfix">
+									<textarea class='email-list'></textarea>
+								</div>
 							</div>
 						</div>
-					</div>
 					
-					<div class="sub-hd" style='padding-top:0px;'>
-						<h3 class="fancy-caps">Add <span>a</span> Message</h3>
-					</div>
-					<div class="sub-bd form-pane">
-						<div class="fields">
-							<div class="row clearfix" style='margin-top:0px;'>
-								<textarea class='email-message'></textarea>
-							</div>
-							<div class='row clearfix' style='margin-top:0px;'>
-								<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+						<div class="sub-hd" style='padding-top:0px;'>
+							<h3 class="fancy-caps">Add <span>a</span> Message</h3>
+						</div>
+						<div class="sub-bd form-pane">
+							<div class="fields">
+								<div class="row clearfix" style='margin-top:0px;'>
+									<textarea class='email-message'></textarea>
+								</div>
+								<div class='row clearfix' style='margin-top:0px;'>
+									<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 				
-				<div class='step email-invite-message' style='display:none;'>
-					<div class="sub-hd">
-						<h3 class="fancy-caps">Add <span>a</span> Message</h3>
-					</div>
-					<div class="sub-bd form-pane">
-						<div class="fields">
-							<div class="row clearfix">
-								<textarea class='email-message'></textarea>
-							</div>
-							<div class='row clearfix' style='margin-top:0px;'>
-								<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+					<div class='step email-invite-message' style='display:none;'>
+						<div class="sub-hd">
+							<h3 class="fancy-caps">Add <span>a</span> Message</h3>
+						</div>
+						<div class="sub-bd form-pane">
+							<div class="fields">
+								<div class="row clearfix">
+									<textarea class='email-message'></textarea>
+								</div>
+								<div class='row clearfix' style='margin-top:0px;'>
+									<input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 				
-				<div class='step email-invite-submit clearfix spinner-message' style='display:none;'>
-					<p>Thank you for inviting more users!</p>
-					<p><img src='/static/images/loader32x32.gif' /></p>
-				</div>
+					<div class='step email-invite-submit clearfix spinner-message' style='display:none;'>
+						<p>Thank you for inviting more users!</p>
+						<p><img src='/static/images/loader32x32.gif' /></p>
+					</div>
 				
-				<div class='step email-invite-error' style='display:none;'>
-					<p>There was an error sending the email invites!</p>
-				</div>
+					<div class='step email-invite-error' style='display:none;'>
+						<p>There was an error sending the email invites!</p>
+					</div>
 				
-			</div>
-			<!-- End Members.email-invite -->
+				</div>
+				<!-- End Members.email-invite -->
 		
-			<!-- Begin Members.ideas-invite -->
-			<div class="ideas-invite">
-				<div class="sub-hd">
-					<h3 class="fancy-caps">Invite People <span>with</span> Similar Ideas</h3>
-					<div class="pagination">
-						<span class="cur-index">0</span> <em>of</em>
-						<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
+				<!-- Begin Members.ideas-invite -->
+				<div class="ideas-invite" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
+					<div class="sub-hd">
+						<h3 class="fancy-caps">Invite People <span>with</span> Similar Ideas</h3>
+						<div class="pagination">
+							<span class="cur-index">0</span> <em>of</em>
+							<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
+						</div>
 					</div>
-				</div>
-				<div class="sub-bd" style="{% if d.template_data.project.data.info.related_ideas['items']|length == 0 %}display:none;{% endif %}">
+					<div class="sub-bd" style="{% if d.template_data.project.data.info.related_ideas['items']|length == 0 %}display:none;{% endif %}">
 					
-					{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
-						<div class="carousel">
-							<div class="scrollable">
-								<ul class="items">
-									{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
-										<li>
-											<div class="note-card-public-controls">
-												<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-												<a href="#"><span class="flag">Flag as Inappropriate</span></a>
-											</div>
-											<div class="note-card">
-												<div class="membrane">
-													<cite class="note-meta-hd">
-														<strong>{{ idea.owner.name }}</strong> says &mdash;
-													</cite>
-													<blockquote>
-														<p>{{ idea.message }}</p>
-													</blockquote>
-													<cite class="note-meta-ft">
-														Posted <strong>{{ idea.created }}</strong>
-													</cite>
+						{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
+							<div class="carousel">
+								<div class="scrollable">
+									<ul class="items">
+										{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
+											<li>
+												<div class="note-card-public-controls">
+													<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+													<a href="#"><span class="flag">Flag as Inappropriate</span></a>
 												</div>
-											</div>
-										</li>
-									{% endfor %}
-								</ul>
+												<div class="note-card">
+													<div class="membrane">
+														<cite class="note-meta-hd">
+															<strong>{{ idea.owner.name }}</strong> says &mdash;
+														</cite>
+														<blockquote>
+															<p>{{ idea.message }}</p>
+														</blockquote>
+														<cite class="note-meta-ft">
+															Posted <strong>{{ idea.created }}</strong>
+														</cite>
+													</div>
+												</div>
+											</li>
+										{% endfor %}
+									</ul>
+								</div>
+								<div class="carousel-controls">
+									<a class="next" href="#">
+										<span>Next</span>
+									</a>
+								</div>
 							</div>
-							<div class="carousel-controls">
-								<a class="next" href="#">
-									<span>Next</span>
-								</a>
-							</div>
-						</div>
-					{% endif %}
+						{% endif %}
 					
-				</div>
+					</div>
 				
-				<div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
-					<!-- <a class="close" href="#"><span>Close</span></a> -->
-					<p>No similar ideas found.</p>
-				</div>
+					<div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
+						<!-- <a class="close" href="#"><span>Close</span></a> -->
+						<p>No similar ideas found.</p>
+					</div>
 				
-			</div>
-			<!-- End Members.ideas-invite -->
+				</div>
+				<!-- End Members.ideas-invite -->
 		
 		</div>
 	</div>
