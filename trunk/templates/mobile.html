@@ -5,8 +5,8 @@
 <div class='merlin mobile clearfix'>
 
 	<ul class="nav clearfix">
-		<li><a class="current" href="#mobile,idea-merlin">Add an Idea</a></li>
-		<li><a href="#mobile,featured">Join a Project</a></li>
+		<li><a class="idea current" href="#mobile,idea-merlin">Add an Idea</a></li>
+		<li><a class='join' href="#mobile,featured">Join a Project</a></li>
 	</ul>
 	<ul class="page step add-idea merlin">
 		<li class="step idea">
@@ -94,7 +94,7 @@
 	<div class="page step join-list join-list-related">
 		<div class="about">
 			<p class="m24"><strong>Be a part of the solution.</strong></p> 
-			<p class="m18">Join a project or <strong>visit the full site</strong> to start your own.</p>
+			<p class="m18">Join a project or <strong><a href='/'>visit the full site</a></strong> to start your own.</p>
 		</div>
 		<div class="projects">
 			<div class="row clearfix">
@@ -228,18 +228,26 @@
 				</div>
 				<span class="login-or">or<span>
 			</div>
-			<div class="row">
-				<label for='email'>E-mail Address</label>
-				<input value='' type='email' name='f_name' id='f_name' class='f_name' tabindex='1'/>
-			</div>
-			<div class="row">
-				<label for='email'>Password</label>
-				<input value='' type='password' name='l_name' id='l_name' class='l_name' tabindex='2'/>
-				<p class="light">Forgot your password?</p>
-			</div>
-			<div class="row">
-				<p class="signup"><a href="#">Click Here</a> to create a traditional login</p>
-				<a class="submit" href="#">Submit</a>
+			<div class='merlin mobile-login'>
+				<div class='step inputs'>
+					<div class="row">
+						<label for='email'>E-mail Address</label>
+						<input value='' type='email' name='email' id='email' class='email' tabindex='1'/>
+					</div>
+					<div class="row">
+						<label for='email'>Password</label>
+						<input value='' type='password' name='password' id='password' class='password' tabindex='2'/>
+						<p class="light">Forgot your password?</p>
+					</div>
+					<div class="row">
+						<p class="signup"><a href="/join">Click Here</a> to create a traditional login</p>
+						<a class="submit" href="#mobile-login,finish">Submit</a>
+					</div>
+				</div>
+				<div class='step finish clearfix spinner-message' style='display:none;'>
+					<p>Thanks for logging in...</p>
+					<p><img class="loading" src='/static/images/loader32x32.gif' /></p>
+				</div>
 			</div>
 			<!--
 			<div class="primary-action">
@@ -268,7 +276,7 @@
 			</div>
 			
 			<div class="row">
-				<p class="signup"><a href="#">Click Here</a> to sign up on the full website without Facebook or Twitter</p>
+				<p class="signup"><a href="/join">Click Here</a> to sign up on the full website without Facebook or Twitter</p>
 			</div>
 		</div>
 	</div>
@@ -295,27 +303,31 @@
 			steps:{
 				'idea-merlin':{
 					selector:'.step.add-idea',
-					init:function(){
+					init:function(merlin,dom){
 						window.scroll(0,0);
 						window.location.hash = 'idea-submission,idea';
+						merlin.dom.children('.nav').find('.idea').addClass('current').parent().siblings().children('a').removeClass('current');
 					}
 				},
 				'related':{
 					selector:'.step.join-list-related',
 					init:function(merlin,dom){
 						window.scroll(0,0);
+						merlin.dom.siblings('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
 					}
 				},
 				'featured':{
 					selector:'.step.join-list-related',
 					init:function(merlin,dom){
 						window.scroll(0,0);
+						merlin.dom.children('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
 					}
 				},
 				'invited':{
 					selector:'.step.join-list-invite',
 					init:function(merlin,dom){
 						window.scroll(0,0);
+						merlin.dom.children('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
 					}
 				},
 				'joined':{
@@ -328,6 +340,7 @@
 					selector:'.step.login',
 					init:function(merlin,dom){
 						window.scroll(0,0);
+						window.location.hash = 'mobile-login,inputs';
 					}
 				},
 				'join':{
@@ -338,7 +351,6 @@
 				}
 			}
 		});
-			
 		
 		app.components.idea_submission = new tc.merlin(app,{
 			name:'idea-submission',
@@ -435,6 +447,62 @@
 								}
 								tc.util.dump(data);
 								window.location.hash = 'mobile,related'
+							}
+						});
+					}
+				}
+			}
+		});
+		
+		
+		app.components.mobile_login = new tc.merlin(app,{
+			name:'mobile-login',
+			dom:tc.jQ('.merlin.mobile-login'),
+			next_step:tc.jQ(''),
+			first_step:'inputs',
+			data:{
+				email:null,
+				password:null
+			},
+			steps:{
+				'inputs':{
+					selector:'.step.inputs',
+					next_step:'finish',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-180','email']
+						},
+						password:{
+							selector:'input.password',
+							validators:['min-3','max-180']
+						}
+					},
+					init:function(merlin,dom){
+						window.scroll(0,0);
+					},
+					finish:function(merlin,dom){
+						merlin.options.data.email = merlin.current_step.inputs.email.dom.val();
+						merlin.options.data.password = merlin.current_step.inputs.password.dom.val();
+						tc.util.dump(merlin.options.data);
+					}
+				},
+				'finish':{
+					selector:'.step.finish',
+					init:function(merlin,dom){
+						tc.util.dump('----ifnishing');
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/login',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									window.location.hash = 'login-failure';
+									return;
+								}
+								window.location.hash = 'mobile,featured';
 							}
 						});
 					}

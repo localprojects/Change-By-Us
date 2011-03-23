@@ -85,12 +85,20 @@ tc.merlin.prototype.show_step = function(step,force){
 	tc.util.log('tc.merlin.show_step['+step+']');
 	var i, j, temp_e_data;
 	
+	tc.util.dump(step);
+	
 	if(this.current_step && !force){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
+		tc.util.dump(this.current_step.step_name);
 		
 		if(step == this.current_step.step_name){
 			return;
 		}
+		if(tc.jQ.isFunction(this.current_step.finish)){
+			this.current_step.finish(this,this.current_step.dom);
+		}
+	}
+	if(force){
 		if(tc.jQ.isFunction(this.current_step.finish)){
 			this.current_step.finish(this,this.current_step.dom);
 		}
@@ -225,21 +233,19 @@ tc.merlin.prototype.validate = function(on_submit){
 tc.merlin.prototype.handlers = {
 	hashchange:function(e,d){
 		tc.util.log('tc.merlin.handlers.hashchange['+window.location.hash+']');
-		var hash, force;
+		var hash;
 		hash = window.location.hash.substring(1,window.location.hash.length);
-		force = false;
 		if(e.data.me.options.name){
 			if(hash.split(',')[0] != e.data.me.options.name){
 				e.data.me.current_hash = null;
 				return;
 			}
 			hash = hash.split(',')[1];
-			force = true;
-		}
-		
-		if(e.data.me.current_hash != hash){
 			e.data.me.current_hash = hash;
-			e.data.me.show_step(e.data.me.current_hash,force);
+			e.data.me.show_step(e.data.me.current_hash,true);
+		} else if(e.data.me.current_hash != hash){
+			e.data.me.current_hash = hash;
+			e.data.me.show_step(e.data.me.current_hash,false);
 		}
 	},
 	indicator_click:function(e,d){
