@@ -89,16 +89,17 @@ tc.merlin.prototype.show_step = function(step,force){
 	
 	if(this.current_step && !force){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
-		tc.util.dump(this.current_step.step_name);
 		
 		if(step == this.current_step.step_name){
 			return;
 		}
-		if(tc.jQ.isFunction(this.current_step.finish)){
-			this.current_step.finish(this,this.current_step.dom);
+		if(this.current_step){
+			if(tc.jQ.isFunction(this.current_step.finish)){
+				this.current_step.finish(this,this.current_step.dom);
+			}
 		}
 	}
-	if(force){
+	if(force && this.current_step){
 		if(tc.jQ.isFunction(this.current_step.finish)){
 			this.current_step.finish(this,this.current_step.dom);
 		}
