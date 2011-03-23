@@ -28,10 +28,16 @@
 					<li class="home">
 						<a href="/mobile"><span>NYC SimpliCity | Give A Minute</span></a>
 					</li>
+					{% if d.template_data and d.template_data.user %}
+					<li class="userland">
+						<div class='logout'><a href='#mobile,logout'>Logout</a></div>
+					</li>
+					{% else %}
 					<li class="userland">
 						<div class='login'><a href='#mobile,login'>Login</a></div>
 						<div class="join"><a href='#mobile,join'>Join</a></div>
 					</li>
+					{% endif %}
 				</ul>
 			</div>
 		</div>
@@ -44,9 +50,11 @@
 		
 		<script src="/static/js/libs/jquery-1.5.1.js"></script>
 		<script src="/static/js/libs/tc.util.js"></script>
+		<script src="/static/js/libs/jqtools.scrollable.js"></script>
 		
 		<script src="/static/js/tc.gam.validate.js"></script>
 		<script src="/static/js/tc.gam.merlin.js"></script>
+		<script src="/static/js/tc.gam.carousel.js"></script>
 		<script src="/static/js/tc.gam.locationDropdown.js"></script>
 		
 		<script src="/static/js/tc.gam.app.js"></script>
@@ -58,7 +66,7 @@
 		<script>
 			$(document).one('ready',function(){
 				
-				tc.util.dump(window.outerWidth)
+				{% if d.template_data and d.template_data.user %} app_page.user = {{ d.template_data.user.json }}; {% else %} app_page.user = null; {% endif %}
 				
 				tc.jQ('.step').css('width',window.outerWidth-30+'px').show();
 				

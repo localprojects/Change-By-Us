@@ -12,8 +12,6 @@ tc.app.prototype.init = function(page){
 	_me = this;
 	this.app_page = page;
 	
-	tc.util.dump(page);
-	
 	if(page.features){
 		for(i in page.features){
 			
