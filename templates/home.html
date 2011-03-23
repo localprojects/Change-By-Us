@@ -100,7 +100,7 @@ Give A Minute - Home
 									</div>
 									<div class="bd">
 										{% for idea in d.template_data.all_ideas.data[0].ideas %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[0].project_id }}'><span><cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[0].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 										{% endfor %}
 									</div>
 								</div>
@@ -114,7 +114,7 @@ Give A Minute - Home
 									</div>
 									<div class="bd">
 										{% for idea in d.template_data.all_ideas.data[1].ideas %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[1].project_id }}'><span><cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[1].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 										{% endfor %}
 									</div>
 								</div>
@@ -124,7 +124,7 @@ Give A Minute - Home
 									</div>
 									<div class="bd">
 										{% for idea in d.template_data.all_ideas.data[2].ideas %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[2].project_id }}'><span><cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[2].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 										{% endfor %}
 									</div>
 								</div>
@@ -134,7 +134,7 @@ Give A Minute - Home
 									</div>
 									<div class="bd">
 										{% for idea in d.template_data.all_ideas.data[3].ideas %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[3].project_id }}'><span><cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[3].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 										{% endfor %}
 									</div>
 								</div>
@@ -144,7 +144,7 @@ Give A Minute - Home
 									</div>
 									<div class="bd">
 										{% for idea in d.template_data.all_ideas.data[4].ideas %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[4].project_id }}'><span><cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[4].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 										{% endfor %}
 									</div>
 								</div>
@@ -222,11 +222,13 @@ Give A Minute - Home
 			<div class="note-card-pane">
 				<div class="membrane">
 					<div class="note-card-splash">
+						{% if d.template_data.all_ideas.data[0].ideas[0].f_name %}
 						<cite class="note-meta-hd">
-							<strong>You</strong> said &mdash;
+							<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> said &mdash;
 						</cite>
+						{% endif %}
 						<blockquote>
-							<p>More Trees in New York City would be awesome and it would totally help to make it way more green! Let's plant some!</p>
+							<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
 						</blockquote>
 					</div>
 				</div>
