@@ -31,7 +31,7 @@ tc.modal.prototype.show = function(opts, event_target){
 	content = "";
 	tc.util.dump(opts.source_element);
 	if(opts.source_element){
-		content = opts.source_element.clone();
+		content = opts.source_element.clone().removeClass("template-content");
 	}
 	if(opts.tempate){
 		if(opts.tempate instanceof String){
