@@ -133,7 +133,16 @@ where u.user_id = $id"""
     def getActivityDictionary(self):
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
-                    messages = self.getMessages(10, 0))
+                    messages = self.getMessages(10, 0),
+                    user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId))
+                    
+        return data
+        
+    # data for other users accessing a user's profile/account page
+    def getProfileActivityDictionary(self):
+        data = dict(projects = self.getProjects(),
+                    ideas = self.getIdeas(),
+                    user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId))
                     
         return data
         
