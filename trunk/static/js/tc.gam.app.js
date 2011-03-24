@@ -25,8 +25,8 @@ tc.app.prototype.init = function(page){
 		}
 	}
 	
-	tc.jQ(window).bind('hashchange',{app:this}, function(){
-		if(window.location.hash.substring(1,window.location.hash.length) == 'logout'){
+	tc.jQ(window).bind('hashchange',{app:this}, function(e){
+		if(window.location.hash.substring(1,window.location.hash.length) === 'logout'){
 			tc.jQ.ajax({
 				type:'POST',
 				url:'/logout',
@@ -34,7 +34,13 @@ tc.app.prototype.init = function(page){
 				dataType:'text',
 				success:function(data,ts,xhr){
 					window.location.hash = '';
-					location.reload(true);
+					if (window.location.pathname === "/useraccount") {
+						if (e.data.app.app_page.user) {
+							window.location.assign("/useraccount/"+ e.data.app.app_page.user.u_id);
+							return;
+						}
+					}
+					window.location.reload(true);
 				}
 			});
 		}
