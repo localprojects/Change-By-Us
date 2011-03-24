@@ -1,4 +1,6 @@
 import hashlib
+import giveaminute.project as mProject
+import giveaminute.idea as mIdea
 import framework.util as util
 from framework.log import log
 #from framework.controller import *
@@ -8,7 +10,7 @@ class User():
         self.db = db
         self.id = userId
         self.data = self.populateUserData()
-        self.projectData = self.getUserProjects()
+        self.projectData = self.getUserProjectList()
         
         self.userKey = self.data.user_key
         self.email = self.data.email
@@ -76,7 +78,7 @@ where u.user_id = $id"""
     def updateImage(self, locationId):
         try:
             sql = "update user set location_id = $location_id where user_id = $id"
-            self.db.query(sql, {'id':self.userId, 'location_id':locationId})
+            self.db.query(sql, {'id':self.id, 'location_id':locationId})
             
             return True
         except Exception, e:
@@ -87,7 +89,7 @@ where u.user_id = $id"""
     def updateInfo(self, email, first, last):
         try:
             sql = "update user set first_name = $first, last_name = $last, email = $email where user_id = $id"
-            self.db.query(sql, {'id':self.userId, 'first':first, 'last':last, 'email':email})
+            self.db.query(sql, {'id':self.id, 'first':first, 'last':last, 'email':email})
             
             return True
         except Exception, e:
@@ -95,7 +97,8 @@ where u.user_id = $id"""
             log.error(e)
             return False
             
-    def getUserProjects(self):
+    # get abbreviated data for projects for which user is a member
+    def getUserProjectList(self):
         data = []
         
         try:
@@ -108,6 +111,79 @@ where u.user_id = $id"""
             log.error(e)
             
         return data    
+        
+    def getActivityDictionary(self):
+        data = dict(projects = self.getProjects(),
+                    ideas = self.getIdeas(),
+                    messages = self.getMessages(10, 0))
+                    
+        return data
+        
+    def getProjects(self):
+        return mProject.getProjectsByUser(self.db, self.id)
+    
+    def getIdeas(self):
+        ideas = []
+        
+        try: 
+            data = mIdea.findIdeasByUser(self.db, self.id)
+        
+            if len(data) > 0:
+                for item in data:
+                    ideas.append(mProject.idea(item.idea_id, item.description, item.user_id, item.first_name, item.last_name, item.created_datetime, item.submission_type))
+        except Exception, e:
+            log.info("*** couldn't get user ideas")
+            log.error(e) 
+            
+        return ideas
+        
+    def getMessages(self, limit, offset):
+        messages = []
+    
+        try:
+            sql = """select 
+                        p.project_id,
+                        p.title,
+                        m.project_message_id,
+                        m.message_type,
+                        m.message,
+                        m.created_datetime,
+                        mu.user_id,
+                        mu.first_name,
+                        mu.last_name,
+                        i.idea_id,
+                        i.description as idea_description,
+                        i.submission_type as idea_submission_type,
+                        i.created_datetime as idea_created_datetime
+                    from project_message m
+                    inner join project__user pu on pu.project_id = m.project_id and pu.user_id = $userId
+                    inner join project p on p.project_id = pu.project_id
+                    inner join user mu on mu.user_id = m.user_id
+                    left join idea i on i.idea_id = m.idea_id
+                    where m.is_active = 1
+                    order by m.created_datetime desc
+                    limit $limit offset $offset"""
+            data = list(self.db.query(sql, {'userId':self.id, 'limit':limit, 'offset':offset}))
+            
+            for item in data:
+                messages.append(mProject.userMessage(item.project_message_id, 
+                                        item.message_type, 
+                                        item.message, 
+                                        item.created_datetime, 
+                                        item.user_id, 
+                                        item.first_name, 
+                                        item.last_name, 
+                                        item.idea_id, 
+                                        item.idea_description, 
+                                        item.idea_submission_type, 
+                                        item.idea_created_datetime,
+                                        item.project_id,
+                                        item.title))
+        except Exception, e:
+            log.info("*** couldn't get messages")
+            log.error(e)
+            
+        return messages  
                     
         
 def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
