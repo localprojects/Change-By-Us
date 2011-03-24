@@ -86,16 +86,30 @@ where u.user_id = $id"""
             log.error(e)
             return False
             
-    def updateInfo(self, email, first, last):
+    def updateInfo(self, email, first, last, imageId):
         try:
-            sql = "update user set first_name = $first, last_name = $last, email = $email where user_id = $id"
-            self.db.query(sql, {'id':self.id, 'first':first, 'last':last, 'email':email})
+            if (not imageId):
+                imageId = None
+        
+            sql = "update user set first_name = $first, last_name = $last, email = $email, image_id = $imageId where user_id = $userId"
+            self.db.query(sql, {'userId':self.id, 'first':first, 'last':last, 'email':email, 'imageId':imageId})
             
             return True
         except Exception, e:
             log.info("*** problem updating user info")
             log.error(e)
             return False
+            
+    def setMessagePreferences(self, pref):
+        try:
+            sql = "update user set email_notification = $pref where user_id = $id"
+            self.db.query(sql, {'id':self.id, 'pref':pref})
+            
+            return True
+        except Exception, e:
+            log.info("*** problem updating user message preferences")
+            log.error(e)
+            return False    
             
     # get abbreviated data for projects for which user is a member
     def getUserProjectList(self):
