@@ -33,6 +33,7 @@ ROUTES = (  r'/create/?([^/.]*)', 'controllers.createProject.CreateProject',
             r'/join/?([^/.]*)', 'controllers.join.Join',
             r'/project/?([^/.]*)/?([^/.]*)', 'controllers.project.Project',
             r'/search/?([^/.]*)', 'controllers.search.Search',
+            r'/useraccount/?([^/.]*)', 'controllers.user.UserAccount',
             r'/?([^/.]*)', 'controllers.home.Home' )
 
 if __name__ == "__main__":
