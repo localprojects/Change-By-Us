@@ -11,11 +11,11 @@ Give A Minute - User Account
 
 	</div>
 
-	<div class='midlands merlin tab-view clearfix'>
+	<div class='midlands merlin clearfix'>
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
-					<div class="thumb">						
+					<div class="thumb">
 						{% if d.template_data.user_activity.data.user.image_id %}
 							<img width='30' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
 						{% else %}
@@ -28,18 +28,18 @@ Give A Minute - User Account
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="activity unread"><a href="#activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
+						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
 						
 						{% if d.template_data.user %}
-							<li class="messages"><a href="#messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
-							<li class="account"><a href="#account">Account</a></li>
+							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
+							<li class="account"><a href="#user-account,account">Account</a></li>
 						{% endif %}
 					</ul>
 				</div>
 			</div>
 		</div>
 		<div class="east">
-			<div class="panes">
+			<div>
 			
 				<div class="activity-view step">
 					<div class="box my-projects">
@@ -154,7 +154,8 @@ Give A Minute - User Account
 										{% endif %}
 									{% endfor %}
 									
-									<!--
+									<!-- TODO other messsage types (?)
+									
 									<li class="message-item user-notification">
 										<a class="close" href="#"><span>Close</span></a>
 										<span class="title">You've been invited to the <strong>Green Bklyn</strong> Action Group!</span>
@@ -162,21 +163,6 @@ Give A Minute - User Account
 											<a href="">Click to see action group</a>
 										</div>
 									</li>
-									<li class="message-item">
-										<a class="close" href="#"><span>Close</span></a>
-										<div class="thumb">
-											<img src="http://placehold.it/50x50" alt="" class="avatar"/>
-										</div>
-										<div class="main">
-											<div class="meta">
-												<cite class="sender">Jake B.</cite>
-												<cite>02.04.2011 at 5:00pm</cite>
-											</div>
-											<blockquote class="excerpt">
-												<p>We should bring a projector and a MacBook Air to the meetings&hellip;</p>
-											</blockquote>
-										</div>
-									</li>-->
 									<!--<li class="message-item user-prompt">
 										<a class="close" href="#"><span>Close</span></a>
 										<h4>Sasha wants to join your Action Group!</h4>
@@ -193,6 +179,7 @@ Give A Minute - User Account
 											<a href="">Click to see action group</a>
 										</div>
 									</li>-->
+									
 								</ol>
 							</div>
 							<div class="load-more">
@@ -206,10 +193,6 @@ Give A Minute - User Account
 							<div class="bd">
 								<ul class="checklist">
 									<li>
-										<input type="radio" name="pref-emails-option" id="pref-emails-each"/>
-										<label for="pref-emails-each">Receive e-mails for each message</label>
-									</li>
-									<li>
 										<input type="radio" name="pref-emails-option" id="pref-emails-daily"/>
 										<label for="pref-emails-daily">Get a daily digest e-mail</label>
 									</li>
@@ -222,12 +205,13 @@ Give A Minute - User Account
 						</div>
 					</div><!-- end messages-view -->
 				
-					<div class="account-view step">
+					<div class="account-view step merlin">
+						
 						<div class="box user-account">
 							<div class="hd">
 								<h2>Account</h2>
 							</div>
-							<div class="bd">
+							<div class="bd step edit-account-details">
 								<form action="" method="POST" class="account-info">
 									<div class="thumb user-pic">
 										{% if d.template_data.user_activity.data.user.image_id %}
@@ -274,7 +258,11 @@ Give A Minute - User Account
 									</div>
 								</div>
 							</div>
+							<div class="bd step submit-account-details">
+								
+							</div>
 						</div>
+						
 					</div><!--end account-view-->
 				
 				{% endif %}
@@ -305,33 +293,49 @@ Give A Minute - User Account
 			tc.util.log("Not logged in!");
 		{% endif %}
 
-		app.components.merlin = new tc.merlin(app,{
-			dom:tc.jQ('.merlin'),
+		app.components.user_page_merlin = new tc.merlin(app,{
+			name: "user-account",
+			dom:tc.jQ('.midlands.merlin'),
 			first_step:'activity',
 			steps:{
 				'activity':{
 					selector:'.activity-view',
 					init:function(merlin,dom){
-						tc.jQ('ul.tabs li').removeClass('active');
-						tc.jQ('ul.tabs li.activity').addClass('active');
+						tc.jQ('ul.tabs li').removeClass('active').filter(".activity").addClass("active");
 					}
 				},
 				'messages':{
 					selector:'.messages-view',
 					init:function(merlin,dom){
-						tc.jQ('ul.tabs li').removeClass('active');
-						tc.jQ('ul.tabs li.messages').addClass('active');
+						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
 					}
 				},
 				'account':{
 					selector:'.account-view',
 					init:function(merlin,dom){
-						tc.jQ('ul.tabs li').removeClass('active');
-						tc.jQ('ul.tabs li.account').addClass('active');
+						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
+						window.location.hash = "account-info,edit-account-details";
 					}
 				}
 			}
 		});
+		
+		tc.util.dump( tc.jQ(".account-view.merlin") );
+		
+		app.components.account_merlin = new tc.merlin({
+			name: "account-info",
+			dom:tc.jQ(".account-view.merlin"),
+			first_step: "edit-account-details",
+			steps: {
+				"edit-account-details":{
+					selector: ".step.edit-account-details",
+					init: function(merlin, dom) {
+					}
+				}
+			}
+		});
+		
+		
 	});
 </script>
 <script src="/static/js/prettyCheckboxes.js" type="text/javascript"></script>
