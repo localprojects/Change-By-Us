@@ -15,18 +15,25 @@ Give A Minute - User Account
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
-					<div class="thumb">
-						<img src="http://placehold.it/30x30" alt="" class="avatar"/>
+					<div class="thumb">						
+						{% if d.template_data.user_activity.data.user.image_id %}
+							<img width='30' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
+						{% else %}
+							<img width='30' src="/static/images/thumb_genAvatar30.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+						{% endif %}
 					</div>
 					<div class="user-info">
-						Shawna T.
+						{{ d.template_data.user_activity.data.user.name }}
 					</div>
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="activity unread"><a href="#activity">Activity <span class="counter">4</span></a></li>
-						<li class="messages"><a href="#messages">Messages</a></li>
-						<li class="account"><a href="#account">Account</a></li>
+						<li class="activity unread"><a href="#activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
+						
+						{% if d.template_data.user %}
+							<li class="messages"><a href="#messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
+							<li class="account"><a href="#account">Account</a></li>
+						{% endif %}
 					</ul>
 				</div>
 			</div>
@@ -34,230 +41,243 @@ Give A Minute - User Account
 		<div class="east">
 			<div class="panes">
 			
-				<div class="messages-view step" >
-					<div class="box messages">
-						<div class="hd">
-							<h2>Messages</h2>
-						</div>
-						<div class="bd">
-							<ol class="message-stack">
-								<li class="message-item user-notification">
-									<a class="close" href="#"><span>Close</span></a>
-									<span class="title">You've been invited to the <strong>Green Bklyn</strong> Action Group!</span>
-									<div class="controls">
-										<a href="">Click to see action group</a>
-									</div>
-								</li>
-								<li class="message-item">
-									<a class="close" href="#"><span>Close</span></a>
-									<div class="thumb">
-										<img src="http://placehold.it/50x50" alt="" class="avatar"/>
-									</div>
-									<div class="main">
-										<div class="meta">
-											<cite class="sender">Jake B.</cite>
-											<cite>02.04.2011 at 5:00pm</cite>
-										</div>
-										<blockquote class="excerpt">
-											<p>We should bring a projector and a MacBook Air to the meetings&hellip;</p>
-										</blockquote>
-									</div>
-								</li>
-								<!--<li class="message-item user-prompt">
-									<a class="close" href="#"><span>Close</span></a>
-									<h4>Sasha wants to join your Action Group!</h4>
-									<p>Hey Robert, I saw your group when I went in to create something similar. I live on Church and would love to see some green on this street. I heard the city has a program where you can request plantings. Anyway, let's group up and geterdone!</p>
-									<div class="controls">
-										<button class="approve-btn">Approve</button>
-										<a href="">Ignore</a>
-									</div>
-								</li>-->
-								<li class="message-item user-notification">
-									<a class="close" href="#"><span>Close</span></a>
-									<span class="title">New Member! Your group now has 25 total!</span>
-									<div class="controls">
-										<a href="">Click to see action group</a>
-									</div>
-								</li>
-							</ol>
-						</div>
-						<div class="load-more">
-							<a href=""><span>Load older messages</span></a>
-						</div>
-					</div>
-					<div class="box preferences">
-						<div class="hd">
-							<h3>Preferences</h3>
-						</div>
-						<div class="bd">
-							<ul class="checklist">
-								<li>
-									<input type="checkbox" name="pref-emails-each" id="pref-emails-each"/>
-									<label for="pref-emails-each">Receive e-mails for each message</label>
-								</li>
-								<li>
-									<input type="checkbox" name="pref-emails-daily" id="pref-emails-daily"/>
-									<label for="pref-emails-daily">Get a daily digest e-mail</label>
-								</li>
-								<li>
-									<input type="checkbox" name="pref-no-emails" id="pref-no-emails"/>
-									<label for="pref-no-emails">No e-mails</label>
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div><!-- end messages-view -->
-				
-				
 				<div class="activity-view step">
 					<div class="box my-projects">
 						<div class="hd">
-							<h2><span class="light">My</span> Projects <span class="counter">1</span></h2>
+							<h2><span class="light">My</span> Projects <span class="counter">{{ d.template_data.user_activity.data.projects|length }}</span></h2>
 						</div>
 						<div class="bd">
-							<div class='clearfix project-header'>
-								<div class="thumb">
-									<img src="http://placehold.it/80x80" alt="" class="proj"/>
-									<span class="overlay-tag"></span>
-								</div>
-								<div class="tools">
-									<div class="members">
-										Members <span class="counter">0</span>
+							
+							{% for project in d.template_data.user_activity.data.projects %}
+							
+								<div class='clearfix project-header'>
+									<div class="thumb">
+										{% if project.image_id and not project.image_id == -1  %}
+											<img width='80' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+										{% else %}
+											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+										{% endif %}
+										<span class="overlay-tag"></span>
 									</div>
-								</div>
-								<div class="main">
-									<h1>Start a Garden on 161st and Melrose Ave</h1>
-									<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong>You!</strong></cite>
-									<div class="sub-ft">
-										<div class="facebook">
-											<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-											<fb:like layout="button_count" show_faces="true" width="100"></fb:like>
+									<div class="tools">
+										<div class="members">
+											<a href="/project/{{ project.project_id }}/#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+										</div>
+									</div>
+									<div class="main">
+										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong>XXXXX</strong></cite>
+										<div class="sub-ft">
+											<div class="facebook">
+												<!--
+												<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+												<fb:like layout="button_count" show_faces="true" width="100"></fb:like>
+												-->
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
+							
+							{% endfor %}
+							
 						</div>
 					</div>
 					<div class="box my-ideas">
 						<div class="hd">
-							<h2><span class="light">My</span> Ideas <span class="counter">3</span></h2>
+							<h2><span class="light">My</span> Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span></h2>
 						</div>
 						<div class="bd">
 							<ul class="idea-cards">
-								<li>
-									<div class="note-card-public-controls">
-										<a class="invite rounded-button" href="">Invite</a>
-										<span class="flag">Flag as Inappropriate</span>
-									</div>
-									<div class="note-card">
-										<div class="membrane">
-											<cite class="note-meta-hd">
-												<strong>Shawna</strong> says &mdash;
-											</cite>
-											<blockquote>
-												<p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p>
-											</blockquote>
-											<cite class="note-meta-ft">
-												Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong>
-											</cite>
+								
+								{% for idea in d.template_data.user_activity.data.ideas %}
+								
+									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
+										{% if d.template_data and d.template_data.user %}
+										<div class="note-card-public-controls">
+											{% if d.template_data.user.data.projects|length > 0 %}
+												<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+											{% endif %}
+											<span class="flag">Flag as Inappropriate</span>
 										</div>
-									</div>
-								</li>
-								<li>
-									<div class="note-card-public-controls">
-										<a class="invite rounded-button" href="">Invite</a>
-										<span class="flag">Flag as Inappropriate</span>
-									</div>
-									<div class="note-card">
-										<div class="membrane">
-											<cite class="note-meta-hd">
-												<strong>Shawna</strong> says &mdash;
-											</cite>
-											<blockquote>
-												<p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p>
-											</blockquote>
-											<cite class="note-meta-ft">
-												Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong>
-											</cite>
+										{% endif %}
+										<div class="note-card">
+											<div class="membrane">
+												<!-- <a class="close" href="#"><span>Close</span></a> -->
+												<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> says &mdash;{% endif %}</cite>
+												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
+												<!-- <cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite> -->
+												<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
+											</div>
 										</div>
-									</div>
-								</li>
-								<li class="every-third">
-									<div class="note-card-public-controls">
-										<a class="invite rounded-button" href="">Invite</a>
-										<span class="flag">Flag as Inappropriate</span>
-									</div>
-									<div class="note-card">
-										<div class="membrane">
-											<cite class="note-meta-hd">
-												<strong>Shawna</strong> says &mdash;
-											</cite>
-											<blockquote>
-												<p>I would really love to see the neighborhood come together and start up this garden. It would be so great to get involved in the community. Finally!</p>
-											</blockquote>
-											<cite class="note-meta-ft">
-												Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong>
-											</cite>
-										</div>
-									</div>
-								</li>
+									</li>
+								
+								{% endfor %}
+								
 							</ul>
 						</div>
 					</div>
 				</div><!--end activity-view-->
 				
+				{% if d.template_data.user %}
 				
-				<div class="account-view step">
-					<div class="box user-account">
-						<div class="hd">
-							<h2>Account</h2>
+					<div class="messages-view step" >
+						<div class="box messages">
+							<div class="hd">
+								<h2>Messages</h2>
+							</div>
+							<div class="bd">
+								<ol class="message-stack">
+									
+									{% for message in d.template_data.user_activity.data.messages %}
+										{% if message.message_type == "member_comment" %}
+											<li class="message-item">
+												<a class="close" href="#"><span>Close</span></a>
+												<div class="thumb">
+													{% if message.owner.image_id %}
+														<img width='50' src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt="{{ message.owner.name }}" class='avatar'/>
+													{% else %}
+														<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ message.owner.name }}" class="avatar"/>
+													{% endif %}
+												</div>
+												<div class="main">
+													<div class="meta">
+														<cite class="sender">{{ message.owner.name }}</cite>
+														<cite>{{ message.created }}</cite>
+													</div>
+													<blockquote class="excerpt">
+														<p>{{ message.body }}</p>
+													</blockquote>
+												</div>
+											</li>
+										{% else %}
+										
+										{% endif %}
+									{% endfor %}
+									
+									<!--
+									<li class="message-item user-notification">
+										<a class="close" href="#"><span>Close</span></a>
+										<span class="title">You've been invited to the <strong>Green Bklyn</strong> Action Group!</span>
+										<div class="controls">
+											<a href="">Click to see action group</a>
+										</div>
+									</li>
+									<li class="message-item">
+										<a class="close" href="#"><span>Close</span></a>
+										<div class="thumb">
+											<img src="http://placehold.it/50x50" alt="" class="avatar"/>
+										</div>
+										<div class="main">
+											<div class="meta">
+												<cite class="sender">Jake B.</cite>
+												<cite>02.04.2011 at 5:00pm</cite>
+											</div>
+											<blockquote class="excerpt">
+												<p>We should bring a projector and a MacBook Air to the meetings&hellip;</p>
+											</blockquote>
+										</div>
+									</li>-->
+									<!--<li class="message-item user-prompt">
+										<a class="close" href="#"><span>Close</span></a>
+										<h4>Sasha wants to join your Action Group!</h4>
+										<p>Hey Robert, I saw your group when I went in to create something similar. I live on Church and would love to see some green on this street. I heard the city has a program where you can request plantings. Anyway, let's group up and geterdone!</p>
+										<div class="controls">
+											<button class="approve-btn">Approve</button>
+											<a href="">Ignore</a>
+										</div>
+									</li>--><!--
+									<li class="message-item user-notification">
+										<a class="close" href="#"><span>Close</span></a>
+										<span class="title">New Member! Your group now has 25 total!</span>
+										<div class="controls">
+											<a href="">Click to see action group</a>
+										</div>
+									</li>-->
+								</ol>
+							</div>
+							<div class="load-more">
+								<a href=""><span>Load older messages</span></a>
+							</div>
 						</div>
-						<div class="bd">
-							<form action="" method="POST" class="account-info">
-								<div class="thumb user-pic">
-									<img src="http://placehold.it/50x50" alt="" class="avatar"/>
-									<div class="addphoto">
-										<a href="#">Change<br /><span>Photo</span></a>
+						<div class="box preferences">
+							<div class="hd">
+								<h3>Preferences</h3>
+							</div>
+							<div class="bd">
+								<ul class="checklist">
+									<li>
+										<input type="radio" name="pref-emails-option" id="pref-emails-each"/>
+										<label for="pref-emails-each">Receive e-mails for each message</label>
+									</li>
+									<li>
+										<input type="radio" name="pref-emails-option" id="pref-emails-daily"/>
+										<label for="pref-emails-daily">Get a daily digest e-mail</label>
+									</li>
+									<li>
+										<input type="radio" name="pref-emails-option" id="pref-no-emails"/>
+										<label for="pref-no-emails">No e-mails</label>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div><!-- end messages-view -->
+				
+					<div class="account-view step">
+						<div class="box user-account">
+							<div class="hd">
+								<h2>Account</h2>
+							</div>
+							<div class="bd">
+								<form action="" method="POST" class="account-info">
+									<div class="thumb user-pic">
+										{% if d.template_data.user_activity.data.user.image_id %}
+											<img width='50' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
+										{% else %}
+											<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+										{% endif %}
+										<div class="addphoto">
+											<a href="#">Change<br /><span>Photo</span></a>
+										</div>
 									</div>
-								</div>
-								<div class="user-details">
-									<div class="fields">
-										<div class="row row-first-name">
-											<label>First name</label>
-											<input type="text" value="Shawna" />
+									<div class="user-details">
+										<div class="fields">
+											<div class="row row-first-name">
+												<label>First name</label>
+												<input type="text" value="{{ d.template_data.user.data.f_name }}" />
+											</div>
+											<div class="row row-last-name">
+												<label>Last name</label>
+												<input type="text" value="{{ d.template_data.user.data.l_name }}" />
+											</div>
+											<div class="row row-email clearfix">
+												<label>E-mail address</label>
+												<input type="text" value="{{ d.template_data.user.data.email }}" />
+											</div>
+											<div class="row row-change-pass clearfix">
+												<label>Change Password</label>
+												<input type="password" value="" />
+											</div>
 										</div>
-										<div class="row row-last-name">
-											<label>Last name</label>
-											<input type="text" value="Tearsdille" />
-										</div>
-										<div class="row row-email clearfix">
-											<label>E-mail address</label>
-											<input type="text" value="shawna1890@gmail.com" />
-										</div>
-										<div class="row row-change-pass clearfix">
-											<label>Change Password</label>
-											<input type="text" value="" />
+										<div>
+											<input class="rounded-button" type="submit" value="Save Changes"/>
 										</div>
 									</div>
-									<div>
-										<input class="rounded-button" type="submit" value="Save Changes"/>
+								</form>
+								<div class="social-networking facebook-connected">
+									<div class="social-connect-wrapper">
+										<a href="" class="connect-facebook"></a>
+										<a href="" class="disconnect">Disconnect</a>
 									</div>
-								</div>
-							</form>
-							<div class="social-networking facebook-connected">
-								<div class="social-connect-wrapper">
-									<a href="" class="connect-facebook"></a>
-									<a href="" class="disconnect">Disconnect</a>
-								</div>
-								<div class="social-connect-wrapper">
-									<a href="" class="connect-twitter"></a>
-									<a href="" class="disconnect">Disconnect</a>
+									<div class="social-connect-wrapper">
+										<a href="" class="connect-twitter"></a>
+										<a href="" class="disconnect">Disconnect</a>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				</div><!--end account-view-->
+					</div><!--end account-view-->
 				
+				{% endif %}
 				
 			</div>	
 		</div>
@@ -274,6 +294,16 @@ Give A Minute - User Account
 <script>
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: User Account');
+		
+		tc.util.log("User Account Data!!!!!!!!!!!!");
+		tc.util.dump({{ d.template_data.user_activity.json }});
+		
+		{% if d.template_data.user %}
+			tc.util.log("Logged in User:");
+			tc.util.dump({{ d.template_data.user.json }});
+		{% else %}
+			tc.util.log("Not logged in!");
+		{% endif %}
 
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('.merlin'),
