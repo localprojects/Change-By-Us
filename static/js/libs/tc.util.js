@@ -18,10 +18,16 @@ if(!tc){ var tc = {}; }
 				console[level](message);
 			}
 		}
+		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
+			ipd.log(message);
+		}
 	}
 	tc.util.dump = function(object){
 		if (typeof console != "undefined" && typeof console.debug != "undefined") {
 			console.log(object)
+		}
+		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
+			ipd.log(object);
 		}
 	}
 	
