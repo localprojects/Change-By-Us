@@ -140,6 +140,24 @@ def findIdeas(db, keywords, locationId):
         log.error(e)    
     
     return ideas 
+    
+def findIdeasByUser(db, userId, limit=100):
+    ideas = []
+    
+    try:
+        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, u.first_name, u.last_name, i.created_datetime
+                    from idea i 
+                    inner join user u on u.user_id = i.user_id
+                    where i.is_active = 1 and u.is_active = 1 and u.user_id = $userId
+                order by i.created_datetime desc
+                limit $limit"""
+        
+        ideas = list(db.query(sql, { 'userId':userId, 'limit':limit}))
+    except Exception, e:
+        log.info("*** problem getting ideas for user %s" % userId)
+        log.error(e)    
+    
+    return ideas 
         
 def flagIdea(db, ideaId):
     try:
