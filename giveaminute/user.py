@@ -87,6 +87,10 @@ where u.user_id = $id"""
             return False
             
     def updateInfo(self, email, first, last, imageId):
+        # check if email already in user
+        if (findUserByEmail(self.db, email)):
+            return False
+    
         try:
             if (not imageId):
                 imageId = None
