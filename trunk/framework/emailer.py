@@ -4,7 +4,7 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email import Encoders
 from lib.web.contrib.template import render_jinja
-from jinja2.exceptions import TemplateNotFound
+#from jinja2.exceptions import TemplateNotFound
 from framework.log import log
 from framework.controller import *
 
