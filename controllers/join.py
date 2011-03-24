@@ -36,7 +36,7 @@ class Join(Controller):
         
     def getIdeas(self):
         try:
-            phone = self.cleanPhone(self.request('sms_phone'))
+            phone = util.cleanUSPhone(self.request('sms_phone'))
             
             dataUser = user.findUserByPhone(self.db, phone)
             
@@ -58,7 +58,7 @@ class Join(Controller):
         lastName = self.request('l_name')
         email = self.request('email')
         password = self.request('password')
-        phone = self.cleanPhone(self.request('sms_phone'))
+        phone = util.cleanUSPhone(self.request('sms_phone'))
                 
         if (len(firstName) == 0): 
             #return self.error("no first name")
@@ -85,15 +85,5 @@ class Join(Controller):
                 idea.attachIdeasByPhone(self.db, phone)
         return userId;
     
-    #strip leading 1 and any non-numerics
-    def cleanPhone(self, phone):
-        phone = phone.strip()
-        
-        phone = re.sub("\D", "", phone)
-        phone = re.sub("^1", "", phone)
-        
-        if (util.validateUSPhone(phone)):
-            return phone
-        else:
-            return None
+
     
