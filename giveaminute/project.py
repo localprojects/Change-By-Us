@@ -244,7 +244,7 @@ def userMessage(id, type, message, createdDatetime, userId, firstName, lastName,
 def smallUser(id, first, last, image):
     return dict(u_id = id,
                 image_id = image,
-                name = "%s %s" % (first, last))
+                name = "%s %s." % (first, last[0]))
                 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
     return dict(idea_id = ideaId,
