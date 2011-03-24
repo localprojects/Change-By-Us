@@ -164,7 +164,7 @@ tc.merlin.prototype.show_step = function(step,force){
 				.bind('blur',temp_e_data,this.handlers.blur).data({merlin:this,input:this.current_step.inputs[i]}).each(function(i,j){
 					var $j;
 					$j = tc.jQ(j);
-					if($j.data().input.hint || ($j.data().input.hint == "")){
+					if($j.data().input.hint || ($j.data().input.hint === "")){
 						j.value = $j.data().input.hint;
 					}
 				});
@@ -316,7 +316,7 @@ tc.merlin.prototype.handlers = {
 		$t = tc.jQ(e.target);
 		if(!e.target.value.length){
 			tc.jQ(e.target).removeClass('has-been-focused');
-			if($t.data().input.hint || ($t.data().input.hint == "")){
+			if($t.data().input.hint || ($t.data().input.hint === "")){
 				$t.val($t.data().input.hint);
 			}
 		}
