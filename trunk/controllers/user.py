@@ -4,7 +4,12 @@ from framework.controller import *
 
 class UserAccount(Controller):
     def GET(self, action=None):
-        return self.showPage()
+        userId = util.try_f(int, action)
+    
+        if (userId):
+            return self.showProfilePage(userId)
+        else:
+            return self.showAccountPage()
         
     def POST(self, action=None):
         if (action == 'messages'):
@@ -16,11 +21,24 @@ class UserAccount(Controller):
         else:
             return self.not_found()
         
-    def showPage(self):
-        userActivity = self.user.getActivityDictionary()
+    def showAccountPage(self):
+        if (self.user):
+            userActivity = self.user.getActivityDictionary()
+            
+            self.template_data['user_activity'] = dict(data = userActivity, json = self.json(userActivity))
         
+            return self.render('useraccount')
+        else:
+            return self.not_found()
+            
+    def showProfilePage(self, userId):
+        user = mUser.User(self.db, userId)
+        userActivity = user.getProfileActivityDictionary()
+        
+        log.info("*** activity = %s" % userActivity)
+
         self.template_data['user_activity'] = dict(data = userActivity, json = self.json(userActivity))
-    
+        
         return self.render('useraccount')
         
     def getUserMessages(self):
