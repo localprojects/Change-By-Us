@@ -6,7 +6,7 @@ import giveaminute.idea as mIdea
 
 class Twilio(Controller):
     
-    phone_numbers = Config.get('phone_numbers')
+    #phone_numbers = Config.get('phone_numbers')
     #log.info("Twilio: phone_numbers: %s" % phone_numbers)
     
     def GET(self, nop=None):
@@ -25,15 +25,13 @@ class Twilio(Controller):
         if not sms.validate(self.request):
             return self.text('')
             
-        phone = self.request('From')
-        message = sefl.request('Body')
+        phone = util.cleanUSPhone(self.request('From'))
+        message = self.request('Body')
         
-        # TODO: see if phone belongs to user
+        userId = mUser.findUserByPhone(self.db, phone)
         
-        return mIdea.createIdea(db, message, -1, 'sms', None, None, phone)
+        return mIdea.createIdea(self.db, message, -1, 'sms', userId, None, phone)
 
-
-        
 
     def on_receive(self):
         log.info("Twilio.on_receive" % web.input())
