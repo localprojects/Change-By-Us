@@ -73,6 +73,18 @@ def validate_email(emailaddress):
         
 def validateUSPhone(phone):
     return not (re.match("^[1-9]\d{9}$", phone) == None)
+    
+#strip leading 1 and any non-numerics
+def cleanUSPhone(phone):
+    phone = phone.strip()
+    
+    phone = re.sub("\D", "", phone)
+    phone = re.sub("^1", "", phone)
+    
+    if (validateUSPhone(phone)):
+        return phone
+    else:
+        return None
                 
 def parse_tags(tagstring):
     quotes = re.findall(r'".*?"', tagstring)
