@@ -89,6 +89,7 @@ where u.user_id = $id"""
     def updateInfo(self, email, first, last, imageId):
         # check if email already in user
         if (findUserByEmail(self.db, email)):
+            log.info("*** cannot find user email["+email+"]")
             return False
     
         try:
