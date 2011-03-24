@@ -243,7 +243,7 @@ Give A Minute - User Account
 											</div>
 										</div>
 										<div>
-											<input class="rounded-button" type="submit" value="Save Changes"/>
+											<input class="rounded-button save-button" type="submit" value="Save Changes"/>
 										</div>
 									</div>
 								</form>
@@ -274,6 +274,18 @@ Give A Minute - User Account
 	<div class='foothills'>
 
 	</div>
+	
+	<div class='template-content modal-content upload-image'>
+		<div class='step'>
+			<h2><strong>Upload</strong> a photo for your account.</h2>
+			<div>
+				<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+			</div>
+			<div class="file-uploader"></div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
 </div>
 
 {% endblock continent %}
@@ -320,21 +332,76 @@ Give A Minute - User Account
 			}
 		});
 		
-		tc.util.dump( tc.jQ(".account-view.merlin") );
-		
-		app.components.account_merlin = new tc.merlin({
-			name: "account-info",
-			dom:tc.jQ(".account-view.merlin"),
-			first_step: "edit-account-details",
-			steps: {
-				"edit-account-details":{
-					selector: ".step.edit-account-details",
-					init: function(merlin, dom) {
+		{% if d.template_data.user %}
+			app.components.account_merlin = new tc.merlin(app,{
+				name: "account-info",
+				dom:tc.jQ(".account-view.merlin"),
+				first_step: "edit-account-details",
+				data: {
+					f_name: app.app_page.user.f_name,
+					l_name: app.app_page.user.l_name,
+					email: app.app_page.user.email,
+					password: null,
+					image_id: app.app_page.user.image_id || null
+				},
+				steps: {
+					"edit-account-details":{
+						selector: ".step.edit-account-details",
+						inputs: {
+							first_name:{
+								selector:'.row-first-name input'
+							},
+							last_name:{
+								selector:".row-last-name input"
+							},
+							email:{
+								selector:".row-email input"
+							},
+							password:{
+								selector:".row-change-pass input"
+							}
+						},
+						init: function(merlin, dom) {
+							dom.find('.save-button').bind('click',{merlin:merlin,dom:dom},function(e,d){
+								e.preventDefault();
+								if(dom.hasClass('invalid')){
+									return;
+								}
+								e.data.merlin.show_step('submit-account-details');
+							});
+						},
+						finish: function(merlin, dom) {
+							var change_password;
+							change_password = merlin.current_step.inputs.password.dom.val();
+							
+							merlin.options.data = tc.jQ.extend(merlin.options.data, {
+								f_name: merlin.current_step.inputs.first_name.dom.val(),
+								l_name: merlin.current_step.inputs.last_name.dom.val(),
+								email: merlin.current_step.inputs.email.dom.val(),
+								password: change_password.length ? change_password : null
+							});
+						}
+					},
+					"submit-account-details":{
+						selector:".step.submit-account-details",
+						init: function(merlin, dom) {
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/edit",
+								data:merlin.options.data,
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										return false;
+									}
+								}
+							});
+						}
 					}
 				}
-			}
-		});
-		
+			});
+		{% endif %}
 		
 	});
 </script>
