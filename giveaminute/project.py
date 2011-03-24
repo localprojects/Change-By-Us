@@ -44,8 +44,7 @@ where p.project_id = $id;"""
             log.info("*** couldn't get project info")
             log.error(e)
             return None            
-    
-    # dummy data    
+      
     def getFullDictionary(self):
         members = self.getMembers()
         endorsements = self.getEndorsements()
@@ -224,6 +223,23 @@ def message(id, type, message, createdDatetime, userId, firstName, lastName, ide
                 body = message,
                 created = str(createdDatetime),
                 idea = ideaObj)
+                
+def userMessage(id, type, message, createdDatetime, userId, firstName, lastName, ideaId, idea, ideaSubType, ideaCreatedDatetime, projectId, projectTitle):
+    if (ideaId):
+        ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
+    else:
+        ideaObj = None
+         
+    #something for goals here
+    
+    return dict(message_id = id,
+                message_type = type,
+                owner = smallUser(userId, firstName, lastName, None),
+                body = message,
+                created = str(createdDatetime),
+                idea = ideaObj,
+                project_id = projectId,
+                project_title = projectTitle)
                                                         
 def smallUser(id, first, last, image):
     return dict(u_id = id,
@@ -264,8 +280,7 @@ def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId,
                 accomplished = isAccomplished,
                 timeframe = "%s %s" % (str(time_n), time_unit),
                 owner = smallUser(userId, firstName, lastName, imageId))
-
-    
+                
 def getTestData():
     data = dict(project_id = 12, 
                 editable = True,
@@ -542,19 +557,22 @@ def addLinkToProject(db, projectId, title, url):
         return False     
         
 def getProjectsByLocation(db, locationId, limit = 100):
+    data = []
+    
     try:
         sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
                     from project p where p.is_active = 1 and p.location_id = $locationId
                     limit $limit"""
         data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
-        
-        return data
     except Exception, e:
         log.info("*** couldn't get projects by location")
         log.error(e)
-        return None
+        
+    return data
+
     
 def getProjectsByKeywords(db, keywords, limit = 100):
+    data = []
     # there's a better way to do this
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
     
@@ -563,14 +581,16 @@ def getProjectsByKeywords(db, keywords, limit = 100):
                     from project p where p.is_active = 1 and (p.keywords like '%%%%%s%%%%')
                     limit $limit""" % keywordClause
         data = list(db.query(sql, {'limit':limit}))
-        
-        return data
+
     except Exception, e:
         log.info("*** couldn't get projects by keywords")
         log.error(e)
-        return None
+        
+    return data
+
                  
 def getProjects(db, keywords, locationId, limit = 100):
+    data = []
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
     
     try:
@@ -578,12 +598,29 @@ def getProjects(db, keywords, locationId, limit = 100):
                 from project p where p.is_active = 1 and (p.location_id = $locationId and (p.keywords like '%%%%%s%%%%'))
                 limit $limit""" % keywordClause
         data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
-            
-        return data
     except Exception, e:
         log.info("*** couldn't get projects")
         log.error(e)
-        return None
+            
+    return data
+
+        
+def getProjectsByUser(db, userId, limit = 100):
+    data = []
+
+    try:
+        sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id,
+                    (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
+                from project p
+                inner join project__user pu on pu.user_id = $userId and pu.project_id = p.project_id
+                 where p.is_active = 1
+                 limit $limit"""
+        data = list(db.query(sql, {'userId':userId, 'limit':limit}))
+    except Exception, e:
+        log.info("*** couldn't get projects")
+        log.error(e)
+            
+    return data
         
 def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
     try:
