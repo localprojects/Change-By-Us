@@ -21,14 +21,6 @@ Give A Minute - Home
 							<span class="thanks after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">Please wait while we process your idea!</span></span>
 						</div>
 						
-						<!-- <div class="console">
-							
-						</div>
-						
-						<div class="console">
-							
-						</div> -->
-						
 						<div class="step-one step-two step">
 							<div class="idea-input idea-input-one">
 								<div class="primary-action">
@@ -72,7 +64,7 @@ Give A Minute - Home
 										<label class="location-hood-label" for='location-hood'>It's about a neighborhood or borough</a></label>
 									</div>
 									<div class="row row-3 clearfix">
-										<input value='Start typing neighboorhood or borough...' type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
+										<input type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
 										<div class="location-hood-list">
 											<ul>
 												<li><strong>So</strong>Ho</li>
@@ -442,6 +434,7 @@ Give A Minute - Home
 							validators:['min-3','max-200','required','email'],
 							
 							{% if d.template_data.user and d.template_data.user.data.email %}
+								hint:false,
 							{% else %}
 								hint:'Please enter your e-mail address',
 							{% endif %}
@@ -450,7 +443,8 @@ Give A Minute - Home
 						},
 						location:{
 							selector:'.location-group',
-							validators:tc.locationDropdown.validator
+							validators:tc.locationDropdown.validator,
+							hint:'Start typing neighborhood or borough...'
 						}
 					},
 					step_data:{},
