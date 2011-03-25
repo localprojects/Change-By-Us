@@ -259,7 +259,14 @@ Give A Minute - User Account
 								</div>
 							</div>
 							<div class="bd step submit-account-details">
-								
+								<p>Processing your account details&hellip;</p>
+								<p><img src='/static/images/loader32x32.gif' /></p>
+							</div>
+							<div class="bd step account-details-submitted">
+								<p>Your account details have been updated!</p>
+							</div>
+							<div class="bd step account-details-error">
+								<p>There was an error updated your account details.</p>
 							</div>
 						</div>
 						
@@ -320,6 +327,34 @@ Give A Minute - User Account
 					selector:'.messages-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
+						dom.find(".preferences .checklist input[type='radio']").unbind("change").bind("change", function(e, d) {
+							var pref;
+							switch (tc.jQ(e.target).attr("id")) {
+								case "pref-emails-daily":
+									pref = "digest";
+									break;
+								case "pref-no-emails":
+									pref = "none";
+									break;
+							}
+							if (!pref) {
+								return false;
+							}
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/messageprefs",
+								data:{
+									pref: pref
+								},
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										return false;
+									}
+								}
+							});
+						});
 					}
 				},
 				'account':{
@@ -349,13 +384,16 @@ Give A Minute - User Account
 						selector: ".step.edit-account-details",
 						inputs: {
 							first_name:{
-								selector:'.row-first-name input'
+								selector:'.row-first-name input',
+								validators:["required"]
 							},
 							last_name:{
-								selector:".row-last-name input"
+								selector:".row-last-name input",
+								validators:["required"]
 							},
 							email:{
-								selector:".row-email input"
+								selector:".row-email input",
+								validators:["required"]
 							},
 							password:{
 								selector:".row-change-pass input"
@@ -367,7 +405,16 @@ Give A Minute - User Account
 								if(dom.hasClass('invalid')){
 									return;
 								}
-								e.data.merlin.show_step('submit-account-details');
+								window.location.hash = 'account-info,submit-account-details';
+							});
+							
+							tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
+								e.data.merlin.app.components.modal.hide();
+								if(d.responseJSON.thumbnail_id){
+									merlin.dom.find('.user-pic img').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+									tc.jQ(".user-account-nav img.avatar").attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+									merlin.options.data.image_id = d.responseJSON.thumbnail_id;
+								}
 							});
 						},
 						finish: function(merlin, dom) {
@@ -393,14 +440,59 @@ Give A Minute - User Account
 								dataType:"text",
 								success: function(data, ts, xhr) {
 									if (data == "False") {
+										window.location.hash = "account-info,account-details-error";
 										return false;
 									}
+									//window.location.hash = "account-info,account-details-submitted";
+									window.location.reload(true);
 								}
 							});
+						}
+					},
+					"account-details-submitted":{
+						selector:".step.account-details-submitted",
+						init: function(merlin, dom) {
+							tc.timer(1000, function() {
+								window.location.hash = "user-account,account";
+							});
+						}
+					},
+					"account-details-error":{
+						selector:".step.account-details-error",
+						init: function(merlin, dom) {
+							
 						}
 					}
 				}
 			});
+			
+			tc.jQ('.addphoto a').bind('click',{
+				app:app,
+				source_element:tc.jQ('.modal-content.upload-image'),
+				init:function(modal,callback){
+					var uploader = new qq.FileUploader({
+						element: modal.options.element.find('.file-uploader').get(0),
+						action: '/create/photo',
+						onComplete: function(id, fileName, responseJSON){
+
+							tc.jQ(document).trigger('create-image-uploaded',{
+								id:id,
+								fileName:fileName,
+								responseJSON:responseJSON
+							});
+
+							return true;
+						}
+					});
+					if(tc.jQ.isFunction(callback)){
+						callback(modal);
+					}
+				}
+			},function(e,d){
+				e.preventDefault();
+				e.data.app.components.modal.show(e.data);
+			});
+			
 		{% endif %}
 		
 	});
