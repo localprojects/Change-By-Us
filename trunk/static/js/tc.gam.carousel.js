@@ -51,26 +51,43 @@ tc.carousel.prototype.render = function() {
 	scrollpane.height(h);
 	this.carousel = scrollpane.scrollable(this.options.scrollable).data("scrollable");
 	
-	if (this.options.pagination) {
-		this.carousel.onSeek(function(e, i) {
-			me.update_pagination();
-		});
-		this.carousel.onAddItem(function(e, i) {
-			me.update_pagination();
-			// TODO (update "next" button if we've gone from have 1 item to having 2)
-		});
-	}
+	this.carousel.onSeek(function(e, i) {
+		me.update_pagination();
+	});
+	this.carousel.onAddItem(function(e, i) {
+		me.update_navigation();
+		me.update_pagination();
+	});
 	
-	this.options.element.find(".next, .prev").bind("click", function(e) {
-		e.preventDefault();
+	this.next_btn = this.options.element.find(".next");
+	this.prev_btn = this.options.element.find(".prev");
+	tc.jQ.each([this.next_btn, this.prev_btn], function() {
+		if (this.length) {
+			this.bind("click", function(e) {
+				e.preventDefault();
+			});
+		}
 	});
 	
 	this.rendered = true;
+	this.update_navigation();
 	this.update_pagination();
 };
 
-tc.carousel.prototype.update_pagination = function() {
+tc.carousel.prototype.update_navigation = function() {
 	if (!this.rendered) { return; }
+	tc.util.log("tc.carousel.update_navigation");
+	if (this.carousel.getSize() < 2) {
+		if (this.next_btn) { this.next_btn.hide(); }
+		if (this.prev_btn) { this.prev_btn.hide(); }
+	} else {
+		if (this.next_btn) { this.next_btn.show(); }
+		if (this.prev_btn) { this.prev_btn.show(); }
+	}
+};
+
+tc.carousel.prototype.update_pagination = function() {
+	if (!this.options.pagination || !this.rendered) { return; }
 	tc.util.log("tc.carousel.update_pagination");
 	if (this.options.pagination) {
 		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
