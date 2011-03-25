@@ -162,12 +162,23 @@ def findIdeasByUser(db, userId, limit=100):
 def flagIdea(db, ideaId):
     try:
         sql = "update idea set num_flags = num_flags + 1 where idea_id = $ideaId"
-        self.db.query(sql, vars = locals())
+        db.query(sql, {'ideaId':ideaId})
         return True
     except Exception, e:
         log.info("*** problem flagging idea")
         log.error(e)    
         return False
+        
+def setIdeaIsActive(db, ideaId, b):
+    try:
+        sql = "update idea set is_active = $b where idea_id = $ideaId"
+        db.query(sql, {'ideaId':ideaId, 'b':b})
+        return True
+    except Exception, e:
+        log.info("*** problem setting idea is_active = %s for idea_id = %s" % (b, ideaId))
+        log.error(e)    
+        return False
+
         
 def addIdeaToProject(db, ideaId, projectId):
     try:
