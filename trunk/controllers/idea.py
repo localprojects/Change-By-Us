@@ -11,8 +11,14 @@ class Idea(Controller):
             return self.not_found()
             
             
-    def POST(self,*args, **kw):
-        return self.newIdea()
+    def POST(self, action=None):
+        if (action == 'flag'):
+            return self.flagIdea()
+        elif (action == 'remove'):
+            log.info("*** remove POST")
+            return self.removeIdea()
+        else:
+            return self.newIdea()
         
     def newIdea(self):
         description = self.request('text')
@@ -28,6 +34,27 @@ class Idea(Controller):
         ideaId = mIdea.createIdea(self.db, description, locationId, 'web', userId, email)
         
         return ideaId if ideaId else False 
+        
+    def flagIdea(self):
+        ideaId = self.request('idea_id')
+        
+        if (ideaId):
+            return mIdea.flagIdea(self.db, ideaId)
+        else:
+            return False
+            
+    def removeIdea(self):
+        if (not self.user.isAdmin and not self.user.isModerator):
+            log.warning("*** unauthorized idea removal attempt by user_id = %s" % self.user.id)
+            return False
+    
+        ideaId = self.request('idea_id')
+        
+        if (ideaId):
+            return mIdea.setIdeaIsActive(self.db, ideaId, 0)
+        else:
+            return False
+        
         
     def getRelatedProjects(self):
         ideaId = self.request('idea_id')
