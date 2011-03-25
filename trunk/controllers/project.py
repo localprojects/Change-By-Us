@@ -31,11 +31,15 @@ class Project(Controller):
         elif (action == 'link'):
             if (param0 == 'add'):
                 return self.addLink()
+            elif (param0 == 'remove'):
+                return self.removeLink()
             else:
                 return self.not_found()
         elif (action == 'resource'):
             if (param0 == 'add'):
                 return self.addResource()
+            elif (param0 == 'remove'):
+                return self.removeResource()                
             else:
                 return self.not_found()
         elif (action == 'goal'):
@@ -160,6 +164,23 @@ class Project(Controller):
             return False
         else:
             return mProject.addLinkToProject(self.db, projectId, title, url)
+            
+    def removeLink(self):
+        projectId = self.request('project_id')
+        linkId = self.request('link_id')
+        
+        if (not projectId or not linkId):
+            log.error("*** link removal submitted missing an id")
+            return False            
+        else:        
+            if (not self.user.isAdmin and 
+                not self.user.isModerator and
+                not self.user.isProjectAdmin(projectId)):
+                log.warning("*** unauthorized link removal attempt by user_id = %s" % self.user.id)
+                return False
+            else:
+                return mProject.setLinkIsActive(self.db, projectId, linkId, 0)
+        
         
     def addResource(self):
         projectId = self.request('project_id')
@@ -170,6 +191,23 @@ class Project(Controller):
             return False
         else:
             return mProject.addResourceToProject(self.db, projectId, projectResourceId)
+            
+    def removeResource(self):
+        projectId = self.request('project_id')
+        projectResourceId = self.request('project_resource_id')
+        
+        if (not projectId or not projectResourceId):
+            log.error("*** resource removal submitted missing an id")
+            return False            
+        else:        
+            if (not self.user.isAdmin and 
+                not self.user.isModerator and
+                not self.user.isProjectAdmin(projectId)):
+                log.warning("*** unauthorized resource removal attempt by user_id = %s" % self.user.id)
+                return False
+            else:
+                return mProject.removeResourceFromProject(self.db, projectId, projectResourceId)
+                
         
     def getResourceInfo(self):
         projectResourceId = self.request('project_resource_id')
