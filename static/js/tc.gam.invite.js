@@ -40,9 +40,9 @@ tc.gam.ideas_invite = function(app) {
 								}
 								if (merlin.app.app_page.data.project) {
 									e.data.merlin.options.data.project_id = merlin.app.app_page.data.project.project_id;
-									e.data.merlin.show_step('invite-message-submit');
+									window.location.hash = "ideas_invite,invite-message-submit";
 								} else {
-									e.data.merlin.show_step('invite-message-project-info');
+									window.location.hash = "ideas_invite,invite-message-project-info";
 								}
 							});
 						},
@@ -68,8 +68,8 @@ tc.gam.ideas_invite = function(app) {
 								e.preventDefault();
 								if(dom.hasClass('invalid')){
 									return;
-								}
-								e.data.merlin.show_step('invite-message-submit');
+								}								
+								window.location.hash = "ideas_invite,invite-message-submit";
 							});
 						},
 						finish: function(merlin, dom) {
