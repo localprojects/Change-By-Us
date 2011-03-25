@@ -74,30 +74,30 @@ tc.carousel.prototype.render = function() {
 	this.update_pagination();
 };
 
-tc.carousel.prototype.set_nav_btns = function(next_btn, prev_btn, bind) {
+// register a next and/or previous button with the carousel
+// next_btn and prev_btn are references to jQuery objects
+tc.carousel.prototype.set_nav_btns = function(next_btn, prev_btn) {
 	if (next_btn) { 
 		this.next_btn = next_btn;
-		if (bind) {
-			this.next_btn.bind("click", {carousel:this.carousel}, function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				e.data.carousel.next();
-			});
-		}
+		this.next_btn.bind("click", {carousel:this.carousel}, function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			e.data.carousel.next();
+		});
 	}
 	if (prev_btn) { 
 		this.prev_btn = prev_btn;
-		if (bind) {
-			this.prev_btn.bind("click", {carousel:this.carousel}, function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				e.data.carousel.prev();
-			});
-		}
+		this.prev_btn.bind("click", {carousel:this.carousel}, function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			e.data.carousel.prev();
+		});
 	}
 	this.update_navigation();
 };
 
+// if the carousel has only one item, 
+// hide the next/prev buttons
 tc.carousel.prototype.update_navigation = function() {
 	if (!this.rendered) { return; }
 	tc.util.log("tc.carousel.update_navigation");

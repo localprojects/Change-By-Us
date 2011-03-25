@@ -293,8 +293,15 @@ tc.merlin.prototype.handlers = {
 		}
 	},
 	focus:function(e,d){
+		var $t;
 		if(e.target.className.indexOf('has-been-focused') == -1){
-			tc.jQ(e.target).addClass('has-been-focused').removeClass('valid invalid').filter('[type=text], textarea').val('');
+			$t = tc.jQ(e.target);
+			$t.addClass('has-been-focused').removeClass('valid invalid');    //.filter('[type=text], textarea').val('');
+			if (e.target.nodeName == "TEXTAREA" || (e.target.nodeName == "INPUT" && ($t.attr("type") == "text"))) {
+				if ($t.data().input.hint || $t.data().input.hint === "") {
+					$t.val("");
+				}
+			}
 		}
 		//if(e.data.me.options.error_indicator){
 		//	e.data.me.options.error_indicator.hide();
