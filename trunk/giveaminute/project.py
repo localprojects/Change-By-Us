@@ -403,6 +403,17 @@ def addResourceToProject(db, projectId, resourceId):
         log.info("*** problem attaching resource to project")
         log.error(e)    
         return False 
+
+def removeResourceFromProject(db, projectId, projectResourceId):
+    try:
+        sql = "delete from project__project_resource where project_id = $projectId and project_resource_id = $projectResourceId"
+        db.query(sql, {'projectId':projectId, 'projectResourceId':projectResourceId})
+        
+        return True
+    except Exception, e:
+        log.info("*** problem deleting resource %s to is_active = %s for project %s" % (projectResourceId, b, projectId))
+        log.error(e)    
+        return False  
         
 def addLinkToProject(db, projectId, title, url):
     try:
@@ -415,6 +426,18 @@ def addLinkToProject(db, projectId, title, url):
         log.info("*** problem adding link to project")
         log.error(e)    
         return False     
+        
+def setLinkIsActive(db, projectId, linkId, b):
+    try:
+        sql = "update project_link set is_active = $b where project_id = $projectId and project_link_id = $linkId"
+        db.query(sql, {'projectId':projectId, 'linkId':linkId, 'b':b})
+        
+        return True
+    except Exception, e:
+        log.info("*** problem setting link %s to is_active = %s" % (linkId, b))
+        log.error(e)    
+        return False     
+    
   
 def getFeaturedProjects(db):
     data = []
