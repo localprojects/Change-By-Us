@@ -94,6 +94,7 @@ tc.gam.ideas_invite = function(app) {
 									if (data == "False") {
 										return false;
 									}
+									tc.jQ(event_target).addClass("invited").text("Invited");
 									tc.timer(1000, function() {
 										modal.hide();
 									});
