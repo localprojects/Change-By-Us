@@ -61,7 +61,7 @@ Give A Minute - User Account
 									</div>
 									<div class="tools">
 										<div class="members">
-											<a href="/project/{{ project.project_id }}/#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
 										</div>
 									</div>
 									<div class="main">
@@ -130,6 +130,7 @@ Give A Minute - User Account
 									
 									{% for message in d.template_data.user_activity.data.messages %}
 										{% if message.message_type == "member_comment" %}
+										
 											<li class="message-item">
 												<a class="close" href="#"><span>Close</span></a>
 												<div class="thumb">
@@ -149,24 +150,30 @@ Give A Minute - User Account
 													</blockquote>
 												</div>
 											</li>
+											
 										{% elif message.message_type == "join" %}
-										
+											
+											<li class="message-item user-notification join-notification">
+												<a class="close" href="#"><span>Close</span></a>
+												<span class="title">{{ message.body }}</span>
+												<div class="controls">
+													<a href="/project/{{ message.project_id }}#show,members">Click to see member</a>
+												</div>
+											</li>
+											
 										{% elif message.message_type == "invite" %}
 										
-										{% else %}
-										
+											<li class="message-item user-notification invite-notification">
+												<a class="close" href="#"><span>Close</span></a>
+												<span class="title">{{ message.body }}</span>
+												<div class="controls">
+													<a href="/project/{{ message.project_id }}">Click to see project</a>
+												</div>
+											</li>
+											
 										{% endif %}
 									{% endfor %}
 									
-									<!-- TODO other messsage types (?)
-									
-									<li class="message-item user-notification">
-										<a class="close" href="#"><span>Close</span></a>
-										<span class="title">You've been invited to the <strong>Green Bklyn</strong> Action Group!</span>
-										<div class="controls">
-											<a href="">Click to see action group</a>
-										</div>
-									</li>
 									<!--<li class="message-item user-prompt">
 										<a class="close" href="#"><span>Close</span></a>
 										<h4>Sasha wants to join your Action Group!</h4>
@@ -174,13 +181,6 @@ Give A Minute - User Account
 										<div class="controls">
 											<button class="approve-btn">Approve</button>
 											<a href="">Ignore</a>
-										</div>
-									</li>--><!--
-									<li class="message-item user-notification">
-										<a class="close" href="#"><span>Close</span></a>
-										<span class="title">New Member! Your group now has 25 total!</span>
-										<div class="controls">
-											<a href="">Click to see action group</a>
 										</div>
 									</li>-->
 									
