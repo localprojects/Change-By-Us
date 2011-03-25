@@ -23,6 +23,18 @@ class User():
         self.isModerator = bool(self.data.is_moderator)
         self.isLeader = bool(self.data.is_leader)
     
+    def isProjectAdmin(self, projectId):
+        sql = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId and is_project_admin = 1 limit 1"
+        
+        try:
+            data = self.db.query(sql, {'userId':self.id, 'projectId':projectId})
+            
+            return (len(data) > 0)
+        except Exception, e:
+            log.info("*** couldn't get user project admin status")
+            log.err(e)
+            return False
+    
     def getDictionary(self):
         projects = []
         
