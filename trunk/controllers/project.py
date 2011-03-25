@@ -13,6 +13,10 @@ class Project(Controller):
                 return self.not_found()
         elif (action == 'goals'):
             return self.getGoals()
+        elif (action == 'featured'):
+            return self.getFeaturedProjects()
+        elif (action == 'small'):
+            return self.getProject()            
         else:
             project_user = self.getProjectUser(action)  
             self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
@@ -226,8 +230,40 @@ class Project(Controller):
         else:
             return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id)
         
+    def getFeaturedProjects(self):
+        projects = []
+        data = mProject.getFeaturedProjects(self.db)
         
+        for item in data:
+            projects.append(mProject.smallProject(item.project_id, 
+                                            item.title, 
+                                            item.description, 
+                                            item.image_id, 
+                                            item.num_members,
+                                            item.owner_user_id, 
+                                            item.owner_first_name, 
+                                            item.owner_last_name, 
+                                            item.owner_image_id))
+        return projects
+            
         
+    def getProject(self):
+        projectId = self.request('project_id')
+    
+        project = mProject.Project(self.db, projectId)
+        
+        log.info("*** proj id = %s" % projectId)
+        
+        return mProject.smallProject(project.id, 
+                                project.data.title, 
+                                project.data.description, 
+                                project.data.image_id, 
+                                project.data.num_members,
+                                project.data.owner_user_id, 
+                                project.data.owner_first_name, 
+                                project.data.owner_last_name, 
+                                project.data.owner_image_id)
+                  
         
         
         
