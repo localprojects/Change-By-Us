@@ -389,12 +389,12 @@
 		<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 	</div>
 </li>
-
-
 {% endblock continent %}
 
 
+
 {% block page_js %}
+<script type="application/x-javascript" src="http://localhost:1840/ibug.js"></script>
 <script>
 	
 	{% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
@@ -465,7 +465,6 @@
 								e.stopPropagation();
 								e.data.carousel.carousel.next();
 							});
-							
 							dom.find('.ca-btn').bind('click',{m:merlin,carousel:merlin.app.components.carousels.related}, function(e){
 								e.stopPropagation();
 								e.preventDefault();
@@ -496,7 +495,7 @@
 								n_projects++;
 							}
 							for(i in merlin.options.steps['related'].step_data.citywide){
-								tempitem = merlin.options.steps['related'].step_data.related[i];
+								tempitem = merlin.options.steps['related'].step_data.citywide[i];
 								if(!tempitem){
 									continue;
 								}
@@ -516,7 +515,6 @@
 							merlin.app.components.carousels.related.carousel.begin();
 							dom.find('.n_projects').text(n_projects);
 						}
-						
 					}
 				},
 				'featured':{
@@ -553,7 +551,7 @@
 					selector:'.step.join-list-invite',
 					init:function(merlin,dom){
 						window.scroll(0,0);
-						children('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
+						merlin.dom.children('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
 						dom.find('.swipe').css('width',dom.find('.scrollable').width());
 						if(!merlin.app.components.carousels.invited){
 							merlin.app.components.carousels.invited = new tc.carousel({
@@ -598,6 +596,7 @@
 							context:merlin,
 							dataType:'text',
 							success:function(data,ts,xhr){
+								tc.util.dump(data);
 								if(data == 'False'){
 									window.location.hash = 'mobile,join-error';
 									return;
@@ -614,7 +613,7 @@
 					selector:'.step.join-list-joined',
 					init:function(merlin,dom){
 						window.scroll(0,0);
-						children('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
+						merlin.dom.children('.nav').find('.join').addClass('current').parent().siblings().children('a').removeClass('current');
 						tc.jQ.ajax({
 							type:'GET',
 							url:'/project/small',
