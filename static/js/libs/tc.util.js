@@ -21,7 +21,7 @@ if(!tc){ var tc = {}; }
 		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
 			ipd.log(message);
 		}
-	}
+	};
 	tc.util.dump = function(object){
 		if (typeof console != "undefined" && typeof console.debug != "undefined") {
 			console.log(object)
@@ -29,11 +29,16 @@ if(!tc){ var tc = {}; }
 		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
 			ipd.log(object);
 		}
-	}
+	};
 	
 	if(jQuery){
 	  tc.jQ = jQuery;
 	}
+	
+	// TODO!!!
+	tc.util.getTimeSince = function(timestep) {
+		
+	};
 	
 })(tc);
 
