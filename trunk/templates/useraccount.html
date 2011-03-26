@@ -131,7 +131,7 @@ Give A Minute - User Account
 									{% for message in d.template_data.user_activity.data.messages %}
 										{% if message.message_type == "member_comment" %}
 										
-											<li class="message-item">
+											<li class="message-item member-comment">
 												<a class="close" href="#"><span>Close</span></a>
 												<div class="thumb">
 													{% if message.owner.image_id %}
@@ -286,6 +286,38 @@ Give A Minute - User Account
 
 	</div>
 	
+	<li class="template-content message-item member-comment">
+		<a class="close" href="#"><span>Close</span></a>
+		<div class="thumb">
+			<img width='50' src=" " alt=" " class="avatar"/>
+		</div>
+		<div class="main">
+			<div class="meta">
+				<cite class="sender"></cite>
+				<cite></cite>
+			</div>
+			<blockquote class="excerpt">
+				<p></p>
+			</blockquote>
+		</div>
+	</li>
+	
+	<li class="template-content message-item user-notification join-notification">
+		<a class="close" href="#"><span>Close</span></a>
+		<span class="title"></span>
+		<div class="controls">
+			<a href="">Click to see member</a>
+		</div>
+	</li>
+	
+	<li class="template-content message-item user-notification invite-notification">
+		<a class="close" href="#"><span>Close</span></a>
+		<span class="title"></span>
+		<div class="controls">
+			<a href="">Click to see project</a>
+		</div>
+	</li>
+	
 	<div class='template-content modal-content upload-image'>
 		<div class='step'>
 			<h2><strong>Upload</strong> a photo for your account.</h2>
@@ -295,7 +327,7 @@ Give A Minute - User Account
 			<div class="file-uploader"></div>
 		</div>
 		<a class='close' href="#"><span>close</span></a>
-	</div>
+	</div
 	
 </div>
 
@@ -329,9 +361,12 @@ Give A Minute - User Account
 				},
 				'messages':{
 					selector:'.messages-view',
+					current_offset: {{ d.template_data.user_activity.data.messages|length }}-1,
+					n_to_fetch:5,
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
-						dom.find(".preferences .checklist input[type='radio']").unbind("change").bind("change", function(e, d) {
+						
+						dom.find(".preferences .checklist input[type='radio']").unbind("change").bind("change", {merlin:merlin}, function(e, d) {
 							var pref;
 							switch (tc.jQ(e.target).attr("id")) {
 								case "pref-emails-daily":
@@ -350,12 +385,71 @@ Give A Minute - User Account
 								data:{
 									pref: pref
 								},
-								context:merlin,
+								context:e.data.merlin,
 								dataType:"text",
 								success: function(data, ts, xhr) {
 									if (data == "False") {
 										return false;
 									}
+								}
+							});
+						});
+						
+						dom.find(".load-more a").unbind("click").bind("click", {merlin:merlin, dom:dom}, function(e, d) {
+							var $t;
+							$t = tc.jQ(e.target);
+							$t.addClass("loading");
+							e.preventDefault();
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/messages",
+								data:{
+									n_messages: e.data.merlin.current_step.n_to_fetch,
+									offset: e.data.merlin.current_step.current_offset
+								},
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									var d, dom_stack;
+									$t.removeClass("loading");
+									try {
+										d = tc.jQ.parseJSON(data);
+									} catch(e) {
+										tc.util.log("/useraccount/messages: json parsing error", "warn");
+										return;
+									}
+									dom_stack = e.data.dom.find("ol.message-stack");
+									tc.jQ.each(d, function(i, message) {
+										var template;
+										switch (message.message_type) {
+											case "member_comment":
+												template = tc.jQ(".template-content.message-item.member-comment").clone().removeClass("template-content");
+												if (message.owner.image_id) {
+													template.find(".thumb img").attr("src", "/images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
+												} else {
+													template.find(".thumb img").attr("src", "/static/images/thumb_genAvatar50.png").attr("alt", message.owner.name);
+												}
+												template.find(".sender").text(message.owner.name).next().text(message.created);
+												template.find(".excerpt p").text(message.body);
+												break;
+											case "join":
+												template = tc.jQ(".template-content.message-item.join-notification").clone().removeClass("template-content");
+												template.find(".title").text(message.body);
+												template.find(".controls > a").attr("href", "/project/"+ message.project_id +"#show,members");
+												break;
+											case "invite":
+												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
+												template.find(".title").text(message.body);
+												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
+												break;
+											default:
+												break;
+										}
+										if (template) {
+											dom_stack.append(template);
+										}
+									});
+									this.current_step.current_offset += d.length;
 								}
 							});
 						});
