@@ -398,7 +398,7 @@ Give A Minute - User Account
 						dom.find(".load-more a").unbind("click").bind("click", {merlin:merlin, dom:dom}, function(e, d) {
 							var $t;
 							$t = tc.jQ(e.target);
-							$t.addClass("loading");
+							$t.parent().addClass("loading");
 							e.preventDefault();
 							tc.jQ.ajax({
 								type:"POST",
@@ -411,11 +411,15 @@ Give A Minute - User Account
 								dataType:"text",
 								success: function(data, ts, xhr) {
 									var d, dom_stack;
-									$t.removeClass("loading");
+									$t.parent().removeClass("loading");
 									try {
 										d = tc.jQ.parseJSON(data);
 									} catch(e) {
 										tc.util.log("/useraccount/messages: json parsing error", "warn");
+										return;
+									}
+									if (!d.length) {
+										$t.hide();
 										return;
 									}
 									dom_stack = e.data.dom.find("ol.message-stack");
