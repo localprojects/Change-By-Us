@@ -136,7 +136,7 @@ Give A Minute - Join
 	</div>
 
 	<div class='foothills'>
-		<a class='back' href='#'><span>Back</span></a>
+		<a class='back' href='#' style='display:none'><span>Back</span></a>
 	</div>
 	
 	<div class='template-content modal-content real-name'>
@@ -206,7 +206,13 @@ Give A Minute - Join
 					selector:'.start',
 					prev_step:null,
 					next_step:'user-info',
-					use_for_history:true
+					use_for_history:true,
+					init:function(merlin,dom){
+						tc.jQ('.foothills a.back').hide();
+					},
+					finish:function(merlin,dom){
+						tc.jQ('.foothills a.back').show();
+					}
 				},
 				'user-info':{
 					progress_selector:'.2',

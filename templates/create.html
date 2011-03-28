@@ -136,7 +136,7 @@ Give A Minute - Create a Project
 	</div>
 
 	<div class='foothills'>
-		<a class='back' href='#'>Back</a>
+		<a class='back' href='#' style='display:none'>Back</a>
 	</div>
 	
 	<div class='template-content modal-content upload-image'>
@@ -406,8 +406,10 @@ Give A Minute - Create a Project
 								merlin.options.data.image = d.responseJSON.thumbnail_id;
 							}
 						});
+						tc.jQ('.foothills a.back').hide();
 					},
 					finish:function(merlin,dom){
+						tc.jQ('.foothills a.back').show();
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							title:merlin.current_step.inputs.title.dom.val(),
 							organization:merlin.current_step.inputs.organization.dom.val(),
