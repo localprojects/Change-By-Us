@@ -282,7 +282,7 @@ class Project(Controller):
                                             item.owner_first_name, 
                                             item.owner_last_name, 
                                             item.owner_image_id))
-        return projects
+        return self.json(projects)
             
         
     def getProject(self):
