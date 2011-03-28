@@ -10,6 +10,7 @@ tc.merlin.prototype.options = {
 	back_button:null,
 	watch_keypress:true,
 	first_step:'start',
+	allow_hash_override_onload:false,
 	steps:{
 		'start':{
 			progress_selector:'.1',
@@ -33,14 +34,19 @@ tc.merlin.prototype.init = function(app,options){
 	this.handle_controls(options.controls);
 	this.setup_events(app);
 	tc.util.dump(this.options);
-	if(this.options.first_step){
-		this.show_step(this.options.first_step);
-		//if(this.options.name){
-		//	window.location.hash = this.options.name+','+this.options.first_step;
-		//} else {
-		//	window.location.hash = this.options.first_step;
-		//}
+	if(this.options.allow_hash_override_onload){
+		this.handlers.handle_hash(this,window.location.hash.substring(1,window.location.hash.length));
+	} else {
+		if(this.options.first_step){
+			this.show_step(this.options.first_step);
+			//if(this.options.name){
+			//	window.location.hash = this.options.name+','+this.options.first_step;
+			//} else {
+			//	window.location.hash = this.options.first_step;
+			//}
+		}
 	}
+	
 	this.current_hash = null;
 }
 
@@ -234,19 +240,21 @@ tc.merlin.prototype.validate = function(on_submit){
 tc.merlin.prototype.handlers = {
 	hashchange:function(e,d){
 		tc.util.log('tc.merlin.handlers.hashchange['+window.location.hash+']');
-		var hash;
-		hash = window.location.hash.substring(1,window.location.hash.length);
-		if(e.data.me.options.name){
-			if(hash.split(',')[0] != e.data.me.options.name){
-				e.data.me.current_hash = null;
+		e.data.me.handlers.handle_hash(e.data.me,window.location.hash.substring(1,window.location.hash.length));
+	},
+	handle_hash:function(merlin,hash){
+		tc.util.log('tc.merlin.handlers.handle_hash');
+		if(merlin.options.name){
+			if(hash.split(',')[0] != merlin.options.name){
+				merlin.current_hash = null;
 				return;
 			}
 			hash = hash.split(',')[1];
-			e.data.me.current_hash = hash;
-			e.data.me.show_step(e.data.me.current_hash,true);
-		} else if(e.data.me.current_hash != hash){
-			e.data.me.current_hash = hash;
-			e.data.me.show_step(e.data.me.current_hash,false);
+			merlin.current_hash = hash;
+			merlin.show_step(merlin.current_hash,true);
+		} else if(merlin.current_hash != hash){
+			merlin.current_hash = hash;
+			merlin.show_step(merlin.current_hash,false);
 		}
 	},
 	indicator_click:function(e,d){
