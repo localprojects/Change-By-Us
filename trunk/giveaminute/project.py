@@ -171,46 +171,7 @@ where p.project_id = $id;"""
         return getGoals(self.db, self.id)
         
     def getMessages(self):
-        messages = []
-    
-        try:
-            sql = """select 
-                        m.project_message_id,
-                        m.message_type,
-                        m.message,
-                        m.created_datetime,
-                        u.user_id,
-                        u.first_name,
-                        u.last_name,
-                        i.idea_id,
-                        i.description as idea_description,
-                        i.submission_type as idea_submission_type,
-                        i.created_datetime as idea_created_datetime
-                    from project_message m
-                    inner join user u on u.user_id = m.user_id
-                    left join idea i on i.idea_id = m.idea_id
-                    where m.project_id = $id and m.is_active = 1
-                    order by m.created_datetime desc"""
-            data = list(self.db.query(sql, {'id':self.id}))
-            
-            for item in data:
-                messages.append(message(item.project_message_id, 
-                                        item.message_type, 
-                                        item.message, 
-                                        item.created_datetime, 
-                                        item.user_id, 
-                                        item.first_name, 
-                                        item.last_name, 
-                                        item.idea_id, 
-                                        item.idea_description, 
-                                        item.idea_submission_type, 
-                                        item.idea_created_datetime))
-        except Exception, e:
-            log.info("*** couldn't get messages")
-            log.error(e)
-            
-        return messages    
-        
+        return getMessages(self.db, self.id, 10, 0)
 
 ## FORMATTING FUNCTIONS
 def smallProject(id, title, description, imageId, numMembers, ownerUserId, ownerFirstName, ownerLastName, ownerImageId):
@@ -388,6 +349,67 @@ def getProjectLocation(db, projectId):
         log.info("*** couldn't get project location data")
         log.error(e)
         return None
+        
+def removeUserFromProject(db, projectId, userId):
+    try:
+        db.delete('project__user', where = "project_id = $projectId and user_id = $userId", vars = {'projectId':projectId, 'userId':userId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't remove user from project")
+        log.error(e)
+        return False
+        
+def addKeyword(db, projectId, keyword):
+    try:
+        sqlGet = "select keywords from project where project_id = $projectId"
+        data = list(db.query(sqlGet, {'projectId':projectId}))
+        
+        if (len(data) > 0):
+            keywords = data[0].keywords.split()
+            
+            if (keyword not in keywords):
+                keywords.append(keyword)
+                
+                newKeywords = ' '.join(keywords)
+    
+                sql = "update project set keywords = $keywords where project_id = $projectId"
+                db.query(sql, {'projectId':projectId, 'keywords':newKeywords})
+                
+            # return true whether keyword exists or not
+            return True
+        else:
+            log.error("*** couldn't get keywords for project")
+            return False
+    except Exception, e:
+        log.info("*** couldn't add keyword to project")
+        log.error(e)
+        return False
+        
+def removeKeyword(db, projectId, keyword):
+    try:
+        sqlGet = "select keywords from project where project_id = $projectId"
+        data = list(db.query(sqlGet, {'projectId':projectId}))
+        
+        if (len(data) > 0):
+            keywords = data[0].keywords.split()
+            
+            if (keyword in keywords):
+                keywords.remove(keyword)
+                
+                newKeywords = ' '.join(keywords)
+    
+                sql = "update project set keywords = $keywords where project_id = $projectId"
+                db.query(sql, {'projectId':projectId, 'keywords':newKeywords})
+                
+            # return true whether keyword exists or not
+            return True
+        else:
+            log.error("*** couldn't get keywords for project")
+            return False
+    except Exception, e:
+        log.info("*** couldn't remove keyword from project")
+        log.error(e)
+        return False
     
 def addResourceToProject(db, projectId, resourceId):
     try:
@@ -578,6 +600,17 @@ def accomplishProjectGoal(db, projectGoalId):
         log.error(e)    
         return False 
         
+def removeProjectGoal(db, projectGoalId):
+    try:
+        sql = "update project_goal set is_active = 0 where project_goal_id = $id"
+        db.query(sql, {'id':projectGoalId})
+
+        return True           
+    except Exception, e:
+        log.info("*** problem removing goal")
+        log.error(e)    
+        return False 
+        
 def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None):
     try:
         db.insert('project_message', project_id = projectId,
@@ -593,6 +626,17 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
         log.error(e)    
         return False  
 
+def removeMessage(db, projectId, messageId):
+    try:
+        sql = "update project_message set is_active = 0 where project_id = $projectId and project_message_id = $messageId"
+        db.query(sql, {'projectId':projectId, 'messageId':messageId})
+
+        return True           
+    except Exception, e:
+        log.info("*** problem removing message  ")
+        log.error(e)    
+        return False 
+
 
 def getGoals(db, projectId):
     goals = []
@@ -601,7 +645,7 @@ def getGoals(db, projectId):
                   u.user_id, u.first_name, u.last_name, u.image_id
             from project_goal g
             inner join user u on u.user_id = g.user_id
-            where g.project_id = $id"""
+            where g.project_id = $id and g.is_active = 1"""
             
     try:
         data = list(db.query(sql, {'id':projectId}))
@@ -624,6 +668,48 @@ def getGoals(db, projectId):
         log.error(e)                  
         
     return goals
+    
+def getMessages(db, projectId, limit = 10, offset = 0):
+    messages = []
+
+    try:
+        sql = """select 
+                    m.project_message_id,
+                    m.message_type,
+                    m.message,
+                    m.created_datetime,
+                    u.user_id,
+                    u.first_name,
+                    u.last_name,
+                    i.idea_id,
+                    i.description as idea_description,
+                    i.submission_type as idea_submission_type,
+                    i.created_datetime as idea_created_datetime
+                from project_message m
+                inner join user u on u.user_id = m.user_id
+                left join idea i on i.idea_id = m.idea_id
+                where m.project_id = $id and m.is_active = 1
+                order by m.created_datetime desc
+                limit $limit offset $offset"""
+        data = list(db.query(sql, {'id':projectId, 'limit':limit, 'offset':offset}))
+        
+        for item in data:
+            messages.append(message(item.project_message_id, 
+                                    item.message_type, 
+                                    item.message, 
+                                    item.created_datetime, 
+                                    item.user_id, 
+                                    item.first_name, 
+                                    item.last_name, 
+                                    item.idea_id, 
+                                    item.idea_description, 
+                                    item.idea_submission_type, 
+                                    item.idea_created_datetime))
+    except Exception, e:
+        log.info("*** couldn't get messages")
+        log.error(e)
+        
+    return messages      
     
 def getProjectIdeas(db, projectId, limit = 100):
     ideas = []
