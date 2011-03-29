@@ -118,39 +118,10 @@ where p.project_id = $id;"""
         return endorsements
         
     def getLinks(self):
-        links = []
-        
-        sql = "select project_link_id, title, url, image_id from project_link where project_id = $id"
+        return getLinks(self.db, self.id)
                 
-        try:
-            data = list(self.db.query(sql, {'id':self.id}))
-            
-            if len(data) > 0:
-                for item in data:
-                    links.append(link(item.project_link_id, item.title, item.url, item.image_id))
-        except Exception, e:
-            log.info("*** couldn't get links")
-            log.error(e)                  
-            
-        return links
-        
     def getResources(self):
-        resources = []
-        
-        sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id from project_resource pr 
-                inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id"""
-                
-        try:
-            data = list(self.db.query(sql, {'id':self.id}))
-            
-            if len(data) > 0:
-                for item in data:
-                    resources.append(resource(item.project_resource_id, item.title, item.url, item.image_id))
-        except Exception, e:
-            log.info("*** couldn't get project resources")
-            log.error(e)                  
-            
-        return resources
+        return getResources(self.db, self.id)
         
     def getRelatedIdeas(self):
         ideas = []
@@ -733,6 +704,42 @@ def getMessages(db, projectId, limit = 10, offset = 0):
         log.error(e)
         
     return messages      
+
+
+def getLinks(db, projectId):
+    links = []
+    
+    sql = "select project_link_id, title, url, image_id from project_link where project_id = $id"
+            
+    try:
+        data = list(db.query(sql, {'id':projectId}))
+        
+        if len(data) > 0:
+            for item in data:
+                links.append(link(item.project_link_id, item.title, item.url, item.image_id))
+    except Exception, e:
+        log.info("*** couldn't get links")
+        log.error(e)                  
+        
+    return links
+    
+def getResources(db, projectId):
+    resources = []
+    
+    sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id from project_resource pr 
+            inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id"""
+            
+    try:
+        data = list(db.query(sql, {'id':projectId}))
+        
+        if len(data) > 0:
+            for item in data:
+                resources.append(resource(item.project_resource_id, item.title, item.url, item.image_id))
+    except Exception, e:
+        log.info("*** couldn't get project resources")
+        log.error(e)                  
+        
+    return resources
     
 def getProjectIdeas(db, projectId, limit = 100):
     ideas = []
