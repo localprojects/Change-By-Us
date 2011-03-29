@@ -28,6 +28,8 @@ class Home(Controller):
         elif (action == 'resource'):
             #todo move this to its own controller
             return self.addResource()
+        elif (action == 'feedback'):
+            return self.submitFeedback()
         else:
             return self.not_found()
             
@@ -164,3 +166,18 @@ class Home(Controller):
             
         return betterData
                 
+    def submitFeedback(self):
+        name = self.request('name')
+        email = self.request('email')
+        comment = self.request('comment')
+        
+        try:
+            self.db.insert('site_feedback', submitter_name = name,
+                                            submitter_email = email,
+                                            comment = comment)
+                                            
+            return True
+        except Exception, e:
+            log.info("*** problem submitting feedback comment")
+            log.error(e)
+            return False
