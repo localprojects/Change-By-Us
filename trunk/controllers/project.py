@@ -93,7 +93,7 @@ class Project(Controller):
             
             projDictionary = project.getFullDictionary()
             
-        project_user = self.getProjectUser(action)  
+        project_user = self.getProjectUser(projectId)  
         self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
         
         self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
