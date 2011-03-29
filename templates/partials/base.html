@@ -87,7 +87,7 @@
 						<li class="userland">
 							<div class="join"><a href='/join'>Join</a></div>
 							<div class='login'><a href='/login'>Login</a></div>
-							<div class='messages has-messages'><a href='/useraccount#messages'>&nbsp;</a></div>
+							<div class='messages has-messages'><a href='/useraccount#messages'><span class="indicator"><span class="num">2</span></span></a></div>
 							<div class='username'>
 								<a href='/useraccount'><span class="unbold">Hi, </span>{% if d.template_data and d.template_data.user %}{{ d.template_data['user'].data.f_name }}{% endif %}!</a>
 								<div class="dropdown">
@@ -260,6 +260,13 @@
 		<script src="/static/js/tc.gam.app.js"></script>
 		
 		{% block page_js %}{% endblock page_js %}
+		
+		<!--<script type="text/javascript">
+			// only hide page until typekit is loaded for less than firefox 4 (gecko 2.0)
+			if (tc.jQ.browser.mozilla && tc.jQ.browser.version.slice(0,3) < 2) {
+			    tc.jQ('.wf-loading .exosphere, .wf-loading .exosphere .small-note').addClass('typekit-loading');
+			}
+		</script>-->
 		
 		<script type='text/javascript'>
 			jQuery(document).one('ready',function(e){
