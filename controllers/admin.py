@@ -5,7 +5,14 @@ import giveaminute.idea as mIdea
 
 class Admin(Controller):
     def GET(self, action = None, param0 = None, param1 = None):
-        pass                                      
+        self.require_login("/login", True)
+    
+        if (action == 'admin'):
+            return self.showAdmin()
+        elif (action == 'content'):
+            return self.showContent()
+        else:
+            return self.not_found()                   
             
     def POST(self, action = None, param0 = None, param1 = None):
         self.require_login("/login", True)
@@ -16,6 +23,13 @@ class Admin(Controller):
             return self.updateBlacklist()
         else:
             return self.not_found()
+            
+    def showAdmin(self):
+        return self.render('cms_adminsettings')
+        
+        
+    def showContent(self):
+        return self.render('cms_content')
             
 
     def addUser(self):
