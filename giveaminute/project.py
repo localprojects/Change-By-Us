@@ -264,7 +264,10 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
     
     try:
         if (not locationId or locationId < 1):
+            log.info("*** no location id")
             locationId = -1
+        else:
+            log.info("*** location id = %s" % locationId)
     
         projectId = db.insert('project', title = title,
                                     description = description, 
@@ -282,6 +285,26 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
         log.error(e)    
         
     return projectId
+    
+def updateProjectImage(db, projectId, imageId):
+    try:
+        sql = "update project set image_id = $imageId where project_id = $projectId"
+        db.query(sql, {'projectId':projectId, 'imageId':imageId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't update project image")
+        log.error(e)
+        return False
+        
+def updateProjectDescription(db, projectId, description):
+    try:
+        sql = "update project set description = $description where project_id = $projectId"
+        db.query(sql, {'projectId':projectId, 'description':description})
+        return True
+    except Exception, e:
+        log.info("*** couldn't update project description")
+        log.error(e)
+        return False
     
 def join(db, projectId, userId, isAdmin = False):
     if (not isUserInProject(db, projectId, userId)):
