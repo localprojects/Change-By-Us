@@ -13,6 +13,8 @@ class Project(Controller):
                 return self.not_found()
         elif (action == 'goals'):
             return self.getGoals()
+        elif (action == 'messages'):
+            return self.getMessages()
         elif (action == 'featured'):
             return self.getFeaturedProjects()
         elif (action == 'small'):
@@ -49,15 +51,31 @@ class Project(Controller):
                 return self.featureGoal()
             elif (param0 == 'accomplish'):
                 return self.accomplishGoal()
+            elif (param0 == 'remove'):
+                return self.removeGoal()
             else:
                 return self.not_found()
         elif (action == 'message'):
             if (param0 == 'add'):
                 return self.addMessage()
+            elif (param0 == 'remove'):
+                return self.removeMessage()
+            else:
+                return self.not_found()
+        elif (action == 'tag'):
+            if (param0 == 'add'):
+                return self.addKeyword()
+            elif (param0 == 'remove'):
+                return self.removeKeyword()
             else:
                 return self.not_found()
         elif (action == 'invite'):
             return self.invite()
+        elif (action == 'user'):
+            if (param0 == 'remove'):
+                return self.removeUser()
+            else:
+                return self.not_found()
         else:
             return self.not_found()
         
@@ -250,6 +268,15 @@ class Project(Controller):
         else:
             return mProject.accomplishProjectGoal(self.db, projectGoalId)        
             
+    def removeGoal(self):
+        projectGoalId = self.request('goal_id')
+        
+        if (not projectGoalId):
+            log.error("*** goal accomplish attempted w/o goal id")
+            return False              
+        else:
+            return mProject.removeProjectGoal(self.db, projectGoalId)                    
+            
     def getGoals(self):
         projectId = self.request('project_id')
         
@@ -267,6 +294,23 @@ class Project(Controller):
             return False
         else:
             return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id)
+            
+    def removeMessage(self):
+        projectId = self.request('project_id')
+        messageId = self.request('message_id')
+        
+        if (not projectId or not messageId):
+            log.error("*** message remove attempted w/o ids")
+            return False        
+        else:
+            return mProject.removeMessage(self.db, projectId, messageId)
+        
+    def getMessages(self):
+        projectId = self.request('project_id')
+        limit = util.try_f(int, self.request('n_messages'), 10)
+        offset = util.try_f(int, self.request('offset'), 0)
+        
+        return self.json(mProject.getMessages(self.db, projectId, limit, offset))        
         
     def getFeaturedProjects(self):
         projects = []
@@ -302,10 +346,22 @@ class Project(Controller):
                                 project.data.owner_last_name, 
                                 project.data.owner_image_id)
                   
+    def addKeyword(self):
+        projectId = self.request('project_id')
+        keyword = self.request('text')
         
+        return mProject.addKeyword(self.db, projectId, keyword)        
+      
+    def removeKeyword(self):
+        projectId = self.request('project_id')
+        keyword = self.request('text')
         
+        return mProject.removeKeyword(self.db, projectId, keyword)             
         
+    def removeUser(self):
+        projectId = self.request('project_id')
+        userId = self.request('user_id')
         
-        
+        return mProject.removeUserFromProject(self.db, projectId, userId)    
         
         
