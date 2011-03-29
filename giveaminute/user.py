@@ -117,6 +117,19 @@ where u.user_id = $id"""
             log.error(e)
             return False
             
+    def updatePassword(self, password):
+        try:
+            hashedPassword, salt = makePassword(password)
+            
+            sql = "update user set password = $pw, salt = $salt where user_id = $id"
+            self.db.query(sql, {'id':self.id, 'pw':hashedPassword, 'salt':salt})
+            
+            return True
+        except Exception, e:
+            log.info("*** problem updating user's password")
+            log.error(e)
+            return False 
+            
     def setMessagePreferences(self, pref):
         try:
             sql = "update user set email_notification = $pref where user_id = $id"
