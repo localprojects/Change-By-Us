@@ -38,10 +38,11 @@ Give A Minute - Search Results
 					<a class="clear-field" href=""></a>
 				</div>
 				<span class="in">in</span>
-				<!-- <input type="text" class="search-location" /> -->
-				<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %}/>
-				<div class="location-hood-list"><ul></ul></div>
-				
+				<div class="search-hood-container">
+					<span class="dropdown-indicator"></span>
+					<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %}/>
+					<div class="location-hood-list"><ul></ul></div>
+				</div>
 				<input type="submit" class="rounded-button search-submit" value="Search" />
 			</div>
 		</form>
@@ -408,6 +409,9 @@ Give A Minute - Search Results
 		});
 		
 		tc.gam.ideas_invite( app );
+		
+		// turn location field autocomplete off
+		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
 		
 	});
 </script>
