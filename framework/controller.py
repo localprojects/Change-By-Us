@@ -66,7 +66,9 @@ class Controller():
             log.info("--> not logged in")
             self.redirect(url)
             return False
-        if admin and self.user['admin'] != 1:
+        # gam-specific admin
+        #if admin and self.user['admin'] != 1:
+        if (admin and not self.user.isAdmin):
             log.info("--> not an admin")            
             self.redirect(url)                      
             return False
