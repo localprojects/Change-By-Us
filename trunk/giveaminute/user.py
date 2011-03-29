@@ -351,6 +351,17 @@ def findUserByPhone(db, phone):
     else:
         return None  
     
+def assignUserToGroup(db, userId, userGroupId):
+    try:
+        db.insert('user__user_group', user_id = userId, 
+                                      user_group_id = userGroupId)
+                                      
+        return True
+    except Exception, e:
+        log.info("*** couldn't assign user id %s to group id %s" % (userId, userGroupId))
+        log.error(e)
+        return False
+    
 #temp get dummy data
 def getDummyDictionary():
     data = dict(u_id = 37,
