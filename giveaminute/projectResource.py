@@ -31,10 +31,14 @@ class ProjectResource():
                     location_id = self.data.location_id)
         return data
         
-def getProjectResourcesByLocation(db, locationId):
+def getProjectResourcesByLocation(db, locationId, notInProjectId = None):
     try:
         sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
                     from project_resource pr where pr.is_active = 1 and pr.location_id = $locationId"""
+                    
+        if (notInProjectId):
+            sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
+                    
         data = list(db.query(sql, {'locationId':locationId}))
     
         return data
@@ -43,13 +47,16 @@ def getProjectResourcesByLocation(db, locationId):
         log.error(e)
         return None
         
-def getProjectResourcesByKeywords(db, keywords):
+def getProjectResourcesByKeywords(db, keywords, notInProjectId = None):
     # there's a better way to do this
     keywordClause = "%%' or pr.keywords like '%%".join(keywords)
     
     try:
         sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
                     from project_resource pr where pr.is_active = 1 and (pr.keywords like '%%%%%s%%%%')""" % keywordClause
+
+        if (notInProjectId):
+            sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
 
         data = list(db.query(sql))
     
@@ -59,15 +66,17 @@ def getProjectResourcesByKeywords(db, keywords):
         log.error(e)
         return None        
         
-def getProjectResources(db, keywords, locationId):
-    keywordClause = "%%' or p.keywords like '%%".join(keywords)
+def getProjectResources(db, keywords, locationId, notInProjectId = None):
+    keywordClause = "%%' or pr.keywords like '%%".join(keywords)
     
     try:
         sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and (location_id = $locationId or (pr.keywords like '%%%%%s%%%%'))""" % keywordClause
+                    from project_resource pr where pr.is_active = 1 and (location_id = $locationId and (pr.keywords like '%%%%%s%%%%'))""" % keywordClause
+
+        if (notInProjectId):
+            sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
+
         data = list(db.query(sql, {'locationId':locationId}))
-        
-        log.info("*** kw sql = %s" % sql)
     
         return data
     except Exception, e:
