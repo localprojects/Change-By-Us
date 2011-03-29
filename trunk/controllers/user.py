@@ -18,6 +18,8 @@ class UserAccount(Controller):
             return self.setUserMessagePreferences()
         elif (action == 'edit'):
             return self.editUser()
+        elif (action == 'password'):
+            return self.changePassword()
         else:
             return self.not_found()
         
@@ -71,7 +73,6 @@ class UserAccount(Controller):
         firstName = self.request('f_name')
         lastName = self.request('l_name')
         email = self.request('email')
-        password = self.request('password')
         imageId = self.request('image_id')
         
         log.info("*** attempt update: %s, %s, %s" % (firstName, lastName, email))
@@ -84,5 +85,8 @@ class UserAccount(Controller):
             log.info("*** not enough info to update user")
             return False
         
+    def changePassword(self):
+        password = self.request('new_password')
         
-        
+        return self.user.updatePassword(password)   
+    
