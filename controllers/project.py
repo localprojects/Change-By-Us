@@ -76,6 +76,10 @@ class Project(Controller):
                 return self.removeUser()
             else:
                 return self.not_found()
+        elif (action == 'photo'):
+            return self.updateImage()
+        elif (action == 'description'):
+            return self.updateDescription()
         else:
             return self.not_found()
         
@@ -364,4 +368,15 @@ class Project(Controller):
         
         return mProject.removeUserFromProject(self.db, projectId, userId)    
         
+    def updateImage(self):
+        projectId = self.request('project_id')
+        imageId = self.request('image_id')
         
+        return mProject.updateProjectImage(self.db, projectId, imageId)
+        
+    def updateDescription(self):
+        projectId = self.request('project_id')
+        description = self.request('text')
+        
+        return mProject.updateProjectDescription(self.db, projectId, description)
+            
