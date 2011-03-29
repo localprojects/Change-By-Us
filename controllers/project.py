@@ -11,6 +11,11 @@ class Project(Controller):
                 return self.getResourceInfo()
             else:
                 return self.not_found()
+        elif (action == 'resources'):
+            if (param0 == 'related'):
+                return self.getRelatedResources()
+            else:
+                return self.getResourcesAndLinks()
         elif (action == 'goals'):
             return self.getGoals()
         elif (action == 'messages'):
@@ -20,9 +25,6 @@ class Project(Controller):
         elif (action == 'small'):
             return self.getProject()            
         else:
-            project_user = self.getProjectUser(action)  
-            self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
-                                                
             return self.showProject(action)                                        
             
     def POST(self, action=None, param0=None):
@@ -90,6 +92,9 @@ class Project(Controller):
             project = mProject.Project(self.db, projectId)
             
             projDictionary = project.getFullDictionary()
+            
+        project_user = self.getProjectUser(action)  
+        self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
         
         self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
     
@@ -241,6 +246,34 @@ class Project(Controller):
         
         return info
         
+    def getResourcesAndLinks(self):
+        projectId = self.request('project_id')
+        
+        data = dict(links = mProject.getLinks(self.db, projectId),
+                    resources = mProject.getResources(self.db, projectId))
+        
+        return self.json(data)
+        
+    def getRelatedResources(self):
+        projectId = self.request('project_id')
+        resources = []
+        
+        project = mProject.Project(self.db, projectId)
+        
+        keywords = project.data.keywords.split()
+        locationId = project.data.location_id
+                
+        if (locationId and len(keywords) > 0):
+            resources = mProjectResource.getProjectResources(self.db, keywords, locationId, projectId)
+        elif (locationId):
+            resources = mProjectResource.getProjectResourcesByLocation(self.db, locationId, projectId)
+        elif (len(keywords) > 0):
+            resources = mProjectResource.getProjectResourcesByKeywords(self.db, keywords, projectId)
+        
+        obj = dict(resources = resources)
+        
+        return self.json(obj)
+        
     def addGoal(self):
         projectId = self.request('project_id')
         description = self.request('text')
@@ -337,8 +370,6 @@ class Project(Controller):
         projectId = self.request('project_id')
     
         project = mProject.Project(self.db, projectId)
-        
-        log.info("*** proj id = %s" % projectId)
         
         return mProject.smallProject(project.id, 
                                 project.data.title, 
