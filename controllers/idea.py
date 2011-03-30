@@ -1,6 +1,7 @@
 import giveaminute.idea as mIdea
 import giveaminute.keywords as mKeywords
 import giveaminute.project as mProject
+import framework.util as util
 from framework.controller import *
 
 class Idea(Controller):
@@ -22,7 +23,7 @@ class Idea(Controller):
         
     def newIdea(self):
         description = self.request('text')
-        locationId = self.request('location_id')
+        locationId = util.try_f(int, self.request('location_id'), -1)
 
         if (self.user):
             userId = self.user.id
