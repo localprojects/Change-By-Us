@@ -24,7 +24,7 @@
 					<p class="hint">Post your update as a comment or add links to photos and videos.</p>
 				</div>
 				<div class="primary-action">
-					<!--<button class="rounded-button">Update</button>-->
+					<button class="rounded-button">Update</button>
 					<a class="ca-btn submit-button" href="#">
 						<span>Post</span>
 					</a>
@@ -47,7 +47,7 @@
 				{% for message in d.template_data.project.data.info.messages['items'] %}
 					<li class=" ">
 						{% if d.template_data.project_user.data.is_project_admin %}
-							<!-- <a class="close" href="#"><span>Close</span></a> -->
+							<a class="close" href="#"><span>Close</span></a>
 						{% endif %}
 						<div class="membrane">
 							<div class="thumb">
@@ -89,7 +89,7 @@
 		
 		
 		<div class="load-more" {% if d.template_data.project.data.info.messages['n_returned'] < 10 %} style='display:none;' {% endif %}>
-			<a href="#"><span>Load older posts</span></a>
+			<a href="#" class='load_more_button'><span>Load older posts</span></a>
 		</div>
 	
 
@@ -97,7 +97,7 @@
 
 <li class='template-content message-markup'>
 	{% if d.template_data.project_user.data.is_project_admin %}
-		<!-- <a class="close" href="#"><span>Close</span></a> -->
+		<a class="close" href="#"><span>Close</span></a>
 	{% endif %}
 	<div class="membrane">
 		<div class="thumb">
@@ -110,7 +110,7 @@
 			<blockquote class="serif">
 				<p class='message-body'></p>
 			</blockquote>
-			<cite class="meta-ft">Created Just Now&hellip;</cite>
+			<cite class="meta-ft">Just Now&hellip;</cite>
 		</div>
 	</div>
 </li>
@@ -135,10 +135,18 @@
 			merlin:null
 		};
 		
+		this.runtime_data = {
+			n_to_fetch:10,
+			offset:{{ d.template_data.project.data.info.messages['items']|length }},
+			message_template:tc.jQ('.template-content.message-markup').clone().removeClass('template-content')
+			
+		}
+		
 		this.elements = {
 			userprompt: this.dom.find(".conversation-input label"),
 			textpane: this.dom.find(".conversation-input textarea"),
-			message_stack:this.dom.find("ol.comment-stack")
+			message_stack:this.dom.find("ol.comment-stack"),
+			load_more_button:this.dom.find('.load_more_button')
 		};
 		
 		this.handlers = {
@@ -151,10 +159,55 @@
 				message.hide();
 				e.data.me.elements.message_stack.prepend(message);
 				message.slideDown(500);
+			},
+			load_more_button_click:function(e, d){
+				e.preventDefault();
+				tc.jQ.ajax({
+					type:"GET",
+					url:"/project/messages",
+					data:{
+						project_id: e.data.me.options.app.app_page.data.project.project_id,
+						n_messages: e.data.me.runtime_data.n_to_fetch,
+						offset: e.data.me.runtime_data.offset
+					},
+					context:e.data.me,
+					dataType:"text",
+					success: function(data, ts, xhr) {
+						var d, tempdom;
+						try {
+							d = tc.jQ.parseJSON(data);
+						} catch(e) {
+							tc.util.log("/useraccount/messages: json parsing error", "warn");
+							return;
+						}
+						if (!d.length) {
+							return;
+						} else if(d.length < this.runtime_data.n_to_fetch){
+							this.elements.load_more_button.animate({
+								opacity:0.0
+							});
+						}
+						for(i in d){
+							tempdom = this.runtime_data.message_template.clone();
+							if(d[i].owner.image_id){
+								tempdom.find('img').attr('src','/images/'+(d[i].owner.image_id%10)+'/'+d[i].owner.image_id+'.png' );
+							} else {
+								tempdom.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
+							}
+							
+							tempdom.find('.meta-ft').text(d[i].created);
+							tempdom.find('.message-body').text(d[i].body);
+							this.elements.message_stack.append(tempdom);
+							this.runtime_data.offset++;
+						}
+					}
+				});
+				
 			}
 		};
 		
 		project.dom.bind('add-new-message',{me:this},this.handlers.add_new_message);
+		this.elements.load_more_button.bind('click', { project:project,me:this }, this.handlers.load_more_button_click);
 		this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
 		this.elements.textpane.autoGrow();
 		

@@ -16,7 +16,7 @@
 		<table class="resources-list doublewide"></table>
 		
 		<div class="empty-state-box">
-			<!-- <a class="close" href="#"><span>Close</span></a> -->
+			<a class="close" href="#"><span>Close</span></a>
 			<p>No resources found.</p>
 		</div>
 							
@@ -84,6 +84,7 @@
 							return false;
 						}
 						tc.util.log("resource add success");
+						project.dom.trigger('resources-refresh',{ type:'organization' });
 						add_btn.parent().addClass("added");
 					}
 				});
@@ -92,12 +93,10 @@
 		
 		function get() {
 			tc.jQ.ajax({
-				url: '/create/resources',
+				type: 'GET',
+				url: '/project/resources/related',
 				data: {
-					text: data.project.info.mission,
-					title: data.project.info.title,
-					keywords: data.project.info.keywords.join(","),
-					location_id: data.project.info.location.location_id
+					project_id: project.data.project_id
 				},
 				context: me,
 				dataType:'text',

@@ -101,54 +101,17 @@
 			<p class="m24"><strong>Be a part of the solution.</strong></p> 
 			<p class="m18">Join a project or <strong><a href='/'>visit the full site</a></strong> to start your own.</p>
 		</div>
-		<div class="projects carousel">
+		<div class="projects">
 			<div class="row clearfix">
 				<div class="actions east">
 					<a class="prev" href="#"><span>back</span></a>
 					<a class="next" href="#"><span>next</span></a>
 				</div>
-				<p><span class="light">FOUND</span> <strong class='n_projects'>XX</strong> projects</p>
+				<p><span class="light">FOUND</span> <strong class='n_projects'></strong> projects</p>
 			</div>
 			<div class="row carousel">
 				<div class="scrollable featured">
-					<ul class="projects-list clearfix items">
-						<li class="swipe" id='1'>
-							<div class="thumb">
-								<img src="http://placehold.it/50x50" alt="" class="proj"/>
-								<span class="overlay-tag"></span>
-								<span class="member-count">58</span>
-							</div>
-							<div class="project-info">
-								<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-								<span class="creator"><em>Created by </em> Terry Richardson</span>
-								<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-							</div>
-						</li>
-						<li class="swipe" id='2'>
-							<div class="thumb">
-								<img src="http://placehold.it/50x50" alt="" class="proj"/>
-								<span class="overlay-tag"></span>
-								<span class="member-count">58</span>
-							</div>
-							<div class="project-info">
-								<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-								<span class="creator"><em>Created by </em> Terry Richardson</span>
-								<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-							</div>
-						</li>
-						<li class="swipe" id='3'>
-							<div class="thumb">
-								<img src="http://placehold.it/50x50" alt="" class="proj"/>
-								<span class="overlay-tag"></span>
-								<span class="member-count">58</span>
-							</div>
-							<div class="project-info">
-								<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
-								<span class="creator"><em>Created by </em> Terry Richardson</span>
-								<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
-							</div>
-						</li>
-					</ul>
+					<ul class="projects-list clearfix items"></ul>
 				</div>
 				
 			</div>
@@ -453,9 +416,11 @@
 						
 						if(!merlin.app.components.carousels.related){
 							merlin.app.components.carousels.related = new tc.carousel({
-								element: dom.find(".carousel")
+								element: dom.find(".carousel"),
+								next_button: dom.find('.next'),
+								prev_button: dom.find('.prev')
 							});
-							merlin.app.components.carousels.related.set_nav_btns(dom.find('.next'), dom.find('.prev'));
+							
 							dom.find('.ca-btn').bind('click',{m:merlin,carousel:merlin.app.components.carousels.related}, function(e){
 								e.stopPropagation();
 								e.preventDefault();
@@ -516,15 +481,46 @@
 						dom.find('.swipe').css('width',dom.find('.scrollable').width());
 						tc.util.dump(merlin.app.components.carousels.featured);
 						if(!merlin.app.components.carousels.featured){
+							
 							merlin.app.components.carousels.featured = new tc.carousel({
-								element: dom.find(".carousel")
+								element: dom.find(".carousel"),
+								next_button: dom.find('.next'),
+								prev_button: dom.find('.prev')
 							});
-							merlin.app.components.carousels.featured.set_nav_btns(dom.find('.next'), dom.find('.prev'));
+							
 							dom.find('.ca-btn').bind('click',{m:merlin,carousel:merlin.app.components.carousels.featured}, function(e){
 								e.stopPropagation();
 								e.preventDefault();
 								e.data.m.options.steps['join-process'].data.project_id = e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()].id;
 								window.location.hash = 'mobile,join-process';
+							});
+							
+							tc.jQ.ajax({
+								type:'GET',
+								url:'/project/featured',
+								context:merlin,
+								dataType:'json',
+								success:function(data,ts,xhr){
+									var n_projects;
+									n_projects = 0;
+									for(i in data){
+										tempitem = data[i];
+										tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass('template-content');
+										if(tempitem.image_id){
+											tempdom.find('img').attr('src','/imgages/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
+										}
+										tempdom.find('.member-count').text(tempitem.num_members);
+										tempdom.find('a').attr('href','/project/'+tempitem.project_id).text(tempitem.title);
+										tempdom.find('.description').text(tempitem.description);
+										tempdom.find('.owner').text('XXXX XXXXX');
+										tempdom.attr('id',tempitem.project_id);
+										tempdom.css('width',dom.find('.scrollable').width());
+										n_projects++;
+										merlin.app.components.carousels.featured.get_element().find('ul').append(tempdom);
+									}
+									merlin.current_step.dom.find('.n_projects').text(n_projects);
+									merlin.app.components.carousels.featured.render();
+								}
 							});
 						}
 					}
@@ -537,9 +533,11 @@
 						dom.find('.swipe').css('width',dom.find('.scrollable').width());
 						if(!merlin.app.components.carousels.invited){
 							merlin.app.components.carousels.invited = new tc.carousel({
-								element: dom.find(".carousel")
+								element: dom.find(".carousel"),
+								next_button: dom.find('.next'),
+								prev_button: dom.find('.prev')
 							});
-							merlin.app.components.carousels.invited.set_nav_btns(dom.find('.next'), dom.find('.prev'));
+							
 							dom.find('.ca-btn').bind('click',{m:merlin,carousel:merlin.app.components.carousels.invited}, function(e){
 								e.stopPropagation();
 								e.preventDefault();
