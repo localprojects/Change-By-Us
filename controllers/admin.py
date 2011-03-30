@@ -14,6 +14,31 @@ class Admin(Controller):
             return self.showContent()
         elif (action == 'users'):
             return self.getAdminUsers()
+        elif (action == 'project'):
+            if (param0 == 'getflagged'):
+                return self.getFlaggedProjects()
+            else:
+                return self.not_found()
+        elif (action == 'idea'):
+            if (param0 == 'getflagged'):
+                return self.getFlaggedIdeas()
+            else:
+                return self.not_found()
+        elif (action == 'message'):
+            if (param0 == 'getflagged'):
+                return self.getFlaggedMessages()
+            else:
+                return self.not_found()
+        elif (action == 'goal'):
+            if (param0 == 'getflagged'):
+                return self.getFlaggedGoals()
+            else:
+                return self.not_found()
+        elif (action == 'link'):
+            if (param0 == 'getflagged'):
+                return self.getFlaggedLinks()
+            else:
+                return self.not_found()
         else:
             return self.not_found()                   
             
@@ -70,6 +95,114 @@ class Admin(Controller):
     
         return self.render('cms_content')
         
+    def getFlaggedProjects(self):
+        sql = """select p.title as project_title, 
+                         p.project_id,
+                         'project' as item_type,
+                         p.project_id as item_id,
+                         p.description as item_description,
+                         cast(p.created_datetime as char) as item_created_datetime,
+                         u.first_name as owner_first_name,
+                         u.last_name as owner_last_name,
+                         u.user_id as owner_user_id
+                  from project p
+                  left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
+                  left join user u on u.user_id = pu.user_id
+                  where p.is_active = 1 and p.num_flags > 0
+                  order by p.created_datetime desc
+                limit $limit offset $offset"""
+                
+        return self.getFlaggedItems(sql)
+        
+    def getFlaggedIdeas(self):
+        sql = """select null as project_title, 
+                         null as project_id,
+                         'idea' as item_type,
+                         i.idea_id as item_id,
+                         i.description as item_description,
+                         cast(i.created_datetime as char) as item_created_datetime,
+                         u.first_name as owner_first_name,
+                         u.last_name as owner_last_name,
+                         u.user_id as owner_user_id
+                  from idea i
+                  left join user u on u.user_id = i.user_id
+                  where i.is_active = 1 and i.num_flags > 0
+                  order by i.created_datetime desc
+                  limit $limit offset $offset"""
+                  
+        return self.getFlaggedItems(sql)
+
+    def getFlaggedMessages(self):
+        sql = """select p.title as project_title, 
+                         p.project_id,
+                         'message' as item_type,
+                         pm.project_id as item_id,
+                         pm.message as item_description,
+                         cast(pm.created_datetime as char) as item_created_datetime,
+                         u.first_name as owner_first_name,
+                         u.last_name as owner_last_name,
+                         u.user_id as owner_user_id
+                  from project_message pm
+                  inner join project p on pm.project_id = p.project_id
+                  inner join user u on u.user_id = pm.user_id
+                  where pm.is_active = 1 and pm.num_flags > 0
+                  order by pm.created_datetime desc
+                  limit $limit offset $offset"""
+                  
+        return self.getFlaggedItems(sql)
+
+        
+    def getFlaggedGoals(self):
+        sql = """select p.title as project_title, 
+                         p.project_id,
+                         'goal' as item_type,
+                         pg.project_goal_id as item_id,
+                         pg.description as item_description,
+                         cast(pg.created_datetime as char) as item_created_datetime,
+                         u.first_name as owner_first_name,
+                         u.last_name as owner_last_name,
+                         u.user_id as owner_user_id
+                  from project_goal pg
+                  inner join project p on pg.project_id = p.project_id
+                  inner join user u on u.user_id = pg.user_id
+                  where pg.is_active = 1 and pg.num_flags > 0
+                  order by pg.created_datetime desc
+                  limit $limit offset $offset"""
+                  
+        return self.getFlaggedItems(sql)
+
+    def getFlaggedLinks(self):
+        sql = """select p.title as project_title, 
+                         p.project_id,
+                         'link' as item_type,
+                         pl.project_link_id as item_id,
+                         concat(pl.title, ': ', pl.url) as item_description,
+                         cast(pl.created_datetime as char) as item_created_datetime,
+                         u.first_name as owner_first_name,
+                         u.last_name as owner_last_name,
+                         u.user_id as owner_user_id
+                  from project_link pl
+                  inner join project p on pl.project_id = p.project_id
+                  left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
+                  left join user u on u.user_id = pu.user_id
+                  where pl.is_active = 1 and pl.num_flags > 0
+                  limit $limit offset $offset"""
+                  
+        return self.getFlaggedItems(sql)
+        
+    def getFlaggedItems(self, sql):
+        limit = util.try_f(int, self.request('n_limit'), 10)
+        offset = util.try_f(int, self.request('offset'), 0)
+        data = []
+        
+        try:
+            data = list(self.db.query(sql, {'limit':limit, 'offset':offset}))
+        except Exception, e:
+            log.info("*** problem getting flagged items")
+            log.error(e)
+            
+        return self.json(data)
+                
     def getAdminUsers(self):
         limit = util.try_f(int, self.request('n_users'), 10)
         offset = util.try_f(int, self.request('offset'), 0)
