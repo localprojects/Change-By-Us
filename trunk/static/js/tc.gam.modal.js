@@ -45,7 +45,18 @@ tc.modal.prototype.show = function(opts, event_target){
 	content.show();
 	this.options.element.append(content);
 	this.options.element.find('.close').bind('click',{me:this},function(e){
+		e.preventDefault();
 		e.data.me.hide();
+	});
+	this.options.element.find('.submit').bind('click',{me:this,opts:opts},function(e){
+		e.preventDefault();
+		e.data.me.hide();
+		if(tc.jQ.isFunction(e.data.opts.submit)){
+			e.data.opts.submit();
+		}
+	});
+	this.options.element.bind('onClose',{me:this},function(e){
+		e.data.me.options.element.children().remove();
 	});
 	if(tc.jQ.isFunction(opts.init)){
 		if (event_target) {
@@ -60,8 +71,5 @@ tc.modal.prototype.show = function(opts, event_target){
 
 tc.modal.prototype.hide = function(){
 	tc.util.log('tc.modal.hide');
-	this.options.element.one('onClose',{me:this},function(e){
-		e.data.me.options.element.children().remove();
-	});
 	this.modal.close();
 };

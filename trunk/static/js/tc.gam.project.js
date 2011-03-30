@@ -37,6 +37,12 @@ tc.gam.project = function(options){
 		if(e){
 			e.data.project.components.goals_main.show(false);
 			e.data.project.components.conversation.show(false);
+			
+			if (tc.gam.project_widgets.goals_stack) {
+				e.data.project.components.goals_stack.hide(false);
+			}
+			e.data.project.components.goals_add.hide(false);
+			e.data.project.components.add_link.hide(false);
 		} else {
 			this.components.goals_main.show(false);
 			this.components.conversation.show(false);
@@ -67,6 +73,7 @@ tc.gam.project = function(options){
 					e.data.project.components.conversation.hide(false);
 					break;
 				case 'goals_stack':
+					e.data.project.components.goals_add.hide(false);
 					e.data.project.components.goals_main.hide(false);
 					break;
 				case 'related_resources':
@@ -105,12 +112,14 @@ tc.gam.project = function(options){
 			tc.util.log('tc.project.handlers.hashchange');
 			var hash;
 			hash = window.location.hash.substring(1,window.location.hash.length);
-			if(hash == ''){
+			if(hash == 'project-home'){
+				e.preventDefault();
 				go_home(e);
 				return;
 			}
 			switch(hash.split(',')[0]){
 				case 'show':
+					e.preventDefault();
 					if(e.data.project.components[hash.split(',')[1]]){
 						e.data.project.components[hash.split(',')[1]].show();
 					}
