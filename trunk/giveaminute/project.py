@@ -272,7 +272,7 @@ def updateProjectImage(db, projectId, imageId):
 def updateProjectDescription(db, projectId, description):
     try:
         # censor behavior
-        numFlags = censor.badwords(db, title + " " + description)
+        numFlags = censor.badwords(db, description)
         isActive = 0 if numFlags == 2 else 1
     
         if (numFlags == 2):
