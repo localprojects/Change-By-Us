@@ -26,7 +26,7 @@
 				<p class='mission-text'>{{ d.template_data.project.data.info.mission }}</p>
 			</div>
 		</div>
-		<div class="endorsements" {% if d.template_data.project.data.info.endorsements['items']|length == 0 %} style='display:none;' {% endif %}>
+		<div class="endorsements" {% if d.template_data.project.data.info.endorsements['items']|length == 0 and d.template_data.user.data.is_leader == False %} style='display:none;' {% endif %}>
 			<div class="sub-hd">
 				<h3>Endorsements</h3>
 			</div>
@@ -45,7 +45,7 @@
 						</li>
 					{% endfor %}
 				</ul>
-				{% if d.template_data.user.data.is_leader %}
+				{% if d.template_data.user and d.template_data.user.data.is_leader %}
 					<a class="endorse-button"><span><span class="fancy-caps">Endorse <span>this</span> project</span></span></a>
 				{% endif %}
 			</div>
