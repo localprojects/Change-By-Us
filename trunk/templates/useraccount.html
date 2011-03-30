@@ -231,16 +231,27 @@ Give A Minute - User Account
 												<label>E-mail address</label>
 												<input type="text" value="{{ d.template_data.user.data.email }}" />
 											</div>
-											<div class="row row-change-pass clearfix">
-												<label>Change Password</label>
-												<input type="password" value="" />
+										</div>
+										<div class="clearfix">
+											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
+											<a href="#" class="change-password rounded-button small">Change Password</a>
+										</div>
+										<div class="password-info">
+											<div class="row">
+												<label>Password</label>
+												<input type="password"/>
+											</div>
+											<div class="row">
+												<label>Confirm Password</label>
+												<input type="password"/>
+											</div>
+											<div class="controls">
+												<input class="rounded-button password-save-button" type="submit" value="Save Changes"/>
+												<a href="#" class="">Cancel</a>
 											</div>
 										</div>
-										<div>
-											<input class="rounded-button save-button" type="submit" value="Save Changes"/>
-										</div>
 									</div>
-								</form>
+								</form>	
 								<div class="social-networking facebook-connected">
 									<div class="social-connect-wrapper">
 										<a href="" class="connect-facebook"></a>
@@ -468,7 +479,6 @@ Give A Minute - User Account
 					f_name: app.app_page.user.f_name,
 					l_name: app.app_page.user.l_name,
 					email: app.app_page.user.email,
-					password: null,
 					image_id: app.app_page.user.image_id || null
 				},
 				steps: {
@@ -486,13 +496,10 @@ Give A Minute - User Account
 							email:{
 								selector:".row-email input",
 								validators:["required"]
-							},
-							password:{
-								selector:".row-change-pass input"
 							}
 						},
 						init: function(merlin, dom) {
-							dom.find('.save-button').bind('click',{merlin:merlin,dom:dom},function(e,d){
+							dom.find('.info-save-button').bind('click',{merlin:merlin,dom:dom},function(e,d){
 								e.preventDefault();
 								if(dom.hasClass('invalid')){
 									return;
@@ -510,14 +517,10 @@ Give A Minute - User Account
 							});
 						},
 						finish: function(merlin, dom) {
-							var change_password;
-							change_password = merlin.current_step.inputs.password.dom.val();
-							
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
 								f_name: merlin.current_step.inputs.first_name.dom.val(),
 								l_name: merlin.current_step.inputs.last_name.dom.val(),
-								email: merlin.current_step.inputs.email.dom.val(),
-								password: change_password.length ? change_password : null
+								email: merlin.current_step.inputs.email.dom.val()
 							});
 						}
 					},
