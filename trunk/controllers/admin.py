@@ -6,32 +6,74 @@ import giveaminute.idea as mIdea
 class Admin(Controller):
     def GET(self, action = None, param0 = None, param1 = None):
         self.require_login("/login", True)
-    
+            
         if (action == 'admin'):
             return self.showAdmin()
         elif (action == 'content'):
             return self.showContent()
+        elif (action == 'users'):
+            return self.getAdminUsers()
         else:
             return self.not_found()                   
             
     def POST(self, action = None, param0 = None, param1 = None):
         self.require_login("/login", True)
     
-        if (action == 'adduser'):
-            return self.addUser()
+        if (action == 'user'):
+            if (param0 == 'add'):
+                return self.addUser()
+            elif (param0 == 'delete'):
+                return self.deleteUser()
+            elif (param0 == 'setrole'):
+                return self.setUserGroup()
+            elif (param0 == 'oncall'):
+                return self.setUserOncall()
+            else:
+                return self.not_found()
         elif (action == 'blacklist'):
             return self.updateBlacklist()
         else:
             return self.not_found()
             
     def showAdmin(self):
+        # first page of admin
+        users = mUser.getAdminUsers(self.db, 10, 0)
+        
+        # blacklist/graylist
+        words = self.getBadwords()
+        
+        self.template_data['users'] = dict(data = users, json = self.json(users))
+        self.template_data['words'] = dict(data = words, json = self.json(words))
+        
         return self.render('cms_adminsettings')
         
         
     def showContent(self):
         return self.render('cms_content')
+        
+    def getAdminUsers(self):
+        limit = util.try_f(int, self.request('n_users'), 10)
+        offset = util.try_f(int, self.request('offset'), 0)
             
-
+        return self.json(mUser.getAdminUsers(self.db, limit, offset))
+        
+    def deleteUser(self):
+        userId = self.request('user_id')
+        
+        return mUser.deleteUser(self.db, userId)
+        
+    def setUserGroup(self):
+        userId = self.request('user_id')
+        userGroupId = self.request('role')
+        
+        return mUser.setUserGroup(self.db, userId, userGroupId)
+        
+    def setUserOncall(self):
+        userId = self.request('user_id')
+        isOncall = self.request('is_oncall')
+    
+        return mUser.setUserOncallStatus(self.db, userId, isOncall)
+    
     def addUser(self):
         firstName = self.request('f_name')
         lastName = self.request('l_name')
@@ -82,4 +124,19 @@ class Admin(Controller):
             log.error(e)
             return False
         
+    def getBadwords(self):
+        words = dict(blacklist = '', graylist = '')
+    
+        try:
+            sql = "select kill_words, warn_words from badwords where id = 1 limit 1"
+            data = list(self.db.query(sql))
+            
+            if (len(data) > 0):
+                words['blacklist'] = data[0].kill_words
+                words['graylist'] = data[0].warn_words
+        except Exception, e:
+            log.info("*** couldn't get badwords")
+            log.error(e)
+            
+        return words
         
