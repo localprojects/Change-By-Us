@@ -25,7 +25,7 @@
 					{% for goal in d.template_data.project.data.info.goals['items'] %}
 						<li>
 							<div class="goal-card">
-								{% if d.template_data.project_user.is_project_admin %}
+								{% if d.template_data.project_user.data.is_project_admin %}
 									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
 								{% endif %}
 								<p>{{ goal.text }}</p>
@@ -102,6 +102,32 @@
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
 		this.handlers = {
+			remove_goal: function(e, d) {
+				e.preventDefault();
+				
+				e.data.project.options.app.components.modal.show({
+					app:e.data.project.options.app,
+					source_element:tc.jQ('.modal-content.remove-goal'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/project/goal/remove',
+							data:{
+								project_id:e.data.project.project_id,
+								goal_id:e.target.href.split(',')[1]
+							},
+							context:this,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								project.dom.trigger('goals-refresh');
+							}
+						});
+					}
+				});
+			},
 			goals_refresh:function(e){
 				tc.util.dump('goals_main.goals-refresh');
 				tc.jQ.ajax({
@@ -138,10 +164,12 @@
 		};
 		
 		this.handle_goals = function(data){
-			var i, list, temphtml;
+			var i, list, temphtml, n_goals;
 			this.dom.find('.counter').text(data.length);
+			list = this.dom.find('ul.items');
+			n_goals = list.children().length;
 			if (!this.carousel.is_rendered()) {
-				list = this.dom.find('ul.items');
+				
 				for(i in data){
 					if(data[i].active){
 						list.append(this.generate_markup(data[i]));
@@ -165,13 +193,20 @@
 				for(i in data){
 					this.carousel.carousel.addItem(this.generate_markup(data[i]));
 				}
-				this.carousel.carousel.end();
+				if(list.children().length > n_goals){
+					this.carousel.carousel.end();
+				} else {
+					this.carousel.carousel.begin();
+				}
 			}
+			this.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, this.handlers.remove_goal);
 		};
 		
 		this.carousel = new tc.carousel({
 			element: this.dom.find(".carousel")
 		});
+		
+		this.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, this.handlers.remove_goal);
 		
 		return {
 			show:function(propagate){

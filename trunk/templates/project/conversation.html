@@ -44,9 +44,9 @@
 		<ol class="comment-stack">
 			{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
 				{% for message in d.template_data.project.data.info.messages['items'] %}
-					<li class=" ">
+					<li class=" " id='message-{{ message.message_id }}'>
 						{% if d.template_data.project_user.data.is_project_admin %}
-							<a class="close" href="#"><span>Close</span></a>
+							<a class="close" href="#remove,{{ message.message_id }}"><span>Close</span></a>
 						{% endif %}
 						<div class="membrane">
 							<div class="thumb">
@@ -100,7 +100,7 @@
 	{% endif %}
 	<div class="membrane">
 		<div class="thumb">
-			<img src="http://placehold.it/50x50" alt=" " class="avatar"/>
+			<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
 		</div>
 		<div class="main">
 			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
@@ -116,6 +116,20 @@
 
 <div class='template-content modal-content add-message-no-user'>
 	<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Give a Minute in order to add a goal to this project.</p>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+<div class="template-content modal-content confirm-delete remove-message">
+	<div class="step">
+		<h2><strong>Delete</strong> this Message?</h2>
+		<div>
+			<p>This deletes the message from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete Message</a>
+			<a class="cancel" href="#">No, keep them.</a>
+		</div>
+	</div>
 	<a class='close' href="#"><span>close</span></a>
 </div>
 
@@ -138,7 +152,6 @@
 			n_to_fetch:10,
 			offset:{{ d.template_data.project.data.info.messages['items']|length }},
 			message_template:tc.jQ('.template-content.message-markup').clone().removeClass('template-content')
-			
 		}
 		
 		this.elements = {
@@ -157,6 +170,7 @@
 				message = generate_message_markup(d);
 				message.hide();
 				e.data.me.elements.message_stack.prepend(message);
+				e.data.me.dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_comment);
 				message.slideDown(500);
 			},
 			load_more_button_click:function(e, d){
@@ -187,21 +201,51 @@
 							});
 						}
 						for(i in d){
-							tempdom = this.runtime_data.message_template.clone();
+							tempdom = this.runtime_data.message_template.clone().removeClass('message-markup');
 							if(d[i].owner.image_id){
 								tempdom.find('img').attr('src','/images/'+(d[i].owner.image_id%10)+'/'+d[i].owner.image_id+'.png' );
 							} else {
 								tempdom.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
 							}
 							
+							tempdom.attr('id','message-'+d[i].message_id);
 							tempdom.find('.meta-ft').text(d[i].created);
 							tempdom.find('.message-body').text(d[i].body);
+							tempdom.find('a.close').attr('href','#remove,'+d[i].message_id);
 							this.elements.message_stack.append(tempdom);
 							this.runtime_data.offset++;
 						}
+						this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 					}
 				});
 				
+			},
+			remove_comment:function(e){
+				e.preventDefault();
+				
+				e.data.project.options.app.components.modal.show({
+					app:e.data.project.options.app,
+					source_element:tc.jQ('.modal-content.remove-message'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/project/message/remove',
+							data:{
+								project_id: e.data.me.options.app.app_page.data.project.project_id,
+								message_id: e.target.href.split(',')[1]
+							},
+							context:e.data.me,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.dom.find('#message-'+e.target.href.split(',')[1]).slideUp();
+								this.runtime_data.offset--;
+							}
+						});
+					}
+				});
 			}
 		};
 		
@@ -209,10 +253,14 @@
 		this.elements.load_more_button.bind('click', { project:project,me:this }, this.handlers.load_more_button_click);
 		this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
 		this.elements.textpane.autoGrow();
+		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 		
 		function generate_message_markup(data){
 			var markup;
 			markup = tc.jQ('.template-content.message-markup').clone().removeClass('template-content');
+			markup.attr('id','message-'+data.message_id);
+			//markup.find('img').attr('src','/images/'++'/'++'.png')
+			markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
 			markup.find('p.message-body').text(data.message);
 			return markup;
 		}
