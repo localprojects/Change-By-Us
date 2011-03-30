@@ -296,13 +296,36 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
     
 def deleteUser(db, userId):
     try:
-        db.delete('user', where = "user_id = $userId", vars=locals())
+        db.update('user', where = "user_id = $userId", is_active = 0, vars = {'userId':userId})
+        return True
     except Exception, e:
-        log.info("*** problem deleting user")
+        log.info("*** problem deleting user %s" % userId)
         log.error(e)    
         return False
         
-    return True
+def setUserGroup(db, userId, userGroupId):
+    t = db.transaction()
+    
+    try:
+        db.delete('user__user_group', where = "user_id = $userId", vars = {'userId':userId})
+        db.insert('user__user_group', user_id = userId, user_group_id = userGroupId)
+    except Exception, e:
+        log.info("*** problem setting user id %s to group %s" % (userId, userGroupId))
+        log.error(e)
+        t.rollback()
+        return False
+    else:
+        t.commit()
+        return True
+        
+def setUserOncallStatus(db, userId, status):
+    try:
+        db.update('user', where = "user_id = $userId", is_oncall = status, vars = {'userId':userId})
+        return True
+    except Exception, e:
+        log.info("*** problem setting oncall status to %s for user id %s" % (status, userId))
+        log.error(e)
+        return False
     
 def authenticateUser(db, email, password):
     sql = "select user_id, email, password, salt from user where email = $email"
@@ -311,9 +334,6 @@ def authenticateUser(db, email, password):
     if (len(data) > 0):
         user = list(data)[0]
         hashed_password = makePassword(password, user.salt)
-        
-        log.info("*** hashed_password = %s" % hashed_password)
-        log.info("*** user.password = %s" % user.password)
     
         if (hashed_password[0] == user.password):
             log.info("*** User authenticated")
@@ -361,6 +381,31 @@ def assignUserToGroup(db, userId, userGroupId):
         log.info("*** couldn't assign user id %s to group id %s" % (userId, userGroupId))
         log.error(e)
         return False
+    
+def getAdminUsers(db, limit = 10, offset = 0):
+    data = []
+
+    try:
+        sql = """select distinct 
+                    u.user_id, u.email, u.first_name, u.last_name
+                    ,if(ug1.user_group_id, 1, 0) as is_admin
+                    ,if(ug2.user_group_id, 1, 0) as is_moderator
+                    ,if(ug3.user_group_id, 1, 0) as is_leader
+                    ,u.is_oncall
+                from user u 
+                left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id = 1
+                left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
+                left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
+                where u.is_active = 1 
+                   and (ug1.user_group_id is not null or ug2.user_group_id is not null or ug3.user_group_id is not null)
+                order by u.last_name
+                limit $limit offset $offset"""
+        data = list(db.query(sql, {'limit':limit, 'offset':offset}))
+    except Exception, e:
+        log.info("*** couldn't get admin users")
+        log.error(e)
+        
+    return data
     
 #temp get dummy data
 def getDummyDictionary():
