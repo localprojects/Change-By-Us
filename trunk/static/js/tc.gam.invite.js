@@ -31,8 +31,16 @@ tc.gam.ideas_invite = function(app) {
 							}
 						},
 						init:function(merlin,dom){
-							dom.find(".name").text( tc.jQ(event_target).attr("href").split(",")[2] );
-								
+							var name;
+							
+							name = tc.jQ(event_target).attr("href").split(",")[2];
+							if (name) {
+								dom.find(".no-name").hide();
+								dom.find(".name").text(name);
+							} else {
+								dom.find(".has-name").hide();
+							}
+
 							dom.find('a.submit').bind('click',{merlin:merlin,dom:dom},function(e,d){
 								e.preventDefault();
 								if(dom.hasClass('invalid')){
@@ -62,7 +70,15 @@ tc.gam.ideas_invite = function(app) {
 							//
 						},
 						init: function(merlin, dom) {
-							dom.find(".name").text( tc.jQ(event_target).attr("href").split(",")[2] );
+							var name;
+							
+							name = tc.jQ(event_target).attr("href").split(",")[2];
+							if (name) {
+								dom.find(".no-name").hide();
+								dom.find(".name").text(name);
+							} else {
+								dom.find(".has-name").hide();
+							}
 							
 							dom.find('a.submit').bind('click',{merlin:merlin,dom:dom},function(e,d){
 								e.preventDefault();
