@@ -33,9 +33,13 @@ Give A Minute - Feedback
 			</div>
 		</div>
 		
-		<div class='finish' style='display:none;'>
+		<div class='step finish clearfix spinner-message' style='display:none;'>
 			<p>Thank you for the feedback...</p>
 			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
+		
+		<div class='step thanks' style='display:none;'>
+			<p>Thank you for the feedback...</p>
 		</div>
 	</div>
 	
@@ -98,7 +102,24 @@ Give A Minute - Feedback
 					selector:'.finish',
 					init:function(merlin,dom){
 						tc.util.dump(merlin.options.data);
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/feedback',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								window.location.hash = 'thanks';
+							}
+						});
+						
 					}
+				},
+				'thanks':{
+					selector:'.thanks',
 				}
 			}
 		});

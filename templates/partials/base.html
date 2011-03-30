@@ -61,7 +61,7 @@
 	</head>
 	
 	<!-- the "green-nyc" class is to decorate page with green-specific styles -->
-	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} admin'>
+	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%}'>
 		
 		<div class='exosphere'>
 		
@@ -116,12 +116,11 @@
 						</li>
 					</ul><!--end navbar-->
 					
-					{% if d.template_data and d.template_data.user %}
+					{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 					<ul class="adminbar">
 						<li class="content"><a href="/cms/content">Content</a></li>
 						<li class="admin-settings"><a href="/cms/admin">Admin Settings</a></li>
-						<li class="feature"><a href="" class="fancy-caps">Feature <span>this</span> project</a></li>
-						<li class="delete"><a href="" class="fancy-caps">Delete <span>this</span> project</a></li>
+					{% block project_admin %}{% endblock %}
 					<ul>
 					{% endif %}
 					
