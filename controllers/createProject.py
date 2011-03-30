@@ -2,6 +2,7 @@ import giveaminute.keywords as keywords
 import giveaminute.project as project
 import giveaminute.projectResource as resource
 import giveaminute.location as mLocation
+import framework.util as util
 from framework.controller import *
 from framework.image_server import *
 from PIL import Image
@@ -34,7 +35,7 @@ class CreateProject(Controller):
             owner_user_id = self.session.user_id
             title = self.request('title')
             description = self.request('text')
-            locationId = self.request('location_id') if self.request('location_id') else -1
+            locationId = util.try_f(int, self.request('location_id'), -1)
             imageId = self.request('image')
             keywords = self.request('keywords').split(',')
             resourceIds = self.request('resources').split(',')
