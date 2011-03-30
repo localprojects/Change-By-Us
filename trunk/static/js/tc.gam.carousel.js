@@ -9,6 +9,8 @@ tc.carousel.prototype.init = function(options) {
 	
 	this.options = tc.jQ.extend({
 		element: null,
+		next_button:null,
+		prev_button:null,
 		scrollable: {
 			items: ".items",
 			speed: 300,
@@ -59,41 +61,41 @@ tc.carousel.prototype.render = function() {
 		me.update_pagination();
 	});
 	
-	this.next_btn = this.options.element.find(".next");
-	this.prev_btn = this.options.element.find(".prev");
-	tc.jQ.each([this.next_btn, this.prev_btn], function() {
-		if (this.length) {
-			this.bind("click", function(e) {
+	if(!this.next_btn){
+		if(this.options.next_button){
+			this.next_btn = this.options.next_button;
+			this.next_btn.bind("click", {carousel:this.carousel}, function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.data.carousel.next();
+			});
+		} else {
+			this.next_btn = this.options.element.find(".next");
+			this.next_btn.bind("click", function(e) {
 				e.preventDefault();
 			});
 		}
-	});
+	}
+	
+	if(!this.prev_btn){
+		if(this.options.prev_button){
+			this.prev_btn = this.options.prev_button;
+			this.prev_btn.bind("click", {carousel:this.carousel}, function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.data.carousel.prev();
+			});
+		} else {
+			this.prev_btn = this.options.element.find(".prev");
+			this.prev_btn.bind("click", function(e) {
+				e.preventDefault();
+			});
+		}
+	}
 	
 	this.rendered = true;
 	this.update_navigation();
 	this.update_pagination();
-};
-
-// register a next and/or previous button with the carousel
-// next_btn and prev_btn are references to jQuery objects
-tc.carousel.prototype.set_nav_btns = function(next_btn, prev_btn) {
-	if (next_btn) { 
-		this.next_btn = next_btn;
-		this.next_btn.bind("click", {carousel:this.carousel}, function(e) {
-			e.preventDefault();
-			e.stopPropagation();
-			e.data.carousel.next();
-		});
-	}
-	if (prev_btn) { 
-		this.prev_btn = prev_btn;
-		this.prev_btn.bind("click", {carousel:this.carousel}, function(e) {
-			e.preventDefault();
-			e.stopPropagation();
-			e.data.carousel.prev();
-		});
-	}
-	this.update_navigation();
 };
 
 // if the carousel has only one item, 
@@ -128,3 +130,7 @@ tc.carousel.prototype.has_items = function() {
 tc.carousel.prototype.is_rendered = function() {
 	return this.rendered;
 };
+
+tc.carousel.prototype.get_element = function(){
+	return this.options.element;
+}
