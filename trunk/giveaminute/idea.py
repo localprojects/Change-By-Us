@@ -1,4 +1,5 @@
 import framework.util as util
+import helpers.censor as censor
 from framework.log import log
 
 class Idea:
@@ -31,12 +32,18 @@ class Idea:
 
 def createIdea(db, description, locationId, submissionType, userId=None, email=None, phone=None):
     try:
+        # censor behavior
+        numFlags = censor.badwords(db, description)
+        isActive = 0 if numFlags == 2 else 1
+        
         ideaId = db.insert('idea', description = description,
                                     location_id = locationId,
                                     submission_type = submissionType,
                                     user_id = userId,
                                     email = email,
-                                    phone = phone)
+                                    phone = phone,
+                                    is_active = isActive,
+                                    num_flags = numFlags)
     except Exception, e:
         log.info("*** problem creating idea")
         log.error(e)    
