@@ -121,9 +121,16 @@
 	</div>
 </div>
 
-<td class='template-content link-table-cell'>
-	
-</td>
+<div class='template-content link-table-cell'>
+	<span class="thumb">
+		<img width='30' src="/static/images/thumb_genAvatar30.png" alt=""/>
+	</span>
+	<span class="resource-name">
+		<span>
+			<span><a target='_blank' href="" class='link-link'><span></span></a></span>
+		</span>
+	</span>
+</div>
 
 <div class='template-content organization-table-cell' title=''>
 	<span class="thumb">
@@ -186,7 +193,7 @@
 				if(d.type){
 					switch(d.type){
 						case 'link':
-							e.data.me.runtime_data.load_into = 'links';
+							e.data.me.runtime_data.load_into = 'link';
 							e.data.me.elements.links_table.children('tbody').children().remove();
 							e.data.me.elements.links_table.children('tbody').append('<tr><td class="loading"><img class="loading" src="/static/images/loader32x32.gif" /></td></tr>');
 							break;
@@ -226,9 +233,17 @@
 				switch(e.data.me.runtime_data.load_into){
 					default:
 						return;
-					case 'links':
+					case 'link':
 						for(i in d.links){
-							
+							if(temptbody.find('tr').length == 0 || temptbody.find('tr:last').children().length == 2){
+								temptbody.append('<tr></tr>');
+							}
+							temptd = tc.jQ('<td></td>').append(tc.jQ('.template-content.link-table-cell').clone().children());
+							if(d.links[i].image_id){
+								temptd.find('img').attr('src','/images/'+(d.links[i].image_id%10)+'/'+d.links[i].image_id+'.png');
+							}
+							temptd.find('.link-link').attr('href',d.links[i].url).children('span').text(d.links[i].title);
+							temptbody.find('tr:last').append(temptd);
 						}
 						e.data.me.elements.links_table.children('tbody').replaceWith(temptbody);
 						break;
@@ -260,9 +275,6 @@
 			get_url: "/project/resource/info"
 		});
 		
-		this.dom.find('.hd h2 span').bind('click',function(){
-			project.dom.trigger('resources-refresh',{type:'organization'});
-		});
 		project.dom.bind('resources-loaded', {me:this}, this.handlers.resources_loaded_handler);
 		project.dom.bind('resources-refresh', {me:this}, this.handlers.resource_refresh_handler);
 		
