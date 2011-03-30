@@ -23,7 +23,7 @@
 				</div>
 			</div>
 			<div class="sub-bd serif">
-				<p>{{ d.template_data.project.data.info.mission }}</p>
+				<p class='mission-text'>{{ d.template_data.project.data.info.mission }}</p>
 			</div>
 		</div>
 		<div class="endorsements" {% if d.template_data.project.data.info.endorsements['items']|length == 0 %} style='display:none;' {% endif %}>
@@ -63,8 +63,7 @@
 				<ul class="tag-cloud serif">
 					{% for keyword in d.template_data.project.data.info.keywords %}
 						{% if d.template_data.project_user.data.is_project_admin %}
-							<li class="admin"><a href="/search?terms={{ keyword }}">{{ keyword }}</a> <a href="#" class="remove-btn"><span>Remove</span></a></li>
-							<li><a href="/search?terms={{ keyword }}">{{ keyword }}</a></li>
+							<li class="admin" id='keyword-{{ keyword }}'><a href="/search?terms={{ keyword }}">{{ keyword }}</a> <a href="#remove,{{ keyword }}" class="remove-btn keyword"><span>Remove</span></a></li>
 						{% else %}
 							<li><a href="/search?terms={{ keyword }}">{{ keyword }}</a></li>
 						{% endif %}
@@ -74,6 +73,20 @@
 		</div>
 	</div>
 </div> <!-- end .box.mission -->
+
+<div class="template-content modal-content confirm-delete remove-keyword">
+	<div class="step">
+		<h2><strong>Delete</strong> this Keyword?</h2>
+		<div>
+			<p>This deletes the keyword from project permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete Keyword</a>
+			<a class="cancel" href="#">No, keep them.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="/static/js/gam-map-style.js"></script>
@@ -89,6 +102,7 @@
 		me = this;
 		this.options = tc.jQ.extend({name:'infopane'},options);
 		data = this.options.app.app_page.data;
+		this.data = data;
 		this.dom = dom;
 		this.editable = false;
 		this.edit_mode = false;
@@ -135,23 +149,24 @@
 					me.elements.mission.textpane.html("<p>"+ data.project.info.mission +"</p>");
 				},
 				save: function() { // TODO
+					tc.util.dump(this);
 					var text;
 					text = me.elements.mission.textpane.find("textarea").val();
 					tc.jQ.ajax({
 						url: "/project/description",
 						data: {
-							project_id: me.data.project.project_id,
+							project_id: me.options.app.app_page.data.project.project_id,
 							text: text
 						},
 						context: me,
 						type: "POST",
 						dataType: "text",
 						success: function(data,ts,xhr) {
-							if (data === "true") {
-								this.data.project.info.mission = text;
-							} else {
-								
+							if (data == "False") {
+								return;
 							}
+							this.data.project.info.mission = text;
+							this.elements.mission.display();
 						}
 					});
 				}
@@ -188,10 +203,10 @@
 						},
 						draggable: false
 					});
-
+					
 					map.mapTypes.set("GAM", new google.maps.StyledMapType(gamMapStyle, { name: "Give a Minite" }));
 					map.setMapTypeId("GAM");
-
+					
 					me.elements.location_map.map = map;
 				}
 			},
@@ -214,8 +229,42 @@
 				} else {
 					e.data.me.elements.mission.edit();
 				}
+			},
+			remove_keyword:function(e){
+				e.preventDefault();
+				e.stopPropagation();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				e.data.project.options.app.components.modal.show({
+					app:e.data.project.options.app,
+					source_element:tc.jQ('.modal-content.remove-keyword'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/project/tag/remove',
+							data:{
+								project_id: e.data.me.options.app.app_page.data.project.project_id,
+								text: t.href.split(',')[1]
+							},
+							context:e.data.me,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.dom.find('#keyword-'+t.href.split(',')[1]).remove();
+							}
+						});
+					}
+				});
 			}
 		};
+		
+		tc.util.dump(this.dom.find('a.remove-btn.keyword'));
+		tc.util.dump(this.dom.find('a.remove-btn'));
+		this.dom.find('a.remove-btn.keyword').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_keyword);
 		
 		this.elements.mission.init( this.dom.find(".our-mission.editable") );
 		this.elements.location_map.init();
