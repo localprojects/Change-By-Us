@@ -78,15 +78,17 @@
 	</div>
 </div> <!-- end .box.mission -->
 
-<div class="template-content modal-content confirm-delete remove-keyword">
+<div class="template-content modal-content endorse-project">
 	<div class="step">
-		<h2><strong>Delete</strong> this Keyword?</h2>
+		<h2><strong>Endorse</strong> this project?</h2>
 		<div>
-			<p>This deletes the keyword from project permanently! <br/>Are you sure?</p>
+			<p>Do you want to endorse</p>
+			<p>{{ d.template_data.project.data.info.title }}?</p>
+			<p>It will receive your seal of approval!</p>
 		</div>
 		<div class="actions">
-			<a class="submit rounded-button" href="#">Yes, Delete Keyword</a>
-			<a class="cancel" href="#">No, keep them.</a>
+			<a class="submit rounded-button" href="#">Yes</a>
+			<a class="cancel rounded-button" href="#">No</a>
 		</div>
 	</div>
 	<a class='close' href="#"><span>close</span></a>
@@ -270,6 +272,7 @@
 			},
 			endorse_project:function(e){
 				e.preventDefault();
+				
 				e.data.project.options.app.components.modal.show({
 					app:e.data.project.options.app,
 					source_element:tc.jQ('.modal-content.endorse-project'),
@@ -279,7 +282,7 @@
 							url:'/project/endorse',
 							data:{
 								project_id: e.data.me.options.app.app_page.data.project.project_id,
-								user_id: e.data.me.options.app.user.u_id
+								user_id: e.data.me.options.app.app_page.user.u_id
 							},
 							context:e.data.me,
 							dataType:'text',
