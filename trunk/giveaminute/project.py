@@ -2,6 +2,7 @@ from framework.log import log
 from framework.config import *
 from framework.emailer import *
 import giveaminute.idea as mIdea
+import helpers.censor as censor
 
 class Project():
     def __init__(self, db, projectId):
@@ -32,9 +33,10 @@ select p.project_id
     ,u.image_id as owner_image_id
 from project p
 left join location l on l.location_id = p.location_id
-left join project__user pu on pu.project_id = p.project_id
+left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
 left join user u on u.user_id = pu.user_id
-where p.project_id = $id;"""
+where p.project_id = $id
+limit 1"""
         
         try:
             data = list(self.db.query(sql, {'id':self.id}))
@@ -232,20 +234,20 @@ def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId,
                 
 def createProject(db, ownerUserId, title, description, keywords, locationId, imageId):
     projectId = None
-    
+
     try:
-        if (not locationId or locationId < 1):
-            log.info("*** no location id")
-            locationId = -1
-        else:
-            log.info("*** location id = %s" % locationId)
-    
+        # censor behavior
+        numFlags = censor.badwords(db, title + " " + description)
+        isActive = 0 if numFlags == 2 else 1
+
         projectId = db.insert('project', title = title,
                                     description = description, 
                                     image_id = imageId, 
                                     location_id = locationId, 
                                     keywords = keywords, 
-                                    created_datetime=None)
+                                    created_datetime=None,
+                                    num_flags = numFlags,
+                                    is_active = isActive)
                                     
         if (projectId):
             join(db, projectId, ownerUserId, True)
@@ -269,9 +271,16 @@ def updateProjectImage(db, projectId, imageId):
         
 def updateProjectDescription(db, projectId, description):
     try:
-        sql = "update project set description = $description where project_id = $projectId"
-        db.query(sql, {'projectId':projectId, 'description':description})
-        return True
+        # censor behavior
+        numFlags = censor.badwords(db, title + " " + description)
+        isActive = 0 if numFlags == 2 else 1
+    
+        if (numFlags == 2):
+            return False
+        else:
+            sql = "update project set description = $description, num_flags = num_flags + $flags where project_id = $projectId"
+            db.query(sql, {'projectId':projectId, 'description':description, 'flags':numFlags})
+            return True
     except Exception, e:
         log.info("*** couldn't update project description")
         log.error(e)
@@ -433,9 +442,15 @@ def removeResourceFromProject(db, projectId, projectResourceId):
         
 def addLinkToProject(db, projectId, title, url):
     try:
+        # censor behavior
+        numFlags = censor.badwords(db, title)
+        isActive = 0 if numFlags == 2 else 1
+            
         db.insert('project_link', project_id = projectId,
                                     title = title,
-                                    url = url)
+                                    url = url,
+                                    num_flags = numFlags,
+                                    is_active = isActive)
                                     
         return True;
     except Exception, e:
@@ -484,6 +499,45 @@ def getFeaturedProjects(db):
         log.error(e)
         
     return data    
+    
+def getFeaturedProjectsWithStats(db):
+    data = []
+    
+    try:
+        sql = """select 
+                    p.project_id, 
+                    p.title, 
+                    p.description, 
+                    p.image_id, 
+                    p.location_id,
+                    o.user_id as owner_user_id,
+                    o.first_name as owner_first_name,
+                    o.last_name as owner_last_name,
+                    o.image_id as owner_image_id, 
+                    fp.updated_datetime as featured_datetime,
+                    (select count(npu.user_id) from project__user npu 
+                        inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
+                        where npu.project_id = p.project_id)  as num_members, 
+                    (select count(npi.idea_id) from project__idea npi 
+                        inner join idea ni on ni.idea_id = npi.idea_id and ni.is_active = 1
+                        where npi.project_id = p.project_id)  as num_ideas,
+                    (select count(npr.project_resource_id) from project__project_resource npr 
+                        inner join project_resource nr on nr.project_resource_id = npr.project_resource_id and nr.is_active = 1
+                        where npr.project_id = p.project_id)  as num_project_resources,
+                    (select count(e.user_id) from project_endorsement e
+                        where e.project_id = p.project_id) as num_endorsements
+                from project p 
+                inner join featured_project fp on fp.project_id = p.project_id
+                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                inner join user o on o.user_id = opu.user_id
+                where p.is_active = 1
+                order by fp.ordinal"""
+        data = list(db.query(sql))
+    except Exception, e:
+        log.info("*** couldn't get featured projects with stats")
+        log.error(e)
+        
+    return data        
         
 def getProjectsByLocation(db, locationId, limit = 100):
     data = []
@@ -553,12 +607,18 @@ def getProjectsByUser(db, userId, limit = 100):
         
 def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
     try:
+        # censor behavior
+        numFlags = censor.badwords(db, description)
+        isActive = 0 if numFlags == 2 else 1
+        
         db.insert('project_goal', project_id = projectId,
                                     description = description,
                                     time_frame_numeric = int(timeframeNumber),
                                     time_frame_unit = timeframeUnit,
                                     user_id = userId,
-                                    created_datetime = None)
+                                    created_datetime = None,
+                                    num_flags = numFlags,
+                                    is_active = isActive)
                                     
         return True;
     except Exception, e:
@@ -607,12 +667,18 @@ def removeProjectGoal(db, projectGoalId):
         
 def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None):
     try:
+        # censor behavior
+        numFlags = censor.badwords(db, message)
+        isActive = 0 if numFlags == 2 else 1    
+    
         db.insert('project_message', project_id = projectId,
                                     message = message,
                                     user_id = userId,
                                     idea_id = ideaId,
                                     project_goal_id = projectGoalId,
-                                    message_type  = message_type)
+                                    message_type  = message_type,
+                                    num_flags = numFlags,
+                                    is_active = isActive)
                                     
         return True;
     except Exception, e:
@@ -709,7 +775,7 @@ def getMessages(db, projectId, limit = 10, offset = 0):
 def getLinks(db, projectId):
     links = []
     
-    sql = "select project_link_id, title, url, image_id from project_link where project_id = $id"
+    sql = "select project_link_id, title, url, image_id from project_link where project_id = $id and is_active = 1"
             
     try:
         data = list(db.query(sql, {'id':projectId}))
@@ -726,8 +792,10 @@ def getLinks(db, projectId):
 def getResources(db, projectId):
     resources = []
     
-    sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id from project_resource pr 
-            inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id"""
+    sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id 
+            from project_resource pr 
+            inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id
+            where pr.is_active = 1"""
             
     try:
         data = list(db.query(sql, {'id':projectId}))
@@ -748,7 +816,7 @@ def getProjectIdeas(db, projectId, limit = 100):
         sql = """select i.idea_id, i.description, i.user_id, u.first_name, u.last_name, item.submission_type
                     from idea i 
                     left join user u on u.user_id = i.user_id
-                    where project_id = $projectId and is_active = 1
+                    where i.project_id = $projectId and i.is_active = 1
                     limit $limit"""
         data = list(db.query(sql, { 'projectId':projectId, 'limit':limit }))          
         
