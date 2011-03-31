@@ -8,31 +8,35 @@
 	<div class="merlin add-goal form-pane">
 		<h2><strong>Add</strong> a Goal</h2>
 		
-		<div class='step info'>
+		<div class='step info clearfix'>
 			<div class="fields">
-				<div class="row">
+				<div class="row clearfix">
 					<label>What's the goal?</label>
 					<textarea class='message'></textarea>
 				</div>
 				<div class="row">
 					<label>How quickly can it get done?</label>
-					<select class='duration'>
-						<option value='-1'></option>
-						<option value='1,week'>1 week or less</option>
-						<option value='1,month'>1 months or less</option>
-						<option value='3,month'>3 months or less</option>
-						<option value='1,year'>1 year or less</option>
-						<option value='3,year'>1 years or less</option>
-					</select>
+					<span class="serif">
+						<select class='duration'>
+							<option value='-1'></option>
+							<option value='1,week'>1 week or less</option>
+							<option value='1,month'>1 months or less</option>
+							<option value='3,month'>3 months or less</option>
+							<option value='1,year'>1 year or less</option>
+							<option value='3,year'>1 years or less</option>
+						</select>
+					</span>
 				</div>
 				<div class="row">
 					<label>Who will be the point person for getting it done?</label>
-					<select class='point_person'>
-						<option value='-1'></option>
-						{% for member in d.template_data.project.data.info.members['items'] %}
-							<option value='{{ member.u_id }}'>{{ member.name }}</option>
-						{% endfor %}
-					</select>
+					<span class="serif">
+						<select class='point_person'>
+							<option value='-1'></option>
+							{% for member in d.template_data.project.data.info.members['items'] %}
+								<option value='{{ member.u_id }}'>{{ member.name }}</option>
+							{% endfor %}
+						</select>
+					</span>
 				</div>
 			</div>
 			<div class="primary-action">
