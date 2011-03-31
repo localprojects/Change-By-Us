@@ -103,9 +103,11 @@ limit 1"""
     def getEndorsements(self):
         endorsements = []
         
-        sql = """select u.user_id, u.first_name, u.last_name, u.image_id, pl.title, pl.organization from user u
-                left join project_leader pl on pl.user_id = u.user_id
-                inner join project_endorsement pe on pe.user_id = pl.user_id and pe.project_id = $id"""
+        sql = """select u.user_id, u.first_name, u.last_name, u.image_id, pl.title, pl.organization 
+                    from project_endorsement pe
+                    inner join user u on pe.user_id = u.user_id  
+                    left join project_leader pl on pl.user_id = u.user_id
+                    where pe.project_id = $id"""
                 
         try:
             data = list(self.db.query(sql, {'id':self.id}))
