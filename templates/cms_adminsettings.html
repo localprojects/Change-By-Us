@@ -10,16 +10,16 @@ Change by Us - CMS Admin Settings
 
 	<div class='headlands clearfix'>
 		<ul class="tabs">
-			<li class="tab administrators active"><a href="#admins">Administrators</a></li>
-			<li class="tab blacklist"><a href="#blacklists">Blacklist</a></li>
+			<li class="tab administrators active"><a href="#cms-admin,admins">Administrators</a></li>
+			<li class="tab blacklist"><a href="#cms-admin,blacklists">Blacklist</a></li>
 		</ul>
 	</div><!-- end .headlands -->
 
 	<div class='midlands merlin merlin-admin-settings clearfix'>
 		<div id="administrators" class="step view">
 			<div class="west"><!-- begin .west -->
-				<form class="add-admin-merlin" method="POST" action=" "><!-- ADD CLASS ".merlin"-->
-					<div class="add-admin-main"><!-- ADD CLASS ".step"-->
+				<div class="add-admin-merlin merlin">
+					<div class="add-admin-main step">
 						<div class="box">
 							<div class="hd">
 								<h2 class="fancy-caps">Add <span>an</span> Administrator</h2>
@@ -27,44 +27,44 @@ Change by Us - CMS Admin Settings
 							<div class="bd">
 								<div class="row">
 									<label>First Name</label>
-									<input type="text"/>
+									<input class='f_name' type="text"/>
 								</div>
 								<div class="row">
 									<label>Last Name</label>
-									<input type="text"/>
+									<input class='l_name' type="text"/>
 								</div>
 								<div class="row">
 									<label>E-mail</label>
-									<input type="text"/>
+									<input class='email' type="text"/>
 								</div>
 								<div class="row">
 									<label>Password</label>
-									<input type="password"/>
+									<input class='password' type="password"/>
 								</div>
 								<div class="row clearfix">
-									<input type="radio" name="add-admin-radio" id="city-leaders-radio" />
+									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="city-leaders-radio" value="3" />
 									<label for="city-leaders-radio" class="white"><strong>City Leaders</strong> can endorse projects</label>
 								</div>
 								<div class="row clearfix">
-									<input type="radio" name="add-admin-radio" id="administrators-radio" />
+									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="administrators-radio" value="2" />
 									<label for="administrators-radio" class="white"><strong>Administrators</strong> can moderate and delete posts and delete regular accounts</label>
 								</div>
 								<div class="row clearfix">
-									<input type="radio" name="add-admin-radio" id="superadmin-radio" />
+									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="superadmin-radio" value="1"/>
 									<label for="superadmin-radio" class="white"><strong>Super Administrators</strong> can create other admins and delete posts, users, and delete other admins</label>
 								</div>
 							</div>
 							<div class="ft">
-								<a class="rounded-button" href="#">Add Administrator</a>
+								<a class="admin-merlin-next-step rounded-button" href="#">Add Administrator</a>
 							</div>
 						</div>
 					</div>
-					<div class="add-admin-finish"><!-- ADD CLASS ".step"-->
-						
+					<div class="add-admin-finish step spinner-message clearfix">
+						<p class="west">Adding Administrator...</p>
+						<img class="loading" src='/static/images/loader32x32.gif' />
 					</div>
-				</form>
+				</div>
 			</div><!-- end .west -->
-			
 			
 			
 			<div class="east">
@@ -72,272 +72,78 @@ Change by Us - CMS Admin Settings
 					<div class="hd">
 						<div class="pagination-controls">
 							<span class="control">
-								<a class="prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
-								<a class="next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+								<a class="prev admin-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<a class="next admin-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
 							</span>
 						</div>
 						<h2 class="fancy-caps">Active Administrators</h2>
 					</div>
 					<div class="bd">
-						<div class="carousel">
+						<div class="carousel admins">
 							<div class="scrollable">
 								<ul class="items">
+									<li class='loaded'>
+										<table class="active-admins-table">
+											<tbody>
+										{% if d.template_data.users['data'] > 0 %}
+											{% for user in d.template_data.users['data'] %}
+												
+												<tr id='user-{{ user.user_id }}'>
+													<th scope="row" class="active-admin-info serif">
+														<h3>{{ user.first_name }} {{ user.last_name }}</h3>
+														<div class="email">
+															<a href="mailto:{{ user.email }}">{{ user.email }}</a>
+														</div>
+													</th>
+													<td class="control-admin-type">
+														<form>
+															<div>
+																<input type="radio" id="user-role-{{ user.user_id }}-radio-leader" rel='setRole,3,{{ user.user_id }}' name="user-role-{{ user.user_id }}-radio" {% if user.is_leader %}checked="true"{% endif %} />
+																<label for="user-role-{{ user.user_id }}-radio-leader" class="small">City Leader</label>
+															</div>
+															<div>
+																<input type="radio" id="user-role-{{ user.user_id }}-radio-moderator" rel='setRole,2,{{ user.user_id }}' name="user-role-{{ user.user_id }}-radio" {% if user.is_moderator %}checked="true"{% endif %} />
+																<label for="user-role-{{ user.user_id }}-radio-moderator" class="small">Moderator</label>
+															</div>
+															<div>
+																<input type="radio" id="user-role-{{ user.user_id }}-radio-admin" rel='setRole,1,{{ user.user_id }}' name="user-role-{{ user.user_id }}-radio" {% if user.is_admin %}checked="true"{% endif %} />
+																<label for="user-role-{{ user.user_id }}-radio-admin" class="small">Super Admin</label>
+															</div>
+														</form>
+													</td>
+													<td class="control-call-status">
+														<input type="checkbox" id="user-oncall-{{ user.user_id }}-check" rel='setOncall,{{ user.user_id }}' name='user-oncall-{{ user.user_id }}-check' {% if user.is_oncall %}checked="true"{% endif %} />
+														<label for="user-oncall-{{ user.user_id }}-check" class="white">On Call</label>
+													</td>
+													<td class="control-delete">
+														<a class='delete' href="#removeUser,{{ user.user_id }}">Delete</a>
+													</td>
+												</tr>
+												
+											{% endfor %}
+										{% endif %}
+											</tbody>
+										</table>
+									</li>
 									<li>
 										<table class="active-admins-table">
 											<tbody>
 												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user1-superuser-radio" name="user1-radio" />
-																<label for="user1-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user1-admin-radio" name="user1-radio" />
-																<label for="user1-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user1-leader-radio" name="user1-radio" />
-																<label for="user1-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user1-oncall-check" />
-														<label for="user1-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user2-superuser-radio" name="user2-radio" />
-																<label for="user2-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user2-admin-radio" name="user2-radio" />
-																<label for="user2-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user2-leader-radio" name="user2-radio" />
-																<label for="user2-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user2-oncall-check" />
-														<label for="user2-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user3-superuser-radio" name="user3-radio" />
-																<label for="user3-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user3-admin-radio" name="user3-radio" />
-																<label for="user3-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user3-leader-radio" name="user3-radio" />
-																<label for="user3-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user3-oncall-check" />
-														<label for="user3-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user4-superuser-radio" name="user4-radio" />
-																<label for="user4-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user4-admin-radio" name="user4-radio" />
-																<label for="user4-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user4-leader-radio" name="user4-radio" />
-																<label for="user4-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user4-oncall-check" />
-														<label for="user4-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user5-superuser-radio" name="user5-radio" />
-																<label for="user5-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user5-admin-radio" name="user5-radio" />
-																<label for="user5-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user5-leader-radio" name="user5-radio" />
-																<label for="user5-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user5-oncall-check" />
-														<label for="user5-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user6-superuser-radio" name="user6-radio" />
-																<label for="user6-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user6-admin-radio" name="user6-radio" />
-																<label for="user6-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user6-leader-radio" name="user6-radio" />
-																<label for="user6-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user6-oncall-check" />
-														<label for="user6-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user7-superuser-radio" name="user7-radio" />
-																<label for="user7-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user7-admin-radio" name="user7-radio" />
-																<label for="user7-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user7-leader-radio" name="user7-radio" />
-																<label for="user7-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user7-oncall-check" />
-														<label for="user7-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
-												</tr>
-												<tr>
-													<th scope="row" class="active-admin-info serif">
-														<h3>Halley Hanson</h3>
-														<div class="email">
-															<a href="">hh112@gmail.com</a>
-														</div>
-													</th>
-													<td class="control-admin-type">
-														<form>
-															<div>
-																<input type="radio" id="user8-superuser-radio" name="user8-radio" />
-																<label for="user8-superuser-radio" class="small">Super User</label>
-															</div>
-															<div>
-																<input type="radio" id="user8-admin-radio" name="user8-radio" />
-																<label for="user8-admin-radio" class="small">Administrator</label>
-															</div>
-															<div>
-																<input type="radio" id="user8-leader-radio" name="user8-radio" />
-																<label for="user8-leader-radio" class="small">City Leader</label>
-															</div>
-														</form>
-													</td>
-													<td class="control-call-status">
-														<input type="checkbox" id="user8-oncall-check" />
-														<label for="user8-oncall-check" class="white">On Call</label>
-													</td>
-													<td class="control-delete">
-														<a href="#">Delete</a>
-													</td>
+													<td><p>Loading...</p></td>
 												</tr>
 											</tbody>
 										</table>
 									</li>
 								</ul>
 							</div>
+						</div>
+					</div>
+					<div class="ft">
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev admin-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<a class="next admin-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
 						</div>
 					</div>
 				</div>
@@ -349,15 +155,15 @@ Change by Us - CMS Admin Settings
 			<div class="description">
 				The blacklist and graylist are used to filter out inappropriate responses.
 			</div>
-			<form class="blacklist-merlin" method="POST" action=" "><!-- ADD CLASS ".merlin"-->
-				<div class="blacklist-merlin-main"><!-- ADD CLASS ".step"-->
+			<div class="blacklist-merlin merlin">
+				<div class="blacklist-merlin-main step">
 					<div class="box graylist-box west">
 						<div class="hd">
 							<h2>Graylist</h2>
 							<p>If anything on the site matches the graylist, <br />it will be <strong>flagged for review</strong>.</p>
 						</div>
 						<div class="bd">
-							<textarea class="word-set"></textarea>
+							<textarea class="graylist word-set">{{ d.template_data.words.data.graylist }}</textarea>
 						</div>
 					</div>
 					<div class="box blacklist-box west">
@@ -366,7 +172,7 @@ Change by Us - CMS Admin Settings
 							<p>If anything on the site matches the blacklist, <br />it will be <strong>automatically hidden</strong>.</p>
 						</div>
 						<div class="bd">
-							<textarea class="word-set"></textarea>
+							<textarea class="blacklist word-set">{{ d.template_data.words.data.blacklist }}</textarea>
 						</div>
 					</div>
 					<div class="box actions-box west">
@@ -375,14 +181,15 @@ Change by Us - CMS Admin Settings
 							<p>The last changes were saved at <span>02:45pm</span> on <span>04.12.2011</span> by <span>Jen</span></p>
 						</div>
 						<div class="bd">
-							<a class="rounded-button save-button" href="#">Save</a>
+							<a class="rounded-button save-button blacklist-save-button" href="#">Save</a>
 						</div>
 					</div>
 				</div>
-				<div class="blacklist-merlin-finish"><!-- ADD CLASS ".step"-->
-					
+				<div class="blacklist-merlin-finish step spinner-message clearfix"><!-- ADD CLASS ".step"-->
+					<p class="west">Saving Blacklist...</p>
+					<img class="loading" src='/static/images/loader32x32.gif' />
 				</div>
-			</form>
+			</div>
 		</div>
 	</div>
 
@@ -393,6 +200,53 @@ Change by Us - CMS Admin Settings
 	
 
 </div><!-- end .continent.cms-admin-settings -->
+
+<!-- <div class='template-content user-row'>
+	<th scope="row" class="active-admin-info serif">
+		<h3>XXXX XXXX</h3>
+		<div class="email">
+			<a href="mailto:">email</a>
+		</div>
+	</th>
+	<td class="control-admin-type">
+		<form>
+			<div>
+				<input class='loeader' type="radio" id="user-role-XX-radio-leader" name="user-role-xx-radio" />
+				<label for="user-role-xx-radio-leader" class="small">Super User</label>
+			</div>
+			<div>
+				<input type="radio" id="user-role--radio-moderator" name="user-role--radio" />
+				<label for="user-role-xx-radio-moderator" class="small">Administrator</label>
+			</div>
+			<div>
+				<input type="radio" id="user-role-xx-radio-admin" name="user-role-xx-radio" />
+				<label for="user-role-xx-radio-admin" class="small">City Leader</label>
+			</div>
+		</form>
+	</td>
+	<td class="control-call-status">
+		<input type="checkbox" id="user-oncall-x-check" name='user-oncall-xx-check' />
+		<label for="user-oncall-xx-check" class="white">On Call</label>
+	</td>
+	<td class="control-delete">
+		<a href="#">Delete</a>
+	</td>
+</div> -->
+
+<div class="template-content modal-content confirm-delete remove-user">
+	<div class="step">
+		<h2><strong>Delete</strong> this User?</h2>
+		<div>
+			<p>This deletes the User from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete User</a>
+			<a class="cancel" href="#">No, keep them.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
 {% endblock continent %}
 
 
@@ -402,15 +256,217 @@ Change by Us - CMS Admin Settings
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Admin Settings');
 		
-		app.components.merlin = new tc.merlin(app,{
+		app.components.cms_admin_merlin = new tc.merlin(app,{
+			name:'cms-admin',
 			dom:tc.jQ('.merlin-admin-settings'),
 			first_step:'admins',
 			steps:{
 				'admins':{
 					selector:'#administrators',
+					components:{
+						pagination:null
+					},
+					fn:{
+						admin_input_change:function(e){
+							var t;
+							t = tc.jQ(e.target);
+							tc.util.dump(t.attr('checked'));
+							if(t.attr('rel')){
+								switch(t.attr('rel').split(',')[0]){
+									case 'setRole':
+										tc.jQ.ajax({
+											type:'POST',
+											url:'/admin/user/setrole',
+											data:{
+												user_id:t.attr('rel').split(',')[2],
+												role:t.attr('rel').split(',')[1]
+											},
+											context:e.data.me,
+											dataType:'text',
+											success:function(data,ts,xhr){
+												if(data == 'False' || data == 'None'){
+													return;
+												}
+											}
+										});
+										break;
+									case 'setOncall':
+										tc.jQ.ajax({
+											type:'POST',
+											url:'/admin/user/oncall',
+											data:{
+												user_id:t.attr('rel').split(',')[1],
+												is_oncall:t.attr('checked') ? 1 : 0
+											},
+											context:e.data.me,
+											dataType:'text',
+											success:function(data,ts,xhr){
+												if(data == 'False' || data == 'None'){
+													return;
+												}
+											}
+										});
+										break;
+								}
+							}
+						},
+						delete_admin:function(e){
+							tc.util.dump(e);
+							e.preventDefault();
+							tc.util.dump(e.target.href.split(',')[1]);
+							e.data.me.app.components.modal.show({
+								app:e.data.app,
+								source_element:tc.jQ('.modal-content.remove-user'),
+								submit:function(){
+									tc.jQ.ajax({
+										type:'POST',
+										url:'/admin/user/delete',
+										data:{
+											user_id: e.target.href.split(',')[1]
+										},
+										context:e.data.me,
+										dataType:'text',
+										success:function(data,ts,xhr){
+											if(data == 'False'){
+												return false;
+											}
+											this.dom.find('#user-'+e.target.href.split(',')[1]).slideUp();
+											this.current_step.runtime_data.offset--;
+										}
+									});
+								}
+							});
+						}
+					},
+					runtime_data:{
+						n_messages:null,
+						offset:null,
+						tr_element:tc.jQ('<tr>\
+							<th scope="row" class="active-admin-info serif">\
+								<h3 class="name"></h3>\
+								<div class="email">\
+									<a href="mailto:" class="email-a"></a>\
+								</div>\
+							</th>\
+							<td class="control-admin-type">\
+								<form>\
+									<div>\
+										<input class="radio-leader" type="radio" id="user-role-XX-radio-leader" name="user-role-xx-radio" />\
+										<label for="user-role-xx-radio-leader" class="small">City Leader</label>\
+									</div>\
+									<div>\
+										<input class="radio-moderator" type="radio" id="user-role--radio-moderator" name="user-role--radio" />\
+										<label for="user-role-xx-radio-moderator" class="small">Moderator</label>\
+									</div>\
+									<div>\
+										<input class="radio-admin" type="radio" id="user-role-xx-radio-admin" name="user-role-xx-radio" />\
+										<label for="user-role-xx-radio-admin" class="small">Super Admin</label>\
+									</div>\
+								</form>\
+							</td>\
+							<td class="control-call-status">\
+								<input class="checkbox-oncall" type="checkbox" id="user-oncall-x-check" name="user-oncall-xx-check" />\
+								<label for="user-oncall-xx-check" class="white">On Call</label>\
+							</td>\
+							<td class="control-delete">\
+								<a href="#">Delete</a>\
+							</td>\
+						</tr>')
+					},
 					init:function(merlin,dom){
 						tc.jQ('.headlands .tabs li').removeClass('active');
 						tc.jQ('.headlands .tabs li.administrators').addClass('active');
+						window.location.hash = 'add-admin,main';
+						
+						if(!merlin.current_step.components.pagination){
+							merlin.current_step.components.pagination = true;
+							
+							merlin.current_step.components.admins_pagination = new tc.carousel({
+								element: this.dom.find(".admins.carousel"),
+								next_button: dom.find('.admin-carousel-next'),
+								prev_button: dom.find('.admin-carousel-prev')
+							});
+							
+							merlin.current_step.runtime_data.n_to_fetch = 10;
+							merlin.current_step.runtime_data.offset = merlin.current_step.components.admins_pagination.carousel.getItems().first().find('tr').length;
+							
+							dom.find('input').bind('change', {me:merlin, dom:dom}, merlin.current_step.fn.admin_input_change);
+							dom.find('a.delete').bind('click', {me:merlin, dom:dom}, merlin.current_step.fn.delete_admin);
+							
+							merlin.current_step.components.admins_pagination.carousel.getRoot().bind('onSeek', {me:merlin,dom:dom}, function(e,d){
+								e.data.me.current_step.runtime_data.current_page = e.data.me.current_step.components.admins_pagination.carousel.getItems().eq(e.data.me.current_step.components.admins_pagination.carousel.getIndex());
+								if(!e.data.me.current_step.runtime_data.current_page.hasClass('loaded')){
+									e.data.me.current_step.runtime_data.current_page.addClass('loaded');
+									tc.jQ.ajax({
+										type:"GET",
+										url:"/admin/users",
+										data:{
+											n_messages: merlin.current_step.runtime_data.n_to_fetch,
+											offset: merlin.current_step.runtime_data.offset
+										},
+										context:e.data.me,
+										dataType:"text",
+										success: function(data, ts, xhr) {
+											var d, temptbody, temprow;
+											try {
+												d = tc.jQ.parseJSON(data);
+											} catch(e) {
+												tc.util.log("/admin/users: json parsing error", "warn");
+												return;
+											}
+											if(!d.length){
+												this.current_step.runtime_data.current_page.remove();
+												return;
+											}
+											if(d.length == this.current_step.runtime_data.n_to_fetch){
+												this.current_step.components.admins_pagination.carousel.addItem('<li>\
+													<table class="active-admins-table">\
+														<tbody>\
+															<tr>\
+																<td class="spinner-message clearfix">\
+																	<p class="west">Saving Blacklist...</p>\
+																	<img class="loading" src="/static/images/loader32x32.gif" />\
+																</td>\
+															</tr>\
+														</tbody>\
+													</table>\
+												</li>');
+											}
+											temptbody = tc.jQ('<tbody></tbody>');
+											for(i in d){
+												temprow = this.current_step.runtime_data.tr_element.clone();
+												temprow.attr('id','user-'+d[i].user_id);
+												temprow.find('h3.name').text(d[i].first_name+' '+d[i].last_name);
+												temprow.find('a.email-a').attr('href','mailto:'+d[i].email).text(d[i].email);
+												temprow.find('input.radio-leader').attr('id','user-role-'+d[i].user_id+'-radio-leader').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+3+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-leader');
+												temprow.find('input.radio-moderator').attr('id','user-role-'+d[i].user_id+'-radio-moderator').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+2+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-moderator');
+												temprow.find('input.radio-admin').attr('id','user-role-'+d[i].user_id+'-radio-admin').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+1+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-admin');
+												temprow.find('input.checkbox-oncall').attr('id','user-oncall-'+d[i].user_id+'-check').attr('name','user-oncall-'+d[i].user_id+'-check').attr('rel','setOncall,'+d[i].user_id).siblings('label').attr('for','user-oncall-'+d[i].user_id+'-check');
+												if(d[i].is_leader){
+													temprow.find('input.radio-leader').attr('checked',true);
+												}
+												if(d[i].is_moderator){
+													temprow.find('input.radio-moderator').attr('checked',true);
+												}
+												if(d[i].is_admin){
+													temprow.find('input.radio-admin').attr('checked',true);
+												}
+												if(d[i].is_oncall){
+													temprow.find('input.checkbox-oncall').attr('checked',true);
+												}
+												temptbody.append(temprow);
+												this.current_step.runtime_data.offset++;
+											}
+											temptbody.find('input').bind('change', {me:this}, this.current_step.fn.admin_input_change);
+											temptbody.find('a.delete').bind('change', {me:this}, this.current_step.fn.admin_input_change);
+											this.current_step.runtime_data.current_page.find('tbody').replaceWith(temptbody);
+										}
+									});
+								}
+							});
+							
+						}
+						
 					}
 				},
 				'blacklists':{
@@ -418,16 +474,140 @@ Change by Us - CMS Admin Settings
 					init:function(merlin,dom){
 						tc.jQ('.headlands .tabs li').removeClass('active');
 						tc.jQ('.headlands .tabs li.blacklist').addClass('active');
+						window.location.hash = 'blacklist-merlin,main';
+					}
+				}
+			}
+		});
+		
+		app.components.add_admin_merlin = new tc.merlin(app,{
+			name:'add-admin',
+			dom:tc.jQ('.add-admin-merlin'),
+			next_button:tc.jQ('a.admin-merlin-next-step'),
+			data:{
+				f_name:null,
+				l_name:null,
+				email:null,
+				password:null,
+				role:null
+			},
+			steps:{
+				'main':{
+					selector:'.add-admin-main',
+					next_step:'finish',
+					inputs:{
+						f_name:{
+							selector:'input.f_name',
+							validators:['min-3','max-64','required']
+						},
+						l_name:{
+							selector:'input.l_name',
+							validators:['min-3','max-64','required']
+						},
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-64','email','required']
+						},
+						password:{
+							selector:'input.password',
+							validators:['password-20','required']
+						},
+						role:{
+							selector:'.add-admin-radio',
+							validators:['required']
+						}
+					},
+					init:function(merlin,dom){
+						
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							f_name:merlin.current_step.inputs.f_name.dom.val(),
+							l_name:merlin.current_step.inputs.l_name.dom.val(),
+							email:merlin.current_step.inputs.email.dom.val(),
+							password:merlin.current_step.inputs.password.dom.val(),
+							role:merlin.current_step.inputs.role.dom.filter(':checked').val()
+						});
+					}
+				},
+				'finish':{
+					selector:'.add-admin-finish',
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/user/add',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False' || data == 'None'){
+									window.location.hash = 'error';
+									return;
+								}
+								location.reload(true);
+							}
+						});
+					}
+				}
+			}
+		});
+		
+		app.components.blacklist_merlin = new tc.merlin(app,{
+			name:'blacklist-merlin',
+			dom:tc.jQ('.blacklist-merlin'),
+			next_button:tc.jQ('a.blacklist-save-button'),
+			data:{
+				graylist:null,
+				blacklist:null
+			},
+			steps:{
+				'main':{
+					selector:'.blacklist-merlin-main',
+					next_step:'finish',
+					inputs:{
+						graylist:{
+							selector:'textarea.graylist',
+							validators:[]
+						},
+						blacklist:{
+							selector:'textarea.blacklist',
+							validators:[]
+						}
+					},
+					init:function(merlin,dom){
+						
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							graylist:merlin.current_step.inputs.graylist.dom.val(),
+							blacklist:merlin.current_step.inputs.blacklist.dom.val()
+						});
+					}
+				},
+				'finish':{
+					selector:'.blacklist-merlin-finish',
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/blacklist',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False' || data == 'None'){
+									window.location.hash = 'error';
+									return;
+								}
+								location.reload('true');
+							}
+						});
 					}
 				}
 			}
 		});
 		
 		
-		tc.jQ(document).ready(function(){
-			tc.jQ('input[type=checkbox],input[type=radio]').prettyCheckboxes();
-		});
-		
+		//tc.jQ('input[type=checkbox],input[type=radio]').prettyCheckboxes();
 		tc.jQ('.adminbar li.admin-settings').addClass('active');
 		
 	});
