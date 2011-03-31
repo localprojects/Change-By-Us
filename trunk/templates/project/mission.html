@@ -26,7 +26,7 @@
 				<p class='mission-text'>{{ d.template_data.project.data.info.mission }}</p>
 			</div>
 		</div>
-		<div class="endorsements" {% if d.template_data.project.data.info.endorsements['items']|length == 0 and d.template_data.user.data.is_leader == False %} style='display:none;' {% endif %}>
+		<div class="endorsements" {% if d.template_data.project.data.info.endorsements['items']|length == 0 and d.template_data.user and d.template_data.user.data.is_leader == False %} style='display:none;' {% endif %}>
 			<div class="sub-hd">
 				<h3>Endorsements</h3>
 			</div>
@@ -65,14 +65,16 @@
 			<div class="sub-bd">
 				<ul class="tag-cloud serif">
 					{% for keyword in d.template_data.project.data.info.keywords %}
-						{% if d.template_data.project_user.data.is_project_admin %}
+						{% if d.template_data.user and d.template_data.project_user.data.is_project_admin %}
 							<li class="admin" id='keyword-{{ keyword }}'><a href="/search?terms={{ keyword }}">{{ keyword }}</a> <a href="#remove,{{ keyword }}" class="remove-btn keyword"><span>Remove</span></a></li>
 						{% else %}
 							<li><a href="/search?terms={{ keyword }}">{{ keyword }}</a></li>
 						{% endif %}
 					{% endfor %}
 				</ul>
-				<a href="" class="add-keyword">&#43; Add Keyword</a>
+				{% if d.template_data.user and d.template_data.project_user.data.is_member %}
+					<a href="" class="add-keyword">&#43; Add Keyword</a>
+				{% endif %}
 			</div>
 		</div>
 	</div>
