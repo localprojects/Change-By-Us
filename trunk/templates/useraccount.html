@@ -246,6 +246,7 @@ Change by Us - User Account
 												<div class="row">
 													<label>New Password</label>
 													<input type="password" class="has-been-focused new-password" />
+													<span class="pass-strength"></span>
 												</div>
 												<div class="row">
 													<label>Confirm Password</label>
@@ -261,7 +262,7 @@ Change by Us - User Account
 												<p><img src='/static/images/loader32x32.gif' /></p>
 											</div>
 											<div class="step password-details-submitted">
-												<p>Your password has been changed!</p>
+												<p>Password Changed</p>
 											</div>
 											<div class="step password-details-error">
 												<p>There was an error changing your password.</p>
@@ -583,6 +584,7 @@ Change by Us - User Account
 			app.components.change_pass_merlin = new tc.merlin(app,{
 				name: "change-password",
 				dom: tc.jQ(".password-info.merlin"),
+				next_button: tc.jQ(".password-save-button"),
 				first_step: "edit-password-details",
 				data: {
 					old_password: null,
@@ -591,6 +593,7 @@ Change by Us - User Account
 				steps: {
 					"edit-password-details":{
 						selector:".step.edit-password-details",
+						next_step:"submit-password-details",
 						inputs: {
 							old_password: {
 								selector: ".old-password",
@@ -598,23 +601,12 @@ Change by Us - User Account
 							},
 							new_password: {
 								selector: ".new-password",
-								validators:["required", "password-20"]
+								validators:["password-20", "required"]
 							},
 							confirm_new_password: {
 								selector: ".confirm-new-password",
 								validators:["required"]
 							}
-						},
-						init: function(merlin, dom) {
-							dom.find(".password-save-button").bind("click", {merlin:merlin, dom:dom}, function(e, d) {
-								e.preventDefault();
-								if (e.data.dom.hasClass("invalid")) { return; }
-								if (e.data.merlin.current_step.inputs.new_password.dom.val() !== e.data.merlin.current_step.inputs.confirm_new_password.dom.val()) {
-									
-									return;
-								}
-								window.location.hash = "change-password,submit-password-details";
-							});
 						},
 						finish: function(merlin, dom) {
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
