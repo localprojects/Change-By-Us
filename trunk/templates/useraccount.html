@@ -234,22 +234,40 @@ Change by Us - User Account
 										</div>
 										<div class="clearfix">
 											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
-											<a href="#" class="change-password rounded-button small">Change Password</a>
+											<a href="#change-password,edit-password-details" class="change-password rounded-button small">Change Password</a>
 										</div>
-										<div class="password-info">
-											<div class="row">
-												<label>Password</label>
-												<input type="password" class="has-been-focused" />
+										
+										<div class="password-info merlin">
+											<div class="step edit-password-details">
+												<div class="row">
+													<label>Old Password</label>
+													<input type="password" class="has-been-focused old-password" />
+												</div>
+												<div class="row">
+													<label>New Password</label>
+													<input type="password" class="has-been-focused new-password" />
+												</div>
+												<div class="row">
+													<label>Confirm Password</label>
+													<input type="password" class="has-been-focused confirm-new-password" />
+												</div>
+												<div class="controls">
+													<input class="rounded-button password-save-button" type="submit" value="Save"/>
+													<a href="#account-info,edit-account-details" class="cancel">Cancel</a>
+												</div>
 											</div>
-											<div class="row">
-												<label>Confirm Password</label>
-												<input type="password" class="has-been-focused" />
+											<div class="step submit-password-details">
+												<p>Changing your password&hellip;</p>
+												<p><img src='/static/images/loader32x32.gif' /></p>
 											</div>
-											<div class="controls">
-												<input class="rounded-button password-save-button" type="submit" value="Save Changes"/>
-												<a href="#" class="">Cancel</a>
+											<div class="step password-details-submitted">
+												<p>Your password has been changed!</p>
+											</div>
+											<div class="step password-details-error">
+												<p>There was an error changing your password.</p>
 											</div>
 										</div>
+										
 									</div>
 								</form>	
 								<div class="social-networking facebook-connected">
@@ -271,7 +289,7 @@ Change by Us - User Account
 								<p>Your account details have been updated!</p>
 							</div>
 							<div class="bd step account-details-error">
-								<p>There was an error updated your account details.</p>
+								<p>There was an error updating your account details.</p>
 							</div>
 						</div>
 						
@@ -501,7 +519,7 @@ Change by Us - User Account
 						init: function(merlin, dom) {
 							dom.find('.info-save-button').bind('click',{merlin:merlin,dom:dom},function(e,d){
 								e.preventDefault();
-								if(dom.hasClass('invalid')){
+								if(e.data.dom.hasClass('invalid')){
 									return;
 								}
 								window.location.hash = 'account-info,submit-account-details';
@@ -555,6 +573,87 @@ Change by Us - User Account
 					},
 					"account-details-error":{
 						selector:".step.account-details-error",
+						init: function(merlin, dom) {
+							
+						}
+					}
+				}
+			});
+			
+			app.components.change_pass_merlin = new tc.merlin(app,{
+				name: "change-password",
+				dom: tc.jQ(".password-info.merlin"),
+				first_step: "edit-password-details",
+				data: {
+					old_password: null,
+					new_password: null
+				},
+				steps: {
+					"edit-password-details":{
+						selector:".step.edit-password-details",
+						inputs: {
+							old_password: {
+								selector: ".old-password",
+								validators:["required"]
+							},
+							new_password: {
+								selector: ".new-password",
+								validators:["required", "password-20"]
+							},
+							confirm_new_password: {
+								selector: ".confirm-new-password",
+								validators:["required"]
+							}
+						},
+						init: function(merlin, dom) {
+							dom.find(".password-save-button").bind("click", {merlin:merlin, dom:dom}, function(e, d) {
+								e.preventDefault();
+								if (e.data.dom.hasClass("invalid")) { return; }
+								if (e.data.merlin.current_step.inputs.new_password.dom.val() !== e.data.merlin.current_step.inputs.confirm_new_password.dom.val()) {
+									
+									return;
+								}
+								window.location.hash = "change-password,submit-password-details";
+							});
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data = tc.jQ.extend(merlin.options.data, {
+								old_password: merlin.current_step.inputs.old_password.dom.val(),
+								new_password: merlin.current_step.inputs.new_password.dom.val()
+							});
+						}
+					},
+					"submit-password-details":{
+						selector:".step.submit-password-details",
+						init: function(merlin, dom) {
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/password",
+								data:merlin.options.data,
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										window.location.hash = "change-password,password-details-error";
+										return false;
+									}
+									tc.timer(2000, function() {
+										window.location.hash = "change-password,password-details-submitted";
+									});
+								}
+							});
+						}
+					},
+					"password-details-submitted":{
+						selector:".step.password-details-submitted",
+						init: function(merlin, dom) {
+							tc.timer(1000, function() {
+								window.location.hash = "user-account,account";
+							});
+						}
+					},
+					"password-details-error":{
+						selector:".step.password-details-error",
 						init: function(merlin, dom) {
 							
 						}
