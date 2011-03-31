@@ -222,7 +222,7 @@ Change by Us - Home
 
 			</div><!--end .splash-->
 			
-			<div class="note-card-pane">
+			<div class="note-card-pane" style="display:none">
 				<div class="membrane">
 					<div class="note-card-splash">
 						{% if d.template_data.all_ideas.data[0].ideas[0].f_name %}
@@ -716,14 +716,17 @@ Change by Us - Home
 			};
 		};
 		
+		
+		// .show note-card-pane
+		tc.jQ('.note-card-pane').addClass('hand' + (Math.floor(Math.random()*3) + 1)).show();
 
 		
 		// .small-note hover
 		var hoverZindexCounter = 106;
-		bigNoteCardSelector = $(".note-card-splash");
+		bigNoteCardSelector = tc.jQ(".note-card-splash");
 		$(".small-note").hover(
 			function () {
-				$(this).css({'zIndex' : hoverZindexCounter});
+				tc.jQ(this).css({'zIndex' : hoverZindexCounter});
 				var theContents = $(this).find('span').html();
 				bigNoteCardSelector.stop(true, true).fadeOut(50);
 				bigNoteCardSelector.html( theContents ).fadeIn(150);
