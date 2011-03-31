@@ -104,7 +104,7 @@ limit 1"""
         endorsements = []
         
         sql = """select u.user_id, u.first_name, u.last_name, u.image_id, pl.title, pl.organization from user u
-                inner join project_leader pl on pl.user_id = u.user_id
+                left join project_leader pl on pl.user_id = u.user_id
                 inner join project_endorsement pe on pe.user_id = pl.user_id and pe.project_id = $id"""
                 
         try:
