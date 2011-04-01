@@ -58,6 +58,31 @@ class Admin(Controller):
                 return self.not_found()
         elif (action == 'blacklist'):
             return self.updateBlacklist()
+        elif (action == 'idea'):
+            if (param0 == 'delete'):
+                return self.deleteIdea()
+            else:
+                return self.not_found()
+        elif (action == 'project'):
+            if (param0 == 'delete'):
+                return self.deleteProject()
+            else:
+                return self.not_found()
+        elif (action == 'message'):
+            if (param0 == 'delete'):
+                return self.deleteMessage()
+            else:
+                return self.not_found()
+        elif (action == 'goal'):
+            if (param0 == 'delete'):
+                return self.deleteGoal()
+            else:
+                return self.not_found()
+        elif (action == 'link'):
+            if (param0 == 'delete'):
+                return self.deleteLink()
+            else:
+                return self.not_found()
         else:
             return self.not_found()
             
@@ -257,6 +282,52 @@ class Admin(Controller):
             mUser.assignUserToGroup(self.db, userId, userGroupId)
 
             return userId
+            
+    def deleteProject(self):
+        projectId = self.request('project_id')
+        
+        if (not projectId):
+            log.error("*** project remove attempted w/o ids")
+            return False        
+        else:
+            return mProject.deleteProject(self.db, projectId)
+    
+    def deleteIdea(self):
+        ideaId = self.request('idea_id')
+        
+        if (not ideaId):
+            log.error("*** idea remove attempted w/o ids")
+            return False        
+        else:
+            return mIdea.setIdeaIsActive(self.db, ideaId, 0)
+            
+
+    def deleteMessage(self):
+        messageId = self.request('message_id')
+        
+        if (not messageId):
+            log.error("*** message remove attempted w/o ids")
+            return False        
+        else:
+            return mProject.removeMessage(self.db, messageId)
+
+    def deleteGoal(self):
+        projectGoalId = self.request('goal_id')
+        
+        if (not projectGoalId):
+            log.error("*** goal remove attempted w/o goal id")
+            return False              
+        else:
+            return mProject.removeProjectGoal(self.db, projectGoalId)  
+
+    def deleteLink(self):
+        linkId = self.request('link_id')
+        
+        if (not linkId):
+            log.error("*** link removal submitted missing an id")
+            return False            
+        else:        
+            return mProject.setLinkIsActive(self.db, linkId, 0)
             
     def updateBlacklist(self):
         blacklist = self.request('blacklist')
