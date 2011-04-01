@@ -193,10 +193,9 @@ class Project(Controller):
             return mProject.addLinkToProject(self.db, projectId, title, url)
             
     def removeLink(self):
-        projectId = self.request('project_id')
         linkId = self.request('link_id')
         
-        if (not projectId or not linkId):
+        if (not linkId):
             log.error("*** link removal submitted missing an id")
             return False            
         else:        
@@ -206,7 +205,7 @@ class Project(Controller):
                 log.warning("*** unauthorized link removal attempt by user_id = %s" % self.user.id)
                 return False
             else:
-                return mProject.setLinkIsActive(self.db, projectId, linkId, 0)
+                return mProject.setLinkIsActive(self.db, linkId, 0)
         
         
     def addResource(self):
@@ -309,7 +308,7 @@ class Project(Controller):
         projectGoalId = self.request('goal_id')
         
         if (not projectGoalId):
-            log.error("*** goal accomplish attempted w/o goal id")
+            log.error("*** goal remove attempted w/o goal id")
             return False              
         else:
             return mProject.removeProjectGoal(self.db, projectGoalId)                    
@@ -333,14 +332,13 @@ class Project(Controller):
             return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id)
             
     def removeMessage(self):
-        projectId = self.request('project_id')
         messageId = self.request('message_id')
         
-        if (not projectId or not messageId):
+        if (not messageId):
             log.error("*** message remove attempted w/o ids")
             return False        
         else:
-            return mProject.removeMessage(self.db, projectId, messageId)
+            return mProject.removeMessage(self.db, messageId)
         
     def getMessages(self):
         projectId = self.request('project_id')
