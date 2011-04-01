@@ -293,15 +293,6 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
         return None
         
     return userId
-    
-def deleteUser(db, userId):
-    try:
-        db.update('user', where = "user_id = $userId", is_active = 0, vars = {'userId':userId})
-        return True
-    except Exception, e:
-        log.info("*** problem deleting user %s" % userId)
-        log.error(e)    
-        return False
         
 def setUserGroup(db, userId, userGroupId):
     t = db.transaction()
