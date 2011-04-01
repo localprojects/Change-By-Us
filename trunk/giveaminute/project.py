@@ -260,6 +260,26 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
         log.error(e)    
         
     return projectId
+
+def approveItem(db, table, id):
+    try:
+        whereClause = "%s_id = %s" % (table, id)
+        db.update(table, where = whereClause, num_flags = 0)
+        return True
+    except:
+        log.info("*** couldn't approve item for table = %s, id = %s" % (table, id))
+        log.error(e)
+        return False
+ 
+def deleteItem(db, table, id):
+    try:
+        whereClause = "%s_id = %s" % (table, id)
+        db.update(table, where = whereClause, is_active = 0)
+        return True
+    except:
+        log.info("*** couldn't delete item for table = %s, id = %s" % (table, id))
+        log.error(e)
+        return False 
     
 def deleteProject(db, projectId):
     try:
