@@ -261,6 +261,15 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
         
     return projectId
     
+def deleteProject(db, projectId):
+    try:
+        db.update('project', where = "project_id = $projectId", is_active = 0, vars = {'projectId':projectId})
+        return True
+    except Exception, e:
+        log.info("*** there was a problem deleting the idea")
+        log.error(e)
+        return False
+    
 def updateProjectImage(db, projectId, imageId):
     try:
         sql = "update project set image_id = $imageId where project_id = $projectId"
@@ -460,10 +469,9 @@ def addLinkToProject(db, projectId, title, url):
         log.error(e)    
         return False     
         
-def setLinkIsActive(db, projectId, linkId, b):
+def setLinkIsActive(db, linkId, b):
     try:
-        sql = "update project_link set is_active = $b where project_id = $projectId and project_link_id = $linkId"
-        db.query(sql, {'projectId':projectId, 'linkId':linkId, 'b':b})
+        db.update('project_link', where = "project_link_id = $linkId", is_active = b, vars = {'linkId':linkId})
         
         return True
     except Exception, e:
@@ -688,10 +696,9 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
         log.error(e)    
         return False  
 
-def removeMessage(db, projectId, messageId):
+def removeMessage(db, messageId):
     try:
-        sql = "update project_message set is_active = 0 where project_id = $projectId and project_message_id = $messageId"
-        db.query(sql, {'projectId':projectId, 'messageId':messageId})
+        db.update('project_message', where="project_message_id = $messageId", is_active=0, vars = {'messageId':messageId})
 
         return True           
     except Exception, e:
