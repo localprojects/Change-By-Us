@@ -49,7 +49,7 @@ class Admin(Controller):
             if (param0 == 'add'):
                 return self.addUser()
             elif (param0 == 'delete'):
-                return self.deleteUser()
+                return self.deleteItem('user', self.request('user_id'))
             elif (param0 == 'setrole'):
                 return self.setUserGroup()
             elif (param0 == 'oncall'):
@@ -60,27 +60,37 @@ class Admin(Controller):
             return self.updateBlacklist()
         elif (action == 'idea'):
             if (param0 == 'delete'):
-                return self.deleteIdea()
+                return self.deleteItem('idea', self.request('idea_id'))
+            elif (param0 == 'approve'):
+                return self.approveItem('idea', self.request('idea_id'))
             else:
                 return self.not_found()
         elif (action == 'project'):
             if (param0 == 'delete'):
-                return self.deleteProject()
+                return self.deleteItem('project', self.request('project_id'))
+            elif (param0 == 'approve'):
+                return self.approveItem('project', self.request('project_id'))
             else:
                 return self.not_found()
         elif (action == 'message'):
             if (param0 == 'delete'):
-                return self.deleteMessage()
+                return self.deleteItem('project_message', self.request('message_id'))
+            elif (param0 == 'approve'):
+                return self.approveItem('project_message', self.request('message_id'))                
             else:
                 return self.not_found()
         elif (action == 'goal'):
             if (param0 == 'delete'):
-                return self.deleteGoal()
+                return self.deleteItem('project_goal', self.request('goal_id'))
+            elif (param0 == 'approve'):
+                return self.approveItem('project_goal', self.request('goal_id'))
             else:
                 return self.not_found()
         elif (action == 'link'):
             if (param0 == 'delete'):
-                return self.deleteLink()
+                return self.deleteItem('project_link', self.request('link_id')) 
+            elif (param0 == 'approve'):
+                return self.approveItem('project_link', self.request('link_id'))                
             else:
                 return self.not_found()
         else:
@@ -234,11 +244,6 @@ class Admin(Controller):
             
         return self.json(mUser.getAdminUsers(self.db, limit, offset))
         
-    def deleteUser(self):
-        userId = self.request('user_id')
-        
-        return mUser.deleteUser(self.db, userId)
-        
     def setUserGroup(self):
         userId = self.request('user_id')
         userGroupId = self.request('role')
@@ -282,53 +287,21 @@ class Admin(Controller):
             mUser.assignUserToGroup(self.db, userId, userGroupId)
 
             return userId
-            
-    def deleteProject(self):
-        projectId = self.request('project_id')
-        
-        if (not projectId):
-            log.error("*** project remove attempted w/o ids")
-            return False        
-        else:
-            return mProject.deleteProject(self.db, projectId)
-    
-    def deleteIdea(self):
-        ideaId = self.request('idea_id')
-        
-        if (not ideaId):
-            log.error("*** idea remove attempted w/o ids")
-            return False        
-        else:
-            return mIdea.setIdeaIsActive(self.db, ideaId, 0)
-            
 
-    def deleteMessage(self):
-        messageId = self.request('message_id')
-        
-        if (not messageId):
-            log.error("*** message remove attempted w/o ids")
-            return False        
+    def approveItem(self, table, id):
+        if (not id):
+            log.error("*** approve item attempted w/o id for table = %s" % table)
+            return False
         else:
-            return mProject.removeMessage(self.db, messageId)
-
-    def deleteGoal(self):
-        projectGoalId = self.request('goal_id')
-        
-        if (not projectGoalId):
-            log.error("*** goal remove attempted w/o goal id")
-            return False              
-        else:
-            return mProject.removeProjectGoal(self.db, projectGoalId)  
-
-    def deleteLink(self):
-        linkId = self.request('link_id')
-        
-        if (not linkId):
-            log.error("*** link removal submitted missing an id")
-            return False            
-        else:        
-            return mProject.setLinkIsActive(self.db, linkId, 0)
+            return mProject.approveItem(self.db, table, id)
             
+    def deleteItem(self, table, id):
+        if (not id):
+            log.error("*** delete item attempted w/o id for table = %s" % table)
+            return False
+        else:
+            return mProject.deleteItem(self.db, table, id)
+           
     def updateBlacklist(self):
         blacklist = self.request('blacklist')
         graylist = self.request('graylist')
