@@ -190,7 +190,6 @@ def setIdeaIsActive(db, ideaId, b):
 def addIdeaToProject(db, ideaId, projectId):
     try:
         db.insert('project__idea', idea_id = ideaId, project_id = projectId)
-        log.info("*** did we get here? ids asdfasdf asd")
                     
         return True
     except Exception, e:
