@@ -2,6 +2,7 @@ from framework.log import log
 from framework.config import *
 from framework.emailer import *
 import giveaminute.idea as mIdea
+import giveaminute.project as mProject
 import helpers.censor as censor
 
 class Project():
@@ -260,6 +261,26 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
         log.error(e)    
         
     return projectId
+    
+def getNumMembers(db, projectId):
+    count = 0
+
+    try:
+        sql = """select count(npu.user_id) as count from project__user npu 
+                    inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
+                    where npu.project_id = $projectId"""
+        data = list(db.query(sql, {'projectId':projectId}))
+        
+        if (len(data) > 0):
+            count = data[0].count
+        else:
+            log.info("*** couldn't get member count for project %s" % projectId)
+    except Exception, e:
+            log.info("*** couldn't get member count for project %s" % projectId)
+            log.error(e)
+            
+    return count        
+        
 
 def approveItem(db, table, id):
     try:
@@ -280,15 +301,6 @@ def deleteItem(db, table, id):
         log.info("*** couldn't delete item for table = %s, id = %s" % (table, id))
         log.error(e)
         return False 
-    
-def deleteProject(db, projectId):
-    try:
-        db.update('project', where = "project_id = $projectId", is_active = 0, vars = {'projectId':projectId})
-        return True
-    except Exception, e:
-        log.info("*** there was a problem deleting the idea")
-        log.error(e)
-        return False
     
 def updateProjectImage(db, projectId, imageId):
     try:
@@ -619,21 +631,40 @@ def getProjects(db, keywords, locationId, limit = 100):
 
         
 def getProjectsByUser(db, userId, limit = 100):
-    data = []
+    betterData = []
 
     try:
-        sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id,
+        sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
                 from project p
+                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                inner join user o on o.user_id = opu.user_id
                 inner join project__user pu on pu.user_id = $userId and pu.project_id = p.project_id
                  where p.is_active = 1
                  limit $limit"""
         data = list(db.query(sql, {'userId':userId, 'limit':limit}))
+        
+        for item in data:
+            betterData.append(dict(project_id = item.project_id,
+                            title = item.title,
+                            description = item.description,
+                            image_id = item.image_id,
+                            location_id = item.location_id,
+                            owner = mProject.smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                            num_members = item.num_members))
     except Exception, e:
         log.info("*** couldn't get projects")
         log.error(e)
             
-    return data
+    return betterData
         
 def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
     try:
