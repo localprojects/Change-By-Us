@@ -3,6 +3,7 @@ import giveaminute.location as mLocation
 import giveaminute.user as mUser
 import giveaminute.project as mProject
 import framework.util as util
+import lib.web
 
 class Home(Controller):
     def GET(self, action=None, page=None):
@@ -15,7 +16,9 @@ class Home(Controller):
         elif (action == 'mobile'):
             return self.showMobile()
         elif (action == 'project'):
-            return self.showProject(page)                                        
+            return self.showProject(page)    
+        elif (action == 'login'):
+            return self.showLogin()                                    
         else:
             return self.render(action)
             
@@ -68,6 +71,14 @@ class Home(Controller):
         
         self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
         return self.render('project')
+        
+    def showLogin(self):
+        referer = web.ctx.env.get('HTTP_REFERER')
+        
+        if (referer and "/join" not in referer):
+            self.template_data['redir_from'] = referer
+    
+        return self.render('login')
     
     def login(self):
         email = self.request("email")
