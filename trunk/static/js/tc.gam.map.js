@@ -6,6 +6,9 @@ var map;
 var brooklyn = new google.maps.LatLng(40.6743890, -73.9455);
 var ib;
 var currentMarker;
+var ib_up = false;
+var ib_over = false;
+var marker_up = false;
 
 function initialize(app) {
 	tc.util.log('Give A Minute: Map Search Init');
@@ -19,6 +22,7 @@ function initialize(app) {
 		minZoom: 11,
 		maxZoom: 15,
 		disableDefaultUI: true,
+		scrollwheel: false,
 		mapTypeControlOptions: {
 		   mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'GAM']
 		}
@@ -52,9 +56,9 @@ function initialize(app) {
 			marker.location_id = thisHood.location_id;
 			
 			// Event Listeners
-			google.maps.event.addListener(marker, 'mouseover', markerOver);
+			google.maps.event.addListener(marker, 'mouseover', showInfoBox);
 			google.maps.event.addListener(marker, 'mouseout', markerOut);
-			google.maps.event.addListener(marker, "click", markerClick);
+			google.maps.event.addListener(marker, "click", getSearch);
 		}
 	}
 	
@@ -67,10 +71,8 @@ function initialize(app) {
 		content: boxText,
 		disableAutoPan: false,
 		maxWidth: 0,
-		pixelOffset: new google.maps.Size(-5, -89),
+		pixelOffset: new google.maps.Size(-5, -92),
 		zIndex: null,
-		//closeBoxMargin: "10px 2px 2px 2px",
-		//closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
 		closeBoxURL: "",
 		infoBoxClearance: new google.maps.Size(0, 0),
 		isHidden: false,
@@ -80,6 +82,8 @@ function initialize(app) {
 	
 	ib = new InfoBox(myOptions);
 	
+	//$('#ib-content').hover(infoBoxOver, infoBoxOut).click(getSearch);
+	
 	// Map Init //
 	
 	var gamMapType = new google.maps.StyledMapType(gamMapStyle, { name: "Give a Minute" });
@@ -87,7 +91,7 @@ function initialize(app) {
 	map.mapTypes.set('GAM', gamMapType);
 	map.setMapTypeId('GAM');
 	
-	google.maps.event.addListener(map, "click", mapClick);
+	//google.maps.event.addListener(map, "click", mapClick);
 	
 	// Create the DIV to hold the control and call the HomeControl() constructor
 	// passing in this DIV.
@@ -132,14 +136,20 @@ function getIconOver(diameter){
 }
 
 function markerOver(e){
-	//console.log(this);
+	//console.log("markerOver: "+this);
 	this.setIcon(getIconOver(this.m_size));
+	//marker_up = true;
+	showInfoBox();
 }
 
 function markerOut(e){
-	if(this.isSelected) return;
+	//if(this.isSelected) return;
+	//console.log("markerOut: "+this);
+	//if(ib_up) return;
+	
 	this.setIcon(getIconUp(this.m_size));
-	this.isSelected = false;
+	ib.close();
+	//this.isSelected = false;
 }
 
 function markerClick(e){
@@ -162,9 +172,82 @@ function markerClick(e){
 	
 	var boxText = document.createElement("div");
 	boxText.id = "infobox";
-	boxText.innerHTML = "<div class='vCenter' id='ib-content' onClick='infoboxClick("+location_id+");'><div class='outer'><div class='inner'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div></div></div>";
+	//  onClick='infoboxClick("+location_id+");'
+	boxText.innerHTML = "<div class='vCenter' id='ib-content'><div class='outer'><div class='inner'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div></div></div>";
+	
 	ib.setContent(boxText);
+	
 	ib.open(map, this);
+}
+
+function showInfoBox(e){
+	//if(ib_up) return;
+	
+	this.setIcon(getIconOver(this.m_size));
+/*
+	if(this == currentMarker) return;
+	
+	if(currentMarker && currentMarker != this){
+		currentMarker.setIcon(getIconUp(currentMarker.m_size));
+		currentMarker.isSelected = false;
+	}
+	
+	this.isSelected = true;
+	currentMarker = this;
+*/
+	
+	var num_projects = this.n_projects;
+	var num_ideas = this.n_ideas;
+	var num_resources = this.n_resources;
+	var location_id = this.location_id;
+	
+	// Can't use jQuery for this because of the way Infobox works, apparently
+	
+	var boxText = document.createElement("div");
+	boxText.id = "infobox";
+	//  onClick='infoboxClick("+location_id+");'
+	boxText.innerHTML = "<div class='vCenter' id='ib-content'><div class='outer'><div class='inner'><div id='ib-title'>"+this.title+"</div><img src='/static/images/map-infobox-projects.png' /><span id='ib-projects-num' class='ib-num'>"+num_projects+"</span><br /><img src='/static/images/map-infobox-ideas.png' /><span id='ib-ideas-num' class='ib-num'>"+num_ideas+"</span><br /><img src='/static/images/map-infobox-resources.png' /><span id='ib-resources-num' class='ib-num'>"+num_resources+"</span></div></div></div>";
+	ib.setContent(boxText);
+	
+	ib.setOptions({pixelOffset: new google.maps.Size((this.m_size / 2), -92)});
+
+	
+	ib.open(map, this);
+}
+
+function hideInfoBox(e){
+	if(ib_up) return;
+	
+	this.setIcon(getIconUp(this.m_size));
+	this.isSelected = false;
+	
+	if(currentMarker) {
+		currentMarker.setIcon(getIconUp(currentMarker.score));
+		currentMarker.isSelected = false;
+		currentMarker = null;
+	}
+	ib.close();
+	ib_up = false;
+}
+
+function infoBoxOver(e){
+	ib_up = true;
+}
+
+function infoBoxOut(e){
+/*
+	if(currentMarker) {
+		currentMarker.setIcon(getIconUp(currentMarker.score));
+		currentMarker.isSelected = false;
+		currentMarker = null;
+	}
+	ib.close();
+*/
+	ib_up = false;
+}
+
+function getSearch(e){
+	infoboxClick(this.location_id);
 }
 
 function mapClick(e){
