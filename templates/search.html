@@ -133,9 +133,9 @@ Change by Us - Search Results
 												<a href="" class="add-button rounded-button small" href="">Add</a>
 											{% endif %}
 											{% if resource.image_id %}
-												<span class="thumb"><a class="close" href="#"><span>Close</span></a><img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+												<span class="thumb"><!-- <a class="close" href="#"><span>Close</span></a> --><img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
 											{% else %}
-												<span class="thumb"><a class="close" href="#"><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												<span class="thumb"><!-- <a class="close" href="#"><span>Close</span></a> --><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
 											<span class="resource-name"><span><span>{{ resource.title|truncate(50) }}</span></span></span>
 										</td>
@@ -159,7 +159,7 @@ Change by Us - Search Results
 				
 				<div class="box results-box results-ideas clearfix {% if d.template_data.results.data.ideas|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">{{ d.template_data.results.data.ideas|length }}</span> Idea{% if d.template_data.results.data.ideas|length > 1 %}s{% endif %}</h2>
+						<h2><span class="counter active">{{ d.template_data.results.data.ideas|length }}</span> Idea{% if d.template_data.results.data.ideas|length > 1 %}s{% endif %}</h2>
 						{% if d.template_data.results.data.ideas|length > 3 %}
 						<span class="control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
@@ -174,12 +174,12 @@ Change by Us - Search Results
 										{% if d.template_data.user.data.projects|length > 0 %}
 											<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
 										{% endif %}
-										<span class="flag">Flag as Inappropriate</span>
+										<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
 									</div>
 									{% endif %}
 									<div class="note-card">
 										<div class="membrane">
-											<a class="close" href="#"><span>Close</span></a>
+											<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
 											<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> says &mdash;{% endif %}</cite>
 											<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
 											<cite class="note-meta-ft">Posted <strong>02.04.2011</strong> at <strong>02:45pm</strong> via <strong>Web</strong></cite>
@@ -319,6 +319,21 @@ Change by Us - Search Results
 	<div class='foothills'>
 
 	</div>
+	
+	<div class="template-content modal-content confirm-delete remove-idea">
+		<div class="step">
+			<h2><strong>Delete</strong> this Idea?</h2>
+			<div>
+				<p>This deletes the idea from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete Idea</a>
+				<a class="cancel" href="#">No, keep them.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
 </div>
 
 {% endblock continent %}
@@ -409,6 +424,121 @@ Change by Us - Search Results
 		});
 		
 		tc.gam.ideas_invite( app );
+		
+		tc.jQ('a.flag-idea').bind('click', {app:app}, function(e){
+			e.preventDefault();
+			tc.jQ.ajax({
+				type:"POST",
+				url:'/idea/flag',
+				data:{
+					idea_id:e.target.hash.split(',')[1]
+				},
+				context:tc.jQ(e.target),
+				dataType:"text",
+				success: function(data, ts, xhr) {
+					if (data == "False") {
+						return false;
+					}
+					this.parent().text('Flagged');
+				}
+			});
+		});
+		
+		tc.jQ('a.remove-project').bind('click', {app:app}, function(e){
+			e.preventDefault();
+			var $t;
+			$t = tc.jQ(e.target);
+			e.data.app.components.modal.show({
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.remove-project'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/project/delete',
+							data:{
+								idea_id: e.target.hash.split(',')[1]
+							},
+							context:$t,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+								this.parent().parent().parent().animate({
+									width:0
+								}, 400, 'easeOutCubic', function(e,d){
+									tc.jQ(this).hide();
+								});
+							}
+						});
+					}
+				});
+		});
+		
+		tc.jQ('a.remove-resource').bind('click', {app:app}, function(e){
+			e.preventDefault();
+			var $t;
+			$t = tc.jQ(e.target);
+			e.data.app.components.modal.show({
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.remove-resource'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/resource/remove',
+							data:{
+								idea_id: e.target.hash.split(',')[1]
+							},
+							context:$t,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+								this.parent().parent().parent().animate({
+									width:0
+								}, 400, 'easeOutCubic', function(e,d){
+									tc.jQ(this).hide();
+								});
+							}
+						});
+					}
+				});
+		});
+		
+		tc.jQ('a.remove-idea').bind('click', {app:app}, function(e){
+			e.preventDefault();
+			var $t;
+			$t = tc.jQ(e.target);
+			e.data.app.components.modal.show({
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.remove-idea'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/idea/remove',
+							data:{
+								idea_id: e.target.hash.split(',')[1]
+							},
+							context:$t,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+								this.parent().parent().parent().animate({
+									width:0
+								}, 400, 'easeOutCubic', function(e,d){
+									tc.jQ(this).hide();
+								});
+							}
+						});
+					}
+				});
+		});
 		
 		// turn location field autocomplete off
 		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
