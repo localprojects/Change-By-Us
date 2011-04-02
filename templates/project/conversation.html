@@ -1,99 +1,101 @@
 <div class="box conversation">
-	<div class="conversation-controls clearfix">
-		<a class="rss-btn" href="#"><span><abbr>RSS</abbr></span></a>
+	
+	{% if d.template_data.project_user.data.is_member or d.template_data.project_user.data.is_project_admin %}
+		<!-- begin .conversation-controls -->
+		<div class="conversation-controls clearfix">
+			<a class="rss-btn" href="#"><span><abbr>RSS</abbr></span></a>
 		
-		{% if d.template_data.project.data.info.messages['total'] > 0 %}
-			<!--
-			<div class="filters">
-				<select>
-					<option>All messages</option>
-					<option>XXXX</option>
-					<option>XXXX</option>
-				</select>
-			</div>
-			-->
-		{% endif %}
+			{% if d.template_data.project.data.info.messages['total'] > 0 %}
+				<!-- TODO ??
+				<div class="filters">
+					<select>
+						<option>All messages</option>
+						<option>XXXX</option>
+						<option>XXXX</option>
+					</select>
+				</div>
+				-->
+			{% endif %}
 		
-		<div class="main merlin submit-message">
-			<div class='step message clearfix'>
-				<div class="conversation-input">
-					{% if d.template_data.project.data.info.messages['total'] > 0 %}
-						<label class="fancy-caps">Join <span>the</span> Conversation</label>
-					{% else %}
-						<label class="fancy-caps">Start <span>the</span> Conversation</label>
-					{% endif %}
-					<textarea class='message-input' cols="48" rows="1"></textarea>
-					<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+			<div class="main merlin submit-message">
+				<div class='step message clearfix'>
+					<div class="conversation-input">
+						{% if d.template_data.project.data.info.messages['total'] > 0 %}
+							<label class="fancy-caps">Join <span>the</span> Conversation</label>
+						{% else %}
+							<label class="fancy-caps">Start <span>the</span> Conversation</label>
+						{% endif %}
+						<textarea class='message-input' cols="48" rows="1"></textarea>
+						<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+					</div>
+					<div class="primary-action">
+						<a class="ca-btn submit-button" href="#">
+							<span>Post</span>
+						</a>
+					</div>
 				</div>
-				<div class="primary-action">
-					<a class="ca-btn submit-button" href="#">
-						<span>Post</span>
-					</a>
+				<div class='step submit clearfix spinner-message' style='display:none;'>
+					<p>Thank you for submitting a message!</p>
+					<p><img src='/static/images/loader32x32.gif' /></p>
 				</div>
-			</div>
-			<div class='step submit clearfix spinner-message' style='display:none;'>
-				<p>Thank you for submitting a message!</p>
-				<p><img src='/static/images/loader32x32.gif' /></p>
-			</div>
 			
-			<div class='step submit-error clearfix' style='display:none;'>
-				<p>There was an error submitting your message!</p>
+				<div class='step submit-error clearfix' style='display:none;'>
+					<p>There was an error submitting your message!</p>
+				</div>
 			</div>
 		</div>
+		<!-- end .conversation-controls -->
+	{% endif %}
+	
+	<ol class="comment-stack">
+		{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+			{% for message in d.template_data.project.data.info.messages['items'] %}
+				<li class=" " id='message-{{ message.message_id }}'>
+					{% if d.template_data.project_user.data.is_project_admin %}
+						<a class="close" href="#remove,{{ message.message_id }}"><span>Close</span></a>
+					{% endif %}
+					<div class="membrane">
+						<div class="thumb">
+							{% if message.owner.image_id %}
+								<img src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
+							{% else %}
+								<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+							{% endif %}
+						</div>
+						<div class="main">
+							{% if message.message_type == 'join' %}
+								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
+							{% elif message.message_type == 'comment' %}
+								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> says</cite>
+							{% endif %}
+						
+							{% if message.idea %}
+								<div class="note-card">
+									<cite class="note-meta-hd"></cite>
+									<blockquote>
+										<p>{{ message.idea.message }}</p>
+									</blockquote>
+									<cite class="note-meta-ft"></cite>
+								</div>
+							{% endif %}
+						
+							<blockquote class="serif">
+								<p>{{ message.body }}</p>
+							</blockquote>
+							<!-- TODO calculate time since based on {{ message.created }} -->
+							<!--<cite class="meta-ft">XXXX ago</cite>-->
+							<cite class="meta-ft">Created {{ message.created }}</cite>
+						</div>
+					</div>
+				</li>
+			{% endfor %}
+		{% endif %}
+	</ol>
+	
+	<div class="load-more" {% if d.template_data.project.data.info.messages['n_returned'] < 10 %} style='display:none;' {% endif %}>
+		<a href="#" class='load_more_button'><span>Load older posts</span></a>
 	</div>
 	
-	
-		<ol class="comment-stack">
-			{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
-				{% for message in d.template_data.project.data.info.messages['items'] %}
-					<li class=" " id='message-{{ message.message_id }}'>
-						{% if d.template_data.project_user.data.is_project_admin %}
-							<a class="close" href="#remove,{{ message.message_id }}"><span>Close</span></a>
-						{% endif %}
-						<div class="membrane">
-							<div class="thumb">
-								{% if message.owner.image_id %}
-									<img src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
-								{% else %}
-									<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
-								{% endif %}
-							</div>
-							<div class="main">
-								{% if message.message_type == 'join' %}
-									<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
-								{% elif message.message_type == 'comment' %}
-									<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> says</cite>
-								{% endif %}
-							
-								{% if message.idea %}
-									<div class="note-card">
-										<cite class="note-meta-hd"></cite>
-										<blockquote>
-											<p>{{ message.idea.message }}</p>
-										</blockquote>
-										<cite class="note-meta-ft"></cite>
-									</div>
-								{% endif %}
-							
-								<blockquote class="serif">
-									<p>{{ message.body }}</p>
-								</blockquote>
-								<!-- TODO calculate time since based on {{ message.created }} -->
-								<!--<cite class="meta-ft">XXXX ago</cite>-->
-								<cite class="meta-ft">Created {{ message.created }}</cite>
-							</div>
-						</div>
-					</li>
-				{% endfor %}
-			{% endif %}
-		</ol>
-		
-		
-		<div class="load-more" {% if d.template_data.project.data.info.messages['n_returned'] < 10 %} style='display:none;' {% endif %}>
-			<a href="#" class='load_more_button'><span>Load older posts</span></a>
-		</div>
-	
-
 </div>
 
 <li class='template-content message-markup'>
@@ -253,8 +255,12 @@
 		
 		project.dom.bind('add-new-message',{me:this},this.handlers.add_new_message);
 		this.elements.load_more_button.bind('click', { project:project,me:this }, this.handlers.load_more_button_click);
-		this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
-		this.elements.textpane.autoGrow();
+		if (this.elements.userprompt.length) {
+			this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
+		}
+		if (this.elements.textpane.length) {
+			this.elements.textpane.autoGrow();
+		}
 		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 		
 		function generate_message_markup(data){
@@ -267,99 +273,101 @@
 			return markup;
 		}
 		
-		this.build_merlin = function(){
-			//if(!options.app.app_page.user){
-			//	options.app.components.modal.show({
-			//		source_element:tc.jQ('.modal-content.add-message-no-user'),
-			//		init:function(modal,callback){
-			//			if(tc.jQ.isFunction(callback)){
-			//				callback(modal);
-			//			}
-			//		}
-			//	});
-			//	return false;
-			//}
-			tc.util.log('conversation.build_merlin')
-			if(this.components.merlin){
-				return;
-			}
-			this.components.merlin = new tc.merlin(options.app,{
-				name:'project_conversation',
-				dom:dom.find('.merlin.submit-message'),
-				next_button:dom.find('a.submit-button'),
-				first_step:'message',
-				data:{
-					message:null,
-					project_id:null
-				},
-				steps:{
-					'message':{
-						selector:'.step.message',
-						next_step:'message-submit',
-						inputs:{
-							message:{
-								selector:'textarea.message-input',
-								validators:['min-3','max-200','required'],
-								hint:'',
-								handlers:{
-									focus:function(e,d){
-										if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
-											e.data.me.dom.find(".conversation-input label").hide();
-										}
-									},
-									blur:function(e,d){
-										if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
-											e.data.me.dom.find(".conversation-input label").show();
+		{% if d.template_data.project_user.data.is_member or d.template_data.project_user.data.is_project_admin %}
+			this.build_merlin = function(){
+				//if(!options.app.app_page.user){
+				//	options.app.components.modal.show({
+				//		source_element:tc.jQ('.modal-content.add-message-no-user'),
+				//		init:function(modal,callback){
+				//			if(tc.jQ.isFunction(callback)){
+				//				callback(modal);
+				//			}
+				//		}
+				//	});
+				//	return false;
+				//}
+				tc.util.log('conversation.build_merlin')
+				if(this.components.merlin){
+					return;
+				}
+				this.components.merlin = new tc.merlin(options.app,{
+					name:'project_conversation',
+					dom:dom.find('.merlin.submit-message'),
+					next_button:dom.find('a.submit-button'),
+					first_step:'message',
+					data:{
+						message:null,
+						project_id:null
+					},
+					steps:{
+						'message':{
+							selector:'.step.message',
+							next_step:'message-submit',
+							inputs:{
+								message:{
+									selector:'textarea.message-input',
+									validators:['min-3','max-200','required'],
+									hint:'',
+									handlers:{
+										focus:function(e,d){
+											if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
+												e.data.me.dom.find(".conversation-input label").hide();
+											}
+										},
+										blur:function(e,d){
+											if (tc.validator_utils.isEmpty(tc.jQ(this).val())) {
+												e.data.me.dom.find(".conversation-input label").show();
+											}
 										}
 									}
 								}
+							},
+							init:function(merlin,dom){
+								merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+							},
+							finish:function(merlin,dom){
+								tc.util.dump(merlin.current_step.dom.height());
+								merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height())
+								merlin.options.data = tc.jQ.extend(merlin.options.data,{
+									project_id:merlin.app.app_page.data.project.project_id,
+									message:merlin.current_step.inputs.message.dom.val()
+								});
 							}
 						},
-						init:function(merlin,dom){
-							merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
-						},
-						finish:function(merlin,dom){
-							tc.util.dump(merlin.current_step.dom.height());
-							merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height())
-							merlin.options.data = tc.jQ.extend(merlin.options.data,{
-								project_id:merlin.app.app_page.data.project.project_id,
-								message:merlin.current_step.inputs.message.dom.val()
-							});
-						}
-					},
-					'message-submit':{
-						selector:'.step.submit',
-						init:function(merlin,dom){
-							tc.jQ.ajax({
-								type:'POST',
-								url:'/project/message/add',
-								data:merlin.options.data,
-								context:merlin,
-								dataType:'text',
-								success:function(data,ts,xhr){
-									if(data == 'False'){
-										window.location.hash = 'project_conversation,message-submit-error';
-										return false;
+						'message-submit':{
+							selector:'.step.submit',
+							init:function(merlin,dom){
+								tc.jQ.ajax({
+									type:'POST',
+									url:'/project/message/add',
+									data:merlin.options.data,
+									context:merlin,
+									dataType:'text',
+									success:function(data,ts,xhr){
+										if(data == 'False'){
+											window.location.hash = 'project_conversation,message-submit-error';
+											return false;
+										}
+										project.dom.trigger('add-new-message',this.options.data);
+										window.location.hash = 'project_conversation,message';
 									}
-									project.dom.trigger('add-new-message',this.options.data);
+								});
+							}
+						},
+						'message-submit-error':{
+							selector:'.step.submit-error',
+							init:function(){
+								tc.timer(1000,function(){
 									window.location.hash = 'project_conversation,message';
-								}
-							});
-						}
-					},
-					'message-submit-error':{
-						selector:'.step.submit-error',
-						init:function(){
-							tc.timer(1000,function(){
-								window.location.hash = 'project_conversation,message';
-							});
+								});
+							}
 						}
 					}
-				}
-			});
-		};
+				});
+			};
 		
-		this.build_merlin();
+			this.build_merlin();
+		{% endif %}
 		
 		return { 
 			show: widget.show,
