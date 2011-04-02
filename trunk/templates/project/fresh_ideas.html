@@ -18,7 +18,7 @@
 								<li>
 									<div class="note-card-public-controls">
 										<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-										<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+										<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
 									</div>
 									<div class="note-card">
 										<div class="membrane">
@@ -47,12 +47,26 @@
 			</div>
 		
 			<div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
-				<a class="close" href="#"><span>Close</span></a>
+				<a class="close remove-idea" href="#"><span>Close</span></a>
 				<p>No similar ideas found.</p>
 			</div>
 		
 		</div>
 	</div>
+</div>
+
+<div class="template-content modal-content confirm-delete remove-idea">
+	<div class="step">
+		<h2><strong>Delete</strong> this Idea?</h2>
+		<div>
+			<p>This deletes the idea from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete Idea</a>
+			<a class="cancel" href="#">No, keep them.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
 </div>
 
 <script>
@@ -77,6 +91,52 @@
 		if (!this.carousel.is_rendered()) {
 			
 		}
+		
+		
+		dom.find('a.flag-idea').bind('click', {project:project}, function(e){
+			e.preventDefault();
+			tc.jQ.ajax({
+				type:"POST",
+				url:'/idea/flag',
+				data:{
+					idea_id:e.target.hash.split(',')[1]
+				},
+				context:tc.jQ(e.target),
+				dataType:"text",
+				success: function(data, ts, xhr) {
+					if (data == "False") {
+						return false;
+					}
+					this.parent().text('Flagged');
+				}
+			});
+		});
+		
+		dom.find('a.remove-idea').bind('click', {project:project}, function(e){
+			e.preventDefault();
+			
+			e.data.app.components.modal.show({
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.remove-message'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/idea/remove',
+							data:{
+								idea_id: e.target.hash.split(',')[1]
+							},
+							context:e.data.project,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+							}
+						});
+					}
+				});
+			
+		});
 			
 		return {
 			show:widget.show,
