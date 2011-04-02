@@ -85,43 +85,62 @@ class Search(Controller):
     ## END DEBUG ONLY
 
     def searchProjects(self, terms, locationId):
-        data = []
+        betterData = []
         
-        clause = self.makeMatchClause(terms, "p.title, p.description")
+        match = ' '.join([(item + "*") for item in terms])
     
         #obviously must optimize here
         try:
-            sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 
+            sql = """select p.project_id, 
+                            p.title, 
+                            p.description, 
+                            p.image_id, 
+                            p.location_id,
+                            o.user_id as owner_user_id,
+                            o.first_name as owner_first_name,
+                            o.last_name as owner_last_name,
+                            o.image_id as owner_image_id, 
                         (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
                         from project p
+                        inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                        inner join user o on o.user_id = opu.user_id
                         where
-                        p.is_active = 1 %s
-                        %s
-                        order by p.created_datetime desc""" % ((("and p.location_id = %s " % str(locationId)) if locationId else ""),
-                                                                "and %s" % clause if len(clause) > 0 else "")
+                        p.is_active = 1 
+                        and ($locationId is null or p.location_id = $locationId)
+                        and ($match = '' or match(p.title, p.description) against ($match in boolean mode))
+                        order by p.created_datetime desc"""
                         
-            data = list(self.db.query(sql))
+            data = list(self.db.query(sql, {'match':match, 'locationId':locationId}))
+            
+            for item in data:
+                betterData.append(dict(project_id = item.project_id,
+                                title = item.title,
+                                description = item.description,
+                                image_id = item.image_id,
+                                location_id = item.location_id,
+                                owner = mProject.smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                                num_members = item.num_members))
         except Exception, e:
             log.info("*** couldn't get project search data")
             log.error(e)
             
-        return data
+        return betterData
         
     def searchProjectResources(self, terms, locationId):
         data = []
 
-        clause = self.makeMatchClause(terms, "title, description")
+        match = ' '.join([(item + "*") for item in terms])
         
         try:
             sql = """select project_resource_id as link_id, title, url, image_id 
                     from project_resource
                         where
-                        is_active = 1 %s
-                        %s
-                        order by created_datetime desc""" % ((("and location_id = %s " % str(locationId)) if locationId else ""),
-                                                                "and %s" % clause if len(clause) > 0 else "")
+                        is_active = 1 
+                        and ($locationId is null or location_id = $locationId)
+                        and ($match = '' or match(title, description) against ($match in boolean mode))
+                        order by created_datetime desc"""
 
-            data = list(self.db.query(sql))
+            data = list(self.db.query(sql, {'match':match, 'locationId':locationId}))
         except Exception, e:
             log.info("*** couldn't get resources search data")
             log.error(e)
@@ -129,40 +148,42 @@ class Search(Controller):
         return data
 
     def searchIdeas(self, terms, locationId):
-        clause = self.makeMatchClause(terms, "i.description")
-                
-        sql = """select i.idea_id
-                       ,i.description
-                      ,i.submission_type
-                      ,i.created_datetime
-                      ,u.user_id
-                      ,u.first_name
-                      ,u.last_name
-                      ,u.image_id
-                from idea i
-                left join user u on u.user_id = i.user_id
-                where
-                i.is_active = 1 %s
-                %s
-                order by i.created_datetime desc""" % ((("and i.location_id = %s " % str(locationId)) if locationId else ""),
-                                                        "and %s" % clause if len(clause) > 0 else "")
-
-
-        data = list(self.db.query(sql))
-        
         betterData = []
-        
-        for item in data:
-            owner = None
+        match = ' '.join([(item + "*") for item in terms])
+                
+        try:
+            sql = """select i.idea_id
+                           ,i.description
+                          ,i.submission_type
+                          ,i.created_datetime
+                          ,u.user_id
+                          ,u.first_name
+                          ,u.last_name
+                          ,u.image_id
+                    from idea i
+                    left join user u on u.user_id = i.user_id
+                    where
+                    i.is_active = 1 
+                    and ($locationId is null or i.location_id = $locationId)
+                    and ($match = '' or match(i.description) against ($match in boolean mode))
+                    order by i.created_datetime desc"""
+    
+            data = list(self.db.query(sql, {'match':match, 'locationId':locationId}))
             
-            if (item.user_id):
-                owner = mProject.smallUser(item.user_id, item.first_name, item.last_name, item.image_id)
-        
-            betterData.append(dict(idea_id = item.idea_id,
-                            message = item.description,
-                            created = str(item.created_datetime),
-                            submission_type = item.submission_type,
-                            owner = owner))
+            for item in data:
+                owner = None
+                
+                if (item.user_id):
+                    owner = mProject.smallUser(item.user_id, item.first_name, item.last_name, item.image_id)
+            
+                betterData.append(dict(idea_id = item.idea_id,
+                                message = item.description,
+                                created = str(item.created_datetime),
+                                submission_type = item.submission_type,
+                                owner = owner))
+        except Exception, e:
+            log.info("*** couldn't get idea search data")
+            log.error(e)
                 
         return betterData
 
