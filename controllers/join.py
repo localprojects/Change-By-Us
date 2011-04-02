@@ -3,8 +3,7 @@ import framework.util as util
 from framework.controller import *
 import giveaminute.user as user
 import giveaminute.idea as idea
-# from giveaminute.user import *
-# from giveaminute.idea import *
+import lib.web
 
 class Join(Controller):
     def GET(self, action=None):
@@ -13,14 +12,18 @@ class Join(Controller):
         elif (action == 'ideas'):
             return self.getIdeas()
         else:
-            return self.render('join',{'user':None})
-            
+            return self.showJoin()            
             
     def POST(self,*args, **kw):
-        log.info("*** args =  %s" % args)
-        log.info("*** kw = %s" % kw)
-        
         return self.newUser()
+        
+    def showJoin(self):
+        referer = web.ctx.env.get('HTTP_REFERER')
+        
+        if (referer and "/login" not in referer):
+            self.template_data['redir_from'] = referer
+                
+        return self.render('join',{'user':None})  
         
     def getUsers(self, action=None):
         try:
