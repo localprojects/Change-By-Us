@@ -34,9 +34,8 @@ if(!tc){ var tc = {}; }
 	if(jQuery){
 	  tc.jQ = jQuery;
 	}
-	
-	// TODO!!!
-	tc.util.getTimeSince = function(timestep) {
+
+	tc.util.getTimeSince = function(timestamp) {
 		
 	};
 	
