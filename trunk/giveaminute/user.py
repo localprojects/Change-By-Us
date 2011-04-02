@@ -19,6 +19,7 @@ class User():
         self.lastName = self.data.last_name
         self.imageId = self.data.image_id
         self.locationId = self.data.location_id
+        self.emailNotification = self.data.email_notification
         self.isAdmin = bool(self.data.is_admin)
         self.isModerator = bool(self.data.is_moderator)
         self.isLeader = bool(self.data.is_leader)
@@ -48,6 +49,7 @@ class User():
                     l_name = self.lastName,
                     email = self.email,
                     mobile = self.phone,
+                    email_notification = self.emailNotification,
                     projects = projects)
                                         
         return data
@@ -63,6 +65,7 @@ select u.user_key
       ,u.last_name
       ,u.image_id
       ,u.location_id
+      ,u.email_notification
       ,if(ug1.user_group_id, 1, 0) as is_admin
       ,if(ug2.user_group_id, 1, 0) as is_moderator
       ,if(ug3.user_group_id, 1, 0) as is_leader
