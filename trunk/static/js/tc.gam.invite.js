@@ -92,6 +92,9 @@ tc.gam.ideas_invite = function(app) {
 							var selected_project;
 							selected_project = dom.find(".project-radio:checked");
 							
+							//temp
+							if (!selected_project.length) { return; }
+							
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
 								project_id: selected_project.attr("rel").split(",")[1]
 							});
