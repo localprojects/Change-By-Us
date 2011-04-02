@@ -68,11 +68,12 @@ Change by Us - User Account
 										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
 										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong>XXXXX</strong></cite>
 										<div class="sub-ft">
+											<div class="twitter">
+												<a href="http://twitter.com/share" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+											</div>
 											<div class="facebook">
-												<!--
 												<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
 												<fb:like layout="button_count" show_faces="true" width="100"></fb:like>
-												-->
 											</div>
 										</div>
 									</div>
@@ -92,14 +93,6 @@ Change by Us - User Account
 								{% for idea in d.template_data.user_activity.data.ideas %}
 								
 									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
-										{% if d.template_data and d.template_data.user %}
-										<div class="note-card-public-controls">
-											{% if d.template_data.user.data.projects|length > 0 %}
-												<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-											{% endif %}
-											<span class="flag">Flag as Inappropriate</span>
-										</div>
-										{% endif %}
 										<div class="note-card">
 											<div class="membrane">
 												<a class="close" href="#"><span>Close</span></a>
