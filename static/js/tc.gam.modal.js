@@ -42,7 +42,9 @@ tc.modal.prototype.show = function(opts, event_target){
 	this.options.element.children().remove();
 	content.show();
 	this.options.element.append(content);
-	this.options.element.find('.close').bind('click',{me:this},function(e){
+	tc.util.dump(this.options.element.find('.close'));
+	this.options.element.find('.close, .cancel').bind('click',{me:this},function(e){
+		tc.util.dump('CLICKED');
 		e.preventDefault();
 		e.data.me.hide();
 	});
@@ -54,7 +56,6 @@ tc.modal.prototype.show = function(opts, event_target){
 		}
 	});
 	this.options.element.bind('onBeforeClose',{me:this, opts:opts},function(e){
-		tc.util.dump(e.data.opts.preventClose);
 		if(e.data.opts.preventClose){
 			return false;
 		}

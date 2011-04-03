@@ -76,9 +76,6 @@ tc.gam.ideas_invite = function(app) {
 							
 						},
 						finish: function(merlin, dom) {
-							//temp
-							if (!selected_project.length) { return; }
-							
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
 								idea_id: tc.jQ(event_target).attr("href").split(",")[1],
 								message: merlin.current_step.inputs.invite_message.dom.val()
