@@ -132,14 +132,18 @@ Change by Us - Search Results
 									{% endif %}
 										<td>
 											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-												<a href="" class="add-button rounded-button small" href="">Add</a>
+												<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
 											{% endif %}
 											{% if resource.image_id %}
 												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
 											{% else %}
 												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
-											<span class="resource-name"><span><span>{{ resource.title|truncate(50) }}</span></span></span>
+											<span class="resource-name">
+												<span rel="#organization,{{ resource.link_id }}" class='tooltip_trigger'>
+													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title }}</span></a></span>
+												</span>
+											</span>
 										</td>
 									{% if loop.index % 3 == 0 %}
 									</tr>
@@ -339,6 +343,59 @@ Change by Us - Search Results
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
+	
+	<div class='template-content modal-content merlin add-resource'>
+			
+			<div class="step add-resource-project-info">
+				<h2>Add a <strong><span class="name">Resource</span></strong> To Your Project</h2>
+				<p class="no-name">Since you are a part of multiple projects, we need to know which project you would like to add this resource to?</p>
+				<form action='#' class="form-pane non-float checklist">
+					<div class="fields">
+						{% if d.template_data and d.template_data.user %}
+							{% if d.template_data.user.data.projects|length > 0 %}
+								{% for project in d.template_data.user.data.projects %}
+									<div class="row">
+										<input type="radio" class="project-radio" rel="#project,{{ project.project_id }}" name="invite-project-name" id="invite-project-{{ project.project_id }}" />
+										<label for="invite-project-{{ project.project_id }}">{{ project.title }}</label>
+									</div>
+								{% endfor %}
+							{% else %}
+							
+							{% endif %}
+						{% endif %}
+					</div>
+					<a class='submit rounded-button' href="#">Add</a>
+				</form>
+			</div>
+			
+			<div class='step add-resource-submit spinner-message'>
+				<p>Thanks for adding a resource to your project!</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
+			</div>
+			
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+	
+	<div class='template-content' id='organization-markup-source'>
+		<div class='tooltip-hd'>
+			<h2></h2>
+		</div>
+		<div class='tooltip-bd'>
+			<div class='info'>
+				<div class='thumb'>
+					<img width='90' alt='' src='http://placehold.it/90x90'/>
+				</div>
+				<div class='main'>
+					<p></p>
+				</div>
+			</div>
+			<dl class='details'>
+				<dt>Visit Us</dt>
+				<dd><a href=''></a></dd>
+			</dl>
+		</div>
+	</div>
+	
 </div>
 
 {% endblock continent %}
@@ -346,7 +403,7 @@ Change by Us - Search Results
 {% block page_js %}
 <script type="text/javascript">
 	tc.util.dump('Search Data');
-	tc.util.dump({{ d.template_data.results['json'] }})
+	tc.util.dump({{ d.template_data.results['json'] }});
 </script>
 
 <script type="text/javascript">
@@ -428,26 +485,90 @@ Change by Us - Search Results
 			}
 		});
 		
+		app.components.tooltips = tc.resource_tooltip({
+			triggers: tc.jQ(".resources-list .tooltip_trigger"),
+			markup_source_element: tc.jQ('#organization-markup-source'),
+			get_url: "/project/resource/info"
+		});
+		
 		tc.gam.ideas_invite( app );
 		
-		tc.jQ('a.flag-idea').bind('click', {app:app}, function(e){
-			e.preventDefault();
-			tc.jQ.ajax({
-				type:"POST",
-				url:'/idea/flag',
-				data:{
-					idea_id:e.target.hash.split(',')[1]
-				},
-				context:tc.jQ(e.target),
-				dataType:"text",
-				success: function(data, ts, xhr) {
-					if (data == "False") {
-						return false;
+		tc.jQ('a.add-resource').bind('click',{
+			app:app,
+			source_element:tc.jQ('.modal-content.add-resource'),
+			init:function(modal,event_target,callback){
+				var modal_merlin;
+				modal_merlin = new tc.merlin(app,{
+					name:'add-resource',
+					dom:modal.options.element.find('.add-resource'),
+					next_button: tc.jQ('a.submit'),
+					first_step: 'add-resource-project-info',
+					data:{
+						project_id: null,
+						project_resource_id: null
+					},
+					steps:{
+						'add-resource-project-info':{
+							selector:'.add-resource-project-info',
+							next_step:'add-resource-submit',
+							inputs:{
+								project_radios:{
+									selector:'.project-radio',
+									vallidators:['required']
+								}
+							},
+							init: function(merlin, dom) {
+								var name;
+								
+								if(dom.find('.project-radio').length == 1){
+									dom.find('.project-radio').first().attr('checked',true);
+									//window.location.hash = 'add-resource,add-resource-submit';
+								}
+							
+							},
+							finish: function(merlin, dom) {
+								merlin.options.data = tc.jQ.extend(merlin.options.data, {
+									project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
+									project_resource_id: event_target.hash.split(',')[1]
+								});
+							}
+						},
+						'add-resource-submit':{
+							selector:'.add-resource-submit',
+							init: function(merlin, dom) {
+								
+								tc.util.dump(merlin.options.data);
+								
+								tc.jQ.ajax({
+									type:"POST",
+									url:"/project/resource/add",
+									data:merlin.options.data,
+									context:merlin,
+									dataType:"text",
+									success: function(data, ts, xhr) {
+										//if (data == "False") {
+										//	return false;
+										//}
+										tc.jQ(event_target).addClass("disabled").text("Added");
+										tc.timer(1000, function() {
+											modal.hide();
+										});
+									}
+								});
+							}
+						}
 					}
-					this.parent().text('Flagged');
+				});
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
 				}
-			});
+			}
+		},function(e,d){
+			e.preventDefault();
+			e.data.app.components.modal.show(e.data, e.target);
 		});
+		
+		
 		
 		tc.jQ('a.remove-project').bind('click', {app:app}, function(e){
 			e.preventDefault();
@@ -511,6 +632,25 @@ Change by Us - Search Results
 						});
 					}
 				});
+		});
+		
+		tc.jQ('a.flag-idea').bind('click', {app:app}, function(e){
+			e.preventDefault();
+			tc.jQ.ajax({
+				type:"POST",
+				url:'/idea/flag',
+				data:{
+					idea_id:e.target.hash.split(',')[1]
+				},
+				context:tc.jQ(e.target),
+				dataType:"text",
+				success: function(data, ts, xhr) {
+					if (data == "False") {
+						return false;
+					}
+					this.parent().text('Flagged');
+				}
+			});
 		});
 		
 		tc.jQ('a.remove-idea').bind('click', {app:app}, function(e){

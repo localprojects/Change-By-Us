@@ -130,7 +130,7 @@
 											<li>
 												<div class="note-card-public-controls">
 													<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-													<a href="#"><span class="flag">Flag as Inappropriate</span></a>
+													<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
 												</div>
 												<div class="note-card">
 													<div class="membrane">
@@ -331,6 +331,25 @@
 		};
 		
 		this.build_email_merlin();
+		
+		this.dom.find('a.flag-idea').bind('click', {project:project}, function(e){
+			e.preventDefault();
+			tc.jQ.ajax({
+				type:"POST",
+				url:'/idea/flag',
+				data:{
+					idea_id:e.target.hash.split(',')[1]
+				},
+				context:tc.jQ(e.target),
+				dataType:"text",
+				success: function(data, ts, xhr) {
+					if (data == "False") {
+						return false;
+					}
+					this.parent().text('Flagged');
+				}
+			});
+		});
 		
 		this.components.ideas_carousel = new tc.carousel({
 			element: this.dom.find(".ideas-invite .carousel"),

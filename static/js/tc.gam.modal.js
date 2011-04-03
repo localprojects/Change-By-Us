@@ -29,18 +29,16 @@ tc.modal.prototype.show = function(opts, event_target){
 	}
 	var content;
 	content = "";
-	tc.util.dump(opts.source_element);
 	if(opts.source_element){
 		content = opts.source_element.clone().removeClass("template-content");
 	}
-	if(opts.tempate){
+	if(opts.template){
 		if(opts.tempate instanceof String){
-			content = w1.jQ(opts.tempate);
+			content = w1.jQ(opts.template);
 		} else {
-			content = opts.tempate;
+			content = opts.template;
 		}
 	}
-	tc.util.dump(content);
 	this.options.element.children().remove();
 	content.show();
 	this.options.element.append(content);
@@ -54,6 +52,13 @@ tc.modal.prototype.show = function(opts, event_target){
 		if(tc.jQ.isFunction(e.data.opts.submit)){
 			e.data.opts.submit();
 		}
+	});
+	this.options.element.bind('onBeforeClose',{me:this, opts:opts},function(e){
+		tc.util.dump(e.data.opts.preventClose);
+		if(e.data.opts.preventClose){
+			return false;
+		}
+		return true;
 	});
 	this.options.element.bind('onClose',{me:this},function(e){
 		e.data.me.options.element.children().remove();

@@ -18,7 +18,7 @@
 				<h3>External Links</h3>
 			</div>
 			
-			<div class="sub-bd" style="{% if d.template_data.project.data.info.resources.links['items']|length == 0 %}display:none;{% endif %}">
+			<div class="sub-bd links-not-empty" style="{% if d.template_data.project.data.info.resources.links['items']|length == 0 %}display:none;{% endif %}">
 				<table class="resources-list link-table doublewide">
 					<tbody>
 						{% for link in d.template_data.project.data.info.resources.links['items'] %}
@@ -27,7 +27,7 @@
 							{% endif %}
 							<td rel="#link,{{ link.link_id }}" title="{{ link.title }}">
 								<span class="thumb">
-									{% if d.template_data.project_user.data.is_project_admin %}
+									{% if d.template_data and d.template_data.project_user and d.template_data.project_user.data.is_project_admin %}
 										<a class="close" href="#removeLink,{{ link.link_id }}"></a>
 									{% endif %}
 									{% if link.image_id %}
@@ -51,12 +51,12 @@
 			</div>
 			
 			{% if d.template_data.project_user.data.is_member == True %}
-			<div class="sub-ft clearfix" style="{% if d.template_data.project.data.info.resources.links['items']|length == 0 %}display:none;{% endif %}">
+			<div class="sub-ft clearfix links-not-empty" style="{% if d.template_data.project.data.info.resources.links['items']|length == 0 %}display:none;{% endif %}">
 				<a href="#show,add_link" class="rounded-button small add-link">Add a Link</a>
 			</div>
 			{% endif %}
 			
-			<div class="sub-bd" style="{% if d.template_data.project.data.info.resources.links['items']|length > 0 %}display:none;{% endif %}">
+			<div class="sub-bd links-empty" style="{% if d.template_data.project.data.info.resources.links['items']|length > 0 %}display:none;{% endif %}">
 				<div class="empty-state-box">
 					<a class="close" href="#"><span>Close</span></a>
 					<p><a href="#show,add_link">Add links</a> to anything, including some of our recommended links like Facebook groups and Kickstarter.</p>
@@ -74,7 +74,7 @@
 				<h3>Organizations</h3>
 			</div>
 			
-			<div class="sub-bd" style="{% if d.template_data.project.data.info.resources.organizations['items']|length == 0 %}display:none;{% endif %}">
+			<div class="sub-bd organizations-not-empty" style="{% if d.template_data.project.data.info.resources.organizations['items']|length == 0 %}display:none;{% endif %}">
 				<table class="resources-list organization-table doublewide">
 					<tbody>
 						{% for org in d.template_data.project.data.info.resources.organizations['items'] %}
@@ -83,7 +83,7 @@
 							{% endif %}
 							<td title="{{ org.title }}">
 								<span class="thumb">
-									{% if d.template_data.project_user.data.is_project_admin %}
+									{% if d.template_data and d.template_data.project_user and d.template_data.project_user.data.is_project_admin %}
 										<a class="close" href="#removeOrganization,{{ org.organization }}"></a>
 									{% endif %}
 									{% if org.image_id %}
@@ -107,12 +107,12 @@
 			</div>
 				
 			{% if d.template_data.project_user.data.is_member == True %}
-			<div class="sub-ft clearfix" style="{% if d.template_data.project.data.info.resources.organizations['items']|length == 0 %}display:none;{% endif %}">
+			<div class="sub-ft clearfix organizations-not-empty" style="{% if d.template_data.project.data.info.resources.organizations['items']|length == 0 %}display:none;{% endif %}">
 				<a href="#show,related_resources" class="rounded-button small add-organization">Add Organization</a>
 			</div>
 			{% endif %}
 			
-			<div class="sub-bd" style="{% if d.template_data.project.data.info.resources.organizations['items']|length > 0 %}display:none;{% endif %}">
+			<div class="sub-bd  organizations-empty" style="{% if d.template_data.project.data.info.resources.organizations['items']|length > 0 %}display:none;{% endif %}">
 				<div class="empty-state-box">
 					<a class="close" href="#"><span>Close</span></a>
 					<p>When you <a href="#show,related_resources">add organizations</a>, we'll introduce your project to the people over there.</p>
@@ -215,7 +215,11 @@
 		widget = tc.gam.widget(this,project);
 		
 		this.elements = {
+			links_empty:this.dom.find('.links-empty'),
+			links_not_empty:this.dom.find('.links-not-empty'),
 			links_table:this.dom.find('.link-table'),
+			organizations_empty:this.dom.find('.organizations-empty'),
+			organizations_not_empty:this.dom.find('.organizations-not-empty'),
 			organizations_table:this.dom.find('.organization-table')
 		};
 		
@@ -269,6 +273,13 @@
 					default:
 						return;
 					case 'link':
+						if(!d.links.length){
+							e.data.me.elements.links_not_empty.hide();
+							e.data.me.elements.links_empty.show();
+						} else {
+							e.data.me.elements.links_empty.hide();
+							e.data.me.elements.links_not_empty.show();
+						}
 						for(i in d.links){
 							if(temptbody.find('tr').length == 0 || temptbody.find('tr:last').children().length == 2){
 								temptbody.append('<tr></tr>');
@@ -285,6 +296,13 @@
 						e.data.me.elements.links_table.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_resource);
 						break;
 					case 'organization':
+						if(!d.resources.length){
+							e.data.me.elements.organizations_not_empty.hide();
+							e.data.me.elements.organizations_empty.show();
+						} else {
+							e.data.me.elements.organizations_empty.hide();
+							e.data.me.elements.organizations_not_empty.show();
+						}
 						for(i in d.resources){
 							if(temptbody.find('tr').length == 0 || temptbody.find('tr:last').children().length == 2){
 								temptbody.append('<tr></tr>');

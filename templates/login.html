@@ -116,7 +116,7 @@ Change by Us - Login
 					inputs:{
 						email:{
 							selector:'input.email',
-							validators:['min-3','max-32','required'],
+							validators:['min-3','max-100','required'],
 							hint:''
 						},
 						password:{
@@ -146,7 +146,11 @@ Change by Us - Login
 									window.location.hash = 'login-failure';
 									return;
 								}
-								window.location = '/useraccount';
+								if(merlin.app.app_page.data.redir_from){
+									window.location = merlin.app.app_page.data.redir_from;
+								} else {
+									window.location = '/useraccount';
+								}
 							}
 						});
 					}

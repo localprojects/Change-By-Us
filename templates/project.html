@@ -124,10 +124,11 @@ Change by Us - Project
 	</div>
 	
 	<div class='template-content modal-content join-no-user'>
-		<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Change by Us in order to Join this project.</p>
+		<h2><strong>Hold your horses!</strong> Please register.</h2>
+		<p>You must <strong><a href='/join'>register</a></strong> or <strong><a href='/login'>login</a></strong> with Change by Us in order to Join a project.</p>
 		<a class='close' href="#"><span>close</span></a>
 	</div>
-
+	
 	<div class="template-content modal-content confirm-delete member-delete">
 		<div class="step">
 			<h2><strong>Delete</strong> this Project Member?</h2>
@@ -138,6 +139,17 @@ Change by Us - Project
 				<a class="submit rounded-button" href="#">Yes, Delete Member</a>
 				<a class="cancel" href="#">No, keep them.</a>
 			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<div class='template-content modal-content upload-image'>
+		<div class='step'>
+			<h2><strong>Upload</strong> a photo for your project.</h2>
+			<div>
+				<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+			</div>
+			<div class="file-uploader"></div>
 		</div>
 		<a class='close' href="#"><span>close</span></a>
 	</div>
@@ -169,6 +181,51 @@ Change by Us - Project
 			data:app_page.data.project,
 			project_user:app_page.project_user,
 			dom:tc.jQ('.continent.project')
+		});
+		
+		tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded', {app:app, project:app.components.project}, function(e, d){
+			e.data.app.components.modal.hide()
+			if(d.responseJSON.thumbnail_id){
+				tc.jQ.ajax({
+					type:'POST',
+					url:'/project/photo',
+					data:{
+						project_id:e.data.project.data.project_id,
+						image_id:d.responseJSON.thumbnail_id
+					},
+					dataType:'text',
+					success:function(data,ts,xhr){
+						tc.jQ('img.proj').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+					}
+				});
+			}
+		});
+		
+		tc.jQ('a.change-image').bind('click',{
+			app:app,
+			source_element:tc.jQ('.modal-content.upload-image'),
+			init:function(modal,callback){
+				var uploader = new qq.FileUploader({
+					element: modal.options.element.find('.file-uploader').get(0),
+					action: '/create/photo',
+					onComplete: function(id, fileName, responseJSON){
+						
+						tc.jQ(document).trigger('create-image-uploaded',{
+							id:id,
+							fileName:fileName,
+							responseJSON:responseJSON
+						});
+						
+						return true;
+					}
+				});
+				if(tc.jQ.isFunction(callback)){
+					callback(modal);
+				}
+			}
+		},function(e,d){
+			e.preventDefault();
+			e.data.app.components.modal.show(e.data);
 		});
 		
 		// Join
@@ -224,7 +281,7 @@ Change by Us - Project
 										url:'/project/join',
 										data:merlin.options.data,
 										context:merlin,
-										dataType:'json',
+										dataType:'text',
 										success:function(data,ts,xhr){
 											location.reload(true);
 										}

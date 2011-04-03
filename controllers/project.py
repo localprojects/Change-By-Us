@@ -193,6 +193,7 @@ class Project(Controller):
             return mProject.addLinkToProject(self.db, projectId, title, url)
             
     def removeLink(self):
+        projectId = self.request('project_id')
         linkId = self.request('link_id')
         
         if (not linkId):

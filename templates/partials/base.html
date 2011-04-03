@@ -193,9 +193,9 @@
 		<!-- invite ideas merlin template -->
 		<div class='template-content modal-content merlin invite-user'>
 			<div class='step invite-message-info'>
-				<h2 class="has-name">Invite <strong><span class="name">XXXXXX</span></strong> To Your Project</h2>
+				<h2 class="has-name">Invite <strong><span class="name"></span></strong> To Your Project</h2>
 				<h2 class="no-name">Invite To Your Project</h2>
-				<p class="has-name">You can send a message to <span class="name">XXXXXX</span> telling them more about your new project and why he or she should join (optional).</p>
+				<p class="has-name">You can send a message to <span class="name"></span> telling them more about your new project and why he or she should join (optional).</p>
 				<p class="no-name">You can send a message about your project (optional).</p>
 				<form action='#' class="form-pane">
 					<div class="fields">
@@ -282,8 +282,10 @@
 				{% if d.locations %} app_page.data.locations = {{ d.locations.json }}; {% endif %}
 				{% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
 				if(!app_page.data.locations){ app_page.data.locations = []; }
+				{% if d.template_data and d.template_data.redir_from %} app_page.data.redir_from = "{{ d.template_data.redir_from }}"; {% endif %}
 				{% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
 				
+				tc.util.log(':::: APP_PAGE ::::');
 				tc.util.dump(app_page);
 				
 				tc.app(app_page);
