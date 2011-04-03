@@ -139,14 +139,6 @@ Change by Us - Join
 		<a class='back' href='#' style='display:none'><span>Back</span></a>
 	</div>
 	
-	<div class='template-content modal-content real-name'>
-		<h2><strong>This</strong> is why you use your real name.</h2>
-		<div>
-			<p>Blahdy blahdy blah.</p>
-		</div>
-		<a class='close' href="#"><span>close</span></a>
-	</div>
-	
 
 </div>
 <div class='template-content modal-content toc'>
@@ -448,7 +440,11 @@ Change by Us - Join
 									window.location.hash = 'error';
 									return;
 								}
-								window.location = '/login';
+								if(merlin.app.app_page.data.redir_from){
+									window.location = merlin.app.app_page.data.redir_from;
+								} else {
+									window.location = '/useraccount';
+								}
 							}
 						});
 					}

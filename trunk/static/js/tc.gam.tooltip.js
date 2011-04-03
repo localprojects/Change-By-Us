@@ -122,18 +122,20 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 tc.resource_tooltip.prototype.show = function(){
 	//tc.util.log("tc.resource_tooltip.show");
 	var target_pos, me;
-	target_pos = {
-		top:this.current_trigger.offset().top-70,
-		left:this.current_trigger.offset().left+this.current_trigger.width()+20
-	}
+	target_pos = function(self){
+		return {
+			top:self.current_trigger.offset().top - self.tooltip.height() - 20,
+			left:self.current_trigger.offset().left + (self.current_trigger.width()/2) - (self.tooltip.width()/2)
+		};
+	};
 	me = this;
 	
 	if(this.current_trigger.data('cached-data')){
 		this.tooltip.html(this.current_trigger.data('cached-data'));
-		this.move_to_target(target_pos, this.has_been_shown ? true : false);
+		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 	} else {
 		this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
-		this.move_to_target(target_pos, this.has_been_shown ? true : false);
+		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 		tc.jQ.ajax({
 			url: this.options.get_url,
 			data: {
@@ -147,6 +149,7 @@ tc.resource_tooltip.prototype.show = function(){
 			}
 		});
 		this.tooltip.html(this.current_trigger.data('cached-data'));
+		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 	}
 }
 
