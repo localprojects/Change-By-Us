@@ -151,12 +151,18 @@
 			}
 		};
 		
+		this.elements = {
+			state_empty:dom.find('.goals-empty'),
+			state_not_empty:dom.find('.goals-display')
+		}
+		
 		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
 				
 		this.generate_markup = function(data){
 			var temphtml;
 			temphtml = tc.jQ('.template-content.goal').clone().removeClass('template-content');
 			temphtml.css('width','512px');
+			temphtml.find('a.close').attr('href','#removeGoal,'+data.goal_id);
 			temphtml.find('.goal-title').text(data.text);
 			temphtml.find('.timeframe').text(data.timeframe);
 			temphtml.find('.owner-name').html("<a href='/useraccount/"+data.owner.u_id+"'>"+data.owner.name+"</a>");
@@ -165,6 +171,14 @@
 		
 		this.handle_goals = function(data){
 			var i, list, temphtml, n_goals;
+			if(!data.length){
+				this.elements.state_not_empty.hide();
+				this.elements.state_empty.show();
+				return;
+			} else {
+				this.elements.state_empty.hide();
+				this.elements.state_not_empty.show();
+			}
 			this.dom.find('.counter').text(data.length);
 			list = this.dom.find('ul.items');
 			n_goals = list.children().length;
@@ -180,6 +194,7 @@
 				for(i in data){
 					list.append(this.generate_markup(data[i]));
 				}
+				this.carousel.render();
 				
 			} else {
 				this.carousel.carousel.getItems().remove();
