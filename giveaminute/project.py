@@ -2,7 +2,8 @@ from framework.log import log
 from framework.config import *
 from framework.emailer import *
 import giveaminute.idea as mIdea
-import giveaminute.project as mProject
+#commented out by andrew
+#import giveaminute.project as mProject
 import helpers.censor as censor
 
 class Project():

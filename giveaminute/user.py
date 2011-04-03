@@ -1,5 +1,6 @@
 import hashlib
-import giveaminute.project as mProject
+#modified by andrew
+import project as mProject
 import giveaminute.idea as mIdea
 import framework.util as util
 from framework.log import log
