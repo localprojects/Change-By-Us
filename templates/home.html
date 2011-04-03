@@ -719,8 +719,8 @@ Change by Us - Home
 			};
 		};
 		
-		// .show note-card-pane
-		tc.jQ('.hand').addClass('hand' + (Math.floor(Math.random()*4) + 1)).show();
+		// show .hand
+		tc.jQ('.hand').addClass('hand' + (Math.floor(Math.random()*3) + 1)).show();
 
 
 		// .small-note hover
@@ -729,6 +729,7 @@ Change by Us - Home
 		smallNoteHover("3");
 		smallNoteHover("4");
 		smallNoteHover("5");
+				
 		
 		function smallNoteHover(areaNum) {
 			var hoverZindexCounter = 106;
@@ -736,33 +737,31 @@ Change by Us - Home
 			var bigNoteCardSelector = tc.jQ(".note-card-splash");
 			var noteCardPane = tc.jQ(".note-card-pane");
 			
+			var theHandClass = "hand" + ((areaNum % 3) + 1);
+
 			$(areaSelector + " .small-note").hover(
 				function () {
-					var randHand = Math.floor(Math.random()*4) + 1
-					if (randHand == 1 || randHand ==2) {
-						if (hoverZindexCounter % 2 == 0) {
-						} else {
-							randHand++
-						};
-					};
 					tc.jQ(this).css({'zIndex' : hoverZindexCounter});
 					var theContents = $(this).find('span').html();
-					// bigNoteCardSelector.stop(true, true).fadeOut(50);
-					// bigNoteCardSelector.html( theContents ).fadeIn(150);
-					noteCardPane.stop(true, true).fadeOut(100);
-					tc.jQ('.hand').delay(100).removeClass('hand1 hand2 hand3 hand4').addClass('hand' + randHand );
+					
+					bigNoteCardSelector.stop(true, true).fadeOut(50);
+					bigNoteCardSelector.html( theContents ).fadeIn(150);
+					
+					tc.jQ('.hand').removeClass('hand1 hand2 hand3 hand4').addClass(theHandClass);
 					if (noteCardPane.hasClass('color' + areaNum)) {
 						// do nothing
 					} else {
-						noteCardPane.delay(100).removeClass('color1 color2 color3 color4 color5').addClass('color' + areaNum);
+						noteCardPane.removeClass('color1 color2 color3 color4 color5').addClass('color' + areaNum);
 					};
-					noteCardPane.fadeIn(150);
 				},
 				function () {
 					hoverZindexCounter++;
 				}
 			); 
 		};
+		
+		
+		
 		
 		// turn location field autocomplete off
 		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
