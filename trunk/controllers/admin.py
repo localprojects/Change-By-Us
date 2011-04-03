@@ -14,6 +14,13 @@ class Admin(Controller):
             return self.showContent()
         elif (action == 'users'):
             return self.getAdminUsers()
+        elif (action == 'all'):
+            if (param0 == 'getflagged'):
+                # TODO: eholda
+                # this is temporary until we decide how aggregate view will work
+                return self.getFlaggedIdeas()
+            else:
+                return self.not_found()
         elif (action == 'project'):
             if (param0 == 'getflagged'):
                 return self.getFlaggedProjects()
