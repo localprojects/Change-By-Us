@@ -253,43 +253,11 @@
 				add_keywords: function() {
 					me.elements.keywords.add_keyword_btn.hide();
 					me.elements.keywords.edit_controls.find("input[type=text]").val("");
-					me.elements.keywords.edit_controls.show().find(".add-btn").bind("click", {me:me}, function(e, d) {
-						var input, text;
-						e.preventDefault();
-						
-						input = e.data.me.elements.keywords.edit_controls.find("input[type=text]");
-						text = input.val();
-						if (text) {
-							tc.jQ.ajax({
-								url: "/project/tag/add",
-								data: {
-									project_id: e.data.me.options.app.app_page.data.project.project_id,
-									text: text
-								},
-								context: e.data.me,
-								type: "POST",
-								dataType: "text",
-								success: function(data, ts, xhr) {
-									var i, tags;
-									if (data == "False") {
-										return;
-									}
-									tags = this.dom.find("ul.tag-cloud");
-									text = text.split(",");
-									for (i in text) {
-										tags.append("<li class='admin' id='keyword-"+ text[i] +"'>"+
-											"<a href='/search?terms="+ text[i] +"'>"+ text[i] + "</a>"+
-											"<a class='remove-btn keyword' href='#remove,"+ text[i] +"'>"+
-												"<span>Remove</span></a>"+
-										"</li>");
-									}
-								}
-							});
-						}
-						
-						e.data.me.elements.keywords.edit_controls.hide();
-						e.data.me.elements.keywords.add_keyword_btn.show();
-					});
+					me.elements.keywords.edit_controls.show().find(".add-btn").bind(
+						"click", 
+						{project:project, me:me}, 
+						me.handlers.add_keywords_submit
+					);
 				}
 			}
 		};
@@ -312,6 +280,43 @@
 			add_keyword_clicked: function(e, d) {
 				e.preventDefault();
 				e.data.me.elements.keywords.add_keywords();
+			},
+			add_keywords_submit: function(e, d) {
+				var input, text;
+				e.preventDefault();
+				
+				input = e.data.me.elements.keywords.edit_controls.find("input[type=text]");
+				text = input.val();
+				if (text) {
+					tc.jQ.ajax({
+						url: "/project/tag/add",
+						data: {
+							project_id: e.data.me.options.app.app_page.data.project.project_id,
+							text: text
+						},
+						context: e.data.me,
+						type: "POST",
+						dataType: "text",
+						success: function(data, ts, xhr) {
+							var i, tags;
+							if (data == "False") {
+								return;
+							}
+							tags = this.dom.find("ul.tag-cloud");
+							text = text.split(",");
+							for (i in text) {
+								tags.append("<li class='admin' id='keyword-"+ text[i] +"'>"+
+									"<a href='/search?terms="+ text[i] +"'>"+ text[i] + "</a>"+
+									"<a class='remove-btn keyword' href='#remove,"+ text[i] +"'>"+
+										"<span>Remove</span></a>"+
+								"</li>");
+							}
+						}
+					});
+				}
+				
+				e.data.me.elements.keywords.edit_controls.hide();
+				e.data.me.elements.keywords.add_keyword_btn.show();
 			},
 			remove_keyword:function(e){
 				var t;
