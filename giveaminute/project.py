@@ -2,8 +2,6 @@ from framework.log import log
 from framework.config import *
 from framework.emailer import *
 import giveaminute.idea as mIdea
-#commented out by andrew
-#import giveaminute.project as mProject
 import helpers.censor as censor
 
 class Project():
@@ -159,7 +157,7 @@ def smallProject(id, title, description, imageId, numMembers, ownerUserId, owner
                 num_members = numMembers,
                 owner = smallUser(ownerUserId, ownerFirstName, ownerLastName, ownerImageId))
         
-def message(id, type, message, createdDatetime, userId, firstName, lastName, ideaId, idea, ideaSubType, ideaCreatedDatetime):
+def message(id, type, message, createdDatetime, userId, firstName, lastName, ideaId = None, idea = None, ideaSubType = None, ideaCreatedDatetime = None, goalId = None):
     if (ideaId):
         ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
     else:
@@ -172,7 +170,8 @@ def message(id, type, message, createdDatetime, userId, firstName, lastName, ide
                 owner = smallUser(userId, firstName, lastName, None),
                 body = message,
                 created = str(createdDatetime),
-                idea = ideaObj)
+                idea = ideaObj,
+                project_goal_id = goalId)
                 
 def userMessage(id, type, message, createdDatetime, userId, firstName, lastName, ideaId, idea, ideaSubType, ideaCreatedDatetime, projectId, projectTitle):
     if (ideaId):
@@ -659,7 +658,7 @@ def getProjectsByUser(db, userId, limit = 100):
                             description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
-                            owner = mProject.smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                            owner = smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
                             num_members = item.num_members))
     except Exception, e:
         log.info("*** couldn't get projects")
@@ -705,11 +704,31 @@ def featureProjectGoal(db, projectGoalId):
         return False     
 
 def accomplishProjectGoal(db, projectGoalId):
-    # TODO should put rollback/commit here
     try:
-        sql = "update project_goal set is_accomplished = 1 where project_goal_id = $id"
-        db.query(sql, {'id':projectGoalId})
-
+        sql = "update project_goal set is_accomplished = 1 where project_goal_id = $id and is_accomplished = 0"
+        
+        num_updated = db.query(sql, {'id':projectGoalId})
+        
+        if (num_updated > 0):
+            sql = "select project_id, description, user_id from project_goal where project_goal_id = $id limit 1"
+            data = list(db.query(sql, {'id':projectGoalId}))
+        
+            if (len(data) > 0):
+                message = "We completed our goal! '%s'" % data[0].description
+                
+                if (not addMessage(db, 
+                                    data[0].project_id, 
+                                    message, 
+                                    'goal_achieved', 
+                                    data[0].user_id, 
+                                    None,
+                                    projectGoalId)):
+                    log.warning("*** couldn't create goal accomplished message for project goal id = %s" % projectGoalId)
+            else:
+                log.warning("*** ")
+        else:
+            log.warning("*** ")
+            
         return True           
     except Exception, e:
         log.info("*** problem accomplishing goal")
