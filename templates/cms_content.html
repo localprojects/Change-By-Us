@@ -24,123 +24,36 @@ Change by Us - CMS Content
 					<h2>Featured Projects are displayed on the board located on the homepage of the site.</h2>
 				</div>
 				<div class="east">
-					<p><strong>Note:</strong> only five projects can be featured on the homepage at a time. To add a different project, you can <a href="">find some projects to feature</a>.</p>
+					<p><strong>Note:</strong> only five projects can be featured on the homepage at a time. To add a different project, you can <a href="/search?terms=#projects">find some projects to feature</a>.</p>
 				</div>
 			</div>
 			<div class="main-tier">
 				<table class="featured-projects-table">
 					<tbody>
-						<tr>
-							<th class="featured-project-header" scope="row">
-								<h3 class="serif">Some Project Name That Could be This Long There</h3>
-							</th>
-							<td class="info-breakdown">
-								<ul>
-									<li><span class="counter">54</span> Members</li>
-									<li><span class="counter">79</span> Ideas</li>
-									<li><span class="counter">3</span> Resources</li>
-									<li><span class="counter">1</span> Endorsements</li>
-								</ul>
-							</td>
-							<td class="info-description serif">
-								<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante donec.</p>
-							</td>
-							<td class="info-meta">
-								Featured since <br /><strong>04.15.2011 </strong><br />by <strong>Jen L.</strong>
-							</td>
-							<td class="control-delete">
-								<a href="#" class="delete"><span>Delete</span></a>
-							</td>
-						</tr>
-						<tr class="alt">
-							<th class="featured-project-header" scope="row">
-								<h3 class="serif">Some Project Name That Could be This Long There</h3>
-							</th>
-							<td class="info-breakdown">
-								<ul>
-									<li><span class="counter">54</span> Members</li>
-									<li><span class="counter">79</span> Ideas</li>
-									<li><span class="counter">3</span> Resources</li>
-									<li><span class="counter">1</span> Endorsements</li>
-								</ul>
-							</td>
-							<td class="info-description serif">
-								<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante donec.</p>
-							</td>
-							<td class="info-meta">
-								Featured since <br /><strong>04.15.2011 </strong><br />by <strong>Jen L.</strong>
-							</td>
-							<td class="control-delete">
-								<a href="#" class="delete"><span>Delete</span></a>
-							</td>
-						</tr>
-						<tr>
-							<th class="featured-project-header" scope="row">
-								<h3 class="serif">Some Project Name That Could be This Long There</h3>
-							</th>
-							<td class="info-breakdown">
-								<ul>
-									<li><span class="counter">54</span> Members</li>
-									<li><span class="counter">79</span> Ideas</li>
-									<li><span class="counter">3</span> Resources</li>
-									<li><span class="counter">1</span> Endorsements</li>
-								</ul>
-							</td>
-							<td class="info-description serif">
-								<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante donec.</p>
-							</td>
-							<td class="info-meta">
-								Featured since <br /><strong>04.15.2011 </strong><br />by <strong>Jen L.</strong>
-							</td>
-							<td class="control-delete">
-								<a href="#" class="delete"><span>Delete</span></a>
-							</td>
-						</tr>
-						<tr class="alt">
-							<th class="featured-project-header" scope="row">
-								<h3 class="serif">Some Project Name That Could be This Long There</h3>
-							</th>
-							<td class="info-breakdown">
-								<ul>
-									<li><span class="counter">54</span> Members</li>
-									<li><span class="counter">79</span> Ideas</li>
-									<li><span class="counter">3</span> Resources</li>
-									<li><span class="counter">1</span> Endorsements</li>
-								</ul>
-							</td>
-							<td class="info-description serif">
-								<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante donec.</p>
-							</td>
-							<td class="info-meta">
-								Featured since <br /><strong>04.15.2011 </strong><br />by <strong>Jen L.</strong>
-							</td>
-							<td class="control-delete">
-								<a href="#" class="delete"><span>Delete</span></a>
-							</td>
-						</tr>
-						<tr>
-							<th class="featured-project-header" scope="row">
-								<h3 class="serif">Some Project Name That Could be This Long There</h3>
-							</th>
-							<td class="info-breakdown">
-								<ul>
-									<li><span class="counter">54</span> Members</li>
-									<li><span class="counter">79</span> Ideas</li>
-									<li><span class="counter">3</span> Resources</li>
-									<li><span class="counter">1</span> Endorsements</li>
-								</ul>
-							</td>
-							<td class="info-description serif">
-								<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante donec.</p>
-							</td>
-							<td class="info-meta">
-								Featured since <br /><strong>04.15.2011 </strong><br />by <strong>Jen L.</strong>
-							</td>
-							<td class="control-delete">
-								<a href="#" class="delete"><span>Delete</span></a>
-							</td>
-						</tr>
-
+						{% for project in d.template_data.featured_projects.data %}
+							<tr class="{% if loop.index is odd %}alt{% endif %}">
+								<th class="featured-project-header" scope="row">
+									<h3 class="serif">{{ project.title }}</h3>
+								</th>
+								<td class="info-breakdown">
+									<ul>
+										<li><span class="counter">{{ project.num_members }}</span> Members</li>
+										<li><span class="counter">{{ project.num_ideas }}</span> Ideas</li>
+										<li><span class="counter">{{ project.num_resources }}</span> Resources</li>
+										<li><span class="counter">{{ project.num_endorsements }}</span> Endorsements</li>
+									</ul>
+								</td>
+								<td class="info-description serif">
+									<p>{{ project.description }}</p>
+								</td>
+								<td class="info-meta">
+									Featured since <br /><strong>{{ project.featured_datetime }}</strong><br />by <strong>{{ project.owner.name }}</strong>
+								</td>
+								<td class="control-delete">
+									<a href="#deleteProject,{{ project.project_id }}" class="delete"><span>Delete</span></a>
+								</td>
+							</tr>
+						{% endfor %}
 					</tbody>
 				</table>
 			</div>
