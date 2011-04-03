@@ -17,7 +17,7 @@
 		{% endif %}
 			<div class="sub-hd clearfix">
 				<h3>Our Mission</h3>
-				<div class="edit-controls" style="display:none;">
+				<div class="inline-edit-controls" style="display:none;">
 					<a href="#" class="ca-btn save-btn">Save</a>
 					<a href="#" class="cancel-btn">Cancel</a>
 				</div>
@@ -73,6 +73,10 @@
 					{% endfor %}
 				</ul>
 				{% if d.template_data.user and d.template_data.project_user.data.is_member %}
+					<div class="inline-edit-controls" style="display:none;">
+						<input class="mini" type="text"/>
+						<a href="#" class="ca-btn add-btn">Add</a>
+					</div>
 					<a href="" class="add-keyword">&#43; Add Keyword</a>
 				{% endif %}
 			</div>
@@ -143,7 +147,7 @@
 				textpane: null,
 				init: function(element) {
 					if (me.editable) {
-						me.elements.mission.edit_controls = element.find(".edit-controls");
+						me.elements.mission.edit_controls = element.find(".inline-edit-controls");
 						me.elements.mission.textpane = element.find(".sub-bd");
 						
 						me.elements.mission.edit_controls.children(".save-btn").bind(
@@ -233,7 +237,60 @@
 				}
 			},
 			keywords: {
-				
+				add_keyword_btn: null,
+				edit_controls: null,
+				init: function(element) {
+					me.elements.keywords.add_keyword_btn = element.find(".add-keyword");
+					if (me.elements.keywords.add_keyword_btn.length) {
+						me.elements.keywords.edit_controls = element.find(".inline-edit-controls");
+						me.elements.keywords.add_keyword_btn.bind(
+							"click", 
+							{ project:project, me:me },
+							me.handlers.add_keyword_clicked
+						);
+					}
+				},
+				add_keywords: function() {
+					me.elements.keywords.add_keyword_btn.hide();
+					me.elements.keywords.edit_controls.find("input[type=text]").val("");
+					me.elements.keywords.edit_controls.show().find(".add-btn").bind("click", {me:me}, function(e, d) {
+						var input, text;
+						e.preventDefault();
+						
+						input = e.data.me.elements.keywords.edit_controls.find("input[type=text]");
+						text = input.val();
+						if (text) {
+							tc.jQ.ajax({
+								url: "/project/tag/add",
+								data: {
+									project_id: e.data.me.options.app.app_page.data.project.project_id,
+									text: text
+								},
+								context: e.data.me,
+								type: "POST",
+								dataType: "text",
+								success: function(data, ts, xhr) {
+									var i, tags;
+									if (data == "False") {
+										return;
+									}
+									tags = this.dom.find("ul.tag-cloud");
+									text = text.split(",");
+									for (i in text) {
+										tags.append("<li class='admin' id='keyword-"+ text[i] +"'>"+
+											"<a href='/search?terms="+ text[i] +"'>"+ text[i] + "</a>"+
+											"<a class='remove-btn keyword' href='#remove,"+ text[i] +"'>"+
+												"<span>Remove</span></a>"+
+										"</li>");
+									}
+								}
+							});
+						}
+						
+						e.data.me.elements.keywords.edit_controls.hide();
+						e.data.me.elements.keywords.add_keyword_btn.show();
+					});
+				}
 			}
 		};
 		this.handlers = {
@@ -251,6 +308,10 @@
 				} else {
 					e.data.me.elements.mission.edit();
 				}
+			},
+			add_keyword_clicked: function(e, d) {
+				e.preventDefault();
+				e.data.me.elements.keywords.add_keywords();
 			},
 			remove_keyword:function(e){
 				var t;
@@ -316,6 +377,7 @@
 		
 		this.elements.mission.init( this.dom.find(".our-mission.editable") );
 		this.elements.location_map.init();
+		this.elements.keywords.init( this.dom.find(".keywords") );
 		
 		return {
 			show:widget.show,
