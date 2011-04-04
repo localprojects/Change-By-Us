@@ -77,6 +77,11 @@ class Admin(Controller):
                 return self.deleteItem('project', self.request('project_id'))
             elif (param0 == 'approve'):
                 return self.approveItem('project', self.request('project_id'))
+            elif (param0 == 'feature'):
+                if (param1 == 'delete'):
+                    return self.unfeatureProject()
+                else:
+                    return self.featureProject()
             else:
                 return self.not_found()
         elif (action == 'message'):
@@ -136,6 +141,30 @@ class Admin(Controller):
         self.template_data['featured_projects'] = dict(data = featuredProjects, json = self.json(featuredProjects))
     
         return self.render('cms_content')
+        
+    def featureProject(self):
+        featuredProjectId = self.request('project_id')
+        unfeaturedProjectId = self.request('replace_project_id')
+        
+        if (not featuredProjectId):
+            log.error("*** feature project submitted w/o project id")
+            return False   
+        else:
+            if (unfeaturedProjectId):
+                ordinal = mProject.unfeatureProject(self.db, unfeaturedProjectId)
+            else:
+                ordinal = None
+            
+            return mProject.featureProject(self.db, featuredProjectId, ordinal)
+        
+    def unfeatureProject(self):
+        unfeaturedProjectId = self.request('project_id')
+        
+        if (not unfeaturedProjectId):
+            log.error("*** unfeature project submitted w/o project id")
+            return False            
+        else:
+            return mProject.unfeatureProject(self.db, unfeaturedProjectId)
         
     def getFlaggedProjects(self):
         sql = """select p.title as project_title, 
