@@ -159,12 +159,10 @@ Change by Us - Project
 		<div class="template-content modal-content merlin feature-project-dialog">
 			<div class="step feature-this-project">
 				<h2><strong>Feature</strong> This Project</h2>
-				<div class="">
+				<div class="replace-prompt">
 					Do you want to replace
-					<select>
-						<option value="-1"></option>
-					</select>
-					with <span class="serif"></span>
+					<select></select>
+					with <span class="serif project-name"></span>
 					in the Featured Projects section on the homepage?
 				</div>
 				<div class="actions">
@@ -173,7 +171,8 @@ Change by Us - Project
 				</div>
 			</div>
 			<div class="step feature-this-project-submit">
-				
+				<p>Adding project to Featured Projects list&hellip;</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
 			</div>
 			<a class='close' href="#"><span>close</span></a>
 		</div>
@@ -341,30 +340,84 @@ Change by Us - Project
 							name: "feature_project",
 							dom: modal.options.element.find(".feature-project-dialog"),
 							next_button: modal.options.element.find(".actions .submit"),
-							first_step: "feature-this-project",
 							data: {
 								project_id: app.app_page.data.project.project_id,
 								replace_project_id: null
 							},
+							already_featured_projects: null,
+							max_featured_projects: 5,
+							need_to_replace: false,
 							steps: {
 								"feature-this-project": {
 									selector: ".feature-this-project",
 									next_step: "feature-this-project-submit",
 									init: function(merlin, dom) {
-										
+										dom.find(".project-name").text(app.app_page.data.project.info.title);
+										tc.jQ.ajax({
+											type:"GET",
+											url:"/project/featured",
+											context:merlin,
+											dataType:"text",
+											success: function(data, ts, xhr) {
+												var d;
+												try {
+													d = tc.jQ.parseJSON(data);
+												} catch(e) {
+													tc.util.log("/project/featured: json parsing error", "warn");
+													return;
+												}
+												
+												this.options.already_featured_projects = d;
+												if (d.length < this.options.max_featured_projects) {
+													this.options.need_to_replace = true;
+													(function() {
+														var select, i;
+														select = dom.find(".replace-prompt select");
+														tc.jQ.each(d, function(i, fp) {
+															var option;
+															option = tc.jQ("<option value='"+ fp.project_id +"'>"+
+																fp.title +"</option>");
+															select.append(option);
+														});
+													}());
+												} else {
+													dom.find(".replace-prompt").remove();
+												}
+											}
+										});
 									},
 									finish: function(merlin, dom) {
-										
+										if (merlin.options.need_to_replace) {
+											merlin.options.data.replace_project_id = 
+												dom.find(".replace-prompt select option:select").attr("value");
+										} else {
+											delete merlin.options.data.replace_project_id;
+										}
 									}
 								},
 								"feature-this-project-submit": {
 									selector: ".feature-this-project-submit",
 									init: function(merlin, dom) {
-										
+										tc.jQ.ajax({
+											type:"POST",
+											url:"/admin/project/feature",
+											data: merlin.options.data,
+											context:merlin,
+											dataType:"text",
+											success: function(data, ts, xhr) {
+												if (data == "False") {
+													return false;
+												}
+												tc.timer(1000, function() {
+													modal.hide();
+												});
+											}
+										});
 									}
 								}
 							}
 						});
+						window.location.hash = "feature_project,feature-this-project";
 						if (tc.jQ.isFunction(callback)) {
 							callback(modal);
 						}
