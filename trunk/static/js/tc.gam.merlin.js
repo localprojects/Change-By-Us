@@ -55,7 +55,11 @@ tc.merlin.prototype.setup_events = function(app){
 	tc.jQ(window)
 		.unbind('hashchange',this.event_data,this.handlers.hashchange)
 		.bind('hashchange',this.event_data,this.handlers.hashchange);
-	this.dom.find('a.step_link').unbind('click').bind('click',this.event_data,this.handlers.a_click);
+	if(this.dom){
+		this.dom.find('a.step_link').unbind('click').bind('click',this.event_data,this.handlers.a_click);
+		this.dom.bind('merlin-step-valid',this.event_data,this.handlers.valid);
+		this.dom.bind('merlin-step-invalid',this.event_data,this.handlers.invalid);
+	}
 	if(this.options.back_button){
 		this.options.back_button.unbind('click').bind('click',this.event_data,this.handlers.last_step);
 	}
@@ -63,8 +67,6 @@ tc.merlin.prototype.setup_events = function(app){
 		this.options.next_button.addClass('disabled');
 		this.options.next_button.unbind('click').bind('click',this.event_data,this.handlers.next_step);
 	}
-	this.dom.bind('merlin-step-valid',this.event_data,this.handlers.valid);
-	this.dom.bind('merlin-step-invalid',this.event_data,this.handlers.invalid);
 }
 
 tc.merlin.prototype.handle_controls = function(controls){
@@ -81,7 +83,7 @@ tc.merlin.prototype.handle_steps = function(){
 	tc.util.log('tc.merlin.handle_steps');
 	var i;
 	for(i in this.options.steps){
-		if(this.options.steps[i].selector){
+		if(this.options.steps[i].selector && this.dom){
 			this.options.steps[i].dom = this.dom.find(this.options.steps[i].selector);
 		}
 	}
@@ -146,7 +148,7 @@ tc.merlin.prototype.show_step = function(step,force){
 	
 	if(tc.jQ.isFunction(this.current_step.transition)){
 		this.current_step.transition(this);
-	} else {
+	} else if(this.dom){
 		this.dom.find('.step').hide();
 		this.dom.find(this.current_step.selector).show();
 	}
@@ -223,15 +225,19 @@ tc.merlin.prototype.validate = function(on_submit){
 		}
 	}
 	if(valid){
-		this.dom.trigger('merlin-step-valid',{
-			step:this.current_step
-		});
+		if(this.dom){
+			this.dom.trigger('merlin-step-valid',{
+				step:this.current_step
+			});
+		}
 		this.current_step.dom.removeClass('invalid').addClass('valid');
 		return true;
 	} else {
-		this.dom.trigger('merlin-step-invalid',{
-			step:this.current_step
-		});
+		if(this.dom){
+			this.dom.trigger('merlin-step-invalid',{
+				step:this.current_step
+			});
+		}
 		this.current_step.dom.removeClass('valid').addClass('invalid');
 		return false;
 	}
