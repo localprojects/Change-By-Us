@@ -7,15 +7,18 @@
 			<a class="rss-btn" href="#"><span><abbr>RSS</abbr></span></a>
 		
 			{% if d.template_data.project.data.info.messages['total'] > 0 %}
-				<!-- TODO ??
+				
 				<div class="filters">
-					<select>
-						<option>All messages</option>
-						<option>XXXX</option>
-						<option>XXXX</option>
+					<select class=''>
+						<option value='all'>All Messages</option>
+						<option value='member_comment'>Member Comments</option>
+						<option value='admin_comment'>Admin Comments</option>
+						<option value='goal_achieved'>Goal Achieved</option>
+						<option value='join'>Join</option>
+						<option value='endorsement'>Endorsement</option>
 					</select>
 				</div>
-				-->
+				
 			{% endif %}
 		
 			<div class="main merlin submit-message">
@@ -154,6 +157,7 @@
 		};
 		
 		this.runtime_data = {
+			message_filter:'all',
 			n_to_fetch:10,
 			offset:{{ d.template_data.project.data.info.messages['items']|length }},
 			message_template:tc.jQ('.template-content.message-markup').clone().removeClass('template-content')
@@ -186,7 +190,8 @@
 					data:{
 						project_id: e.data.me.options.app.app_page.data.project.project_id,
 						n_messages: e.data.me.runtime_data.n_to_fetch,
-						offset: e.data.me.runtime_data.offset
+						offset: e.data.me.runtime_data.offset,
+						filter: e.data.me.runtime_data.message_filter
 					},
 					context:e.data.me,
 					dataType:"text",
