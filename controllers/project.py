@@ -196,7 +196,20 @@ class Project(Controller):
             log.error("*** endorsement submitted w/o logged in user or with non-project leader user account")
             return False
         else:
-            return mProject.endorse(self.db, projectId, self.user.id)
+            isEndorsed = mProject.endorse(self.db, projectId, self.user.id)
+            
+            if (isEndorsed):
+                # add a message to the queue about the join
+                message = 'Congratulations! Your group has now been endorsed by %s %s.' % (self.user.firstName, self.user.lastName)
+                
+                if (not mProject.addMessage(self.db, 
+                                            projectId, 
+                                            message, 
+                                            'endorsement', 
+                                            self.user.id)):
+                    log.error("*** new message not created for user %s on endorsing project %s" % (self.user.id, projectId))    
+            
+            return isEndorsed
             
     def addLink(self):
         projectId = self.request('project_id')
@@ -362,8 +375,9 @@ class Project(Controller):
         projectId = self.request('project_id')
         limit = util.try_f(int, self.request('n_messages'), 10)
         offset = util.try_f(int, self.request('offset'), 0)
+        filterBy = self.request('filter')
         
-        return self.json(mProject.getMessages(self.db, projectId, limit, offset))        
+        return self.json(mProject.getMessages(self.db, projectId, limit, offset, filterBy))        
         
     def getFeaturedProjects(self):
         projects = []
