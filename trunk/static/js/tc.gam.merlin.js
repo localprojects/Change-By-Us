@@ -29,6 +29,7 @@ tc.merlin.prototype.init = function(app,options){
 		this.options.dom = tc.jQ(options.dom);
 	}
 	this.dom = this.options.dom;
+	this.magic = null;
 	this.event_data = {app:app,me:this};
 	this.handle_steps();
 	this.handle_controls(options.controls);
@@ -82,7 +83,7 @@ tc.merlin.prototype.handle_controls = function(controls){
 tc.merlin.prototype.handle_steps = function(){
 	tc.util.log('tc.merlin.handle_steps');
 	if(this.options.magic){
-		this.magic();
+		this.magic = this.magic_spell();
 	}
 	var i;
 	for(i in this.options.steps){
@@ -105,54 +106,96 @@ tc.merlin.prototype.handle_steps = function(){
            '.\  /.'
              '\/'
 */
-tc.merlin.prototype.magic = function(){
-	tc.util.log('tc.merlin.magic');
+tc.merlin.prototype.magic_spell = function(){
+	tc.util.log('tc.merlin.magic_spell');
 	var i, magic_dust;
 	tc.util.dump(this.options);
 	tc.util.dump(this.dom);
 	tc.util.dump(this.options.steps);
 	
-	magic_dust = {
-		init:function(merlin){
-			
-		},
+	magic_dust = ({
 		n_items:0,
 		overall_width:0,
 		page_width:0,
-		max_item_width:0,
-		min_item_width:100000,
-		resize_handler:function(e){
+		item_metadata:{
+			max_width:0,
+			min_width:100000,
+			max_height:0,
+			min_height:100000,
+			marginLeft:0
+		},
+		$items:[],
+		init:function(merlin){
+			tc.util.log('tc.merlin.magic_spell[magic_dust].init');
+			this.merlin = merlin;
 			
-		}
-	};
-
-	for(i in this.options.steps){
-		this.options.steps[i].magic_dom = this.dom.children().filter(this.options.steps[i].selector);
-		if(this.options.steps[i].magic_dom.length){
-			magic_dust.n_items++;
-			tc.util.dump(this.options.steps[i].magic_dom);
+			for(i in this.merlin.options.steps){
+				this.merlin.options.steps[i].magic_dom = this.merlin.dom.children().filter(this.merlin.options.steps[i].selector);
+				if(this.merlin.options.steps[i].magic_dom.length){
+					this.$items.push(this.merlin.options.steps[i].magic_dom.get(0));
+					
+					if(this.merlin.options.steps[i].magic_dom.outerWidth() < this.item_metadata.min_width){
+						this.item_metadata.min_width = this.merlin.options.steps[i].magic_dom.outerWidth();
+					}
+					if(this.merlin.options.steps[i].magic_dom.outerWidth() > this.item_metadata.max_width){
+						this.item_metadata.max_width = this.merlin.options.steps[i].magic_dom.outerWidth();
+					}
+					
+					if(this.merlin.options.steps[i].magic_dom.outerHeight() < this.item_metadata.min_height){
+						this.item_metadata.min_height = this.merlin.options.steps[i].magic_dom.outerHeight();
+					}
+					if(this.merlin.options.steps[i].magic_dom.outerHeight() > this.item_metadata.max_height){
+						this.item_metadata.max_height = this.merlin.options.steps[i].magic_dom.outerHeight();
+					}
+				}
+			}
 			
-			this.options.steps[i].magic_dom.show().css({
+			this.n_items = this.$items.length;
+			this.$items = tc.jQ(this.$items);
+			this.page_width = tc.jQ(window).width(); 
+			this.overall_width = (this.page_width * this.n_items);
+			this.item_metadata.marginLeft = (this.page_width - this.item_metadata.max_width)/2
+			
+			this.merlin.dom.css({
+				'width':this.overall_width + 'px',
+				'height':this.item_metadata.max_height + 'px'
+				//'marginLeft':-1 * this.item_metadata.marginLeft
+			});
+			this.$items.show().css({
 				'float':'left',
-				'clear':'none'
+				'clear':'none',
+				'width':this.item_metadata.max_width+'px',
+				'marginLeft':this.item_metadata.marginLeft
 			}).removeClass('clearfix');
 			
-			tc.util.dump(this.options.steps[i].magic_dom.outerWidth());
-			if(this.options.steps[i].magic_dom.outerWidth() < magic_dust.min_item_width){
-				magic_dust.min_item_width = this.options.steps[i].magic_dom.outerWidth();
+			return this;
+		},
+		resize_handler:function(e){
+			tc.util.log('tc.merlin.magic_spell[magic_dust].resize_handler');
+			
+		},
+		show_step:function(step){
+			tc.util.log('tc.merlin.magic_spell[magic_dust].show_step');
+			if(!step.magic_dom){
+				return;
 			}
-			if(this.options.steps[i].magic_dom.outerWidth() > magic_dust.max_item_width){
-				magic_dust.max_item_width = this.options.steps[i].magic_dom.outerWidth();
-			}
+			tc.util.dump(step.magic_dom);
+			tc.util.dump(step.magic_dom.position().left);
+			tc.util.dump(this.item_metadata.marginLeft);
+			
+			tc.util.dump( (-1 * this.item_metadata.marginLeft) - ( step.magic_dom.position().left ) );
+			
+			this.merlin.dom.css({
+				//'marginLeft': ((-1 * this.item_metadata.marginLeft) - ( step.magic_dom.position().left )) + 'px'
+				'marginLeft': (( step.magic_dom.position().left )) + 'px'
+			})
+			
+			
 		}
-		
-		tc.util.dump('----');
-	}
-	magic_dust.page_width = tc.jQ(window).width(); 
-	magic_dust.overall_width = (magic_dust.page_width * magic_dust.n_items) 
+	}).init(this);
 	
-	this.dom.css('width',magic_dust.overall_width+'px');
-	
+	tc.util.dump('----');
+	tc.util.dump('----');
 	tc.util.dump(magic_dust);
 	tc.util.dump('----');
 	tc.util.dump('----');
@@ -220,7 +263,9 @@ tc.merlin.prototype.show_step = function(step,force){
 	
 	if(tc.jQ.isFunction(this.current_step.transition)){
 		this.current_step.transition(this);
-	} else if(this.dom && !this.options.magic){
+	}else if(this.magic){
+		this.magic.show_step(this.current_step);
+	} else if(this.dom && !this.magic){
 		this.dom.find('.step').hide();
 		this.dom.find(this.current_step.selector).show();
 	}
