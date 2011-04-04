@@ -140,7 +140,7 @@ Change by Us - Search Results
 												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
 											<span class="resource-name">
-												<span rel="#organization,{{ resource.link_id }}" class='tooltip_trigger'>
+												<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
 													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title }}</span></a></span>
 												</span>
 											</span>
@@ -294,7 +294,9 @@ Change by Us - Search Results
 											{% else %}
 											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
-											<span class="resource-name"><span><span>{{ resource.title|truncate(50) }}</span></span></span>
+											<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger resource-name tooltip_trigger'>
+												<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title }}</span></a></span>
+											</span>
 										</td>
 										{% endif %}
 									{% endfor %}
@@ -483,7 +485,8 @@ Change by Us - Search Results
 		});
 		
 		app.components.tooltips = tc.resource_tooltip({
-			triggers: tc.jQ(".resources-list .tooltip_trigger"),
+			triggers: tc.jQ(".resource-tooltip_trigger"),
+			trigger_class:'resource-tooltip_trigger',
 			markup_source_element: tc.jQ('#organization-markup-source'),
 			get_url: "/project/resource/info"
 		});

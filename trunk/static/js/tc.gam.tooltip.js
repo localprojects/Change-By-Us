@@ -10,6 +10,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 	me = this;
 	this.options = tc.jQ.extend({
 		triggers: tc.jQ('.tooltip_trigger'),
+		trigger_class:null,
 		tooltip_element:tc.jQ('#organization-tooltip'),
 		markup_source_element: null,
 		get_url: null
@@ -50,18 +51,33 @@ tc.resource_tooltip.prototype.handlers = {
 		var t;
 		t = e.target;
 		if(e.data.me.current_trigger){
-			while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
-				t = t.parentNode;
+			if(e.data.me.options.trigger_class){
+				while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
+					t = t.parentNode;
+				}
+			} else {
+				while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
+					t = t.parentNode;
+				}
 			}
+			
 			if(t != e.data.me.current_trigger){
 				e.data.me.current_trigger = tc.jQ(t);
 				e.data.me.tooltip.stop();
 				e.data.me.show();
 			}
 		} else {
-			while (t.className != e.data.me.triggers.get(0).className && t.nodeName != 'BODY'){
-				t = t.parentNode;
+			
+			if(e.data.me.options.trigger_class){
+				while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
+					t = t.parentNode;
+				}
+			} else {
+				while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
+					t = t.parentNode;
+				}
 			}
+			
 			e.data.me.current_trigger = tc.jQ(t);
 			e.data.me.tooltip.stop();
 			e.data.me.show();
@@ -136,6 +152,9 @@ tc.resource_tooltip.prototype.show = function(){
 	} else {
 		this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
+		
+		tc.util.dump(this.current_trigger);
+		
 		tc.jQ.ajax({
 			url: this.options.get_url,
 			data: {
