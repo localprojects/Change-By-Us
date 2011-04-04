@@ -525,7 +525,10 @@ def featureProject(db, projectId, ordinal = None):
                     order by ordinal limit 1"""
             data = list(db.query(sql))
         
-            ordinal = data[0].first_gap
+            if (len(data) > 0):
+                ordinal = data[0].first_gap
+            else:
+                ordinal = 1
             
         if (ordinal > 5):
             log.error("*** couldn't feature project id %s, too many featured projects")
