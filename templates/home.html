@@ -226,14 +226,14 @@ Change by Us - Home
 			<div class="note-card-pane">
 				<div class="membrane">
 					<div class="note-card-splash">
-						{% if d.template_data.all_ideas.data[0].ideas[0].f_name %}
-						<cite class="note-meta-hd">
-							<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> said &mdash;
-						</cite>
+						{% if d.template_data.all_ideas.data[0]['ideas']|length > 0 and d.template_data.all_ideas.data[0].ideas[0].f_name %}
+							<cite class="note-meta-hd">
+								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> said &mdash;
+							</cite>
+							<blockquote>
+								<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
+							</blockquote>
 						{% endif %}
-						<blockquote>
-							<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
-						</blockquote>
 					</div>
 				</div>
 				
