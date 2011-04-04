@@ -303,7 +303,7 @@ class Admin(Controller):
                                        dict(word = "solar", num_projects = 25, num_resources = 10),
                                        dict(word = "green", num_projects = 21, num_resources = 10),
                                        dict(word = "water", num_projects = 19, num_resources = 8)]))
-        return data        
+        return self.json(data)        
                 
     def getTagsCSV(self):
         return self.csv("tag,data", "change_by_us.tags.csv")
