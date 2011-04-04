@@ -33,7 +33,7 @@ Change by Us - CMS Content
 						{% for project in d.template_data.featured_projects.data %}
 							<tr class="{% if loop.index is odd %}alt{% endif %}">
 								<th class="featured-project-header" scope="row">
-									<h3 class="serif">{{ project.title }}</h3>
+									<h3 class="serif"><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h3>
 								</th>
 								<td class="info-breakdown">
 									<ul>
@@ -47,7 +47,7 @@ Change by Us - CMS Content
 									<p>{{ project.description }}</p>
 								</td>
 								<td class="info-meta">
-									Featured since <br /><strong>{{ project.featured_datetime }}</strong><br />by <strong>{{ project.owner.name }}</strong>
+									Featured since <br /><strong>{{ project.featured_datetime }}</strong><br />by <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong>
 								</td>
 								<td class="control-delete">
 									<a href="#deleteProject,{{ project.project_id }}" class="delete"><span>Delete</span></a>
