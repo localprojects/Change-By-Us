@@ -77,7 +77,8 @@ function initialize(app) {
 		infoBoxClearance: new google.maps.Size(0, 0),
 		isHidden: false,
 		pane: "floatPane",
-		enableEventPropagation: false
+		enableEventPropagation: false,
+		disableAutoPan: true
 	};
 	
 	ib = new InfoBox(myOptions);
