@@ -511,6 +511,52 @@ def setLinkIsActive(db, linkId, b):
         log.error(e)    
         return False     
     
+def featureProject(db, projectId, ordinal = None):
+    try:
+        # if no ordinal submitted, find first gap
+        if (ordinal < 1):
+            sql = """select ordinal + 1 as first_gap from featured_project fp1
+                    where not exists
+                      (select null from featured_project fp2 where fp2.ordinal = fp1.ordinal + 1)
+                    order by ordinal limit 1"""
+            data = list(db.query(sql))
+        
+            ordinal = data[0].first_gap
+            
+        if (ordinal > 5):
+            log.error("*** couldn't feature project id %s, too many featured projects")
+            return False
+        else:
+            db.insert('featured_project', 
+                      ordinal = ordinal, 
+                      project_id = projectId)
+                      
+            return True
+    except Exception, e:
+        log.info("*** couldn't feature project id %s" % projectId)
+        log.error(e)
+        return False
+    
+def unfeatureProject(db, projectId):
+    try:
+        sql = "select ordinal from featured_project where project_id = $projectId order by ordinal desc limit 1"
+        data = list(db.query(sql, {'projectId':projectId}))
+        
+        if (len(data) > 0):
+            ordinal = data[0].ordinal
+            db.delete('featured_project', 
+                      where = "project_id = $projectId and ordinal = $ordinal", 
+                      vars = {'projectId':projectId, 'ordinal':ordinal})
+                      
+            return ordinal
+        else:
+            log.error("*** couldn't unfeature project, project id %s not in feature table" % projectId)
+            return -1
+    except Exception, e:
+        log.info("*** couldn't unfeature project id %s" % projectId)
+        log.error(e)
+        return -1
+             
   
 def getFeaturedProjects(db):
     data = []
