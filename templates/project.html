@@ -7,7 +7,7 @@ Change by Us - Project
 
 {% block project_admin %}
 {{ super() }}
-	<li class="feature"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
+	<li class="feature {% if d.template_data.project.data.info.is_featured is sameas 1 %}state-disabled{% endif %}"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
 	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Delete <span>this</span> project</a></li>
 {% endblock %}
 
@@ -333,6 +333,7 @@ Change by Us - Project
 		
 		tc.gam.ideas_invite( app );
 		
+		// Feature this project
 		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 			tc.jQ(".adminbar > .feature a").bind("click", {
 					app: app,
@@ -426,7 +427,7 @@ Change by Us - Project
 								"feature-this-project-error": {
 									selector: ".feature-this-project-error",
 									init: function(merlin, dom) {
-										tc.time(1000, function() {
+										tc.timer(1000, function() {
 											modal.hide();
 										});
 									}
@@ -440,8 +441,16 @@ Change by Us - Project
 					}
 				},
 				function(e,d){
+					var t;
 					e.preventDefault();
-					e.data.app.components.modal.show(e.data, e.target);
+					t = e.target;
+					if (t.nodeName == 'SPAN'){
+						t = t.parentNode;
+					}
+					if (tc.jQ(t.parentNode).hasClass("state-disabled")) {
+						return;
+					}
+					e.data.app.components.modal.show(e.data, t);
 				}
 			);
 		{% endif %}
