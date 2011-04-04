@@ -298,18 +298,20 @@
 						type: "POST",
 						dataType: "text",
 						success: function(data, ts, xhr) {
-							var i, tags;
+							var i, tags, temptag;
 							if (data == "False") {
 								return;
 							}
 							tags = this.dom.find("ul.tag-cloud");
 							text = text.split(",");
 							for (i in text) {
-								tags.append("<li class='admin' id='keyword-"+ text[i] +"'>"+
+								temptag = tc.jQ("<li class='admin' id='keyword-"+ text[i] +"'>"+
 									"<a href='/search?terms="+ text[i] +"'>"+ text[i] + "</a>"+
 									"<a class='remove-btn keyword' href='#remove,"+ text[i] +"'>"+
 										"<span>Remove</span></a>"+
 								"</li>");
+								temptag.find('a.remove-btn.keyword').bind('click', {project:project,me:this}, this.handlers.remove_keyword);
+								tags.append(temptag);
 							}
 						}
 					});
