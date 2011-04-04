@@ -87,70 +87,22 @@ Change by Us - Home
 						</div>
 						<div class="project-cards">
 							<div class="membrane">
-								<div class="box area1 grouping">
-									<div class="hd">
-										<h3><a href='/project/{{ d.template_data.all_ideas.data[0].project_id }}'>{{ d.template_data.all_ideas.data[0].title }}</a></h3>
-									</div>
-									<div class="bd">
-										{% for idea in d.template_data.all_ideas.data[0].ideas %}
-											{% if loop.index < 45 %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[0].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
-											{% endif %}
-										{% endfor %}
-									</div>
-								</div>
-								<div class="box area2 grouping">
-									<div class="hd">
-										<h3><a href='/project/{{ d.template_data.all_ideas.data[1].project_id }}'>{{ d.template_data.all_ideas.data[1].title }}</a></h3>
-										<div class="endorser-thumb">
-											<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
-											<span class="overlay-tag"></span>
+								
+								{% for idea_group in d.template_data.all_ideas %}
+									<div class ="box area{{ loop.index }} grouping">
+										<div class="hd">
+											<h3><a href="/project/{{ idea_group.project_id }}">{{ idea_group.title }}</a></h3>
+										</div>
+										<div class="bd">
+											{% for idea in idea_group.ideas %}
+												{% if loop.index < 45 %}
+													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+												{% endif %}
+											{% endfor %}
 										</div>
 									</div>
-									<div class="bd">
-										{% for idea in d.template_data.all_ideas.data[1].ideas %}
-											{% if loop.index < 20 %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[1].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
-											{% endif %}
-										{% endfor %}
-									</div>
-								</div>
-								<div class="box area3 grouping">
-									<div class="hd">
-										<h3><a href='/project/{{ d.template_data.all_ideas.data[2].project_id }}'>{{ d.template_data.all_ideas.data[2].title }}</a></h3>
-									</div>
-									<div class="bd">
-										{% for idea in d.template_data.all_ideas.data[2].ideas %}
-											{% if loop.index < 20 %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[2].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
-											{% endif %}
-										{% endfor %}
-									</div>
-								</div>
-								<div class="box area4 grouping">
-									<div class="hd">
-										<h3><a href='/project/{{ d.template_data.all_ideas.data[3].project_id }}'>{{ d.template_data.all_ideas.data[3].title }}</a></h3>
-									</div>
-									<div class="bd">
-										{% for idea in d.template_data.all_ideas.data[3].ideas %}
-											{% if loop.index < 25 %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[3].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
-											{% endif %}
-										{% endfor %}
-									</div>
-								</div>
-								<div class="box area5 grouping">
-									<div class="hd">
-										<h3><a href='/project/{{ d.template_data.all_ideas.data[4].project_id }}'>{{ d.template_data.all_ideas.data[4].title }}</a></h3>
-									</div>
-									<div class="bd">
-										{% for idea in d.template_data.all_ideas.data[4].ideas %}
-											{% if loop.index < 15 %}
-											<div class="small-note"><a href='/project/{{ d.template_data.all_ideas.data[4].project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> says &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
-											{% endif %}
-										{% endfor %}
-									</div>
-								</div>
+								{% endfor %}
+								
 							</div>
 						</div>
 					</div>
@@ -226,7 +178,7 @@ Change by Us - Home
 			<div class="note-card-pane">
 				<div class="membrane">
 					<div class="note-card-splash">
-						{% if d.template_data.all_ideas.data[0]['ideas']|length > 0 and d.template_data.all_ideas.data[0].ideas[0].f_name %}
+						{% if d.template_data.all_ideas.data|length > 0 and d.template_data.all_ideas.data[0].ideas[0].f_name %}
 							<cite class="note-meta-hd">
 								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> said &mdash;
 							</cite>

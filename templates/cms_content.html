@@ -28,34 +28,41 @@ Change by Us - CMS Content
 				</div>
 			</div>
 			<div class="main-tier">
-				<table class="featured-projects-table">
-					<tbody>
-						{% for project in d.template_data.featured_projects.data %}
-							<tr class="{% if loop.index is odd %}alt{% endif %}">
-								<th class="featured-project-header" scope="row">
-									<h3 class="serif"><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h3>
-								</th>
-								<td class="info-breakdown">
-									<ul>
-										<li><span class="counter">{{ project.num_members }}</span> Members</li>
-										<li><span class="counter">{{ project.num_ideas }}</span> Ideas</li>
-										<li><span class="counter">{{ project.num_resources }}</span> Resources</li>
-										<li><span class="counter">{{ project.num_endorsements }}</span> Supporters</li>
-									</ul>
-								</td>
-								<td class="info-description serif">
-									<p>{{ project.description }}</p>
-								</td>
-								<td class="info-meta">
-									Featured since <br /><strong>{{ project.featured_datetime }}</strong><br />by <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong>
-								</td>
-								<td class="control-delete">
-									<a href="#deleteProject,{{ project.project_id }}" class="delete"><span>Delete</span></a>
-								</td>
-							</tr>
-						{% endfor %}
-					</tbody>
-				</table>
+				{% if d.template_data.featured_projects.data|length > 0 %}
+					<table class="featured-projects-table">
+						<tbody>
+							{% for project in d.template_data.featured_projects.data %}
+								<tr class="{% if loop.index is odd %}alt{% endif %}">
+									<th class="featured-project-header" scope="row">
+										<h3 class="serif"><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h3>
+									</th>
+									<td class="info-breakdown">
+										<ul>
+											<li><span class="counter">{{ project.num_members }}</span> Members</li>
+											<li><span class="counter">{{ project.num_ideas }}</span> Ideas</li>
+											<li><span class="counter">{{ project.num_resources }}</span> Resources</li>
+											<li><span class="counter">{{ project.num_endorsements }}</span> Supporters</li>
+										</ul>
+									</td>
+									<td class="info-description serif">
+										<p>{{ project.description }}</p>
+									</td>
+									<td class="info-meta">
+										Featured since <br /><strong>{{ project.featured_datetime }}</strong><br />by <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong>
+									</td>
+									<td class="control-delete">
+										<a href="#deleteProject,{{ project.project_id }}" class="delete"><span>Delete</span></a>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				{% else %}
+					<div class="empty-state-box big">
+						<a class="close" href="#"><span>Close</span></a>
+						<p>There are no Featured Projects yet.</p>
+					</div>
+				{% endif %}
 			</div>
 		</div>
 		
