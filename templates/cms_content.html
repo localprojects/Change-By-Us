@@ -10,10 +10,10 @@ Change by Us - CMS Content
 
 	<div class='headlands clearfix'>
 		<ul class="tabs">
-			<li class="tab featured-projects"><a href="#featuredprojects">Featured Projects</a></li>
-			<li class="tab warning-list"><a href="#warninglist">Warning List</a></li>
-			<li class="tab pending-resources"><a href="#pendingresources">Pending Resources</a></li>
-			<li class="tab metrics"><a href="#sitemetrics">Metrics</a></li>
+			<li class="tab featured-projects"><a href="#admin-content,featuredprojects">Featured Projects</a></li>
+			<li class="tab warning-list"><a href="#admin-content,warninglist">Warning List</a></li>
+			<li class="tab pending-resources"><a href="#admin-content,pendingresources">Pending Resources</a></li>
+			<li class="tab metrics"><a href="#admin-content,sitemetrics">Metrics</a></li>
 		</ul>
 	</div><!-- end .headlands -->
 
@@ -67,12 +67,12 @@ Change by Us - CMS Content
 						<h2>Flagged Content</h2>
 					</div>
 					<div class="bd">
-						<a href="#all" class="sidebar-item all active"><span>All</span></a>
-						<a href="#ideas" class="sidebar-item ideas"><span>Ideas</span></a>
-						<a href="#projects" class="sidebar-item projects"><span>Projects</span></a>
-						<a href="#project-posts" class="sidebar-item project-posts"><span>Project Posts</span></a>
-						<a href="#project-goals" class="sidebar-item project-goals"><span>Project Goals</span></a>
-						<a href="#links" class="sidebar-item links"><span>Links</span></a>
+						<!-- <a href="#warning-content,all" class="sidebar-item all active"><span>All</span></a> -->
+						<a href="#warning-content,ideas" class="sidebar-item ideas"><span>Ideas</span></a>
+						<a href="#warning-content,projects" class="sidebar-item projects"><span>Projects</span></a>
+						<a href="#warning-content,project-posts" class="sidebar-item project-posts"><span>Project Posts</span></a>
+						<a href="#warning-content,project-goals" class="sidebar-item project-goals"><span>Project Goals</span></a>
+						<a href="#warning-content,links" class="sidebar-item links"><span>Links</span></a>
 					</div>
 					<div class="ft">
 						<p>Content is flagged according to the <q>Graylist</q> of questionable language.</p><br />
@@ -129,37 +129,10 @@ Change by Us - CMS Content
 							<div class="scrollable">
 								<ul class="items">
 									
-									<li class='loaded'>
+									<li class='flagged-content-carousel-item clearfix spinner-message'>
 										<ul class="items warning-list-stack">
-											<li class="item-box ideas all" >
-												<div class="hd">
-													<div class="controls">
-														<a href="#" class="control-ok">OK</a>
-														<a href="#" class="control-delete">Delete</a>
-													</div>
-													<div class="info">
-														<span class="name">Lorem Lastname</span> in
-														<span class="title serif">Project Name</span>
-														<span class="time"><strong>12:43pm</strong> on <strong>04.03.2011</strong></span>
-													</div>
-												</div>
-												<div class="bd serif">
-													<blockquote>
-														<p>Idea. Iusto dolore eorum claritatem exerci consuetudium. Qui est processus lectores modo humanitatis. Aliquam non dolor eodem lectorum duis.</p>
-													</blockquote>
-												</div>
-											</li>
+											<li><p>Loading...</p></li>
 										</ul>
-									</li>
-									
-									<li>
-										<table class="active-admins-table">
-											<tbody>
-												<tr>
-													<td><p>Loading...</p></td>
-												</tr>
-											</tbody>
-										</table>
 									</li>
 									
 								</ul>
@@ -344,6 +317,39 @@ Change by Us - CMS Content
 
 	</div>
 	
+	<li class="item-box ideas all template-content" >
+		<div class="hd">
+			<div class="controls">
+				<a href="#" class="control-ok">OK</a>
+				<a href="#" class="control-delete">Delete</a>
+			</div>
+			<div class="info">
+				<span class="name"></span> in
+				<span class="title serif"></span>
+				<!-- <span class="time"><strong>12:43pm</strong> on <strong>04.03.2011</strong></span> -->
+				<span class="time"></span>
+			</div>
+		</div>
+		<div class="bd serif">
+			<blockquote>
+				<p class='description'></p>
+			</blockquote>
+		</div>
+	</li>
+	
+	<div class="template-content modal-content confirm-delete content-delete">
+		<div class="step">
+			<h2><strong>Delete</strong> this <span class='item-type-name'></span>?</h2>
+			<div>
+				<p>You are about to delete this <span class='item-type-name'></span> from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete <span class='item-type-name'></span></a>
+				<a class="cancel" href="#">No, keep it.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
 
 </div><!-- end .continent.cms-content -->
 {% endblock continent %}
@@ -357,140 +363,319 @@ Change by Us - CMS Content
 		tc.util.log('Give A Minute: Content');
 		
 		app.components.merlin = new tc.merlin(app,{
+			name:'admin-content',
 			dom:tc.jQ('.merlin'),
 			first_step:'featuredprojects',
 			steps:{
 				'featuredprojects':{
 					selector:'#featured-projects',
 					init:function(merlin,dom){
-						tc.jQ('.headlands .tabs li').removeClass('active');
-						tc.jQ('.headlands .tabs li.featured-projects').addClass('active');
+						tc.jQ('.headlands .tabs li.featured-projects').addClass('active').siblings().removeClass('active');
 					}
 				},
 				'warninglist':{
 					selector:'#warning-list',
 					init:function(merlin,dom){
-						tc.jQ('.headlands .tabs li').removeClass('active');
-						tc.jQ('.headlands .tabs li.warning-list').addClass('active');
+						tc.jQ('.headlands .tabs li.warning-list').addClass('active').siblings().removeClass('active');
 						build_carousel(merlin.app);
+						window.location.hash = 'warning-content,ideas';
 					}
 				},
 				'pendingresources':{
 					selector:'#pending-resources',
 					init:function(merlin,dom){
-						tc.jQ('.headlands .tabs li').removeClass('active');
-						tc.jQ('.headlands .tabs li.pending-resources').addClass('active');
+						tc.jQ('.headlands .tabs li.pending-resources').addClass('active').siblings().removeClass('active');
 					}
 				},
 				'sitemetrics':{
 					selector:'#metrics',
 					init:function(merlin,dom){
-						tc.jQ('.headlands .tabs li').removeClass('active');
-						tc.jQ('.headlands .tabs li.metrics').addClass('active');
+						tc.jQ('.headlands .tabs li.metrics').addClass('active').siblings().removeClass('active');
 					}
 				}
 			}
 		});
 		
+		app.components.warning_content_merlin = new tc.merlin(app,{
+			name:'warning-content',
+			steps:{
+				//'all':{
+				//	init:function(merlin,dom){
+				//		tc.jQ('.sidebar-item.all').addClass('active').siblings().removeClass('active');
+				//		if(merlin.app.components.warning_pagination){
+				//			merlin.app.components.warning_pagination.setContentType('all');
+				//		}
+				//	}
+				//},
+				'ideas':{
+					init:function(merlin,dom){
+						tc.jQ('.sidebar-item.ideas').addClass('active').siblings().removeClass('active');
+						if(merlin.app.components.warning_pagination){
+							merlin.app.components.warning_pagination.setContentType('idea');
+						}
+					}
+				},
+				'projects':{
+					init:function(merlin,dom){
+						tc.jQ('.sidebar-item.projects').addClass('active').siblings().removeClass('active');
+						if(merlin.app.components.warning_pagination){
+							merlin.app.components.warning_pagination.setContentType('project');
+						}
+					}
+				},
+				'project-posts':{
+					init:function(merlin,dom){
+						tc.jQ('.sidebar-item.project-posts').addClass('active').siblings().removeClass('active');
+						if(merlin.app.components.warning_pagination){
+							merlin.app.components.warning_pagination.setContentType('message');
+						}
+					}
+				},
+				'project-goals':{
+					init:function(merlin,dom){
+						tc.jQ('.sidebar-item.project-goals').addClass('active').siblings().removeClass('active');
+						if(merlin.app.components.warning_pagination){
+							merlin.app.components.warning_pagination.setContentType('goal');
+						}
+					}
+				},
+				'links':{
+					init:function(merlin,dom){
+						tc.jQ('.sidebar-item.links').addClass('active').siblings().removeClass('active');
+						if(merlin.app.components.warning_pagination){
+							merlin.app.components.warning_pagination.setContentType('link');
+						}
+					}
+				}
+			}
+		});
+		
+		app.components.content_functions = {
+			mark_content_ok:function(e){
+				var type;
+				e.preventDefault();
+				type = e.target.hash.split('-')[1].split(',')[0];
+				
+				switch(type){
+					case 'idea':
+						data = {
+							idea_id:e.target.hash.split(',')[1]
+						}
+						break;
+					case 'project':
+						data = {
+							project_id:e.target.hash.split(',')[1]
+						}
+						break;
+					case 'goal':
+						data = {
+							goal_id:e.target.hash.split(',')[1]
+						}
+						break;
+					case 'message':
+						data = {
+							message_id:e.target.hash.split(',')[1]
+						}
+						break;
+					case 'link':
+						data = {
+							link_id:e.target.hash.split(',')[1]
+						}
+						break;
+				}
+				
+				tc.jQ.ajax({
+					type:"POST",
+					url:"/admin/"+type+"/approve",
+					data:data,
+					context:e,
+					dataType:"text",
+					success: function(data, ts, xhr) {
+						if(data == 'False'){
+							return;
+						}
+						tc.jQ(this.target).parents('.item-box').addClass('approved').slideUp();
+						this.data.app.components.warning_pagination.data.offset--;
+					}
+				});
+				
+			},
+			delete_content:function(e){
+				var type, modal_values, data;
+				e.preventDefault();
+				type = e.target.hash.split('-')[1].split(',')[0];
+				
+				switch(type){
+					case 'idea':
+						data = {
+							idea_id:e.target.hash.split(',')[1]
+						}
+						modal_values = {
+							item_type_name:'Idea'
+						}
+						break;
+					case 'project':
+						data = {
+							project_id:e.target.hash.split(',')[1]
+						}
+						modal_values = {
+							item_type_name:'Project'
+						}
+						break;
+					case 'goal':
+						data = {
+							goal_id:e.target.hash.split(',')[1]
+						}
+						modal_values = {
+							item_type_name:'Goal'
+						}
+						break;
+					case 'message':
+						data = {
+							message_id:e.target.hash.split(',')[1]
+						}
+						modal_values = {
+							item_type_name:'Message'
+						}
+						break;
+					case 'link':
+						data = {
+							link_id:e.target.hash.split(',')[1]
+						}
+						modal_values = {
+							item_type_name:'Link'
+						}
+						break;
+				}
+				
+				e.data.app.components.modal.show({
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.content-delete'),
+					init:function(modal,callback){
+						modal.options.element.find('.item-type-name').text(modal_values.item_type_name);
+						if(tc.jQ.isFunction(callback)){
+							callback(modal);
+						}
+					},
+					submit:function(modal){
+						tc.jQ.ajax({
+							type:"POST",
+							url:"/admin/"+type+"/delete",
+							data:data,
+							context:e,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								if(data == 'False'){
+									return;
+								}
+								tc.jQ(this.target).parents('.item-box').addClass('deleted').slideUp();
+								this.data.app.components.warning_pagination.data.offset--;
+							}
+						});
+					}
+				});
+				
+				
+				
+			}
+		};
+		
 		
 		function build_carousel(app){
 			var data, fn;
 			
-			data = {
-				current_section:null,
-				current_page:null,
-				n_to_fetch: 10,
-				offset:0
-			};
-			
-			fn = {
-				
-			};
+			if(app.components.warning_pagination){
+				return;
+			}
 			
 			app.components.warning_pagination = new tc.carousel({
 				element: tc.jQ(".warning.carousel"),
-				next_button: tc.jQ('.tc.jQ-carousel-next'),
-				prev_button: tc.jQ('.tc.jQ-carousel-prev')
+				next_button: tc.jQ('.warning-carousel-next'),
+				prev_button: tc.jQ('.warning-carousel-prev'),
+				scrollable: {
+					items: ".items",
+					speed: 300,
+					circular: false
+				}
 			});
 			
-			tc.util.dump(app.components.warning_pagination);
+			app.components.warning_pagination.data = {
+				current_section:null,
+				current_page:null,
+				n_to_fetch: 10,
+				offset:0,
+				temp_item_source:tc.jQ('.template-content.item-box')
+			};
 			
-			//merlin.current_step.runtime_data.n_to_fetch = 10;
-			//merlin.current_step.runtime_data.offset = merlin.current_step.components.admins_pagination.carousel.getItems().first().find('tr').length;
+			app.components.warning_pagination.setContentType = function(content_type){
+				this.data.current_section = content_type;
+				this.data.offset = 0;
+				this.carousel.getItems().removeClass('loaded').filter(':gt(0)').remove();
+				this.carousel.seekTo(0,0);
+			}
+			
 			if(!app.components.warning_pagination){
 				return;
 			}
-			app.components.warning_pagination.carousel.getRoot().bind('onSeek', {app:app,data:data}, function(e,d){
-				e.data.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
-				if(!e.data.data.current_page.hasClass('loaded')){
-					e.data.data.current_page.addClass('loaded');
+			
+			app.components.warning_pagination.carousel.getRoot().bind('onSeek', {app:app}, function(e,d){
+				e.data.app.components.warning_pagination.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
+				if(!e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
+					e.data.app.components.warning_pagination.data.current_page.addClass('loaded');
 					tc.jQ.ajax({
 						type:"GET",
-						url:"/admin/users",
+						url:"/admin/"+e.data.app.components.warning_pagination.data.current_section+"/getflagged",
 						data:{
-							n_messages: e.data.data.n_to_fetch,
-							offset: e.data.data.offset
+							n_messages: e.data.app.components.warning_pagination.data.n_to_fetch,
+							offset: e.data.app.components.warning_pagination.data.offset
 						},
 						context:e.data.app,
 						dataType:"text",
 						success: function(data, ts, xhr) {
-							var d, temptbody, temprow;
+							var d, temptbody, tempitem;
 							try {
 								d = tc.jQ.parseJSON(data);
-							} catch(e) {
-								tc.util.log("/admin/users: json parsing error", "warn");
+							} catch(e) {current_step
+								tc.util.log("/admin/all/getflagged: json parsing error", "warn");
 								return;
 							}
-							if(!d.length){
-								this.current_step.runtime_data.current_page.remove();
+							this.components.warning_pagination.data.current_page.children('ul').children().remove();
+							if(!d.length && this.components.warning_pagination.data.offset > 0){
+								this.components.warning_pagination.data.current_page.remove();
 								return;
+							} else if(!d.length){
+								this.components.warning_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
 							}
-							if(d.length == this.current_step.runtime_data.n_to_fetch){
-								this.current_step.components.admins_pagination.carousel.addItem('<li>\
-									<table class="active-admins-table">\
-										<tbody>\
-											<tr>\
-												<td class="spinner-message clearfix">\
-													<p class="west">Saving Blacklist...</p>\
-													<img class="loading" src="/static/images/loader32x32.gif" />\
-												</td>\
-											</tr>\
-										</tbody>\
-									</table>\
-								</li>');
+							if(d.length == this.components.warning_pagination.data.n_to_fetch){
+								this.components.warning_pagination.carousel.addItem('\
+									<li class="flagged-content-carousel-item clearfix spinner-message">\
+										<ul class="items warning-list-stack">\
+											<li><p>Loading...</p></li>\
+										</ul>\
+									</li>');
 							}
-							temptbody = tc.jQ('<tbody></tbody>');
 							for(i in d){
-								//temprow = this.current_step.runtime_data.tr_element.clone();
-								//this.current_step.runtime_data.current_page.find('tbody').replaceWith(temptbody);
+								tempitem = this.components.warning_pagination.data.temp_item_source.clone().removeClass('template-content');
+								if(d[i].owner_first_name && d[i].owner_last_name){
+									tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
+								}
+								tempitem.find('span.title').text(d[i].project_title);
+								tempitem.find('span.time').text(d[i].item_created_datetime);
+								tempitem.find('p.description').text(d[i].item_description);
+								tempitem.find('a.control-ok').attr('href','#ok-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
+								tempitem.find('a.control-delete').attr('href','#remove-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
+								this.components.warning_pagination.data.offset++;
+								this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
 							}
+							this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
+							this.components.warning_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
 						}
 					});
 				}
 			});
+			
+			app.components.warning_pagination.carousel.begin();
 		}
-		
-		
-		//var warningListSidebarLinks = tc.jQ('#warning-list .sidebar-item');
-		//var warningListItems = tc.jQ('#warning-list li.item-box');
-		//
-		//function warningListFilter(filterSelector) {
-		//	warningListSidebarLinks.filter(filterSelector).click(function() {
-		//		warningListItems.hide();
-		//		warningListItems.filter(filterSelector).show().removeClass('alt').filter(':odd').addClass('alt');
-		//		warningListSidebarLinks.removeClass('active');
-		//		tc.jQ(this).addClass('active');
-		//	});
-		//};
-		//
-		//warningListFilter('.all');
-		//warningListFilter('.ideas');
-		//warningListFilter('.projects');
-		//warningListFilter('.project-posts');
-		//warningListFilter('.project-goals');
-		//warningListFilter('.links');
-		
-		
 		
 		tc.jQ('.adminbar li.content').addClass('active');
 		
