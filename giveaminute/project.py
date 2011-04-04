@@ -862,8 +862,11 @@ def getGoals(db, projectId):
         
     return goals
     
-def getMessages(db, projectId, limit = 10, offset = 0):
+def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
     messages = []
+    
+    if (filterBy not in ['member_comment','admin_comment','goal_achieved','join','endorsement']):
+        filterBy = None
 
     try:
         sql = """select 
@@ -882,9 +885,10 @@ def getMessages(db, projectId, limit = 10, offset = 0):
                 inner join user u on u.user_id = m.user_id
                 left join idea i on i.idea_id = m.idea_id
                 where m.project_id = $id and m.is_active = 1
+                and ($filterBy is null or m.message_type = $filterBy)
                 order by m.created_datetime desc
                 limit $limit offset $offset"""
-        data = list(db.query(sql, {'id':projectId, 'limit':limit, 'offset':offset}))
+        data = list(db.query(sql, {'id':projectId, 'limit':limit, 'offset':offset, 'filterBy':filterBy}))
         
         for item in data:
             messages.append(message(item.project_message_id, 
