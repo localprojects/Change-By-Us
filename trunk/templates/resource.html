@@ -72,6 +72,10 @@ Change by Us - Add Resource
 							<label>Contact e-mail<span class="note"><strong>Important</strong> This e-mail is for Change by Us to get in touch with you whenever a project adds your organization as a resource.</span></label>
 							<input type="text" class='contact'/>
 						</div>
+						<div class="row">
+							<input type="checkbox" id="agree-tos" class='contact' />
+							<label for="agree-tos">I have read and accept the <a href="/tou"><strong>Terms &amp; Conditions</strong></a></label>
+						</div>
 					</div>
 					<div>
 						<input type='submit' name='add-org' id="add-org" class="rounded-button" value='Add My Resource' />
@@ -112,6 +116,7 @@ Change by Us - Add Resource
 {% endblock continent %}
 
 {% block page_js %}
+<script src="/static/js/prettyCheckboxes.js" type="text/javascript"></script>
 <script>
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Resource Addition');
@@ -245,6 +250,10 @@ Change by Us - Add Resource
 				}
 			}
 		});
+		
+		// pretty checkboxes
+		tc.jQ('input[type=checkbox],input[type=radio]').prettyCheckboxes();
+		
 	});
 </script>
 {% endblock page_js %}
