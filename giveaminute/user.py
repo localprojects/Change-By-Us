@@ -1,10 +1,8 @@
 import hashlib
-#modified by andrew
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
 import framework.util as util
 from framework.log import log
-#from framework.controller import *
 
 class User():
     def __init__(self, db, userId):
@@ -24,6 +22,7 @@ class User():
         self.isAdmin = bool(self.data.is_admin)
         self.isModerator = bool(self.data.is_moderator)
         self.isLeader = bool(self.data.is_leader)
+        self.numNewMessages = self.getNumNewMessages()
     
     def isProjectAdmin(self, projectId):
         sql = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId and is_project_admin = 1 limit 1"
@@ -51,6 +50,7 @@ class User():
                     email = self.email,
                     mobile = self.phone,
                     email_notification = self.emailNotification,
+                    num_new_messages = self.numNewMessages,
                     projects = projects)
                                         
         return data
@@ -272,6 +272,12 @@ where u.user_id = $id"""
             log.error(e)
             
         return messages  
+        
+    # temporarily stubbed out
+    def getNumNewMessages(self):
+        import random
+        
+        return random.randint(1, 10)
                     
         
 def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
