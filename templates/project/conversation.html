@@ -9,8 +9,8 @@
 			{% if d.template_data.project.data.info.messages['total'] > 0 %}
 				
 				<div class="filters">
-					<select class=''>
-						<option value='all'>All Messages</option>
+					<select class='message_filter_select'>
+						<option selected='true' value='all'>All Messages</option>
 						<option value='member_comment'>Member Comments</option>
 						<option value='admin_comment'>Admin Comments</option>
 						<option value='goal_achieved'>Goal Achieved</option>
@@ -182,6 +182,59 @@
 				e.data.me.dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_comment);
 				message.slideDown(500);
 			},
+			change_message_filter:function(e,d){
+				
+				e.data.me.elements.message_stack.children().remove();
+				e.data.me.runtime_data.offset = 0;
+				e.data.me.runtime_data.message_filter = tc.jQ(e.target).val();
+				
+				tc.jQ.ajax({
+					type:"GET",
+					url:"/project/messages",
+					data:{
+						project_id: e.data.me.options.app.app_page.data.project.project_id,
+						n_messages: e.data.me.runtime_data.n_to_fetch,
+						offset: e.data.me.runtime_data.offset,
+						filter: e.data.me.runtime_data.message_filter
+					},
+					context:e.data.me,
+					dataType:"text",
+					success: function(data, ts, xhr) {
+						var d, tempdom;
+						try {
+							d = tc.jQ.parseJSON(data);
+						} catch(e) {
+							tc.util.log("/useraccount/messages: json parsing error", "warn");
+							return;
+						}
+						if (!d.length) {
+							return;
+						} else if(d.length < this.runtime_data.n_to_fetch){
+							this.elements.load_more_button.animate({
+								opacity:0.0
+							});
+						}
+						for(i in d){
+							tempdom = this.runtime_data.message_template.clone().removeClass('message-markup');
+							if(d[i].owner.image_id){
+								tempdom.find('img').attr('src','/images/'+(d[i].owner.image_id%10)+'/'+d[i].owner.image_id+'.png' );
+							} else {
+								tempdom.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
+							}
+							
+							tempdom.attr('id','message-'+d[i].message_id);
+							tempdom.find('.meta-ft').text(d[i].created);
+							tempdom.find('.message-body').text(d[i].body);
+							tempdom.find('a.close').attr('href','#remove,'+d[i].message_id);
+							this.elements.message_stack.append(tempdom);
+							this.runtime_data.offset++;
+						}
+						this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
+					}
+				});
+				
+				
+			},
 			load_more_button_click:function(e, d){
 				e.preventDefault();
 				tc.jQ.ajax({
@@ -267,6 +320,7 @@
 		if (this.elements.textpane.length) {
 			this.elements.textpane.autoGrow();
 		}
+		this.dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
 		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 		
 		function generate_message_markup(data){
