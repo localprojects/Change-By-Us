@@ -67,7 +67,7 @@ tc.merlin.prototype.setup_events = function(app){
 		this.options.next_button.addClass('disabled');
 		this.options.next_button.unbind('click').bind('click',this.event_data,this.handlers.next_step);
 	}
-}
+};
 
 tc.merlin.prototype.handle_controls = function(controls){
 	tc.util.log('tc.merlin.handle_controls');
@@ -77,17 +77,89 @@ tc.merlin.prototype.handle_controls = function(controls){
 	if(this.options.error_indicator){
 		this.options.error_indicator.html('<span></span>');
 	}
-}
+};
 
 tc.merlin.prototype.handle_steps = function(){
 	tc.util.log('tc.merlin.handle_steps');
+	if(this.options.magic){
+		this.magic();
+	}
 	var i;
 	for(i in this.options.steps){
 		if(this.options.steps[i].selector && this.dom){
 			this.options.steps[i].dom = this.dom.find(this.options.steps[i].selector);
 		}
 	}
-}
+};
+/*         Magic!!
+      __________________
+    .-'  \ _.-''-._ /  '-.
+  .-/\   .'.      .'.   /\-.
+ _'/  \.'   '.  .'   './  \'_
+:======:======::======:======:  
+ '. '.  \     ''     /  .' .'
+   '. .  \   :  :   /  . .'
+     '.'  \  '  '  /  '.'
+       ':  \:    :/  :'
+         '. \    / .'
+           '.\  /.'
+             '\/'
+*/
+tc.merlin.prototype.magic = function(){
+	tc.util.log('tc.merlin.magic');
+	var i, magic_dust;
+	tc.util.dump(this.options);
+	tc.util.dump(this.dom);
+	tc.util.dump(this.options.steps);
+	
+	magic_dust = {
+		init:function(merlin){
+			
+		},
+		n_items:0,
+		overall_width:0,
+		page_width:0,
+		max_item_width:0,
+		min_item_width:100000,
+		resize_handler:function(e){
+			
+		}
+	};
+
+	for(i in this.options.steps){
+		this.options.steps[i].magic_dom = this.dom.children().filter(this.options.steps[i].selector);
+		if(this.options.steps[i].magic_dom.length){
+			magic_dust.n_items++;
+			tc.util.dump(this.options.steps[i].magic_dom);
+			
+			this.options.steps[i].magic_dom.show().css({
+				'float':'left',
+				'clear':'none'
+			}).removeClass('clearfix');
+			
+			tc.util.dump(this.options.steps[i].magic_dom.outerWidth());
+			if(this.options.steps[i].magic_dom.outerWidth() < magic_dust.min_item_width){
+				magic_dust.min_item_width = this.options.steps[i].magic_dom.outerWidth();
+			}
+			if(this.options.steps[i].magic_dom.outerWidth() > magic_dust.max_item_width){
+				magic_dust.max_item_width = this.options.steps[i].magic_dom.outerWidth();
+			}
+		}
+		
+		tc.util.dump('----');
+	}
+	magic_dust.page_width = tc.jQ(window).width(); 
+	magic_dust.overall_width = (magic_dust.page_width * magic_dust.n_items) 
+	
+	this.dom.css('width',magic_dust.overall_width+'px');
+	
+	tc.util.dump(magic_dust);
+	tc.util.dump('----');
+	tc.util.dump('----');
+	
+	return magic_dust;
+};
+/* ** * * end magic  * * ** */
 
 tc.merlin.prototype.show_step = function(step,force){
 	tc.util.log('tc.merlin.show_step['+step+']');
@@ -148,7 +220,7 @@ tc.merlin.prototype.show_step = function(step,force){
 	
 	if(tc.jQ.isFunction(this.current_step.transition)){
 		this.current_step.transition(this);
-	} else if(this.dom){
+	} else if(this.dom && !this.options.magic){
 		this.dom.find('.step').hide();
 		this.dom.find(this.current_step.selector).show();
 	}
