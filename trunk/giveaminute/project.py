@@ -11,6 +11,7 @@ class Project():
         self.data = self.populateProjectData()
         
     def populateProjectData(self):
+        # TODO: remove left joins on user and location (once DB is tight)
         sql = """
 select p.project_id 
     ,p.title
@@ -20,6 +21,7 @@ select p.project_id
     ,p.is_active
     ,p.created_datetime
     ,p.updated_datetime
+    ,if(fp.ordinal, 1, 0) as is_featured
     ,(select count(npu.user_id) from project__user npu 
         inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
         where npu.project_id = p.project_id)  as num_members     
@@ -35,6 +37,7 @@ from project p
 left join location l on l.location_id = p.location_id
 left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
 left join user u on u.user_id = pu.user_id
+left join featured_project fp on fp.project_id = p.project_id
 where p.project_id = $id
 limit 1"""
         
@@ -67,6 +70,7 @@ limit 1"""
                                 mission = self.data.description,
                                 keywords = (self.data.keywords.split() if self.data.keywords else []),
                                 endorsements = dict(items = endorsements),
+                                is_featured = self.data.is_featured,
                                 location = dict(location_id = self.data.location_id,
                                                 name = self.data.location_name,
                                                 position = dict(lat = str(self.data.location_lat), lng = str(self.data.location_lon))),
