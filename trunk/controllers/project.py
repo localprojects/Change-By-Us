@@ -140,7 +140,22 @@ class Project(Controller):
                                             self.user.email)
                                             
                 if (newIdeaId):
-                    mIdea.addIdeaToProject(self.db, newIdeaId, projectId)
+                    if (not mIdea.addIdeaToProject(self.db, newIdeaId, projectId)):
+                        log.error("*** new idea not created for user %s on joining project %s" % (self.user.id, projectId))
+                else:
+                    log.error("*** new idea not created for user %s on joining project %s" % (self.user.id, projectId))
+                
+                message = 'New Member! Your group now has %s total!' % mProject.getNumMembers(self.db, projectId)
+                
+                if (not mProject.addMessage(self.db, 
+                                            projectId, 
+                                            message, 
+                                            'join', 
+                                            self.user.id, 
+                                            newIdeaId)):
+                    log.error("*** new message not created for user %s on joining project %s" % (self.user.id, projectId))
+                    
+                # check if invited and add idea from invite
                 
         return isJoined
     
