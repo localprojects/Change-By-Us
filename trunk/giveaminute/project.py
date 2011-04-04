@@ -21,6 +21,7 @@ select p.project_id
     ,p.is_active
     ,p.created_datetime
     ,p.updated_datetime
+    ,p.is_official
     ,if(fp.ordinal, 1, 0) as is_featured
     ,(select count(npu.user_id) from project__user npu 
         inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
@@ -71,6 +72,7 @@ limit 1"""
                                 keywords = (self.data.keywords.split() if self.data.keywords else []),
                                 endorsements = dict(items = endorsements),
                                 is_featured = self.data.is_featured,
+                                is_official = self.data.is_official,
                                 location = dict(location_id = self.data.location_id,
                                                 name = self.data.location_name,
                                                 position = dict(lat = str(self.data.location_lat), lng = str(self.data.location_lon))),
@@ -239,7 +241,7 @@ def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId,
                 
 ## END FORMATTING FUNCTIONS
                 
-def createProject(db, ownerUserId, title, description, keywords, locationId, imageId):
+def createProject(db, ownerUserId, title, description, keywords, locationId, imageId, isOfficial = False):
     projectId = None
 
     try:
@@ -254,7 +256,8 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
                                     keywords = keywords, 
                                     created_datetime=None,
                                     num_flags = numFlags,
-                                    is_active = isActive)
+                                    is_active = isActive,
+                                    is_official = isOfficial)
                                     
         if (projectId):
             join(db, projectId, ownerUserId, True)
