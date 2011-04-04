@@ -204,7 +204,7 @@ where u.user_id = $id"""
                         m.project_message_id,
                         m.message_type,
                         m.message,
-                        m.created_datetime,
+                        m.created_datetime as created_datetime,
                         mu.user_id,
                         mu.first_name,
                         mu.last_name,
@@ -218,9 +218,28 @@ where u.user_id = $id"""
                     inner join user mu on mu.user_id = m.user_id
                     left join idea i on i.idea_id = m.idea_id
                     where m.is_active = 1
-                    order by m.created_datetime desc
+                        union
+                    select 
+                        p.project_id,
+                        p.title,
+                        null as project_message_id,
+                        'invite' as message_type,
+                        concat('You''ve been invited to the ', ucase(p.title), ' group!<br/><br/>"', inv.message, '"') as message,
+                        inv.created_datetime as created_datetime,
+                        iu.user_id,
+                        iu.first_name,
+                        iu.last_name,
+                        i.idea_id,
+                        i.description as idea_description,
+                        i.submission_type as idea_submission_type,
+                        i.created_datetime as idea_created_datetime
+                    from project_invite inv
+                    inner join project p on p.project_id = inv.project_id
+                    inner join user iu on iu.user_id = inv.inviter_user_id
+                    inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id =$userId
+                    order by created_datetime desc
                     limit $limit offset $offset"""
-            data = list(self.db.query(sql, {'userId':self.id, 'limit':limit, 'offset':offset}))                               
+            data = list(self.db.query(sql, {'userId':self.id, 'limit':limit, 'offset':offset}))  
                
             for item in data:
                 messages.append(mProject.userMessage(item.project_message_id, 
