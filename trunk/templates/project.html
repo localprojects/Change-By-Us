@@ -7,8 +7,8 @@ Change by Us - Project
 
 {% block project_admin %}
 {{ super() }}
-	<li class="feature"><a href="" class="fancy-caps">Feature <span>this</span> project</a></li>
-	<li class="delete"><a href="" class="fancy-caps">Delete <span>this</span> project</a></li>
+	<li class="feature"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
+	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Delete <span>this</span> project</a></li>
 {% endblock %}
 
 {% block continent %}
@@ -153,6 +153,30 @@ Change by Us - Project
 		</div>
 		<a class='close' href="#"><span>close</span></a>
 	</div>
+	
+	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<!-- feature this project merlin template -->
+		<div class="template-content modal-content merlin feature-project-dialog">
+			<div class="step feature-this-project">
+				<h2><strong>Feature</strong> This Project</h2>
+				<div class="">
+					Do you want to replace
+					<select>
+						<option value="-1"></option>
+					</select>
+					with <span class="serif"></span>
+					in the Featured Projects section on the homepage?
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes</a>
+					<a class="cancel rounded-button" href="#">Cancel</a>
+				</div>
+			</div>
+			<div class="step feature-this-project-submit">
+				
+			</div>
+		</div>
+	{% endif %}
 
 </div><!-- end .continent.project -->
 {% endblock continent %}
@@ -305,18 +329,51 @@ Change by Us - Project
 		
 		tc.gam.ideas_invite( app );
 		
-		//tc.jQ(".members-stack li a.close").bind("click", {
-		//	app:app,
-		//	source_element:tc.jQ(".modal-content.member-delete"),
-		//	init:function(modal, callback) {
-		//		if(tc.jQ.isFunction(callback)){
-		//			callback(modal);
-		//		}
-		//	}
-		//},function(e,d) {
-		//	e.data.app.components.modal.show(e.data, e.target);
-		//});
-
+		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+			tc.jQ(".adminbar > .feature a").bind("click", {
+					app: app,
+					source_element: tc.jQ(".modal-content.feature-project-dialog"),
+					init: function(modal, event_target, callback) {
+						var modal_merlin;
+						modal_merlin = new tc.merlin(app, {
+							name: "feature_project",
+							dom: modal.options.element.find(".feature-project-dialog"),
+							next_button: modal.options.element.find(".actions .submit"),
+							first_step: "feature-this-project",
+							data: {
+								project_id: app.app_page.data.project.project_id,
+								replace_project_id: null
+							},
+							steps: {
+								"feature-this-project": {
+									selector: ".feature-this-project",
+									next_step: "feature-this-project-submit",
+									init: function(merlin, dom) {
+										
+									},
+									finish: function(merlin, dom) {
+										
+									}
+								},
+								"feature-this-project-submit": {
+									selector: ".feature-this-project-submit",
+									init: function(merlin, dom) {
+										
+									}
+								}
+							}
+						});
+						if (tc.jQ.isFunction(callback)) {
+							callback(modal);
+						}
+					}
+				},
+				function(e,d){
+					e.preventDefault();
+					e.data.app.components.modal.show(e.data, e.target);
+				}
+			);
+		{% endif %}
 	});
 </script>
 
