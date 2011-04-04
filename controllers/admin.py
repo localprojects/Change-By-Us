@@ -46,6 +46,20 @@ class Admin(Controller):
                 return self.getFlaggedLinks()
             else:
                 return self.not_found()
+        elif (action == 'metrics'):
+            if (param0 == 'csv'):
+                if (param1 == 'tags'):
+                    return self.getTagsCSV()
+                elif (param1 == 'project'):
+                    return self.getProjectCSV()
+                elif (param1 == 'user'):
+                    return self.getUserCSV()
+                elif (param1 == 'location'):
+                    return self.getLocationCSV()
+                else:
+                    return self.not_found()
+            else:            
+                return self.getBasicMetrics()
         else:
             return self.not_found()                   
             
@@ -273,7 +287,37 @@ class Admin(Controller):
             log.error(e)
             
         return self.json(data)
+        
+    # BEGIN metrics methods
+    def getBasicMetrics(self):
+        data = dict(overall = dict(num_users = 100,
+                                   num_projects = 67,
+                                   num_ideas = 987,
+                                   num_resources = 82,
+                                   num_avg_users_per_project = 15,
+                                   num_avg_ideas_per_day = 38),
+                    tags = dict(num_total = 135,
+                                top = [dict(word = "trees", num_projects = 50, num_resources = 12),
+                                       dict(word = "recycling", num_projects = 48, num_resources = 11),
+                                       dict(word = "bicycle", num_projects = 30, num_resources = 10),
+                                       dict(word = "solar", num_projects = 25, num_resources = 10),
+                                       dict(word = "green", num_projects = 21, num_resources = 10),
+                                       dict(word = "water", num_projects = 19, num_resources = 8)]))
+        return data        
                 
+    def getTagsCSV(self):
+        return self.csv("tag,data", "change_by_us.tags.csv")
+
+    def getProjectCSV(self):
+        return self.csv("project,data", "change_by_us.project.csv")
+
+    def getUserCSV(self):
+        return self.csv("user,data", "change_by_us.user.csv")
+
+    def getLocationCSV(self):
+        return self.csv("location,data", "change_by_us.location.csv")
+    # END metrics methods
+    
     def getAdminUsers(self):
         limit = util.try_f(int, self.request('n_users'), 10)
         offset = util.try_f(int, self.request('offset'), 0)
