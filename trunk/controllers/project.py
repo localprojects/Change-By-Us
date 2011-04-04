@@ -132,6 +132,7 @@ class Project(Controller):
             isJoined = mProject.join(self.db, projectId, self.user.id)
                     
             if (isJoined):
+                # create the user's "hello there" idea and add to project
                 newIdeaId = mIdea.createIdea(self.db, 
                                             description, 
                                             mProject.getProjectLocation(self.db, projectId).location_id,
@@ -145,6 +146,11 @@ class Project(Controller):
                 else:
                     log.error("*** new idea not created for user %s on joining project %s" % (self.user.id, projectId))
                 
+                # automatically insert any ideas attached to invites for this user and this project    
+                if (not mIdea.addInvitedIdeaToProject(self.db, projectId, self.user.id)):
+                    log.error("*** couldn't add invited idea to project for user %s on joining project %s" % (self.user.id, projectId))
+                
+                # add a message to the queue about the join
                 message = 'New Member! Your group now has %s total!' % mProject.getNumMembers(self.db, projectId)
                 
                 if (not mProject.addMessage(self.db, 
@@ -154,8 +160,6 @@ class Project(Controller):
                                             self.user.id, 
                                             newIdeaId)):
                     log.error("*** new message not created for user %s on joining project %s" % (self.user.id, projectId))
-                    
-                # check if invited and add idea from invite
                 
         return isJoined
     
@@ -164,8 +168,6 @@ class Project(Controller):
         ideaId = self.request('idea_id')
         emails = self.request('email_list')
         message = self.request('message')
-        
-        log.info("*** %s" % emails)
         
         if (not self.user):
             log.error("*** invite w/o logged in user")
