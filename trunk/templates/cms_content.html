@@ -307,6 +307,20 @@ Change by Us - CMS Content
 		</div>
 		<a class='close' href="#"><span>close</span></a>
 	</div>
+	
+	<div class="template-content modal-content confirm-delete unfeature-project">
+		<div class="step">
+			<h2><strong>Remove</strong> this Project?</h2>
+			<div>
+				<p>You are about to remove this Project from the Featured Projects list! Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Remove Project</a>
+				<a class="cancel" href="#">No, keep it.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
 
 </div><!-- end .continent.cms-content -->
 {% endblock continent %}
@@ -328,6 +342,40 @@ Change by Us - CMS Content
 					selector:'#featured-projects',
 					init:function(merlin,dom){
 						tc.jQ('.headlands .tabs li.featured-projects').addClass('active').siblings().removeClass('active');
+						dom.find(".featured-projects-table a.delete").bind("click", {
+							merlin:merlin,
+							dom:dom
+						},
+						function(e, d) {
+							var row;
+							row = tc.jQ(e.target).parents("tr").eq(0);
+							e.preventDefault();
+							e.data.merlin.app.components.modal.show({
+								app: e.data.merlin.app,
+								source_element: tc.jQ('.modal-content.unfeature-project'),
+								submit: function() {
+									tc.jQ.ajax({
+										type:'POST',
+										url:'/admin/project/feature/delete',
+										data:{
+											project_id: e.target.href.split(",")[1],
+										},
+										context: e.data.merlin,
+										dataType:'text',
+										success:function(data,ts,xhr){
+											var table, ordinal;
+											if(data == '-1'){
+												return false;
+											}
+											ordinal = data;
+											row.remove();
+											table = row.parents("table").eq(0);
+											table.find("tbody tr").removeClass("alt").filter(":odd").addClass("alt");
+										}
+									});
+								}
+							})
+						});
 					}
 				},
 				'warninglist':{
