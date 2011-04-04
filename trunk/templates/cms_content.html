@@ -209,84 +209,41 @@ Change by Us - CMS Content
 				<div class="overall-stats">
 					<ul class="breakdown clearfix">
 						<li>
-							<span class="counter">120,228</span>
+							<span class="counter n-users">&nbsp;</span>
 							Users
 						</li>
 						<li>
-							<span class="counter">732</span>
+							<span class="counter n-projects">&nbsp;</span>
 							Projects
 						</li>
 						<li>
-							<span class="counter">2,034</span>
+							<span class="counter n-ideas">v</span>
 							Ideas
 						</li>
 						<li>
-							<span class="counter">120</span>
+							<span class="counter n-resources">&nbsp;</span>
 							Resources
 						</li>
 					</ul>
 					<div class="averages">
-						Average of <span class="counter">28</span> members per project <span class="separator">|</span>
-						Average of <span class="counter">55</span> ideas submitted per day
+						Average of <span class="counter avg-project-users">&nbsp;</span> members per project <span class="separator">|</span>
+						Average of <span class="counter avg-daily-ideas">&nbsp;</span> ideas submitted per day
 					</div>
 				</div>
 			</div>
 			<div class="box metrics-section metrics-keywords">
 				<div class="hd clearfix">
-					<h2><span class="unbold">Top</span> Keywords<span class="counter">135 Total</span></h2>
-					<a href="#" class="download-button download-csv rounded-button small">Download (.csv)</a>
+					<h2><span class="unbold">Top</span> Keywords<span class="counter total-tags">&nbsp;</span></h2>
+					<a href="/admin/csv/metrics/keywords" target="_blank" class="download-button download-csv rounded-button small">Download (.csv)</a>
 				</div>
 				<div class="bd">
-					<ul class="keyword-list clearfix">
-						<li>
-							<span class="stats">
-								<span><span class="counter">210</span> Projects</span>
-								<span><span class="counter">34</span> Resources</span>
-							</span>
-							<h3><span class="serif">trees</span> <span class="counter">258</span></h3>
-						</li>
-						<li>
-							<span class="stats">
-								<span><span class="counter">210</span> Projects</span>
-								<span><span class="counter">34</span> Resources</span>
-							</span>
-							<h3><span class="serif">solar</span> <span class="counter">258</span></h3>
-						</li>
-						<li>
-							<span class="stats">
-								<span><span class="counter">210</span> Projects</span>
-								<span><span class="counter">34</span> Resources</span>
-							</span>
-							<h3><span class="serif">recycling</span> <span class="counter">258</span></h3>
-						</li>
-						<li>
-							<span class="stats">
-								<span><span class="counter">210</span> Projects</span>
-								<span><span class="counter">34</span> Resources</span>
-							</span>
-							<h3><span class="serif">green</span> <span class="counter">258</span></h3>
-						</li>
-						<li>
-							<span class="stats">
-								<span><span class="counter">210</span> Projects</span>
-								<span><span class="counter">34</span> Resources</span>
-							</span>
-							<h3><span class="serif">bicycle</span> <span class="counter">258</span></h3>
-						</li>
-						<li>
-							<span class="stats">
-								<span><span class="counter">210</span> Projects</span>
-								<span><span class="counter">34</span> Resources</span>
-							</span>
-							<h3><span class="serif">water</span> <span class="counter">258</span></h3>
-						</li>
-					</ul>
+					<ul class="keyword-list clearfix"></ul>
 				</div>
 			</div>
 			<div class="box metrics-section metrics-projects">
 				<div class="hd clearfix">
 					<h2>Project <span class="unbold">Metrics</span></h2>
-					<a href="#" class="download-button download-csv rounded-button small">Download (.csv)</a>
+					<a href="/admin/csv/metrics/project" target="_blank" class="download-button download-csv rounded-button small">Download (.csv)</a>
 				</div>
 				<div class="bd">
 					<p>Contains the number of: <strong>Members</strong>, <strong>Ideas</strong>, <strong>Resources</strong>, <strong>Endorsements</strong> and <strong>tags</strong> for all projects. (organized alphabetically by name)</p>
@@ -295,7 +252,7 @@ Change by Us - CMS Content
 			<div class="box metrics-section metrics-user">
 				<div class="hd clearfix">
 					<h2>User <span class="unbold">Metrics</span></h2>
-					<a href="#" class="download-button download-csv rounded-button small">Download (.csv)</a>
+					<a href="/admin/csv/metrics/user" target="_blank" class="download-button download-csv rounded-button small">Download (.csv)</a>
 				</div>
 				<div class="bd">
 					<p>Contains: <strong>name</strong>, <strong>email</strong>, <strong>date joined</strong>, <strong>projects joined</strong>, and <strong>date</strong> <br />for each user (organized alphabetically by user name)</p>
@@ -304,7 +261,7 @@ Change by Us - CMS Content
 			<div class="box metrics-section metrics-location">
 				<div class="hd clearfix">
 					<h2>Location <span class="unbold">Metrics</span></h2>
-					<a href="#" class="download-button download-csv rounded-button small">Download (.csv)</a>
+					<a href="/admin/csv/metrics/location" target="_blank" class="download-button download-csv rounded-button small">Download (.csv)</a>
 				</div>
 				<div class="bd">
 					<p>Contains the number of: <strong>Projects</strong>, <strong>Ideas</strong>, and <strong>Resources</strong> <br />for each neighborhood. (organized by borough)</p>
@@ -391,6 +348,44 @@ Change by Us - CMS Content
 					selector:'#metrics',
 					init:function(merlin,dom){
 						tc.jQ('.headlands .tabs li.metrics').addClass('active').siblings().removeClass('active');
+						tc.jQ.ajax({
+							type:"GET",
+							url:"/admin/metrics",
+							context:merlin,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								var d, i;
+								try{
+									d = tc.jQ.parseJSON(data);
+								}catch(e){
+									tc.util.dump(e);
+									return;
+								}
+								tc.util.dump(d);
+								tc.util.dump(this.current_step.dom.find('.counter.n_users'));
+								this.current_step.dom.find('.counter.n-users').text(d.overall.num_users);
+								this.current_step.dom.find('.counter.n-projects').text(d.overall.num_projects);
+								this.current_step.dom.find('.counter.n-ideas').text(d.overall.num_ideas);
+								this.current_step.dom.find('.counter.n-resources').text(d.overall.num_resources);
+								
+								this.current_step.dom.find('.counter.avg-project-users').text(d.overall.num_avg_users_per_project);
+								this.current_step.dom.find('.counter.avg-daily-ideas').text(d.overall.num_avg_ideas_per_day);
+								
+								this.current_step.dom.find('.counter.total-tags').text(d.tags.num_total+' TOTAL');
+								
+								this.current_step.dom.find('.keyword-list').children().remove();
+								for(i in d.tags.top){
+									this.current_step.dom.find('.keyword-list').append('<li>\
+										<span class="stats">\
+											<span><span class="counter">'+d.tags.top[i].num_projects+'</span> Projects</span>\
+											<span><span class="counter">'+d.tags.top[i].num_resources+'</span> Resources</span>\
+										</span>\
+										<h3><span class="serif">'+d.tags.top[i].word+'</span> <span class="counter">'+(d.tags.top[i].num_projects+d.tags.top[i].num_resources)+'</span></h3>\
+									</li>');
+								}
+								
+							}
+						});
 					}
 				}
 			}
