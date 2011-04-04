@@ -8,7 +8,7 @@ Change by Us - Project
 {% block project_admin %}
 {{ super() }}
 	<li class="feature {% if d.template_data.project.data.info.is_featured is sameas 1 %}state-disabled{% endif %}"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
-	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Delete <span>this</span> project</a></li>
+	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps delete-project">Delete <span>this</span> project</a></li>
 {% endblock %}
 
 {% block continent %}
@@ -26,7 +26,7 @@ Change by Us - Project
 			{% if d.template_data.project.data.info.image_id %}
 				<img width='100' src='/images/{{ d.template_data.project.data.info.image_id % 10 }}/{{ d.template_data.project.data.info.image_id }}.png' alt="" class='proj'/>
 			{% else %}
-				<img width='100' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+				<img width='100' src="/strongatic/images/thumb_genAvatar100.png" alt="" class="proj"/>
 			{% endif %}
 			
 			<span class="overlay-tag"></span>
@@ -159,7 +159,7 @@ Change by Us - Project
 		<div class="template-content modal-content merlin feature-project-dialog">
 			<div class="step feature-this-project">
 				<h2><strong>Feature</strong> This Project</h2>
-				<div class="replace-prompt">
+				<div class="">
 					Do you want to replace
 					<select class="replace-project-options"></select>
 					with <span class="serif project-name"></span>
@@ -171,11 +171,25 @@ Change by Us - Project
 				</div>
 			</div>
 			<div class="step feature-this-project-submit">
-				<p>Adding project to Featured Projects list&hellip;</p>
-				<p><img src='/static/images/loader32x32.gif' /></p>
+				
 			</div>
 			<div class="step feature-this-project-error">
 				<p>Unable to Feature this project!</p>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+		
+		
+		<div class="template-content modal-content confirm-delete project-delete">
+			<div class="step">
+				<h2><strong>Delete</strong> this Project?</h2>
+				<div>
+					<p>You are about to delete this project from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete Project</a>
+					<a class="cancel" href="#">No, keep them.</a>
+				</div>
 			</div>
 			<a class='close' href="#"><span>close</span></a>
 		</div>
@@ -344,13 +358,11 @@ Change by Us - Project
 							name: "feature_project",
 							dom: modal.options.element.find(".feature-project-dialog"),
 							next_button: modal.options.element.find(".actions .submit"),
+							first_step: "feature-this-project",
 							data: {
 								project_id: app.app_page.data.project.project_id,
 								replace_project_id: null
 							},
-							already_featured_projects: null,
-							max_featured_projects: 5,
-							need_to_replace: false,
 							steps: {
 								"feature-this-project": {
 									selector: ".feature-this-project",
@@ -434,7 +446,6 @@ Change by Us - Project
 								}
 							}
 						});
-						window.location.hash = "feature_project,feature-this-project";
 						if (tc.jQ.isFunction(callback)) {
 							callback(modal);
 						}
@@ -453,6 +464,37 @@ Change by Us - Project
 					e.data.app.components.modal.show(e.data, t);
 				}
 			);
+			
+			tc.jQ('a.delete-project').bind('click',{app:app},function(e,d){
+				var t;
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				e.data.app.components.modal.show({
+					app:app,
+					source_element:tc.jQ('.modal-content.project-delete'),
+					submit:function(modal,callback){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/project/delete',
+							data:{
+								project_id:t.hash.split(',')[1]
+							},
+							context:app,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(this.app_page.data.redir_from){
+									window.location = this.app_page.data.redir_from;
+								} else {
+									window.location = '/';
+								}
+							}
+						});
+					}
+				});
+			});
 		{% endif %}
 	});
 </script>

@@ -76,7 +76,7 @@ Change by Us - Search Results
 									{% endif %}
 										<td>
 											{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-											<a class="close" href="#"><span>Close</span></a>
+											<a class="close delete-project" href="#removeProject,{{ project.project_id }}"><span>Close</span></a>
 											{% endif %}
 											<div class="thumb">
 												{% if project.image_id %}
@@ -135,9 +135,9 @@ Change by Us - Search Results
 												<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
 											{% endif %}
 											{% if resource.image_id %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
 											{% else %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
 											<span class="resource-name">
 												<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
@@ -341,6 +341,20 @@ Change by Us - Search Results
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
+	<div class="template-content modal-content confirm-delete remove-resource">
+		<div class="step">
+			<h2><strong>Delete</strong> this Resource?</h2>
+			<div>
+				<p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete Resource</a>
+				<a class="cancel" href="#">No, keep them.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
 	
 	<div class='template-content modal-content merlin add-resource'>
 			
@@ -392,6 +406,20 @@ Change by Us - Search Results
 				<dd><a href=''></a></dd>
 			</dl>
 		</div>
+	</div>
+	
+	<div class="template-content modal-content confirm-delete project-delete">
+		<div class="step">
+			<h2><strong>Delete</strong> this Project?</h2>
+			<div>
+				<p>You are about to delete this project from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete Project</a>
+				<a class="cancel" href="#">No, keep them.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
 </div>
@@ -571,71 +599,39 @@ Change by Us - Search Results
 			e.data.app.components.modal.show(e.data, e.target);
 		});
 		
+		//tc.jQ('a.remove-project').bind('click', {app:app}, function(e){
+		//	e.preventDefault();
+		//	var $t;
+		//	$t = tc.jQ(e.target);
+		//	e.data.app.components.modal.show({
+		//			app:e.data.app,
+		//			source_element:tc.jQ('.modal-content.remove-project'),
+		//			submit:function(){
+		//				tc.jQ.ajax({
+		//					type:'POST',
+		//					url:'/admin/project/delete',
+		//					data:{
+		//						idea_id: e.target.hash.split(',')[1]
+		//					},
+		//					context:$t,
+		//					dataType:'text',
+		//					success:function(data,ts,xhr){
+		//						if(data == 'False'){
+		//							return false;
+		//						}
+		//						this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+		//						this.parent().parent().parent().animate({
+		//							width:0
+		//						}, 400, 'easeOutCubic', function(e,d){
+		//							tc.jQ(this).hide();
+		//						});
+		//					}
+		//				});
+		//			}
+		//		});
+		//});
 		
 		
-		tc.jQ('a.remove-project').bind('click', {app:app}, function(e){
-			e.preventDefault();
-			var $t;
-			$t = tc.jQ(e.target);
-			e.data.app.components.modal.show({
-					app:e.data.app,
-					source_element:tc.jQ('.modal-content.remove-project'),
-					submit:function(){
-						tc.jQ.ajax({
-							type:'POST',
-							url:'/admin/project/delete',
-							data:{
-								idea_id: e.target.hash.split(',')[1]
-							},
-							context:$t,
-							dataType:'text',
-							success:function(data,ts,xhr){
-								if(data == 'False'){
-									return false;
-								}
-								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
-								this.parent().parent().parent().animate({
-									width:0
-								}, 400, 'easeOutCubic', function(e,d){
-									tc.jQ(this).hide();
-								});
-							}
-						});
-					}
-				});
-		});
-		
-		tc.jQ('a.remove-resource').bind('click', {app:app}, function(e){
-			e.preventDefault();
-			var $t;
-			$t = tc.jQ(e.target);
-			e.data.app.components.modal.show({
-					app:e.data.app,
-					source_element:tc.jQ('.modal-content.remove-resource'),
-					submit:function(){
-						tc.jQ.ajax({
-							type:'POST',
-							url:'/admin/resource/remove',
-							data:{
-								idea_id: e.target.hash.split(',')[1]
-							},
-							context:$t,
-							dataType:'text',
-							success:function(data,ts,xhr){
-								if(data == 'False'){
-									return false;
-								}
-								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
-								this.parent().parent().parent().animate({
-									width:0
-								}, 400, 'easeOutCubic', function(e,d){
-									tc.jQ(this).hide();
-								});
-							}
-						});
-					}
-				});
-		});
 		
 		tc.jQ('a.flag-idea').bind('click', {app:app}, function(e){
 			e.preventDefault();
@@ -661,35 +657,86 @@ Change by Us - Search Results
 			var $t;
 			$t = tc.jQ(e.target);
 			e.data.app.components.modal.show({
+				app:e.data.app,
+				source_element:tc.jQ('.modal-content.remove-idea'),
+				submit:function(){
+					tc.jQ.ajax({
+						type:'POST',
+						url:'/idea/remove',
+						data:{
+							idea_id: e.target.hash.split(',')[1]
+						},
+						context:$t,
+						dataType:'text',
+						success:function(data,ts,xhr){
+							if(data == 'False'){
+								return false;
+							}
+							this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+							this.parent().parent().parent().animate({
+								width:0
+							}, 400, 'easeOutCubic', function(e,d){
+								tc.jQ(this).hide();
+							}).remove();
+							tc.jQ('ul.ideas-list li').removeClass('every-third').filter(function(index) {
+					 			return index % 3 == 2;
+							}).addClass('every-third');
+							tc.jQ('ul.ideas-list li').eq(2).removeClass('hidden-result');
+						}
+					});
+				}
+			});
+		});
+		
+		tc.jQ('a.delete-resource').bind('click', {app:app}, function(e){
+			e.preventDefault();
+			var $t;
+			$t = tc.jQ(e.target);
+			e.data.app.components.modal.show({
 					app:e.data.app,
-					source_element:tc.jQ('.modal-content.remove-idea'),
+					source_element:tc.jQ('.modal-content.remove-resource'),
 					submit:function(){
 						tc.jQ.ajax({
 							type:'POST',
-							url:'/idea/remove',
+							url:'/admin/resource/delete',
 							data:{
-								idea_id: e.target.hash.split(',')[1]
+								resource_id: e.target.hash.split(',')[1]
 							},
 							context:$t,
 							dataType:'text',
 							success:function(data,ts,xhr){
-								if(data == 'False'){
-									return false;
-								}
-								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
-								this.parent().parent().parent().animate({
-									width:0
-								}, 400, 'easeOutCubic', function(e,d){
-									tc.jQ(this).hide();
-								}).remove();
-								tc.jQ('ul.ideas-list li').removeClass('every-third').filter(function(index) {
-						 			return index % 3 == 2;
-								}).addClass('every-third');
-								tc.jQ('ul.ideas-list li').eq(2).removeClass('hidden-result');
+								location.reload(true);
 							}
 						});
 					}
 				});
+		});
+		
+		tc.jQ('a.delete-project').bind('click',{app:app},function(e,d){
+			var t;
+			e.preventDefault();
+			t = e.target;
+			if(t.nodeName == 'SPAN'){
+				t = t.parentNode;
+			}
+			e.data.app.components.modal.show({
+				app:app,
+				source_element:tc.jQ('.modal-content.project-delete'),
+				submit:function(modal,callback){
+					tc.jQ.ajax({
+						type:'POST',
+						url:'/admin/project/delete',
+						data:{
+							project_id:t.hash.split(',')[1]
+						},
+						context:app,
+						dataType:'text',
+						success:function(data,ts,xhr){
+							location.reload(true);
+						}
+					});
+				}
+			});
 		});
 		
 		// turn location field autocomplete off
