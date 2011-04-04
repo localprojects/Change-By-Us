@@ -43,6 +43,9 @@ tc.gam.ideas_invite = function(app) {
 								dom.find(".has-name").hide();
 							}
 							
+							// pretty checkboxes
+							tc.jQ('input[type=checkbox],input[type=radio]').prettyCheckboxes();
+							
 						},
 						finish: function(merlin, dom) {
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
