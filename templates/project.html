@@ -161,7 +161,7 @@ Change by Us - Project
 				<h2><strong>Feature</strong> This Project</h2>
 				<div class="replace-prompt">
 					Do you want to replace
-					<select></select>
+					<select class="replace-project-options"></select>
 					with <span class="serif project-name"></span>
 					in the Featured Projects section on the homepage?
 				</div>
@@ -173,6 +173,9 @@ Change by Us - Project
 			<div class="step feature-this-project-submit">
 				<p>Adding project to Featured Projects list&hellip;</p>
 				<p><img src='/static/images/loader32x32.gif' /></p>
+			</div>
+			<div class="step feature-this-project-error">
+				<p>Unable to Feature this project!</p>
 			</div>
 			<a class='close' href="#"><span>close</span></a>
 		</div>
@@ -368,7 +371,7 @@ Change by Us - Project
 												}
 												
 												this.options.already_featured_projects = d;
-												if (d.length < this.options.max_featured_projects) {
+												if (d.length >= this.options.max_featured_projects) {
 													this.options.need_to_replace = true;
 													(function() {
 														var select, i;
@@ -379,6 +382,10 @@ Change by Us - Project
 																fp.title +"</option>");
 															select.append(option);
 														});
+														/*select.jqDropDown({ 
+															direction: 'down',
+															placeholder: '.replace-project-options'
+														});*/
 													}());
 												} else {
 													dom.find(".replace-prompt").remove();
@@ -389,7 +396,7 @@ Change by Us - Project
 									finish: function(merlin, dom) {
 										if (merlin.options.need_to_replace) {
 											merlin.options.data.replace_project_id = 
-												dom.find(".replace-prompt select option:select").attr("value");
+												dom.find(".replace-prompt select option:selected").attr("value");
 										} else {
 											delete merlin.options.data.replace_project_id;
 										}
@@ -406,12 +413,21 @@ Change by Us - Project
 											dataType:"text",
 											success: function(data, ts, xhr) {
 												if (data == "False") {
+													window.location.hash = "feature_project,feature-this-project-error";
 													return false;
 												}
 												tc.timer(1000, function() {
 													modal.hide();
 												});
 											}
+										});
+									}
+								},
+								"feature-this-project-error": {
+									selector: ".feature-this-project-error",
+									init: function(merlin, dom) {
+										tc.time(1000, function() {
+											modal.hide();
 										});
 									}
 								}
