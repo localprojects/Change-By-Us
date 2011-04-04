@@ -220,38 +220,7 @@ where u.user_id = $id"""
                     where m.is_active = 1
                     order by m.created_datetime desc
                     limit $limit offset $offset"""
-            data = list(self.db.query(sql, {'userId':self.id, 'limit':limit, 'offset':offset}))
-            
-            # slug in other message types
-            # join
-            messages.append(mProject.userMessage(1000, 
-                                        "join", 
-                                        "New Member! Your group now has 30 total!", 
-                                        "2011-03-25 15:46:36", 
-                                        1, 
-                                        "Ethan", 
-                                        "Holda", 
-                                        77, 
-                                        "Another green idea about bikes via SMS.", 
-                                        "sms", 
-                                        " 2011-03-24 15:46:36",
-                                        19,
-                                        "Composting In Queens"))
-                                        
-            # invite
-            messages.append(mProject.userMessage(1001, 
-                                        "invite", 
-                                        "You've been invited to join Ride More Bikes!", 
-                                        "2011-03-25 15:46:36", 
-                                        1, 
-                                        "Ethan", 
-                                        "Holda",
-                                        76, 
-                                        "My green message will find my account.", 
-                                        "web", 
-                                        "2011-03-18 11:54:17",
-                                        15,
-                                        "Ride More Bikes!"))                                      
+            data = list(self.db.query(sql, {'userId':self.id, 'limit':limit, 'offset':offset}))                               
                
             for item in data:
                 messages.append(mProject.userMessage(item.project_message_id, 
