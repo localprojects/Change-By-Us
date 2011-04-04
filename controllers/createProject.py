@@ -31,20 +31,17 @@ class CreateProject(Controller):
             return self.newProject()  
         
     def newProject(self):
-        if (self.session.user_id):
-            owner_user_id = self.session.user_id
+        if (self.user):
+            owner_user_id = self.user.id
             title = self.request('title')
             description = self.request('text')
             locationId = util.try_f(int, self.request('location_id'), -1)
             imageId = self.request('image')
             keywords = self.request('keywords').split(',')
             resourceIds = self.request('resources').split(',')
+            isOfficial = self.user.isAdmin
             
-            log.info("*** %s" % str(locationId))
-            
-            projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId)
-            
-            ##TODO add keywords to dictionary, hence the splitting and joining
+            projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId, isOfficial)
             
             for resourceId in resourceIds:
                 log.info("*** insert resource id %s" % resourceId)
