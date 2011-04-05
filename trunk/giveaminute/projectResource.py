@@ -83,3 +83,16 @@ def getProjectResources(db, keywords, locationId, notInProjectId = None):
         log.info("*** couldn't get projects by keywords")
         log.error(e)
         return None
+        
+def updateProjectResourceImage(db, projectResourceId, imageId):
+    try:
+        sql = "update project_resource set image_id = $imageId where project_resource_id = $projectResourceId"
+        db.query(sql, {'projectResourceId':projectResourceId, 'imageId':imageId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't update project image")
+        log.error(e)
+        return False
+        
+def getUnreviewedProjectResources(db, limit = 10, offset = 0):
+    pass
