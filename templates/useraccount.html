@@ -107,6 +107,14 @@ Change by Us - User Account
 								{% for idea in d.template_data.user_activity.data.ideas %}
 								
 									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
+										{% if d.template_data and d.template_data.user and d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id %}
+										<div class="note-card-public-controls">
+											{% if d.template_data.user.data.projects|length > 0 %}
+												<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+											{% endif %}
+											<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+										</div>
+										{% endif %}
 										<div class="note-card">
 											<div class="membrane">
 												{% if d.template_data and d.template_data.user %}
@@ -192,7 +200,7 @@ Change by Us - User Account
 						</div>
 						<div class="box preferences">
 							<div class="hd">
-								<h3>Email ßPreferences</h3>
+								<h3>Email Preferences</h3>
 							</div>
 							<div class="bd">
 								<ul class="checklist">
@@ -238,7 +246,7 @@ Change by Us - User Account
 												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.l_name }}" />
 											</div>
 											<div class="row row-email clearfix">
-												<label>E-mail address</label>
+												<label>Email address</label>
 												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.email }}" />
 											</div>
 										</div>

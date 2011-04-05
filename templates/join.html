@@ -21,9 +21,9 @@ Change by Us - Join
 					<a class="ca-btn" href="#">
 						<span>Let's Do it!</span>
 					</a>
-				</div>
-				<div class="oops" style='display:none;'>
-					<span></span>
+					<div class="oops" style='display:none;'>
+						<span></span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -46,9 +46,11 @@ Change by Us - Join
 				
 				<div class="west">
 					<div class="row">
+						<label for='f_name'>First name</label>
 						<input value='First name' type='text' name='f_name' id='f_name' class='f_name' tabindex='1'/>
 					</div>
 					<div class="row">
+						<label for='l_name'>Last name</label>
 						<input value='Last name' type='text' name='l_name' id='l_name' class='l_name' tabindex='2'/>
 					</div>
 					<div class="row">
@@ -79,10 +81,19 @@ Change by Us - Join
 			<div class='step email-step clearfix ' style='display:none;'>
 				<p><strong>Enter your email to get updates from Change by Us projects.</strong></p>
 				
-				<input type='text' name='email' id='email' class='email'/>
+				<div class="fields">
+					<input type='text' name='email' id='email' class='email'/>
+					<div class="row row-error">
+						<span class="email-error" style='display: none'>Please enter a valid email address</span>
+					</div>
+				</div>
 				
-				<input type='checkbox' name='tos-email' id='tos-email' class='tos-email'/>
-				<label class="tos-email-label" for='tos-email'>I accept and have read<br />the <a href='/tou' target='_blank'>Terms and Conditions</a></label>
+				<div class="west">
+					<input type='checkbox' name='tos-email' id='tos-email' class='tos-email'/>
+					<label class="tos-email-label" for='tos-email'>I accept and have read<br />the <a href='/tou' target='_blank'>Terms and Conditions</a></label>
+				</div>
+				
+		
 			</div><!--end step-->
 			
 			<div class='step sms-lookup clearfix ' style='display:none;'>
@@ -237,9 +248,6 @@ Change by Us - Join
 							selector:'input.tos-user-info',
 							validators:['required']
 						},
-					},
-					init:function(merlin,dom){
-						$('input#tos-user-info').attr('checked', false);
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
