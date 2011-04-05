@@ -528,7 +528,7 @@ def featureProject(db, projectId, ordinal = None):
                     order by ordinal limit 1"""
             data = list(db.query(sql))
         
-            if (len(data) > 0):
+            if (len(data) > 0 and data[0].first_gap < 6):
                 ordinal = data[0].first_gap
             else:
                 ordinal = 1
