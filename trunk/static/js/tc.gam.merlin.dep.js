@@ -219,7 +219,7 @@ tc.merlin.prototype.handlers = {
 		}
 		if(!valid){
 			if(e.data.me.options.error_indicator){
-				e.data.me.options.error_indicator.html('<span>Oops! Please correct the fields marked in red.</span>').show();
+				e.data.me.options.error_indicator.html('<span>Oops! Please fill in the fields marked in red.</span>').show();
 			}
 			return;
 		}
