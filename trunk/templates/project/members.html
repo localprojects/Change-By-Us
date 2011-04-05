@@ -178,10 +178,10 @@
 	<div class="step">
 		<h2><strong>Delete</strong> this Project Member?</h2>
 		<div>
-			<p>You are about delete this member from the project permanently. <br/>Are you sure?</p>
+			<p>You are about delete <span class="person-name serif">this member</span> from the project permanently! <br/>Are you sure?</p>
 		</div>
 		<div class="actions">
-			<a class="submit rounded-button" href="#">Yes, Delete Member</a>
+			<a class="submit rounded-button" href="#">Yes, Delete <span class="person-name">Member</span></a>
 			<a class="cancel" href="#">No, keep them.</a>
 		</div>
 	</div>
@@ -209,6 +209,16 @@
 				e.data.project.options.app.components.modal.show({
 					app:e.data.project.options.app,
 					source_element:tc.jQ('.modal-content.remove-member'),
+					init: function(modal, callback) {
+						var member_name;
+						member_name = tc.jQ(e.target).prev().find("a").text();
+						if (member_name) {
+							modal.options.element.find(".person-name").text(member_name);
+						}
+						if (tc.jQ.isFunction(callback)) {
+							callback(modal);
+						}
+					},
 					submit:function(){
 						tc.jQ.ajax({
 							type:'POST',
