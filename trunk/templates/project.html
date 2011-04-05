@@ -6,8 +6,14 @@ Change by Us - Project
 
 
 {% block project_admin %}
-{{ super() }}
-	<li class="feature {% if d.template_data.project.data.info.is_featured %}state-disabled{% endif %}"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
+	{{ super() }}
+	
+	{% if d.template_data.project.data.info.is_featured %}
+		<li class="feature state-disabled"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Featured Project!</a></li>
+	{% else %}
+		<li class="feature"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
+	{% endif %}
+	
 	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps delete-project">Delete <span>this</span> project</a></li>
 {% endblock %}
 
@@ -437,6 +443,7 @@ Change by Us - Project
 													window.location.hash = "feature_project,feature-this-project-error";
 													return false;
 												}
+												tc.jQ(event_target).html("Featured Project!").parent().addClass("state-disabled");
 												tc.timer(1000, function() {
 													modal.hide();
 												});
