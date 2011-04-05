@@ -4,6 +4,9 @@ import giveaminute.user as mUser
 import giveaminute.project as mProject
 import framework.util as util
 import lib.web
+#temp
+from framework.image_server import *  
+import giveaminute.projectResource as mResource  
 
 class Home(Controller):
     def GET(self, action=None, page=None):
@@ -18,7 +21,9 @@ class Home(Controller):
         elif (action == 'project'):
             return self.showProject(page)    
         elif (action == 'login'):
-            return self.showLogin()                                    
+            return self.showLogin()  
+        elif (action == 'tempupload'):
+            return self.showTempUpload()                                  
         else:
             return self.render(action)
             
@@ -33,9 +38,35 @@ class Home(Controller):
             return self.addResource()
         elif (action == 'feedback'):
             return self.submitFeedback()
+        elif (action == 'tempupload'):
+            self.tempUpload()
+            return self.showTempUpload() 
         else:
             return self.not_found()
-            
+         
+    # BEGIN temp page for uploading resource images
+    def showTempUpload(self):
+        sql = "select project_resource_id, title, image_id from project_resource order by title;"
+        res = list(self.db.query(sql))
+        
+        self.template_data['res'] = res
+        
+        return self.render('tempupload')   
+
+    def tempUpload(self):
+        data = [s for s in web.input().items() if "image_" in s[0]]
+        
+        for item in data:
+            if (self.request(item[0])):
+                imageId = ImageServer.add(self.db, item[1], 'giveaminute', [100, 100])
+                resourceId = item[0].split('_')[1]
+                if (mResource.updateProjectResourceImage(self.db, resourceId, imageId)):
+                    log.info("*** resource %s image %s" % (resourceId, imageId))
+                else:
+                    log.info("*** FAILED: resource %s image %s" % (resourceId, imageId))
+
+
+    # END temp page for uploading resource images
             
     def showHome(self):
 #         locations = mLocation.getSimpleLocationDictionary(self.db)
