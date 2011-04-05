@@ -7,7 +7,7 @@ Change by Us - Project
 
 {% block project_admin %}
 {{ super() }}
-	<li class="feature {% if d.template_data.project.data.info.is_featured is sameas 1 %}state-disabled{% endif %}"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
+	<li class="feature {% if d.template_data.project.data.info.is_featured %}state-disabled{% endif %}"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
 	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps delete-project">Delete <span>this</span> project</a></li>
 {% endblock %}
 
@@ -171,7 +171,8 @@ Change by Us - Project
 				</div>
 			</div>
 			<div class="step feature-this-project-submit">
-				
+				<p>Featuring project&hellip;</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
 			</div>
 			<div class="step feature-this-project-error">
 				<p>Unable to Feature this project!</p>
@@ -363,6 +364,7 @@ Change by Us - Project
 								project_id: app.app_page.data.project.project_id,
 								replace_project_id: null
 							},
+							has_done_GET: false,
 							already_featured_projects: null,
 							max_featured_projects: 5,
 							need_to_replace: false,
@@ -372,42 +374,45 @@ Change by Us - Project
 									next_step: "feature-this-project-submit",
 									init: function(merlin, dom) {
 										dom.find(".project-name").text(app.app_page.data.project.info.title);
-										tc.jQ.ajax({
-											type:"GET",
-											url:"/project/featured",
-											context:merlin,
-											dataType:"text",
-											success: function(data, ts, xhr) {
-												var d;
-												try {
-													d = tc.jQ.parseJSON(data);
-												} catch(e) {
-													tc.util.log("/project/featured: json parsing error", "warn");
-													return;
+										if (!merlin.options.has_done_GET) {
+											tc.jQ.ajax({
+												type:"GET",
+												url:"/project/featured",
+												context:merlin,
+												dataType:"text",
+												success: function(data, ts, xhr) {
+													var d;
+													try {
+														d = tc.jQ.parseJSON(data);
+													} catch(e) {
+														tc.util.log("/project/featured: json parsing error", "warn");
+														return;
+													}
+
+													this.options.already_featured_projects = d;
+													if (d.length >= this.options.max_featured_projects) {
+														this.options.need_to_replace = true;
+														(function() {
+															var select;
+															select = dom.find(".replace-prompt select");
+															tc.jQ.each(d, function(i, fp) {
+																var option;
+																option = tc.jQ("<option value='"+ fp.project_id +"'>"+
+																	fp.title +"</option>");
+																select.append(option);
+															});
+															/*select.jqDropDown({ 
+																direction: 'down',
+																placeholder: '.replace-project-options'
+															});*/
+														}());
+													} else {
+														dom.find(".replace-prompt").remove();
+													}
 												}
-												
-												this.options.already_featured_projects = d;
-												if (d.length >= this.options.max_featured_projects) {
-													this.options.need_to_replace = true;
-													(function() {
-														var select;
-														select = dom.find(".replace-prompt select");
-														tc.jQ.each(d, function(i, fp) {
-															var option;
-															option = tc.jQ("<option value='"+ fp.project_id +"'>"+
-																fp.title +"</option>");
-															select.append(option);
-														});
-														/*select.jqDropDown({ 
-															direction: 'down',
-															placeholder: '.replace-project-options'
-														});*/
-													}());
-												} else {
-													dom.find(".replace-prompt").remove();
-												}
-											}
-										});
+											});
+											merlin.options.has_done_GET = true;
+										}
 									},
 									finish: function(merlin, dom) {
 										if (merlin.options.need_to_replace) {
