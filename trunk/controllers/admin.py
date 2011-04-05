@@ -3,6 +3,7 @@ import framework.util as util
 import giveaminute.user as mUser
 import giveaminute.idea as mIdea
 import giveaminute.project as mProject
+import giveaminute.metrics as mMetrics
 
 class Admin(Controller):
     def GET(self, action = None, param0 = None, param1 = None):
@@ -44,6 +45,12 @@ class Admin(Controller):
         elif (action == 'link'):
             if (param0 == 'getflagged'):
                 return self.getFlaggedLinks()
+            else:
+                return self.not_found()
+        elif (action == 'resource'):
+            if (param0 == 'getunreviewed'):
+                #return self.getUnreviewedResources()
+                return []
             else:
                 return self.not_found()
         elif (action == 'metrics'):
@@ -290,19 +297,13 @@ class Admin(Controller):
         
     # BEGIN metrics methods
     def getBasicMetrics(self):
-        data = dict(overall = dict(num_users = 100,
-                                   num_projects = 67,
-                                   num_ideas = 987,
-                                   num_resources = 82,
-                                   num_avg_users_per_project = 15,
-                                   num_avg_ideas_per_day = 38),
-                    tags = dict(num_total = 135,
-                                top = [dict(word = "trees", num_projects = 50, num_resources = 12),
-                                       dict(word = "recycling", num_projects = 48, num_resources = 11),
-                                       dict(word = "bicycle", num_projects = 30, num_resources = 10),
-                                       dict(word = "solar", num_projects = 25, num_resources = 10),
-                                       dict(word = "green", num_projects = 21, num_resources = 10),
-                                       dict(word = "water", num_projects = 19, num_resources = 8)]))
+        numbers = mMetrics.getCounts(self.db)
+        kwUsage = mMetrics.getKeywordUsage(self.db, 6, 0)
+        kwNum = mMetrics.getNumKeywords(self.db)
+    
+        data = dict(overall = numbers,
+                    tags = dict(num_total = kwNum,
+                                top = kwUsage))
         return self.json(data)        
                 
     def getTagsCSV(self):
