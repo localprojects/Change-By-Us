@@ -62,6 +62,7 @@ class Idea(Controller):
         limit = int(self.request('n_limit')) if self.request('n_limit') else 5
         relatedProjects = []
         citywideProjects = []
+        isLocationOnlyMatch = False
         
         if (not ideaId):
             log.error("No idea id")
@@ -71,16 +72,14 @@ class Idea(Controller):
             if (idea):
                 kw = mKeywords.getKeywords(self.db, idea.description)
                 
-                relatedProjects = mProject.getProjects(self.db, kw, idea.locationId, limit)
-                
-                if (len(relatedProjects) == 0):
-                    isLocationOnlyMatch = True
-                    relatedProjects = mProject.getProjectsByLocation(self.db, idea.locationId, limit)
-                else:
-                    isLocationOnlyMatch = False
+                if (idea.locationId != -1):
+                    relatedProjects = mProject.getProjects(self.db, kw, idea.locationId, limit)
+                    
+                    if (len(relatedProjects) == 0):
+                        isLocationOnlyMatch = True
+                        relatedProjects = mProject.getProjectsByLocation(self.db, idea.locationId, limit)
                     
                 citywideProjects = mProject.getProjects(self.db, kw, -1, limit)
-                
             else:
                 log.error("No idea found for id = %s" % ideaId)
             
