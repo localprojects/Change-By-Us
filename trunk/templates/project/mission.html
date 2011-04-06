@@ -35,7 +35,12 @@
 					{% for endorsement in d.template_data.project.data.info.endorsements['items'] %}
 						<li>
 							<div class="thumb">
-								<img class="endorser-photo" alt="{{ endorsement.name }}" src="http://placehold.it/30x30"/>
+								{% if endorsement.image_id %}
+									<img width='30' height='30' class="endorser-photo" alt="{{ endorsement.name }}" src="/images/{{ endorsement.image_id % 10 }}/{{ endorsement.image_id }}.png"/>
+								{% else %}
+									<img width='30' height='30' class="endorser-photo" alt="{{ endorsement.name }}" src="http://placehold.it/30x30"/>
+								{% endif %}
+								
 								<span class="overlay-tag"></span>
 							</div>
 							<div class="main">
