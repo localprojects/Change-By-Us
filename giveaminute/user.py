@@ -67,6 +67,7 @@ select u.user_key
       ,u.image_id
       ,u.location_id
       ,u.email_notification
+      ,coalesce(u.last_account_page_access_datetime, u.created_datetime) as last_account_page_access_datetime
       ,if(ug1.user_group_id, 1, 0) as is_admin
       ,if(ug2.user_group_id, 1, 0) as is_moderator
       ,if(ug3.user_group_id, 1, 0) as is_leader
@@ -142,6 +143,17 @@ where u.user_id = $id"""
             return True
         except Exception, e:
             log.info("*** problem updating user message preferences")
+            log.error(e)
+            return False    
+            
+    def updateAccountPageVisit(self):
+        try:
+            sql = "update user set last_account_page_access_datetime = now() where user_id = $userId"
+            self.db.query(sql, {'userId':self.id})
+            
+            return True
+        except Exception, e:
+            log.info("*** problem updating last_account_page_access_datetime for user id %s" % self.id)
             log.error(e)
             return False    
             
@@ -261,11 +273,25 @@ where u.user_id = $id"""
             
         return messages  
         
-    # temporarily stubbed out
     def getNumNewMessages(self):
-        import random
+        num = 0
         
-        return random.randint(1, 10)
+        try:
+            sql = """select 
+                        (select count(inv.project_invite_id) from project_invite inv
+                          inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id = $userId
+                          where inv.created_datetime > $last) +
+                        (select count(pm.project_message_id) from project_message pm
+                          inner join project__user pu on pu.project_id = pm.project_id  and pu.user_id = $userId
+                          where pm.is_active = 1 and pm.created_datetime > $last) as total"""
+            data = list(self.db.query(sql, {'userId':self.id, 'last':self.data.last_account_page_access_datetime}))
+             
+            num = data[0].total             
+        except Exception, e:
+            log.info("*** couldn't get number of new msgs for user id %s" % self.id)
+            log.error(e)
+            
+        return num
                     
         
 def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
