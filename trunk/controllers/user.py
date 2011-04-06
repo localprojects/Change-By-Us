@@ -33,7 +33,10 @@ class UserAccount(Controller):
         
             return self.render('useraccount')
         else:
-            return self.not_found()
+            log.error("*** attempt to access account page without user object")
+            # quick fix to avoid error when logging in too quickly
+            self.redirect("/")
+            #return self.not_found()
             
     def showProfilePage(self, userId):
         user = mUser.User(self.db, userId)
