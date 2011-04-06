@@ -25,6 +25,8 @@ class UserAccount(Controller):
         
     def showAccountPage(self):
         if (self.user):
+            self.user.updateAccountPageVisit()
+        
             userActivity = self.user.getActivityDictionary()
             
             self.template_data['user_activity'] = dict(data = userActivity, json = self.json(userActivity))
