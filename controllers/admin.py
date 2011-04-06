@@ -54,19 +54,18 @@ class Admin(Controller):
             else:
                 return self.not_found()
         elif (action == 'metrics'):
-            if (param0 == 'csv'):
-                if (param1 == 'tags'):
-                    return self.getTagsCSV()
-                elif (param1 == 'project'):
-                    return self.getProjectCSV()
-                elif (param1 == 'user'):
-                    return self.getUserCSV()
-                elif (param1 == 'location'):
-                    return self.getLocationCSV()
-                else:
-                    return self.not_found()
-            else:            
-                return self.getBasicMetrics()
+            return self.getBasicMetrics()
+        elif (action == 'csv' and param0 == 'metrics'):
+            if (param1 == 'keywords'):
+                return self.getTagsCSV()
+            elif (param1 == 'project'):
+                return self.getProjectCSV()
+            elif (param1 == 'user'):
+                return self.getUserCSV()
+            elif (param1 == 'location'):
+                return self.getLocationCSV()
+            else:
+                return self.not_found()
         else:
             return self.not_found()                   
             
@@ -307,16 +306,48 @@ class Admin(Controller):
         return self.json(data)        
                 
     def getTagsCSV(self):
-        return self.csv("tag,data", "change_by_us.tags.csv")
+        data = mMetrics.getKeywordUsage(self.db, 1000, 0)
+        csv = []
+        
+        csv.append("WORD,TOTAL,PROJECTS,RESOURCES")
+        
+        for item in data:
+            csv.append("%s,%s,%s,%s" % (item.word, str(item.num_projects + item.num_resources), item.num_projects, item.num_resources))
+        
+        return self.csv('\n'.join(csv), "change_by_us.tags.csv")
 
     def getProjectCSV(self):
-        return self.csv("project,data", "change_by_us.project.csv")
+        data = mMetrics.getProjectCounts(self.db)
+        csv = []
+        
+        csv.append("PROJECT,USERS,IDEAS,RESOURCES,ENDORSEMENTS,KEYWORDS")
+        
+        for item in data:
+            csv.append("%s,%s,%s,%s,%s,%s" % (item.title, item.num_users, item.num_ideas, item.num_resources, item.num_endorsements, len(item.keywords.split())))
+        
+        return self.csv('\n'.join(csv), "change_by_us.project.csv")
 
     def getUserCSV(self):
-        return self.csv("user,data", "change_by_us.user.csv")
+        data = mMetrics.getUserCounts(self.db)
+        csv = []
+        
+        csv.append("LAST NAME,FIRST NAME,EMAIL,PROJECTS JOINED,DATE JOINED")
+        
+        for item in data:
+            csv.append("%s,%s,%s,%s,%s" % (item.last_name, item.first_name, item.email, item.num_projects, item.created_datetime))
+            
+        return self.csv('\n'.join(csv), "change_by_us.user.csv")
 
     def getLocationCSV(self):
-        return self.csv("location,data", "change_by_us.location.csv")
+        data = mMetrics.getLocationCounts(self.db)
+        csv = []
+        
+        csv.append("LOCATION,BOROUGH,PROJECTS,IDEAS,RESOURCES")
+        
+        for item in data:
+            csv.append("%s,%s,%s,%s,%s" % (item.name, item.borough, item.num_projects, item.num_ideas, item.num_resources))            
+        
+        return self.csv('\n'.join(csv), "change_by_us.location.csv")
     # END metrics methods
     
     def getAdminUsers(self):
