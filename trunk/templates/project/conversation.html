@@ -117,7 +117,6 @@
 		<div class="main">
 			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
 			<!-- <cite class="meta-hd"><strong>XXXX XXXX</strong> says</cite> -->
-			
 			<blockquote class="serif">
 				<p class='message-body'></p>
 			</blockquote>
@@ -165,7 +164,7 @@
 			n_to_fetch:10,
 			offset:{{ d.template_data.project.data.info.messages['items']|length }},
 			message_template:tc.jQ('.template-content.message-markup').clone().removeClass('template-content')
-		}
+		};
 		
 		this.elements = {
 			userprompt: this.dom.find(".conversation-input label"),
@@ -328,6 +327,7 @@
 		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 		
 		function generate_message_markup(data){
+			tc.util.dump(data);
 			var markup;
 			markup = tc.jQ('.template-content.message-markup').clone().removeClass('template-content');
 			markup.attr('id','message-'+data.message_id);
