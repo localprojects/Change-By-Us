@@ -69,18 +69,11 @@ class Home(Controller):
     # END temp page for uploading resource images
             
     def showHome(self):
-#         locations = mLocation.getSimpleLocationDictionary(self.db)
-#         allIdeas = self.getAllProjectIdeas();
-#         
-#         locationsObj = dict(data = locations, json = self.json(locations))
-#         allIdeasObj = dict(data = allIdeas, json = self.json(allIdeas))
-        
-#         self.template_data['locations'] = locationsObj
-#         self.template_data['all_ideas'] = allIdeasObj
+        locations = mLocation.getSimpleLocationDictionary(self.db)
+        allIdeas = self.getFeaturedProjectIdeas();
 
-        #temp fix
-        locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = self.json(mLocation.getSimpleLocationDictionary(self.db)))
-        allIdeas = dict(data = self.getFeaturedProjectIdeas(), json = self.json(self.getFeaturedProjectIdeas()))
+        locations = dict(data = locations, json = self.json(locations))
+        allIdeas = dict(data = allIdeas, json = self.json(allIdeas))
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
@@ -191,15 +184,13 @@ class Home(Controller):
                 left join user u on u.user_id = i.user_id
                 limit $limit"""
                 
-        log.info("*** proj idea sql = %s" % sql)
-                
         try:
             data = list(self.db.query(sql, {'id':projectId, 'limit':limit}))
         
             for item in data:
                 betterData.append(dict(text = str(item.text),
                             f_name = str(item.f_name) if item.f_name else '',
-                            l_name = str(item.l_name) if item.l_name else '',
+                            l_name = str(item.l_name)[0] + '.' if item.l_name else '',
                             submitted_by =  str(item.submitted_by)))   
         
         except Exception, e:
