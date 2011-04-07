@@ -5,6 +5,41 @@ Change by Us - Join
 {% endblock title %}
 
 {% block continent %}
+<script>
+
+    facebookClass = function() { this.initialize.apply(this, arguments); };
+    facebookClass.prototype = {
+        initialize: function () {
+        },
+        
+        connect: function () {
+        
+            var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
+
+            FB.login(
+                function(response) {
+                    if(response.session)
+                    {
+                        window.location.href="/login_facebook";
+                        //$.get("/login_facebook", function(data){
+                        //    window.location.href=data;
+                        //});
+                    }
+                    else
+                    {
+                        // login failure, do something here
+                    }
+                },
+                {perms: requiredPerms.join(',')}
+            );
+        }
+    };
+
+    F = new facebookClass();
+  
+</script>
+
+
 <div class='continent register'>
 	<div class='headlands clearfix'>
 		<div class='west'>
@@ -35,8 +70,8 @@ Change by Us - Join
 			<div class='step start clearfix'>
 				<p>Create a login using <strong>Facebook</strong> or <strong>Twitter</strong></p>
 				<div class='social-login clearfix'>
-					<a href='' class='login-facebook west'><span>Facebook</span></a>
-					<a href='' class='login-twitter west'><span>Twitter</span></a>
+					<a class="login-facebook west" href='#' onclick="F.connect();"><span>Facebook</span></a>
+					<a class="login-twitter west" href='/login_twitter'><span>Twitter</span></a>
 				</div>
 				<p><a class='step_link' href='#user-info'>Click Here</a> <span class="italic">if you want to create a login without Facebook or Twitter</span></p>
 			</div><!--end step-->
