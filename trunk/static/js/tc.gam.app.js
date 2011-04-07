@@ -6,6 +6,19 @@ tc.app.prototype.app_page = null;
 tc.app.prototype.components = {};
 tc.app.prototype.events = tc.jQ({});
 
+// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
+function finish_logout(e)
+{
+    window.location.hash = '';
+	if (window.location.pathname === "/useraccount") {
+		if (e.data.app.app_page.user) {
+			window.location.assign("/useraccount/"+ e.data.app.app_page.user.u_id);
+			return;
+		}
+	}
+	window.location.reload(true);
+}
+
 tc.app.prototype.init = function(page){
 	tc.util.log('tc.app.init');
 	var _me;
@@ -33,14 +46,18 @@ tc.app.prototype.init = function(page){
 				context:this,
 				dataType:'text',
 				success:function(data,ts,xhr){
-					window.location.hash = '';
-					if (window.location.pathname === "/useraccount") {
-						if (e.data.app.app_page.user) {
-							window.location.assign("/useraccount/"+ e.data.app.app_page.user.u_id);
-							return;
-						}
-					}
-					window.location.reload(true);
+				
+				    FB.getLoginStatus(function(response) {
+                        if (response.session) {
+                            FB.logout(function(response){
+                                finish_logout(e);
+                            });
+                        } else {
+                            finish_logout(e);
+                        }
+                    });
+				
+					
 				}
 			});
 		}

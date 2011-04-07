@@ -22,12 +22,15 @@ Change by Us - Login
                 function(response) {
                     if(response.session)
                     {
-                        $.get("/login_facebook", function(data){
-                            window.location.href="/";
-                        });
+                        window.location.href="/login_facebook";
+                        //$.get("/login_facebook", function(data){
+                        //    window.location.href=data;
+                        //});
                     }
                     else
-                        alert("error");
+                    {
+                        // login failure, do something here
+                    }
                 },
                 {perms: requiredPerms.join(',')}
             );
@@ -35,18 +38,6 @@ Change by Us - Login
     };
 
     F = new facebookClass();
-
-
-  window.fbAsyncInit = function() {
-    FB.init({appId: '177033235680785', status: true, cookie: true,
-             xfbml: true});
-  };
-  (function() {
-    var e = document.createElement('script'); e.async = true;
-    e.src = document.location.protocol +
-      '//connect.facebook.net/en_US/all.js';
-    document.getElementById('fb-root').appendChild(e);
-  }());
   
 </script>
 
