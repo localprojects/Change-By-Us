@@ -163,6 +163,7 @@ class Home(Controller):
         
         associated_user = -1
         
+        created_user = False
         if len(res) == 1:
             facebook_user = res[0]
             associated_user = facebook_user.user_id
@@ -177,21 +178,23 @@ class Home(Controller):
             uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
             self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
             associated_user = uid
+            created_user = True
         
         self.session.user_id = associated_user
         self.session.invalidate()
 
-        return associated_user
+        if created_user:
+            raise web.seeother("/useraccount")
+        else:
+            raise web.seeother("/")
         
     def login_twitter(self):
         # Step 1. Get a request token from Twitter.
-        try:
-            resp, content = tw_client.request(tw_request_token_url, "GET")
-        except:
-            return self.login_twitter()
+            
+        resp, content = tw_client.request(tw_request_token_url, "GET")
             
         if resp['status'] != '200':
-            raise Exception("Invalid response from Twitter.")
+            raise web.seeother("/")
     
         # Step 2. Store the request token in a session for later use.
         
@@ -206,10 +209,7 @@ class Home(Controller):
     
         # Step 3. Redirect the user to the authentication URL.
         
-        try:
-            url = "%s?oauth_token=%s" % (tw_authenticate_url, req_token['oauth_token'])
-        except:
-            return self.login_twitter()
+        url = "%s?oauth_token=%s&force_login=true" % (tw_authenticate_url, req_token['oauth_token'])
         
         log.info("twitter login")
         log.info(s)
@@ -227,8 +227,7 @@ class Home(Controller):
         # Step 2. Request the authorized access token from Twitter.
         resp, content = client.request(tw_access_token_url, "GET")
         if resp['status'] != '200':
-            print content
-            raise Exception("Invalid response from Twitter.")
+            raise web.seeother("/")
     
         access_token = dict(cgi.parse_qsl(content))
         log.info(str(access_token))
@@ -239,6 +238,7 @@ class Home(Controller):
         
         associated_user = -1
         
+        created_user = False
         if len(res) == 1:
             twitter_user = res[0]
             associated_user = twitter_user.user_id
@@ -247,11 +247,15 @@ class Home(Controller):
             uid = mUser.createUser(self.db, '%s@twitter.com' % access_token['screen_name'], access_token['oauth_token_secret'], access_token['screen_name'])
             self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
             associated_user = uid
+            created_user = True
         
         self.session.user_id = associated_user
         self.session.invalidate()
     
-        raise web.seeother("/")
+        if created_user:
+            raise web.seeother("/useraccount")
+        else:
+            raise web.seeother("/")
             
     def logout(self):
         self.session.kill()
