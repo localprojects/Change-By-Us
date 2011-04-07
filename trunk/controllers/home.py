@@ -8,6 +8,24 @@ import lib.web
 from framework.image_server import *  
 import giveaminute.projectResource as mResource  
 
+import cgi
+import oauth2 as oauth
+import urllib2
+import json
+import hashlib
+
+fb_app_id = '177033235680785'
+
+tw_consumer_key = 's5Ex8SQqsxoWtrbcs1lkA'
+tw_consumer_secret = 'ztHbfXDfYAavLnpi9sXnvuVZLZ6UAnD5U5efyiqbI'
+
+tw_request_token_url = 'http://twitter.com/oauth/request_token'
+tw_access_token_url = 'http://twitter.com/oauth/access_token'
+tw_authenticate_url = 'http://twitter.com/oauth/authenticate'
+
+tw_consumer = oauth.Consumer(tw_consumer_key, tw_consumer_secret)
+tw_client = oauth.Client(tw_consumer)
+
 class Home(Controller):
     def GET(self, action=None, page=None):
         project_user = dict(is_member = True,
@@ -21,7 +39,13 @@ class Home(Controller):
         elif (action == 'project'):
             return self.showProject(page)    
         elif (action == 'login'):
-            return self.showLogin()  
+            return self.showLogin() 
+        elif (action == 'login_twitter'):
+            return self.login_twitter()   
+        elif (action == 'login_facebook'):
+            return self.login_facebook() 
+        elif (action == 'twitter_callback'):
+            return self.tw_authenticated()   
         elif (action == 'tempupload'):
             return self.showTempUpload()                                  
         else:
@@ -121,6 +145,113 @@ class Home(Controller):
         else:
             log.warning("Missing email or password")                        
             return False
+            
+    def login_facebook(self):
+        cookiename = "fbs_%s" % fb_app_id
+        fbcookie = web.cookies().get(cookiename) 
+        entries = fbcookie.split("&")
+        dc = {}
+        for e in entries:
+            es = e.split("=")
+            dc[es[0]] = es[1]
+        
+        details = urllib2.urlopen("https://graph.facebook.com/%s?access_token=%s" % (dc["uid"], dc["access_token"]))    
+        profile = json.loads(details.read())
+        
+        sql = "select * from facebook_user where facebook_id = %s" % str(profile['id'])
+        res = list(self.db.query(sql))
+        
+        associated_user = -1
+        
+        if len(res) == 1:
+            facebook_user = res[0]
+            associated_user = facebook_user.user_id
+
+        else:
+            # When creating the user I just use their screen_name@twitter.com
+            # for their email and the oauth_token_secret for their password.
+            # These two things will likely never be used. Alternatively, you 
+            # can prompt them for their email here. Either way, the password 
+            # should never be used.
+            passw = hashlib.sha224(profile["email"]).hexdigest()[:10]
+            uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+            self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
+            associated_user = uid
+        
+        self.session.user_id = associated_user
+        self.session.invalidate()
+
+        return associated_user
+        
+    def login_twitter(self):
+        # Step 1. Get a request token from Twitter.
+        try:
+            resp, content = tw_client.request(tw_request_token_url, "GET")
+        except:
+            return self.login_twitter()
+            
+        if resp['status'] != '200':
+            raise Exception("Invalid response from Twitter.")
+    
+        # Step 2. Store the request token in a session for later use.
+        
+        
+        req_token = dict(cgi.parse_qsl(content))
+        
+        
+        self.session.request_token = req_token
+        self.session._changed = True
+        SessionHolder.set(self.session)
+        s = SessionHolder.get_session()
+    
+        # Step 3. Redirect the user to the authentication URL.
+        
+        try:
+            url = "%s?oauth_token=%s" % (tw_authenticate_url, req_token['oauth_token'])
+        except:
+            return self.login_twitter()
+        
+        log.info("twitter login")
+        log.info(s)
+
+        raise web.seeother(url)
+        
+    def tw_authenticated(self):
+        # Step 1. Use the request token in the session to build a new client.
+
+        s = SessionHolder.get_session()
+        token = oauth.Token(s.request_token['oauth_token'],
+            s.request_token['oauth_token_secret'])
+        client = oauth.Client(tw_consumer, token)
+    
+        # Step 2. Request the authorized access token from Twitter.
+        resp, content = client.request(tw_access_token_url, "GET")
+        if resp['status'] != '200':
+            print content
+            raise Exception("Invalid response from Twitter.")
+    
+        access_token = dict(cgi.parse_qsl(content))
+        log.info(str(access_token))
+    
+        # Step 3. Lookup the user or create them if they don't exist
+        sql = "select * from twitter_user where twitter_id = %s" % str(access_token['user_id'])
+        res = list(self.db.query(sql))
+        
+        associated_user = -1
+        
+        if len(res) == 1:
+            twitter_user = res[0]
+            associated_user = twitter_user.user_id
+
+        else:
+            uid = mUser.createUser(self.db, '%s@twitter.com' % access_token['screen_name'], access_token['oauth_token_secret'], access_token['screen_name'])
+            self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
+            associated_user = uid
+        
+        self.session.user_id = associated_user
+        self.session.invalidate()
+    
+        raise web.seeother("/")
             
     def logout(self):
         self.session.kill()

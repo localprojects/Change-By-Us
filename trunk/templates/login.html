@@ -5,6 +5,52 @@ Change by Us - Login
 {% endblock title %}
 
 {% block continent %}
+
+<div id="fb-root"></div>
+<script>
+
+    facebookClass = function() { this.initialize.apply(this, arguments); };
+    facebookClass.prototype = {
+        initialize: function () {
+        },
+        
+        connect: function () {
+        
+            var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
+
+            FB.login(
+                function(response) {
+                    if(response.session)
+                    {
+                        $.get("/login_facebook", function(data){
+                            window.location.href="/";
+                        });
+                    }
+                    else
+                        alert("error");
+                },
+                {perms: requiredPerms.join(',')}
+            );
+        }
+    };
+
+    F = new facebookClass();
+
+
+  window.fbAsyncInit = function() {
+    FB.init({appId: '177033235680785', status: true, cookie: true,
+             xfbml: true});
+  };
+  (function() {
+    var e = document.createElement('script'); e.async = true;
+    e.src = document.location.protocol +
+      '//connect.facebook.net/en_US/all.js';
+    document.getElementById('fb-root').appendChild(e);
+  }());
+  
+</script>
+
+
 <div class='continent login'>
 	<div class='headlands clearfix'>
 		<div class='west'>
@@ -19,8 +65,8 @@ Change by Us - Login
 			<div class='west'>
 				<h4>Login</h4>
 				<div class='oauth-login'>
-					<a class="login-facebook" href='#'><span>Sign in with Facebook</span></a>
-					<a class="login-twitter" href='#'><span>Sign in with Twitter</span></a>
+					<a class="login-facebook" href='#' onclick="F.connect();"><span>Sign in with Facebook</span></a>
+					<a class="login-twitter" href='/login_twitter'><span>Sign in with Twitter</span></a>
 				</div>
 				<div class='or'>
 					<em>or</em>
@@ -73,8 +119,8 @@ Change by Us - Login
 			
 			<div class='east clearfix'>
 				<div class='oauth-login'>
-					<a class="login-facebook" href='#'><span>Sign in with Facebook</span></a>
-					<a class="login-twitter" href='#'><span>Sign in with Twitter</span></a>
+					<a class="login-facebook" href='#' onclick="F.connect();"><span>Sign in with Facebook</span></a>
+					<a class="login-twitter" href='/login_twitter'><span>Sign in with Twitter</span></a>
 				</div>
 			</div>
 		</div><!--end .step-->
