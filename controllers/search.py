@@ -1,6 +1,7 @@
 import framework.util as util
 import giveaminute.location as mLocation
 import giveaminute.project as mProject
+import giveaminute.idea as mIdea
 from framework.controller import *
 
 class Search(Controller):
@@ -85,46 +86,7 @@ class Search(Controller):
     ## END DEBUG ONLY
 
     def searchProjects(self, terms, locationId):
-        betterData = []
-        
-        match = ' '.join([(item + "*") for item in terms])
-    
-        #obviously must optimize here
-        try:
-            sql = """select p.project_id, 
-                            p.title, 
-                            p.description, 
-                            p.image_id, 
-                            p.location_id,
-                            o.user_id as owner_user_id,
-                            o.first_name as owner_first_name,
-                            o.last_name as owner_last_name,
-                            o.image_id as owner_image_id, 
-                        (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
-                        from project p
-                        inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
-                        inner join user o on o.user_id = opu.user_id
-                        where
-                        p.is_active = 1 
-                        and ($locationId is null or p.location_id = $locationId)
-                        and ($match = '' or match(p.title, p.description) against ($match in boolean mode))
-                        order by p.created_datetime desc"""
-                        
-            data = list(self.db.query(sql, {'match':match, 'locationId':locationId}))
-            
-            for item in data:
-                betterData.append(dict(project_id = item.project_id,
-                                title = item.title,
-                                description = item.description,
-                                image_id = item.image_id,
-                                location_id = item.location_id,
-                                owner = mProject.smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
-                                num_members = item.num_members))
-        except Exception, e:
-            log.info("*** couldn't get project search data")
-            log.error(e)
-            
-        return betterData
+        return mProject.searchProjects(self.db, terms, locationId)
         
     def searchProjectResources(self, terms, locationId):
         data = []
@@ -148,44 +110,7 @@ class Search(Controller):
         return data
 
     def searchIdeas(self, terms, locationId):
-        betterData = []
-        match = ' '.join([(item + "*") for item in terms])
-                
-        try:
-            sql = """select i.idea_id
-                           ,i.description
-                          ,i.submission_type
-                          ,i.created_datetime
-                          ,u.user_id
-                          ,u.first_name
-                          ,u.last_name
-                          ,u.image_id
-                    from idea i
-                    left join user u on u.user_id = i.user_id
-                    where
-                    i.is_active = 1 
-                    and ($locationId is null or i.location_id = $locationId)
-                    and ($match = '' or match(i.description) against ($match in boolean mode))
-                    order by i.created_datetime desc"""
-    
-            data = list(self.db.query(sql, {'match':match, 'locationId':locationId}))
-            
-            for item in data:
-                owner = None
-                
-                if (item.user_id):
-                    owner = mProject.smallUser(item.user_id, item.first_name, item.last_name, item.image_id)
-            
-                betterData.append(dict(idea_id = item.idea_id,
-                                message = item.description,
-                                created = str(item.created_datetime),
-                                submission_type = item.submission_type,
-                                owner = owner))
-        except Exception, e:
-            log.info("*** couldn't get idea search data")
-            log.error(e)
-                
-        return betterData
+        return mIdea.searchIdeas(self.db, terms, locationId)
 
     def makeMatchClause(self, words, fieldstring):
         clauseList = []
