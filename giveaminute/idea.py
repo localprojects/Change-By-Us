@@ -1,5 +1,6 @@
 import framework.util as util
 import helpers.censor as censor
+import giveaminute.project as mProject
 from framework.log import log
 
 class Idea:
@@ -147,7 +148,49 @@ def findIdeas(db, keywords, locationId):
         log.error(e)    
     
     return ideas 
-    
+
+def searchIdeas(db, terms, locationId, limit=100, offset=0, excludeProjectId = None):
+    betterData = []
+    match = ' '.join([(item + "*") for item in terms])
+            
+    try:
+        sql = """select i.idea_id
+                       ,i.description
+                      ,i.submission_type
+                      ,i.created_datetime
+                      ,u.user_id
+                      ,u.first_name
+                      ,u.last_name
+                      ,u.image_id
+                from idea i
+                left join user u on u.user_id = i.user_id
+                where
+                i.is_active = 1 
+                and ($locationId is null or i.location_id = $locationId)
+                and ($match = '' or match(i.description) against ($match in boolean mode))
+                and ($projectId is null or i.idea_id not in (select pi.idea_id from project__idea pi where pi.project_id = $projectId))
+                order by i.created_datetime desc
+                limit $limit offset $offset"""  
+
+        data = list(db.query(sql, {'match':match, 'locationId':locationId, 'limit':limit, 'offset':offset, 'projectId':excludeProjectId}))
+        
+        for item in data:
+            owner = None
+            
+            if (item.user_id):
+                owner = mProject.smallUser(item.user_id, item.first_name, item.last_name, item.image_id)
+        
+            betterData.append(dict(idea_id = item.idea_id,
+                            message = item.description,
+                            created = str(item.created_datetime),
+                            submission_type = item.submission_type,
+                            owner = owner))
+    except Exception, e:
+        log.info("*** couldn't get idea search data")
+        log.error(e)
+            
+    return betterData
+
 def findIdeasByUser(db, userId, limit=100):
     ideas = []
     

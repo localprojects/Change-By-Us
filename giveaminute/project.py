@@ -137,11 +137,7 @@ limit 1"""
         ideas = []
         
         try: 
-            data = mIdea.findIdeas(self.db, self.data.keywords.split(), self.data.location_id)
-        
-            if len(data) > 0:
-                for item in data:
-                    ideas.append(idea(item.idea_id, item.description, item.user_id, item.first_name, item.last_name, item.created_datetime, item.submission_type))
+            ideas = mIdea.searchIdeas(self.db, self.data.keywords.split(), self.data.location_id, excludeProjectId = self.id)
         except Exception, e:
             log.info("*** couldn't get related")
             log.error(e)                  
@@ -637,6 +633,7 @@ def getFeaturedProjectsWithStats(db):
         
     return data        
         
+# find projects by location id
 def getProjectsByLocation(db, locationId, limit = 100):
     data = []
     
@@ -651,7 +648,7 @@ def getProjectsByLocation(db, locationId, limit = 100):
         
     return data
 
-    
+# find projects by keyword match
 def getProjectsByKeywords(db, keywords, limit = 100):
     data = []
     # there's a better way to do this
@@ -669,7 +666,7 @@ def getProjectsByKeywords(db, keywords, limit = 100):
         
     return data
 
-                 
+# find projects by keyword match and location id              
 def getProjects(db, keywords, locationId, limit = 100):
     data = []
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
@@ -685,7 +682,7 @@ def getProjects(db, keywords, locationId, limit = 100):
             
     return data
 
-        
+# find project by user id        
 def getProjectsByUser(db, userId, limit = 100):
     betterData = []
 
@@ -720,6 +717,50 @@ def getProjectsByUser(db, userId, limit = 100):
         log.info("*** couldn't get projects")
         log.error(e)
             
+    return betterData
+    
+# find projects by full text search and location id
+def searchProjects(db, terms, locationId, limit=100, offset=0):
+    betterData = []
+    
+    match = ' '.join([(item + "*") for item in terms])
+
+    #obviously must optimize here
+    try:
+        sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
+                    from project p
+                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    inner join user o on o.user_id = opu.user_id
+                    where
+                    p.is_active = 1 
+                    and ($locationId is null or p.location_id = $locationId)
+                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))
+                    order by p.created_datetime desc
+                    limit $limit offset $offset"""
+                    
+        data = list(db.query(sql, {'match':match, 'locationId':locationId, 'limit':limit, 'offset':offset}))
+        
+        for item in data:
+            betterData.append(dict(project_id = item.project_id,
+                            title = item.title,
+                            description = item.description,
+                            image_id = item.image_id,
+                            location_id = item.location_id,
+                            owner = smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                            num_members = item.num_members))
+    except Exception, e:
+        log.info("*** couldn't get project search data")
+        log.error(e)
+        
     return betterData
         
 def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
