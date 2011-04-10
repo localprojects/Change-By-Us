@@ -73,17 +73,17 @@ class Idea(Controller):
                 kw = mKeywords.getKeywords(self.db, idea.description)
                 
                 if (idea.locationId != -1):
-                    relatedProjects = mProject.getProjects(self.db, kw, idea.locationId, limit)
+                    relatedProjects = mProject.searchProjects(self.db, kw, idea.locationId, limit)
                     
                     if (len(relatedProjects) == 0):
                         isLocationOnlyMatch = True
                         relatedProjects = mProject.getProjectsByLocation(self.db, idea.locationId, limit)
                     
-                citywideProjects = mProject.getProjects(self.db, kw, -1, limit)
+                citywideProjects = mProject.searchProjects(self.db, kw, -1, limit)
             else:
                 log.error("No idea found for id = %s" % ideaId)
             
-        obj = dict(is_location_only_match = isLocationOnlyMatch, related = relatedProjects, citywide = citywideProjects)
+        obj = dict(is_location_only_match = isLocationOnlyMatch, related = relatedProjects, citywide = citywideProjects, search_terms = ','.join(kw))
             
         return self.json(obj)
         
