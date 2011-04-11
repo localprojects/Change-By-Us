@@ -219,12 +219,18 @@ tc.merlin.prototype.show_step = function(step,force){
 		if(this.current_step){
 			if(tc.jQ.isFunction(this.current_step.finish)){
 				this.current_step.finish(this,this.current_step.dom);
+				//if(this.current_step.finish(this,this.current_step.dom) === false){
+				//	return;
+				//};
 			}
 		}
 	}
 	if(force && this.current_step){
 		if(tc.jQ.isFunction(this.current_step.finish)){
 			this.current_step.finish(this,this.current_step.dom);
+			//if(this.current_step.finish(this,this.current_step.dom) === false){
+			//	return;
+			//};
 		}
 	}
 	
