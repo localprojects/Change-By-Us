@@ -141,7 +141,7 @@ Change by Us - Search Results
 											{% endif %}
 											<span class="resource-name">
 												<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title }}</span></a></span>
+													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30) }}</span></a></span>
 												</span>
 											</span>
 										</td>
@@ -190,7 +190,7 @@ Change by Us - Search Results
 												<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
 												{% endif %}
 											{% endif %}
-											<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> says &mdash;{% endif %}</cite>
+											{% if idea.owner %}<cite class="note-meta-hd"><strong>{{ idea.owner.name|truncate(18) }}</strong> says &mdash;</cite>{% endif %}
 											<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
 											<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
 										</div>
@@ -297,7 +297,7 @@ Change by Us - Search Results
 											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
 											<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger resource-name tooltip_trigger'>
-												<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title }}</span></a></span>
+												<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30) }}</span></a></span>
 											</span>
 										</td>
 										{% endif %}
