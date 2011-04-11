@@ -35,13 +35,14 @@ class CreateProject(Controller):
             owner_user_id = self.user.id
             title = self.request('title')
             description = self.request('text')
+            organization = self.request('organization')
             locationId = util.try_f(int, self.request('location_id'), -1)
             imageId = self.request('image')
             keywords = self.request('keywords').split(',')
             resourceIds = self.request('resources').split(',')
             isOfficial = self.user.isAdmin
             
-            projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId, isOfficial)
+            projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId, isOfficial, organization)
             
             for resourceId in resourceIds:
                 log.info("*** insert resource id %s" % resourceId)
