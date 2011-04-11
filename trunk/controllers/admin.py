@@ -4,6 +4,7 @@ import giveaminute.user as mUser
 import giveaminute.idea as mIdea
 import giveaminute.project as mProject
 import giveaminute.metrics as mMetrics
+import giveaminute.projectResource as mProjectResource
 
 class Admin(Controller):
     def GET(self, action = None, param0 = None, param1 = None):
@@ -49,8 +50,7 @@ class Admin(Controller):
                 return self.not_found()
         elif (action == 'resource'):
             if (param0 == 'getunreviewed'):
-                #return self.getUnreviewedResources()
-                return []
+                return self.getUnreviewedResources()
             else:
                 return self.not_found()
         elif (action == 'metrics'):
@@ -123,6 +123,13 @@ class Admin(Controller):
                 return self.deleteItem('project_link', self.request('link_id')) 
             elif (param0 == 'approve'):
                 return self.approveItem('project_link', self.request('link_id'))                
+            else:
+                return self.not_found()
+        elif (action == 'resource'):
+            if (param0 == 'delete'):
+                return self.deleteItem('project_resource', self.request('resource_id'))
+            elif (param0 == 'approve'):
+                return self.approveProjectResource()
             else:
                 return self.not_found()
         else:
@@ -294,6 +301,12 @@ class Admin(Controller):
             
         return self.json(data)
         
+    def getUnreviewedResources(self):
+        limit = util.try_f(int, self.request('n_limit'), 10)
+        offset = util.try_f(int, self.request('offset'), 0)
+        
+        return self.json(mProjectResource.getUnreviewedProjectResources(self.db, limit, offset))
+        
     # BEGIN metrics methods
     def getBasicMetrics(self):
         numbers = mMetrics.getCounts(self.db)
@@ -413,6 +426,15 @@ class Admin(Controller):
             return False
         else:
             return mProject.deleteItem(self.db, table, id)
+            
+    def approveProjectResource(self):
+        projectResourceId = self.request('resource_id')
+        
+        if (not projectResourceId):
+            log.error("*** attempted to approve resource w/o id")
+            return False
+        else:
+            return mProjectResource.approveProjectResource(self.db, projectResourceId)
            
     def updateBlacklist(self):
         blacklist = self.request('blacklist')
