@@ -520,7 +520,7 @@ Change by Us - Home
 							context:merlin,
 							dataType:'json',
 							success:function(data,ts,xhr){
-								if(data.citywide.length || data.related.length){
+								if(data.citywide.length > 0 || data.related.length > 0){
 									this.options.steps['related'].step_data = data;
 									window.location.hash = 'related';
 								} else {
@@ -591,7 +591,7 @@ Change by Us - Home
 					next_step:null,
 					selector:'.related-not-found',
 					init:function(merlin,dom){
-						
+						tc.jQ('.projects-pane.not-found').fadeIn();
 					}
 				}
 			}
