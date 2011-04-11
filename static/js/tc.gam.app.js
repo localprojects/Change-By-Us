@@ -6,19 +6,6 @@ tc.app.prototype.app_page = null;
 tc.app.prototype.components = {};
 tc.app.prototype.events = tc.jQ({});
 
-// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
-function finish_logout(e)
-{
-    window.location.hash = '';
-	if (window.location.pathname === "/useraccount") {
-		if (e.data.app.app_page.user) {
-			window.location.assign("/useraccount/"+ e.data.app.app_page.user.u_id);
-			return;
-		}
-	}
-	window.location.reload(true);
-}
-
 tc.app.prototype.init = function(page){
 	tc.util.log('tc.app.init');
 	var _me;
@@ -38,26 +25,40 @@ tc.app.prototype.init = function(page){
 		}
 	}
 	
+	// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
+	this.finish_logout = function(e){
+		window.location.hash = '';
+		if (window.location.pathname === "/useraccount") {
+			if (e.data.app.app_page.user) {
+				window.location.assign("/useraccount/"+ e.data.app.app_page.user.u_id);
+				return;
+			}
+		}
+		window.location.reload(true);
+	};
+	
 	tc.jQ(window).bind('hashchange',{app:this}, function(e){
 		if(window.location.hash.substring(1,window.location.hash.length) === 'logout'){
 			tc.jQ.ajax({
 				type:'POST',
 				url:'/logout',
-				context:this,
+				context:e.data.app,
 				dataType:'text',
 				success:function(data,ts,xhr){
-				
-				    FB.getLoginStatus(function(response) {
-                        if (response.session) {
-                            FB.logout(function(response){
-                                finish_logout(e);
-                            });
-                        } else {
-                            finish_logout(e);
-                        }
-                    });
-				
-					
+					var me = this;
+					if(FB._userStatus == 'unknown'){
+						me.finish_logout(e);
+					} else {
+						FB.getLoginStatus(function(response) {
+							if (response.session) {
+								FB.logout(function(response){
+									me.finish_logout(e);
+								});
+							} else {
+								me.finish_logout(e);
+							}
+						});
+					}
 				}
 			});
 		}
