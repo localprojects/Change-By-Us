@@ -129,7 +129,7 @@ Change by Us - Home
 							<div class="bd">
 								<ul class="projects-list">
 								</ul>
-								<a href="/search" class="see-more">See more projects <em>near</em> you &rarr;</a>
+								<a href="/search" class="see-more more-projects">See more projects <em>near</em> you &rarr;</a>
 							</div>
 						</div>
 						<div class="box citywide-projects">
@@ -139,7 +139,7 @@ Change by Us - Home
 							<div class="bd">
 								<ul class="projects-list">
 								</ul>
-								<a href="/search" class="see-more">See more citywide projects &rarr;</a>
+								<a href="/search#projects" class="see-more more-projects">See more citywide projects &rarr;</a>
 							</div>
 						</div>
 						<div class="controls">
@@ -213,7 +213,7 @@ Change by Us - Home
 					<p>A network of leaders from across the city is ready to read ideas, follow projects, and connect online.</p>
 				</div>
 				<div class="bd">
-					<ul class="">
+					<ul>
 						<li>
 							<img src="/static/images/thumb_mbloomberg.jpg" alt="" width="106" height="80" />
 							<p class="name">Michael Bloomberg</p>
@@ -535,65 +535,54 @@ Change by Us - Home
 					next_step:null,
 					selector:'.step-three',
 					init:function(merlin,dom){
-						var i, temphtml;
+
+						function build_project_items(data, selector) {
+							var i, temphtml, box;
+							box = dom.find(selector);
+							for (i in data) {
+								if (i == 2) { break; }
+								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+								if (data[i].image_id){
+									temphtml.find('img').attr('src','/images/'+(data[i].image_id % 10)+'/'+data[i].image_id+'.png');
+								}
+								temphtml.find('.link a').text(data[i].title)
+									.attr('href','/project/'+ data[i].project_id)
+									.attr("target", "_blank");
+								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> '+ data[i].owner.name +'</span>');
+								temphtml.find('.description').text(data[i].description);
+								temphtml.find('.member-count').text(data[i].num_members);
+								if (data[i].endorsement) {
+									temphtml.find('.endorser-thumb').show();
+								}
+								box.find("ul").append(temphtml);
+								box.css("opacity", 0.0).show().animate({
+									opacity:1.0
+								}, 100, "easeOutCubic");
+							}
+						}
 						
 						if(merlin.current_step.step_data){
 							if(!merlin.current_step.step_data.related.length && !merlin.current_step.step_data.citywide.length){
 								window.location.hash = 'related-not-found';
 								return;
 							}
+							
 							if(!merlin.current_step.step_data.related.length){
 								dom.find('.related-projects').hide();
 								dom.find('.citywide-projects').addClass('single');
 							} else {
-								for(i in merlin.current_step.step_data.related){
-									if(i == 2){ break; }
-									//dom.find('.related-projects').find('.serif').html("<strong>"++"</strong>")
-									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-									if(merlin.current_step.step_data.related[i].image_id){
-										temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.related[i].image_id % 10)+'/'+merlin.current_step.step_data.related[i].image_id+'.png')
-									}
-									temphtml.find('.link a').text(merlin.current_step.step_data.related[i].title)
-										.attr('href','/project/'+merlin.current_step.step_data.related[i].project_id)
-										.attr("target", "_blank");
-									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
-									temphtml.find('.description').text(merlin.current_step.step_data.related[i].description);
-									temphtml.find('.member-count').text(merlin.current_step.step_data.related[i].num_members);
-									if(merlin.current_step.step_data.related[i].endorsement){
-										temphtml.find('.endorser-thumb').show();
-									}
-									dom.find('.related-projects').find('ul').append(temphtml);
-								}
-								dom.find('.related-projects').css('opacity',0.0).show().animate({
-									opacity:1.0
-								},1000,'easeOutCubic');
+								build_project_items(merlin.current_step.step_data.related, ".related-projects");
 							}
 							if(!merlin.current_step.step_data.citywide.length){
 								dom.find('.citywide-projects').hide();
 								dom.find('.related-projects').addClass('single');
 							} else {
-								for(i in merlin.current_step.step_data.citywide){
-									if(i == 2){ break; }
-									temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-									if(merlin.current_step.step_data.citywide[i].image_id){
-										temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.citywide[i].image_id % 10)+'/'+merlin.current_step.step_data.citywide[i].image_id+'.png')
-									}
-									temphtml.find('.link a').text(merlin.current_step.step_data.citywide[i].title)
-										.attr('href','/project/'+merlin.current_step.step_data.citywide[i].project_id)
-										.attr("target", "_blank");
-									temphtml.find('.creator').html('<span class="creator"><em>Created by </em> XXXXXX XXXXXXXX</span>');
-									temphtml.find('.description').text(merlin.current_step.step_data.citywide[i].description);
-									temphtml.find('.member-count').text(merlin.current_step.step_data.citywide[i].num_members);
-									if(merlin.current_step.step_data.citywide[i].endorsement){
-										temphtml.find('.endorser-thumb').show();
-									}
-									dom.find('.citywide-projects').find('ul').append(temphtml);
-								}
-								dom.find('.citywide-projects').css('opacity',0.0).show().animate({
-									opacity:1.0
-								},1000,'easeOutCubic');
+								build_project_items(merlin.current_step.step_data.citywide, ".citywide-projects");
 							}
 							
+							if (merlin.current_step.step_data.search_terms.length) {
+								dom.find("a.more-projects").attr("href", "/search?terms="+ merlin.current_step.step_data.search_terms +"#projects");
+							}
 						}
 					}
 				},
