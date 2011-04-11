@@ -59,6 +59,11 @@ Change by Us - CMS Admin Settings
 							</div>
 						</div>
 					</div>
+					<div class="add-admin-error step ">
+						<p class="">There was an error creating the administrator.</p>
+						<br />
+						<p class=""><a href='#add-admin,main'>Back.</a></p>
+					</div>
 					<div class="add-admin-finish step spinner-message clearfix">
 						<p class="west">Adding Administrator...</p>
 						<img class="loading" src='/static/images/loader32x32.gif' />
@@ -530,6 +535,9 @@ Change by Us - CMS Admin Settings
 						});
 					}
 				},
+				'error':{
+					selector:'.add-admin-error',
+				},
 				'finish':{
 					selector:'.add-admin-finish',
 					init:function(merlin,dom){
@@ -541,7 +549,7 @@ Change by Us - CMS Admin Settings
 							dataType:'text',
 							success:function(data,ts,xhr){
 								if(data == 'False' || data == 'None'){
-									window.location.hash = 'error';
+									window.location.hash = 'add-admin,error';
 									return;
 								}
 								location.reload(true);
