@@ -237,7 +237,7 @@ def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId,
                 
 ## END FORMATTING FUNCTIONS
                 
-def createProject(db, ownerUserId, title, description, keywords, locationId, imageId, isOfficial = False):
+def createProject(db, ownerUserId, title, description, keywords, locationId, imageId, isOfficial = False, organization = None):
     projectId = None
 
     try:
@@ -253,7 +253,8 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
                                     created_datetime=None,
                                     num_flags = numFlags,
                                     is_active = isActive,
-                                    is_official = isOfficial)
+                                    is_official = isOfficial,
+                                    organization = organization)
                                     
         if (projectId):
             join(db, projectId, ownerUserId, True)
@@ -638,8 +639,19 @@ def getProjectsByLocation(db, locationId, limit = 100):
     data = []
     
     try:
-        sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
-                    from project p where p.is_active = 1 and p.location_id = $locationId
+        sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
+                    from project p
+                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    inner join user o on o.user_id = opu.user_id where p.is_active = 1 and p.location_id = $locationId
                     limit $limit"""
         data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
     except Exception, e:
@@ -655,8 +667,20 @@ def getProjectsByKeywords(db, keywords, limit = 100):
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
     
     try:
-        sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
-                    from project p where p.is_active = 1 and (p.keywords like '%%%%%s%%%%')
+        sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
+                    from project p
+                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    inner join user o on o.user_id = opu.user_id
+                    where p.is_active = 1 and (p.keywords like '%%%%%s%%%%')
                     limit $limit""" % keywordClause
         data = list(db.query(sql, {'limit':limit}))
 
@@ -672,9 +696,21 @@ def getProjects(db, keywords, locationId, limit = 100):
     keywordClause = "%%' or p.keywords like '%%".join(keywords)
     
     try:
-        sql = """select p.project_id, p.title, p.description, p.image_id, p.location_id, 0 as num_members 
-                from project p where p.is_active = 1 and (p.location_id = $locationId and (p.keywords like '%%%%%s%%%%'))
-                limit $limit""" % keywordClause
+        sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
+                    from project p
+                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    inner join user o on o.user_id = opu.user_id
+                    where p.is_active = 1 and (p.location_id = $locationId and (p.keywords like '%%%%%s%%%%'))
+                    limit $limit""" % keywordClause
         data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
     except Exception, e:
         log.info("*** couldn't get projects")
