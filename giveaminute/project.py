@@ -720,7 +720,7 @@ def getProjectsByUser(db, userId, limit = 100):
     return betterData
     
 # find projects by full text search and location id
-def searchProjects(db, terms, locationId, limit=100, offset=0):
+def searchProjects(db, terms, locationId, limit=1000, offset=0):
     betterData = []
     
     match = ' '.join([(item + "*") for item in terms])

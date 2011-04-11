@@ -149,7 +149,7 @@ def findIdeas(db, keywords, locationId):
     
     return ideas 
 
-def searchIdeas(db, terms, locationId, limit=100, offset=0, excludeProjectId = None):
+def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = None):
     betterData = []
     match = ' '.join([(item + "*") for item in terms])
             
