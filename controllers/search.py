@@ -2,6 +2,7 @@ import framework.util as util
 import giveaminute.location as mLocation
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
+import giveaminute.projectResource as mProjectResource
 from framework.controller import *
 
 class Search(Controller):
@@ -89,36 +90,11 @@ class Search(Controller):
         return mProject.searchProjects(self.db, terms, locationId)
         
     def searchProjectResources(self, terms, locationId):
-        data = []
-
-        match = ' '.join([(item + "*") for item in terms])
-        
-        try:
-            sql = """select project_resource_id as link_id, title, url, image_id 
-                    from project_resource
-                        where
-                        is_active = 1 
-                        and ($locationId is null or location_id = $locationId)
-                        and ($match = '' or match(title, description) against ($match in boolean mode))
-                        order by created_datetime desc"""
-
-            data = list(self.db.query(sql, {'match':match, 'locationId':locationId}))
-        except Exception, e:
-            log.info("*** couldn't get resources search data")
-            log.error(e)
-                    
-        return data
+        return mProjectResource.searchProjectResources(self.db, terms, locationId)
 
     def searchIdeas(self, terms, locationId):
         return mIdea.searchIdeas(self.db, terms, locationId)
 
-    def makeMatchClause(self, words, fieldstring):
-        clauseList = []
-    
-        for word in words:
-            clauseList.append("match(%s) against ('%s')" % (fieldstring, word))
-            
-        return ' or '.join(clauseList)
             
             
             

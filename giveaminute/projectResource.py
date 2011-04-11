@@ -30,11 +30,32 @@ class ProjectResource():
                     url = self.data.url,
                     location_id = self.data.location_id)
         return data
+
+def searchProjectResources(db, terms, locationId):
+    data = []
+
+    match = ' '.join([(item + "*") for item in terms])
+    
+    try:
+        sql = """select project_resource_id as link_id, title, url, image_id 
+                from project_resource
+                    where
+                    is_active = 1 and is_hidden = 0
+                    and ($locationId is null or location_id = $locationId)
+                    and ($match = '' or match(title, description) against ($match in boolean mode))
+                    order by created_datetime desc"""
+
+        data = list(db.query(sql, {'match':match, 'locationId':locationId}))
+    except Exception, e:
+        log.info("*** couldn't get resources search data")
+        log.error(e)
+                
+    return data
         
 def getProjectResourcesByLocation(db, locationId, notInProjectId = None):
     try:
         sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and pr.location_id = $locationId"""
+                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 0 and pr.location_id = $locationId"""
                     
         if (notInProjectId):
             sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
@@ -53,7 +74,7 @@ def getProjectResourcesByKeywords(db, keywords, notInProjectId = None):
     
     try:
         sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and (pr.keywords like '%%%%%s%%%%')""" % keywordClause
+                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 0 and (pr.keywords like '%%%%%s%%%%')""" % keywordClause
 
         if (notInProjectId):
             sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
@@ -71,7 +92,7 @@ def getProjectResources(db, keywords, locationId, notInProjectId = None):
     
     try:
         sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and (location_id = $locationId and (pr.keywords like '%%%%%s%%%%'))""" % keywordClause
+                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 0 and (location_id = $locationId and (pr.keywords like '%%%%%s%%%%'))""" % keywordClause
 
         if (notInProjectId):
             sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
@@ -95,4 +116,25 @@ def updateProjectResourceImage(db, projectResourceId, imageId):
         return False
         
 def getUnreviewedProjectResources(db, limit = 10, offset = 0):
-    pass
+    data = []
+    
+    try:
+        sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
+                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 1 
+                    limit $limit offset $offset"""
+                    
+        data = list(db.query(sql, {'limit':limit, 'offset':offset}))
+    except Exception, e:
+        log.info("*** couldn't get unreviewed resources")
+        log.error(e)
+        
+    return data
+    
+def approveProjectResource(db, projectResourceId):
+    try:
+        db.update('project_resource', where = "project_resource_id = $projectResourceId", is_hidden = 0, vars = {'projectResourceId':projectResourceId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't approve project resource %s" % projectResourceId)
+        log.error(e)
+        return False
