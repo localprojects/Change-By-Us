@@ -96,7 +96,7 @@ Change by Us - Home
 										<div class="bd">
 											{% for idea in idea_group.ideas %}
 												{% if loop.index < 45 %}
-													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> <em>says</em> &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> <span class="said">says</span> &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 												{% endif %}
 											{% endfor %}
 										</div>
@@ -180,7 +180,7 @@ Change by Us - Home
 					<div class="note-card-splash">
 						{% if d.template_data.all_ideas.data|length > 0 and d.template_data.all_ideas.data[0].ideas[0].f_name %}
 							<cite class="note-meta-hd">
-								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> <em>says</em> &mdash;
+								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> <span class="said">says</span> &mdash;
 							</cite>
 							<blockquote>
 								<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
@@ -393,6 +393,7 @@ Change by Us - Home
 				},
 				'idea-details':{
 					prev_step:'start',
+					force_prev_step:'start',
 					next_step:'idea-processing',
 					selector:'.step-two',
 					inputs:{
@@ -475,7 +476,7 @@ Change by Us - Home
 								}
 								this.options.data.idea_id = data;
 								this.dom.siblings('.note-card-pane').find('strong').text('You');
-								this.dom.siblings('.note-card-pane').find('em').text('say');
+								this.dom.siblings('.note-card-pane').find('.said').text('say');
 								this.dom.siblings('.note-card-pane').find('blockquote').html('<p>'+merlin.options.data.text+'</p>');
 								window.location.hash = 'related-processing';
 							}
@@ -533,10 +534,11 @@ Change by Us - Home
 				},
 				'related':{
 					prev_step:'idea-details',
+					force_prev_step:'related',
 					next_step:null,
 					selector:'.step-three',
 					init:function(merlin,dom){
-
+						
 						function build_project_items(data, selector) {
 							var i, temphtml, box;
 							box = dom.find(selector);
@@ -589,6 +591,7 @@ Change by Us - Home
 				},
 				'related-not-found':{
 					prev_step:'idea-details',
+					force_prev_step:'related-not-found',
 					next_step:null,
 					selector:'.related-not-found',
 					init:function(merlin,dom){
