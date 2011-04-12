@@ -269,6 +269,7 @@
 		<script src="/static/js/libs/jquery.autogrowtextarea.js"></script>
 		<script src="/static/js/libs/fileuploader.js"></script>
 		<script src="/static/js/libs/tc.util.js"></script>
+		<script src="/static/js/libs/prettyCheckboxes.js"></script>
 				
 		<script src="/static/js/tc.gam.validate.js"></script>
 		<script src="/static/js/tc.gam.merlin.js"></script>
@@ -293,6 +294,10 @@
 		
 		<script type='text/javascript'>
 			jQuery(document).one('ready',function(e){
+				
+				tc.jQ('input[type=checkbox],input[type=radio]')
+					.not('.has-prettycheckbox')
+					.prettyCheckboxes();
 				
 				{% if d.template_data and d.template_data.user %} app_page.user = {{ d.template_data.user.json }}; {% else %} app_page.user = null; {% endif %}
 				{% if d.template_data and d.template_data.project_user %} app_page.project_user = {{ d.template_data.project_user.json }}; {% else %} app_page.project_user = null; {% endif %}

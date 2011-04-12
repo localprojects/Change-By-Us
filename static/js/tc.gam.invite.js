@@ -27,9 +27,6 @@ tc.gam.ideas_invite = function(app) {
 								selector:'.project-radio'
 							}
 						},
-						runtime:{
-							has_pretty_checkboxes:false
-						},
 						init: function(merlin, dom) {
 							var name;
 							
@@ -46,13 +43,7 @@ tc.gam.ideas_invite = function(app) {
 								dom.find(".has-name").hide();
 							}
 							
-							// pretty checkboxes
-							
-							if(!merlin.current_step.runtime.has_pretty_checkboxes){
-								merlin.current_step.runtime.has_pretty_checkboxes = true;
-								//dom.find('input[type=checkbox],input[type=radio]').prettyCheckboxes();
-							}
-							
+							dom.find('input[type=checkbox],input[type=radio]').prettyCheckboxes();
 							
 						},
 						finish: function(merlin, dom) {
@@ -97,14 +88,12 @@ tc.gam.ideas_invite = function(app) {
 							
 						},
 						finish: function(merlin, dom) {
-							
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
 								idea_id: tc.jQ(event_target).attr("href").split(",")[1],
 								message: merlin.current_step.inputs.invite_message.dom.val()
 							});
 						}
 					},
-					
 					'invite-message-submit':{
 						selector:'.invite-message-submit',
 						init: function(merlin, dom) {

@@ -93,8 +93,8 @@
 									{% endif %}
 								</span>
 								<span class="resource-name">
-									<span>
-										<span><a target='_blank' rel="#organization,{{ org.organization }}" href="{{ org.url }}" class='tooltip_trigger'><span>{{ org.title|truncate(30) }}</span></a></span>
+									<span rel="#organization,{{ org.organization }}" class='tooltip_trigger'>
+										<span><a target='_blank' href="{{ org.url }}"><span>{{ org.title|truncate(30) }}</span></a></span>
 									</span>
 								</span>
 							</td>
@@ -145,8 +145,8 @@
 		<img width='30' src="/static/images/thumb_genAvatar30.png" alt=""/>
 	</span>
 	<span class="resource-name">
-		<span>
-			<span><a target='_blank' rel="#organization," href="" class='tooltip_trigger'><span></span></a></span>
+		<span class='tooltip_trigger' rel="#organization,">
+			<span><a target='_blank' ><span></span></a></span>
 		</span>
 	</span>
 </div>
@@ -315,7 +315,8 @@
 							temptd.find('a.close').attr('href','#removeResource,'+d.resources[i].organization);
 							temptd.find('.tooltip_trigger')
 								.attr('rel','#organization,'+d.resources[i].organization)
-								.attr('href',d.resources[i].url).children('span').text(d.resources[i].title);
+								.children('a')
+									.attr('href',d.resources[i].url).children('span').text(d.resources[i].title);
 							e.data.me.components.tooltips.add_trigger(temptd.find('.tooltip_trigger'));
 							temptbody.find('tr:last').append(temptd);
 						}
@@ -382,14 +383,13 @@
 		
 		this.components.tooltips = tc.resource_tooltip({
 			triggers: this.dom.find(".resources-list .tooltip_trigger"),
+			trigger_class:'tooltip_trigger',
 			markup_source_element:tc.jQ('#organization-markup-source'),
 			get_url: "/project/resource/info"
 		});
 		
 		project.dom.bind('resources-loaded', {me:this}, this.handlers.resources_loaded_handler);
 		project.dom.bind('resources-refresh', {me:this}, this.handlers.resource_refresh_handler);
-		
-		
 		
 		return {
 			show:widget.show,

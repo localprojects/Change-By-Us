@@ -50,38 +50,50 @@ tc.resource_tooltip.prototype.handlers = {
 		//tc.util.log("tc.resource_tooltip.trigger_mouseover");
 		var t;
 		t = e.target;
-		if(e.data.me.current_trigger){
-			if(e.data.me.options.trigger_class){
-				while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
-					t = t.parentNode;
-				}
-			} else {
-				while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
-					t = t.parentNode;
-				}
-			}
-			
-			if(t != e.data.me.current_trigger){
-				e.data.me.current_trigger = tc.jQ(t);
-				e.data.me.tooltip.stop();
-				e.data.me.show();
-			}
-		} else {
-			
-			if(e.data.me.options.trigger_class){
-				while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
-					t = t.parentNode;
-				}
-			} else {
-				while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
-					t = t.parentNode;
-				}
-			}
-			
-			e.data.me.current_trigger = tc.jQ(t);
-			e.data.me.tooltip.stop();
-			e.data.me.show();
+		
+		
+		
+		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
+			tc.util.dump(e.data.me.options.trigger_class);
+			tc.util.dump(t.className);
+			t = t.parentNode;
 		}
+		e.data.me.current_trigger = tc.jQ(t);
+		e.data.me.tooltip.stop();
+		e.data.me.show();
+		
+		
+		//if(e.data.me.current_trigger){
+		//	if(e.data.me.options.trigger_class){
+		//		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
+		//			t = t.parentNode;
+		//		}
+		//	} else {
+		//		while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
+		//			t = t.parentNode;
+		//		}
+		//	}
+		//	
+		//	if(t != e.data.me.current_trigger){
+		//		e.data.me.current_trigger = tc.jQ(t);
+		//		e.data.me.tooltip.stop();
+		//		e.data.me.show();
+		//	}
+		//} else {
+		//	
+		//	if(e.data.me.options.trigger_class){
+		//		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
+		//			t = t.parentNode;
+		//		}
+		//		e.data.me.current_trigger = tc.jQ(t);
+		//		e.data.me.tooltip.stop();
+		//		e.data.me.show();
+		//	} else {
+		//		while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
+		//			t = t.parentNode;
+		//		}
+		//	}
+		//}
 	},
 	trigger_mouseout:function(e){
 		//tc.util.log("tc.resource_tooltip.trigger_mouseout");
