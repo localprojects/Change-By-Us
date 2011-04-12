@@ -337,12 +337,13 @@ class Home(Controller):
     def submitFeedback(self):
         name = self.request('name')
         email = self.request('email')
-        comment = self.request('comment')
+        comment = self.request('text')
         
         try:
             self.db.insert('site_feedback', submitter_name = name,
                                             submitter_email = email,
-                                            comment = comment)
+                                            comment = comment,
+                                            created_datetime = None)
                                             
             return True
         except Exception, e:

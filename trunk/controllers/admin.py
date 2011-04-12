@@ -55,15 +55,23 @@ class Admin(Controller):
                 return self.not_found()
         elif (action == 'metrics'):
             return self.getBasicMetrics()
-        elif (action == 'csv' and param0 == 'metrics'):
-            if (param1 == 'keywords'):
-                return self.getTagsCSV()
-            elif (param1 == 'project'):
-                return self.getProjectCSV()
-            elif (param1 == 'user'):
-                return self.getUserCSV()
-            elif (param1 == 'location'):
-                return self.getLocationCSV()
+        elif (action == 'csv'):
+            if (param0 == 'metrics'):
+                if (param1 == 'keywords'):
+                    return self.getTagsCSV()
+                elif (param1 == 'project'):
+                    return self.getProjectCSV()
+                elif (param1 == 'user'):
+                    return self.getUserCSV()
+                elif (param1 == 'location'):
+                    return self.getLocationCSV()
+                else:
+                    return self.not_found()
+            elif (param0 == 'site'):
+                if (param1 == 'feedback'):
+                    return self.getSiteFeedbackCSV()
+                else:
+                    return self.not_found()
             else:
                 return self.not_found()
         else:
@@ -362,6 +370,23 @@ class Admin(Controller):
         
         return self.csv('\n'.join(csv), "change_by_us.location.csv")
     # END metrics methods
+
+    def getSiteFeedbackCSV(self):
+        csv = []
+        
+        csv.append("ID,NAME,EMAIL,COMMENT,TIMESTAMP")
+        
+        try:
+            sql = "select site_feedback_id, submitter_name, submitter_email, comment, created_datetime from site_feedback order by site_feedback_id"
+            data = list(self.db.query(sql))
+        
+            for item in data:
+                csv.append("%s,%s,%s,%s,%s" % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, str(item.created_datetime))) 
+        except Exception, e:
+            log.info("*** there was a problem getting site feedback")
+            log.error(e)
+        
+        return self.csv('\n'.join(csv), "change_by_us.feedback.csv")
     
     def getAdminUsers(self):
         limit = util.try_f(int, self.request('n_users'), 10)
