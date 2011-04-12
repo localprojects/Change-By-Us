@@ -3,6 +3,7 @@ import framework.util as util
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
 import giveaminute.projectResource as mProjectResource
+import json
 
 class Project(Controller):
     def GET(self, action=None, param0=None):
@@ -94,9 +95,9 @@ class Project(Controller):
             projDictionary = project.getFullDictionary()
             
         project_user = self.getProjectUser(projectId)  
-        self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
+        self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
         
-        self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
+        self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
     
         return self.render('project')
         

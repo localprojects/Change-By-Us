@@ -30,14 +30,12 @@ class Home(Controller):
     def GET(self, action=None, page=None):
         project_user = dict(is_member = True,
                               is_project_admin = True)
-        self.template_data['project_user'] = dict(data = project_user, json = self.json(project_user))
+        self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
                                           
         if (not action or action == 'home'):
             return self.showHome()
         elif (action == 'mobile'):
-            return self.showMobile()
-        elif (action == 'project'):
-            return self.showProject(page)    
+            return self.showMobile()   
         elif (action == 'login'):
             return self.showLogin() 
         elif (action == 'login_twitter'):
@@ -96,8 +94,8 @@ class Home(Controller):
         locations = mLocation.getSimpleLocationDictionary(self.db)
         allIdeas = self.getFeaturedProjectIdeas();
 
-        locations = dict(data = locations, json = self.json(locations))
-        allIdeas = dict(data = allIdeas, json = self.json(allIdeas))
+        locations = dict(data = locations, json = json.dumps(locations))
+        allIdeas = dict(data = allIdeas, json = json.dumps(allIdeas))
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
@@ -105,20 +103,9 @@ class Home(Controller):
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
     def showMobile(self):
-        locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = self.json(mLocation.getSimpleLocationDictionary(self.db)))
+        locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = json.dumps(mLocation.getSimpleLocationDictionary(self.db)))
         self.template_data['locations'] = locations
         return self.render('mobile')
-        
-    def showProject(self, projectId):
-        if (not projectId or projectId == -1):
-            projDictionary = mProject.getTestData()
-        else:
-            project = mProject.Project(self.db, project_id)
-            
-            projDictionary = project.getFullDictionary()
-        
-        self.template_data['project'] = dict(json = self.json(projDictionary), data = projDictionary)
-        return self.render('project')
         
     def showLogin(self):
         referer = web.ctx.env.get('HTTP_REFERER')
