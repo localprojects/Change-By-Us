@@ -1,6 +1,7 @@
 import framework.util as util
 import giveaminute.user as mUser
 from framework.controller import *
+import json
 
 class UserAccount(Controller):
     def GET(self, action=None):
@@ -29,7 +30,7 @@ class UserAccount(Controller):
         
             userActivity = self.user.getActivityDictionary()
             
-            self.template_data['user_activity'] = dict(data = userActivity, json = self.json(userActivity))
+            self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
         
             return self.render('useraccount')
         else:
@@ -44,7 +45,7 @@ class UserAccount(Controller):
         
         log.info("*** activity = %s" % userActivity)
 
-        self.template_data['user_activity'] = dict(data = userActivity, json = self.json(userActivity))
+        self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
         
         return self.render('useraccount')
         

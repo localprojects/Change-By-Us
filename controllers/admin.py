@@ -5,6 +5,7 @@ import giveaminute.idea as mIdea
 import giveaminute.project as mProject
 import giveaminute.metrics as mMetrics
 import giveaminute.projectResource as mProjectResource
+import json
 
 class Admin(Controller):
     def GET(self, action = None, param0 = None, param1 = None):
@@ -150,8 +151,8 @@ class Admin(Controller):
         # blacklist/graylist
         words = self.getBadwords()
         
-        self.template_data['users'] = dict(data = users, json = self.json(users))
-        self.template_data['words'] = dict(data = words, json = self.json(words))
+        self.template_data['users'] = dict(data = users, json = json.dumps(users))
+        self.template_data['words'] = dict(data = words, json = json.dumps(words))
         
         return self.render('cms_adminsettings')
         
@@ -173,7 +174,7 @@ class Admin(Controller):
                                         num_endorsements = item.num_endorsements,
                                         featured_datetime = str(item.featured_datetime)))
         
-        self.template_data['featured_projects'] = dict(data = featuredProjects, json = self.json(featuredProjects))
+        self.template_data['featured_projects'] = dict(data = featuredProjects, json = json.dumps(featuredProjects))
     
         return self.render('cms_content')
         
@@ -330,10 +331,10 @@ class Admin(Controller):
         data = mMetrics.getKeywordUsage(self.db, 1000, 0)
         csv = []
         
-        csv.append("WORD,TOTAL,PROJECTS,RESOURCES")
+        csv.append('"WORD","TOTAL","PROJECTS","RESOURCES"')
         
         for item in data:
-            csv.append("%s,%s,%s,%s" % (item.word, str(item.num_projects + item.num_resources), item.num_projects, item.num_resources))
+            csv.append('"%s","%s","%s","%s"' % (item.word, str(item.num_projects + item.num_resources), item.num_projects, item.num_resources))
         
         return self.csv('\n'.join(csv), "change_by_us.tags.csv")
 
@@ -341,10 +342,10 @@ class Admin(Controller):
         data = mMetrics.getProjectCounts(self.db)
         csv = []
         
-        csv.append("PROJECT,USERS,IDEAS,RESOURCES,ENDORSEMENTS,KEYWORDS")
+        csv.append('"PROJECT","USERS","IDEAS","RESOURCES","ENDORSEMENTS","KEYWORDS"')
         
         for item in data:
-            csv.append("%s,%s,%s,%s,%s,%s" % (item.title, item.num_users, item.num_ideas, item.num_resources, item.num_endorsements, len(item.keywords.split())))
+            csv.append('"%s","%s","%s","%s","%s","%s"' % (item.title, item.num_users, item.num_ideas, item.num_resources, item.num_endorsements, len(item.keywords.split())))
         
         return self.csv('\n'.join(csv), "change_by_us.project.csv")
 
@@ -352,10 +353,10 @@ class Admin(Controller):
         data = mMetrics.getUserCounts(self.db)
         csv = []
         
-        csv.append("LAST NAME,FIRST NAME,EMAIL,PROJECTS JOINED,DATE JOINED")
+        csv.append('"LAST NAME","FIRST NAME","EMAIL","PROJECTS JOINED","DATE JOINED"')
         
         for item in data:
-            csv.append("%s,%s,%s,%s,%s" % (item.last_name, item.first_name, item.email, item.num_projects, item.created_datetime))
+            csv.append('"%s","%s","%s","%s","%s"' % (item.last_name, item.first_name, item.email, item.num_projects, item.created_datetime))
             
         return self.csv('\n'.join(csv), "change_by_us.user.csv")
 
@@ -363,10 +364,10 @@ class Admin(Controller):
         data = mMetrics.getLocationCounts(self.db)
         csv = []
         
-        csv.append("LOCATION,BOROUGH,PROJECTS,IDEAS,RESOURCES")
+        csv.append('"LOCATION","BOROUGH","PROJECTS","IDEAS","RESOURCES"')
         
         for item in data:
-            csv.append("%s,%s,%s,%s,%s" % (item.name, item.borough, item.num_projects, item.num_ideas, item.num_resources))            
+            csv.append('"%s","%s","%s","%s","%s"' % (item.name, item.borough, item.num_projects, item.num_ideas, item.num_resources))            
         
         return self.csv('\n'.join(csv), "change_by_us.location.csv")
     # END metrics methods
@@ -374,14 +375,14 @@ class Admin(Controller):
     def getSiteFeedbackCSV(self):
         csv = []
         
-        csv.append("ID,NAME,EMAIL,COMMENT,TIMESTAMP")
+        csv.append('"ID","NAME","EMAIL","COMMENT","TIMESTAMP"')
         
         try:
             sql = "select site_feedback_id, submitter_name, submitter_email, comment, created_datetime from site_feedback order by site_feedback_id"
             data = list(self.db.query(sql))
         
             for item in data:
-                csv.append("%s,%s,%s,%s,%s" % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, str(item.created_datetime))) 
+                csv.append('"%s","%s","%s","%s","%s"' % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, str(item.created_datetime))) 
         except Exception, e:
             log.info("*** there was a problem getting site feedback")
             log.error(e)

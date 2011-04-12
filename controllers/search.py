@@ -4,6 +4,7 @@ import giveaminute.project as mProject
 import giveaminute.idea as mIdea
 import giveaminute.projectResource as mProjectResource
 from framework.controller import *
+import json
 
 class Search(Controller):
     def GET(self, action=None):
@@ -15,7 +16,7 @@ class Search(Controller):
     def showMap(self):
         locationData = self.getLocationData()
     
-        self.template_data['locations_scored'] = self.json(locationData)
+        self.template_data['locations_scored'] = json.dumps(locationData)
         self.template_data['max_score'] = locationData[0]['score']
     
         return self.render('map')
@@ -39,14 +40,14 @@ class Search(Controller):
         
         results = dict(projects = projects, resources = resources, ideas = ideas)
         
-        self.template_data['results'] = dict(json = self.json(results), data = results)
+        self.template_data['results'] = dict(json = json.dumps(results), data = results)
         
         locations_list = mLocation.getSimpleLocationDictionary(self.db)
-        self.template_data['locations'] = dict(json = self.json(locations_list), data = locations_list)
+        self.template_data['locations'] = dict(json = json.dumps(locations_list), data = locations_list)
         
         locationData = self.getLocationData()
         
-        self.template_data['locations_scored'] = self.json(locationData)
+        self.template_data['locations_scored'] = json.dumps(locationData)
         self.template_data['max_score'] = locationData[0]['score']
         
         return self.render('search')

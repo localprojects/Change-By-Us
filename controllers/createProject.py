@@ -7,6 +7,7 @@ from framework.controller import *
 from framework.image_server import *
 from PIL import Image
 import lib.web
+import json
 
 class CreateProject(Controller):
     def GET(self, action=None):
@@ -18,7 +19,7 @@ class CreateProject(Controller):
             return self.getSimilarResourcesJSON()
         else:
             locations_data = mLocation.getSimpleLocationDictionary(self.db)
-            locations = dict(json = self.json(locations_data), data = locations_data)
+            locations = dict(json = json.dumps(locations_data), data = locations_data)
             
             return self.render('create', {'locations':locations})
             
