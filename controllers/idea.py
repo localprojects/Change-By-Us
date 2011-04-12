@@ -62,6 +62,7 @@ class Idea(Controller):
         limit = int(self.request('n_limit')) if self.request('n_limit') else 5
         relatedProjects = []
         citywideProjects = []
+        kw = []
         isLocationOnlyMatch = False
         
         if (not ideaId):
