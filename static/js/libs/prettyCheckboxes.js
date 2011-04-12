@@ -49,14 +49,18 @@
 				if(e.data.input.is(':checkbox')){
 					$label.toggleClass('checked');
 					e.data.input.attr('checked',true);
+					e.data.input[0].checked = true;
+					tc.util.dump(e.data.input);
 					$label.find('span.holder').css('top',0);
 				}else{
 					$('input[name="'+e.data.input.attr('name')+'"]').each(function(){
 						$('label[for="' + $(this).attr('id')+'"]').removeClass('checked');	
 						$(this).removeAttr('checked');
+						e.data.input[0].checked = false;
 					});
 					$label.addClass('checked');
 					e.data.input.attr('checked',true);
+					e.data.input[0].checked = true;
 				};
 			});
 			
