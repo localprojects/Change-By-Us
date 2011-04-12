@@ -84,22 +84,36 @@ Change by Us - Add Resource
 					</div>
 				</form>
 				
+			</div>
+		</div><!--end step-->
+		
+		<div class='step finish' style='display:none;'>
+			<div class="west">
+				<div class="box">
+					<div class="hd">
+						<h1><strong>Add</strong> your resource</h1>
+					</div>
+					<div class="bd">
+						<p>Welcome! We're always looking to list more valuable organizations, services, and programs on Change By Us – to give users a variety of resources to add to their projects.</p>
+						<p>To be considered, just fill out this form.<span class="smaller">*</span> We'll notify you by email when you have been approved as a resource to be listed on Change By Us.<span class="smaller">**</span> </p>
+						<p>When you have been approved, users will be able to find your resource on the site and add it to their project pages. When they do, you’ll get an email inviting you to visit their page to see if you can help.</p>
+						<span class="smaller">
+							<p>*Please use this form only if you are an employee or direct affiliate of the organization, service, or program.</p>
+							<p>**We’ll post only resources relevant to the questions being asked on the site.</p>
+						</span>
+					</div>
+				</div>
+			</div>
+			
+			<div class="east">
 				<div class="thanks">
 					<p><strong>Thanks for submitting a resource! </strong><br />We will contact you when your resource has been approved.</p>
 					<a href="/resource">Add another resource</a>
 					<a class="prev" href="/"><span class="sm-arrow-back light"></span><span>Go back home</span></a>
 				</div>
 			</div>
-		</div><!--end step-->
-		
-		<div class='step finish clearfix spinner-message' style='display:none;'>
-			<p>Please hold while we process your request...</p>
-			<p><img src='/static/images/loader32x32.gif' /></p>
 		</div>
 		
-		<div class='step thank-you' style='display:none;'>
-			<p>Thank you for adding your organization. You will receive an email confirming its addition.</p>
-		</div>
 	</div>
 
 	<div class='foothills'>
@@ -231,6 +245,7 @@ Change by Us - Add Resource
 				'finish':{
 					selector:'.finish',
 					init:function(merlin,dom){
+						window.scroll(0,0);
 						tc.jQ.ajax({
 							type:'POST',
 							url:'/resource',
@@ -241,12 +256,8 @@ Change by Us - Add Resource
 								if(data == 'False'){
 									return false;
 								}
-								window.location.hash = 'thank-you';
 							}
 						});
-					},
-					'thank-you':{
-						selector:'.thank-you'
 					}
 				}
 			}
