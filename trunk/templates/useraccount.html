@@ -6,6 +6,8 @@ Change by Us - User Account
 
 {% block continent %}
 
+
+
 <div class='continent user-account'>
 	<div class='headlands'>
 
@@ -289,13 +291,13 @@ Change by Us - User Account
 										
 									</div>
 								</form>	
-								<div class="social-networking facebook-connected">
+								<div class="social-networking">
 									<div class="social-connect-wrapper">
 										<a href="" class="connect-facebook"></a>
 										<a href="" class="disconnect">Disconnect</a>
 									</div>
 									<div class="social-connect-wrapper">
-										<a href="" class="connect-twitter"></a>
+										<a href="/login_twitter" class="connect-twitter"></a>
 										<a href="" class="disconnect">Disconnect</a>
 									</div>
 								</div>
@@ -373,6 +375,64 @@ Change by Us - User Account
 
 {% block page_js %}
 <script>
+
+    facebookClass = function() { this.initialize.apply(this, arguments); };
+    facebookClass.prototype = {
+        initialize: function () {
+        },
+        
+        connect: function () {
+        
+            var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
+
+            FB.login(
+                function(response) {
+                    if(response.session)
+                    {
+                        window.location.href="/login_facebook";
+                    }
+                    else
+                    {
+                        // login failure, do something here
+                    }
+                },
+                {perms: requiredPerms.join(',')}
+            );
+        }
+    };
+
+    F = new facebookClass();
+  
+    $(document).ready(function()
+    {
+        $(".connect-facebook").click(function(event){
+            event.preventDefault();
+            F.connect();
+        });
+        
+     /*FB.getLoginStatus(function(response) 
+     {
+		if (response.session) 
+			$(".connect-facebook").closest(".social-networking").addClass("facebook-connected");
+     }); */
+     
+     {% if d.connected_fb %}
+        $(".connect-facebook").closest(".social-networking").addClass("facebook-connected");
+     {%endif%}
+    
+     {% if d.connected_tw %}
+        $(".connect-twitter").closest(".social-networking").addClass("twitter-connected");
+     {%endif%}
+     
+     
+     /* {{d}} */
+        
+    });
+        
+        
+
+
+
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: User Account');
 		
