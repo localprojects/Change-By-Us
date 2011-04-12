@@ -162,7 +162,17 @@ class Home(Controller):
             # can prompt them for their email here. Either way, the password 
             # should never be used.
             passw = hashlib.sha224(profile["email"]).hexdigest()[:10]
-            uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+            
+            email = profile["email"]
+            check_if_email_exists = "select * from user where email = '%s'" % str(email)
+            users_with_this_email = list(self.db.query(check_if_email_exists))
+            email_exists = len(users_with_this_email)
+            
+            if email_exists == 1:
+                uid = users_with_this_email[0].user_id
+            else:
+                uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+            
             self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
             associated_user = uid
             created_user = True
