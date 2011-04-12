@@ -31,8 +31,22 @@ class UserAccount(Controller):
             userActivity = self.user.getActivityDictionary()
             
             self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
-        
-            return self.render('useraccount')
+            
+            connected_fb = False
+            connected_tw = False
+            s = SessionHolder.get_session()
+            if s.user_id:
+                check_fb = "select * from facebook_user where user_id = %s" % str(s.user_id)
+                res_fb = list(self.db.query(check_fb))
+                if len(res_fb) == 1:
+                    connected_fb = True
+                    
+                check_tw = "select * from twitter_user where user_id = %s" % str(s.user_id)
+                res_tw = list(self.db.query(check_tw))
+                if len(res_tw) == 1:
+                    connected_tw = True
+
+            return self.render('useraccount', {'connected_fb':connected_fb, 'connected_tw':connected_tw, 'test':True})
         else:
             log.error("*** attempt to access account page without user object")
             # quick fix to avoid error when logging in too quickly

@@ -168,10 +168,16 @@ class Home(Controller):
             users_with_this_email = list(self.db.query(check_if_email_exists))
             email_exists = len(users_with_this_email)
             
+            # see if we have a use with this email
             if email_exists == 1:
                 uid = users_with_this_email[0].user_id
             else:
-                uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+                # see if the user is logged in
+                s = SessionHolder.get_session()
+                if s.user_id:
+                    uid = s.user_id
+                else:
+                    uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
             
             self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
             associated_user = uid
@@ -241,7 +247,10 @@ class Home(Controller):
             associated_user = twitter_user.user_id
 
         else:
-            uid = mUser.createUser(self.db, '%s@twitter.com' % access_token['screen_name'], access_token['oauth_token_secret'], access_token['screen_name'])
+            if s.user_id:
+                uid = s.user_id
+            else:
+                uid = mUser.createUser(self.db, '%s@twitter.com' % access_token['screen_name'], access_token['oauth_token_secret'], access_token['screen_name'])
             self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
             associated_user = uid
             created_user = True
