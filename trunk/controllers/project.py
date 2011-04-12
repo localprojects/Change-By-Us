@@ -67,7 +67,7 @@ class Project(Controller):
                 return self.not_found()
         elif (action == 'tag'):
             if (param0 == 'add'):
-                return self.addKeyword()
+                return self.addKeywords()
             elif (param0 == 'remove'):
                 return self.removeKeyword()
             else:
@@ -412,11 +412,15 @@ class Project(Controller):
                                 project.data.owner_last_name, 
                                 project.data.owner_image_id)
                   
-    def addKeyword(self):
+    def addKeywords(self):
         projectId = self.request('project_id')
-        keyword = self.request('text')
-        
-        return mProject.addKeyword(self.db, projectId, keyword)        
+        keywords = self.request('text')
+                
+        if (projectId and keywords):
+            return mProject.addKeywords(self.db, projectId, keywords.split(','))        
+        else:
+            log.error("*** add keyword attempted w/o project id or keywords")
+            return False
       
     def removeKeyword(self):
         projectId = self.request('project_id')
