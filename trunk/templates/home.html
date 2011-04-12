@@ -96,7 +96,7 @@ Change by Us - Home
 										<div class="bd">
 											{% for idea in idea_group.ideas %}
 												{% if loop.index < 45 %}
-													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><span>{% if idea.f_name %}<cite class="note-meta-hd"><strong>{{ idea.f_name ~ " " ~ idea.l_name }}</strong> <span class="said">says</span> &mdash;</cite>{% endif %}<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
+													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><span><cite class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}><strong>{% if idea.f_name %}{{ idea.f_name ~ " " ~ idea.l_name }}{% endif %}</strong> <em>says</em> &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></span></a></div>
 												{% endif %}
 											{% endfor %}
 										</div>
@@ -180,7 +180,7 @@ Change by Us - Home
 					<div class="note-card-splash">
 						{% if d.template_data.all_ideas.data|length > 0 and d.template_data.all_ideas.data[0].ideas[0].f_name %}
 							<cite class="note-meta-hd">
-								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> <span class="said">says</span> &mdash;
+								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> <em>says</em> &mdash;
 							</cite>
 							<blockquote>
 								<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
@@ -476,7 +476,8 @@ Change by Us - Home
 								}
 								this.options.data.idea_id = data;
 								this.dom.siblings('.note-card-pane').find('strong').text('You');
-								this.dom.siblings('.note-card-pane').find('.said').text('say');
+								this.dom.siblings('.note-card-pane').find('em').text('say');
+								this.dom.siblings('.note-card-pane').find('cite').show();
 								this.dom.siblings('.note-card-pane').find('blockquote').html('<p>'+merlin.options.data.text+'</p>');
 								window.location.hash = 'related-processing';
 							}
