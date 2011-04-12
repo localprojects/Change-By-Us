@@ -409,22 +409,25 @@ def removeUserFromProject(db, projectId, userId):
         log.error(e)
         return False
         
-def addKeyword(db, projectId, keyword):
+def addKeywords(db, projectId, newKeywords):
     try:
         sqlGet = "select keywords from project where project_id = $projectId"
         data = list(db.query(sqlGet, {'projectId':projectId}))
         
         if (len(data) > 0):
             keywords = data[0].keywords.split()
+            newKeywords = [word.strip() for word in newKeywords]
+            addKeywords = []
             
-            if (keyword not in keywords):
-                keywords.append(keyword)
-                
-                newKeywords = ' '.join(keywords)
-    
-                sql = "update project set keywords = $keywords where project_id = $projectId"
-                db.query(sql, {'projectId':projectId, 'keywords':newKeywords})
-                
+            for newWord in newKeywords:
+                if (newWord not in keywords):
+                    addKeywords.append(newWord)
+                    
+            if (len(addKeywords) > 0):
+                keywords = ' '.join(keywords + addKeywords)
+        
+                db.update('project', where = "project_id = $projectId", keywords = keywords, vars = {'projectId':projectId})
+                    
             # return true whether keyword exists or not
             return True
         else:
