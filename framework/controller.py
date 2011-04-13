@@ -53,7 +53,7 @@ class Controller():
                 self.user = mUser.User(self.db, self.session['user_id'])
                 
                 self.template_data['user'] = dict(data = self.user.getDictionary(),
-                                                json = self.json(self.user.getDictionary()),
+                                                json = json.dumps(self.user.getDictionary()),
                                                 is_admin = self.user.isAdmin,
                                                 is_moderator = self.user.isModerator,
                                                 is_leader = self.user.isLeader)            
