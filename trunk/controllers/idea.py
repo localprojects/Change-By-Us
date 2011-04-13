@@ -78,7 +78,7 @@ class Idea(Controller):
                     
                     if (len(relatedProjects) == 0):
                         isLocationOnlyMatch = True
-                        relatedProjects = mProject.getProjectsByLocation(self.db, idea.locationId, limit)
+                        relatedProjects = mProject.searchProjects(self.db, [], idea.locationId, limit)
                     
                 citywideProjects = mProject.searchProjects(self.db, kw, -1, limit)
             else:
