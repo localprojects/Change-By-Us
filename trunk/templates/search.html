@@ -34,13 +34,13 @@ Change by Us - Search Results
 			<label>Search results for:</label>
 			<div class="form-tier west">
 				<div class="search-terms-container">
-					<input type="text" class="search-terms" value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}"/> 
+					<input type="text" class="search-terms always-focused" value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}"/> 
 					<a class="clear-field" href=""></a>
 				</div>
 				<span class="in">in</span>
 				<div class="search-hood-container">
 					<span class="dropdown-indicator"></span>
-					<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %} value="All neighborhoods"/>
+					<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %} value="All neighborhoods"/>
 					<div class="location-hood-list"><ul></ul></div>
 				</div>
 				<input type="submit" class="rounded-button search-submit" value="Search" />
@@ -191,7 +191,7 @@ Change by Us - Search Results
 												{% endif %}
 											{% endif %}
 											{% if idea.owner %}<cite class="note-meta-hd"><strong>{{ idea.owner.name|truncate(18) }}</strong> says &mdash;</cite>{% endif %}
-											<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
+											<blockquote><p>{{ idea.message|truncate(165) }}</p></blockquote>
 											<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
 										</div>
 									</div>
