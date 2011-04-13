@@ -450,7 +450,10 @@ Change by Us - Home
 								warning:dom.find('span.error'),
 								locations:merlin.app.app_page.data.locations
 							});
-						}
+						};
+						{% if d.template_data.user and d.template_data.user.data.email %}
+							tc.jQ('#email').addClass('always-focused disabled').attr("disabled", true);
+						{% endif %}
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
