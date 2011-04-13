@@ -1,6 +1,5 @@
 import framework.util as util
 import helpers.censor as censor
-import giveaminute.project as mProject
 from framework.log import log
 
 class Idea:
@@ -178,8 +177,11 @@ def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = 
             owner = None
             
             if (item.user_id):
-                owner = mProject.smallUser(item.user_id, item.first_name, item.last_name, item.image_id)
-        
+                # repeating smallUser method from giveaminute.project to avoid circular reference
+                owner = dict(u_id = item.user_id,
+                            image_id = item.image_id,
+                            name = "%s %s." % (item.first_name, item.last_name[0]))
+
             betterData.append(dict(idea_id = item.idea_id,
                             message = item.description,
                             created = str(item.created_datetime),
