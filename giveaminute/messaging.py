@@ -1,6 +1,9 @@
+import helpers.sms as sms
 from framework.emailer import *
 from framework.log import log
 from framework.config import *
+
+## EMAIL FUNCTIONS
 
 # send email to invited users
 def emailInvite(email, inviterName, projectId, title, description):
@@ -42,7 +45,8 @@ def emailProjectJoin(email, projectId, title, userId, userName):
         log.info("*** couldn't send join email")
         log.error(e)
         return False
-        
+
+# email project admins about endorsements        
 def emailProjectEndorsement(email, title, leaderName):
     emailAccount = Config.get('email')
     subject = "%s liked your project!" % leaderName
@@ -60,7 +64,8 @@ def emailProjectEndorsement(email, title, leaderName):
         log.info("*** couldn't send endorsement email")
         log.error(e)
         return False
-        
+
+# email resource contacts on resource add        
 def emailResourceNotification(email, projectId, title, description, resourceName):
     emailAccount = Config.get('email')
     subject = "A project on Changeby.us has added %s as a resource" % resourceName
@@ -79,6 +84,7 @@ def emailResourceNotification(email, projectId, title, description, resourceName
         log.error(e)
         return False
         
+# email deleted users
 def emailAccountDeactivation(email):
     emailAccount = Config.get('email')
     subject = "Your account has been deactivated"
@@ -96,3 +102,58 @@ def emailAccountDeactivation(email):
         log.info("*** couldn't send account deactivation email")
         log.error(e)
         return False
+
+### SMS FUNCTIONS
+        
+# add phone number to table of stopped numbers
+def stopSMS(db, phone):
+    try:
+        db.insert('sms_stopped_phone', phone = phone)
+        return True
+    except Exception, e:
+        log.info("*** couldn't stop messages to phone number %s.  Number may already be in database." % phone)
+        log.error(e)
+        return False
+        
+def isPhoneStopped(db, phone):
+    try:
+        sql = "select phone from sms_stopped_phone where phone = $phone limit 1";
+        data = list(db.query(sql, {'phone':phone}))
+        
+        return len(data) > 0
+    except Exception, e:
+        log.info("*** couldn't get sms stopped value for %s" % phone)
+        log.error(e)
+        
+        # in this case, we err on NOT sending messages and thus return True
+        return True
+
+def sendSMSConfirmation(db, phone):
+    log.info("*** sending confirmation to %s" % phone)
+    
+    if (not isPhoneStopped(db, phone)):
+        message = "Thanks for adding your idea to changeby.us Visit %smobile to browse and join projects related to your idea." % Config.get('default_host')
+        
+        return sms.send(phone, message)
+    else:
+        return False
+    
+def sendSMSInvite(db, phone, projectId):
+    log.info("*** sending invite to %s" % phone)  
+    
+    try:
+        if (not isPhoneStopped(db, phone)):
+            link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
+            message = "You've been invited to a project on changeby.us. Visit %s to see the project. Reply 'STOP' to stop changeby.us messages." % link        
+            return sms.send(phone, message)
+        else:
+            return False    
+    except Exception, e:
+        log.info("*** something failed in sending sms invite")
+        log.error(e)
+        return False    
+    
+    
+    
+    
+
