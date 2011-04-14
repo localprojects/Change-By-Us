@@ -5,6 +5,7 @@ import giveaminute.idea as mIdea
 import giveaminute.project as mProject
 import giveaminute.metrics as mMetrics
 import giveaminute.projectResource as mProjectResource
+import giveaminute.messaging as mMessaging
 import json
 
 class Admin(Controller):
@@ -85,7 +86,7 @@ class Admin(Controller):
             if (param0 == 'add'):
                 return self.addUser()
             elif (param0 == 'delete'):
-                return self.deleteItem('user', self.request('user_id'))
+                return self.deleteUser()
             elif (param0 == 'setrole'):
                 return self.setUserGroup()
             elif (param0 == 'oncall'):
@@ -438,6 +439,22 @@ class Admin(Controller):
             mUser.assignUserToGroup(self.db, userId, userGroupId)
 
             return userId
+            
+    def deleteUser(self):
+        userId = self.request('user_id')
+        
+        if (self.deleteItem('user', userId)):
+            # email deleted user
+# TODO: temporarily commenting out because the only place this currently gets sent from is deletion of admins
+#             u = mUser.User(self.db, userId)
+#             
+#             if (not mMessaging.emailAccountDeactivation(u.email)):
+#                 log.error("*** couldn't email deleted user_id = %s" % userId)            
+            
+            return True
+        else:
+            log.error("*** couldn't delete user %s" % userId)
+            return False
 
     def approveItem(self, table, id):
         if (not id):

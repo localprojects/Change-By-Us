@@ -2,6 +2,7 @@ from framework.log import log
 from framework.config import *
 from framework.emailer import *
 import giveaminute.idea as mIdea
+import giveaminute.messaging as mMessaging
 import helpers.censor as censor
 
 class Project():
@@ -33,6 +34,7 @@ select p.project_id
     ,u.user_id as owner_user_id
     ,u.first_name as owner_first_name
     ,u.last_name as owner_last_name
+    ,u.email as owner_email
     ,u.image_id as owner_image_id
 from project p
 left join location l on l.location_id = p.location_id
@@ -196,9 +198,12 @@ def smallUser(id, first, last, image):
     if (id and first and last):
         return dict(u_id = id,
                     image_id = image,
-                    name = "%s %s." % (first, last[0]))
+                    name = userName(first, last))
     else:
         return None
+  
+def userName(first, last):
+    return "%s %s." % (first, last[0]) 
                 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
     return dict(idea_id = ideaId,
@@ -1047,39 +1052,43 @@ def getProjectIdeas(db, projectId, limit = 100):
         log.info("*** couldn't get project ideas")
         log.error(e)            
                     
-def inviteByIdea(db, projectId, ideaId, message, inviterUserId):
-    createInviteRecord(db, projectId, message, inviterUserId, ideaId)
-    
-    try:
-        idea = mIdea.Idea(db, ideaId)
-        
-        Emailer.send(idea.data.idea_email, 
-                    "You've been invited to join our project", 
-                    createInviteBody(message, projectId), 
-                    None, 
-                    None, 
-                    "ethan@localprojects.net")
-        return True
-    except Exception, e:
-        log.info("*** couldn't get send email")
-        log.error(e) 
+def inviteByIdea(db, projectId, ideaId, message, inviterUser):
+    if (createInviteRecord(db, projectId, message, inviterUser.id, ideaId)):
+        try:
+            idea = mIdea.Idea(db, ideaId)
+            project = Project(db, projectId)
+            
+            return mMessaging.emailInvite(idea.data.idea_email, 
+                                          userName(inviterUser.firstName, inviterUser.lastName), 
+                                          projectId,
+                                          project.data.title,
+                                          project.data.description)
+        except Exception, e:
+            log.info("*** couldn't get send email")
+            log.error(e) 
+            return False
+    else:
+        log.error("*** could not create invite record")
         return False
 
-def inviteByEmail(db, projectId, emails, message, inviterUserId):
+def inviteByEmail(db, projectId, emails, message, inviterUser):
     try:
+        project = Project(db, projectId)
+    
         for email in emails:
-            createInviteRecord(db, projectId, message, inviterUserId, None, email)
-            
-            Emailer.send(email, 
-                        "You've been invited to join our project", 
-                        createInviteBody(message, projectId), 
-                        None, 
-                        None, 
-                        "ethan@localprojects.net") 
+            if (createInviteRecord(db, projectId, message, inviterUser.id, None, email)):
+               if (not mMessaging.emailInvite(email, 
+                                          userName(inviterUser.firstName, inviterUser.lastName), 
+                                          projectId,
+                                          project.data.title,
+                                          project.data.description)):
+                    log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          
+            else:
+                log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          
                         
         return True   
     except Exception, e:
-        log.info("*** couldn't get send one or more emails email")
+        log.info("*** couldn't get send one or more emails")
         log.error(e) 
         return False
 
