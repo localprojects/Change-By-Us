@@ -13,10 +13,6 @@
 	
 	<title><?php semantic_title(); ?></title>
 	
-	<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
-		Remove this if you use the .htaccess -->
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-	
 	<meta name="description" content=""/>
 	<meta name="author" content=""/>
 	<meta http-equiv="Content-Type" content="<?php bloginfo( 'html_type' ); ?>; charset=<?php bloginfo('charset'); ?>" />
@@ -26,8 +22,8 @@
 	<link rel="shortcut icon" href="<?php echo IMAGES . '/favicon.ico'; ?>"/>
 	<!-- <link rel="apple-touch-icon" href="<?php echo IMAGES . '/apple-touch-icon.png'; ?>"/> -->
 	
-	<link rel="stylesheet" href="http://localhost:9090/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-	<link rel="stylesheet" href="http://localhost:9090/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
+	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
 	<link rel="stylesheet" href="<?php bloginfo( 'stylesheet_url' ); ?>" type="text/css" media="screen, projection" />
 	<link rel="stylesheet" href="<?php echo CSS . '/print.css'; ?>" type="text/css" media="print" />
 	
@@ -111,7 +107,7 @@
 				<div class="search generic-search">
 					<form class="searchform" method="get" action="<?php bloginfo( 'url' ); ?>">
 						<input class="search" name="s" type="text" value="Search..." tabindex="1" />
-					    <input class="search-btn" type="submit" tabindex="2" name='headlands-search-btn' value='Search'/>
+					    <input class="search-btn rounded-button" type="submit" tabindex="2" name='headlands-search-btn' value='Search'/>
 					</form>
 				</div>
 			</div>

@@ -9,7 +9,7 @@
 
 				<div class="east sidebar">
 					<div class="box blog-rss">
-						<a href="<?php bloginfo( 'rss2_url' ); ?>" title="<?php echo wp_specialchars( get_bloginfo( 'name' ), 1 ) ?> Posts RSS feed" rel="alternate" type="application/rss+xml" class="rounded-button small"><abbr>RSS</abbr></a>
+						<a href="<?php bloginfo( 'rss2_url' ); ?>" title="<?php echo wp_specialchars( get_bloginfo( 'name' ), 1 ) ?> Posts RSS feed" rel="alternate" type="application/rss+xml" class="rounded-button small rss-button"><abbr>RSS</abbr></a>
 					</div>
 					<div class="box blog-categories">
 						<div class="hd">
