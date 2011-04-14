@@ -25,7 +25,7 @@
 							</ul>
 						</div>
 					</div>
-					<div class="box blog-signup">
+					<!--<div class="box blog-signup">
 						<div class="hd">
 							<h3 class="fancy-caps">Sign up <span>for</span> Emails</h3>
 						</div>
@@ -36,7 +36,7 @@
 								<input type="submit" class="rounded-button small" value="Sign Up" />
 							</form>
 						</div>
-					</div>
+					</div>-->
 					<div class="box blog-feedback">
 						<div class="hd">
 							<h3>We Love Feedback</h3>
