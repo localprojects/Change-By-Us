@@ -1,17 +1,18 @@
 import smtplib, os
+import helpers.custom_filters as custom_filters
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email import Encoders
 from lib.web.contrib.template import render_jinja
-#from jinja2.exceptions import TemplateNotFound
+from lib.jinja2.exceptions import TemplateNotFound
 from framework.log import log
 from framework.controller import *
 
 class Emailer():
 
     @classmethod
-    def send_from_template(cls, addresses, subject, template_name, template_values=None, attachment=None, from_address=None):
+    def send_from_template(cls, addresses, subject, template_name, template_values=None, attachment=None, from_name=None, from_address=None):
         log.info("Emailer.send_from_template (%s)" % template_name)
         try:
             html = Emailer.render(template_name, template_values)
@@ -24,14 +25,14 @@ class Emailer():
             log.warning("text template not found")
             text = None
         log.debug(html)
-        return cls.send(addresses, subject, text, html, attachment, from_address)
+        return cls.send(addresses, subject, text, html, attachment, from_name, from_address)
 
     @classmethod
-    def send(cls, addresses, subject, text, html=None, attachment=None, from_address=None):
-        log.info("Emailer.send [%s] [%s] from: %s" % (addresses, subject, from_address))
+    def send(cls, addresses, subject, text, html=None, attachment=None, from_name=None, from_address=None):
+        log.info("Emailer.send [%s] [%s]" % (addresses, subject))   
         if isinstance(addresses, basestring):
             addresses = [r.strip() for r in addresses.split(',')]
-        account = Config.get('email')   
+        account = Config.get('email')    
         if html:
             msg = MIMEMultipart('alternative')
             msg.attach(MIMEText(text, 'plain'))  
@@ -49,18 +50,18 @@ class Emailer():
             Encoders.encode_base64(part)
             part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attachment))
             msg.attach(part)                
-        msg['From'] = from_address
+        sender = from_name + "<" + from_address + ">"
+        msg['From'] = sender
         msg['To'] = ','.join(addresses)
         msg['Subject'] = subject
-        # log.info("\n%s" % msg.as_string())
+        # log.info("\n%s" % msg.as_string())                        
         try:
             server = smtplib.SMTP(account['host'], account['port'])
             server.ehlo()
             server.starttls()
             server.ehlo()
             server.login(account['username'], account['password'])
-            log.info("about to run server.sendmail with from_address: %s" % from_address)
-            server.sendmail(from_address, addresses, msg.as_string())
+            server.sendmail(sender, addresses, msg.as_string())
             server.close()
         except Exception, e:
             log.error("Could not send email (%s)" % e)
@@ -75,3 +76,4 @@ class Emailer():
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')      
         renderer._lookup.filters.update(custom_filters.filters)
         return (renderer[template_name + "." + suffix](template_values)).encode('utf-8')
+        
