@@ -44,13 +44,19 @@
 			$label.unbind('click').bind('click', {input:$input}, function(e){
 				var $label;
 				$label = $(this);
-				e.data.input.triggerHandler('click');
-				
+				//e.data.input.triggerHandler('click');
 				if(e.data.input.is(':checkbox')){
 					$label.toggleClass('checked');
-					e.data.input.attr('checked',true);
-					e.data.input[0].checked = true;
-					tc.util.dump(e.data.input);
+					if(e.data.input.attr('checked') == true){
+						e.data.input.removeAttr('checked');
+					} else {
+						e.data.input.attr('checked',true);
+					}
+					if(e.data.input[0].checked == true){
+						e.data.input[0].checked = false;
+					} else {
+						e.data.input[0].checked = true;
+					}
 					$label.find('span.holder').css('top',0);
 				}else{
 					$('input[name="'+e.data.input.attr('name')+'"]').each(function(){
