@@ -3,6 +3,7 @@ from framework import util
 from framework.controller import *
 import giveaminute.user as mUser
 import giveaminute.idea as mIdea
+import giveaminute.messaging as mMessaging
 
 class Twilio(Controller):
     
@@ -18,9 +19,6 @@ class Twilio(Controller):
         return self.not_found()
         
     def receive(self):
-        log.info("Twilio.on_receive" % web.input())
-        log.info("self.request('To'): %s" % self.request('To'))
-
         # TODO: could do more w/ validation
         if not sms.validate(self.request):
             return self.text('')
@@ -30,11 +28,22 @@ class Twilio(Controller):
         
         userId = mUser.findUserByPhone(self.db, phone)
         
-        return mIdea.createIdea(self.db, message, -1, 'sms', userId, None, phone)
+        if (not phone or not message):
+            log.error("*** sms received but idea not created.  missing phone or message")
+        else:
+            if (message.lower() == 'stop'):
+                return mMessaging.stopSMS(self.db, phone)        
+            else:
+                if (mIdea.createIdea(self.db, message, -1, 'sms', userId, None, phone)):
+                    mMessaging.sendSMSConfirmation(self.db, phone)
+                    
+                    return True
+                else:
+                    return False
 
 
     def on_receive(self):
-        log.info("Twilio.on_receive" % web.input())
+        log.info("Twilio.on_receive: %s" % web.input())
         log.info("self.request('To'): %s" % self.request('To'))
         if not sms.validate(self.request):
             return self.text('')

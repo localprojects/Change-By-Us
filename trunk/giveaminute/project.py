@@ -1050,7 +1050,23 @@ def getProjectIdeas(db, projectId, limit = 100):
                 ideas.append(smallIdea(item.idea_id, item.description, item.first_name, item.last_name, item.submission_type))
     except Exception, e:
         log.info("*** couldn't get project ideas")
-        log.error(e)            
+        log.error(e)        
+        
+def findInviteByPhone(db, phone):
+    data = []
+    
+    if (phone):
+        try:
+            sql = """select inv.project_invite_id, inv.project_id, i.idea_id, i.user_id, inv.created_datetime
+                        from project_invite inv
+                        inner join idea i on i.idea_id = inv.invitee_idea_id and i.phone = $phone"""
+            data = list(db.query(sql, {'phone':phone}))
+            
+        except Exception, e:
+            log.info("*** couldn't get invite data for phone %s" % phone)
+            log.error(e)
+    
+    return data    
                     
 def inviteByIdea(db, projectId, ideaId, message, inviterUser):
     if (createInviteRecord(db, projectId, message, inviterUser.id, ideaId)):
@@ -1058,13 +1074,28 @@ def inviteByIdea(db, projectId, ideaId, message, inviterUser):
             idea = mIdea.Idea(db, ideaId)
             project = Project(db, projectId)
             
-            return mMessaging.emailInvite(idea.data.idea_email, 
-                                          userName(inviterUser.firstName, inviterUser.lastName), 
-                                          projectId,
-                                          project.data.title,
-                                          project.data.description)
+            # IF message is not attached to a user account AND
+            # the idea was sent via sms AND
+            # the phone number has not previously received an invite
+            # send by SMS
+            # ELSE
+            # send by email
+            if (not idea.data.user_id and
+                idea.data.submission_type == 'sms' and
+                idea.data.phone):
+                if (len(findInviteByPhone(db, idea.data.phone)) == 1):
+                    return mMessaging.sendSMSInvite(db, idea.data.phone, projectId)
+                else:
+                    log.info("*** phone number %s already received an invite" % idea.data.phone)
+                    return True
+            else:
+                return mMessaging.emailInvite(idea.data.email, 
+                                              userName(inviterUser.firstName, inviterUser.lastName), 
+                                              projectId,
+                                              project.data.title,
+                                              project.data.description)
         except Exception, e:
-            log.info("*** couldn't get send email")
+            log.info("*** couldn't get send invite")
             log.error(e) 
             return False
     else:

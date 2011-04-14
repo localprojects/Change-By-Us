@@ -18,7 +18,7 @@ def reply(user, message):
     return ''
 
 
-def send(user, message_id, message):
+def send(phone, message):
     
     log.info("Sending sms...")    
     
@@ -31,7 +31,7 @@ def send(user, message_id, message):
         callback = Config.get('default_host')
     
     data = {    'From': settings['phone'],
-                'To': user.phone,
+                'To': phone,
                 'Body': message,
                 'StatusCallback': "%stwilio/status" % callback
                 }
@@ -46,10 +46,7 @@ def send(user, message_id, message):
         log.error(e)
         smsid = None
         status = "blocked"        
-    try:
-        Controller.get_db().query("UPDATE messages SET smsid=$smsid, status=$status WHERE id=$id", {'id': message_id, 'smsid': smsid, 'status': status})
-    except Exception, e:
-        log.error(e)
+
     return True
 
 

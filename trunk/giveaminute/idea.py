@@ -12,7 +12,8 @@ class Idea:
         
     def populateIdeaData(self):
         sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.email as idea_email, i.phone, i.num_flags,
-                        u.first_name, u.last_name, u.email as user_email
+                        u.first_name, u.last_name, u.email as user_email,
+                        coalesce(u.email, i.email) as email
                 from idea  i               
                 left join user u on u.user_id = i.user_id
                                 where idea_id = $id"""
