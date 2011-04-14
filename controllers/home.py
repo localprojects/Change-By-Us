@@ -14,16 +14,8 @@ import urllib2
 import json
 import hashlib
 
-fb_app_id = '177033235680785'
-
-tw_consumer_key = 's5Ex8SQqsxoWtrbcs1lkA'
-tw_consumer_secret = 'ztHbfXDfYAavLnpi9sXnvuVZLZ6UAnD5U5efyiqbI'
-
-tw_request_token_url = 'http://twitter.com/oauth/request_token'
-tw_access_token_url = 'http://twitter.com/oauth/access_token'
-tw_authenticate_url = 'http://twitter.com/oauth/authenticate'
-
-tw_consumer = oauth.Consumer(tw_consumer_key, tw_consumer_secret)
+tw_settings = Config.get('twitter')
+tw_consumer = oauth.Consumer(tw_settings['consumer_key'], tw_settings['consumer_secret'])
 tw_client = oauth.Client(tw_consumer)
 
 class Home(Controller):
@@ -143,7 +135,9 @@ class Home(Controller):
             
     def login_facebook(self):
     
-        cookiename = "fbs_%s" % fb_app_id
+        fb_settings = Config.get('facebook')
+    
+        cookiename = "fbs_%s" % fb_settings['app_id']
         fbcookie = web.cookies().get(cookiename) 
         entries = fbcookie.split("&")
         dc = {}
@@ -229,7 +223,7 @@ class Home(Controller):
     def login_twitter(self):
         # Step 1. Get a request token from Twitter.
             
-        resp, content = tw_client.request(tw_request_token_url, "GET")
+        resp, content = tw_client.request(tw_settings['request_token_url'], "GET")
             
         if resp['status'] != '200':
             raise web.seeother("/")
@@ -247,7 +241,7 @@ class Home(Controller):
     
         # Step 3. Redirect the user to the authentication URL.
         
-        url = "%s?oauth_token=%s&force_login=true" % (tw_authenticate_url, req_token['oauth_token'])
+        url = "%s?oauth_token=%s&force_login=true" % (tw_settings['authenticate_url'], req_token['oauth_token'])
         
         log.info("twitter login")
         log.info(s)
@@ -263,7 +257,7 @@ class Home(Controller):
         client = oauth.Client(tw_consumer, token)
     
         # Step 2. Request the authorized access token from Twitter.
-        resp, content = client.request(tw_access_token_url, "GET")
+        resp, content = client.request(tw_settings['access_token_url'], "GET")
         if resp['status'] != '200':
             raise web.seeother("/")
     
