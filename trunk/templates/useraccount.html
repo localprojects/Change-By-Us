@@ -18,10 +18,10 @@ Change by Us - User Account
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
 					<div class="thumb">
-						{% if d.template_data.user_activity.data.user.image_id %}
-							<img width='30' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
+						{% if d.template_data.user_activity.data.user.image_id > -1 %}
+							<img width='50' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
 						{% else %}
-							<img width='30' src="/static/images/thumb_genAvatar30.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+							<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
 						{% endif %}
 					</div>
 					<div class="user-info">
@@ -124,7 +124,7 @@ Change by Us - User Account
 													<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
 													{% endif %}
 												{% endif %}
-												<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> says &mdash;{% endif %}</cite>
+												<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> said &mdash;{% endif %}</cite>
 												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
 												<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
 											</div>
