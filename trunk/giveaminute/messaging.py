@@ -73,16 +73,22 @@ def emailResourceNotification(email, projectId, title, description, resourceName
     body = Emailer.render('email/resource_notification',
                         {'title':title, 'description':description, 'resource_name':resourceName, 'link':link},
                         suffix = 'txt')
-    try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['username'])  
-    except Exception, e:
-        log.info("*** couldn't send resource notification email")
-        log.error(e)
-        return False
+
+    ### WE DON'T WANT TO SEND THESE YET
+    log.info("*** pretend we sent a notification email to %s" % email)
+    log.info("*** body = %s" % body)
+    return True
+    
+#     try:
+#         return Emailer.send(email, 
+#                             subject, 
+#                             body,
+#                             from_name = emailAccount['from_name'],
+#                             from_address = emailAccount['username'])  
+#     except Exception, e:
+#         log.info("*** couldn't send resource notification email")
+#         log.error(e)
+#         return False
         
 # email deleted users
 def emailAccountDeactivation(email):
