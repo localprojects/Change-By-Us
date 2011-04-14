@@ -206,7 +206,7 @@ class Home(Controller):
                 self.session.invalidate()
 
         if created_user:
-            return self.render('join', {'new_account_via_facebook': True}) # go to TOS
+            return self.render('join', {'new_account_via_facebook': True, 'facebook_data': profile}) # go to TOS
         else:
             raise web.seeother("/") # user had already signed up with us before
      
@@ -214,6 +214,8 @@ class Home(Controller):
         
         s = SessionHolder.get_session()
         profile = s.profile
+        
+        # profile = self.request('facebook_data')
         
         passw = hashlib.sha224(profile["email"]).hexdigest()[:10]
         uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
@@ -309,7 +311,7 @@ class Home(Controller):
                 self.session.invalidate()
     
         if created_user:
-            return self.render('join', {'new_account_via_twitter': True}) # go to TOS
+            return self.render('join', {'new_account_via_twitter': True, 'twitter_data': access_token}) # go to TOS
         else:
             raise web.seeother("/")
             
@@ -318,6 +320,8 @@ class Home(Controller):
         
         s = SessionHolder.get_session()
         access_token = s.tw_access_token
+       
+        #access_token = self.request('twitter_data')
         
         email = self.request('email')
         firstname = self.request('firstname')
