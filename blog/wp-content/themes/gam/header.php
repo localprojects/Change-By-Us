@@ -57,7 +57,7 @@
 
 				<ul class="navbar clearfix">
 					<li class="home">
-						<a href="/"><span>Change by Us</span></a>
+						<a href="http://ec2-50-16-1-176.compute-1.amazonaws.com/"><span>Change by Us</span></a>
 					</li>
 					<!--<li class="simplicity">
 						<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml" target="_blank"><span>NYC SimpliCity</span></a>

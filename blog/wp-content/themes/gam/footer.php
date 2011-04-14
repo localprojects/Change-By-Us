@@ -30,7 +30,7 @@
 					<ul class="sitemap">
 						<li><a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/about'>About Change by Us</a></li>
 						<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
-						<li><a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/blog'>News</a></li>
+						<li><a href='http://ec2-184-73-83-52.compute-1.amazonaws.com/'>News</a></li>
 						<li><a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/tou#community-policy'>Community Policy</a></li>
 						<li><a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/tou'>Terms of Service</a></li>
 						<li><a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/tou#privacy'>Privacy Policy</a></li>
