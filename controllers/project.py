@@ -264,7 +264,16 @@ class Project(Controller):
             log.error("*** resource submitted missing an id")
             return False
         else:
-            return mProject.addResourceToProject(self.db, projectId, projectResourceId)
+            if (mProject.addResourceToProject(self.db, projectId, projectResourceId)):
+                # TODO do we need to get the whole project here?    
+                project = mProject.Project(self.db, projectId)
+                res = mProjectResource.ProjectResource(self.db, projectResourceId)
+                
+                if (not mMessaging.emailResourceNotification(res.data.contact_email, projectId, project.data.title, project.data.description, res.data.title)):
+                    log.error("*** couldn't email resource id %s" % projectResourceId)
+            else:
+                log.error("*** couldn't add resource %s to project %s" % (projectResourceId, projectId))
+                return False
             
     def removeResource(self):
         projectId = self.request('project_id')
