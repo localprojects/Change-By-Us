@@ -291,7 +291,8 @@ class Home(Controller):
                                         contact_name = contact_name,
                                         contact_email = contact_email,
                                         created_datetime = None,
-                                        image_id = image_id)
+                                        image_id = image_id,
+                                        is_hidden = 1)
             
             return True
         except Exception,e:
