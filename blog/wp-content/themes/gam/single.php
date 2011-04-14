@@ -31,7 +31,6 @@ get_header();
 						</div>
 					</div><!-- end post -->
 
-					<?php comments_template( '', true ); ?>
                 	<?php include ( TEMPLATEPATH . '/navigation.php' ); ?>
 					<?php endwhile; else : ?>
 					

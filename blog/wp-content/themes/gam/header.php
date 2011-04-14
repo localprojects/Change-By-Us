@@ -19,8 +19,8 @@
 	<meta name="generator" content="WordPress" />
 	<meta name="framework" content="WP Framework" />
 	
-	<link rel="shortcut icon" href="<?php echo IMAGES . '/favicon.ico'; ?>"/>
-	<!-- <link rel="apple-touch-icon" href="<?php echo IMAGES . '/apple-touch-icon.png'; ?>"/> -->
+	<link rel="icon" href="/favicon.ico"/>
+	<link rel="shortcut icon" href="/favicon.ico"/>
 	
 	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
 	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
@@ -57,42 +57,22 @@
 
 				<ul class="navbar clearfix">
 					<li class="home">
-						<a href="/"><span>NYC SimpliCity | Give A Minute</span></a>
+						<a href="/"><span>Change by Us</span></a>
 					</li>
+					<!--<li class="simplicity">
+						<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml" target="_blank"><span>NYC SimpliCity</span></a>
+					</li>-->
 					<li class="news-about">
-						<a href='/blog'>News</a>
-						<a href='/about'>About</a>
+						<a href='/'>News</a>
+						<a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/about'>About</a>
 					</li>
 					<li class="search">
-						<form action='/home' method='GET'>
-							<input type='text' name='query' />
-							<input type='submit' name='hd-search-btn' value='Search' />
+						<form action='http://ec2-50-16-1-176.compute-1.amazonaws.com/search' method='GET'>
+							<input type='text' name='terms' value="" />
+							<input type='submit' value='Search' />
 						</form>
 					</li>
-					<li class="userland">
-						<div class="join"><a href='/join'>Join</a></div>
-						<div class='login'><a href='/login'>Login</a></div>
-						<div class='messages has-messages'><a href='/useraccount#messages'>&nbsp;</a></div>
-						<div class='username'>
-							<a href='/useraccount'><span class="unbold">Hi, </span>Xxxxxxx!</a>
-							<div class="dropdown">
-								<div class="membrane">
-									<a href="/useraccount">Account</a>
-									<a href="">Log out</a>
-								</div>
-							</div>
-						</div>
-						<div class='myprojects'>
-							<a href='/useraccount'><span class="unbold">My </span>Projects</a>
-							<div class="dropdown">
-								<div class="membrane">
-									<a href="/project">More Trees in the South Bronx</a>
-									<a href="/project">Start a garden on 161st and Melrose Ave</a>
-								</div>
-							</div>
-						</div>
-					</li>
-				</ul>
+				</ul><!--end navbar-->
 
 			</div>
 		</div>

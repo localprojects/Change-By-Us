@@ -42,7 +42,7 @@
 							<h3>We Love Feedback</h3>
 						</div>
 						<div class="bd">
-							Do you want to comment on a post? <a href="http://localhost:9090/feedback">Send it to us</a>
+							Do you want to comment on a post? <a href="http://ec2-50-16-1-176.compute-1.amazonaws.com/feedback">Send it to us</a>
 						</div>
 					</div>
 					<div class="box blog-archive">
