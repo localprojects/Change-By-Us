@@ -3,6 +3,7 @@ import framework.util as util
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
 import giveaminute.projectResource as mProjectResource
+import giveaminute.messaging as mMessaging
 import json
 
 class Project(Controller):
@@ -131,12 +132,14 @@ class Project(Controller):
             return False
         else:
             isJoined = mProject.join(self.db, projectId, self.user.id)
-                    
+            
             if (isJoined):
+                project = mProject.Project(self.db, projectId)
+            
                 # create the user's "hello there" idea and add to project
                 newIdeaId = mIdea.createIdea(self.db, 
                                             description, 
-                                            mProject.getProjectLocation(self.db, projectId).location_id,
+                                            project.data.location_id,
                                             'web',
                                             self.user.id,
                                             self.user.email)
@@ -152,7 +155,15 @@ class Project(Controller):
                     log.error("*** couldn't add invited idea to project for user %s on joining project %s" % (self.user.id, projectId))
                 
                 # add a message to the queue about the join
-                message = 'New Member! Your group now has %s total!' % mProject.getNumMembers(self.db, projectId)
+                message = 'New Member! Your group now has %s total!' % project.data.num_members
+                
+                # email admin
+                if (not mMessaging.emailProjectJoin(project.data.owner_email, 
+                                                    projectId, 
+                                                    project.data.title, 
+                                                    self.user.id, 
+                                                    mProject.userName(self.user.firstName, self.user.lastName))):
+                    log.error("*** couldn't email admin on user_id = %s joining project %s" % (self.user.id, projectId))
                 
                 if (not mProject.addMessage(self.db, 
                                             projectId, 
@@ -176,15 +187,11 @@ class Project(Controller):
         elif (not projectId):
             log.error("***invite w/o project id")
             return False
-        elif (util.strNullOrEmpty(message)):
-            log.error("*** invite submitted w/o message")
-            message = ""
-            #return False
         else:
             if (ideaId):
-                return mProject.inviteByIdea(self.db, projectId, ideaId, message, self.user.id)
+                return mProject.inviteByIdea(self.db, projectId, ideaId, message, self.user)
             elif (emails):
-                return mProject.inviteByEmail(self.db, projectId, emails.split(','), message, self.user.id)
+                return mProject.inviteByEmail(self.db, projectId, emails.split(','), message, self.user)
             else:
                 log.error("*** invite w/o idea or email")
                 return False
@@ -200,6 +207,15 @@ class Project(Controller):
             isEndorsed = mProject.endorse(self.db, projectId, self.user.id)
             
             if (isEndorsed):
+                # TODO do we need to get the whole project here?
+                project = mProject.Project(self.db, projectId)
+            
+                # email admin
+                if (not mMessaging.emailProjectEndorsement(project.data.owner_email, 
+                                                    project.data.title, 
+                                                    "%s %s" % (self.user.firstName, self.user.lastName))):
+                    log.error("*** couldn't email admin on user_id = %s endorsing project %s" % (self.user.id, projectId))
+            
                 # add a message to the queue about the join
                 message = 'Congratulations! Your group has now been endorsed by %s %s.' % (self.user.firstName, self.user.lastName)
                 
@@ -208,7 +224,7 @@ class Project(Controller):
                                             message, 
                                             'endorsement', 
                                             self.user.id)):
-                    log.error("*** new message not created for user %s on endorsing project %s" % (self.user.id, projectId))    
+                    log.error("*** new message not created for user %s on endorsing project %s" % (self.user.id, projectId))
             
             return isEndorsed
             

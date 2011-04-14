@@ -247,7 +247,8 @@ def addInvitedIdeaToProject(db, projectId, userId):
         sql = """insert into project__idea (project_id, idea_id)
                   select $projectId, inv.invitee_idea_id from project_invite inv
                     inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id = $userId
-                    where project_id = $projectId"""    
+                    where project_id = $projectId
+                    limit 1"""    
         db.query(sql, {'projectId':projectId, 'userId':userId})
         
         return True
