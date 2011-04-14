@@ -294,11 +294,11 @@ Change by Us - User Account
 								<div class="social-networking">
 									<div class="social-connect-wrapper">
 										<a href="" class="connect-facebook"></a>
-										<a href="" class="disconnect">Disconnect</a>
+										<a href="" class="disconnect disconnect-facebook">Disconnect</a>
 									</div>
 									<div class="social-connect-wrapper">
 										<a href="/login_twitter" class="connect-twitter"></a>
-										<a href="" class="disconnect">Disconnect</a>
+										<a href="" class="disconnect disconnect-twitter">Disconnect</a>
 									</div>
 								</div>
 							</div>
@@ -418,10 +418,40 @@ Change by Us - User Account
      
      {% if d.connected_fb %}
         $(".connect-facebook").closest(".social-networking").addClass("facebook-connected");
+        
+        $(".disconnect-facebook").click(function(event){
+            
+            event.preventDefault();
+            
+            $.getJSON("/disconnect_facebook", function(data){
+             
+                if(data.success)
+                {
+                    $(".connect-facebook").closest(".social-networking").removeClass("facebook-connected");
+                }   
+                
+            });
+        });
+        
      {%endif%}
     
      {% if d.connected_tw %}
         $(".connect-twitter").closest(".social-networking").addClass("twitter-connected");
+        
+        $(".disconnect-twitter").click(function(event){
+            
+            event.preventDefault();
+            
+            $.getJSON("/disconnect_twitter", function(data){
+             
+                if(data.success)
+                {
+                    $(".connect-twitter").closest(".social-networking").removeClass("twitter-connected");
+                }   
+                
+            });
+        });
+        
      {%endif%}
         
     });
