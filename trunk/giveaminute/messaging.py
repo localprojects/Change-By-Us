@@ -61,12 +61,12 @@ def emailProjectEndorsement(email, title, leaderName):
         log.error(e)
         return False
         
-def emailResourceNotifiction(email, projectId, title, resourceName):
+def emailResourceNotification(email, projectId, title, description, resourceName):
     emailAccount = Config.get('email')
     subject = "A project on Changeby.us has added %s as a resource" % resourceName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
     body = Emailer.render('email/resource_notification',
-                        {'title':title, 'resource_name':resourceName, 'link':link},
+                        {'title':title, 'description':description, 'resource_name':resourceName, 'link':link},
                         suffix = 'txt')
     try:
         return Emailer.send(email, 
