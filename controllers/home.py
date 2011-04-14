@@ -44,6 +44,14 @@ class Home(Controller):
             return self.login_facebook() 
         elif (action == 'twitter_callback'):
             return self.tw_authenticated()   
+        elif (action == 'login_twitter_create'):
+            return self.login_twitter_create()   
+        elif (action == 'login_facebook_create'):
+            return self.login_facebook_create()
+        elif (action == 'disconnect_facebook'):
+            return self.disconnect_facebook()   
+        elif (action == 'disconnect_twitter'):
+            return self.disconnect_twitter()      
         elif (action == 'tempupload'):
             return self.showTempUpload()                                  
         else:
@@ -134,6 +142,7 @@ class Home(Controller):
             return False
             
     def login_facebook(self):
+    
         cookiename = "fbs_%s" % fb_app_id
         fbcookie = web.cookies().get(cookiename) 
         entries = fbcookie.split("&")
@@ -151,46 +160,70 @@ class Home(Controller):
         associated_user = -1
         
         created_user = False
+        created_facebook_user = False
+        # do we already have fb data for this user? -> log them in
         if len(res) == 1:
             facebook_user = res[0]
-            associated_user = facebook_user.user_id
+            self.session.user_id = facebook_user.user_id
+            self.session.invalidate()
 
         else:
-            # When creating the user I just use their screen_name@twitter.com
-            # for their email and the oauth_token_secret for their password.
-            # These two things will likely never be used. Alternatively, you 
-            # can prompt them for their email here. Either way, the password 
-            # should never be used.
-            passw = hashlib.sha224(profile["email"]).hexdigest()[:10]
-            
             email = profile["email"]
             check_if_email_exists = "select * from user where email = '%s'" % str(email)
             users_with_this_email = list(self.db.query(check_if_email_exists))
             email_exists = len(users_with_this_email)
             
-            # see if we have a use with this email
+            # see if we have a user with this email on a regular account
             if email_exists == 1:
                 uid = users_with_this_email[0].user_id
-            else:
+            else: # no regular account with this email
+            
                 # see if the user is logged in
                 s = SessionHolder.get_session()
-                if s.user_id:
+                
+                make_new_user = True
+                try:
                     uid = s.user_id
-                else:
-                    uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+                    if uid is not None:
+                        make_new_user = False # user is logged in
+                except AttributeError:
+                    pass
+                    #uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+                
+                # not logged in, so make a new user
+                if make_new_user:
+                    created_user = True
+                    self.session.profile = profile
+                    self.session._changed = True
+                    SessionHolder.set(self.session)
             
-            self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
-            associated_user = uid
-            created_user = True
+            if not created_user: # we can associate an existing account with this data
+                self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
+                associated_user = uid
+                created_facebook_user = True
         
-        self.session.user_id = associated_user
-        self.session.invalidate()
+                self.session.user_id = associated_user
+                self.session.invalidate()
 
         if created_user:
-            raise web.seeother("/useraccount")
+            return self.render('join', {'new_account_via_facebook': True}) # go to TOS
         else:
-            raise web.seeother("/")
+            raise web.seeother("/") # user had already signed up with us before
+     
+    def login_facebook_create(self):
         
+        s = SessionHolder.get_session()
+        profile = s.profile
+        
+        passw = hashlib.sha224(profile["email"]).hexdigest()[:10]
+        uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+        self.db.insert('facebook_user', user_id = uid, facebook_id = profile['id'])
+        
+        self.session.user_id = uid
+        self.session.invalidate()
+        
+        raise web.seeother("/")
+       
     def login_twitter(self):
         # Step 1. Get a request token from Twitter.
             
@@ -242,26 +275,76 @@ class Home(Controller):
         associated_user = -1
         
         created_user = False
+        created_twitter_user = False
+        
+        # do we already have twitter data for this user?
         if len(res) == 1:
             twitter_user = res[0]
-            associated_user = twitter_user.user_id
+            self.session.user_id = twitter_user.user_id
+            self.session.invalidate()
 
-        else:
-            if s.user_id:
+        else: # no existing twitter data
+            # is the user logged in with a regular or FB account?
+            make_new_user = True
+            try:
                 uid = s.user_id
-            else:
-                uid = mUser.createUser(self.db, '%s@twitter.com' % access_token['screen_name'], access_token['oauth_token_secret'], access_token['screen_name'])
-            self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
-            associated_user = uid
-            created_user = True
+                if uid is not None:
+                    make_new_user = False # user is logged in
+            except AttributeError:
+                pass
+                #uid = mUser.createUser(self.db, profile["email"], passw, profile["first_name"], profile["last_name"])
+            
+            if make_new_user: # no existing account data, make a new one after TOS
+                created_user = True
+                self.session.tw_access_token = access_token
+                self.session._changed = True
+                SessionHolder.set(self.session)
+            
+            else: # no twitter data, but logged in, associate the accounts
+                self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
+                associated_user = uid
+                created_twitter_user = True
         
-        self.session.user_id = associated_user
-        self.session.invalidate()
+                self.session.user_id = associated_user
+                self.session.invalidate()
     
         if created_user:
-            raise web.seeother("/useraccount")
+            return self.render('join', {'new_account_via_twitter': True}) # go to TOS
         else:
             raise web.seeother("/")
+            
+            
+    def login_twitter_create(self):
+        
+        s = SessionHolder.get_session()
+        access_token = s.tw_access_token
+        
+        email = self.request('email')
+        firstname = self.request('firstname')
+        lastname = self.request('lastname')
+        uid = mUser.createUser(self.db, email, access_token['oauth_token_secret'], firstname, lastname)
+        self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
+        
+        self.session.user_id = uid
+        self.session.invalidate()
+        
+        raise web.seeother("/")
+        
+    def disconnect_twitter(self):
+    
+        uid = self.session.user_id
+        
+        self.db.delete("twitter_user", "user_id = %d" % uid)
+        
+        return json.dumps({'success':True})
+        
+    def disconnect_facebook(self):
+    
+        uid = self.session.user_id
+        
+        self.db.delete("facebook_user", "user_id = %d" % uid)
+        
+        return json.dumps({'success':True})
             
     def logout(self):
         self.session.kill()
