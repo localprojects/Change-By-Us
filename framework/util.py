@@ -428,4 +428,4 @@ def check_bad_words(data):
     return False
     
 def strNullOrEmpty(s):
-    return not s or len(s) == 0
+    return not s or len(s.strip()) == 0
