@@ -257,22 +257,34 @@ Change by Us - Add Resource
 						tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
 						var linksCount = 1;
 						dom.find('.add-another').click(function() {
-							tc.jQ('input#links'+linksCount).after('<a class="deletelink" id="'+(linksCount + 1)+'">&ndash;</a><input type="text" class="links always-focused" name="otherlinks" id="links'+(linksCount + 1)+'" />');
+							dom.find('input#links'+linksCount).after('<a class="deletelink" id="'+(linksCount + 1)+'">&ndash;</a><input type="text" class="links always-focused" name="otherlinks" id="links'+(linksCount + 1)+'" />');
 							dom.find('.deletelink').unbind('click').bind('click',function(e) {
 								dom.find('#links'+tc.jQ(this).attr('id')).remove();
 								tc.jQ(this).remove();
 							});
 							linksCount++;
+							var keywords;
+							keywords = "";
+							
+							tc.util.dump(keywords);
 						});
 					},
 					finish:function(merlin,dom){
+						var keywords;
+						merlin.current_step.dom.find('input[name=otherlinks]').each(function(i,j){
+							if(j.value && j.value.length){
+								keywords += j.value + ', ';
+							}
+						});
+						
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							title:merlin.current_step.inputs.name.dom.val(),
 							description:merlin.current_step.inputs.description.dom.val(),
 							physical_address:merlin.current_step.inputs.address.dom.val(),
+							location_id:merlin.current_step.step_data.locationDropdown.getLocation(),
 							url:merlin.current_step.inputs.web.dom.val(),
 							other_urls:merlin.current_step.inputs.links.dom.val(),
-							keywords:merlin.current_step.inputs.keywords.dom.val(),
+							keywords:keywords,
 							contact_email:merlin.current_step.inputs.contact.dom.val()
 						});
 					}
