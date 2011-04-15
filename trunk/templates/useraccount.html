@@ -207,11 +207,11 @@ Change by Us - User Account
 							<div class="bd">
 								<ul class="checklist">
 									<li>
-										<input type="radio" name="pref-emails-option" id="pref-emails-daily" {% if d.template_data.user.data.email_notification is sameas 'digest' %}checked="true"{% endif %}/>
+										<input type="radio" name="pref-emails-option" id="pref-emails-daily"/>
 										<label for="pref-emails-daily">Email daily digest</label>
 									</li>
 									<li>
-										<input type="radio" name="pref-emails-option" id="pref-no-emails" {% if d.template_data.user.data.email_notification is sameas 'digest' %}checked="false"{% else %}checked="true"{% endif %}/>
+										<input type="radio" name="pref-emails-option" id="pref-no-emails"/>
 										<label for="pref-no-emails">No emails</label>
 									</li>
 								</ul>
@@ -488,9 +488,26 @@ Change by Us - User Account
 					selector:'.messages-view',
 					current_offset: {{ d.template_data.user_activity.data.messages|length }}-1,
 					n_to_fetch:5,
+					has_run_init: false,
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
-
+						
+						if (!merlin.current_step.has_run_init) {
+							(function() {
+								var checklist, pref; 
+								checklist = tc.jQ(".messages-view .preferences .checklist");
+								pref = app.app_page.user.email_notification;
+								switch (pref) {
+									case "digest":
+										checklist.find("label[for='pref-emails-daily']").click();
+										break;
+									case "none":
+										checklist.find("label[for='pref-no-emails']").click();
+								}
+							}());
+							merlin.current_step.has_run_init = true;
+						}
+						
 						//Click event to handle "prettyCheckbox" custom check boxes
 						//This event is namespaced to avoid collisions with the click events bound by $.fn.prettyCheckboxes()
 						dom.find(".preferences .checklist .prettyCheckbox.radio").unbind("click.message_prefs")
@@ -599,6 +616,7 @@ Change by Us - User Account
 		});
 		
 		{% if d.template_data.user %}
+		
 			app.components.account_merlin = new tc.merlin(app,{
 				name: "account-info",
 				dom:tc.jQ(".account-view.merlin"),
