@@ -13,6 +13,8 @@ import oauth2 as oauth
 import urllib2
 import json
 import hashlib
+import feedparser
+import time
 
 tw_settings = Config.get('twitter')
 tw_consumer = oauth.Consumer(tw_settings['consumer_key'], tw_settings['consumer_secret'])
@@ -362,16 +364,29 @@ class Home(Controller):
         return True    
         
     def getNewsItems(self):
-        # TODO just slugging in temp data so UI can be wired in
-        data = [{'title':"New grants program announced!",
-               'text':"The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform neighborhoods. (1st temp)",
-               'link':"http://ec2-184-73-83-52.compute-1.amazonaws.com/?p=7",
-               'datetime':"2011-04-15 18:36:22"},
-              {'title':"Change by Us generates new ideas for New York City in 2011",
-               'text':"The city is happy to announce that it received thousands of ideas this year! (2nd temp)",
-               'link':"http://ec2-184-73-83-52.compute-1.amazonaws.com/?p=8",
-               'datetime':"2011-04-03 12:59:00"}]
+        MORE_TAG = '<span id="more'
+        data = []
 
+        try:
+            feed = feedparser.parse("%s?feed=rss2" % Config.get('blog_host'))
+            
+            # is there an easier way to sort rss entries by tag?
+            filtered = [item for item in feed.entries if (hasattr(item, 'tags') and (len([t for t in item.tags if t.term == 'featured']) > 0))]
+            
+            for entry in filtered[0:2]:
+                if (MORE_TAG in entry.content[0].value):
+                    text = entry.content[0].value.split(MORE_TAG)[0]
+                else:
+                    text = ' '.join(entry.content[0].value.split()[0:20]) + "..."
+            
+                data.append({'title':entry.title,
+                            'datetime':time.strftime("%m.%d.%Y", entry.updated_parsed),
+                            'link':entry.links[0].href,
+                            'text':util.strip_html(text)})
+        except Exception, e:
+            log.info("*** couldn't get rss feed for news items")
+            log.error(e)
+                        
         return data
         
     def addResource(self):
