@@ -96,9 +96,11 @@ class Home(Controller):
 
         locations = dict(data = locations, json = json.dumps(locations))
         allIdeas = dict(data = allIdeas, json = json.dumps(allIdeas))
+        news = self.getNewsItems()
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
+        self.template_data['news'] = news
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
@@ -348,6 +350,19 @@ class Home(Controller):
         self.session.kill()
 
         return True    
+        
+    def getNewsItems(self):
+        # TODO just slugging in temp data so UI can be wired in
+        data = [{'title':"New grants program announced!",
+               'text':"The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform neighborhoods. (1st temp)",
+               'link':"http://ec2-184-73-83-52.compute-1.amazonaws.com/?p=7",
+               'datetime':"2011-04-15 18:36:22"},
+              {'title':"Change by Us generates new ideas for New York City in 2011",
+               'text':"The city is happy to announce that it received thousands of ideas this year! (2nd temp)",
+               'link':"http://ec2-184-73-83-52.compute-1.amazonaws.com/?p=8",
+               'datetime':"2011-04-03 12:59:00"}]
+
+        return data
         
     def addResource(self):
         title = self.request('title')
