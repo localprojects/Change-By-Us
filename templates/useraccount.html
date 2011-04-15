@@ -490,35 +490,39 @@ Change by Us - User Account
 					n_to_fetch:5,
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
-						
-						dom.find(".preferences .checklist input[type='radio']").unbind("change").bind("change", {merlin:merlin}, function(e, d) {
-							var pref;
-							switch (e.target.id) {
-								case "pref-emails-daily":
-									pref = "digest";
-									break;
-								case "pref-no-emails":
-									pref = "none";
-									break;
-							}
-							if (!pref) {
-								return false;
-							}
-							tc.jQ.ajax({
-								type:"POST",
-								url:"/useraccount/messageprefs",
-								data:{
-									pref: pref
-								},
-								context:e.data.merlin,
-								dataType:"text",
-								success: function(data, ts, xhr) {
-									if (data == "False") {
-										return false;
-									}
+
+						//Click event to handle "prettyCheckbox" custom check boxes
+						//This event is namespaced to avoid collisions with the click events bound by $.fn.prettyCheckboxes()
+						dom.find(".preferences .checklist .prettyCheckbox.radio").unbind("click.message_prefs")
+						   .bind("click.message_prefs", {merlin:merlin}, function(e, d) {
+								var pref;
+								switch (tc.jQ(this).attr("for")) {
+									case "pref-emails-daily":
+										pref = "digest";
+										break;
+									case "pref-no-emails":
+										pref = "none";
+										break;
 								}
+								if (!pref) {
+									tc.util.log("error parsing email pref", "warn");
+									return false;
+								}
+								tc.jQ.ajax({
+									type:"POST",
+									url:"/useraccount/messageprefs",
+									data:{
+										pref: pref
+									},
+									context:e.data.merlin,
+									dataType:"text",
+									success: function(data, ts, xhr) {
+										if (data == "False") {
+											return false;
+										}
+									}
+								});
 							});
-						});
 						
 						dom.find(".load-more a").unbind("click").bind("click", {merlin:merlin, dom:dom}, function(e, d) {
 							var $t;
@@ -662,6 +666,7 @@ Change by Us - User Account
 										window.location.hash = "account-info,account-details-error";
 										return false;
 									}
+									
 									tc.timer(2000, function() {
 										window.location.assign("/useraccount#account-info,edit-account-details");
 									});
