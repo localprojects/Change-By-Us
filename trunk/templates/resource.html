@@ -55,6 +55,16 @@ Change by Us - Add Resource
 							<label>Address</label>
 							<input type="text" class='address'/>
 						</div>
+						<div class="row row-neighborhood">
+							<label>Neighborhood</label>
+							<span class="dropdown-indicator"></span>
+							<input type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
+							<div class="location-hood-list" style="display: none">
+								<ul>
+								</ul>
+							</div>
+							<span class="error" style="display: none">Please enter a neighborhood or borough.</span>
+						</div>
 						<div class="row">
 							<label>Web Address</label>
 							<input type="text" class='web'/>
@@ -199,6 +209,11 @@ Change by Us - Add Resource
 							selector:'input.address',
 							validators:['min-3','max-75','required'],
 							hint:''
+						},
+						location:{
+							selector:'.location-group',
+							validators:tc.locationDropdown.validator,
+							hint:'Start typing neighborhood or borough...'
 						},
 						web:{
 							selector:'input.web',
