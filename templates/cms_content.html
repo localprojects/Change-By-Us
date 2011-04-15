@@ -306,16 +306,16 @@ Change by Us - CMS Content
 		</div>
 		<div class="bd">
 			<div class="west">
-				<h3 class="serif">Resource Name</h3>
-				<p class="serif"><a href="">www.resourcewebsite.org</a><br/> Given Location</p>
-				<div class="tags">
+				<h3 class="serif resource-name">Resource Name</h3>
+				<!--<p class="serif"><a class='resource-link' href=""></a><br/> Given Location</p>-->
+				<!--<div class="tags">
 					<h4>Tags</h4>
 					<span class="serif">lorem, ipsum, sit, eros</span>
-				</div>
+				</div>-->
 			</div>
 			<div class="mission">
 				<h4>Mission</h4>
-				<span class="serif"><p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci.</p></span>
+				<span class="serif"><p class='description'></p></span>
 			</div>
 		</div>
 	</li>
@@ -713,7 +713,7 @@ Change by Us - CMS Content
 							context:e.data.app,
 							dataType:"text",
 							success: function(data, ts, xhr) {
-								var d, temptbody, tempitem;
+								var d, temptbody, tempitem, itemsheight;
 								try {
 									d = tc.jQ.parseJSON(data);
 								} catch(e) {current_step
@@ -735,21 +735,19 @@ Change by Us - CMS Content
 											</ul>\
 										</li>');
 								}
+								itemsheight = 0;
 								for(i in d){
 									tempitem = this.components.resources_pagination.data.temp_item_source.clone().removeClass('template-content').show();
-									//if(d[i].owner_first_name && d[i].owner_last_name){
-									//	tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
-									//}
-									//tempitem.find('span.title').text(d[i].project_title);
-									//tempitem.find('span.time').text(d[i].item_created_datetime);
-									//tempitem.find('p.description').text(d[i].item_description);
+									tempitem.find('h3.resource-name').text(d[i].title);
+									tempitem.find('a.resource-link').attr('href',d[i].url).text(d[i].url);
+									tempitem.find('p.description').text(d[i].description);
 									tempitem.find('a.control-ok').attr('href','#ok-resource,'+d[i].project_resource_id);
 									tempitem.find('a.control-delete').attr('href','#remove-resource,'+d[i].project_resource_id);
 									this.components.resources_pagination.data.offset++;
-									tc.util.dump(tempitem);
-									tc.util.dump(this.components.resources_pagination.data.current_page);
 									this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
+									itemsheight += (tempitem.height() + 30);
 								}
+								this.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+100)+'px')
 								this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
 								this.components.resources_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
 							}
