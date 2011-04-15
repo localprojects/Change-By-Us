@@ -173,36 +173,23 @@ Change by Us - CMS Content
 				<div class="hd clearfix">
 					<div class="pagination-controls">
 						<span class="control">
-							<a class="prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
-							<a class="next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							<a class="resources-carousel-prev prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+							<a class="resources-carousel-next next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
 						</span>
 					</div>
 				</div>
 				<div class="bd">
-					<ul class="items pending-resources-stack">
-						<li class="item-box clearfix">
-							<div class="hd">
-								<div class="controls">
-									<a href="#" class="control-approve">Approve</a>
-									<a href="#" class="control-delete">Delete</a>
-								</div>
+					<div class="carousel resources">
+						<div class="scrollable">
+								<ul class="items pending-resources-stack">
+									<li class="flagged-content-carousel-item clearfix spinner-message">
+										<ul class="items warning-list-stack">
+											<li><p>Loading...</p></li>
+										</ul>
+									</li>
+								</ul>
 							</div>
-							<div class="bd">
-								<div class="west">
-									<h3 class="serif">Resource Name</h3>
-									<p class="serif"><a href="">www.resourcewebsite.org</a><br/> Given Location</p>
-									<div class="tags">
-										<h4>Tags</h4>
-										<span class="serif">lorem, ipsum, sit, eros</span>
-									</div>
-								</div>
-								<div class="mission">
-									<h4>Mission</h4>
-									<span class="serif"><p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci.</p></span>
-								</div>
-							</div>
-						</li>
-					</ul>
+						</div>
 				</div>
 			</div>
 		</div>
@@ -310,6 +297,29 @@ Change by Us - CMS Content
 		</div>
 	</li>
 	
+	<li class="item-box clearfix resource-box template-content">
+		<div class="hd">
+			<div class="controls">
+				<a href="#" class="control-approve">Approve</a>
+				<a href="#" class="control-delete">Delete</a>
+			</div>
+		</div>
+		<div class="bd">
+			<div class="west">
+				<h3 class="serif">Resource Name</h3>
+				<p class="serif"><a href="">www.resourcewebsite.org</a><br/> Given Location</p>
+				<div class="tags">
+					<h4>Tags</h4>
+					<span class="serif">lorem, ipsum, sit, eros</span>
+				</div>
+			</div>
+			<div class="mission">
+				<h4>Mission</h4>
+				<span class="serif"><p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci.</p></span>
+			</div>
+		</div>
+	</li>
+	
 	<div class="template-content modal-content confirm-delete content-delete">
 		<div class="step">
 			<h2><strong>Delete</strong> this <span class='item-type-name'></span>?</h2>
@@ -398,7 +408,7 @@ Change by Us - CMS Content
 					selector:'#warning-list',
 					init:function(merlin,dom){
 						tc.jQ('.headlands .tabs li.warning-list').addClass('active').siblings().removeClass('active');
-						build_carousel(merlin.app);
+						build_warning_carousel(merlin.app);
 						window.location.hash = 'warning-content,ideas';
 					}
 				},
@@ -406,6 +416,7 @@ Change by Us - CMS Content
 					selector:'#pending-resources',
 					init:function(merlin,dom){
 						tc.jQ('.headlands .tabs li.pending-resources').addClass('active').siblings().removeClass('active');
+						build_resources_carousel(merlin.app);
 					}
 				},
 				'sitemetrics':{
@@ -640,13 +651,104 @@ Change by Us - CMS Content
 		};
 		
 		
-		function build_carousel(app){
+		function build_resources_carousel(app){
+			var data, fn;
+			
+			if(app.components.resources_pagination){
+				return;
+			}
+				
+			app.components.resources_pagination = new tc.carousel({
+				element: tc.jQ(".resources.carousel"),
+				next_button: tc.jQ('.resources-carousel-next'),
+				prev_button: tc.jQ('.resources-carousel-prev'),
+				scrollable: {
+					items: ".items",
+					speed: 300,
+					circular: false
+				}
+			});
+			
+			app.components.resources_pagination.data = {
+				current_page:null,
+				n_to_fetch: 10,
+				offset:0,
+				temp_item_source:tc.jQ('.template-content.resource-box')
+			};
+			
+			
+			if(app.components.resources_pagination){
+				app.components.resources_pagination.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
+					e.data.app.components.resources_pagination.data.current_page = e.data.app.components.resources_pagination.carousel.getItems().eq(e.data.app.components.resources_pagination.carousel.getIndex());
+					if(!e.data.app.components.resources_pagination.data.current_page.hasClass('loaded')){
+						e.data.app.components.resources_pagination.data.current_page.addClass('loaded');
+						tc.jQ.ajax({
+							type:"GET",
+							url:"/admin/resource/getunreviewed",
+							data:{
+								n_messages: e.data.app.components.resources_pagination.data.n_to_fetch,
+								offset: e.data.app.components.resources_pagination.data.offset
+							},
+							context:e.data.app,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								var d, temptbody, tempitem;
+								try {
+									d = tc.jQ.parseJSON(data);
+								} catch(e) {current_step
+									tc.util.log("/admin/resource/getunreviewed: json parsing error", "warn");
+									return;
+								}
+								this.components.resources_pagination.data.current_page.children('ul').children().remove();
+								if(!d.length && this.components.resources_pagination.data.offset > 0){
+									this.components.resources_pagination.data.current_page.remove();
+									return;
+								} else if(!d.length){
+									this.components.resources_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
+								}
+								if(d.length == this.components.resources_pagination.data.n_to_fetch){
+									this.components.resources_pagination.carousel.addItem('\
+										<li class="flagged-content-carousel-item clearfix spinner-message">\
+											<ul class="items warning-list-stack">\
+												<li><p>Loading...</p></li>\
+											</ul>\
+										</li>');
+								}
+								for(i in d){
+									tempitem = this.components.resources_pagination.data.temp_item_source.clone().removeClass('template-content').show();
+									//if(d[i].owner_first_name && d[i].owner_last_name){
+									//	tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
+									//}
+									//tempitem.find('span.title').text(d[i].project_title);
+									//tempitem.find('span.time').text(d[i].item_created_datetime);
+									//tempitem.find('p.description').text(d[i].item_description);
+									//tempitem.find('a.control-ok').attr('href','#ok-'+this.components.resources_pagination.data.current_section+','+d[i].item_id);
+									//tempitem.find('a.control-delete').attr('href','#remove-'+this.components.resources_pagination.data.current_section+','+d[i].item_id);
+									this.components.resources_pagination.data.offset++;
+									tc.util.dump(tempitem);
+									tc.util.dump(this.components.resources_pagination.data.current_page);
+									this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
+								}
+								this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
+								this.components.resources_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
+							}
+						});
+					}
+				});
+				
+				
+				app.components.resources_pagination.carousel.seekTo(0,0);
+			}
+			
+		}
+			
+		function build_warning_carousel(app){
 			var data, fn;
 			
 			if(app.components.warning_pagination){
 				return;
 			}
-			
+				
 			app.components.warning_pagination = new tc.carousel({
 				element: tc.jQ(".warning.carousel"),
 				next_button: tc.jQ('.warning-carousel-next'),
@@ -671,67 +773,65 @@ Change by Us - CMS Content
 				this.data.offset = 0;
 				this.carousel.getItems().removeClass('loaded').filter(':gt(0)').remove();
 				this.carousel.seekTo(0,0);
-			}
+			};
 			
-			if(!app.components.warning_pagination){
-				return;
-			}
-			
-			app.components.warning_pagination.carousel.getRoot().bind('onSeek', {app:app}, function(e,d){
-				e.data.app.components.warning_pagination.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
-				if(!e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
-					e.data.app.components.warning_pagination.data.current_page.addClass('loaded');
-					tc.jQ.ajax({
-						type:"GET",
-						url:"/admin/"+e.data.app.components.warning_pagination.data.current_section+"/getflagged",
-						data:{
-							n_messages: e.data.app.components.warning_pagination.data.n_to_fetch,
-							offset: e.data.app.components.warning_pagination.data.offset
-						},
-						context:e.data.app,
-						dataType:"text",
-						success: function(data, ts, xhr) {
-							var d, temptbody, tempitem;
-							try {
-								d = tc.jQ.parseJSON(data);
-							} catch(e) {current_step
-								tc.util.log("/admin/all/getflagged: json parsing error", "warn");
-								return;
-							}
-							this.components.warning_pagination.data.current_page.children('ul').children().remove();
-							if(!d.length && this.components.warning_pagination.data.offset > 0){
-								this.components.warning_pagination.data.current_page.remove();
-								return;
-							} else if(!d.length){
-								this.components.warning_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
-							}
-							if(d.length == this.components.warning_pagination.data.n_to_fetch){
-								this.components.warning_pagination.carousel.addItem('\
-									<li class="flagged-content-carousel-item clearfix spinner-message">\
-										<ul class="items warning-list-stack">\
-											<li><p>Loading...</p></li>\
-										</ul>\
-									</li>');
-							}
-							for(i in d){
-								tempitem = this.components.warning_pagination.data.temp_item_source.clone().removeClass('template-content');
-								if(d[i].owner_first_name && d[i].owner_last_name){
-									tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
+			if(app.components.warning_pagination){
+				app.components.warning_pagination.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
+					e.data.app.components.warning_pagination.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
+					if(!e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
+						e.data.app.components.warning_pagination.data.current_page.addClass('loaded');
+						tc.jQ.ajax({
+							type:"GET",
+							url:"/admin/"+e.data.app.components.warning_pagination.data.current_section+"/getflagged",
+							data:{
+								n_messages: e.data.app.components.warning_pagination.data.n_to_fetch,
+								offset: e.data.app.components.warning_pagination.data.offset
+							},
+							context:e.data.app,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								var d, temptbody, tempitem;
+								try {
+									d = tc.jQ.parseJSON(data);
+								} catch(e) {current_step
+									tc.util.log("/admin/all/getflagged: json parsing error", "warn");
+									return;
 								}
-								tempitem.find('span.title').text(d[i].project_title);
-								tempitem.find('span.time').text(d[i].item_created_datetime);
-								tempitem.find('p.description').text(d[i].item_description);
-								tempitem.find('a.control-ok').attr('href','#ok-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
-								tempitem.find('a.control-delete').attr('href','#remove-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
-								this.components.warning_pagination.data.offset++;
-								this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
+								this.components.warning_pagination.data.current_page.children('ul').children().remove();
+								if(!d.length && this.components.warning_pagination.data.offset > 0){
+									this.components.warning_pagination.data.current_page.remove();
+									return;
+								} else if(!d.length){
+									this.components.warning_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
+								}
+								if(d.length == this.components.warning_pagination.data.n_to_fetch){
+									this.components.warning_pagination.carousel.addItem('\
+										<li class="flagged-content-carousel-item clearfix spinner-message">\
+											<ul class="items warning-list-stack">\
+												<li><p>Loading...</p></li>\
+											</ul>\
+										</li>');
+								}
+								for(i in d){
+									tempitem = this.components.warning_pagination.data.temp_item_source.clone().removeClass('template-content');
+									if(d[i].owner_first_name && d[i].owner_last_name){
+										tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
+									}
+									tempitem.find('span.title').text(d[i].project_title);
+									tempitem.find('span.time').text(d[i].item_created_datetime);
+									tempitem.find('p.description').text(d[i].item_description);
+									tempitem.find('a.control-ok').attr('href','#ok-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
+									tempitem.find('a.control-delete').attr('href','#remove-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
+									this.components.warning_pagination.data.offset++;
+									this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
+								}
+								this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
+								this.components.warning_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
 							}
-							this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
-							this.components.warning_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
-						}
-					});
-				}
-			});
+						});
+					}
+				});
+			}
 			
 			app.components.warning_pagination.carousel.begin();
 		}
