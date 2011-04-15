@@ -4,17 +4,27 @@ tc.locationDropdown = makeClass();
 
 tc.locationDropdown.validator = function(merlin,elements){
 	//tc.util.log('tc.locationDropdown.validator');
-	if(elements.filter('.location-city').filter(':checked').length){
-		return {
-			valid:true,
-			errors:[]
-		}
-	}
-	if(elements.filter('.location-hood').filter(':checked').length){
+	tc.util.dump(elements.length);
+	if(elements.length == 1){
 		if(elements.filter('.location-hood-enter').attr('location_id')){
 			return {
 				valid:true,
 				errors:[]
+			}
+		}
+	} else {
+		if(elements.filter('.location-city').filter(':checked').length){
+			return {
+				valid:true,
+				errors:[]
+			}
+		}
+		if(elements.filter('.location-hood').filter(':checked').length){
+			if(elements.filter('.location-hood-enter').attr('location_id')){
+				return {
+					valid:true,
+					errors:[]
+				}
 			}
 		}
 	}
@@ -23,6 +33,7 @@ tc.locationDropdown.validator = function(merlin,elements){
 		valid:false,
 		errors:['Please select a location.']
 	};
+	
 };
 
 tc.locationDropdown.prototype.init = function(options){
