@@ -57,7 +57,7 @@ Change by Us - Add Resource
 						</div>
 						<div class="row row-neighborhood">
 							<label>Neighborhood</label>
-							<span class="dropdown-indicator"></span>
+							<!-- <span class="dropdown-indicator"></span> -->
 							<input type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
 							<div class="location-hood-list" style="display: none">
 								<ul>
@@ -69,11 +69,11 @@ Change by Us - Add Resource
 							<label>Web Address</label>
 							<input type="text" class='web'/>
 						</div>
-						<div class="row">
+						<div class="row row-otherlinks">
 							<label>Other links (if applicable) Facebook, Twitter, Blog, etc</label>
-							<input type="text" class='links'/>
+							<input type="text" class='links' id="links1" name='otherlinks' />
 							<div class="control add-another">
-								<a href="#">&#43; Another Link</a>
+								<a class="anotherlink">&#43; Another Link</a>
 							</div>
 						</div>
 						<div class="row">
@@ -236,6 +236,7 @@ Change by Us - Add Resource
 							hint:''
 						}
 					},
+					step_data:{},
 					init:function(merlin,dom){
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
@@ -243,6 +244,25 @@ Change by Us - Add Resource
 								merlin.dom.find('img.proj').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image = d.responseJSON.thumbnail_id;
 							}
+						});
+						if(!merlin.current_step.step_data.locationDropdown){
+							merlin.current_step.step_data.locationDropdown = new tc.locationDropdown({
+								radios:dom.find('input[type=radio]'),
+								input:dom.find('input.location-hood-enter'),
+								list:dom.find('div.location-hood-list'),
+								warning:dom.find('span.error'),
+								locations:merlin.app.app_page.data.locations
+							});
+						};
+						tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
+						var linksCount = 1;
+						dom.find('.add-another').click(function() {
+							tc.jQ('input#links'+linksCount).after('<a class="deletelink" id="'+(linksCount + 1)+'">&ndash;</a><input type="text" class="links always-focused" name="otherlinks" id="links'+(linksCount + 1)+'" />');
+							dom.find('.deletelink').unbind('click').bind('click',function(e) {
+								dom.find('#links'+tc.jQ(this).attr('id')).remove();
+								tc.jQ(this).remove();
+							});
+							linksCount++;
 						});
 					},
 					finish:function(merlin,dom){
