@@ -287,16 +287,13 @@ Change by Us
 				</div>
 				<div class="bd">
 					<ul class="news-stack">
+				        {% for item in d.template_data.news %}
 						<li>
-							<cite class="meta">02.03.2011</cite>
-							<h3>New grants program announced!</h3>
-							<p>The city is happy to announce a new grant program of up to &#36;4000 for innovative ideas that transform neighborhoods.</p>
+							<cite class="meta">{{ item.datetime }}</cite>
+							<h3><a href="{{ item.link }}">{{ item.title }}</a></h3>
+							<p>{{ item.text }}</p>
 						</li>
-						<li>
-							<cite class="meta">02.20.2011</cite>
-							<h3>Change by Us generates new ideas for New York City in 2011</h3>
-							<p>The city is happy to announce that it received thousands of ideas this year!</p>
-						</li>
+				        {% endfor %}
 					</ul>
 				</div>
 				<div class="ft">
