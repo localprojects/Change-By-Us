@@ -44,6 +44,8 @@ class Home(Controller):
             return self.disconnect_facebook()   
         elif (action == 'disconnect_twitter'):
             return self.disconnect_twitter()      
+        elif (action == 'resource'):
+            return self.showAddResource()
         elif (action == 'tempupload'):
             return self.showTempUpload()                                  
         else:
@@ -91,11 +93,11 @@ class Home(Controller):
     # END temp page for uploading resource images
             
     def showHome(self):
-        locations = mLocation.getSimpleLocationDictionary(self.db)
-        allIdeas = self.getFeaturedProjectIdeas();
+        locationData = mLocation.getSimpleLocationDictionary(self.db)
+        allIdeasData = self.getFeaturedProjectIdeas();
 
-        locations = dict(data = locations, json = json.dumps(locations))
-        allIdeas = dict(data = allIdeas, json = json.dumps(allIdeas))
+        locations = dict(data = locationData, json = json.dumps(locationData))
+        allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
         news = self.getNewsItems()
         
         self.template_data['locations'] = locations
@@ -105,7 +107,8 @@ class Home(Controller):
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
     def showMobile(self):
-        locations = dict(data = mLocation.getSimpleLocationDictionary(self.db), json = json.dumps(mLocation.getSimpleLocationDictionary(self.db)))
+        locationData = mLocation.getSimpleLocationDictionary(self.db)
+        locations = dict(data =locationData, json = json.dumps(locationData))
         self.template_data['locations'] = locations
         return self.render('mobile')
         
@@ -116,6 +119,13 @@ class Home(Controller):
             self.template_data['redir_from'] = referer
     
         return self.render('login')
+        
+    def showAddResource(self):
+        locationData = mLocation.getSimpleLocationDictionary(self.db)
+        locations = dict(data = locationData, json = json.dumps(locationData))
+        self.template_data['locations'] = locations
+        
+        return self.render('resource')
     
     def login(self):
         email = self.request("email")
