@@ -22,8 +22,8 @@
 	<link rel="icon" href="/favicon.ico"/>
 	<link rel="shortcut icon" href="/favicon.ico"/>
 	
-	<link rel="stylesheet" href="<?php bloginfo( 'template_directory' ); ?>/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-	<link rel="stylesheet" href="<?php bloginfo( 'template_directory' ); ?>/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
+	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
 	<link rel="stylesheet" href="<?php bloginfo( 'stylesheet_url' ); ?>" type="text/css" media="screen, projection" />
 	<link rel="stylesheet" href="<?php echo CSS . '/print.css'; ?>" type="text/css" media="print" />
 	
