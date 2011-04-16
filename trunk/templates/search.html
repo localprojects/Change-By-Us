@@ -143,6 +143,11 @@ Change by Us - Search Results
 													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30, true) }}</span></a></span>
 												</span>
 											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+												<!-- <span class="added-close"></span> -->
+											</div>
 										</td>
 									{% if loop.index % 3 == 0 %}
 									</tr>
@@ -288,7 +293,7 @@ Change by Us - Search Results
 										{% if loop.index < 2 %}
 										<td>
 											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-												<a href="" class="add-button rounded-button small" href="">Add</a>
+												<a href="#addProject,{{ resource.link_id }}" class="add-button rounded-button small" href="">Add</a>
 											{% endif %}
 											{% if resource.image_id > -1 %}
 											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
@@ -298,6 +303,11 @@ Change by Us - Search Results
 											<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger resource-name tooltip_trigger'>
 												<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30) }}</span></a></span>
 											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+												<!-- <span class="added-close"></span> -->
+											</div>
 										</td>
 										{% endif %}
 									{% endfor %}
@@ -578,7 +588,8 @@ Change by Us - Search Results
 										//if (data == "False") {
 										//	return false;
 										//}
-										tc.jQ(event_target).addClass("disabled").text("Added");
+										//tc.jQ(event_target).addClass("disabled").text("Added");
+										tc.jQ(event_target).parents('td').addClass('added');
 										tc.timer(1000, function() {
 											modal.hide();
 										});
