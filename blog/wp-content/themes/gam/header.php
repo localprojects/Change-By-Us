@@ -22,8 +22,8 @@
 	<link rel="icon" href="/favicon.ico"/>
 	<link rel="shortcut icon" href="/favicon.ico"/>
 	
-	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
+	<link rel="stylesheet" href="<?php bloginfo( 'template_directory' ); ?>/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
+	<link rel="stylesheet" href="<?php bloginfo( 'template_directory' ); ?>/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
 	<link rel="stylesheet" href="<?php bloginfo( 'stylesheet_url' ); ?>" type="text/css" media="screen, projection" />
 	<link rel="stylesheet" href="<?php echo CSS . '/print.css'; ?>" type="text/css" media="print" />
 	
@@ -80,9 +80,9 @@
 		<div class='continent blog'>
 			<div class='headlands clearfix'>
 				<span class="above-h1 fancy-caps"><span>The</span> Official</span>
-				<h1><a href="/">Give a Minute <span class="unbold">Blog</a></span></h1>
+				<h1><a href="/">Change by Us <span class="unbold">Blog</a></span></h1>
 				<div class="description">
-					Updates from Give a Minute community projects and all the news from Give a Minute <abbr>HQ</abbr>.
+					Updates from Change by Us community projects and all the news from Change by Us <abbr>HQ</abbr>.
 				</div>
 				<div class="search generic-search">
 					<form class="searchform" method="get" action="<?php bloginfo( 'url' ); ?>">
