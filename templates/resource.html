@@ -43,12 +43,14 @@ Change by Us - Add Resource
 						</div>
 					</div>
 					<div class="fields">
-						<div class="row">
+						<div class="row row-name">
 							<label>Resource Name</label>
+							<span class="charlimit">0/50</span>
 							<input type="text" class='name'/>
 						</div>
-						<div class="row">
+						<div class="row row-description">
 							<label>Description</label>
+							<span class="charlimit">0/400</span>
 							<textarea class='description'></textarea>
 						</div>
 						<div class="row">
@@ -198,12 +200,20 @@ Change by Us - Add Resource
 						name:{
 							selector:'input.name',
 							validators:['min-3','max-50','required'],
-							hint:''
+							hint:'',
+							counter:{
+								selector:'.row-name .charlimit',
+								limit:50
+							}
 						},
 						description:{
 							selector:'textarea.description',
-							validators:['min-3','max-200','required'],
-							hint:''
+							validators:['min-3','max-400','required'],
+							hint:'',
+							counter:{
+								selector:'.row-description .charlimit',
+								limit:400
+							}
 						},
 						address:{
 							selector:'input.address',
