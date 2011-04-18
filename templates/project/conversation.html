@@ -29,7 +29,7 @@
 						{% else %}
 							<label class="fancy-caps">Start <span>the</span> Conversation</label>
 						{% endif %}
-						<textarea class='message-input' cols="48" rows="1"></textarea>
+						<textarea class='message-input'></textarea>
 						<p class="hint">Post your update as a comment or add links to photos and videos.</p>
 					</div>
 					<div class="primary-action">
@@ -91,7 +91,6 @@
 								<p>{{ message.body }}</p>
 							</blockquote>
 							<!-- TODO calculate time since based on {{ message.created }} -->
-							<!--<cite class="meta-ft">XXXX ago</cite>-->
 							<cite class="meta-ft">Created {{ message.created }}</cite>
 						</div>
 					</div>
@@ -321,7 +320,7 @@
 			this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
 		}
 		if (this.elements.textpane.length) {
-			this.elements.textpane.autoGrow();
+			this.elements.textpane.elastic();
 		}
 		this.dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
 		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
