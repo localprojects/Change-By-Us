@@ -345,6 +345,13 @@ tc.merlin.prototype.validate = function(on_submit){
 		
 		if(!temp_valid.valid){
 			valid = false;
+			if(this.current_step.inputs[i].counter && this.current_step.inputs[i].dom.hasClass('has-been-focused')){
+				this.current_step.inputs[i].counter.dom.addClass('invalid').removeClass('valid');
+			}
+		} else{
+			if(this.current_step.inputs[i].counter && this.current_step.inputs[i].counter.dom.hasClass('invalid')){
+				this.current_step.inputs[i].counter.dom.addClass('valid').removeClass('invalid');
+			}
 		}
 	}
 	if(valid){
