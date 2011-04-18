@@ -31,7 +31,7 @@
 				<h3>Supporters</h3>
 			</div>
 			<div class="sub-bd">
-				<ul class="endorsements-stack clearfix">
+				<ul class="endorsements-stack">
 					{% for endorsement in d.template_data.project.data.info.endorsements['items'] %}
 						<li>
 							<div class="thumb">
@@ -44,8 +44,9 @@
 								<span class="overlay-tag"></span>
 							</div>
 							<div class="main">
-								<strong>{{ endorsement.name }}</strong>,
-								<cite>{{ endorsement.title }} {{ endorsement.organization }}</cite>
+								<strong>{{ endorsement.name }}</strong>
+								{% if endorsement.title or endorsement.organization %},{% endif %}
+								<cite>{% if endorsement.title %}{{ endorsement.title }}{% endif %} {% if endorsement.organization %}{{ endorsement.organization }}{% endif %}</cite>
 							</div>
 						</li>
 					{% endfor %}
@@ -98,7 +99,7 @@
 			<p>{{ d.template_data.project.data.info.title }}?</p>
 			<p>It will receive your seal of approval!</p>
 		</div>
-		<div class="actions">
+		<div class="actions yesno">
 			<a class="submit rounded-button" href="#">Yes</a>
 			<a class="cancel rounded-button" href="#">No</a>
 		</div>
