@@ -3,8 +3,8 @@ if(!tc){ var tc = {}; }
 tc.locationDropdown = makeClass();
 
 tc.locationDropdown.validator = function(merlin,elements){
-	//tc.util.log('tc.locationDropdown.validator');
-	tc.util.dump(elements.length);
+	tc.util.log('tc.locationDropdown.validator');
+	elements.filter('.location-hood-enter').siblings('.error').hide();
 	if(elements.length == 1){
 		if(elements.filter('.location-hood-enter').attr('location_id')){
 			return {
@@ -13,13 +13,13 @@ tc.locationDropdown.validator = function(merlin,elements){
 			}
 		}
 	} else {
-		if(elements.filter('.location-city').filter(':checked').length){
+		if(elements.filter('.location-city').filter(':checked').length || elements.filter('.location-city')[0].checked){
 			return {
 				valid:true,
 				errors:[]
 			}
 		}
-		if(elements.filter('.location-hood').filter(':checked').length){
+		if(elements.filter('.location-hood').filter(':checked').length || elements.filter('.location-hood')[0].checked){
 			if(elements.filter('.location-hood-enter').attr('location_id')){
 				return {
 					valid:true,
@@ -28,10 +28,12 @@ tc.locationDropdown.validator = function(merlin,elements){
 			}
 		}
 	}
+	
 	elements.filter('.location-hood-enter').addClass('not-valid').removeClass('valid');
+	elements.filter('.location-hood-enter').siblings('.error').show();
 	return {
 		valid:false,
-		errors:['Please select a location.']
+		errors:['Please enter a neighborhood or borough.']
 	};
 	
 };
@@ -83,28 +85,15 @@ tc.locationDropdown.prototype.bindEvents = function(){
 			case 'keyup':e.data.dropdown.inputKeyUpHandler(e);break;
 			case 'keydown':e.data.dropdown.inputKeyDownHandler(e);break;
 			case 'keypress':e.data.dropdown.inputKeyPressHandler(e);break;
-			case 'blur':break;
+			case 'blur':e.data.dropdown.inputBlurHandler(e);break;
 		}
 	});
-	this.options.list.bind('click',{dropdown:this},function(e){
-		var t, location_tuple;
-		if(e.target.nodeName == 'SPAN'){
-			t = e.target.parentNode;
-		} else if(e.target.nodeName == 'A'){
-			t = e.target;
+	this.options.list.bind('focus click blur',{dropdown:this},function(e){
+		switch(e.type){
+			case 'focus':e.data.dropdown.listFocusHandler(e);break;
+			case 'click':e.data.dropdown.listClickHandler(e);break;
+			case 'blur':e.data.dropdown.listBlurHandler(e);break;
 		}
-		if(!t){
-			return;
-		}
-		e.preventDefault();
-		if(e.data.dropdown.options.warning){
-			e.data.dropdown.options.warning.hide();
-		}
-		
-		location_tuple = t.hash.substring(1,t.hash.length).split(',');
-		
-		e.data.dropdown.options.input.removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]).val(location_tuple[0]).trigger('change');
-		e.data.dropdown.options.list.hide();
 	});
 	if(this.options.radios){
 		this.options.radios.bind('change',{dropdown:this},function(e){
@@ -113,11 +102,49 @@ tc.locationDropdown.prototype.bindEvents = function(){
 	}
 };
 
+tc.locationDropdown.prototype.listFocusHandler = function(e){
+	tc.util.log('tc.locationDropdown.listFocusHandler');
+	
+};
+
+tc.locationDropdown.prototype.listClickHandler = function(e){
+	//tc.util.log('tc.locationDropdown.listClickHandler');
+	var t, location_tuple;
+	if(e.target.nodeName == 'SPAN'){
+		t = e.target.parentNode;
+	} else if(e.target.nodeName == 'A'){
+		t = e.target;
+	}
+	if(!t){
+		return;
+	}
+	e.preventDefault();
+	if(e.data.dropdown.options.warning){
+		e.data.dropdown.options.warning.hide();
+	}
+	
+	location_tuple = t.hash.substring(1,t.hash.length).split(',');
+	
+	e.data.dropdown.options.input.removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]).val(location_tuple[0]).trigger('change');
+	e.data.dropdown.options.list.hide();
+};
+
+tc.locationDropdown.prototype.listBlurHandler = function(e){
+	tc.util.log('tc.locationDropdown.listBlurHandler');
+	
+};
+
 tc.locationDropdown.prototype.inputFocusHandler = function(e){
-	//tc.util.log('tc.locationDropdown.inputFocusHandler');
+	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	if(this.options.radios){
 		this.options.radios.filter('.location-hood').attr('checked',true);
 	}
+	this.options.list.show();
+};
+
+tc.locationDropdown.prototype.inputBlurHandler = function(e){
+	tc.util.log('tc.locationDropdown.inputBlurHandler');
+	//this.options.list.hide();
 };
 
 tc.locationDropdown.prototype.inputKeyUpHandler = function(e){

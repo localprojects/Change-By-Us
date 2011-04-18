@@ -62,12 +62,14 @@
 					$('input[name="'+e.data.input.attr('name')+'"]').each(function(){
 						$('label[for="' + $(this).attr('id')+'"]').removeClass('checked');	
 						$(this).removeAttr('checked');
-						e.data.input[0].checked = false;
+						$(this)[0].checked = false;
 					});
+					
 					$label.addClass('checked');
 					e.data.input.attr('checked',true);
 					e.data.input[0].checked = true;
 				};
+				e.data.input.trigger('change');
 			});
 			
 			$('input#' + $label.attr('for')).unbind('keypress').bind('keypress', {label:$label}, function(e){
