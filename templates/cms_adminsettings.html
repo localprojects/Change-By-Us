@@ -45,6 +45,10 @@ Change by Us - CMS Admin Settings
 									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="city-leaders-radio" value="3" />
 									<label for="city-leaders-radio" class="white"><strong>City Leaders</strong> can endorse projects</label>
 								</div>
+								<div class="row organization-row" style='display:none;'>
+									<label>Organization</label>
+									<input class='organization' type="text"/>
+								</div>
 								<div class="row clearfix">
 									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="administrators-radio" value="2" />
 									<label for="administrators-radio" class="white"><strong>Administrators</strong> can moderate and delete posts and delete regular accounts</label>
@@ -493,7 +497,8 @@ Change by Us - CMS Admin Settings
 				l_name:null,
 				email:null,
 				password:null,
-				role:null
+				role:null,
+				organization:null
 			},
 			steps:{
 				'main':{
@@ -516,13 +521,23 @@ Change by Us - CMS Admin Settings
 							selector:'input.password',
 							validators:['password-20','required']
 						},
+						organization:{
+							selector:'input.organization',
+							validators:[]
+						},
 						role:{
 							selector:'.add-admin-radio',
 							validators:['required']
 						}
 					},
 					init:function(merlin,dom){
-						
+						merlin.current_step.inputs.role.dom.bind('change', {merlin:merlin}, function(e){
+							if(e.target.value == '3'){
+								e.data.merlin.current_step.inputs.organization.dom.parent().show();
+							} else {
+								e.data.merlin.current_step.inputs.organization.dom.parent().hide();
+							};
+						});
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
@@ -530,7 +545,8 @@ Change by Us - CMS Admin Settings
 							l_name:merlin.current_step.inputs.l_name.dom.val(),
 							email:merlin.current_step.inputs.email.dom.val(),
 							password:merlin.current_step.inputs.password.dom.val(),
-							role:merlin.current_step.inputs.role.dom.filter(':checked').val()
+							role:merlin.current_step.inputs.role.dom.filter(':checked').val(),
+							organization:merlin.current_step.inputs.organization.dom.val()
 						});
 					}
 				},
