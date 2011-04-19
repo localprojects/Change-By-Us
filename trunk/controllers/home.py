@@ -50,6 +50,8 @@ class Home(Controller):
             return self.showAddResource()
         elif (action == 'tempupload'):
             return self.showTempUpload()
+        elif (action == 'beta'):
+            return self.render('splash')
         else:
             return self.render(action)
             
