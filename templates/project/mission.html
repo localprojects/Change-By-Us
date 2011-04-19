@@ -37,13 +37,11 @@
 							<div class="thumb">
 								{% if endorsement.image_id %}
 									<img width='30' height='30' class="endorser-photo" alt="{{ endorsement.name }}" src="/images/{{ endorsement.image_id % 10 }}/{{ endorsement.image_id }}.png"/>
-								{% else %}
-									<img width='30' height='30' class="endorser-photo" alt="{{ endorsement.name }}" src="http://placehold.it/30x30"/>
 								{% endif %}
 								
 								<span class="overlay-tag"></span>
 							</div>
-							<div class="main">
+							<div class="main" {% if not endorsement.organization %}style="padding-top: 5px"{% endif %}>
 								<strong>{{ endorsement.name }}</strong>
 								{% if endorsement.title or endorsement.organization %},{% endif %}
 								<cite>{% if endorsement.title %}{{ endorsement.title }}{% endif %} {% if endorsement.organization %}{{ endorsement.organization }}{% endif %}</cite>
