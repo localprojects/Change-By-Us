@@ -18,7 +18,7 @@ def emailInvite(email, inviterName, projectId, title, description):
                             subject, 
                             body,
                             from_name = emailAccount['from_name'],
-                            from_address = emailAccount['username'])  
+                            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send invite email")
         log.error(e)
@@ -40,7 +40,7 @@ def emailProjectJoin(email, projectId, title, userId, userName):
                             subject, 
                             body,
                             from_name = emailAccount['from_name'],
-                            from_address = emailAccount['username'])  
+                            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send join email")
         log.error(e)
@@ -59,7 +59,7 @@ def emailProjectEndorsement(email, title, leaderName):
                             subject, 
                             body,
                             from_name = emailAccount['from_name'],
-                            from_address = emailAccount['username'])  
+                            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send endorsement email")
         log.error(e)
@@ -103,7 +103,7 @@ def emailAccountDeactivation(email):
                             subject, 
                             body,
                             from_name = emailAccount['from_name'],
-                            from_address = emailAccount['username'])  
+                            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send account deactivation email")
         log.error(e)
