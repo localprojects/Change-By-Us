@@ -68,15 +68,15 @@
 						</div>
 						<div class="main">
 							{% if message.message_type == 'join' %}
-								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> joined the project!</cite>
+								<cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> joined the project!</cite>
 							{% elif message.message_type == 'goal_achieved' %}
 							
 							{% elif message.message_type == 'endorsement' %}
-								
+
 							{% elif message.message_type == 'member_comment' or message.message_type == 'admin_comment' %}
-								<cite class="meta-hd"><strong>{{ message.owner.name }}</strong> said</cite>
+								<cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> said</cite>
 							{% endif %}
-						
+
 							{% if message.idea %}
 								<div class="note-card">
 									<cite class="note-meta-hd"></cite>
@@ -86,7 +86,7 @@
 									<cite class="note-meta-ft"></cite>
 								</div>
 							{% endif %}
-						
+							
 							<blockquote class="serif">
 								<p>{{ message.body }}</p>
 							</blockquote>
@@ -115,7 +115,7 @@
 		</div>
 		<div class="main">
 			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
-			<!-- <cite class="meta-hd"><strong>XXXX XXXX</strong> says</cite> -->
+			<cite class="meta-hd"><strong></strong> said</cite>
 			<blockquote class="serif">
 				<p class='message-body'></p>
 			</blockquote>
@@ -137,7 +137,7 @@
 		</div>
 		<div class="actions">
 			<a class="submit rounded-button" href="#">Yes, Delete Message</a>
-			<a class="cancel" href="#">No, keep them.</a>
+			<a class="cancel" href="#">No, keep it.</a>
 		</div>
 	</div>
 	<a class='close' href="#"><span>close</span></a>
@@ -320,7 +320,7 @@
 			this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
 		}
 		if (this.elements.textpane.length) {
-			this.elements.textpane.elastic();
+			this.elements.textpane.elastic(); //make textarea auto grow its height
 		}
 		this.dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
 		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
@@ -333,6 +333,13 @@
 			//markup.find('img').attr('src','/images/'++'/'++'.png')
 			markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
 			markup.find('p.message-body').text(data.message);
+			
+			{% if d.template_data.user.data %} 
+				markup.find(".meta-hd > strong").html("<a href='/useraccount/{{ d.template_data.user.data.u_id }}'>{{ d.template_data.user.data.f_name }} {{ d.template_data.user.data.l_name|truncate(1, true, '.') }}</a>");
+			{% else %}
+				markup.find(".meta-hd").hide();
+			{% endif %}
+			
 			return markup;
 		}
 		
