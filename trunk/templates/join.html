@@ -105,10 +105,12 @@ Change by Us - Join
 				<div class="east">
 					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info' value='1' />
 					<label class="tos-user-info-label" for='tos-user-info'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms and Conditions</a></label>
+					{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
 					<div class="row invite-row">
 						<label for='invite-code'>Invite code</label>
 						<input value='' type='text' name='invite-code' id='invite-code' class='invite-code' tabindex='4'/>
 					</div>
+					{% endif %}
 				</div>
 			</div><!--end step-->
 			
@@ -130,10 +132,10 @@ Change by Us - Join
 						<label for='email'>Email</label>
 						<input value='' type='text' name='email' id='email' class='email' tabindex='3'/>
 					</div>
-					<div class="row">
+					<!--<div class="row">
 						<label for='invite-code-tw'>Invite code</label>
 						<input value='' type='text' name='invite-code-tw' id='invite-code-tw' class='invite-code' tabindex='4'/>
-					</div>
+					</div>-->
 					<div class="row row-error">
 						<span class="email-error" style='display:none;'>Please enter a valid email address</span>
 					</div>
@@ -164,10 +166,10 @@ Change by Us - Join
 				</div>-->
 				
 				<div class="fields">
-					<div class="row">
+					<!--<div class="row">
 						<label for='invite-code-fb'>Invite code</label>
 						<input value='' type='text' name='invite-code-fb' id='invite-code-fb' class='invite-code' tabindex='4'/>
-					</div>
+					</div>-->
 					<div class="row west">
 						<input type='checkbox' name='tos-email' id='tos-email' class='tos-email' />
 						<label class="tos-email-label" for='tos-email'><span class="message">I accept and have read the <a href='/tou' target='_blank'>Terms and Conditions</a></span></label>
@@ -334,7 +336,14 @@ Change by Us - Join
 						tos_user_info:{
 							selector:'input.tos-user-info',
 							validators:['required']
+						},
+						{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+						invite:{
+							selector:'input.invite-code',
+							validators:['max-10','min-10','required'],
+							hint:''
 						}
+						{% endif %}
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
