@@ -16,23 +16,10 @@ class Join(Controller):
             
     def POST(self,action=None):
         if (action == 'code'):
-            return self.verifyBetaCode()
+            return self.verifyBetaCode(self.request('beta_code'))
         else:   
             return self.newUser()
             
-    def verifyBetaCode(self):
-        code = self.request('beta_code')
-        
-        try:
-            sql = "select code from beta_invite_code where code = $code and user_id is null limit 1"
-            data = list(self.db.query(sql, {'code':code}))
-            
-            return (len(data) == 1)
-        except Exception, e:
-            log.info("*** problem verifying beta code")
-            log.error(e)
-            return False
-        
     def showJoin(self):
         referer = web.ctx.env.get('HTTP_REFERER')
         
@@ -78,25 +65,28 @@ class Join(Controller):
         email = self.request('email')
         password = self.request('password')
         phone = util.cleanUSPhone(self.request('sms_phone'))
+        code = self.request('beta_code')        
                 
-        if (len(firstName) == 0): 
-            #return self.error("no first name")
-            log.error("no first name")
+        if (self.appMode == 'beta' and not self.verifyBetaCode(code)):
+            log.error("*** beta user attempted register w/ invalid code")
+            return False        
+        elif (len(firstName) == 0): 
+            log.error("*** error on user create: no first name")
             return False
         elif (len(lastName) == 0): 
-            #return self.error("no last name")
-            log.error("no last name")
+            log.error("*** error on user create: no last name")
             return False
         elif (len(email) == 0 or not util.validate_email(email)): 
-            #return self.error("invalid email")
-            log.error("invalid email")
+            log.error("*** error on user create: invalid email")
             return False
         elif (len(password) == 0): 
-            #return self.error("no password")
-            log.error("no password")
+            log.error("*** error on user create: no password")
             return False
         else:
             userId = user.createUser(self.db, email, password, firstName, lastName, phone)
+            
+            if (userId > 0 and self.appMode == 'beta'):
+                self.expireBetaCode(self, code, userId)
             
             idea.attachIdeasByEmail(self.db, email)
             
@@ -104,5 +94,24 @@ class Join(Controller):
                 idea.attachIdeasByPhone(self.db, phone)
         return userId;
     
-
-    
+    def verifyBetaCode(self, code):
+        try:
+            sql = "select code from beta_invite_code where code = $code and user_id is null limit 1"
+            data = list(self.db.query(sql, {'code':code}))
+            
+            return (len(data) == 1)
+        except Exception, e:
+            log.info("*** problem verifying beta code")
+            log.error(e)
+            return False
+        
+    def expireBetaCode(self, code, userId):
+        try:
+            self.db.update(beta_invite_code, where = "code = $code", user_id = userId, vars = {'code':code})
+            return True
+        except Exception, e:
+            log.info("*** couldn't expire beta code")
+            log.error(e)
+            return False
+            
+            
