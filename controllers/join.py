@@ -14,8 +14,24 @@ class Join(Controller):
         else:
             return self.showJoin()            
             
-    def POST(self,*args, **kw):
-        return self.newUser()
+    def POST(self,action=None):
+        if (action == 'code'):
+            return self.verifyBetaCode()
+        else:   
+            return self.newUser()
+            
+    def verifyBetaCode(self):
+        code = self.request('beta_code')
+        
+        try:
+            sql = "select code from beta_invite_code where code = $code and user_id is null limit 1"
+            data = list(self.db.query(sql, {'code':code}))
+            
+            return (len(data) == 1)
+        except Exception, e:
+            log.info("*** problem verifying beta code")
+            log.error(e)
+            return False
         
     def showJoin(self):
         referer = web.ctx.env.get('HTTP_REFERER')
