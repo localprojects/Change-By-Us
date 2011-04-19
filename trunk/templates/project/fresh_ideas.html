@@ -23,7 +23,7 @@
 									<div class="note-card">
 										<div class="membrane">
 											{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-											<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+												<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
 											{% endif %}
 											<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> said &mdash;{% endif %}</cite>
 											<blockquote>
@@ -65,7 +65,7 @@
 		</div>
 		<div class="actions">
 			<a class="submit rounded-button" href="#">Yes, Delete Idea</a>
-			<a class="cancel" href="#">No, keep them.</a>
+			<a class="cancel" href="#">No, keep it.</a>
 		</div>
 	</div>
 	<a class='close' href="#"><span>close</span></a>
@@ -114,12 +114,12 @@
 			});
 		});
 		
-		dom.find('a.remove-idea').bind('click', {project:project}, function(e){
+		dom.find('a.remove-idea').bind('click', {project:project, app:options.app, carousel:this.carousel}, function(e){
 			e.preventDefault();
 			
 			e.data.app.components.modal.show({
 					app:e.data.app,
-					source_element:tc.jQ('.modal-content.remove-message'),
+					source_element:tc.jQ('.modal-content.remove-idea'),
 					submit:function(){
 						tc.jQ.ajax({
 							type:'POST',
@@ -127,12 +127,14 @@
 							data:{
 								idea_id: e.target.hash.split(',')[1]
 							},
-							context:e.data.project,
+							context: tc.jQ(e.target),
 							dataType:'text',
 							success:function(data,ts,xhr){
 								if(data == 'False'){
 									return false;
 								}
+								this.parents("li").eq(0).remove();
+								e.data.carousel.update_pagination().update_navigation();
 							}
 						});
 					}

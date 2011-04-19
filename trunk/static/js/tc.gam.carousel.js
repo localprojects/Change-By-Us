@@ -112,6 +112,7 @@ tc.carousel.prototype.update_navigation = function() {
 		if (this.next_btn) { this.next_btn.show(); }
 		if (this.prev_btn) { this.prev_btn.show(); }
 	}
+	return this;
 };
 
 tc.carousel.prototype.update_pagination = function() {
@@ -121,6 +122,7 @@ tc.carousel.prototype.update_pagination = function() {
 		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
 		this.options.pagination.total.text( this.carousel.getSize() );
 	}
+	return this;
 };
 
 tc.carousel.prototype.has_items = function() {
@@ -135,4 +137,4 @@ tc.carousel.prototype.is_rendered = function() {
 
 tc.carousel.prototype.get_element = function(){
 	return this.options.element;
-}
+};
