@@ -34,10 +34,6 @@ if(!tc){ var tc = {}; }
 	if(jQuery){
 	  tc.jQ = jQuery;
 	}
-
-	tc.util.getTimeSince = function(timestamp) {
-		
-	};
 	
 })(tc);
 
