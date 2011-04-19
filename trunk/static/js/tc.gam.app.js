@@ -82,3 +82,24 @@ tc.animate_bg = function(ele, from, to) {
 			setTimeout(function() { tc.animate_bg(ele, from, to) }, 50);
 		}
 };
+
+tc.time_since = function(el) {
+	var raw = el.text();
+	el.attr("title", raw.split(" ").join("T") + "Z");
+	el.prettyDate();
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
