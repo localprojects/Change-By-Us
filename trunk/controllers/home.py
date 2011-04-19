@@ -402,7 +402,8 @@ class Home(Controller):
         keywords = self.request('keywords').replace(',', ' ') if not util.strNullOrEmpty(self.request('keywords')) else None
         contact_name = self.request('contact_name')
         contact_email = self.request('contact_email')
-        other_urls = self.request('other_urls').split(',') if not util.strNullOrEmpty(self.request('other_urls')) else []
+        facebook_url = self.request('facebook_url')
+        twitter_url = self.request('twitter_url')
         image_id = self.request('image')
 
         try:
@@ -412,6 +413,8 @@ class Home(Controller):
                                         physical_address = physical_address,
                                         location_id = location_id,
                                         url = url,
+                                        facebook_url = facebook_url,
+                                        twitter_url = twitter_url,
                                         keywords = keywords,
                                         contact_name = contact_name,
                                         contact_email = contact_email,
