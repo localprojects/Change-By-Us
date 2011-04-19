@@ -21,7 +21,7 @@ tw_consumer = oauth.Consumer(tw_settings['consumer_key'], tw_settings['consumer_
 tw_client = oauth.Client(tw_consumer)
 
 class Home(Controller):
-    def GET(self, action=None, page=None):
+    def GET(self, action=None, param0=None):
         project_user = dict(is_member = True,
                               is_project_admin = True)
         self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
@@ -54,7 +54,7 @@ class Home(Controller):
             return self.render(action)
             
             
-    def POST(self, action=None):
+    def POST(self, action=None, param0=None):
         if (action == 'login'):
              return self.login()
         elif (action == 'logout'):
@@ -64,6 +64,8 @@ class Home(Controller):
             return self.addResource()
         elif (action == 'feedback'):
             return self.submitFeedback()
+        elif (action == 'splash' and param0 == 'submit'):
+            return self.submitInviteRequest()
         elif (action == 'tempupload'):
             self.tempUpload()
             return self.showTempUpload() 
@@ -476,5 +478,19 @@ class Home(Controller):
             return True
         except Exception, e:
             log.info("*** problem submitting feedback comment")
+            log.error(e)
+            return False
+            
+    def submitInviteRequest(self):
+        email = self.request('email')
+        comment = self.request('text')
+        
+        try:
+            self.db.insert('beta_invite_request',email = email,
+                                            comment = comment)
+                                            
+            return True
+        except Exception, e:
+            log.info("*** problem submitting beta invite request")
             log.error(e)
             return False
