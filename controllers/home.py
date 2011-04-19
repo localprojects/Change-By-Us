@@ -66,7 +66,7 @@ class Home(Controller):
             return self.addResource()
         elif (action == 'feedback'):
             return self.submitFeedback()
-        elif (action == 'splash' and param0 == 'submit'):
+        elif (action == 'beta' and param0 == 'submit'):
             return self.submitInviteRequest()
         elif (action == 'tempupload'):
             self.tempUpload()
