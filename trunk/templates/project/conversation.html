@@ -87,9 +87,16 @@
 								</div>
 							{% endif %}
 							
-							<blockquote class="serif">
-								<p>{{ message.body }}</p>
-							</blockquote>
+							{% if message.message_type == 'join' %}
+								<blockquote class="serif">
+									<p>{{ message.idea.text }}</p>
+								</blockquote>
+							{% else %}
+								<blockquote class="serif">
+									<p>{{ message.body }}</p>
+								</blockquote>
+							{% endif %}
+							
 							<cite class="meta-ft"><span class="time-since">{{ message.created }}</span></cite>
 						</div>
 					</div>
