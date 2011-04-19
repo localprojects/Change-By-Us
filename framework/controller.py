@@ -67,7 +67,16 @@ class Controller():
         # beta redirect
         if (self.appMode == 'beta' and not self.user):
             path = web.ctx.path.split('/')
-            allowed = ['beta', 'login', 'join', 'tou']
+            allowed = ['beta', 
+                       'login', 
+                       'join', 
+                       'tou',
+                       'logout',
+                       'login_facebook',
+                       'login_twitter',
+                       'tw_authenticated',
+                       'login_facebook_create',
+                       'login_twitter_create']
             
             if (path[1] not in allowed):
                 self.redirect('/beta')
