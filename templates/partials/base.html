@@ -18,9 +18,11 @@
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
-		<!-- <link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" /> -->
 		<link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
+		{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+		<link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
+		{% endif %}
 		{% if d.template_data and d.template_data.user %}
 		<link rel="stylesheet" href="/static/css/tc.gam.admin.css" type="text/css" media="screen" />
 		{% endif %}
@@ -59,7 +61,7 @@
 	</head>
 	
 	<!-- the "green-nyc" class is to decorate page with green-specific styles -->
-	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} beta-splash'>
+	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}'>
 	
 	<div id="fb-root"></div>
 	<script>
