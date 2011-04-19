@@ -18,6 +18,7 @@
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
+		<!-- <link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" /> -->
 		<link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
 		{% if d.template_data and d.template_data.user %}
@@ -58,7 +59,7 @@
 	</head>
 	
 	<!-- the "green-nyc" class is to decorate page with green-specific styles -->
-	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %}'>
+	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} beta-splash'>
 	
 	<div id="fb-root"></div>
     <script>
@@ -127,6 +128,10 @@
 								</div>
 							</div>
 						</li>
+						<li class="splashland"><!-- .splashland can be deleted after beta period is over -->
+							<div class="join"><span class="fancy-caps">Have <span>an</span> invite code?</span><a href='/join'>Sign Up</a></div>
+							<div class='login'><a href='/login'>Login</a></div>
+						</li>
 					</ul><!--end navbar-->
 					
 					{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
@@ -171,7 +176,7 @@
 						<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
 						<li><a href='http://ec2-184-73-83-52.compute-1.amazonaws.com/'>News</a></li>
 						<li><a href='/tou#community-policy'>Community Policy</a></li>
-						<li><a href='/tou'>Terms of Service</a></li>
+						<li class="sitemap-tou"><a href='/tou'>Terms of Service</a></li>
 						<li><a href='/tou#privacy'>Privacy Policy</a></li>
 						<!-- <li><a href='/feedback' class="contact-us-sitemap"><strong>Contact Us</strong></a></li> -->
 					</ul>
