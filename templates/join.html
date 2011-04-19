@@ -108,6 +108,37 @@ Change by Us - Join
 				</div>
 			</div><!--end step-->
 			
+			
+			
+			<div class='step twitter-step clearfix ' style='display:none;'>
+				<p><strong>Enter your email to get updates from Change by Us projects.</strong></p>
+				
+				<div class="west">
+					<div class="row">
+						<label for='f_name'>First name</label>
+						<input value='First name' type='text' name='f_name' id='f_name' class='f_name' tabindex='1'/>
+					</div>
+					<div class="row">
+						<label for='l_name'>Last name</label>
+						<input value='Last name' type='text' name='l_name' id='l_name' class='l_name' tabindex='2'/>
+					</div>
+					<div class="row">
+						<label for='email'>Email</label>
+						<input value='' type='text' name='email' id='email' class='email' tabindex='3'/>
+					</div>
+					<div class="row row-error">
+						<span class="email-error" style='display:none;'>Please enter a valid email address</span>
+					</div>
+				</div>
+				
+				<div class="east">
+					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info' value='1' />
+					<label class="tos-user-info-label" for='tos-user-info'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms and Conditions</a></label>
+				</div>
+				
+			</div><!--end step-->
+			
+			
 			<div class='step email-lookup clearfix spinner-message ' style='display:none;'>
 				<p class="west">Verifying account information...</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
@@ -127,8 +158,6 @@ Change by Us - Join
 					<input type='checkbox' name='tos-email' id='tos-email' class='tos-email' />
 					<label class="tos-email-label" for='tos-email'>I accept and have read<br />the <a href='/tou' target='_blank'>Terms and Conditions</a></label>
 				</div>
-				
-		
 			</div><!--end step-->
 			
 			<div class='step sms-lookup clearfix ' style='display:none;'>
@@ -229,7 +258,13 @@ Change by Us - Join
 			error_indicator:tc.jQ('.oops'),
 			watch_keypress:true,
 			magic:false,
-			first_step:'start',
+			{% if d.new_account_via_twitter %}
+				first_step:'twitter-login',
+			{% elif d.new_account_via_facebook %}
+				first_step:'facebook-login',
+			{% else %}
+				first_step:'start',
+			{% endif %}
 			data:{
 				f_name:null,
 				l_name:null,
@@ -283,7 +318,7 @@ Change by Us - Join
 						tos_user_info:{
 							selector:'input.tos-user-info',
 							validators:['required']
-						},
+						}
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
@@ -292,6 +327,79 @@ Change by Us - Join
 							email:merlin.current_step.inputs.email.dom.val(),
 							password:merlin.current_step.inputs.password.dom.val()
 						});
+					}
+				},
+				/* Step: twitter-login  */
+				'twitter-login':{
+					progress_selector:'.2',
+					selector:'.twitter-step',
+					prev_step:'start',
+					next_step:'email-lookup',
+					use_for_history:true,
+					inputs:{
+						f_name:{
+							selector:'input.f_name',
+							validators:['max-32','min-3','required'],
+							hint:'First name'
+						},
+						l_name:{
+							selector:'input.l_name',
+							validators:['max-32','min-3','required'],
+							hint:'Last name'
+						},
+						email:{
+							selector:'input.email',
+							validators:['max-32','min-3','email','required'],
+							hint:''
+						},
+						tos_email:{
+							selector:'input.tos-twitter',
+							validators:function(merlin,element,step){
+								if(merlin.current_step.inputs.email.dom.val().length){
+									return tc.validate(element,['required']);
+								} else {
+									return {
+										valid:true
+									};
+								}
+							},
+							hint:''
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							f_name:merlin.current_step.inputs.f_name.dom.val(),
+							l_name:merlin.current_step.inputs.l_name.dom.val(),
+							email:merlin.current_step.inputs.email.dom.val()
+						});
+					}
+				},
+				/* Step: facebook-login  */
+				'facebook-login':{
+					progress_selector:'.2',
+					selector:'.email-step',
+					prev_step:'user-info',
+					next_step:'email-lookup',
+					use_for_history:true,
+					inputs:{
+						email:{
+							selector:'input.email-alt',
+							validators:['min-3','max-32','email'],
+							hint:''
+						},
+						tos_email:{
+							selector:'input.tos-email',
+							validators:function(merlin,element,step){
+								if(merlin.current_step.inputs.email.dom.val().length){
+									return tc.validate(element,['required']);
+								} else {
+									return {
+										valid:true
+									};
+								}
+							},
+							hint:''
+						}
 					}
 				},
 				/* Step: email-lookup  */
@@ -484,9 +592,19 @@ Change by Us - Join
 					prev_step:null,
 					next_step:null,
 					init:function(merlin,dom){
+						var url;
+						
+						{% if d.new_account_via_twitter %}
+							url = '/login_twitter_create';
+						{% elif d.new_account_via_facebook %}
+							url = '/login_facebook_create';
+						{% else %}
+							url = '/join';
+						{% endif %}
+						
 						tc.jQ.ajax({
 							type:'POST',
-							url:'/join',
+							url:url,
 							data:merlin.options.data,
 							context:merlin,
 							dataType:'text',
