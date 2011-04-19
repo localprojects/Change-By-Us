@@ -71,12 +71,13 @@ Change by Us - Add Resource
 							<label>Web Address</label>
 							<input type="text" class='web'/>
 						</div>
-						<div class="row row-otherlinks">
-							<label>Other links (if applicable) Facebook, Twitter, Blog, etc</label>
-							<input type="text" class='links' id="links1" name='otherlinks' />
-							<div class="control add-another">
-								<a class="anotherlink">&#43; Another Link</a>
-							</div>
+						<div class="row">
+							<label>Facebook Address</label>
+							<input type="text" class='facebook_url'/>
+						</div>
+						<div class="row">
+							<label>Twitter Address</label>
+							<input type="text" class='twitter_url'/>
 						</div>
 						<div class="row">
 							<label>Keywords (separate by commas)</label>
@@ -186,10 +187,11 @@ Change by Us - Add Resource
 				physical_address:null,
 				location_id: null,
 				url: null,
+				facebook_url:null,
+				twitter_url:null,
 				keywords: null,
 				contact_name: null,
 				contact_email: null,
-				other_urls: null,
 				image: null
 			},
 			steps:{
@@ -227,12 +229,17 @@ Change by Us - Add Resource
 						},
 						web:{
 							selector:'input.web',
-							validators:['min-3','max-50','url'],
+							validators:['min-3','max-512','url'],
 							hint:''
 						},
-						links:{
-							selector:'input.links',
-							validators:['min-3','max-50','csv-url'],
+						twitter:{
+							selector:'input.twitter_url',
+							validators:['min-3','max-512','url'],
+							hint:''
+						},
+						facebook:{
+							selector:'input.facebook_url',
+							validators:['min-3','max-512','url'],
 							hint:''
 						},
 						keywords:{
@@ -264,25 +271,9 @@ Change by Us - Add Resource
 								locations:merlin.app.app_page.data.locations
 							});
 						};
-						tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
-						var linksCount = 1;
-						dom.find('.add-another').click(function() {
-							dom.find('input#links'+linksCount).after('<a class="deletelink" id="'+(linksCount + 1)+'">&ndash;</a><input type="text" class="links always-focused" name="otherlinks" id="links'+(linksCount + 1)+'" />');
-							dom.find('.deletelink').unbind('click').bind('click',function(e) {
-								dom.find('#links'+tc.jQ(this).attr('id')).remove();
-								tc.jQ(this).remove();
-							});
-							linksCount++;
-						});
+						dom.find('input.location-hood-enter').attr('autocomplete', 'off');
 					},
 					finish:function(merlin,dom){
-						var links;
-						links = "";
-						merlin.current_step.dom.find('input[name=otherlinks]').each(function(i,j){
-							if(j.value && j.value.length){
-								links += j.value + ', ';
-							}
-						});
 						
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							title:merlin.current_step.inputs.name.dom.val(),
@@ -290,7 +281,8 @@ Change by Us - Add Resource
 							physical_address:merlin.current_step.inputs.address.dom.val(),
 							location_id:merlin.current_step.step_data.locationDropdown.getLocation(),
 							url:merlin.current_step.inputs.web.dom.val(),
-							other_urls:links,
+							facebook_url:merlin.current_step.inputs.facebook.dom.val(),
+							twitter_url:merlin.current_step.inputs.twitter.dom.val(),
 							keywords:merlin.current_step.inputs.keywords.dom.val(),
 							contact_email:merlin.current_step.inputs.contact.dom.val()
 						});
