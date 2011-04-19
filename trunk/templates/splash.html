@@ -7,40 +7,29 @@ Change by Us
 {% block continent %}
 <div class='continent splash'>
 	<div class='headlands'>
-		<div class='splash-container'>
-
-		</div><!--end .splash-container-->
+		<div class='beta-splash-container'>
+			<div class="pane merlin">
+				<div class="west">
+					<h1>Change by Us<span class="beta"></span></h1>
+					<p><strong>A new</strong> way to share ideas, create projects, build teams, and make our city better.</p>
+					<p class="up">Launching <span>Spring 2011</span></p>
+				</div>
+				
+				<div class="east">
+					<label class="fancy-caps">Sign Up <span>to</span> Learn More</label>
+					<div class="email-start">
+						<input type="text" class="email" value="Your email address..." />
+						<input type="submit" class="rounded-button initial" value="submit" id="submit"/>
+					</div>
+					<div class="email-finish" style="display:none">
+						<p><strong>Thanks! We'll be in touch!</strong></p>
+					</div>
+				</div>
+			</div>
+		</div><!--end .beta-splash-container-->
 		
 		<div class="social-networking">
 			<div class="facebook"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.giveaminute.info&amp;layout=standard&amp;show_faces=false&amp;width=600&amp;action=like&amp;font=verdana&amp;colorscheme=light&amp;height=25" scrolling="no" frameborder="0" style="border:none; overflow:hidden; height:25px; width: 600px;" allowTransparency="true"></iframe></div>
-		</div>
-	</div>
-
-	<div class='midlands clearfix'>
-		<div class="west">
-		</div>
-		<div class="east">
-			<div class="box why-use">
-				<div class="hd">
-					<h2>Why use Change by Us?</h2>
-				</div>
-				<div class="bd">
-					<ol class=" ">
-						<li>
-							<span class="num"><span>1</span></span>
-							<span class="text">Discover resources and friends to help you complete your <a href="/search#projects">community project</a>.</span>
-						</li>
-						<li>
-							<span class="num"><span>2</span></span>
-							<span class="text">Connect with leaders from across the city.</span>
-						</li>
-						<li>
-							<span class="num"><span>3</span></span>
-							<span class="text">Access a limited number of small grants to get your project off the ground.</span>
-						</li>
-					</ol>
-				</div>
-			</div>
 		</div>
 	</div>
 
@@ -51,5 +40,44 @@ Change by Us
 {% endblock continent %}
 
 {% block page_js %}
+<script type="text/javascript">
+	app_page.features.push(function(app){	
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin'),
+			next_button:tc.jQ('#submit'),
+			first_step:'start',
+			data:{
+				contact_email: null
+			},
+			steps:{
+				'start':{
+					selector:'.email-start',
+					next_step:'finish',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-50','required','email'],
+							hint:'Your email address'
+						}
+					},
+					init:function(merlin,dom){
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							contact_email:merlin.current_step.inputs.email.dom.val()
+						});
+						dom.hide();
+					}
+				},
+				'finish':{
+					selector:'.email-finish',
+					init:function(merlin,dom){
+					},
+				}
+			}
+		});
+	
+	});
+</script>
 
 {% endblock page_js %}
