@@ -72,11 +72,13 @@ class Controller():
                        'join', 
                        'tou',
                        'logout',
-                       'login_facebook',
                        'login_twitter',
-                       'tw_authenticated',
+                       'login_facebook',
+                       'twitter_callback',
+                       'login_twitter_create',
                        'login_facebook_create',
-                       'login_twitter_create']
+                       'disconnect_facebook',
+                       'disconnect_twitter']
             
             if (path[1] not in allowed):
                 self.redirect('/beta')
