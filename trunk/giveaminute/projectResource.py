@@ -119,8 +119,21 @@ def getUnreviewedProjectResources(db, limit = 10, offset = 0):
     data = []
     
     try:
-        sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 1 
+        sql = """select pr.project_resource_id, 
+                        pr.title, pr.description, 
+                        pr.image_id, 
+                        pr.location_id, 
+                        pr.url,
+                        pr.twitter_url,
+                        pr.facebook_url,
+                        pr.physical_address,
+                        pr.contact_name,
+                        pr.contact_email,
+                        replace(pr.keywords, ' ', ',') as keywords,
+                        l.name as location_name
+                    from project_resource pr 
+                    left join location l on l.location_id = pr.location_id
+                    where pr.is_active = 1 and pr.is_hidden = 1 
                     limit $limit offset $offset"""
                     
         data = list(db.query(sql, {'limit':limit, 'offset':offset}))
