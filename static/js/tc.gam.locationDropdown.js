@@ -136,6 +136,10 @@ tc.locationDropdown.prototype.listBlurHandler = function(e){
 
 tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
+	tc.util.dump(e.target.value);
+	if(e.target.value == 'All neighborhoods'){
+		e.target.value = '';
+	}
 	if(this.options.radios){
 		this.options.radios.filter('.location-hood').attr('checked',true);
 	}

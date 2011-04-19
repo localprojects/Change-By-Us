@@ -276,10 +276,11 @@ Change by Us - Add Resource
 						});
 					},
 					finish:function(merlin,dom){
-						var keywords;
+						var links;
+						links = "";
 						merlin.current_step.dom.find('input[name=otherlinks]').each(function(i,j){
 							if(j.value && j.value.length){
-								keywords += j.value + ', ';
+								links += j.value + ', ';
 							}
 						});
 						
@@ -289,8 +290,8 @@ Change by Us - Add Resource
 							physical_address:merlin.current_step.inputs.address.dom.val(),
 							location_id:merlin.current_step.step_data.locationDropdown.getLocation(),
 							url:merlin.current_step.inputs.web.dom.val(),
-							other_urls:merlin.current_step.inputs.links.dom.val(),
-							keywords:keywords,
+							other_urls:links,
+							keywords:merlin.current_step.inputs.keywords.dom.val(),
 							contact_email:merlin.current_step.inputs.contact.dom.val()
 						});
 					}

@@ -29,27 +29,27 @@ class Home(Controller):
         if (not action or action == 'home'):
             return self.showHome()
         elif (action == 'mobile'):
-            return self.showMobile()   
+            return self.showMobile()
         elif (action == 'login'):
             return self.showLogin() 
         elif (action == 'login_twitter'):
-            return self.login_twitter()   
+            return self.login_twitter()
         elif (action == 'login_facebook'):
             return self.login_facebook() 
         elif (action == 'twitter_callback'):
-            return self.tw_authenticated()   
+            return self.tw_authenticated()
         elif (action == 'login_twitter_create'):
-            return self.login_twitter_create()   
+            return self.login_twitter_create()
         elif (action == 'login_facebook_create'):
             return self.login_facebook_create()
         elif (action == 'disconnect_facebook'):
-            return self.disconnect_facebook()   
+            return self.disconnect_facebook()
         elif (action == 'disconnect_twitter'):
-            return self.disconnect_twitter()      
+            return self.disconnect_twitter()
         elif (action == 'resource'):
             return self.showAddResource()
         elif (action == 'tempupload'):
-            return self.showTempUpload()                                  
+            return self.showTempUpload()
         else:
             return self.render(action)
             
