@@ -126,7 +126,7 @@ Change by Us - User Account
 												{% endif %}
 												<cite class="note-meta-hd">{% if idea.owner %}<strong>{{ idea.owner.name|truncate(18) }}</strong> said &mdash;{% endif %}</cite>
 												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
-												<cite class="note-meta-ft">Posted <strong>{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
+												<cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
 											</div>
 										</div>
 									</li>
@@ -163,7 +163,7 @@ Change by Us - User Account
 												<div class="main">
 													<div class="meta">
 														<cite class="sender">{{ message.owner.name }}</cite>
-														<cite>{{ message.created }}</cite>
+														<cite class="time-since">{{ message.created }}</cite>
 													</div>
 													<blockquote class="excerpt">
 														<p>{{ message.body }}</p>
@@ -579,7 +579,7 @@ Change by Us - User Account
 												} else {
 													template.find(".thumb img").attr("src", "/static/images/thumb_genAvatar50.png").attr("alt", message.owner.name);
 												}
-												template.find(".sender").text(message.owner.name).next().text(message.created);
+												template.find(".sender").text(message.owner.name).next().text(message.created).time_since();
 												template.find(".excerpt p").text(message.body);
 												break;
 											case "join":

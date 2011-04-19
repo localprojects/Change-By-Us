@@ -90,7 +90,7 @@
 							<blockquote class="serif">
 								<p>{{ message.body }}</p>
 							</blockquote>
-							<cite class="meta-ft">{{ message.created }}</cite>
+							<cite class="meta-ft"><span class="time-since">{{ message.created }}</span></cite>
 						</div>
 					</div>
 				</li>
@@ -323,11 +323,6 @@
 		}
 		this.dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
 		this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
-		
-		
-		this.dom.find(".comment-stack > li .meta-ft").each(function() {
-			tc.time_since(tc.jQ(this));
-		});
 		
 		function generate_message_markup(data){
 			tc.util.dump(data);

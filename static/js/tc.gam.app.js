@@ -83,12 +83,15 @@ tc.animate_bg = function(ele, from, to) {
 		}
 };
 
-tc.time_since = function(el) {
-	var raw = el.text();
-	el.attr("title", raw.split(" ").join("T") + "Z");
-	el.prettyDate();
+tc.jQ.fn.time_since = function() {
+	return this.each(function() {
+		var me, raw;
+		me = tc.jQ(this);
+		raw = me.text();
+		me.attr("title", raw.split(" ").join("T") + "Z");
+		me.prettyDate();
+	});
 };
-
 
 
 
