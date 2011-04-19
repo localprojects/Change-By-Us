@@ -183,9 +183,9 @@ Change by Us
 			<div class="note-card-pane">
 				<div class="membrane">
 					<div class="note-card-splash">
-						{% if d.template_data.all_ideas.data|length > 0 and d.template_data.all_ideas.data[0].ideas[0].f_name %}
+						{% if d.template_data.all_ideas.data[0].ideas and d.template_data.all_ideas.data[0].ideas[0].text %}
 							<cite class="note-meta-hd">
-								<strong>{{ d.template_data.all_ideas.data[0].ideas[0].f_name ~ " " ~ d.template_data.all_ideas.data[0].ideas[0].l_name }}</strong> <em>said</em> &mdash;
+								<strong>{% if d.template_data.all_ideas.data[0].ideas[0].f_name %}{{ d.template_data.all_ideas.data[0].ideas[0].f_name }}{% endif %} {% if d.template_data.all_ideas.data[0].ideas[0].l_name %}{{ d.template_data.all_ideas.data[0].ideas[0].l_name }}{% endif %}</strong> <em>said</em> &mdash;
 							</cite>
 							<blockquote>
 								<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
