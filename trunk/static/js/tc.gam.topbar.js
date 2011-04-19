@@ -12,7 +12,11 @@ tc.top_bar = function(element, options) {
 	
 	function init() {
 		element.find(".username, .myprojects").mouseenter(function () {
-			tc.jQ(this).children(".dropdown").stop(true, true).slideDown(o.slideSpeed);
+			if( $.browser.msie && $.browser.version < 8 ) {
+				tc.jQ(this).children(".dropdown").stop(true, true).fadeIn(o.slideSpeed);
+			} else {
+				tc.jQ(this).children(".dropdown").stop(true, true).slideDown(o.slideSpeed);
+			}
 		}).mouseleave(function () {
 			tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
 		});
