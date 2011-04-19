@@ -44,6 +44,9 @@ class Controller():
         
         # template data
         self.template_data = {}
+        
+        # set mode
+        self.template_data['app_mode'] = self.appMode = Config.get('app_mode')            
 
         # user
         self.user = None
@@ -59,7 +62,16 @@ class Controller():
                                                 is_leader = self.user.isLeader)            
             except Exception, e:
                 log.error(e)
-                self.session.user_id = None                
+                self.session.user_id = None         
+                
+        # beta redirect
+        if (self.appMode == 'beta' and not self.user):
+            path = web.ctx.path.split('/')
+            allowed = ['beta', 'login', 'join', 'tou']
+            
+            if (path[1] not in allowed):
+                self.redirect('/beta')
+  
 
     def require_login(self, url="/", admin=False):
         if not self.user:
