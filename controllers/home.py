@@ -37,7 +37,7 @@ class Home(Controller):
         elif (action == 'login_facebook'):
             return self.login_facebook() 
         elif (action == 'twitter_callback'):
-            return self.tw_authenticated()
+            return self.twitter_callback()
         elif (action == 'login_twitter_create'):
             return self.login_twitter_create()
         elif (action == 'login_facebook_create'):
@@ -217,10 +217,13 @@ class Home(Controller):
                 self.session.user_id = associated_user
                 self.session.invalidate()
 
-        if created_user:
-            return self.render('join', {'new_account_via_facebook': True, 'facebook_data': profile}) # go to TOS
+        if created_user: #we're creating a new account so do the TOS step and then finish the ccount
+            return self.render('join', {'new_account_via_facebook': True, 'facebook_data': profile})
         else:
-            raise web.seeother("/") # user had already signed up with us before
+            if self.request("connect") is not None or created_facebook_user: # we came here from connect-to-fb, or we found an existing regular account with same email
+                raise web.seeother("/useraccount")
+            else: # returning fb user
+                raise web.seeother("/") 
      
     def login_facebook_create(self):
         
@@ -253,6 +256,10 @@ class Home(Controller):
         
         
         self.session.request_token = req_token
+        
+       # if self.request("connect") is not None:
+       #     self.session.twitter_connect = 1
+        
         self.session._changed = True
         SessionHolder.set(self.session)
         s = SessionHolder.get_session()
@@ -266,13 +273,21 @@ class Home(Controller):
 
         raise web.seeother(url)
         
-    def tw_authenticated(self):
+    def twitter_callback(self):
         # Step 1. Use the request token in the session to build a new client.
 
         s = SessionHolder.get_session()
         token = oauth.Token(s.request_token['oauth_token'],
             s.request_token['oauth_token_secret'])
         client = oauth.Client(tw_consumer, token)
+        
+        log.info(str(s))
+        
+       # twitter_connect = 0    
+       # try:
+       #     twitter_connect = s.twitter_connect
+       # except:
+       #     pass
     
         # Step 2. Request the authorized access token from Twitter.
         resp, content = client.request(tw_settings['access_token_url'], "GET")
@@ -322,10 +337,16 @@ class Home(Controller):
                 self.session.user_id = associated_user
                 self.session.invalidate()
     
-        if created_user:
-            return self.render('join', {'new_account_via_twitter': True, 'twitter_data': access_token}) # go to TOS
+        if created_user: # we're making a new account, so do the TOS step and then finish the account
+            #log.info("creating new user via twitter... calling TOS step")
+            return self.render('join', {'new_account_via_twitter': True, 'twitter_data': access_token})
         else:
-            raise web.seeother("/")
+            if created_twitter_user: #merged twitter info into existing account via connect button
+                #log.info("created new twitter user")
+                raise web.seeother("/useraccount")
+            else: #returning twitter user
+                #log.info("returning twitter user")
+                raise web.seeother("/")
             
             
     def login_twitter_create(self):
