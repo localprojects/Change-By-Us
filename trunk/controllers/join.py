@@ -85,14 +85,22 @@ class Join(Controller):
         else:
             userId = user.createUser(self.db, email, password, firstName, lastName, phone)
             
-            if (userId > 0 and self.appMode == 'beta'):
-                self.expireBetaCode(code, userId)
+            if (userId):
+                # log in user
+                self.session.user_id = userId
+                self.session.invalidate()
             
-            idea.attachIdeasByEmail(self.db, email)
+                if (self.appMode == 'beta'):
+                    self.expireBetaCode(code, userId)
+                
+                idea.attachIdeasByEmail(self.db, email)
+                
+                if (phone and len(phone) > 0):
+                    idea.attachIdeasByPhone(self.db, phone)
             
-            if (phone and len(phone) > 0):
-                idea.attachIdeasByPhone(self.db, phone)
-        return userId;
+                return userId
+            else:
+                return False
     
     def verifyBetaCode(self, code):
         try:
