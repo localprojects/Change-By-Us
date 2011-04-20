@@ -426,15 +426,19 @@ class Home(Controller):
         title = self.request('title')
         description = self.request('description')
         physical_address = self.request('physical_address')
-        location_id = self.request('location_id') if not util.strNullOrEmpty(self.request('keywords')) else -1
+        location_id = util.try_f(int, self.request('location_id'), -1)
         url = self.request('url')
         keywords = self.request('keywords').replace(',', ' ') if not util.strNullOrEmpty(self.request('keywords')) else None
         contact_name = self.request('contact_name')
         contact_email = self.request('contact_email')
         facebook_url = self.request('facebook_url')
         twitter_url = self.request('twitter_url')
-        image_id = self.request('image')
-
+        image_id = util.try_f(int, self.request('image'))
+        
+        # TODO this is a temp fix for a form issue
+        if (contact_name == 'null'):
+            contact_name = None
+            
         try:
             projectResourceId = self.db.insert('project_resource', 
                                         title = title,
