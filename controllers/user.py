@@ -57,8 +57,11 @@ class UserAccount(Controller):
         user = mUser.User(self.db, userId)
         userActivity = user.getProfileActivityDictionary()
         
-        log.info("*** activity = %s" % userActivity)
-
+        if (self.user and
+            (self.user.isModerator or
+            self.user.isAdmin)):
+            self.template_data['user_profile_email'] = user.email
+    
         self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
         
         return self.render('useraccount')
