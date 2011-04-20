@@ -32,7 +32,7 @@ Change by Us - User Account
 					<ul class="tabs">
 						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
 						
-						{% if d.template_data.user %}
+						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
 							<li class="account"><a href="#user-account,account">Account</a></li>
 						{% endif %}
@@ -138,7 +138,7 @@ Change by Us - User Account
 					</div>
 				</div><!--end activity-view-->
 				
-				{% if d.template_data.user %}
+				{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 				
 					<div class="messages-view step" >
 						<div class="box messages">
@@ -615,8 +615,8 @@ Change by Us - User Account
 			}
 		});
 		
-		{% if d.template_data.user %}
-		
+		{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+
 			app.components.account_merlin = new tc.merlin(app,{
 				name: "account-info",
 				dom:tc.jQ(".account-view.merlin"),
