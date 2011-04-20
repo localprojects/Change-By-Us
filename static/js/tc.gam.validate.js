@@ -24,6 +24,14 @@ tc.validate = function(element,validators){
 	value = element.val();
 	errors = [];
 	
+	if(!element.get(0)){
+		return {
+			valid:false,
+			errors:['Input not found.'],
+			data:element
+		};
+	}
+	
 	for(i in validators){
 		if(validators[i].substring(0,3) == 'min'){
 			if(value.length < (validators[i].split('-')[1]*1.0)){
@@ -66,7 +74,7 @@ tc.validate = function(element,validators){
 			case 'required':
 				required = true;
 				if(element.get(0).type == 'checkbox'){
-					if(!element.filter(':checked').length){
+					if(!element.filter(':checked').length || !element.get(0).checked){
 						valid = false;
 						errors.push("This is required.");
 					}

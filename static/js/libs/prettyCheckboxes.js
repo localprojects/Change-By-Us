@@ -52,6 +52,7 @@
 					} else {
 						e.data.input.attr('checked',true);
 					}
+					
 					if(e.data.input[0].checked == true){
 						e.data.input[0].checked = false;
 					} else {
