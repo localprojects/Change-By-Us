@@ -741,13 +741,13 @@ Change by Us - CMS Content
 									tempitem.find('p.description').text(d[i].description);
 									tempitem.find('a.control-ok').attr('href','#ok-resource,'+d[i].project_resource_id);
 									tempitem.find('a.control-delete').attr('href','#remove-resource,'+d[i].project_resource_id);
-									if(d[i].image_id != -1){
+									if(d[i].image_id != -1 && d[i].image_id != 'null' && d[i].image_id){
 										tempitem.find('div.west').prepend('<img src="/images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
 									}
 									tempitem.find('div.west').append('<p><strong>'+d[i].location_name+'</strong></p>');
 									if(d[i].contact_name && d[i].contact_name.length) {  
-    									tempitem.find('div.west').append('<p><strong>Name:</strong> '+d[i].contact_name+'</p>');
-	                                }
+										tempitem.find('div.west').append('<p><strong>Name:</strong> '+d[i].contact_name+'</p>');
+									}
 									tempitem.find('div.west').append('<p><strong>Email:</strong> '+d[i].contact_email+'</p>');
 									if(d[i].url && d[i].url.length){
 										tempitem.find('div.west').append('<p><strong>URL:</strong> <a href="'+d[i].url+'" target="_blank">'+d[i].url+'</a></p>');
@@ -775,7 +775,6 @@ Change by Us - CMS Content
 						});
 					}
 				});
-				
 				
 				app.components.resources_pagination.carousel.seekTo(0,0);
 			}
