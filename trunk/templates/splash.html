@@ -47,7 +47,8 @@ Change by Us
 			next_button:tc.jQ('#submit'),
 			first_step:'start',
 			data:{
-				contact_email: null
+				email: null,
+				text:''
 			},
 			steps:{
 				'start':{
@@ -64,7 +65,8 @@ Change by Us
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							contact_email:merlin.current_step.inputs.email.dom.val()
+							email:merlin.current_step.inputs.email.dom.val(),
+							text:''
 						});
 						dom.hide();
 					}
@@ -72,7 +74,19 @@ Change by Us
 				'finish':{
 					selector:'.email-finish',
 					init:function(merlin,dom){
-					},
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/beta/submit',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return;
+								}
+							}
+						});
+					}
 				}
 			}
 		});

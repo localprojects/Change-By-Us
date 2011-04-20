@@ -323,7 +323,7 @@ tc.merlin.prototype.show_step = function(step,force){
 }
 
 tc.merlin.prototype.validate = function(on_submit){
-	tc.util.log('tc.merlin.validate');
+	tc.util.log('tc.merlin.validate1');
 	var i, valid, temp_valid, j;
 	if(!this.current_step.inputs){
 		return true;
@@ -342,7 +342,6 @@ tc.merlin.prototype.validate = function(on_submit){
 		} else {
 			temp_valid = tc.validate(this.current_step.inputs[i].dom,this.current_step.inputs[i].validators);
 		}
-		
 		if(!temp_valid.valid){
 			valid = false;
 			if(this.current_step.inputs[i].counter && this.current_step.inputs[i].dom.hasClass('has-been-focused')){
