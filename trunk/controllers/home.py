@@ -51,7 +51,7 @@ class Home(Controller):
         elif (action == 'tempupload'):
             return self.showTempUpload()
         elif (action == 'beta'):
-            return self.render('splash')
+            return self.showBeta()
         else:
             return self.render(action)
             
@@ -132,6 +132,14 @@ class Home(Controller):
         self.template_data['locations'] = locations
         
         return self.render('resource')
+    
+    # if in beta mode and user is not logged in show splash
+    # otherwise redirect homepage    
+    def showBeta(self):
+        if (self.appMode == 'beta' and not self.user):
+            return self.render('splash')
+        else:
+            return self.redirect('/')
     
     def login(self):
         email = self.request("email")
