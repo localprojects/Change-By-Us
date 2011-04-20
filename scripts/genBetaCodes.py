@@ -1,3 +1,6 @@
+# lazy code generator
+# doesn't check against db, but will throw key error on attempted duplicate insert
+
 import MySQLdb
 
 def main():
