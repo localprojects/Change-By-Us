@@ -40,6 +40,7 @@ Change by Us - Search Results
 				<span class="in">in</span>
 				<div class="search-hood-container">
 					<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %} value="All neighborhoods"/>
+					<a class="clear-field" href=""></a>
 					<div class="location-hood-list"><ul></ul></div>
 				</div>
 				<input type="submit" class="rounded-button search-submit" value="Search" />
@@ -456,9 +457,15 @@ Change by Us - Search Results
 			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
 		};
 		
-		tc.jQ('a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
+		tc.jQ('.search-terms-container a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
 			e.preventDefault();
 			e.data.input.val('');
+		});
+		
+		tc.jQ('.search-hood-container a.clear-field').bind('click',{input:tc.jQ('input.location-hood-enter')},function(e){
+			e.preventDefault();
+			e.data.input.attr('location_id','-1');
+			e.data.input.val('All neighborhoods');
 		});
 		
 		tc.jQ('input.search-submit').bind('click',{terms:tc.jQ('input.search-terms'),location:tc.jQ('input.location-hood-enter')},function(e){
