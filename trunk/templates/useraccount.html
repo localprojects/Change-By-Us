@@ -4,9 +4,17 @@
 Change by Us - User Account
 {% endblock title %}
 
+
+{% block project_admin %}
+	{{ super() }}
+	{% if d.template_data.user and d.template_data.user.data.u_id %}
+		<li class="delete"><a href="#deleteUser,{{ d.template_data.user.data.u_id }}" class="fancy-caps delete-user">Delete <span>this</span> user</a></li>
+	{% endif %}
+{% endblock %}
+
+
+
 {% block continent %}
-
-
 
 <div class='continent user-account'>
 	<div class='headlands'>
@@ -374,7 +382,23 @@ Change by Us - User Account
 			<div class="file-uploader"></div>
 		</div>
 		<a class='close' href="#"><span>close</span></a>
-	</div
+	</div>
+	
+	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<div class="template-content modal-content confirm-delete user-delete">
+			<div class="step">
+				<h2><strong>Delete</strong> this User?</h2>
+				<div>
+					<p>You are about to delete this User from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete User</a>
+					<a class="cancel" href="#">No, keep them.</a>
+				</div>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+	{% endif %}
 	
 </div>
 
@@ -622,8 +646,41 @@ Change by Us - User Account
 			}
 		});
 		
+		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+			tc.jQ('a.delete-user').bind('click',{app:app},function(e,d){
+				var t;
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				e.data.app.components.modal.show({
+					app:app,
+					source_element:tc.jQ('.modal-content.user-delete'),
+					submit:function(modal,callback){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/user/delete',
+							data:{
+								user_id:t.hash.split(',')[1]
+							},
+							context:app,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(this.app_page.data.redir_from){
+									window.location = this.app_page.data.redir_from;
+								} else {
+									window.location = '/';
+								}
+							}
+						});
+					}
+				});
+			});
+		{% endif %}
+		
+		
 		{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-
 			app.components.account_merlin = new tc.merlin(app,{
 				name: "account-info",
 				dom:tc.jQ(".account-view.merlin"),
@@ -796,13 +853,13 @@ Change by Us - User Account
 						element: modal.options.element.find('.file-uploader').get(0),
 						action: '/create/photo',
 						onComplete: function(id, fileName, responseJSON){
-
+							
 							tc.jQ(document).trigger('create-image-uploaded',{
 								id:id,
 								fileName:fileName,
 								responseJSON:responseJSON
 							});
-
+							
 							return true;
 						}
 					});
