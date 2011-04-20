@@ -280,6 +280,8 @@ Change by Us - Join
 				first_step:'twitter-login',
 			{% elif d.new_account_via_facebook %}
 				first_step:'facebook-login',
+			{% elif d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+				first_step:'user-info',
 			{% else %}
 				first_step:'start',
 			{% endif %}
@@ -343,6 +345,13 @@ Change by Us - Join
 							validators:['max-10','min-10','required'],
 							hint:''
 						}
+						{% endif %}
+					},
+					init:function(merlin,dom){
+						{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+							tc.jQ('.merlin-progress a.indicator.1').hide();
+							tc.jQ('.merlin-progress a.indicator.2 .num').html('1');
+							tc.jQ('.merlin-progress a.indicator.3 .num').html('2');
 						{% endif %}
 					},
 					finish:function(merlin,dom){
