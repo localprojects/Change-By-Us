@@ -86,7 +86,7 @@ class Join(Controller):
             userId = user.createUser(self.db, email, password, firstName, lastName, phone)
             
             if (userId > 0 and self.appMode == 'beta'):
-                self.expireBetaCode(self, code, userId)
+                self.expireBetaCode(code, userId)
             
             idea.attachIdeasByEmail(self.db, email)
             
@@ -107,7 +107,7 @@ class Join(Controller):
         
     def expireBetaCode(self, code, userId):
         try:
-            self.db.update(beta_invite_code, where = "code = $code", user_id = userId, vars = {'code':code})
+            self.db.update('beta_invite_code', where = "code = $code", user_id = userId, vars = {'code':code})
             return True
         except Exception, e:
             log.info("*** couldn't expire beta code")
