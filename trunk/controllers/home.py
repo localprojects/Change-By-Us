@@ -492,6 +492,7 @@ class Home(Controller):
         
             for item in data:
                 betterData.append(dict(text = str(item.text),
+                            user_id = item.user_id,
                             f_name = str(item.f_name) if item.f_name else '',
                             l_name = str(item.l_name)[0] + '.' if item.l_name else '',
                             submitted_by =  str(item.submitted_by)))   
