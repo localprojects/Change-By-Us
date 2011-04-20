@@ -386,10 +386,15 @@ def findUserByPhone(db, phone):
     else:
         return None  
     
-def assignUserToGroup(db, userId, userGroupId):
+def assignUserToGroup(db, userId, userGroupId, title = None, organization = None):
     try:
         db.insert('user__user_group', user_id = userId, 
                                       user_group_id = userGroupId)
+                    
+        if (userGroupId == 3):
+            db.insert('project_leader', user_id = userId,
+                                        title = title,
+                                        organization = organization)
                                       
         return True
     except Exception, e:
