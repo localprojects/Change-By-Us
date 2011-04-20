@@ -134,7 +134,7 @@ tc.resource_tooltip.prototype.handlers = {
 		e.data.me.tooltip.stop();
 		e.data.me.hide();
 	}
-}
+};
 
 tc.resource_tooltip.prototype.generate_markup = function(data){
 	tc.util.log("tc.resource_tooltip.generate_markup");
@@ -145,7 +145,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	markup.find('.main p').text(data.description);
 	markup.find('dd a').attr('href',data.url).text(data.url);
 	return markup;
-}
+};
 
 tc.resource_tooltip.prototype.show = function(){
 	//tc.util.log("tc.resource_tooltip.show");
@@ -182,7 +182,7 @@ tc.resource_tooltip.prototype.show = function(){
 		this.tooltip.html(this.current_trigger.data('cached-data'));
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 	}
-}
+};
 
 tc.resource_tooltip.prototype.move_to_target = function(target_pos,animate){
 	if(animate){
@@ -205,7 +205,7 @@ tc.resource_tooltip.prototype.move_to_target = function(target_pos,animate){
 		});
 	}
 	this.has_been_shown = true;
-}
+};
 
 tc.resource_tooltip.prototype.hide = function(){
 	//tc.util.log("tc.resource_tooltip.hide");
@@ -216,4 +216,4 @@ tc.resource_tooltip.prototype.hide = function(){
 		tc.jQ(this).hide();
 		me.current_trigger = null;
 	});
-}
+};
