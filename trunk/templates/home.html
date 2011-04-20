@@ -97,7 +97,7 @@ Change by Us
 										<div class="bd">
 											{% for idea in idea_group.ideas %}
 												{% if loop.index < 45 %}
-													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><div><cite class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}><strong>{% if idea.f_name %}{{ idea.f_name ~ " " ~ idea.l_name }}{% endif %}</strong> <em>said</em> &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></div></a></div>
+													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><div><cite class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}><strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;</cite><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></div></a></div>
 												{% endif %}
 											{% endfor %}
 										</div>
@@ -185,7 +185,14 @@ Change by Us
 					<div class="note-card-splash">
 						{% if d.template_data.all_ideas.data[0].ideas and d.template_data.all_ideas.data[0].ideas[0].text %}
 							<cite class="note-meta-hd">
-								<strong>{% if d.template_data.all_ideas.data[0].ideas[0].f_name %}{{ d.template_data.all_ideas.data[0].ideas[0].f_name }}{% endif %} {% if d.template_data.all_ideas.data[0].ideas[0].l_name %}{{ d.template_data.all_ideas.data[0].ideas[0].l_name }}{% endif %}</strong> <em>said</em> &mdash;
+								{% if d.template_data.all_ideas.data[0].ideas[0].f_name and d.template_data.all_ideas.data[0].ideas[0].l_name %}
+									<strong>
+										<a href="/useraccount/{{ d.template_data.all_ideas.data[0].ideas[0].user_id }}">
+											{{ d.template_data.all_ideas.data[0].ideas[0].f_name }}
+											{{ d.template_data.all_ideas.data[0].ideas[0].l_name }}
+										</a>
+									</strong> <em>said</em> &mdash;
+								{% endif %}
 							</cite>
 							<blockquote>
 								<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
@@ -588,7 +595,7 @@ Change by Us
 									.attr('href','/project/'+ data[i].project_id)
 									.attr("target", "_blank");
 								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> <a href="/useraccount/'+ data[i].owner.u_id +'">'+ data[i].owner.name +'</a></span>');
-								temphtml.find('.description').text(data[i].description);
+								temphtml.find('.description').html( /*tc.truncate(data[i].description, 255)*/data[i].description );
 								temphtml.find('.member-count').text(data[i].num_members);
 								if (data[i].endorsement) {
 									temphtml.find('.endorser-thumb').show();
@@ -637,8 +644,7 @@ Change by Us
 			}
 		});
 		
-		var note_source = {{ d.all_ideas }};
-		
+		var note_source = {{ d.all_ideas.json }};
 				
 		arrangeNotes("1");
 		arrangeNotes("2");
