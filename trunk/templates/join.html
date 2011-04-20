@@ -142,8 +142,8 @@ Change by Us - Join
 				</div>
 				
 				<div class="east">
-					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info' value='1' />
-					<label class="tos-user-info-label" for='tos-user-info'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms and Conditions</a></label>
+					<input type='checkbox' name='tos-user-info-twitter' id='tos-user-info-twitter' class='tos-user-info' value='1' />
+					<label class="tos-user-info-label" for='tos-user-info-twitter'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms and Conditions</a></label>
 					
 				</div>
 				
@@ -316,17 +316,17 @@ Change by Us - Join
 					inputs:{
 						f_name:{
 							selector:'input.f_name',
-							validators:['max-32','min-3','required'],
+							validators:['max-128','min-3','required'],
 							hint:'First name'
 						},
 						l_name:{
 							selector:'input.l_name',
-							validators:['max-32','min-3','required'],
+							validators:['max-128','min-3','required'],
 							hint:'Last name'
 						},
 						email:{
 							selector:'input.email',
-							validators:['max-32','min-3','email','required'],
+							validators:['max-128','min-3','email','required'],
 							hint:''
 						},
 						password:{
@@ -337,8 +337,7 @@ Change by Us - Join
 						tos_user_info:{
 							selector:'input.tos-user-info',
 							validators:['required']
-						},
-						{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+						}{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %},
 						invite:{
 							selector:'input.invite-code',
 							validators:['max-10','min-10','required'],
@@ -351,8 +350,9 @@ Change by Us - Join
 							f_name:merlin.current_step.inputs.f_name.dom.val(),
 							l_name:merlin.current_step.inputs.l_name.dom.val(),
 							email:merlin.current_step.inputs.email.dom.val(),
-							password:merlin.current_step.inputs.password.dom.val(),
+							password:merlin.current_step.inputs.password.dom.val(){% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %},
 							beta_code:merlin.current_step.inputs.invite.dom.val()
+							{% endif %}
 						});
 					}
 				},
@@ -366,12 +366,12 @@ Change by Us - Join
 					inputs:{
 						f_name:{
 							selector:'input.f_name',
-							validators:['max-32','min-3','required'],
+							validators:['max-128','min-3','required'],
 							hint:'First name'
 						},
 						l_name:{
 							selector:'input.l_name',
-							validators:['max-32','min-3','required'],
+							validators:['max-128','min-3','required'],
 							hint:'Last name'
 						},
 						email:{
@@ -380,16 +380,8 @@ Change by Us - Join
 							hint:''
 						},
 						tos_email:{
-							selector:'input.tos-twitter',
-							validators:function(merlin,element,step){
-								if(merlin.current_step.inputs.email.dom.val().length){
-									return tc.validate(element,['required']);
-								} else {
-									return {
-										valid:true
-									};
-								}
-							},
+							selector:'input.tos-user-info',
+							validators:['required'],
 							hint:''
 						}
 					},
@@ -411,7 +403,7 @@ Change by Us - Join
 					inputs:{
 						email:{
 							selector:'input.email-alt',
-							validators:['min-3','max-32','email'],
+							validators:['min-3','max-128','email'],
 							hint:''
 						},
 						tos_email:{
@@ -619,18 +611,21 @@ Change by Us - Join
 					prev_step:null,
 					next_step:null,
 					init:function(merlin,dom){
-						var url;
+						var url, method;
 						
 						{% if d.new_account_via_twitter %}
 							url = '/login_twitter_create';
+							method = 'GET';
 						{% elif d.new_account_via_facebook %}
 							url = '/login_facebook_create';
+							method = 'GET';
 						{% else %}
 							url = '/join';
+							method = 'POST';
 						{% endif %}
 						
 						tc.jQ.ajax({
-							type:'POST',
+							type:method,
 							url:url,
 							data:merlin.options.data,
 							context:merlin,
