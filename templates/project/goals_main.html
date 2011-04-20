@@ -18,12 +18,12 @@
 	</div>
 	
 	<div class="goals-display" style="{% if not d.template_data.project.data.info.goals['items']|length > 0 %}display:none;{% endif %}">
-		<h3 class="fancy-caps"><span>The</span> Active Goal <span>for this</span> Project</h3>
+		<h3 class="fancy-caps active-goal-indicator"><span>The</span> Active Goal <span>for this</span> Project</h3>
 		<div class="carousel">
 			<div class="scrollable">
 				<ul class="items">
 					{% for goal in d.template_data.project.data.info.goals['items'] %}
-						<li>
+						<li rel='{{ goal.goal_id }},{{ goal.active }}'>
 							<div class="goal-card">
 								{% if d.template_data.project_user.data.is_project_admin %}
 									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
@@ -53,7 +53,7 @@
 	
 	{% if d.template_data.project_user.data.is_member %}
 		<div class="goals-empty" style="{% if d.template_data.project.data.info.goals['items']|length > 0 %}display:none;{% endif %}">
-			<h3 class="fancy-caps">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
+			<h3 class="fancy-caps active-goal-indicator">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
 			<div class="empty-state-box big">
 				<!--<a class="close" href="#"><span>Close</span></a>-->
 				<p>Goals help define what you want to do and help you get it done. Why not <a href="#show,goals_add">add a goal now?</a></p>
@@ -161,6 +161,7 @@
 		this.generate_markup = function(data){
 			var temphtml;
 			temphtml = tc.jQ('.template-content.goal').clone().removeClass('template-content');
+			temphtml.attr('rel',data.goal_id+','+data.active);
 			temphtml.css('width','512px');
 			temphtml.find('a.close').attr('href','#removeGoal,'+data.goal_id);
 			temphtml.find('.goal-title').text(data.text);
@@ -220,6 +221,25 @@
 		this.carousel = new tc.carousel({
 			element: this.dom.find(".carousel")
 		});
+		
+		tc.util.dump('-----');
+		this.carousel.carousel.getRoot().unbind('onSeek').bind('onSeek', { project:project, me:me }, function(e,d){
+			var active;
+			active = e.data.me.carousel.carousel.getItems().eq(e.data.me.carousel.carousel.getIndex()).attr('rel').split(',')[1];
+			tc.util.dump(e.data.project.dom.find('.active-goal-indicator'));
+			if(active == 'True' || active == 'true' || active == true){
+				e.data.project.dom.find('.active-goal-indicator').stop().animate({
+					'opacity':1.0
+				},600,'easeOutCubic');
+			} else {
+				e.data.project.dom.find('.active-goal-indicator').stop().animate({
+					'opacity':0.0
+				},600,'easeOutCubic');
+			}
+		});
+		
+		tc.util.dump(this.carousel);
+		tc.util.dump('-----');
 		
 		this.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, this.handlers.remove_goal);
 		
