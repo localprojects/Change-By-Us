@@ -99,7 +99,7 @@ Change by Us - CMS Admin Settings
 												
 												<tr id='user-{{ user.user_id }}'>
 													<th scope="row" class="active-admin-info serif">
-														<h3>{{ user.first_name }} {{ user.last_name }}</h3>
+														<h3><a href="/useraccount/{{ user.user_id }}">{{ user.first_name }} {{ user.last_name }}</a></h3>
 														<div class="email">
 															<a href="mailto:{{ user.email }}">{{ user.email }}</a>
 														</div>
@@ -444,7 +444,7 @@ Change by Us - CMS Admin Settings
 											for(i in d){
 												temprow = this.current_step.runtime_data.tr_element.clone();
 												temprow.attr('id','user-'+d[i].user_id);
-												temprow.find('h3.name').text(d[i].first_name+' '+d[i].last_name);
+												temprow.find('h3.name').html("<a href='/useraccount/"+ d[i].user_id +"'>" + d[i].first_name+' '+d[i].last_name + "</a>");
 												temprow.find('a.email-a').attr('href','mailto:'+d[i].email).text(d[i].email);
 												temprow.find('input.radio-leader').attr('id','user-role-'+d[i].user_id+'-radio-leader').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+3+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-leader');
 												temprow.find('input.radio-moderator').attr('id','user-role-'+d[i].user_id+'-radio-moderator').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+2+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-moderator');
