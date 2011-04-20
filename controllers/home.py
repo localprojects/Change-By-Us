@@ -481,7 +481,7 @@ class Home(Controller):
         data = []
         betterData = []
         
-        sql = """select i.idea_id, i.description as text, u.first_name as f_name, u.last_name as l_name, i.submission_type as submitted_by 
+        sql = """select i.idea_id, i.description as text, u.user_id, u.first_name as f_name, u.last_name as l_name, i.submission_type as submitted_by 
                 from idea i
                 inner join project__idea pi on pi.idea_id = i.idea_id and pi.project_id = $id
                 left join user u on u.user_id = i.user_id
