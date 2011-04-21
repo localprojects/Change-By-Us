@@ -50,10 +50,10 @@ class Home(Controller):
             return self.showAddResource()
         elif (action == 'tempupload'):
             return self.showTempUpload()
-        elif (action == 'beta'):
-            return self.showBeta()
         elif (action == 'nyc'):
             self.redirect('http://nyc.changeby.us/')
+        elif (action == 'beta'):
+            return self.showBeta()
         else:
             return self.render(action)
             
