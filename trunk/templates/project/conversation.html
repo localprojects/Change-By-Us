@@ -108,6 +108,10 @@
 	<div class="load-more" {% if d.template_data.project.data.info.messages['n_returned'] < 10 %} style='display:none;' {% endif %}>
 		<a href="#" class='load_more_button'><span>Older Posts</span></a>
 	</div>
+
+	<div class="empty-state-box big" style="{% if d.template_data.project.data.info.messages['total'] > 0 %}display:none;{% endif %}">
+		<p>No one has started the conversation yet, join this project to tell people what you think!</p>
+	</div>
 	
 </div>
 
@@ -184,6 +188,7 @@
 			},
 			add_new_message:function(e,d){
 				var message;
+				e.data.me.dom.find(".empty-state-box").hide();
 				message = generate_message_markup(d);
 				message.hide();
 				e.data.me.elements.message_stack.prepend(message);
