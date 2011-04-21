@@ -6,8 +6,17 @@ tc.validator_regex = {
 };
 
 tc.validator_utils = {
-	isEmpty: function(str) {
+	is_empty: function(str) {
 		return tc.jQ.trim(str) ? false : true; 
+	},
+	val_escape_hints: function(element) {
+		var value, hint;
+		value = element.val();
+		hint = element.data().input ? element.data().input.hint : null;
+		if (!hint) {
+			return value;
+		}
+		return (value === hint ? "" : value);
 	}
 };
 
@@ -78,10 +87,13 @@ tc.validate = function(element,validators){
 						valid = false;
 						errors.push("This is required.");
 					}
-				} else if(!value.length){
-					empty = true;
-					valid = false;
-					errors.push("This is required.");
+				} else {
+					value = tc.validator_utils.val_escape_hints(element);
+					if (!value.length) {
+						empty = true;
+						valid = false;
+						errors.push("This is required.");
+					}
 				}
 				break;
 			case 'password':
