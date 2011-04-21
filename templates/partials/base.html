@@ -312,6 +312,12 @@
 				
 				tc.app(app_page);
 				
+				// add body class for FF3-specific css fixes (mostly for input styling)
+				var ua = tc.jQ.browser;
+				if ( ua.mozilla && ua.version.slice(0,5) == "1.9.0" ) { /* gecko 1.9.0 is for < FF3.5 */
+					tc.jQ('body').addClass('ff3');
+				};
+				
 				/* DELETE THIS LATER!!!!!!! */
 				$('.dev-util .toggle').click(function() {
 				  $('.dev-util-content').toggle();
