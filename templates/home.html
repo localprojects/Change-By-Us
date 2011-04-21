@@ -88,15 +88,25 @@ Change by Us
 						</div>
 						<div class="project-cards">
 							<div class="membrane">
-								
 								{% for idea_group in d.template_data.all_ideas.data %}
+									{% set area = loop.index %}
+									
 									<div class ="box area{{ loop.index }} grouping">
 										<div class="hd">
 											<h3><a href="/project/{{ idea_group.project_id }}">{{ idea_group.title }}</a></h3>
 										</div>
 										<div class="bd">
 											{% for idea in idea_group.ideas %}
-												{% if loop.index < 45 %}
+											
+												{% if area == 1 %}
+													{% set max_cards = 45 %}
+												{% elif area > 1 and area < 5 %}
+													{% set max_cards = 25 %}
+												{% else %}
+													{% set max_cards = 15 %}
+												{% endif %}
+											
+												{% if loop.index < max_cards %}
 													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><div class="wrap"><div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}><strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;</div><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></div></a></div>
 												{% endif %}
 											{% endfor %}
@@ -591,11 +601,11 @@ Change by Us
 								if (data[i].image_id){
 									temphtml.find('img').attr('src','/images/'+(data[i].image_id % 10)+'/'+data[i].image_id+'.png');
 								}
-								temphtml.find('.link a').text(data[i].title)
+								temphtml.find('.link a').html( tc.truncate(data[i].title, 45) )
 									.attr('href','/project/'+ data[i].project_id)
 									.attr("target", "_blank");
 								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> <a href="/useraccount/'+ data[i].owner.u_id +'">'+ data[i].owner.name +'</a></span>');
-								temphtml.find('.description').html( /*tc.truncate(data[i].description, 255)*/data[i].description );
+								temphtml.find('.description').html( tc.truncate(data[i].description, 110) );
 								temphtml.find('.member-count').text(data[i].num_members);
 								if (data[i].endorsement) {
 									temphtml.find('.endorser-thumb').show();
