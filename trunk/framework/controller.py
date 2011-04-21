@@ -78,8 +78,7 @@ class Controller():
                        'login_twitter_create',
                        'login_facebook_create',
                        'disconnect_facebook',
-                       'disconnect_twitter',
-                       'nyc']
+                       'disconnect_twitter']
             
             if (path[1] not in allowed):
                 self.redirect('/beta')
