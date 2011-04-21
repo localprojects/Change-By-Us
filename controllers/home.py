@@ -53,7 +53,7 @@ class Home(Controller):
         elif (action == 'beta'):
             return self.showBeta()
         elif (action == 'nyc'):
-            self.redirect('/')
+            self.redirect('http://nyc.changeby.us/')
         else:
             return self.render(action)
             
