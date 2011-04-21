@@ -52,6 +52,8 @@ class Home(Controller):
             return self.showTempUpload()
         elif (action == 'beta'):
             return self.showBeta()
+        elif (action == 'nyc'):
+            self.redirect('/')
         else:
             return self.render(action)
             
