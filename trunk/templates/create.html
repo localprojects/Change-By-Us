@@ -414,14 +414,6 @@ Change by Us - Create a Project
 						tc.util.dump(merlin.current_step.inputs);
 						
 						function val_escape_hints($input) {
-							/*var val, hint;
-							val = $input.val();
-							hint = ($input.data().input ? $input.data().input.hint : null);
-							if (!hint) {
-								return val;
-							}
-							return (val === hint ? "" : val);*/
-							
 							if ($input.hasClass("has-been-focused")) {
 								return $input.val();
 							}
@@ -519,8 +511,9 @@ Change by Us - Create a Project
 							}
 							temphtml.find('.link a').text(merlin.current_step.step_data.projects[i].title).attr('href','/project/'+merlin.current_step.step_data.projects[i].project_id);
 							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> '+
-								'<a href="/useraccount/'+ merlin.current_step.step_data.projects[i].owner.u_id + '">'+
-									merlin.current_step.step_data.projects[i].owner.name +
+								'<a href="/useraccount/'+ merlin.current_step.step_data.projects[i].owner_user_id + '">'+
+									merlin.current_step.step_data.projects[i].owner_first_name +
+									merlin.current_step.step_data.projects[i].owner_last_name +
 								'</a>'+
 							'</span>');
 							temphtml.find('.description').text(merlin.current_step.step_data.projects[i].description);

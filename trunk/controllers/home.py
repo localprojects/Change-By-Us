@@ -111,7 +111,7 @@ class Home(Controller):
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
-        self.template_data['news'] = news
+        self.template_data['news'] = dict() #news
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
