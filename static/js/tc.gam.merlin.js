@@ -19,7 +19,7 @@ tc.merlin.prototype.options = {
 			next_step:null
 		}
 	}
-}
+};
 
 tc.merlin.prototype.init = function(app,options){
 	tc.util.log('tc.merlin.init');
@@ -49,7 +49,7 @@ tc.merlin.prototype.init = function(app,options){
 	}
 	
 	this.current_hash = null;
-}
+};
 
 tc.merlin.prototype.setup_events = function(app){
 	tc.util.log('tc.merlin.setup_events');
@@ -292,7 +292,9 @@ tc.merlin.prototype.show_step = function(step,force){
 			this.current_step.inputs[i].dom
 				.bind('focus',temp_e_data,this.handlers.focus)
 				.bind('keyup change',temp_e_data,this.handlers.keypress)
-				.bind('blur',temp_e_data,this.handlers.blur).data({merlin:this,input:this.current_step.inputs[i]}).each(function(i,j){
+				.bind('blur',temp_e_data,this.handlers.blur)
+				.data({merlin:this,input:this.current_step.inputs[i]})
+				.each(function(i,j){
 					var $j;
 					$j = tc.jQ(j);
 					if($j.data().input.hint || ($j.data().input.hint === "")){
@@ -320,7 +322,7 @@ tc.merlin.prototype.show_step = function(step,force){
 	}
 	this.validate(false);
 	this.current_step.has_been_initialized = true;
-}
+};
 
 tc.merlin.prototype.validate = function(on_submit){
 	tc.util.log('tc.merlin.validate1');
@@ -335,7 +337,7 @@ tc.merlin.prototype.validate = function(on_submit){
 			continue;
 		}
 		if(on_submit){
-			this.current_step.inputs[i].dom.addClass('has-been-focused').addClass('has-attempted-submit');
+			this.current_step.inputs[i].dom.addClass('has-been-focused has-attempted-submit');
 		}
 		if(tc.jQ.isFunction(this.current_step.inputs[i].validators)){
 			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].dom,this.current_step);
@@ -370,7 +372,7 @@ tc.merlin.prototype.validate = function(on_submit){
 		this.current_step.dom.removeClass('valid').addClass('invalid');
 		return false;
 	}
-}
+};
 
 tc.merlin.prototype.handlers = {
 	hashchange:function(e,d){
@@ -486,5 +488,5 @@ tc.merlin.prototype.handlers = {
 			e.data.me.options.next_button.removeClass('enabled').addClass('disabled');
 		}
 	}
-}
+};
 
