@@ -106,7 +106,8 @@ class Home(Controller):
 
         locations = dict(data = locationData, json = json.dumps(locationData))
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
-        news = self.getNewsItems()
+        #news = self.getNewsItems()
+        news = []
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
