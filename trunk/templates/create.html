@@ -47,13 +47,13 @@ Change by Us - Create a Project
 				<div class="east">
 					<div class="row clearfix">
 						<label for='name'><strong>Name</strong> your project:</label>
-						<input value='' type='text' name='name' id='name' class='name'/>
+						<input type='text' name='name' id='name' class='name'/>
 						<span class="charlimit title">50</span>
 						<div class="below-input clearfix"><span class="createdby">Created by</span><span class="user-name">{% if d.template_data and d.template_data.user %}{{ d.template_data['user'].data.f_name }} {{ d.template_data['user'].data.l_name }}{% endif %}</span><span class="edit" style='display:none;'>Edit</span></div>
 					</div>
 					<div class="row clearfix">
 						<label for='organization'><strong>Give your affiliation</strong> (Optional)</label>
-						<input value='' type='text' name='organization' id='organization' class='organization'/>
+						<input type='text' name='organization' id='organization' class='organization'/>
 					</div>
 					<div class="row clearfix">
 						<label for='describe'><strong>Describe</strong> your project. Be specific so people can find it and join.</label>
@@ -62,7 +62,7 @@ Change by Us - Create a Project
 					</div>
 					<div class="row clearfix">
 						<label for='keywords'><strong>Add</strong> keywords to help people find your project:</label>
-						<input value='Seperate keywords by commas' type='text' name='keywords' id='keywords' class='keywords'/>
+						<input type='text' name='keywords' id='keywords' class='keywords'/>
 						<div class="below-input clearfix">
 							<span class="suggested-keywords-label">Suggested Keywords</span>
 							<span class="suggested-keywords"></span>
@@ -70,11 +70,9 @@ Change by Us - Create a Project
 					</div>
 				</div>
 			</div><!--end step-->
-			
-			
+
 			<div class='step location clearfix' style='display:none;'>
-				<div class="west">
-				</div>
+				<div class="west"></div>
 				<div class="east">
 					<h3>Your project is for?</h3>
 					<div class="row row-1 clearfix">
@@ -415,11 +413,26 @@ Change by Us - Create a Project
 						
 						tc.util.dump(merlin.current_step.inputs);
 						
+						function val_escape_hints($input) {
+							/*var val, hint;
+							val = $input.val();
+							hint = ($input.data().input ? $input.data().input.hint : null);
+							if (!hint) {
+								return val;
+							}
+							return (val === hint ? "" : val);*/
+							
+							if ($input.hasClass("has-been-focused")) {
+								return $input.val();
+							}
+							return "";
+						}
+						
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							title:merlin.current_step.inputs.title.dom.val(),
-							organization:merlin.current_step.inputs.organization.dom.val(),
-							text:merlin.current_step.inputs.description.dom.val(),
-							keywords:merlin.current_step.inputs.keywords.dom.val()
+							title: merlin.current_step.inputs.title.dom.val(),
+							organization: val_escape_hints(merlin.current_step.inputs.organization.dom),
+							text: merlin.current_step.inputs.description.dom.val(),
+							keywords: val_escape_hints(merlin.current_step.inputs.keywords.dom)
 						});
 					}
 				},
