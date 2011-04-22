@@ -15,7 +15,7 @@
 					<div class="scrollable">
 						<ul class="items">
 							{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
-								<li>
+								<li rel="idea-{{ idea.idea_id }}">
 									<div class="note-card-public-controls">
 										<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
 										<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
@@ -63,20 +63,20 @@
 	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
 	
 	tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
-		var widget;
+		var widget, carousel;
 		tc.util.log("project.fresh_ideas");
 		this.options = tc.jQ.extend({name:'fresh_ideas'},options);
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
 	
-		this.carousel = new tc.carousel({
+		carousel = new tc.carousel({
 			element: this.dom.find(".carousel"),
 			pagination: {
 				current: this.dom.find(".pagination .cur-index"),
 				total: this.dom.find(".pagination .total, .hd h2 .counter")
 			}
 		});
-		if (!this.carousel.is_rendered()) {
+		if (!carousel.is_rendered()) {
 			
 		}
 		
@@ -100,37 +100,41 @@
 			});
 		});
 		
-		dom.find('a.remove-idea').bind('click', {project:project, app:options.app, carousel:this.carousel}, function(e){
+		dom.find('a.remove-idea').bind('click', {project:project, app:options.app}, function(e){
 			e.preventDefault();
 			
 			e.data.app.components.modal.show({
-					app:e.data.app,
-					source_element:tc.jQ('.modal-content.remove-idea'),
-					submit:function(){
-						tc.jQ.ajax({
-							type:'POST',
-							url:'/idea/remove',
-							data:{
-								idea_id: e.target.hash.split(',')[1]
-							},
-							context: tc.jQ(e.target),
-							dataType:'text',
-							success:function(data,ts,xhr){
-								if(data == 'False'){
-									return false;
-								}
-								this.parents("li").eq(0).remove();
-								e.data.carousel.update_pagination().update_navigation();
+				app:e.data.app,
+				source_element:tc.jQ('.modal-content.remove-idea'),
+				submit:function(){
+					var id;
+					id = e.target.hash.split(",")[1];
+					tc.jQ.ajax({
+						type:'POST',
+						url:'/idea/remove',
+						data:{
+							idea_id: id
+						},
+						context: tc.jQ(e.target),
+						dataType:'text',
+						success:function(data,ts,xhr){
+							if(data == 'False'){
+								return false;
 							}
-						});
-					}
-				});
-			
+							e.data.project.dom.trigger("project-idea-remove", { id: id });
+						}
+					});
+				}
+			});
 		});
 			
 		return {
 			show:widget.show,
-			hide:widget.hide
+			hide:widget.hide,
+			remove_idea: function(id) {
+				carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
+				carousel.update_pagination().update_navigation();
+			}
 		};
 	};
 	

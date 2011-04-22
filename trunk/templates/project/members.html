@@ -127,13 +127,17 @@
 								<div class="scrollable">
 									<ul class="items">
 										{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
-											<li>
+											<li rel="idea-{{ idea.idea_id }}">
 												<div class="note-card-public-controls">
 													<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
 													<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
 												</div>
 												<div class="note-card">
 													<div class="membrane">
+														{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+															<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+														{% endif %}
+														
 														{% if idea.owner.name %}
 															<cite class="note-meta-hd">
 																<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name }}</a></strong> said &mdash;
@@ -374,6 +378,34 @@
 			this.components.ideas_pagination.hide();
 		}
 		
+		dom.find('a.remove-idea').bind('click', {project:project, app:options.app}, function(e){
+			e.preventDefault();
+			
+			e.data.app.components.modal.show({
+				app:e.data.app,
+				source_element:tc.jQ('.modal-content.remove-idea'),
+				submit:function(){
+					var id;
+					id = e.target.hash.split(",")[1];
+					tc.jQ.ajax({
+						type:'POST',
+						url:'/idea/remove',
+						data:{
+							idea_id: id
+						},
+						context: tc.jQ(e.target),
+						dataType:'text',
+						success:function(data,ts,xhr){
+							if(data == 'False'){
+								return false;
+							}
+							e.data.project.dom.trigger("project-idea-remove", { id: id });
+						}
+					});
+				}
+			});
+		});
+
 		return {
 			show:function(propagate) {
 				widget.show(propagate);
@@ -383,7 +415,11 @@
 				}
 				window.location.hash = 'email_invite,email-invite-info';
 			},
-			hide:widget.hide
+			hide:widget.hide,
+			remove_idea: function(id) {
+				me.components.ideas_carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
+				me.components.ideas_carousel.update_pagination().update_navigation();
+			}
 		};
 	};
 
