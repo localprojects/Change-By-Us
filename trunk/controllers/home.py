@@ -60,7 +60,10 @@ class Home(Controller):
             
     def POST(self, action=None, param0=None):
         if (action == 'login'):
-             return self.login()
+            if (param0 == 'forgot'):
+                return self.forgotPassword()
+            else:
+                return self.login()
         elif (action == 'logout'):
             return self.logout()
         elif (action == 'resource'):
@@ -159,7 +162,17 @@ class Home(Controller):
             else:
                 return False    
         else:
-            log.warning("Missing email or password")                        
+            log.error("*** Login attempt missing email or password")                        
+            return False
+            
+    def forgotPassword(self):
+        email = self.request('email')
+        
+        if (email):
+            log.info("*** forgot password request")
+            return True
+        else:
+            log.error("*** Forgot password attempt w/o email")
             return False
             
     def login_facebook(self):
