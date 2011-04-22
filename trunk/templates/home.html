@@ -107,7 +107,14 @@ Change by Us
 												{% endif %}
 											
 												{% if loop.index < max_cards %}
-													<div class="small-note"><a href='/project/{{ idea_group.project_id }}'><div class="wrap"><div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}><strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;</div><blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote></div></a></div>
+													<div class="small-note small-note-area{{ area }}">
+														<div class="wrap">
+															<div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}>
+																<strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;
+															</div>
+															<blockquote><p>{{ idea.text|truncate(180) }}</p></blockquote>
+														</div>
+													</div>
 												{% endif %}
 											{% endfor %}
 										</div>
@@ -731,7 +738,7 @@ Change by Us
 		smallNoteHover("5");
 		
 		var isMsie8 = false;
-		if( ua.msie && ua.version < 8 ) {
+		if( ua.msie && ua.version < 9 ) {
 			var isMsie8 = true;
 		};
 		
