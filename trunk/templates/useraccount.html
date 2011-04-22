@@ -136,7 +136,7 @@ Change by Us - User Account
 											<div class="membrane">
 												{% if d.template_data and d.template_data.user %}
 													{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
-													<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+														<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
 													{% endif %}
 												{% endif %}
 												<cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
@@ -515,6 +515,38 @@ Change by Us - User Account
 					selector:'.activity-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".activity").addClass("active");
+						
+						dom.find('a.remove-idea').unbind("click").bind('click', {app:app}, function(e){
+							e.preventDefault();
+							e.data.app.components.modal.show({
+								app:e.data.app,
+								source_element:tc.jQ('.modal-content.remove-idea'),
+								submit:function(){
+									tc.jQ.ajax({
+										type:'POST',
+										url:'/idea/remove',
+										data:{
+											idea_id: e.target.hash.split(',')[1]
+										},
+										context: tc.jQ(e.target),
+										dataType:'text',
+										success:function(data,ts,xhr){
+											var item;
+											if(data == 'False'){
+												return false;
+											}
+											item = this.parents("li").eq(0);
+											
+											(function(counter, n) {
+												counter.text(n);
+											}(this.parents(".box").eq(0).children(".hd").find(".counter"), item.siblings().length));
+											
+											item.remove();
+										}
+									});
+								}
+							});
+						});
 					}
 				},
 				'messages':{
@@ -876,7 +908,7 @@ Change by Us - User Account
 			
 		{% endif %}
 		
-		tc.gam.ideas_invite( app );
+		tc.gam.ideas_invite(app);
 		
 		// random note-card backgrounds
 		var ideasList = tc.jQ('.idea-cards li');
