@@ -118,7 +118,7 @@
 				temp += "<td>";
 				
 				temp += '<a href="#add,'+ resource.project_resource_id +'" class="add-button rounded-button small">Add</a>'+
-				        '<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img src="http://placehold.it/35x35" alt="" /></span>'+
+				        '<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>{% endif %}<img src="http://placehold.it/35x35" alt="" /></span>'+
 				        '<span class="resource-name" ><span>'+
 				            '<span class="organization-name tooltip_trigger" rel="#organization,'+ resource.project_resource_id +'">'+ 
 				                resource.title +
@@ -149,6 +149,32 @@
 				trigger_class:'tooltip_trigger',
 				markup_source_element:tc.jQ('#organization-markup-source'),
 				get_url: "/project/resource/info"
+			});
+			
+			me.elements.resources_table.find('.close').unbind('click').bind('click', {project:project, me:me}, function(e){
+				e.data.project.options.app.components.modal.show({
+					app:e.data.project.options.app,
+					source_element:tc.jQ('.modal-content.remove-resource'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/resource/delete',
+							data:{
+								resource_id: e.target.href.split(',')[1]
+							},
+							context:e,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								tc.jQ(this.target).parent().parent().animate({
+									'opacity':0.0
+								},600,'easeOutCubic');
+							}
+						});
+					}
+				});
 			});
 			
 		}
