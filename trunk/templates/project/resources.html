@@ -256,8 +256,6 @@
 				var i, temptbody, temptd;
 				temptbody = tc.jQ('<tbody></tbody>');
 				switch(e.data.me.runtime_data.load_into){
-					default:
-						return;
 					case 'link':
 						if(!d.links.length){
 							e.data.me.elements.links_not_empty.hide();
@@ -301,6 +299,7 @@
 							temptd.find('a.close').attr('href','#removeResource,'+d.resources[i].organization);
 							temptd.find('.tooltip_trigger')
 								.attr('rel','#organization,'+d.resources[i].organization)
+								.children('span')
 								.children('a')
 									.attr('href',d.resources[i].url).children('span').text(d.resources[i].title);
 							e.data.me.components.tooltips.add_trigger(temptd.find('.tooltip_trigger'));
@@ -309,6 +308,8 @@
 						e.data.me.elements.organizations_table.children('tbody').replaceWith(temptbody);
 						e.data.me.elements.organizations_table.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_resource);
 						break;
+					default:
+						return;
 				}
 			},
 			remove_resource:function(e){
