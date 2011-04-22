@@ -38,7 +38,7 @@
 					</ul>
 					<div class="search generic-search clearfix">
 						<form action='http://nyc.changeby.us/search' method='GET'>
-							<input type='text' id='ft-search-field' class='ft-search-field serif has-been-focused' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
+							<input type='text' id='ft-search-field' class='ft-search-field serif has-been-focused' name='terms' value="" />
 							<input type='submit' id='ft-search-btn' class='ft-search-btn' value='Search' />
 						</form>
 					</div>
