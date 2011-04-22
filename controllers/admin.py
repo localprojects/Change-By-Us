@@ -72,6 +72,8 @@ class Admin(Controller):
             elif (param0 == 'site'):
                 if (param1 == 'feedback'):
                     return self.getSiteFeedbackCSV()
+                elif (param1 == 'betarequests'):
+                    return self.getBetaRequestsCSV()
                 else:
                     return self.not_found()
             else:
@@ -389,6 +391,23 @@ class Admin(Controller):
             log.error(e)
         
         return self.csv('\n'.join(csv), "change_by_us.feedback.csv")
+        
+    def getBetaRequestsCSV(self):
+        csv = []
+        
+        csv.append('"EMAIL","TIMESTAMP"')
+        
+        try:
+            sql = "select email, created_datetime from beta_invite_request order by created_datetime"
+            data = list(self.db.query(sql))
+        
+            for item in data:
+                csv.append('"%s","%s"' % (item.email, str(item.created_datetime))) 
+        except Exception, e:
+            log.info("*** there was a problem getting beta invite requests")
+            log.error(e)
+        
+        return self.csv('\n'.join(csv), "change_by_us.beta_invite_requests.csv")
     
     def getAdminUsers(self):
         limit = util.try_f(int, self.request('n_users'), 10)
