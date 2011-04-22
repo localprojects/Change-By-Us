@@ -169,8 +169,13 @@ class Home(Controller):
         email = self.request('email')
         
         if (email):
-            log.info("*** forgot password request")
-            return True
+            userId = mUser.findUserByEmail(self.db, email)
+            
+            if (not userId):
+                log.error("*** couldn't find user matching forgotten password request email")
+                return False
+            else:
+                return mUser.resetPassword(self.db, userId)
         else:
             log.error("*** Forgot password attempt w/o email")
             return False

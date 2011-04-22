@@ -109,6 +109,24 @@ def emailAccountDeactivation(email):
         log.error(e)
         return False
 
+def emailTempPassword(email, password):
+    emailAccount = Config.get('email')
+    subject = "Your password has been reset"
+    link = "%slogin" % Config.get('default_host')
+    body = Emailer.render('email/forgot_password',
+                        {'password':password, 'link':link},
+                        suffix = 'txt')
+    try:
+        return Emailer.send(email, 
+                            subject, 
+                            body,
+                            from_name = emailAccount['from_name'],
+                            from_address = emailAccount['from_email'])  
+    except Exception, e:
+        log.info("*** couldn't send forgot password email")
+        log.error(e)
+        return False
+
 ### SMS FUNCTIONS
         
 # add phone number to table of stopped numbers
