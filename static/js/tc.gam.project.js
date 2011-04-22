@@ -134,44 +134,17 @@ tc.gam.project = function(options){
 					break;
 			}
 		},
-		link_clicked:function(e,d){ //(DEPRECATED)
-			var t;
-			t = e.target;
-			if(t.nodeName == 'SPAN'){
-				if(t.parentNode.nodeName == 'A'){
-					t = t.parentNode;
-				} else if(t.parentNode.parentNode.nodeName == 'A'){
-					t = t.parentNode.parentNode;
-				} else {
-					return;
-				}
-			}
-			if(t.hash){
-				switch(t.hash.substring(1,t.hash.length).split(',')[0]){
-					case 'show':
-						e.preventDefault();
-						if(e.data.project.components[t.hash.substring(1,t.hash.length).split(',')[1]]){
-							e.data.project.components[t.hash.substring(1,t.hash.length).split(',')[1]].show();
-						}
-						break;
-					case 'hide':
-						e.preventDefault();
-						if(e.data.project.components[t.hash.substring(1,t.hash.length).split(',')[1]]){
-							e.data.project.components[t.hash.substring(1,t.hash.length).split(',')[1]].hide();
-						}
-						break;
-					default:
-						break;
-				}
-			}
+		idea_remove: function(e, d) {
+			e.data.project.components.related_ideas.remove_idea(d.id);
+			e.data.project.components.members.remove_idea(d.id);
 		}
 	};
-	
-	//this.dom.find('a').bind('click',this.event_data,this.handlers.link_clicked);
+
 	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	
+	this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
 };
 
 
