@@ -729,7 +729,11 @@ Change by Us
 		smallNoteHover("3");
 		smallNoteHover("4");
 		smallNoteHover("5");
-				
+		
+		var isMsie8 = false;
+		if( ua.msie && ua.version < 8 ) {
+			var isMsie8 = true;
+		};
 		
 		function smallNoteHover(areaNum) {
 			var hoverZindexCounter = 106;
@@ -744,8 +748,12 @@ Change by Us
 					tc.jQ(this).css({'zIndex' : hoverZindexCounter});
 					var theContents = $(this).find('div').html();
 					
-					bigNoteCardSelector.stop(true, true).fadeOut(50);
-					bigNoteCardSelector.html( theContents ).fadeIn(150);
+					if( isMsie8 == true ) {
+						bigNoteCardSelector.html( theContents );
+					} else {
+						bigNoteCardSelector.stop(true, true).fadeOut(50);
+						bigNoteCardSelector.html( theContents ).fadeIn(150);
+					};
 					
 					tc.jQ('.hand').removeClass('hand1 hand2 hand3 hand4').addClass(theHandClass);
 					if (noteCardPane.hasClass('color' + areaNum)) {

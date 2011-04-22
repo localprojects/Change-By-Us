@@ -54,17 +54,17 @@
 
 				<ul class="navbar clearfix">
 					<li class="home">
-						<a href="http://ec2-50-16-1-176.compute-1.amazonaws.com/"><span>Change by Us</span></a>
+						<a href="http://nyc.changeby.us"><span>Change by Us</span></a>
 					</li>
 					<!--<li class="simplicity">
 						<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml" target="_blank"><span>NYC SimpliCity</span></a>
 					</li>-->
 					<li class="news-about">
-						<a href='/'>News</a>
-						<a href='http://ec2-50-16-1-176.compute-1.amazonaws.com/about'>About</a>
+						<a href='http://nycblog.changeby.us'>News</a>
+						<a href='http://nyc.changeby.us/about'>About</a>
 					</li>
 					<li class="search">
-						<form action='http://ec2-50-16-1-176.compute-1.amazonaws.com/search' method='GET'>
+						<form action='http://nyc.changeby.us/search' method='GET'>
 							<input type='text' name='terms' value="" />
 							<input type='submit' value='Search' />
 						</form>

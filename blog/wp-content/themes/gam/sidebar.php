@@ -42,7 +42,7 @@
 							<h3>We Love Feedback</h3>
 						</div>
 						<div class="bd">
-							Comment on a post and <a href="http://ec2-50-16-1-176.compute-1.amazonaws.com/feedback">send it to us</a>.
+							Comment on a post and <a href="http://nyc.changeby.us/feedback">send it to us</a>.
 						</div>
 					</div>
 					<div class="box blog-archive">
