@@ -10,7 +10,7 @@
 	</div>
 
 	<div class="bd clearfix">
-		{% if d.template_data.project_user.data.is_project_admin %}
+		{% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}
 			<div class="our-mission editable">
 		{% else %}
 			<div class="our-mission">
@@ -105,10 +105,6 @@
 	<a class='close' href="#"><span>close</span></a>
 </div>
 
-{% if d.template_data.user and d.template_data.user.data.is_leader %}
-
-{% endif %}
-
 <div class="template-content modal-content confirm-delete remove-keyword">
 	<div class="step">
 		<h2><strong>Delete</strong> this Keyword?</h2>
@@ -139,10 +135,10 @@
 		data = this.options.app.app_page.data;
 		this.data = data;
 		this.dom = dom;
-		this.editable = false;
+		this.editable = {% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}true{% else %}false{% endif %};
 		this.edit_mode = false;
-		if (this.options.app.app_page.project_user.is_project_admin) {
-			this.editable = true;
+		
+		if (this.editable) {
 			this.dom.addClass("can-edit");
 		}
 		widget = tc.gam.widget(this,project);
