@@ -1,6 +1,7 @@
 import hashlib
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
+import giveaminute.messaging as mMessaging
 import framework.util as util
 from framework.log import log
 
@@ -360,6 +361,14 @@ def authenticateUser(db, email, password):
         log.warning("*** No record for email= %s" % email)
         return None
         
+def resetPassword(db, userId):
+    forgetfulUser = User(db, userId)
+    newPassword = util.random_string(10)
+    
+    if (forgetfulUser.updatePassword(newPassword)):
+        return mMessaging.emailTempPassword(forgetfulUser.email, newPassword)
+    else:
+        return False    
         
 def makePassword(password, salt = None):
     if (not salt):
