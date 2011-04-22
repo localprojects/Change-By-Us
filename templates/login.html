@@ -86,7 +86,7 @@ Change by Us - Login
 		</div><!--end .step-->
 		
 		<div class="step login-process spinner-message" style="display:none;">	
-			<p>Thank you for logging in...</p>
+			<p>Thank you for logging in&hellip;</p>
 			<p><img src='/static/images/loader32x32.gif' /></p>
 		</div><!--end .step-->
 		
@@ -110,7 +110,7 @@ Change by Us - Login
 			</div>
 			
 			<div class='east clearfix'>
-				<div class='oauth-login'>
+				<div class='oauth-login' style="{% if d.template_data and d.template_data.app_mode == 'beta' %}display:none;{% endif %}">
 					<a class="login-facebook" href='#' onclick="F.connect();"><span>Sign in with Facebook</span></a>
 					<a class="login-twitter" href='/login_twitter'><span>Sign in with Twitter</span></a>
 				</div>
@@ -219,7 +219,20 @@ Change by Us - Login
 				'forgot-password-process':{
 					selector:'.forgot-password-process',
 					init:function(merlin,dom){
-						window.location.hash = 'forgot-password-finished';
+						tc.jQ.ajax({
+							type:"POST",
+							url:"/login/forgot",
+							data:merlin.options.data,
+							context:merlin,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								if (data == "False") {
+									//window.location.hash =
+									return;
+								}
+								window.location.hash = "forgot-password-finished";
+							}
+						});
 					}
 				},
 				'forgot-password-finished':{
