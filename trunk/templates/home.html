@@ -725,19 +725,19 @@ Change by Us
 		tc.jQ('.hand').addClass('hand' + (Math.floor(Math.random()*3) + 1)).show();
 
 
-		// .small-note hover
-		smallNoteHover("1");
-		smallNoteHover("2");
-		smallNoteHover("3");
-		smallNoteHover("4");
-		smallNoteHover("5");
+		// .small-note hover and click
+		smallNoteEvents("1");
+		smallNoteEvents("2");
+		smallNoteEvents("3");
+		smallNoteEvents("4");
+		smallNoteEvents("5");
 		
 		var isMsie8 = false;
 		if( ua.msie && ua.version < 9 ) {
 			var isMsie8 = true;
 		};
 		
-		function smallNoteHover(areaNum) {
+		function smallNoteEvents(areaNum) {
 			var hoverZindexCounter = 106;
 			var areaSelector = ".area" + areaNum;
 			var bigNoteCardSelector = tc.jQ(".note-card-splash");
@@ -767,7 +767,13 @@ Change by Us
 				function () {
 					hoverZindexCounter++;
 				}
-			); 
+			).click(function(e) {
+				var me, href;
+				e.preventDefault();
+				me = tc.jQ(this);
+				href = me.parent().parent().children(".hd").find("a").eq(0).attr("href");
+				window.location.assign(href);
+			});
 		};
 		
 		
