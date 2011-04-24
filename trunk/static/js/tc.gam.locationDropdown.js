@@ -10,21 +10,21 @@ tc.locationDropdown.validator = function(merlin,elements){
 			return {
 				valid:true,
 				errors:[]
-			}
+			};
 		}
 	} else {
 		if(elements.filter('.location-city').filter(':checked').length || elements.filter('.location-city')[0].checked){
 			return {
 				valid:true,
 				errors:[]
-			}
+			};
 		}
 		if(elements.filter('.location-hood').filter(':checked').length || elements.filter('.location-hood')[0].checked){
 			if(elements.filter('.location-hood-enter').attr('location_id')){
 				return {
 					valid:true,
 					errors:[]
-				}
+				};
 			}
 		}
 	}
@@ -35,7 +35,6 @@ tc.locationDropdown.validator = function(merlin,elements){
 		valid:false,
 		errors:['Please enter a neighborhood or borough.']
 	};
-	
 };
 
 tc.locationDropdown.prototype.init = function(options){
@@ -72,10 +71,9 @@ tc.locationDropdown.prototype.getLocation = function(){
 	//tc.util.log('tc.locationDropdown.prototype.getLocation','warn');
 	if(this.options.input.attr('location_id')){
 		return this.options.input.attr('location_id');
-	} else {
-		return false;
 	}
-}
+	return false;
+};
 
 tc.locationDropdown.prototype.bindEvents = function(){
 	//tc.util.log('tc.locationDropdown.bindEvents');
@@ -102,9 +100,28 @@ tc.locationDropdown.prototype.bindEvents = function(){
 	}
 };
 
+tc.locationDropdown.prototype.open = function() {
+	tc.jQ("body").bind("click.location_dropdown", {dropdown:this}, this.anywhereClickHandler);
+	this.options.list.show();
+};
+
+tc.locationDropdown.prototype.close = function() {
+	tc.jQ("body").unbind("click.location_dropdown", this.anywhereClickHandler);
+	this.options.list.hide();
+};
+
+tc.locationDropdown.prototype.anywhereClickHandler = function(e) {
+	var dropdown;
+	dropdown = e.data.dropdown;
+	if (!tc.jQ.contains(dropdown.options.list[0], e.target) &&
+	    !tc.jQ.contains(dropdown.options.input[0], e.target)) {
+		
+		dropdown.close();
+	}
+};
+
 tc.locationDropdown.prototype.listFocusHandler = function(e){
 	tc.util.log('tc.locationDropdown.listFocusHandler');
-	
 };
 
 tc.locationDropdown.prototype.listClickHandler = function(e){
@@ -126,7 +143,7 @@ tc.locationDropdown.prototype.listClickHandler = function(e){
 	location_tuple = t.hash.substring(1,t.hash.length).split(',');
 	
 	e.data.dropdown.options.input.removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]).val(location_tuple[0]).trigger('change');
-	e.data.dropdown.options.list.hide();
+	e.data.dropdown.close();
 };
 
 tc.locationDropdown.prototype.listBlurHandler = function(e){
@@ -135,15 +152,17 @@ tc.locationDropdown.prototype.listBlurHandler = function(e){
 };
 
 tc.locationDropdown.prototype.inputFocusHandler = function(e){
+	var dropdown;
+	dropdown = e.data.dropdown;
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	tc.util.dump(e.target.value);
 	if(e.target.value == 'All neighborhoods'){
 		e.target.value = '';
 	}
-	if(this.options.radios){
-		this.options.radios.filter('.location-hood').attr('checked',true);
+	if(dropdown.options.radios){
+		dropdown.options.radios.filter('.location-hood').attr('checked',true);
 	}
-	this.options.list.show();
+	dropdown.open();
 };
 
 tc.locationDropdown.prototype.inputBlurHandler = function(e){
@@ -218,14 +237,14 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 	switch(e.target.id){
 		case 'location-city':
 			this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid');//.removeAttr('location_id');
-			this.options.list.hide();
+			this.close();
 			break;
 		case 'location-hood':
 			lastvalue = this.options.input.data('last-value');
 			if(this.options.input.attr('location_id')){
 				this.options.input.removeClass('not-valid').addClass('valid');
 			} else {
-				this.options.list.show();
+				this.open();
 			}
 			if(lastvalue){
 				this.options.input.val(lastvalue);
@@ -235,7 +254,7 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 	}
 };
 
-tc.locationDropdown.prototype.superFilterAndUpdateList = function(text,skipUpdate){
+tc.locationDropdown.prototype.superFilterAndUpdateList = function(text){
 	//tc.util.log('tc.locationDropdown.filterLocations');
 	var i, filter, n_filtered, temp_start, temp_string, html;
 	filter = new RegExp(text,"gi");
@@ -270,13 +289,13 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text,skipUpdat
 		}
 		this.options.input.removeClass('valid').addClass('not-valid').removeAttr('location_id');
 	} else {
-		this.options.list.children('ul').get(0).innerHTML = html;
+		this.options.list.children('ul').html(html);
 		if(n_filtered == 1){
 			//this.options.input.removeClass('not-valid').addClass('valid').attr('valid-location','true');
 			this.options.list.find('li:first').addClass('selected');
 		}
 		if(!this.options.input.attr('location_id')){
-			this.options.list.show();
+			this.open();
 		}
 	} 
 };

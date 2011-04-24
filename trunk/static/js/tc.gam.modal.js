@@ -32,19 +32,11 @@ tc.modal.prototype.show = function(opts, event_target){
 	if(opts.source_element){
 		content = opts.source_element.clone().removeClass("template-content");
 	}
-	if(opts.template){
-		if(opts.tempate instanceof String){
-			content = w1.jQ(opts.template);
-		} else {
-			content = opts.template;
-		}
-	}
 	this.options.element.children().remove();
 	content.show();
 	this.options.element.append(content);
 	tc.util.dump(this.options.element.find('.close'));
 	this.options.element.find('.close, .cancel').bind('click',{me:this},function(e){
-		tc.util.dump('CLICKED');
 		e.preventDefault();
 		e.data.me.hide();
 	});
