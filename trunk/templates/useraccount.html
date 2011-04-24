@@ -90,7 +90,7 @@ Change by Us - User Account
 										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
 										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
 										<div class="sub-ft">
-											{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+											{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode != 'beta' %}
 												<div class="twitter">
 													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
 												</div>
@@ -306,7 +306,7 @@ Change by Us - User Account
 										
 									</div>
 								</form>	
-								{%- if (d.template_data and d.template_data.app_mode == 'beta') -%}
+								{%- if (d.template_data and not(d.template_data.user) and d.template_data.app_mode != 'beta') -%}
 									<div class="social-networking">
 										<div class="social-connect-wrapper">
 											<a href="" class="connect-facebook"></a>
