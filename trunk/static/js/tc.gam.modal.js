@@ -16,7 +16,8 @@ tc.modal.prototype.init = function(app,options){
 		speed: 75,
 		mask: {
 			color: '#55504b',
-			opacity: 0.5
+			opacity: 0.5,
+			zIndex: 19998
 		}
 	});
 	this.modal = this.options.element.data('overlay');
