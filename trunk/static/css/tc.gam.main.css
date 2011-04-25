@@ -121,8 +121,8 @@ body.ff3 ul.navbar li.search input[type=text] { padding-top: 4px; padding-bottom
 
 
 /* continent (main area) */
-div.continent{ width:960px; margin:35px auto 0; position:relative; }
-	div.headlands{ width:100%; position:relative; margin:0 0 20px; }
+div.continent{ width:960px; margin:35px auto 0; position:relative; z-index:2; }
+	div.headlands{ width:100%; position:relative; margin:0 0 20px; z-index:3; }
 	div.midlands{ width:100%; }
 	div.foothills{ width:100%; }
 
@@ -448,8 +448,8 @@ label.checked.small:hover span.holder { background-position: 0 -32px; } /* Backg
 label.list { float: left; clear: left; margin: 0 0 5px 0; }
 label.inline { float: left; margin: 0 10px 0 0; }
 input.hiddenCheckbox { position: absolute; left: -10000px; /* Hide the input */ }
-label.prettyCheckbox span.holderWrap { display: block; float: left; position: relative; margin-right: 10px; overflow: hidden; }
-label.prettyCheckbox span.holder { display: block; position: absolute; top: 0; left: 0; }
+label.prettyCheckbox span.holderWrap { display: block; float: left; /*position: relative;*/ margin-right: 10px; overflow: hidden; }
+label.prettyCheckbox span.holder { display: block; /*position: absolute; top: 0; left: 0;*/ }
 
 /* inline edit controls */
 .inline-edit-controls { float:left; }
@@ -1197,17 +1197,22 @@ div.continent.home { margin-top:0; }
 div.continent.home .headlands { border-bottom:1px solid #ebeae8; margin-bottom: 30px; position: relative; }
 div.continent.home span.hey { display: block; position: absolute; left: -18px; top:29px; background: url(../images/button_heyNYC.png) top left no-repeat transparent; height: 59px; width: 121px; z-index: 10000; }
 div.continent.home span.hey span { visibility: hidden; }
-div.continent.home .headlands .splash-container { overflow:hidden; height:635px; position:relative;}
-div.continent.home .headlands .splash { height:100%; background-color:transparent; position:relative; width: 2220px;}
+div.continent.home .headlands .splash-container { overflow:hidden; height:635px; position:relative; z-index:96; }
+div.continent.home .headlands .splash { height:100%; background-color:transparent; position:relative; width: 2220px; z-index:97; }
 /*div.continent.home .headlands .splash .splash-inner { position: absolute; top: 0; left:0; width: 960px; height: 635px; background-repeat: none; background-color: transparent; background-position: center; }*/
 div.continent.home .headlands .splash-background { position: absolute; z-index: 0; top: 0; left: 0; background: url(../images/bg_home_wider.jpg) top left no-repeat transparent; height: 100%; width: 1322px; }
-div.continent.home .headlands .splash .splash-inner { float:left; width: 960px; height: 100%; position:relative; }
+div.continent.home .headlands .splash .splash-inner { float:left; width: 960px; height: 100%; position:relative; z-index:98; }
 div.continent.home .headlands .splash .splash-inner.first { margin-right:300px; }
 
 	/* splash top area */
-div.continent.home .headlands .splash .top-pane { 
-	position: absolute; top: 18px; left: 20px; right: 20px; padding: 8px 10px 9px 10px; color: #3d3a36; z-index: 9999;
-	background-color: transparent; background: rgb(255, 255, 255); background: rgba(255, 255, 255, 0.5);
+div.continent.home .headlands .splash .top-pane {
+	/*
+	Absolutely positioning this was causing crazy z-index problems in IE. 
+	Subsequently, this is now static, requires a clearfix, and an explicit width. -- Lev
+	*/
+	/*position: absolute; top: 18px; left: 20px; right: 20px; z-index:6*/ 
+	width:900px; margin:18px 20px; padding: 8px 10px 9px 10px; 
+	color: #3d3a36; background-color: transparent; background: rgb(255, 255, 255); background: rgba(255, 255, 255, 0.5);
 }
 div.continent.home .headlands .splash .top-pane .oops { position:absolute; z-index: 10000 ; top: 12px; right:132px; }
 	
@@ -1223,7 +1228,7 @@ div.continent.home .headlands .splash .top-pane div.console span.console-message
 div.continent.home .headlands .splash .top-pane div.idea-input { float:right; margin-top: 11px;overflow:hidden;padding-right:116px;}
 div.continent.home .headlands .splash .top-pane div.idea-input textarea { float:none; width: 294px; min-height: 56px; }
 div.continent.home .headlands .splash .top-pane div.idea-input div.helpers a { font-size: 11px; line-height: 11px; font-weight: bold; color: #3d3a36; text-transform: uppercase; margin:0 8px; }
-div.continent.home .headlands .splash .top-pane div.idea-input div.primary-action { position: absolute; width:111px; height: 84px; top: 14px; right: 10px; }
+div.continent.home .headlands .splash .top-pane div.idea-input div.primary-action { position: absolute; width:111px; height: 84px; /*top: 14px; right: 10px;*/ top:28px; right:30px; }
 div.continent.home .headlands .splash .top-pane div.idea-input div.primary-action a { display: block; width: 111px; height: 84px; background: url(../images/button_postActive.png) center right no-repeat transparent;}
 div.continent.home .headlands .splash .top-pane div.idea-input div.primary-action a.disabled { opacity:0.5; }
 div.continent.home .headlands .splash .top-pane div.idea-input div.primary-action a span { visibility: hidden; }
@@ -1248,7 +1253,7 @@ div.continent.home .headlands .splash .top-pane .step-two div.info-input div.ema
 div.continent.home .headlands .splash .top-pane .step-two div.info-input div.email-info p.email-error { color: #e53224; margin-bottom: 3px; font-style: italic; display:none; }
 div.continent.home .headlands .splash .top-pane .step-two div.info-input .row { display: block; margin-bottom: 12px; }
 div.continent.home .headlands .splash .top-pane .step-two div.info-input .row.row-2 { margin-bottom: 6px; }
-div.continent.home .headlands .splash .top-pane .step-two div.info-input .row.row-3 { margin-left: 29px; position: relative; width: 366px; }
+div.continent.home .headlands .splash .top-pane .step-two div.info-input .row.row-3 { margin-left: 29px; position: relative; width: 366px; margin-bottom:0; padding-bottom:12px; }
 div.continent.home .headlands .splash .top-pane .step-two div.info-input label { display: block; float: left; /*margin-left: 10px;*/ font-size: 18px; line-height: 18px; color: #55504b; }
 div.continent.home .headlands .splash .top-pane .step-two div.info-input label .holder { filter:alpha(opacity=80); -moz-opacity:0.8; -khtml-opacity: 0.8; opacity: 0.8; }
 div.continent.home .headlands .splash .top-pane .step-two div.info-input input.location-hood-enter { width: 350px; float: none; }
@@ -1258,7 +1263,7 @@ div.continent.home .headlands .splash .top-pane .step-two div.info-input span.er
 div.continent.home .headlands .splash .top-pane .idea-processing div.console { width: 600px; }
 
 	/* splash project cards outer area */
-div.continent.home .headlands .splash  .projects-pane { position: absolute; height: 487px; width: 628px; bottom:0px; left: 28px; z-index: 1; color: #3d3a36;}
+div.continent.home .headlands .splash  .projects-pane { position: absolute; height: 487px; width: 628px; bottom:0px; left: 28px; z-index:-1; color: #3d3a36;}
 div.continent.home .headlands .splash  .projects-pane h2 { height: 50px; margin-left: 9px; color: #3d3a36; width:285px; position: relative; }
 div.continent.home .headlands .splash  .projects-pane h2 .text { 
 	font-size: 16px; line-height: 16px; text-transform: uppercase; font-weight: bold; padding: 3px 0 4px 9px; position: relative; top: 12px;
