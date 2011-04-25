@@ -113,8 +113,9 @@ tc.locationDropdown.prototype.close = function() {
 tc.locationDropdown.prototype.anywhereClickHandler = function(e) {
 	var dropdown;
 	dropdown = e.data.dropdown;
-	if (!tc.jQ.contains(dropdown.options.list[0], e.target) &&
-	    !tc.jQ.contains(dropdown.options.input[0], e.target)) {
+	
+	if ( !tc.jQ.contains(dropdown.options.list[0], e.target) &&
+	     !tc.jQ.contains(dropdown.options.input[0], e.target) ) {
 		
 		dropdown.close();
 	}
@@ -162,7 +163,7 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	if(dropdown.options.radios){
 		dropdown.options.radios.filter('.location-hood').attr('checked',true);
 	}
-	dropdown.open();
+	//dropdown.open();
 };
 
 tc.locationDropdown.prototype.inputBlurHandler = function(e){
