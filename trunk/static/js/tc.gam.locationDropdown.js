@@ -46,7 +46,9 @@ tc.locationDropdown.prototype.init = function(options){
 		list:null,
 		warning:null,
 		step:null,
-		locations:tc.locations
+		locations:tc.locations,
+		scrollMenuThreshold:10 //apply a scrollbar after this many items
+		                       //set to false to prevent srollbar
 	},options);
 	this.bindEvents();
 	if(this.options.warning){
@@ -102,6 +104,7 @@ tc.locationDropdown.prototype.bindEvents = function(){
 
 tc.locationDropdown.prototype.open = function() {
 	tc.jQ("body").bind("click.location_dropdown", {dropdown:this}, this.anywhereClickHandler);
+	this.handleListScrollbar();
 	this.options.list.show();
 };
 
@@ -113,10 +116,10 @@ tc.locationDropdown.prototype.close = function() {
 tc.locationDropdown.prototype.anywhereClickHandler = function(e) {
 	var dropdown;
 	dropdown = e.data.dropdown;
-	
-	if ( !tc.jQ.contains(dropdown.options.list[0], e.target) &&
-	     !tc.jQ.contains(dropdown.options.input[0], e.target) ) {
 		
+	if ( !tc.jQ.contains(dropdown.options.list[0], e.target) &&
+	     e.target !== dropdown.options.input[0] ) {
+			
 		dropdown.close();
 	}
 };
@@ -157,18 +160,18 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	dropdown = e.data.dropdown;
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	tc.util.dump(e.target.value);
-	if(e.target.value == 'All neighborhoods'){
+	if(e.target.value.toLowerCase() == 'all neighborhoods'){
 		e.target.value = '';
 	}
 	if(dropdown.options.radios){
 		dropdown.options.radios.filter('.location-hood').attr('checked',true);
 	}
-	//dropdown.open();
+	dropdown.open();
 };
 
 tc.locationDropdown.prototype.inputBlurHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputBlurHandler');
-	//e.data.dropdown();
+	
 };
 
 tc.locationDropdown.prototype.inputKeyUpHandler = function(e){
@@ -297,6 +300,17 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text){
 		}
 		if(!this.options.input.attr('location_id')){
 			this.open();
+		} else {
+			this.handleListScrollbar();
 		}
 	} 
+};
+
+tc.locationDropdown.prototype.handleListScrollbar = function() {
+	var n;
+	if (!this.options.scrollMenuThreshold) {
+		return;
+	}
+	n = this.options.list.children('ul').children('li').length;
+	this.options.list[n > this.options.scrollMenuThreshold ? "addClass" : "removeClass"]("has-scrollbar");
 };
