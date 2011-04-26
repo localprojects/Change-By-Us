@@ -46,8 +46,9 @@ class Controller():
         self.template_data = {}
         
         # set mode
-        self.template_data['app_mode'] = self.appMode = Config.get('app_mode')            
-
+        self.template_data['app_mode'] = self.appMode = Config.get('app_mode') 
+        self.template_data['app_env'] = self.appEnv = Config.get('app_env') 
+        
         # user
         self.user = None
         if hasattr(self.session, 'user_id'):
