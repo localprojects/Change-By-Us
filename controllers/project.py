@@ -75,6 +75,8 @@ class Project(Controller):
                 return self.not_found()
         elif (action == 'invite'):
             return self.invite()
+        elif (action == 'leave'):
+            return self.leaveProject()
         elif (action == 'user'):
             if (param0 == 'remove'):
                 return self.removeUser()
@@ -453,6 +455,12 @@ class Project(Controller):
         
         return mProject.removeKeyword(self.db, projectId, keyword)             
         
+    def leaveProject(self):
+        userId = self.session.user_id
+        projectId = self.request('project_id')
+        
+        return mProject.removeUserFromProject(self.db, projectId, userId)
+    
     def removeUser(self):
         projectId = self.request('project_id')
         userId = self.request('user_id')
