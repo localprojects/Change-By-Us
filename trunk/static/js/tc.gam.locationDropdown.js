@@ -168,7 +168,7 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 
 tc.locationDropdown.prototype.inputBlurHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputBlurHandler');
-	//this.options.list.hide();
+	//e.data.dropdown();
 };
 
 tc.locationDropdown.prototype.inputKeyUpHandler = function(e){
