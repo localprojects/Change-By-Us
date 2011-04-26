@@ -417,8 +417,10 @@
 			},
 			hide:widget.hide,
 			remove_idea: function(id) {
-				me.components.ideas_carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
-				me.components.ideas_carousel.update_pagination().update_navigation();
+				if (me.components.ideas_carousel.carousel) {
+					me.components.ideas_carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
+					me.components.ideas_carousel.update_pagination().update_navigation();
+				}
 			}
 		};
 	};
