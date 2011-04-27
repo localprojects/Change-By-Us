@@ -1,4 +1,13 @@
 <?php
+/* check for changeby.us cbu_key.  If it doesn't exist, redirect to beta splash. 
+   This is obviously a temporary solution.
+   You could set this w/ a constant in wp-config, but then you'd have to wait till much 
+   later in the process to do it. 
+ */
+if (!isset($_COOKIE['cbu_key'])) {
+    header('Location: http://nyc.changeby.us/beta');
+}
+
 /**
  * Front to the WordPress application. This file doesn't do anything, but loads
  * wp-blog-header.php which does and tells WordPress to load the theme.
