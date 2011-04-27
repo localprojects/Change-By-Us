@@ -89,6 +89,9 @@ class Join(Controller):
                 # log in user
                 self.session.user_id = userId
                 self.session.invalidate()
+                # set cbu_key for blog access
+                web.setcookie('cbu_key', util.obfuscate(userId), domain = ".changeby.us")
+
             
                 if (self.appMode == 'beta'):
                     self.expireBetaCode(code, userId)

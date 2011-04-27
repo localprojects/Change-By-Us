@@ -157,6 +157,8 @@ class Home(Controller):
             if (userId):        
                 self.session.user_id = userId
                 self.session.invalidate()
+                # set cbu_key for blog access
+                web.setcookie('cbu_key', util.obfuscate(userId), domain = ".changeby.us")
                 
                 return userId
             else:
@@ -414,6 +416,7 @@ class Home(Controller):
             
     def logout(self):
         self.session.kill()
+        web.setcookie('cbu_key', None, expires = -1, domain = ".changeby.us")
 
         return True    
         
