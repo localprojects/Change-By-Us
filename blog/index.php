@@ -6,6 +6,7 @@
  */
 if (!isset($_COOKIE['cbu_key'])) {
     header('Location: http://nyc.changeby.us/beta');
+    exit;
 }
 
 /**
