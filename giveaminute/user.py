@@ -10,20 +10,22 @@ class User():
         self.db = db
         self.id = userId
         self.data = self.populateUserData()
-        self.projectData = self.getUserProjectList()
         
-        self.userKey = self.data.user_key
-        self.email = self.data.email
-        self.phone = self.data.phone
-        self.firstName = self.data.first_name
-        self.lastName = self.data.last_name
-        self.imageId = self.data.image_id
-        self.locationId = self.data.location_id
-        self.emailNotification = self.data.email_notification
-        self.isAdmin = bool(self.data.is_admin)
-        self.isModerator = bool(self.data.is_moderator)
-        self.isLeader = bool(self.data.is_leader)
-        self.numNewMessages = self.getNumNewMessages()
+        if (self.data):
+            self.projectData = self.getUserProjectList()
+            
+            self.userKey = self.data.user_key
+            self.email = self.data.email
+            self.phone = self.data.phone
+            self.firstName = self.data.first_name
+            self.lastName = self.data.last_name
+            self.imageId = self.data.image_id
+            self.locationId = self.data.location_id
+            self.emailNotification = self.data.email_notification
+            self.isAdmin = bool(self.data.is_admin)
+            self.isModerator = bool(self.data.is_moderator)
+            self.isLeader = bool(self.data.is_leader)
+            self.numNewMessages = self.getNumNewMessages()
     
     def isProjectAdmin(self, projectId):
         sql = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId and is_project_admin = 1 limit 1"
