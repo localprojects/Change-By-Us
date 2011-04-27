@@ -303,7 +303,17 @@
 		<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
 		
 		<!-- detect user agent for js + css browser fixes later -->
-		<script type="text/javascript">var ua = tc.jQ.browser</script>
+		<script type="text/javascript">
+			var ua = tc.jQ.browser;
+			
+			if (ua.mozilla) { /* gecko 1.9.1 is for FF3.5, 1.9.0 for FF3 */
+				if (ua.version.slice(0,5) == "1.9.0") { tc.jQ('body').addClass('ff3') }
+				else if (ua.version.slice(0,5) == "1.9.1") { tc.jQ('body').addClass('ff3-5') }
+			};
+			if (ua.webkit) {
+				tc.jQ('body').addClass('webkit')
+			};
+		</script>
 		
 		{% block page_js %}{% endblock page_js %}
 		
@@ -328,13 +338,6 @@
 				tc.util.dump(app_page);
 				
 				tc.app(app_page);
-				
-				// add body class for FF3-specific css fixes for input styling
-				if ( ua.mozilla ) { /* gecko 1.9.1 is for FF3.5, 1.9.0 for FF3 */
-					if (ua.version.slice(0,5) == "1.9.0" || ua.version.slice(0,5) == "1.9.1") {
-						tc.jQ('body').addClass('ff3');
-					}
-				};
 				
 				/* DELETE THIS LATER!!!!!!! */
 				$('.dev-util .toggle').click(function() {
