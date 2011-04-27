@@ -16,7 +16,6 @@ class Idea(Controller):
         if (action == 'flag'):
             return self.flagIdea()
         elif (action == 'remove'):
-            log.info("*** remove POST")
             return self.removeIdea()
         else:
             return self.newIdea()
@@ -45,15 +44,23 @@ class Idea(Controller):
             return False
             
     def removeIdea(self):
-        if (not self.user.isAdmin and not self.user.isModerator):
-            log.warning("*** unauthorized idea removal attempt by user_id = %s" % self.user.id)
-            return False
-    
         ideaId = self.request('idea_id')
         
         if (ideaId):
-            return mIdea.setIdeaIsActive(self.db, ideaId, 0)
+            idea = mIdea.Idea(self.db, ideaId)
+        
+            if (idea.data):
+                if (not self.user.isAdmin and 
+                    not self.user.isModerator and
+                    not self.user.id == idea.data.user_id):
+                    log.warning("*** unauthorized idea removal attempt by user_id = %s" % self.user.id)
+                    return False
+                else:
+                    return mIdea.setIdeaIsActive(self.db, ideaId, 0)
+            else:
+                log.error("*** idea does not exist for idea id %s" % ideaId)
         else:
+            log.error("*** attempting to delete idea with no id")
             return False
         
         
