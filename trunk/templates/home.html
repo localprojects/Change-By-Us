@@ -600,8 +600,10 @@ Change by Us
 							for (i in data) {
 								if (i == 2) { break; }
 								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-								if (data[i].image_id){
+								if (data[i].image_id > -1){
 									temphtml.find('img').attr('src','/images/'+(data[i].image_id % 10)+'/'+data[i].image_id+'.png');
+								} else {
+									temphtml.find('img').attr('src','/static/images/thumb_genAvatar50.png');
 								}
 								temphtml.find('.link a').html( tc.truncate(data[i].title, 45) )
 									.attr('href','/project/'+ data[i].project_id)
