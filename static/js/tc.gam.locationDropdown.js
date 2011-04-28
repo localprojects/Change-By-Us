@@ -58,7 +58,7 @@ tc.locationDropdown.prototype.init = function(options){
 	if(this.options.input.attr('location_id')){
 		for(i = 0; i < this.options.locations.length; i++){
 			if(this.options.locations[i].location_id == this.options.input.attr('location_id')){
-				this.options.input.val(this.options.locations[i].name);
+				this.options.input.val(unescape(this.options.locations[i].name));
 				found = true;
 				break;
 			}
@@ -251,7 +251,7 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 				this.open();
 			}
 			if(lastvalue){
-				this.options.input.val(lastvalue);
+				this.options.input.val(unescape(lastvalue));
 				this.superFilterAndUpdateList(lastvalue,true);
 			}
 			break;
@@ -284,6 +284,7 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text){
 		}
 		
 		html += temp_string;
+		html = unescape(html);
 		n_filtered++;
 	}
 	
