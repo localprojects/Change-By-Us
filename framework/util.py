@@ -1,5 +1,5 @@
 # generally try not to import things up here
-import re, base64, string
+import re, base64, string, urlparse
 from framework.log import log
 
 def try_f(f, data, default=None):
@@ -429,3 +429,17 @@ def check_bad_words(data):
     
 def strNullOrEmpty(s):
     return not s or len(s.strip()) == 0
+
+def makeUrlAbsolute(url):
+    scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+
+    if not scheme:
+        if not netloc:
+            netloc, path = path, ''
+        fixed = urlparse.urlunparse(('http', netloc, path, params, query, fragment))
+        return fixed
+    elif re.match('http', scheme) is None:
+        fixed = "http://" + url
+        return fixed
+    else:
+        return url
