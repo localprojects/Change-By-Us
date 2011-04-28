@@ -5,6 +5,7 @@ import giveaminute.idea as mIdea
 import giveaminute.projectResource as mProjectResource
 import giveaminute.messaging as mMessaging
 import json
+import re
 
 class Project(Controller):
     def GET(self, action=None, param0=None):
@@ -229,7 +230,7 @@ class Project(Controller):
                     log.error("*** new message not created for user %s on endorsing project %s" % (self.user.id, projectId))
             
             return isEndorsed
-            
+         
     def addLink(self):
         projectId = self.request('project_id')
         title = self.request('title')
@@ -239,7 +240,7 @@ class Project(Controller):
             log.error("*** link submitted w/o id, title, or url")
             return False
         else:
-            return mProject.addLinkToProject(self.db, projectId, title, url)
+            return mProject.addLinkToProject(self.db, projectId, title, util.makeUrlAbsolute(url))
             
     def removeLink(self):
         projectId = self.request('project_id')
