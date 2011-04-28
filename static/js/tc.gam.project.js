@@ -130,8 +130,6 @@ tc.gam.project = function(options){
 						e.data.project.components[hash.split(',')[1]].hide();
 					}
 					break;
-				default:
-					break;
 			}
 		},
 		idea_remove: function(e, d) {
