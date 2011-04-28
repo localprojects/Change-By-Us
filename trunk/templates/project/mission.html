@@ -54,36 +54,38 @@
 				{% endif %}
 			</div>
 		</div>
-		<div class="location">
-			<div class="sub-hd">
-				<h3>Location</h3>
+		<div class="has-layout-fixer">
+			<div class="location">
+				<div class="sub-hd">
+					<h3>Location</h3>
+				</div>
+				<div class="sub-bd">
+					<a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><div id="location-map" class="map-holder"><!-- container for google map --></div></a>
+					<a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><p class='location-link serif'>{{ d.template_data.project.data.info.location.name }}</p></a>
+				</div>
 			</div>
-			<div class="sub-bd">
-				<a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><div id="location-map" class="map-holder"><!-- container for google map --></div></a>
-				<a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><p class='location-link serif'>{{ d.template_data.project.data.info.location.name }}</p></a>
-			</div>
-		</div>
-		<div class="keywords">
-			<div class="sub-hd">
-				<h3>Keywords</h3>
-			</div>
-			<div class="sub-bd">
-				<ul class="tag-cloud serif">
-					{% for keyword in d.template_data.project.data.info.keywords %}
-						{% if d.template_data.user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-							<li class="admin" id='keyword-{{ keyword }}'><a href="/search?terms={{ keyword }}">{{ keyword }}</a> <a href="#remove,{{ keyword }}" class="remove-btn keyword"><span>Remove</span></a></li>
-						{% else %}
-							<li><a href="/search?terms={{ keyword }}">{{ keyword }}</a></li>
-						{% endif %}
-					{% endfor %}
-				</ul>
-				{% if d.template_data.user and d.template_data.project_user.data.is_member %}
-					<div class="inline-edit-controls" style="display:none;">
-						<input class="mini" type="text"/>
-						<a href="#" class="ca-btn add-btn">Add</a>
-					</div>
-					<a href="" class="add-keyword">&#43; Add Keyword</a>
-				{% endif %}
+			<div class="keywords">
+				<div class="sub-hd">
+					<h3>Keywords</h3>
+				</div>
+				<div class="sub-bd">
+					<ul class="tag-cloud serif">
+						{% for keyword in d.template_data.project.data.info.keywords %}
+							{% if d.template_data.user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+								<li class="admin" id='keyword-{{ keyword }}'><a href="/search?terms={{ keyword }}">{{ keyword }}</a> <a href="#remove,{{ keyword }}" class="remove-btn keyword"><span>Remove</span></a></li>
+							{% else %}
+								<li><a href="/search?terms={{ keyword }}">{{ keyword }}</a></li>
+							{% endif %}
+						{% endfor %}
+					</ul>
+					{% if d.template_data.user and d.template_data.project_user.data.is_member %}
+						<div class="inline-edit-controls" style="display:none;">
+							<input class="mini" type="text"/>
+							<a href="#" class="ca-btn add-btn">Add</a>
+						</div>
+						<a href="" class="add-keyword">&#43; Add Keyword</a>
+					{% endif %}
+				</div>
 			</div>
 		</div>
 	</div>
