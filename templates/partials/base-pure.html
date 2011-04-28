@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html class='universe'>
+	
+	<head class='heavens'>
+		<title>{% block title %}GAM Templates{% endblock %}</title>
+		
+		<!-- Always force IE9 rendering engine & Chrome Frame; remove this if you use the .htaccess -->
+		<!-- <meta http-equiv="X-UA-Compatible" content="IE=9,chrome=1"/> -->
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		
+		<meta name="description" content=""/>
+		<meta name="author" content=""/>
+		
+		<link rel="icon" href="/static/images/favicon.ico"/>
+		<link rel="shortcut icon" href="/static/images/favicon.ico"/>
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+		
+		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
+		{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+		<link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
+		{% endif %}
+		{% if d.template_data and d.template_data.user %}
+		<link rel="stylesheet" href="/static/css/tc.gam.admin.css" type="text/css" media="screen" />
+		{% endif %}
+		
+		{% block javascript_header %}
+		<script>
+			var app_page = {
+				data:{},
+				features:[]
+			};
+			app_page.features.push(function(app){
+				tc.util.log('Give A Minute: Base');
+				app.components.modal = new tc.modal(app,{
+					element:tc.jQ('#modal')
+				});
+				app.components.top_bar = tc.top_bar(tc.jQ(".stratosphere"), {});
+			});
+		</script>
+		{% endblock %}
+		
+		<script type="text/javascript" src="http://use.typekit.com/mco2pzd.js"></script>
+		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+		<!--[if IE]>
+		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie.css" type="text/css" media="screen" charset="utf-8"/>
+		<![endif]-->
+		
+		<!--[if lte IE 8]>
+		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie8.css" type="text/css" media="screen" charset="utf-8"/>
+		<![endif]-->
+		
+		<!--[if lte IE 7]>
+		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie7.css" type="text/css" media="screen" charset="utf-8"/>
+		<![endif]-->
+	
+	</head>
+	
+	<!-- the "green-nyc" class is to decorate page with green-specific styles -->
+	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}'>
+		
+		<div class='exosphere'>
+			
+			{% block continent %}
+				<div class='continent'>
+					<div class='headlands'>
+						
+					</div>
+					
+					<div class='midlands'>
+					
+					</div>
+					
+					<div class='foothills'>
+				</div>
+			{% endblock %}
+		
+				
+		<!-- Javascript goes here -->
+		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqtools.tabs.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqtools.tooltips.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqtools.dynamic.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqtools.overlay.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqtools.expose.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jquery.easing.1.3.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jquery.color.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jquery.elastic.js"></script>
+		<script type="text/javascript" src="/static/js/libs/fileuploader.js"></script>
+		<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
+		<script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
+		<script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
+		
+		<!-- detect user agent for js + css browser fixes later -->
+		<script type="text/javascript">
+			var ua = tc.jQ.browser;
+			
+			if (ua.mozilla) { /* gecko 1.9.1 is for FF3.5, 1.9.0 for FF3 */
+				if (ua.version.slice(0,5) == "1.9.0") { tc.jQ('body').addClass('ff3') }
+				else if (ua.version.slice(0,5) == "1.9.1") { tc.jQ('body').addClass('ff3-5') }
+			};
+			if (ua.webkit) {
+				tc.jQ('body').addClass('webkit')
+			};
+		</script>
+		
+		{% block page_js %}{% endblock page_js %}
+		
+		{% if d.template_data.app_env and d.template_data.app_env == 'live' %}
+			<script type="text/javascript">
+				
+				var _gaq = _gaq || [];
+				_gaq.push(['_setAccount', 'UA-22834983-1']);
+				_gaq.push(['_trackPageview']);
+				
+				(function() {
+					var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+					ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+					var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+				})();
+				
+			</script>
+		{% endif %}
+		
+		{% block javascript_footer %}{% endblock %}
+		
+	</body>
+	
+</html>
