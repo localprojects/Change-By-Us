@@ -127,7 +127,7 @@ class Home(Controller):
     def showLogin(self):
         referer = web.ctx.env.get('HTTP_REFERER')
         
-        if (referer and "/join" not in referer):
+        if (referer and "/join" not in referer and "/login" not in referer):
             self.template_data['redir_from'] = referer
     
         return self.render('login')
