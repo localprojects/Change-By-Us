@@ -6,6 +6,7 @@ import giveaminute.projectResource as mProjectResource
 import giveaminute.messaging as mMessaging
 import json
 import re
+import datetime
 
 class Project(Controller):
     def GET(self, action=None, param0=None):
@@ -26,7 +27,9 @@ class Project(Controller):
         elif (action == 'featured'):
             return self.getFeaturedProjects()
         elif (action == 'small'):
-            return self.getProject()            
+            return self.getProject()   
+        elif (action == 'rss'):
+            return self.showConversationRSS(param0)
         else:
             return self.showProject(action)                                        
             
@@ -104,6 +107,23 @@ class Project(Controller):
         self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
     
         return self.render('project')
+        
+    def showConversationRSS(self, projectId):
+        if (not projectId or projectId == -1):
+            projDictionary = mProject.getTestData()
+        else:
+            project = mProject.Project(self.db, projectId)
+            projDictionary = project.getFullDictionary()
+            
+        self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
+        
+        msgs = self.template_data['project']['data']['info']['messages']['items']
+        
+        for item in msgs:
+            item['created'] = datetime.datetime.strptime(item['created'], '%Y-%m-%d %H:%M:%S').strftime('%a, %d %b %Y %H:%M:%S EST')
+    
+        return self.render('project/conversation_rss', suffix='xml.rss')
+
         
     def getProjectUser(self, projectId):
         projectUser = dict(is_project_admin = False, is_member = False)
