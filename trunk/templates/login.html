@@ -92,7 +92,7 @@ Change by Us - Login
 		
 		<div class="step login-failure" style="display:none;">	
 			<p>There was an error logging you in.</p>
-			<a href="/login" class="retry-login-link"><span class="sm-arrow-back light"></span>Click here to go back to the<br /><span class="spacer"></span>login screen and try again</a>
+			<a href="#start" class="retry-login-link"><span class="sm-arrow-back light"></span>Click here to go back to the<br /><span class="spacer"></span>login screen and try again</a>
 		</div><!--end .step-->
 		
 		<div class="step forgot-password clearfix" style="display:none;">	
@@ -127,7 +127,8 @@ Change by Us - Login
 		</div><!--end .step-->
 		
 		<div class="step forgot-password-error" style="display:none;">	
-			<p>There was an error processing your request.</p>
+			<p>There was an error finding your account. Please double check your email.</p>
+			<a href="#forgot-password" class="retry-login-link"><span class="sm-arrow-back light"></span>Click here to go back to the<br /><span class="spacer"></span>forgot password screen and try again</a>
 		</div><!--end .step-->
 		
 	</div>
@@ -144,10 +145,12 @@ Change by Us - Login
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Login');
 
+		tc.util.dump(window.location.hash);
+
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('.merlin.login'),
 			next_button:tc.jQ('button.next-button'),
-			first_step:'start',
+			first_step: (window.location.hash == '#forgot-password') ? 'forgot-password' : 'start',
 			data:{
 				email:null,
 				password:null
@@ -231,12 +234,18 @@ Change by Us - Login
 							dataType:"text",
 							success: function(data, ts, xhr) {
 								if (data == "False") {
-									//window.location.hash =
+									window.location.hash = "forgot-password-error";
 									return;
 								}
 								window.location.hash = "forgot-password-finished";
 							}
 						});
+					}
+				},
+				'forgot-password-error':{
+					selector:'.forgot-password-error',
+					init:function(merlin,dom){
+						
 					}
 				},
 				'forgot-password-finished':{
