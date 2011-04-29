@@ -107,7 +107,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	var markup;
 	markup = this.options.markup_source_element.clone().css('display','block').removeClass('template-content');
 	markup.find('h2').text(data.title);
-	if (data.image_id > -1) {
+	if (data.image_id > 1) {
 		markup.find('img').attr('src','/images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
 	} else {
 		markup.find('img').attr('src','/static/images/thumb_genAvatar100.png');
