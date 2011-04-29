@@ -66,11 +66,11 @@ tc.gam.project = function(options){
 					break;
 				case 'goals_add':
 					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.members.hide(false);
-					e.data.project.components.conversation.hide(false);
+					//if (tc.gam.project_widgets.goals_stack) {
+					//	e.data.project.components.goals_stack.hide(false);
+					//}
+					//e.data.project.components.members.hide(false);
+					//e.data.project.components.conversation.hide(false);
 					break;
 				case 'goals_stack':
 					e.data.project.components.goals_add.hide(false);
@@ -120,6 +120,7 @@ tc.gam.project = function(options){
 			switch(hash.split(',')[0]){
 				case 'show':
 					e.preventDefault();
+					tc.util.dump(hash.split(',')[1]);
 					if(e.data.project.components[hash.split(',')[1]]){
 						e.data.project.components[hash.split(',')[1]].show();
 					}
