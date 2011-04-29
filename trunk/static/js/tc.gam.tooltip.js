@@ -23,6 +23,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 	this.tooltip.bind('mouseout',{me:this},this.handlers.tooltip_mouseout);
 	this.has_been_shown = false;
 	this.current_trigger = null;
+	this.cached_data = {};
 };
 
 tc.resource_tooltip.prototype.add_trigger = function(trigger){
@@ -51,8 +52,6 @@ tc.resource_tooltip.prototype.handlers = {
 		var t;
 		t = e.target;
 		
-		
-		
 		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
 			tc.util.dump(e.data.me.options.trigger_class);
 			tc.util.dump(t.className);
@@ -61,39 +60,6 @@ tc.resource_tooltip.prototype.handlers = {
 		e.data.me.current_trigger = tc.jQ(t);
 		e.data.me.tooltip.stop();
 		e.data.me.show();
-		
-		
-		//if(e.data.me.current_trigger){
-		//	if(e.data.me.options.trigger_class){
-		//		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
-		//			t = t.parentNode;
-		//		}
-		//	} else {
-		//		while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
-		//			t = t.parentNode;
-		//		}
-		//	}
-		//	
-		//	if(t != e.data.me.current_trigger){
-		//		e.data.me.current_trigger = tc.jQ(t);
-		//		e.data.me.tooltip.stop();
-		//		e.data.me.show();
-		//	}
-		//} else {
-		//	
-		//	if(e.data.me.options.trigger_class){
-		//		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
-		//			t = t.parentNode;
-		//		}
-		//		e.data.me.current_trigger = tc.jQ(t);
-		//		e.data.me.tooltip.stop();
-		//		e.data.me.show();
-		//	} else {
-		//		while (t.className != e.data.me.current_trigger.get(0).className && t.nodeName != 'BODY'){
-		//			t = t.parentNode;
-		//		}
-		//	}
-		//}
 	},
 	trigger_mouseout:function(e){
 		//tc.util.log("tc.resource_tooltip.trigger_mouseout");
@@ -148,7 +114,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	}
 	markup.find('.main p').text(data.description);
 	markup.find('dd a').attr('href',data.url).text(data.url);
-	return markup;
+	return tc.jQ('<div>').append(markup.clone()).remove().html();
 };
 
 tc.resource_tooltip.prototype.show = function(){
@@ -162,14 +128,12 @@ tc.resource_tooltip.prototype.show = function(){
 	};
 	me = this;
 	
-	if(this.current_trigger.data('cached-data')){
-		this.tooltip.html(this.current_trigger.data('cached-data'));
+	if(this.cached_data[this.current_trigger.attr('rel').split(',')[1]]){
+		this.tooltip.html((this.cached_data[this.current_trigger.attr('rel').split(',')[1]]));
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 	} else {
 		this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
-		
-		tc.util.dump(this.current_trigger);
 		
 		tc.jQ.ajax({
 			url: this.options.get_url,
@@ -180,10 +144,13 @@ tc.resource_tooltip.prototype.show = function(){
 			context: this,
 			dataType:'json',
 			success:function(data,ts,xhr){
-				this.current_trigger.data('cached-data',this.generate_markup(data));
+				this.cached_data[this.current_trigger.attr('rel').split(',')[1]] = this.generate_markup(data);
 			}
 		});
-		this.tooltip.html(this.current_trigger.data('cached-data'));
+		
+		tc.util.dump("" + this.cached_data[this.current_trigger.attr('rel').split(',')[1]]);
+		
+		this.tooltip.html(this.cached_data[this.current_trigger.attr('rel').split(',')[1]]);
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 	}
 };
