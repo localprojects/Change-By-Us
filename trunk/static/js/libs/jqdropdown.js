@@ -379,7 +379,7 @@ http://www.opensource.org/licenses/mit-license.php
         toggleLinkPadding = parseInt($toggleLink.css("padding-top"), 10) + parseInt($toggleLink.css("padding-bottom"), 10) || 0;
         borderWidth = parseInt($toggleLink.css("border-top-width"), 10) + parseInt($toggleLink.css("border-bottom-width"), 10) || 0;
 
-        topPos = $toggleLink.height() + toggleLinkPadding + borderWidth;
+        topPos = $toggleLink.height() + toggleLinkPadding + borderWidth - 1;
         direction = 'down';
 
         $list.css({
