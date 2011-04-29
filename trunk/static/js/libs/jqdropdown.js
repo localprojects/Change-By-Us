@@ -285,7 +285,8 @@ http://www.opensource.org/licenses/mit-license.php
                 $ph.val(val);
             } else {
                 $ph.text(val);
-				$ph.addClass('changed');
+								$ph.addClass('changed').trigger('change');
+								
             }
         }
     }
