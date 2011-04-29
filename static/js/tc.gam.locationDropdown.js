@@ -163,13 +163,15 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	dropdown = e.data.dropdown;
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	tc.util.dump(e.target.value);
+	tc.util.dump(dropdown.options);
+	if(dropdown.options.radios){
+		dropdown.options.radios.filter('.location-hood').attr('checked',true)[0].checked = true;;
+		tc.jQ('label[for=location-hood]').trigger('click',{preventChange:true});
+	}
+	dropdown.open();
 	if(e.target.value.toLowerCase() == 'all neighborhoods'){
 		e.target.value = '';
 	}
-	if(dropdown.options.radios){
-		dropdown.options.radios.filter('.location-hood').attr('checked',true);
-	}
-	dropdown.open();
 };
 
 tc.locationDropdown.prototype.inputBlurHandler = function(e){

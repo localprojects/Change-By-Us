@@ -41,7 +41,7 @@
 			$input.addClass('hiddenCheckbox').addClass('has-prettycheckbox');
 			
 			// Associate the click event
-			$label.unbind('click').bind('click', {input:$input}, function(e){
+			$label.unbind('click').bind('click', {input:$input}, function(e,d){
 				var $label;
 				$label = $(this);
 				//e.data.input.triggerHandler('click');
@@ -70,7 +70,9 @@
 					e.data.input.attr('checked',true);
 					e.data.input[0].checked = true;
 				};
-				e.data.input.trigger('change');
+				if(!d || !d.preventChange){
+					e.data.input.trigger('change');
+				}
 			});
 			
 			$('input#' + $label.attr('for')).unbind('keypress').bind('keypress', {label:$label}, function(e){
