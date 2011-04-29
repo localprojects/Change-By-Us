@@ -38,11 +38,11 @@
 						</a>
 					</div>
 				</div>
-				<div class='step submit clearfix spinner-message' style='display:none;'>
+				<div class='step submit clearfix spinner-message' style='visibilty:hidden;'>
 					<p>Thank you for submitting a message!</p>
 					<p><img src='/static/images/loader32x32.gif' /></p>
 				</div>
-			
+				
 				<div class='step submit-error clearfix' style='display:none;'>
 					<p>There was an error submitting your message!</p>
 				</div>
@@ -201,9 +201,16 @@
 			},
 			change_message_filter:function(e,d){
 				
+				var t;
+				t = tc.jQ(e.target);
+				
 				e.data.me.elements.message_stack.children().remove();
 				e.data.me.runtime_data.offset = 0;
-				e.data.me.runtime_data.message_filter = tc.jQ(e.target).val();
+				if(t.hasClass('changed')){
+					e.data.me.runtime_data.message_filter = t.text();
+				} else {
+					e.data.me.runtime_data.message_filter = t.val();
+				}
 				
 				tc.jQ.ajax({
 					type:"GET",
