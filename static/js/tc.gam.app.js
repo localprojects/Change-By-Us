@@ -71,7 +71,11 @@ tc.animate_bg = function(ele, from, to) {
 		if(!$.support.opacity){
 			if(from != to){
 				var opStr = (Math.round(from * 25.5)).toString(16);
-				ele.css({background:'transparent',filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF)"});   
+				ele.css({
+					background:'transparent',
+					filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF) !important",
+					'-ms-filter':"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF) !important"
+				});
 			}else{
 				ele.css({background:'transparent',filter:"none"});   
 			}
