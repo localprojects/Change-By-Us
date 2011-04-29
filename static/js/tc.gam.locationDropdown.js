@@ -105,7 +105,10 @@ tc.locationDropdown.prototype.bindEvents = function(){
 tc.locationDropdown.prototype.open = function() {
 	tc.jQ("body").bind("click.location_dropdown", {dropdown:this}, this.anywhereClickHandler);
 	this.handleListScrollbar();
-	this.options.list.show();
+	if(this.options.list.find('li').length){
+		this.options.list.show();
+	}
+	
 };
 
 tc.locationDropdown.prototype.close = function() {
