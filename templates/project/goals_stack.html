@@ -89,7 +89,8 @@
 		</ul>
 	</div>
 	
-<li class='template-content goal-stack-item'>
+<!-- <li class='template-content goal-stack-item'> -->
+<div class='template-content goal-stack-item'>
 	<div class="goal-card">
 		{% if d.template_data.project_user.data.is_project_admin %}
 			<a class="close" href="#close,"><span>Close</span></a>
@@ -118,6 +119,8 @@
 		</div>
 	</div>
 </li>
+</div>
+<!-- </li> -->
 
 <div class="template-content modal-content confirm-delete remove-goal">
 	<div class="step">
@@ -260,7 +263,8 @@
 		
 		this.generate_markup = function(data){
 			var temphtml;
-			temphtml = tc.jQ('.template-content.goal-stack-item').clone().removeClass('template-content');
+			//temphtml = tc.jQ('.template-content.goal-stack-item').clone().removeClass('template-content');
+			temphtml = tc.jQ('<li class="goal-stack-item"></li>').append(tc.jQ('.template-content.goal-stack-item').clone().children());
 			temphtml.find('.goal-title').text(data.text);
 			if(data.active){
 				temphtml.find('.make-this-active').remove();

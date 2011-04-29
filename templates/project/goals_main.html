@@ -71,7 +71,8 @@
 	
 </div>
 
-<li class='template-content goal'>
+<!-- <li class='template-content goal'> -->
+<div class='template-content goal'>
 	<div class="goal-card">
 		{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 			<a class="close" href="#close,"><span>Close</span></a>
@@ -86,7 +87,8 @@
 			</dl>
 		</div>
 	</div>
-</li>
+</div>
+<!-- </div> -->
 
 <script>
 	if(!tc){ var tc = {}; }
@@ -160,7 +162,7 @@
 				
 		this.generate_markup = function(data){
 			var temphtml;
-			temphtml = tc.jQ('.template-content.goal').clone().removeClass('template-content');
+			temphtml = tc.jQ('<li class="goal"></li>').append(tc.jQ('.template-content.goal').clone().children());//.removeClass('template-content');
 			temphtml.attr('rel',data.goal_id+','+data.active);
 			temphtml.css('width','512px');
 			temphtml.find('a.close').attr('href','#removeGoal,'+data.goal_id);
