@@ -106,6 +106,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	tc.util.log("tc.resource_tooltip.generate_markup");
 	var markup;
 	markup = this.options.markup_source_element.clone().css('display','block').removeClass('template-content');
+	markup.append("<div class='tooltip-tail'></div>");
 	markup.find('h2').text(data.title);
 	if (data.image_id > 1) {
 		markup.find('img').attr('src','/images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
@@ -122,7 +123,7 @@ tc.resource_tooltip.prototype.show = function(){
 	var target_pos, me;
 	target_pos = function(self){
 		return {
-			top:self.current_trigger.offset().top - self.tooltip.height() - 20,
+			top:self.current_trigger.offset().top - self.tooltip.height(), //-20,
 			left:self.current_trigger.offset().left + (self.current_trigger.width()/2) - (self.tooltip.width()/2)
 		};
 	};
