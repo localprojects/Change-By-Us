@@ -146,7 +146,16 @@ Change by Us - Login
 		tc.util.log('Give A Minute: Login');
 
 		tc.util.dump(window.location.hash);
-
+			
+		tc.jQ('a.login-facebook, a.login-twitter').bind('click', {buttons:tc.jQ('a.login-facebook, a.login-twitter')}, function(e){
+			var $t;
+			$t = tc.jQ(this);
+			if($t.hasClass('has-been-clicked') || $t.hasClass('cannot-be-clicked')){
+				e.preventDefault();
+			}
+			$t.addClass('has-been-clicked').siblings().addClass('cannot-be-clicked');
+		})
+		
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('.merlin.login'),
 			next_button:tc.jQ('button.next-button'),
