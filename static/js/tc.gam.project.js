@@ -170,4 +170,3 @@ tc.gam.widget = function(inheritor,project){
 if(!tc.gam.project_widgets){
 	tc.gam.project_widgets = {};
 }
-

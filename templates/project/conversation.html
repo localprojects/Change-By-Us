@@ -119,7 +119,7 @@
 	
 </div>
 
-<li class='template-content message-markup'>
+<div class='template-content message-markup'>
 	{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 		<a class="close" href="#"><span>Close</span></a>
 	{% endif %}
@@ -136,7 +136,7 @@
 			<cite class="meta-ft">Just Now&hellip;</cite>
 		</div>
 	</div>
-</li>
+</div>
 
 <div class='template-content modal-content add-message-no-user'>
 	<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Change by Us in order to add a goal to this project.</p>
@@ -176,7 +176,7 @@
 			message_filter:'all',
 			n_to_fetch:10,
 			offset:{{ d.template_data.project.data.info.messages['items']|length }},
-			message_template:tc.jQ('.template-content.message-markup').clone().removeClass('template-content')
+			message_template:tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children())
 		};
 		
 		this.elements = {
@@ -350,7 +350,7 @@
 		function generate_message_markup(data){
 			tc.util.dump(data);
 			var markup;
-			markup = tc.jQ('.template-content.message-markup').clone().removeClass('template-content');
+			markup = tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
 			markup.attr('id','message-'+data.message_id);
 			//markup.find('img').attr('src','/images/'++'/'++'.png')
 			markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
