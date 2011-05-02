@@ -463,9 +463,6 @@ tc.merlin.prototype.handlers = {
 				}
 			}
 		}
-		//if(e.data.me.options.error_indicator){
-		//	e.data.me.options.error_indicator.hide();
-		//}
 	},
 	keypress:function(e,d){
 		e.data.me.validate(false);

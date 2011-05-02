@@ -6,37 +6,25 @@ Change by Us - Join
 
 {% block continent %}
 <script>
-
-    facebookClass = function() { this.initialize.apply(this, arguments); };
-    facebookClass.prototype = {
-        initialize: function () {
-        },
-        
-        connect: function () {
-        
-            var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
-
-            FB.login(
-                function(response) {
-                    if(response.session)
-                    {
-                        window.location.href="/login_facebook";
-                        //$.get("/login_facebook", function(data){
-                        //    window.location.href=data;
-                        //});
-                    }
-                    else
-                    {
-                        // login failure, do something here
-                    }
-                },
-                {perms: requiredPerms.join(',')}
-            );
-        }
-    };
-
-    F = new facebookClass();
-  
+	facebookClass = function() { this.initialize.apply(this, arguments); };
+	facebookClass.prototype = {
+		initialize: function () {},
+		connect: function () {
+			var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
+			FB.login(
+				function(response) {
+					tc.util.dump(response);
+					if(response.session){
+						//window.location.href="/login_facebook";
+					} else {
+						// login failure, do something here
+					}
+				},
+				{perms: requiredPerms.join(',')}
+			);
+		}
+	};
+	F = new facebookClass();
 </script>
 
 
@@ -271,6 +259,15 @@ Change by Us - Join
 			e.data.app.components.modal.show(e.data);
 		});*/
 		
+		tc.jQ('a.login-facebook, a.login-twitter').bind('click', {buttons:tc.jQ('a.login-facebook, a.login-twitter')}, function(e){
+			var $t;
+			$t = tc.jQ(this);
+			if($t.hasClass('has-been-clicked') || $t.hasClass('cannot-be-clicked')){
+				e.preventDefault();
+			}
+			$t.addClass('has-been-clicked').siblings().addClass('cannot-be-clicked');
+		})
+		
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('form.merlin'),
 			progress_element:tc.jQ('.merlin-progress'),
@@ -408,6 +405,7 @@ Change by Us - Join
 							l_name:merlin.current_step.inputs.l_name.dom.val(),
 							email:merlin.current_step.inputs.email.dom.val()
 						});
+						merlin.options.steps['email-lookup'].data.last_step = 'twitter-login';
 					}
 				},
 				/* Step: facebook-login  */
@@ -436,6 +434,9 @@ Change by Us - Join
 							},
 							hint:''
 						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.steps['email-lookup'].data.last_step = 'facebook-login_twitter_create';
 					}
 				},
 				/* Step: email-lookup  */
@@ -444,6 +445,9 @@ Change by Us - Join
 					selector:'.email-lookup',
 					prev_step:'user-info',
 					next_step:'sms-lookup',
+					data:{
+						last_step:null
+					},
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							url:'/join/users',
@@ -455,8 +459,13 @@ Change by Us - Join
 							success:function(data,ts,xhr){
 								if(data.n_users){
 									merlin.options.steps['user-info'].inputs['email'].validators.push('not-'+merlin.options.data.email);
+									merlin.options.steps['twitter-login'].inputs['email'].validators.push('not-'+merlin.options.data.email);
 									if(merlin.options.error_indicator){
 										merlin.options.error_indicator.html('<span>Oops! We found someone with that name and email address in our system. <a href="http://localhost:9090/login#forgot-password" class="oops-forgot">Forgot your password?</a></span>').show();
+									}
+									if(this.current_step.data.last_step){
+										window.location.hash = this.current_step.data.last_step;
+										return;
 									}
 									window.location.hash = 'user-info';
 								} else {

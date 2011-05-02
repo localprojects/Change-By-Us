@@ -37,7 +37,7 @@ class Home(Controller):
         elif (action == 'login_facebook'):
             return self.login_facebook() 
         elif (action == 'twitter_callback'):
-            return self.twitter_callback()
+            return self.tw_authenticated()
         elif (action == 'login_twitter_create'):
             return self.login_twitter_create()
         elif (action == 'login_facebook_create'):
@@ -109,12 +109,13 @@ class Home(Controller):
 
         locations = dict(data = locationData, json = json.dumps(locationData))
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
+        
         #news = self.getNewsItems()
         news = []
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
-        self.template_data['news'] = dict() #news
+        self.template_data['news'] = dict()#news
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
@@ -187,7 +188,8 @@ class Home(Controller):
         fb_settings = Config.get('facebook')
     
         cookiename = "fbs_%s" % fb_settings['app_id']
-        fbcookie = web.cookies().get(cookiename) 
+        log.info(cookiename)
+        fbcookie = web.cookies().get(cookiename)
         entries = fbcookie.split("&")
         dc = {}
         for e in entries:
@@ -248,13 +250,10 @@ class Home(Controller):
                 self.session.user_id = associated_user
                 self.session.invalidate()
 
-        if created_user: #we're creating a new account so do the TOS step and then finish the ccount
-            return self.render('join', {'new_account_via_facebook': True, 'facebook_data': profile})
+        if created_user:
+            return self.render('join', {'new_account_via_facebook': True, 'facebook_data': profile}) # go to TOS
         else:
-            if self.request("connect") is not None or created_facebook_user: # we came here from connect-to-fb, or we found an existing regular account with same email
-                raise web.seeother("/useraccount")
-            else: # returning fb user
-                raise web.seeother("/") 
+            raise web.seeother("/") # user had already signed up with us before
      
     def login_facebook_create(self):
         
@@ -287,10 +286,6 @@ class Home(Controller):
         
         
         self.session.request_token = req_token
-        
-       # if self.request("connect") is not None:
-       #     self.session.twitter_connect = 1
-        
         self.session._changed = True
         SessionHolder.set(self.session)
         s = SessionHolder.get_session()
@@ -304,21 +299,13 @@ class Home(Controller):
 
         raise web.seeother(url)
         
-    def twitter_callback(self):
+    def tw_authenticated(self):
         # Step 1. Use the request token in the session to build a new client.
 
         s = SessionHolder.get_session()
         token = oauth.Token(s.request_token['oauth_token'],
             s.request_token['oauth_token_secret'])
         client = oauth.Client(tw_consumer, token)
-        
-        log.info(str(s))
-        
-       # twitter_connect = 0    
-       # try:
-       #     twitter_connect = s.twitter_connect
-       # except:
-       #     pass
     
         # Step 2. Request the authorized access token from Twitter.
         resp, content = client.request(tw_settings['access_token_url'], "GET")
@@ -342,6 +329,7 @@ class Home(Controller):
             twitter_user = res[0]
             self.session.user_id = twitter_user.user_id
             self.session.invalidate()
+            return self.redirect('/')
 
         else: # no existing twitter data
             # is the user logged in with a regular or FB account?
@@ -368,35 +356,42 @@ class Home(Controller):
                 self.session.user_id = associated_user
                 self.session.invalidate()
     
-        if created_user: # we're making a new account, so do the TOS step and then finish the account
-            #log.info("creating new user via twitter... calling TOS step")
-            return self.render('join', {'new_account_via_twitter': True, 'twitter_data': access_token})
+        if created_user:
+            return self.render('join', {'new_account_via_twitter': True, 'twitter_data': access_token}) # go to TOS
         else:
-            if created_twitter_user: #merged twitter info into existing account via connect button
-                #log.info("created new twitter user")
-                raise web.seeother("/useraccount")
-            else: #returning twitter user
-                #log.info("returning twitter user")
-                raise web.seeother("/")
+            return self.render('join', {'twitter_error': True}) # go to TOS
             
             
     def login_twitter_create(self):
+        email = self.request('email')
+        firstName = self.request('f_name')
+        lastName = self.request('l_name')
+        phone = util.cleanUSPhone(self.request('sms_phone'))
         
         s = SessionHolder.get_session()
         access_token = s.tw_access_token
-       
         #access_token = self.request('twitter_data')
         
-        email = self.request('email')
-        firstname = self.request('firstname')
-        lastname = self.request('lastname')
-        uid = mUser.createUser(self.db, email, access_token['oauth_token_secret'], firstname, lastname)
-        self.db.insert('twitter_user', user_id = uid, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
-        
-        self.session.user_id = uid
-        self.session.invalidate()
-        
-        raise web.seeother("/")
+        if (len(firstName) == 0):
+            log.error("no first name")
+            return False
+        elif (len(lastName) == 0):
+            log.error("no last name")
+            return False
+        elif (len(email) == 0 or not util.validate_email(email)):
+            log.error("invalid email")
+            return False
+        else:
+            #userId = user.createUser(self.db, email, password, firstName, lastName, phone)
+            userId = mUser.createUser(self.db, email, access_token['oauth_token_secret'], firstName, lastName, phone)
+            self.db.insert('twitter_user', user_id = userId, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
+            self.session.user_id = userId
+            self.session.invalidate()
+            idea.attachIdeasByEmail(self.db, email)
+            if (phone and len(phone) > 0):
+                idea.attachIdeasByPhone(self.db, phone)
+            
+        return userId;
         
     def disconnect_twitter(self):
     
@@ -470,8 +465,6 @@ class Home(Controller):
                                         physical_address = physical_address,
                                         location_id = location_id,
                                         url = url,
-                                        facebook_url = facebook_url,
-                                        twitter_url = twitter_url,
                                         keywords = keywords,
                                         contact_name = contact_name,
                                         contact_email = contact_email,
