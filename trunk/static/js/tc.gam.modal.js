@@ -55,7 +55,13 @@ tc.modal.prototype.show = function(opts, event_target){
 		return true;
 	});
 	this.options.element.bind('onClose',{me:this},function(e){
-		e.data.me.options.element.children().remove();
+		var me;
+		me = e.data.me;
+		if (tc.jQ.isFunction(me.cleanup)) {
+			me.cleanup.apply(me);
+			me.cleanup = null;
+		}
+		me.options.element.children().remove();
 	});
 	if(tc.jQ.isFunction(opts.init)){
 		if (event_target) {

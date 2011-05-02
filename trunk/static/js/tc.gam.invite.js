@@ -54,8 +54,8 @@ tc.gam.ideas_invite = function(app) {
 							merlin.options.data = tc.jQ.extend(merlin.options.data, {
 								project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1]
 							});
-							return true;
 							
+							return true;
 						}
 					},
 					'invite-message-info':{
@@ -107,7 +107,9 @@ tc.gam.ideas_invite = function(app) {
 									if (data == "False") {
 										return false;
 									}
-									tc.jQ(event_target).addClass("disabled").text("Invited");
+									tc.jQ(event_target).addClass("disabled").text("Invited").unbind("click").bind("click", function(e) {
+										e.preventDefault();
+									});
 									tc.timer(1000, function() {
 										modal.hide();
 									});
@@ -117,6 +119,11 @@ tc.gam.ideas_invite = function(app) {
 					}
 				}
 			});
+			
+			modal.cleanup = function() {
+				modal_merlin.deallocate_magic();
+			};
+			
 			if(tc.jQ.isFunction(callback)){
 				callback(modal);
 			}

@@ -70,6 +70,21 @@ tc.merlin.prototype.setup_events = function(app){
 	}
 };
 
+tc.merlin.prototype.deallocate_magic = function() {
+	tc.jQ(window).unbind('hashchange', this.handlers.hashchange);
+	if (this.dom) {
+		this.dom.find('a.step_link').unbind('click', this.handlers.a_click);
+		this.dom.unbind('merlin-step-valid', this.handlers.valid);
+		this.dom.unbind('merlin-step-invalid', this.handlers.invalid);
+	}
+	if (this.options.back_button) {
+		this.options.back_button.unbind('click', this.handlers.last_step);
+	}
+	if (this.options.next_button) {
+		this.options.next_button.unbind('click', this.handlers.next_step);
+	}
+};
+
 tc.merlin.prototype.handle_controls = function(controls){
 	tc.util.log('tc.merlin.handle_controls');
 	if(this.options.progress_element){
