@@ -149,7 +149,7 @@ Change by Us - Create a Project
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
-	<li class='template-content project-item'>
+	<div class='template-content project-item'>
 		<div class="thumb">
 			<img width='50' src="http://placehold.it/50x50" alt="" class="proj"/>
 			<span class="overlay-tag"></span>
@@ -164,9 +164,9 @@ Change by Us - Create a Project
 			<span class="creator"><em>Created by </em> Terry Richardson</span>
 			<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
 		</div>
-	</li>
+	</div>
 	
-	<li class="template-content organization-item">
+	<div class="template-content organization-item">
 		<span class="thumb"><img width='35' src="http://placehold.it/35x35" alt="" /></span>
 		<span class="resource-name"><span><span class='organization-name tooltip_trigger'></span></span></span>
 		<a href="#add" class="add-button rounded-button small">Add</a>
@@ -175,7 +175,7 @@ Change by Us - Create a Project
 			<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
 			<!-- <span class="added-close"></span> -->
 		</div>
-	</li>
+	</div>
 	
 </div>
 
@@ -505,7 +505,7 @@ Change by Us - Create a Project
 						var i, temphtml;
 						dom.find('ul.projects-list').children().remove();
 						for(i in merlin.current_step.step_data.projects){
-							temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
+							temphtml = tc.jQ("<li class='project-item'></li>").append(tc.jQ('.template-content.project-item').clone().children());
 							if(merlin.current_step.step_data.projects[i].image_id){
 								temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
 							}
@@ -597,7 +597,7 @@ Change by Us - Create a Project
 						
 						dom.find('ul.resources-list').children().remove();
 						for(i in merlin.current_step.step_data.resources){
-							temphtml = tc.jQ('.template-content.organization-item').clone().removeClass('template-content');
+							temphtml = tc.jQ("<li class='organization-item'></li>").append(tc.jQ('.template-content.organization-item').clone().children());
 							if(merlin.current_step.step_data.resources[i].image_id){
 								temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
 							}
@@ -617,7 +617,7 @@ Change by Us - Create a Project
 							dom.find('ul.resources-list').append(temphtml);
 							
 						}
-						dom.find('ul.resources-list').find('a').bind('click',{merlin:merlin},function(e){
+						dom.find('ul.resources-list').find('.add-button').bind('click',{merlin:merlin},function(e){
 							e.preventDefault();
 							var existing_orgs;
 							if(!e.data.merlin.options.data.resources){
@@ -625,9 +625,16 @@ Change by Us - Create a Project
 							} else {
 								existing_orgs = e.data.merlin.options.data.resources.split(',');
 							}
-							if(existing_orgs.indexOf(e.target.hash.split(',')[1]) == -1){
-								existing_orgs.push(e.target.hash.split(',')[1]);
+							
+							// This was not working in IE
+							// if(existing_orgs.indexOf(e.target.hash.split(',')[1]) == -1){
+							// 								existing_orgs.push(e.target.hash.split(',')[1]);
+							// 							}
+							// Replaced with this:
+							if (tc.jQ.inArray(e.target.hash.split(',')[1], existing_orgs) == -1) {
+								existing_orgs.push(e.target.hash.split(','));
 							}
+							
 							e.data.merlin.current_step.dom.find('.resource-count').text(existing_orgs.length);
 							e.data.merlin.options.data.resources = existing_orgs.join(',');
 							tc.jQ(e.target).animate({
