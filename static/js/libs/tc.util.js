@@ -36,7 +36,12 @@ if(!tc){ var tc = {}; }
 	  tc.jQ = jQuery;
 	}
 	
-	/*if (!Array.prototype.indexOf) {
+	/* indexOf not supported in IE
+	   // Mozilla's implementation bellow:
+		
+		(using jQuery.inArray for now)
+	
+	if (!Array.prototype.indexOf) {
 		Array.prototype.indexOf = function(obj) {
 			if (this === void 0 || this === null)
 				throw new TypeError();
