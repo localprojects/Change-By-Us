@@ -23,7 +23,11 @@
 				
 					<li id='member-{{ member.u_id }}'>
 						<div class="thumb">
-							<img width='40' src="/static/images/thumb_genAvatar.jpg" alt="" />
+							{% if member.image_id %}
+								<img src='/images/{{ member.image_id % 10 }}/{{ member.image_id }}.png' alt="{{ member.name }}"/>
+							{% else %}
+								<img width='40' src="/static/images/thumb_genAvatar.jpg" alt="{{ member.name }}" class="avatar"/>
+							{% endif %}
 						</div>
 						<div class="main">
 							<a href="/useraccount/{{ member.u_id }}">{{ member.name }}</a>
