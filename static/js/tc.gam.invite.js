@@ -105,6 +105,7 @@ tc.gam.ideas_invite = function(app) {
 								dataType:"text",
 								success: function(data, ts, xhr) {
 									if (data == "False") {
+										window.location.hash = "ideas_invite,invite-message-error";
 										return false;
 									}
 									tc.jQ(event_target).addClass("disabled").text("Invited").unbind("click").bind("click", function(e) {
@@ -114,6 +115,14 @@ tc.gam.ideas_invite = function(app) {
 										modal.hide();
 									});
 								}
+							});
+						}
+					},
+					"invite-message-error": {
+						selector:".invite-message-error",
+						init: function(merlin, dom) {
+							tc.timer(1000, function() {
+								modal.hide();
 							});
 						}
 					}
