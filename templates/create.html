@@ -112,7 +112,8 @@ Change by Us - Create a Project
 					<span class="resource-count">0</span>
 					<span class="resource-label">You've added <br /><strong>resources</strong></span>
 				</div>
-				<ul class="triplewide resources-list clearfix"></ul>
+				<!-- <ul class="triplewide resources-list clearfix"></ul> -->
+				<table class="resources-list triplewide"></table>
 			</div><!--end step-->
 			
 			<div class='step check-nosimilar other-step clearfix' style='display:none;'>
@@ -502,36 +503,36 @@ Change by Us - Create a Project
 					use_for_history:true,
 					step_data:{},
 					init:function(merlin,dom){
-						var i, temphtml;
-						dom.find('ul.projects-list').children().remove();
-						for(i in merlin.current_step.step_data.projects){
-							temphtml = tc.jQ("<li class='project-item'></li>").append(tc.jQ('.template-content.project-item').clone().children());
-							if(merlin.current_step.step_data.projects[i].image_id){
-								temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
-							}
-							temphtml.find('.link a').text(merlin.current_step.step_data.projects[i].title).attr('href','/project/'+merlin.current_step.step_data.projects[i].project_id);
-							temphtml.find('.creator').html('<span class="creator"><em>Created by </em> '+
-								'<a href="/useraccount/'+ merlin.current_step.step_data.projects[i].owner_user_id + '">'+
-									merlin.current_step.step_data.projects[i].owner_first_name +
-									merlin.current_step.step_data.projects[i].owner_last_name +
-								'</a>'+
-							'</span>');
-							temphtml.find('.description').text(merlin.current_step.step_data.projects[i].description);
-							temphtml.find('.member-count').text(merlin.current_step.step_data.projects[i].num_members);
-							if(merlin.current_step.step_data.projects[i].endorsement){
-								temphtml.find('.endorser-thumb').show();
-							}
-							if(i != 0 && (i-1)%3==0){
-								temphtml.addClass('every-three');
-							}
-							if(i >= (merlin.current_step.step_data.projects.length-3)){
-								temphtml.addClass('last-three');
-							}
-							if(i==merlin.current_step.step_data.projects.length-1){
-								temphtml.addClass('last');
-							}
-							dom.find('ul.projects-list').append(temphtml);
-						}
+						//var i, temphtml;
+						//dom.find('ul.projects-list').children().remove();
+						//for(i in merlin.current_step.step_data.projects){
+						//	temphtml = tc.jQ("<li class='project-item'></li>").append(tc.jQ('.template-content.project-item').clone().children());
+						//	if(merlin.current_step.step_data.projects[i].image_id){
+						//		temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
+						//	}
+						//	temphtml.find('.link a').text(merlin.current_step.step_data.projects[i].title).attr('href','/project/'+merlin.current_step.step_data.projects[i].project_id);
+						//	temphtml.find('.creator').html('<span class="creator"><em>Created by </em> '+
+						//		'<a href="/useraccount/'+ merlin.current_step.step_data.projects[i].owner_user_id + '">'+
+						//			merlin.current_step.step_data.projects[i].owner_first_name +
+						//			merlin.current_step.step_data.projects[i].owner_last_name +
+						//		'</a>'+
+						//	'</span>');
+						//	temphtml.find('.description').text(merlin.current_step.step_data.projects[i].description);
+						//	temphtml.find('.member-count').text(merlin.current_step.step_data.projects[i].num_members);
+						//	if(merlin.current_step.step_data.projects[i].endorsement){
+						//		temphtml.find('.endorser-thumb').show();
+						//	}
+						//	if(i != 0 && (i-1)%3==0){
+						//		temphtml.addClass('every-three');
+						//	}
+						//	if(i >= (merlin.current_step.step_data.projects.length-3)){
+						//		temphtml.addClass('last-three');
+						//	}
+						//	if(i==merlin.current_step.step_data.projects.length-1){
+						//		temphtml.addClass('last');
+						//	}
+						//	dom.find('ul.projects-list').append(temphtml);
+						//}
 					}
 				},
 				'check-nosimilar':{
@@ -582,8 +583,71 @@ Change by Us - Create a Project
 					next_step:'finish',
 					use_for_history:true,
 					init:function(merlin,dom){
-						var i, temphtml;
+						//var i, temphtml;
+						//
+						//if(!merlin.options.components.organization_tooltip){
+						//	merlin.options.components.organization_tooltip = tc.resource_tooltip({
+						//		triggers: this.dom.find(".resources-list .tooltip_trigger"),
+						//		trigger_class:'tooltip_trigger',
+						//		markup_source_element:tc.jQ('#organization-markup-source'),
+						//		get_url: "/project/resource/info"
+						//	});
+						//} else {
+						//	merlin.options.components.organization_tooltip.clear_triggers();
+						//}
+						//
+						//dom.find('ul.resources-list').children().remove();
+						//for(i in merlin.current_step.step_data.resources){
+						//	temphtml = tc.jQ("<li class='organization-item'></li>").append(tc.jQ('.template-content.organization-item').clone().children());
+						//	if(merlin.current_step.step_data.resources[i].image_id){
+						//		temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
+						//	}
+						//	temphtml.find('.organization-name').text(merlin.current_step.step_data.resources[i].title);
+						//	temphtml.find('.add-button').attr('href','#add,'+merlin.current_step.step_data.resources[i].project_resource_id);
+						//	if(i!= 0 && (i-1)%3==0){
+						//		temphtml.addClass('every-three');
+						//	}
+						//	if(i >= (merlin.current_step.step_data.resources.length-3)){
+						//		temphtml.addClass('last-three');
+						//	}
+						//	if(i==merlin.current_step.step_data.resources.length-1){
+						//		temphtml.addClass('last');
+						//	}
+						//	temphtml.find('.organization-name').attr('rel','#organization,'+merlin.current_step.step_data.resources[i].project_resource_id);
+						//	merlin.options.components.organization_tooltip.add_trigger(temphtml.find('.organization-name'));
+						//	dom.find('ul.resources-list').append(temphtml);
+						//	
+						//}
+						//dom.find('ul.resources-list').find('.add-button').bind('click',{merlin:merlin},function(e){
+						//	e.preventDefault();
+						//	var existing_orgs;
+						//	if(!e.data.merlin.options.data.resources){
+						//		existing_orgs = [];
+						//	} else {
+						//		existing_orgs = e.data.merlin.options.data.resources.split(',');
+						//	}
+						//	
+						//	// This was not working in IE
+						//	// if(existing_orgs.indexOf(e.target.hash.split(',')[1]) == -1){
+						//	// 								existing_orgs.push(e.target.hash.split(',')[1]);
+						//	// 							}
+						//	// Replaced with this:
+						//	if (tc.jQ.inArray(e.target.hash.split(',')[1], existing_orgs) == -1) {
+						//		existing_orgs.push(e.target.hash.split(','));
+						//	}
+						//	
+						//	e.data.merlin.current_step.dom.find('.resource-count').text(existing_orgs.length);
+						//	e.data.merlin.options.data.resources = existing_orgs.join(',');
+						//	tc.jQ(e.target).animate({
+						//		opacity:0.0
+						//	},400,'easeOutCirc',function(e){
+						//		tc.jQ(this).parent().addClass('added');
+						//	});
+						//});
 						
+						
+						var tbody;
+
 						if(!merlin.options.components.organization_tooltip){
 							merlin.options.components.organization_tooltip = tc.resource_tooltip({
 								triggers: this.dom.find(".resources-list .tooltip_trigger"),
@@ -595,29 +659,34 @@ Change by Us - Create a Project
 							merlin.options.components.organization_tooltip.clear_triggers();
 						}
 						
-						dom.find('ul.resources-list').children().remove();
-						for(i in merlin.current_step.step_data.resources){
-							temphtml = tc.jQ("<li class='organization-item'></li>").append(tc.jQ('.template-content.organization-item').clone().children());
-							if(merlin.current_step.step_data.resources[i].image_id){
-								temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
+						tbody = "<tbody>";
+						tc.jQ.each(merlin.current_step.step_data.resources, function(i, resource) {
+							var temp, position;
+							temp = "";
+							position = i % 3;
+							if(position == 0){
+								temp = "<tr>";
 							}
-							temphtml.find('.organization-name').text(merlin.current_step.step_data.resources[i].title);
-							temphtml.find('.add-button').attr('href','#add,'+merlin.current_step.step_data.resources[i].project_resource_id);
-							if(i!= 0 && (i-1)%3==0){
-								temphtml.addClass('every-three');
-							}
-							if(i >= (merlin.current_step.step_data.resources.length-3)){
-								temphtml.addClass('last-three');
-							}
-							if(i==merlin.current_step.step_data.resources.length-1){
-								temphtml.addClass('last');
-							}
-							temphtml.find('.organization-name').attr('rel','#organization,'+merlin.current_step.step_data.resources[i].project_resource_id);
-							merlin.options.components.organization_tooltip.add_trigger(temphtml.find('.organization-name'));
-							dom.find('ul.resources-list').append(temphtml);
-							
-						}
-						dom.find('ul.resources-list').find('.add-button').bind('click',{merlin:merlin},function(e){
+							temp += "<td>";
+							temp += '<a href="#add,'+ resource.project_resource_id +'" class="add-button rounded-button small">Add</a>'+
+							        '<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>{% endif %}<img src="http://placehold.it/35x35" alt="" /></span>'+
+							        '<span class="resource-name" ><span>'+
+							            '<span class="organization-name tooltip_trigger" rel="#organization,'+ resource.project_resource_id +'">'+ 
+							                resource.title +
+							            '</span></span></span>';
+							// hidden added dialog
+							temp += '<div class="added-dialog">'+
+							            '<span class="added-header">Added <em>to</em> your project</span><br />'+
+							            '<span class="added-text">We\'ve sent them a link to your project page.'+
+							            ' <a href="">?</a></span></div>';
+							temp += "</td>";
+							if (position == 2) { temp += "</tr>"; }
+							tbody += temp;
+						});
+						tbody += "</tbody>";
+						tbody = tc.jQ(tbody);
+						
+						tbody.find('.add-button').bind('click',{merlin:merlin},function(e){
 							e.preventDefault();
 							var existing_orgs;
 							if(!e.data.merlin.options.data.resources){
@@ -625,12 +694,6 @@ Change by Us - Create a Project
 							} else {
 								existing_orgs = e.data.merlin.options.data.resources.split(',');
 							}
-							
-							// This was not working in IE
-							// if(existing_orgs.indexOf(e.target.hash.split(',')[1]) == -1){
-							// 								existing_orgs.push(e.target.hash.split(',')[1]);
-							// 							}
-							// Replaced with this:
 							if (tc.jQ.inArray(e.target.hash.split(',')[1], existing_orgs) == -1) {
 								existing_orgs.push(e.target.hash.split(','));
 							}
@@ -643,6 +706,52 @@ Change by Us - Create a Project
 								tc.jQ(this).parent().addClass('added');
 							});
 						});
+						
+						tbody.find('.close').unbind('click').bind('click', {merlin:merlin}, function(e){
+							//e.data.project.options.app.components.modal.show({
+							//	app:e.data.project.options.app,
+							//	source_element:tc.jQ('.modal-content.remove-resource'),
+							//	submit:function(){
+							//		tc.jQ.ajax({
+							//			type:'POST',
+							//			url:'/admin/resource/delete',
+							//			data:{
+							//				resource_id: e.target.href.split(',')[1]
+							//			},
+							//			context:e,
+							//			dataType:'text',
+							//			success:function(data,ts,xhr){
+							//				if(data == 'False'){
+							//					return false;
+							//				}
+							//				tc.jQ(this.target).parent().parent().animate({
+							//					'opacity':0.0
+							//				},600,'easeOutCubic');
+							//			}
+							//		});
+							//	}
+							//});
+						});
+						
+						
+						merlin.options.components.organization_tooltip.add_trigger(tbody.find('.organization-name'));
+						
+						tc.util.dump('table');
+						tc.util.dump(dom.find('table.resources-list'));
+						dom.find('table.resources-list').children().remove();
+						dom.find('table.resources-list').append(tbody);
+						
+						//me.elements.resources_table.empty().append(tbody);
+						//me.elements.empty_box.hide();
+						//me.elements.resource_counter.text(d.resources.length);
+						//tc.resource_tooltip({
+						//	triggers: me.elements.resources_table.find(".tooltip_trigger"),
+						//	trigger_class:'tooltip_trigger',
+						//	markup_source_element:tc.jQ('#organization-markup-source'),
+						//	get_url: "/project/resource/info"
+						//});
+						
+						
 					}
 				},
 				'add-noresources':{
