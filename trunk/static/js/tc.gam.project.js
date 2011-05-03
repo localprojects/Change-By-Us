@@ -3,7 +3,7 @@ if(!tc.gam){ tc.gam = {}; }
 
 
 tc.gam.project = function(options){	
-	var me;
+	var me, hash_onload;
 	me = this;
 	tc.util.log("tc.gam.project");
 	
@@ -15,6 +15,8 @@ tc.gam.project = function(options){
 	this.event_data = { project:this };
 	this.data = this.options.data;
 	this.widget = new tc.gam.widget(null,this);
+	
+	hash_onload = window.location.hash;
 	
 	this.components = {
 		infopane:new tc.gam.project_widgets.infopane(this,this.dom.find('.box.mission'),{widget:this.widget},{app:options.app}),
@@ -48,8 +50,6 @@ tc.gam.project = function(options){
 			this.components.conversation.show(false);
 		}
 	}
-	
-	window.location.hash = '';
 	
 	this.handlers = {
 		widget_show:function(e,d){
@@ -142,8 +142,10 @@ tc.gam.project = function(options){
 	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
-	
 	this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
+	
+	//window.location.hash = hash_onload;
+	//tc.jQ(window).trigger('hashchange');
 };
 
 
