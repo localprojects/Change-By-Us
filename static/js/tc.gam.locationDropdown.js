@@ -58,7 +58,7 @@ tc.locationDropdown.prototype.init = function(options){
 	if(this.options.input.attr('location_id')){
 		for(i = 0; i < this.options.locations.length; i++){
 			if(this.options.locations[i].location_id == this.options.input.attr('location_id')){
-				this.options.input.val(unescape(this.options.locations[i].name));
+				this.options.input.val(decodeURI(this.options.locations[i].name));
 				found = true;
 				break;
 			}
@@ -149,7 +149,7 @@ tc.locationDropdown.prototype.listClickHandler = function(e){
 	
 	location_tuple = t.hash.substring(1,t.hash.length).split(',');
 	
-	e.data.dropdown.options.input.removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]).val(location_tuple[0]).trigger('change');
+	e.data.dropdown.options.input.removeClass('not-valid').addClass('valid').attr('location_id',location_tuple[1]).val(decodeURI(location_tuple[0])).trigger('change');
 	e.data.dropdown.close();
 };
 
@@ -164,7 +164,7 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	tc.util.dump(e.target.value);
 	tc.util.dump(dropdown.options);
-	if(dropdown.options.radios){
+	if(dropdown.options.radios && dropdown.options.radios.filter('.location-hood').length){
 		dropdown.options.radios.filter('.location-hood').attr('checked',true)[0].checked = true;;
 		tc.jQ('label[for=location-hood]').trigger('click',{preventChange:true});
 	}
@@ -256,7 +256,7 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 				this.open();
 			}
 			if(lastvalue){
-				this.options.input.val(unescape(lastvalue));
+				this.options.input.val(decodeURI(lastvalue));
 				this.superFilterAndUpdateList(lastvalue,true);
 			}
 			break;
@@ -289,7 +289,7 @@ tc.locationDropdown.prototype.superFilterAndUpdateList = function(text){
 		}
 		
 		html += temp_string;
-		html = unescape(html);
+		html = html;
 		n_filtered++;
 	}
 	
