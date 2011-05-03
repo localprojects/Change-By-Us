@@ -27,7 +27,7 @@
 					</a>
 				</div>
 				<div class="about">
-					<p class="m14 welcome-about"><strong>Change by Us</strong> is a place to share ideas, create projects, build teams, and make our city better.</p>
+					<p class="m14 welcome-about"><strong>Change by Us</strong> is a place to share ideas, create projects, build teams, and make our city better.</p>
 				</div>
 				<div class="footer">
 					<div class="row">
@@ -310,7 +310,7 @@
 		<div class="joined">
 			<p class="m24">
 				<strong>Thanks, you've joined</strong><br />
-				<a class="projecttitle" href="/project">Start a Garden on 161st in South Bronx</a>
+				<a class="projecttitle" href="/project"></a>
 			</p>
 		</div>
 		<div class="projects">
@@ -364,7 +364,7 @@
 					</div>
 				</div>
 				<div class='step finish clearfix spinner-message' style='display:none;'>
-					<p>Thanks for logging in...</p>
+					<p>Thanks for logging in&hellip;</p>
 					<p><img class="loading" src='/static/images/loader32x32.gif' /></p>
 				</div>
 			</div>
@@ -404,22 +404,18 @@
 
 <div style='clear:both;'></div>
 
-<style type="text/css" media="screen">
-	.template-content{ display:none; }
-</style>
-
-<li class="template-content project-carousel-item swipe">
+<div class="template-content project-carousel-item swipe">
 	<div class="thumb">
 		<img src="http://placehold.it/50x50" alt="" class="proj"/>
 		<span class="overlay-tag"></span>
-		<span class="member-count">58</span>
+		<span class="member-count"></span>
 	</div>
 	<div class="project-info">
-		<span class="link"><a href="/project">Start a Garden on 161st in South Bronx</a></span>
+		<span class="link"><a href="/project"></a></span>
 		<span class="creator"><em>Created by </em> <div class='owner'></div></span>
-		<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
+		<span class="description"></span>
 	</div>
-</li>
+</div>
 {% endblock continent %}
 
 
@@ -505,7 +501,7 @@
 								if(!tempitem){
 									continue;
 								}
-								tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass('template-content');
+								tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').children());
 								if(tempitem.image_id){
 									tempdom.find('img').attr('src','/images/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 								}
@@ -523,7 +519,7 @@
 								if(!tempitem){
 									continue;
 								}
-								tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass('template-content');
+								tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').children());
 								if(tempitem.image_id){
 									tempdom.find('img').attr('src','/images/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 								}
@@ -731,7 +727,6 @@
 					},
 					init:function(merlin,dom){
 						window.scroll(0,0);
-						tc.util.dump('HERE');
 					},
 					finish:function(merlin,dom){
 						merlin.options.data.text = merlin.current_step.inputs.idea.dom.val();

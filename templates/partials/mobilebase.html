@@ -15,7 +15,7 @@
 			ipdConfig = {
 				baseUrl: '/static/js/libs/iphonedebug/client/', // trailing slash!
 				consoleBaseUrl: 'http://192.168.0.194:8170/' // trailing slash!
-			}
+			};
 		</script>
 		<script type="text/javascript" src="/static/js/libs/iphonedebug/client/ipd.js"></script>
 		
@@ -72,11 +72,28 @@
 		
 		
 		<script>
-			$(document).one('ready',function(){
+			tc.jQ(document).one('ready',function(){
+				var resize_timer;
 				
-				{% if d.template_data and d.template_data.user %} app_page.user = {{ d.template_data.user.json }}; {% else %} app_page.user = null; {% endif %}
+				{% if d.template_data and d.template_data.user %}
+					app_page.user = {{ d.template_data.user.json }}; 
+				{% else %} 
+					app_page.user = null; 
+				{% endif %}
 				
-				tc.jQ('.step').css('width',window.outerWidth-30+'px').show();
+				function handle_dimensions() {
+					tc.jQ(".step").width(window.outerWidth-30);//.show();
+				}
+				
+				handle_dimensions();
+				
+				resize_timer = null;
+				tc.jQ(window).resize(function(e) {
+					if (resize_timer) {
+						tc.clearTimer(resize_timer);
+					}
+					resize_timer = tc.timer(500, handle_dimensions);
+				});
 				
 				tc.app(app_page);
 			});
