@@ -8,8 +8,8 @@
 		<li><a class="idea current" href="#mobile,idea-merlin">Add an Idea</a></li>
 		<li><a class='join' href="#mobile,featured">Join a Project</a></li>
 	</ul>
-	<ul class="page step add-idea merlin">
-		<li class="step idea">
+	<div class="page step add-idea merlin">
+		<div class="step idea">
 			<div class="console">
 				<span class="hey"><span>Hey NYC!</span></span>
 				<span class="console-message"><span></span>How can we make our city a greener, better place to live?</span>
@@ -74,9 +74,9 @@
 					</div>
 				</div>
 			</div>
-		</li>
+		</div>
 		
-		<li class="step email-input user-details">
+		<div class="step email-input user-details">
 			<div class="moreinfo">
 				<p class="m18"><strong>Thanks for your idea!</strong></p>
 				<p class="m18">We need a little more information.</p>
@@ -95,9 +95,9 @@
 					</a>
 				</div>
 			</div>
-		</li>
+		</div>
 		
-		<li class="step location idea-location">
+		<div class="step location idea-location">
 			<div class="idealoc">
 				<p class="m18"><strong>Where is your idea located?</strong></p>
 			</div>
@@ -129,13 +129,13 @@
 					</a>
 				</div>
 			</div>
-		</li>
+		</div>
 		
-		<li class="step finish">
+		<div class="step finish">
 			<p>Thank you for your idea</p>
 			<p><img src='/static/images/loader32x32.gif' /></p>
-		</li>
-	</ul>
+		</div>
+	</div>
 	
 	<div class="page step join-list join-list-featured">
 		<div class="about">
@@ -404,7 +404,7 @@
 
 <div style='clear:both;'></div>
 
-<div class="template-content project-carousel-item swipe">
+<li class="template-content project-carousel-item swipe">
 	<div class="thumb">
 		<img src="http://placehold.it/50x50" alt="" class="proj"/>
 		<span class="overlay-tag"></span>
@@ -415,7 +415,7 @@
 		<span class="creator"><em>Created by </em> <div class='owner'></div></span>
 		<span class="description"></span>
 	</div>
-</div>
+</li>
 {% endblock continent %}
 
 
@@ -501,7 +501,7 @@
 								if(!tempitem){
 									continue;
 								}
-								tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').children());
+								tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass("template-content");
 								if(tempitem.image_id){
 									tempdom.find('img').attr('src','/images/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 								}
@@ -519,7 +519,7 @@
 								if(!tempitem){
 									continue;
 								}
-								tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').children());
+								tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass("template-content");
 								if(tempitem.image_id){
 									tempdom.find('img').attr('src','/images/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 								}
