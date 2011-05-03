@@ -447,14 +447,22 @@ Change by Us - Search Results
 		
 		tc.jQ('.search-terms-container a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
 			e.preventDefault();
-			e.data.input.val('');
+			e.data.input.val('').trigger('change');
 		});
 		
 		tc.jQ('.search-hood-container a.clear-field').bind('click',{input:tc.jQ('input.location-hood-enter')},function(e){
 			e.preventDefault();
-			e.data.input.attr('location_id','-1');
-			e.data.input.val('All neighborhoods');
+			e.data.input.attr('location_id','-1').val('All neighborhoods').trigger('change');
 		});
+		
+		tc.jQ('input.search-terms, input.search-location').bind('change', {}, function(e){
+			if(e.target.value.length == 0 || (e.target.className.indexOf('search-location') != -1 && e.target.value == 'All neighborhoods')){
+				tc.jQ(this).siblings('a.clear-field').hide();
+			} else {
+				tc.jQ(this).siblings('a.clear-field').show();
+			}
+		}).trigger('change');
+		
 		
 		tc.jQ('input.search-submit').bind('click',{terms:tc.jQ('input.search-terms'),location:tc.jQ('input.location-hood-enter')},function(e){
 			e.preventDefault();
