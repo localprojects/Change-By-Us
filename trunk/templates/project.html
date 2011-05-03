@@ -53,7 +53,7 @@ Change by Us - Project
 			{% endif %}
 			{% if d.template_data.project_user.data.is_member %}
 				{% if not d.template_data.project_user.data.is_project_admin %}
-				<span class="control"><a href="">Leave <span class="uncaps">this</span> project</a></span>
+					<span class="control"><a class="leave-project" href="#leaveProject,{{ d.template_data.project.data.project_id }}">Leave <span class="uncaps">this</span> project</a></span>
 				{% endif %}
 			{% endif %}
 		</div>
@@ -205,6 +205,24 @@ Change by Us - Project
 			<a class='close' href="#"><span>close</span></a>
 		</div>
 	{% endif %}
+	
+	{% if d.template_data.project_user.data.is_member %}
+		{% if not d.template_data.project_user.data.is_project_admin %}
+			<div class="template-content modal-content confirm-delete leave-project">
+				<div class="step">
+					<h2><strong>Leave</strong> this Project?</h2>
+					<div>
+						<p>You will no longer be a member of this project!<br/>Are you sure?</p>
+					</div>
+					<div class="actions">
+						<a class="submit rounded-button" href="#">Yes, Leave Project</a>
+						<a class="cancel" href="#">No, stay.</a>
+					</div>
+				</div>
+				<a class='close' href="#"><span>close</span></a>
+			</div>
+		{% endif %}
+	{% endif %}
 
 </div><!-- end .continent.project -->
 {% endblock continent %}
@@ -335,7 +353,7 @@ Change by Us - Project
 										context:merlin,
 										dataType:'text',
 										success:function(data,ts,xhr){
-											location.reload(true);
+											window.location.reload(true);
 										}
 									});
 								}
@@ -355,10 +373,39 @@ Change by Us - Project
 			}
 		});
 		
+		// Leave project
+		tc.jQ("a.leave-project").bind("click", {app:app}, function(e, d) {
+			var t;
+			t = tc.jQ(this);
+			e.preventDefault();
+			e.data.app.components.modal.show({
+				app: app,
+				source_element: tc.jQ(".modal-content.leave-project"),
+				submit: function(modal, callback) {
+					tc.jQ.ajax({
+						type: "POST",
+						url: "/project/leave",
+						data: {
+							project_id: t.attr("href").split(",")[1]
+						},
+						context: app,
+						dataType: "text",
+						success: function(data, ts, xhr) {
+							if (data == "False") {
+								return false;
+							}
+							//t.replaceWith("You have left <span class='uncaps'>this</span> project");
+							window.location.reload(true);
+						}
+					});
+				}
+			});
+		});
+		
 		tc.gam.ideas_invite( app );
 		
-		// Feature this project
 		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+			// Feature this project
 			tc.jQ(".adminbar > .feature a").bind("click", {
 					app: app,
 					source_element: tc.jQ(".modal-content.feature-project-dialog"),
@@ -483,6 +530,7 @@ Change by Us - Project
 				}
 			);
 			
+			// Delete project
 			tc.jQ('a.delete-project').bind('click',{app:app},function(e,d){
 				var t;
 				e.preventDefault();
