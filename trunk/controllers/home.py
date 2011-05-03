@@ -189,6 +189,7 @@ class Home(Controller):
     
         cookiename = "fbs_%s" % fb_settings['app_id']
         log.info(cookiename)
+        log.info(web.cookies())
         fbcookie = web.cookies().get(cookiename)
         entries = fbcookie.split("&")
         dc = {}
@@ -387,9 +388,10 @@ class Home(Controller):
             self.db.insert('twitter_user', user_id = userId, twitter_username = access_token['screen_name'], twitter_id = access_token['user_id'])
             self.session.user_id = userId
             self.session.invalidate()
-            idea.attachIdeasByEmail(self.db, email)
-            if (phone and len(phone) > 0):
-                idea.attachIdeasByPhone(self.db, phone)
+            #following 3 lines commented out for oauth dev
+            #idea.attachIdeasByEmail(self.db, email)
+            #if (phone and len(phone) > 0):
+            #    idea.attachIdeasByPhone(self.db, phone)
             
         return userId;
         
