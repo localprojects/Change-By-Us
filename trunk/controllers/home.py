@@ -186,18 +186,16 @@ class Home(Controller):
     def login_facebook(self):
     
         fb_settings = Config.get('facebook')
-    
-        cookiename = "fbs_%s" % fb_settings['app_id']
-        log.info(cookiename)
-        log.info(web.cookies())
-        fbcookie = web.cookies().get(cookiename)
-        entries = fbcookie.split("&")
-        dc = {}
-        for e in entries:
-            es = e.split("=")
-            dc[es[0]] = es[1]
         
-        details = urllib2.urlopen("https://graph.facebook.com/%s?access_token=%s" % (dc["uid"], dc["access_token"]))    
+        #cookiename = "fbs_%s" % fb_settings['app_id']
+        #fbcookie = web.cookies().get(cookiename)
+        #entries = fbcookie.split("&")
+        #dc = {}
+        #for e in entries:
+        #    es = e.split("=")
+        #    dc[es[0]] = es[1]
+        
+        details = urllib2.urlopen("https://graph.facebook.com/%s?access_token=%s" % (self.request('uid'), self.request("access_token")))    
         profile = json.loads(details.read())
         
         sql = "select * from facebook_user where facebook_id = %s" % str(profile['id'])
@@ -212,7 +210,7 @@ class Home(Controller):
             facebook_user = res[0]
             self.session.user_id = facebook_user.user_id
             self.session.invalidate()
-
+            
         else:
             email = profile["email"]
             check_if_email_exists = "select * from user where email = '%s'" % str(email)
