@@ -4,7 +4,7 @@
 	<head class='heavens'>
 		<title>{% block title %}Change by Us{% endblock title %}</title>
 		
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 		
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
@@ -73,8 +73,6 @@
 		
 		<script>
 			tc.jQ(document).one('ready',function(){
-				var resize_timer;
-				
 				{% if d.template_data and d.template_data.user %}
 					app_page.user = {{ d.template_data.user.json }}; 
 				{% else %} 
@@ -82,19 +80,38 @@
 				{% endif %}
 				
 				function handle_dimensions() {
-					tc.jQ(".step").width(window.outerWidth-30);//.show();
+					var page_width, rmargin;
+					page_width = tc.jQ(window).width();
+					rmargin = 30;
+					tc.jQ(".nav").width(page_width);
+					tc.jQ(".page").width(page_width - rmargin);
 				}
 				
-				handle_dimensions();
-				
-				resize_timer = null;
-				tc.jQ(window).resize(function(e) {
-					if (resize_timer) {
-						tc.clearTimer(resize_timer);
+				tc.jQ("body").bind("orientationchange", function(e) {
+					
+					tc.util.log("Orientation change!!");
+					tc.util.dump(e);
+					
+					if (typeof window.orientation !== "undefined") {
+						
+						switch (Math.abs(window.orientation)) {
+							case 0: // when switching TO portrait mode
+								// update the dimensions since the page width has decreased
+								handle_dimensions();
+								break;
+							case 90: // when switching TO landscape mode
+								// do nothing
+								break;
+								
+							default:
+								tc.util.log("unexpected orientation!", "warn");
+								tc.util.dump(window.orientation);
+								break;
+						}
 					}
-					resize_timer = tc.timer(500, handle_dimensions);
 				});
 				
+				handle_dimensions();
 				tc.app(app_page);
 			});
 		</script>
