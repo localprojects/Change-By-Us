@@ -661,15 +661,20 @@ Change by Us - Create a Project
 						
 						tbody = "<tbody>";
 						tc.jQ.each(merlin.current_step.step_data.resources, function(i, resource) {
-							var temp, position;
+							var temp, position, tempImgPath;
 							temp = "";
 							position = i % 3;
 							if(position == 0){
 								temp = "<tr>";
 							}
+							if (resource.image_id > 0) {
+								tempImgPath = '/images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
+							} else {
+								tempImgPath = '/static/images/thumb_genAvatar50.png'
+							}
 							temp += "<td>";
 							temp += '<a href="#add,'+ resource.project_resource_id +'" class="add-button rounded-button small">Add</a>'+
-							        '<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>{% endif %}<img src="http://placehold.it/35x35" alt="" /></span>'+
+							        '<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>{% endif %}<img width="35" src="'+tempImgPath+'" alt="" /></span>'+
 							        '<span class="resource-name" ><span>'+
 							            '<span class="organization-name tooltip_trigger" rel="#organization,'+ resource.project_resource_id +'">'+ 
 							                resource.title +
