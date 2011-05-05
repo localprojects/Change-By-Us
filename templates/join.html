@@ -415,22 +415,9 @@ Change by Us - Join
 					next_step:'email-lookup',
 					use_for_history:true,
 					inputs:{
-						email:{
-							selector:'input.email-alt',
-							validators:['min-3','max-128','email'],
-							hint:''
-						},
 						tos_email:{
 							selector:'input.tos-email',
-							validators:function(merlin,element,step){
-								if(merlin.current_step.inputs.email.dom.val().length){
-									return tc.validate(element,['required']);
-								} else {
-									return {
-										valid:true
-									};
-								}
-							},
+							validators:['required'],
 							hint:''
 						}
 					},
