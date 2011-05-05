@@ -161,23 +161,36 @@ def smallProject(id, title, description, imageId, numMembers, ownerUserId, owner
                 num_members = numMembers,
                 owner = smallUser(ownerUserId, ownerFirstName, ownerLastName, ownerImageId))
         
-def message(id, type, message, createdDatetime, userId, firstName, lastName, ideaId = None, idea = None, ideaSubType = None, ideaCreatedDatetime = None, goalId = None):
-    if (ideaId):
-        ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
-    else:
-        ideaObj = None
-         
-    #something for goals here
-    
-    return dict(message_id = id,
-                message_type = type,
-                owner = smallUser(userId, firstName, lastName, None),
-                body = message,
-                created = str(createdDatetime),
-                idea = ideaObj,
-                project_goal_id = goalId)
+# def message(id, type, message, createdDatetime, userId, firstName, lastName, ideaId = None, idea = None, ideaSubType = None, ideaCreatedDatetime = None, goalId = None):
+#     if (ideaId):
+#         ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
+#     else:
+#         ideaObj = None
+#          
+#     #something for goals here
+#     
+#     return dict(message_id = id,
+#                 message_type = type,
+#                 owner = smallUser(userId, firstName, lastName, None),
+#                 body = message,
+#                 created = str(createdDatetime),
+#                 idea = ideaObj,
+#                 project_goal_id = goalId)
                 
-def userMessage(id, type, message, createdDatetime, userId, firstName, lastName, ideaId, idea, ideaSubType, ideaCreatedDatetime, projectId, projectTitle):
+def message(id, 
+            type, 
+            message, 
+            createdDatetime, 
+            userId, 
+            firstName, 
+            lastName,
+            imageId, 
+            ideaId = None, 
+            idea = None, 
+            ideaSubType = None, 
+            ideaCreatedDatetime = None, 
+            projectId = None, 
+            projectTitle = None):
     if (ideaId):
         ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
     else:
@@ -187,7 +200,7 @@ def userMessage(id, type, message, createdDatetime, userId, firstName, lastName,
     
     return dict(message_id = id,
                 message_type = type,
-                owner = smallUser(userId, firstName, lastName, None),
+                owner = smallUser(userId, firstName, lastName, imageId),
                 body = message,
                 created = str(createdDatetime),
                 idea = ideaObj,
@@ -965,6 +978,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     u.user_id,
                     u.first_name,
                     u.last_name,
+                    u.image_id,
                     i.idea_id,
                     i.description as idea_description,
                     i.submission_type as idea_submission_type,
@@ -986,6 +1000,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                                     item.user_id, 
                                     item.first_name, 
                                     item.last_name, 
+                                    item.image_id,
                                     item.idea_id, 
                                     item.idea_description, 
                                     item.idea_submission_type, 
