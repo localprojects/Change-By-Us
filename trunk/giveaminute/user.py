@@ -239,7 +239,7 @@ where u.user_id = $id"""
                         p.title,
                         null as project_message_id,
                         'invite' as message_type,
-                        concat('You''ve been invited to the ', ucase(p.title), ' group!<br/><br/>"', inv.message, '"') as message,
+                        concat('You''ve been invited to the ', ucase(p.title), ' project!<br/><br/>"', inv.message, '"') as message,
                         inv.created_datetime as created_datetime,
                         iu.user_id,
                         iu.first_name,
