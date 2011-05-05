@@ -61,7 +61,7 @@
 					<div class="membrane">
 						<div class="thumb">
 							{% if message.owner.image_id %}
-								<img src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
+								<img width='50' src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
 							{% else %}
 								<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
 							{% endif %}
@@ -125,7 +125,7 @@
 	{% endif %}
 	<div class="membrane">
 		<div class="thumb">
-			<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+			<img width='50' src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
 		</div>
 		<div class="main">
 			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
@@ -357,6 +357,10 @@
 			markup.find('p.message-body').text(data.message);
 			
 			{% if d.template_data.user %}
+				{% if d.template_data.user.data.image_id %}
+					markup.find(".thumb img").attr("src", "/images/{{ d.template_data.user.data.image_id % 10 }}/{{ d.template_data.user.data.image_id }}.png");
+				{% endif %}
+			
 				markup.find(".meta-hd > strong").html("<a href='/useraccount/{{ d.template_data.user.data.u_id }}'>{{ d.template_data.user.data.f_name }} {{ d.template_data.user.data.l_name|truncate(1, true, '.') }}</a>");
 			{% else %}
 				markup.find(".meta-hd").hide();
