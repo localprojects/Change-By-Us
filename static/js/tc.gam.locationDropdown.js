@@ -245,7 +245,8 @@ tc.locationDropdown.prototype.radioHandler = function(e){
 	}
 	switch(e.target.id){
 		case 'location-city':
-			this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid');//.removeAttr('location_id');
+			//this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid');//.removeAttr('location_id');
+			this.options.input.data('last-value',this.options.input.val()).val('').removeClass('not-valid').removeClass('valid').attr('location_id','-1');
 			this.close();
 			break;
 		case 'location-hood':
