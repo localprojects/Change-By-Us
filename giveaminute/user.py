@@ -223,6 +223,7 @@ where u.user_id = $id"""
                         mu.user_id,
                         mu.first_name,
                         mu.last_name,
+                        mu.image_id,
                         i.idea_id,
                         i.description as idea_description,
                         i.submission_type as idea_submission_type,
@@ -244,6 +245,7 @@ where u.user_id = $id"""
                         iu.user_id,
                         iu.first_name,
                         iu.last_name,
+                        iu.image_id,
                         i.idea_id,
                         i.description as idea_description,
                         i.submission_type as idea_submission_type,
@@ -257,13 +259,14 @@ where u.user_id = $id"""
             data = list(self.db.query(sql, {'userId':self.id, 'limit':limit, 'offset':offset}))  
                
             for item in data:
-                messages.append(mProject.userMessage(item.project_message_id, 
+                messages.append(mProject.message(item.project_message_id, 
                                         item.message_type, 
                                         item.message, 
                                         item.created_datetime, 
                                         item.user_id, 
                                         item.first_name, 
                                         item.last_name, 
+                                        item.image_id,
                                         item.idea_id, 
                                         item.idea_description, 
                                         item.idea_submission_type, 
