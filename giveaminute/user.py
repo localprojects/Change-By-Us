@@ -54,7 +54,8 @@ class User():
                     mobile = self.phone,
                     email_notification = self.emailNotification,
                     num_new_messages = self.numNewMessages,
-                    projects = projects)
+                    projects = projects,
+                    image_id = self.imageId)
                                         
         return data
         
