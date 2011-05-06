@@ -99,7 +99,7 @@ Change by Us - Create a Project
 			
 			<div class='step check clearfix' style='display:none;'>
 				<h3>Similar Projects</h3>
-				<ul class="triplewide projects-list clearfix"></ul>
+				<table class="triplewide projects-list"></table>
 			</div><!--end step-->
 			
 			<div class='step add-resource-process clearfix spinner-message' style='display:none;'>
@@ -503,36 +503,44 @@ Change by Us - Create a Project
 					use_for_history:true,
 					step_data:{},
 					init:function(merlin,dom){
-						//var i, temphtml;
-						//dom.find('ul.projects-list').children().remove();
-						//for(i in merlin.current_step.step_data.projects){
-						//	temphtml = tc.jQ("<li class='project-item'></li>").append(tc.jQ('.template-content.project-item').clone().children());
-						//	if(merlin.current_step.step_data.projects[i].image_id){
-						//		temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.projects[i].image_id % 10)+'/'+merlin.current_step.step_data.projects[i].image_id+'.png');
-						//	}
-						//	temphtml.find('.link a').text(merlin.current_step.step_data.projects[i].title).attr('href','/project/'+merlin.current_step.step_data.projects[i].project_id);
-						//	temphtml.find('.creator').html('<span class="creator"><em>Created by </em> '+
-						//		'<a href="/useraccount/'+ merlin.current_step.step_data.projects[i].owner_user_id + '">'+
-						//			merlin.current_step.step_data.projects[i].owner_first_name +
-						//			merlin.current_step.step_data.projects[i].owner_last_name +
-						//		'</a>'+
-						//	'</span>');
-						//	temphtml.find('.description').text(merlin.current_step.step_data.projects[i].description);
-						//	temphtml.find('.member-count').text(merlin.current_step.step_data.projects[i].num_members);
-						//	if(merlin.current_step.step_data.projects[i].endorsement){
-						//		temphtml.find('.endorser-thumb').show();
-						//	}
-						//	if(i != 0 && (i-1)%3==0){
-						//		temphtml.addClass('every-three');
-						//	}
-						//	if(i >= (merlin.current_step.step_data.projects.length-3)){
-						//		temphtml.addClass('last-three');
-						//	}
-						//	if(i==merlin.current_step.step_data.projects.length-1){
-						//		temphtml.addClass('last');
-						//	}
-						//	dom.find('ul.projects-list').append(temphtml);
-						//}
+						var tbody;
+
+						tbody = "<tbody>";
+						tc.jQ.each(merlin.current_step.step_data.projects, function(i, project) {
+							var temp, position, tempImgPath;
+							temp = "";
+							position = i % 3;
+							if(position == 0){
+								temp = "<tr>";
+							}
+							if (project.image_id > 0) {
+								tempImgPath = '/images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
+							} else {
+								tempImgPath = '/static/images/thumb_genAvatar50.png'
+							}
+							temp += "<td>";
+							temp += '<div class="thumb">'+
+										'<a href="/project/'+project.project_id+'"><img width="50" height="50" src="'+tempImgPath+'" alt="" class="proj"/></a>'+
+										'<span class="overlay-tag"></span>'+
+										'<span class="member-count">'+project.num_members+'</span>'+
+									'</div>'+
+									'<div class="project-info">'+
+										'<span class="link"><a href="/project/'+project.project_id+'">'+tc.truncate(project.title,50)+'</a></span>'+
+										'<span class="creator"><em>Created by </em> <a href="/useraccount/'+project.owner_user_id+'">'+project.owner_first_name+' '+project.owner_last_name+'</a></span>'+
+										'<span class="description"><a href="/project/'+project.project_id+'">'+tc.truncate(project.description,65)+'</a></span>'+
+									'</div>';
+							temp += "</td>";
+							if (position == 2) { temp += "</tr>"; }
+							tbody += temp;
+						});
+						tbody += "</tbody>";
+						tbody = tc.jQ(tbody);
+
+
+						tc.util.dump('table');
+						tc.util.dump(dom.find('table.projects-list'));
+						dom.find('table.projects-list').children().remove();
+						dom.find('table.projects-list').append(tbody);
 					}
 				},
 				'check-nosimilar':{
