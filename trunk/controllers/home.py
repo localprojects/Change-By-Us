@@ -447,7 +447,7 @@ class Home(Controller):
         physical_address = self.request('physical_address')
         location_id = util.try_f(int, self.request('location_id'), -1)
         url = util.makeUrlAbsolute(self.request('url'))
-        keywords = self.request('keywords').replace(',', ' ') if not util.strNullOrEmpty(self.request('keywords')) else None
+        keywords = ' '.join([word.strip() for word in self.request('keywords').split(',')]) if not util.strNullOrEmpty(self.request('keywords')) else None
         contact_name = self.request('contact_name')
         contact_email = self.request('contact_email')
         facebook_url = util.makeUrlAbsolute(self.request('facebook_url'))
@@ -465,6 +465,8 @@ class Home(Controller):
                                         physical_address = physical_address,
                                         location_id = location_id,
                                         url = url,
+                                        facebook_url = facebook_url,
+                                        twitter_url = twitter_url,
                                         keywords = keywords,
                                         contact_name = contact_name,
                                         contact_email = contact_email,

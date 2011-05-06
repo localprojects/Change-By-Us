@@ -39,7 +39,7 @@ class CreateProject(Controller):
             organization = self.request('organization')
             locationId = util.try_f(int, self.request('location_id'), -1)
             imageId = self.request('image')
-            keywords = self.request('keywords').split(',')
+            keywords = [word.strip() for word in self.request('keywords').split(',')] if not util.strNullOrEmpty(self.request('keywords')) else []
             resourceIds = self.request('resources').split(',')
             isOfficial = self.user.isAdmin
             
