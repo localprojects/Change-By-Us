@@ -54,7 +54,7 @@
 
 				<ul class="navbar clearfix">
 					<li class="home">
-						<a href="http://nyc.changeby.us"><span>Change by Us</span></a>
+						<a href="http://nyc.changeby.us"><span>Change by Us NYC</span></a>
 					</li>
 					<!--<li class="simplicity">
 						<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml" target="_blank"><span>NYC SimpliCity</span></a>
@@ -77,9 +77,9 @@
 		<div class='continent blog'>
 			<div class='headlands clearfix'>
 				<!-- <span class="above-h1 fancy-caps"><span>The</span> Official</span> -->
-				<h1><a href="/">Change by Us <span class="unbold">Blog</a></span></h1>
+				<h1><a href="/">Change by Us NYC <span class="unbold">Blog</a></span></h1>
 				<!-- <div class="description">
-					Updates from Change by Us community projects and all the news from Change by Us <abbr>HQ</abbr>.
+					Updates from Change by Us NYC community projects and all the news from Change by Us NYC <abbr>HQ</abbr>.
 				</div> -->
 				<div class="search generic-search">
 					<form class="searchform" method="get" action="<?php bloginfo( 'url' ); ?>">

@@ -29,7 +29,7 @@
 				</div>
 				<div class="box">
 					<ul class="sitemap">
-						<li><a href='http://nyc.changeby.us/about'>About Change by Us</a></li>
+						<li><a href='http://nyc.changeby.us/about'>About Change by Us NYC</a></li>
 						<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
 						<li><a href='http://nycblog.changeby.us'>News</a></li>
 						<li><a href='http://nyc.changeby.us/tou#community-policy'>Community Policy</a></li>
