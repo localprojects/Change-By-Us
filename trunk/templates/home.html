@@ -39,6 +39,7 @@ Change by Us NYC
 										<a href="#whos-listening">Who's Listening?</a>
 									</div>
 									<span class="charlimit idea">0/175</span>
+									<input style='display:none;' name='main_text' class='main_text' />
 								</div>
 							</div>
 						
@@ -411,7 +412,8 @@ Change by Us NYC
 			data:{
 				text:null,
 				email:null,
-				location_id:null
+				location_id:null,
+				main_text:""
 			},
 			steps:{
 				'start':{
@@ -433,11 +435,16 @@ Change by Us NYC
 									e.data.me.options.error_indicator.hide();
 								}
 							}
+						},
+						main_text:{
+							selector:'input.main_text',
+							validators:['max-0']
 						}
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							text:merlin.current_step.inputs.idea.dom.val()
+							text:merlin.current_step.inputs.idea.dom.val(),
+							main_text:merlin.current_step.inputs.main_text.dom.val()
 						});
 					}
 				},
