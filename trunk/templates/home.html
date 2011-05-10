@@ -746,6 +746,8 @@ Change by Us NYC
 			var noteCardPane = tc.jQ(".note-card-pane");
 			
 			var theHandClass = "hand" + ((areaNum % 3) + 1);
+			
+			var hoveredNoteTop;
 
 			$(areaSelector + " .small-note").hover(
 				function () {
@@ -765,6 +767,13 @@ Change by Us NYC
 					} else {
 						noteCardPane.removeClass('color1 color2 color3 color4 color5').addClass('color' + areaNum);
 					};
+					
+					if( isMsie8 != true ) {
+						hoveredNoteTop = tc.jQ(this).position().top;
+						tc.jQ(this).animate({ 
+							top: "-=3px"
+						}, { "duration": 400, "easing": "easeOutCubic" });
+					}
 					
 					/*
 					var theIntersectors = findIntersectors(tc.jQ(this),tc.jQ(areaSelector + " .small-note"));
@@ -792,6 +801,11 @@ Change by Us NYC
 					*/
 				},
 				function () {
+					if( isMsie8 != true ) {
+						tc.jQ(this).stop(true, true).animate({ 
+							top: hoveredNoteTop+"px"
+						}, { "duration": 50, "easing": "swing" });
+					}
 					hoverZindexCounter++;
 				}
 			).click(function(e) {
