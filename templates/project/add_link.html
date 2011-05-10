@@ -20,6 +20,7 @@
 					<div class="row first clearfix">
 						<input name='link-title' class='link-url link-title' type="text" />
 						<span class="charlimit title">50</span>
+						<input style='display:none;' name='main_text' class='main_text' />
 					</div>
 					<div class="row second">
 						<input name='link-url' class='link-url link-href' type="text" />
@@ -81,7 +82,8 @@
 				data:{
 					project_id:null,
 					title:null,
-					url:null
+					url:null,
+					main_text:""
 				},
 				steps:{
 					'link-info':{
@@ -101,6 +103,10 @@
 								selector:'input.link-href',
 								validators:['min-3','max-300','required','url'],
 								hint:'URL'
+							},
+							main_text:{
+								selector:'input.main_text',
+								validators:['max-0']
 							}
 						},
 						init:function(merlin,dom){
@@ -111,7 +117,8 @@
 							merlin.options.data = tc.jQ.extend(merlin.options.data,{
 								project_id:merlin.app.app_page.data.project.project_id,
 								title:merlin.current_step.inputs.title.dom.val(),
-								url:merlin.current_step.inputs.url.dom.val()
+								url:merlin.current_step.inputs.url.dom.val(),
+								main_text:merlin.current_step.inputs.main_text.dom.val()
 							});
 						}
 					},

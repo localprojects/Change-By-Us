@@ -109,6 +109,7 @@ Change by Us NYC - Add Resource
 						<div class="row">
 							<input type="checkbox" id="agree-tos" class='contact' />
 							<label for="agree-tos">I have read and accept the <a href="/tou"><strong>Terms of Use</strong></a></label>
+							<input style='display:none;' name='main_text' class='main_text' />
 						</div>
 					</div>
 					<div>
@@ -211,7 +212,8 @@ Change by Us NYC - Add Resource
 				keywords: null,
 				contact_name: null,
 				contact_email: null,
-				image: null
+				image: null,
+				main_text:""
 			},
 			steps:{
 				'resource-form':{
@@ -270,6 +272,10 @@ Change by Us NYC - Add Resource
 							selector:'input.contact',
 							validators:['min-3','max-50','required','email'],
 							hint:''
+						},
+						main_text:{
+							selector:'input.main_text',
+							validators:['max-0']
 						}
 					},
 					step_data:{},
@@ -303,7 +309,8 @@ Change by Us NYC - Add Resource
 							facebook_url:merlin.current_step.inputs.facebook.dom.val(),
 							twitter_url:merlin.current_step.inputs.twitter.dom.val(),
 							keywords:merlin.current_step.inputs.keywords.dom.val(),
-							contact_email:merlin.current_step.inputs.contact.dom.val()
+							contact_email:merlin.current_step.inputs.contact.dom.val(),
+							main_text:merlin.current_step.inputs.main_text.dom.val()
 						});
 					}
 				},

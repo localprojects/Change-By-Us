@@ -89,6 +89,7 @@ Change by Us NYC - Join
 					</div>
 					<div class="row row-error">
 						<span class="email-error" style='display:none;'>Please enter a valid email address</span>
+						<input style='display:none;' name='main_text' class='main_text' />
 					</div>
 				</div>
 				
@@ -290,7 +291,8 @@ Change by Us NYC - Join
 				email:null,
 				password:null,
 				sms_phone:'-1',
-				beta_code:null
+				beta_code:null,
+				main_text:""
 			},
 			steps:{
 				/* Step: Start  */
@@ -335,6 +337,10 @@ Change by Us NYC - Join
 							validators:['password-20','required'],
 							hint:''
 						},
+						main_text:{
+							selector:'input.main_text',
+							validators:['max-0']
+						},
 						tos_user_info:{
 							selector:'input.tos-user-info',
 							validators:['required']
@@ -359,6 +365,7 @@ Change by Us NYC - Join
 							f_name:merlin.current_step.inputs.f_name.dom.val(),
 							l_name:merlin.current_step.inputs.l_name.dom.val(),
 							email:merlin.current_step.inputs.email.dom.val(),
+							main_text:merlin.current_step.inputs.main_text.dom.val(),
 							password:merlin.current_step.inputs.password.dom.val(){% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %},
 							beta_code:merlin.current_step.inputs.invite.dom.val()
 							{% endif %}
