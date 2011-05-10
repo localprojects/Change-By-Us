@@ -103,6 +103,22 @@
 					</div>
 				</li>
 			{% endfor %}
+		{% else %}
+			{% if not d.template_data.project.data.info.messages['total'] > 0 %}
+				<li class="admin-default-message">
+					<div class="membrane">
+						<div class="thumb">
+							<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+						</div>
+						<div class="main">
+							<cite class="meta-hd"><strong>Administrator</strong> says</cite>
+							<blockquote class="serif">
+								<p>Hey &ndash; welcome to Change by Us! I&#39;m an administrator of the site. If there is anything we can help you with, please email us at <a href="mailto:info@changeby.us">info@changeby.us</a></p>
+							</blockquote>
+						</div>
+					</div>
+				</li>
+			{% endif %}
 		{% endif %}
 	</ol>
 	
@@ -110,6 +126,7 @@
 		<a href="#" class='load_more_button'><span>Older Posts</span></a>
 	</div>
 
+	<!--
 	<div class="empty-state-box big" style="{% if d.template_data.project.data.info.messages['total'] > 0 %}display:none;{% endif %}">
 		{% if d.template_data.project_user.data.is_member %}
 			<p>No one has started the conversation yet. Be the first to tell people what you think!</p>
@@ -117,6 +134,7 @@
 			<p>No one has started the conversation yet, join this project to tell people what you think!</p>
 		{% endif %}
 	</div>
+	-->
 	
 </div>
 
@@ -192,8 +210,12 @@
 				e.data.me.elements.textpane.focus();
 			},
 			add_new_message:function(e,d){
-				var message;
+				var message, admin_def_msg;
 				e.data.me.dom.find(".empty-state-box").hide();
+				admin_def_msg = e.data.me.dom.find(".admin-default-message");
+				if (admin_def_msg.length) {
+					admin_def_msg.remove();
+				}
 				message = generate_message_markup(d);
 				message.hide();
 				e.data.me.elements.message_stack.prepend(message);
