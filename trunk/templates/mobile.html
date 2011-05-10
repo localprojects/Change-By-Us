@@ -407,7 +407,7 @@
 
 <div style='clear:both;'></div>
 
-<li class="template-content project-carousel-item swipe">
+<div class="template-content project-carousel-item swipe">
 	<div class="thumb">
 		<img src="http://placehold.it/50x50" alt="" class="proj"/>
 		<span class="overlay-tag"></span>
@@ -418,7 +418,7 @@
 		<span class="creator"><em>Created by </em> <div class='owner'></div></span>
 		<span class="description"></span>
 	</div>
-</li>
+</div>
 {% endblock continent %}
 
 
@@ -504,7 +504,7 @@
 								if(!tempitem){
 									continue;
 								}
-								tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass("template-content");
+								tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').clone().children());
 								if(tempitem.image_id){
 									tempdom.find('img').attr('src','/images/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 								}
@@ -522,7 +522,7 @@
 								if(!tempitem){
 									continue;
 								}
-								tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass("template-content");
+								tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').clone().children());
 								if(tempitem.image_id){
 									tempdom.find('img').attr('src','/images/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 								}
@@ -568,11 +568,11 @@
 								context:merlin,
 								dataType:'json',
 								success:function(data,ts,xhr){
-									var n_projects;
+									var n_projects, i;
 									n_projects = 0;
 									for(i in data){
 										tempitem = data[i];
-										tempdom = tc.jQ('.template-content.project-carousel-item').clone().removeClass('template-content');
+										tempdom = tc.jQ("<li class='project-carousel-item swipe'></li>").append(tc.jQ('.template-content.project-carousel-item').clone().children());
 										if(tempitem.image_id){
 											tempdom.find('img').attr('src','/imgages/'+(tempitem.image_id%10)+'/'+tempitem.image_id+'.png');
 										}
@@ -659,7 +659,7 @@
 							context:merlin,
 							dataType:'json',
 							success:function(data,ts,xhr){
-								this.current_step.dom.find('')
+								this.current_step.dom.find('');
 								if(data.image_id){
 									this.current_step.dom.find('img').attr('src','/images/'+(data.image_id%10)+'/'+data.image_id+'.png');
 								}
@@ -799,7 +799,7 @@
 									idea_id:data,
 									n_limit:5
 								};
-								window.location.hash = 'mobile,related-processing'
+								window.location.hash = 'mobile,related-processing';
 							}
 						});
 					}
