@@ -67,6 +67,7 @@ Change by Us NYC - Create a Project
 							<span class="suggested-keywords-label">Suggested Keywords</span>
 							<span class="suggested-keywords"></span>
 						</div>
+						<input style='display:none;' name='main_text' class='main_text' />
 					</div>
 				</div>
 			</div><!--end step-->
@@ -270,7 +271,8 @@ Change by Us NYC - Create a Project
 				location_id:null,
 				links:null,
 				resources:null,
-				image:'-1'
+				image:'-1',
+				main_text:""
 			},
 			steps:{
 				'start':{
@@ -365,6 +367,10 @@ Change by Us NYC - Create a Project
 									}
 								}
 							}
+						},
+						main_text:{
+							selector:'input.main_text',
+							validators:['max-0']
 						}
 					},
 					fn:{
@@ -425,7 +431,8 @@ Change by Us NYC - Create a Project
 							title: merlin.current_step.inputs.title.dom.val(),
 							organization: val_escape_hints(merlin.current_step.inputs.organization.dom),
 							text: merlin.current_step.inputs.description.dom.val(),
-							keywords: val_escape_hints(merlin.current_step.inputs.keywords.dom)
+							keywords: val_escape_hints(merlin.current_step.inputs.keywords.dom),
+							main_text:merlin.current_step.inputs.main_text.dom.val()
 						});
 					}
 				},

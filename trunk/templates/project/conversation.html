@@ -31,6 +31,7 @@
 						{% endif %}
 						<textarea class='message-input'></textarea>
 						<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+						<input style='display:none;' name='main_text' class='main_text' />
 					</div>
 					<div class="primary-action">
 						<a class="ca-btn submit-button" href="#">
@@ -394,7 +395,8 @@
 					first_step:'message',
 					data:{
 						message:null,
-						project_id:null
+						project_id:null,
+						main_text:""
 					},
 					steps:{
 						'message':{
@@ -417,6 +419,10 @@
 											}
 										}
 									}
+								},
+								main_text:{
+									selector:'input.main_text',
+									validators:['max-0']
 								}
 							},
 							init:function(merlin,dom){
@@ -427,7 +433,8 @@
 								merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height())
 								merlin.options.data = tc.jQ.extend(merlin.options.data,{
 									project_id:merlin.app.app_page.data.project.project_id,
-									message:merlin.current_step.inputs.message.dom.val()
+									message:merlin.current_step.inputs.message.dom.val(),
+									main_text:merlin.current_step.inputs.main_text.dom.val()
 								});
 							}
 						},
