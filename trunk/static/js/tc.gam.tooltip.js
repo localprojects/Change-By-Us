@@ -23,6 +23,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 	this.tooltip.bind('mouseout',{me:this},this.handlers.tooltip_mouseout);
 	this.has_been_shown = false;
 	this.current_trigger = null;
+	this.current_trigger_id = null;
 	this.cached_data = {};
 };
 
@@ -51,10 +52,7 @@ tc.resource_tooltip.prototype.handlers = {
 		//tc.util.log("tc.resource_tooltip.trigger_mouseover");
 		var t;
 		t = e.target;
-		
 		while (t.className.indexOf(e.data.me.options.trigger_class) == -1 && t.nodeName != 'BODY'){
-			tc.util.dump(e.data.me.options.trigger_class);
-			tc.util.dump(t.className);
 			t = t.parentNode;
 		}
 		e.data.me.current_trigger = tc.jQ(t);
@@ -118,45 +116,55 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 		markup.find('img').attr('src','/static/images/thumb_genAvatar100.png');
 	}
 	markup.find('.main p').text(data.description);
-	markup.find('dd a').attr('href',data.url).text(tc.truncate(data.url,28,'...'));
-	return tc.jQ('<div>').append(markup.clone()).remove().html();
+	markup.find('dd a').attr('target','_blank').attr('href',data.url).text(tc.truncate(data.url,28,'...'));
+	return tc.jQ('<div>').append(markup).html();
 };
 
 tc.resource_tooltip.prototype.show = function(){
 	//tc.util.log("tc.resource_tooltip.show");
-	var target_pos, me;
+	var target_pos, me, load_content;
 	target_pos = function(self){
 		return {
-			top:self.current_trigger.offset().top - self.tooltip.height(), //-20,
+			top:self.current_trigger.offset().top - self.tooltip.height(),
 			left:self.current_trigger.offset().left + (self.current_trigger.width()/2) - (self.tooltip.width()/2)
 		};
 	};
 	me = this;
+	load_content = false;
 	
-	if(this.cached_data[this.current_trigger.attr('rel').split(',')[1]]){
-		this.tooltip.html((this.cached_data[this.current_trigger.attr('rel').split(',')[1]]));
+	if(this.current_trigger.attr('rel').split(',')[1] != this.current_trigger_id){
+		this.current_trigger_id = this.current_trigger.attr('rel').split(',')[1];
+		load_content = true;
+	}
+	
+	if(this.cached_data[this.current_trigger_id]){
+		if(load_content){
+			this.tooltip.html((this.cached_data[this.current_trigger_id]));
+		}
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 	} else {
-		this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
+		if(load_content){
+			this.tooltip.html('<div class="tooltip-bd spinner"><img class="loading" src="/static/images/loader32x32.gif" /></div>');
+		}
 		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
 		
-		tc.jQ.ajax({
-			url: this.options.get_url,
-			data: {
-				project_resource_id:this.current_trigger.attr('rel').split(',')[1]
-			},
-			async:false,
-			context: this,
-			dataType:'json',
-			success:function(data,ts,xhr){
-				this.cached_data[this.current_trigger.attr('rel').split(',')[1]] = this.generate_markup(data);
-			}
-		});
+		if(load_content){
+			tc.jQ.ajax({
+				url: this.options.get_url,
+				data: {
+					project_resource_id:this.current_trigger_id
+				},
+				async:false,
+				context: this,
+				dataType:'json',
+				success:function(data,ts,xhr){
+					this.cached_data[this.current_trigger_id] = this.generate_markup(data);
+				}
+			});
 		
-		tc.util.dump("" + this.cached_data[this.current_trigger.attr('rel').split(',')[1]]);
-		
-		this.tooltip.html(this.cached_data[this.current_trigger.attr('rel').split(',')[1]]);
-		this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
+			this.tooltip.html(this.cached_data[this.current_trigger_id]);
+			this.move_to_target(target_pos(this), this.has_been_shown ? true : false);
+		}
 	}
 };
 
