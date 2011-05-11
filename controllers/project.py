@@ -129,6 +129,26 @@ class Project(Controller):
         projectUser = dict(is_project_admin = False, is_member = False)
         
         if (self.user):
+            sql_invited_idea = """select project_id from project_invite JOIN idea
+                             ON project_invite.invitee_idea_id = idea.idea_id
+            		         WHERE project_invite.project_id = $projectId
+            		         AND idea.user_id = $userId
+            		         limit 1
+                           """
+            data_invited_idea = list(self.db.query(sql_invited_idea, {'userId':self.user.id, 'projectId':projectId}))
+            
+            sql_invited_email = """select project_id from project_invite
+            		         WHERE project_invite.project_id = $projectId
+            		         AND project_invite.invitee_email = $email
+            		         limit 1
+                           """
+            data_invited_email = list(self.db.query(sql_invited_email, {'email':self.user.email, 'projectId':projectId}))
+            
+            if(len(data_invited_idea) == 1 or len(data_invited_email) == 1):
+                projectUser['is_invited'] = True
+            else:
+                projectUser['is_invited'] = False
+        
             sql = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId limit 1"
             data = list(self.db.query(sql, {'userId':self.user.id, 'projectId':projectId}))
             
