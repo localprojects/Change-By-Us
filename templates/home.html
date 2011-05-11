@@ -152,7 +152,7 @@ Change by Us NYC
 							<div class="bd">
 								<ul class="projects-list">
 								</ul>
-								<a href="/search" class="see-more more-projects">See more projects <em>near</em> you &rarr;</a>
+								<a href="/search" class="see-more more-projects more-projects-related">See more projects <em>near</em> you &rarr;</a>
 							</div>
 						</div>
 						<div class="box citywide-projects">
@@ -647,8 +647,10 @@ Change by Us NYC
 								build_project_items(merlin.current_step.step_data.citywide, ".citywide-projects");
 							}
 							
-							if (merlin.current_step.step_data.search_terms.length) {
-								dom.find("a.more-projects").attr("href", "/search?terms="+ merlin.current_step.step_data.search_terms.split(",").join("+") +"#projects");
+							if (merlin.options.steps['idea-details'].step_data.locationDropdown.getLocation() > 0) {
+								dom.find("a.more-projects-related").attr("href", "search?terms=&location_id="+merlin.options.steps['idea-details'].step_data.locationDropdown.getLocation()+"#projects");
+							} else {
+								dom.find("a.more-projects-related").attr("href", "/search?terms="+ merlin.current_step.step_data.search_terms.split(",").join("+") +"#projects").text('See more related projects &rarr;');
 							}
 						}
 					}
