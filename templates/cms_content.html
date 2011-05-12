@@ -725,7 +725,7 @@ Change by Us NYC - CMS Content
 									tc.util.log("/admin/resource/getunreviewed: json parsing error", "warn");
 									return;
 								}
-								this.components.resources_pagination.data.current_page.children('ul').children().remove();
+								this.components.resources_pagination.data.current_page.children('ul').addClass('pending-resources-stack').children().remove();
 								if(!d.length && this.components.resources_pagination.data.offset > 0){
 									this.components.resources_pagination.data.current_page.remove();
 									return;
@@ -775,8 +775,7 @@ Change by Us NYC - CMS Content
 									this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
 									itemsheight += (tempitem.height() + 30);
 								}
-								//itemsheight += 200;
-								this.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+100)+'px')
+								this.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
 								this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
 								this.components.resources_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
 							}
