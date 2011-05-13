@@ -126,7 +126,7 @@ class Project(Controller):
 
         
     def getProjectUser(self, projectId):
-        projectUser = dict(is_project_admin = False, is_member = False)
+        projectUser = dict(is_project_admin = False, is_member = False, is_invited_by_idea = False, can_endorse = False)
         
         if (self.user):
             sqlInvited = """select pi.project_id from project_invite pi
@@ -137,14 +137,23 @@ class Project(Controller):
                               
             projectUser['is_invited_by_idea'] = (len(dataInvited) == 1)                  
         
-            sql = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId limit 1"
-            data = list(self.db.query(sql, {'userId':self.user.id, 'projectId':projectId}))
+            sqlMember = "select is_project_admin from project__user where user_id = $userId and project_id = $projectId limit 1"
+            dataMember = list(self.db.query(sqlMember, {'userId':self.user.id, 'projectId':projectId}))
             
-            if (len(data)== 1):
+            if (len(dataMember)== 1):
                 projectUser['is_member'] = True
                 
-                if (data[0].is_project_admin == 1):
+                if (dataMember[0].is_project_admin == 1):
                     projectUser['is_project_admin'] = True
+                
+            # # #
+            if (self.user.isLeader):
+                sqlEndorse = "select user_id from project_endorsement where project_id = $projectId and user_id = $userId limit 1"
+                dataEndorse = list(self.db.query(sqlEndorse,  {'userId':self.user.id, 'projectId':projectId}))
+                
+                projectUser['can_endorse'] = (len(dataEndorse) == 0)
+            else:
+                projectUser['can_endorse'] = False
                 
         return projectUser
         
