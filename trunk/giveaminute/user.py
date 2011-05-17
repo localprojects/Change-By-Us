@@ -168,7 +168,8 @@ where u.user_id = $id"""
         try:
             sql = """select p.project_id, p.title, pu.is_project_admin 
                     from project p
-                    inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id"""
+                    inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id
+                    where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
         except Exception,e:
             log.info("*** couldn't get user data")
@@ -231,7 +232,7 @@ where u.user_id = $id"""
                         i.created_datetime as idea_created_datetime
                     from project_message m
                     inner join project__user pu on pu.project_id = m.project_id and pu.user_id = $userId
-                    inner join project p on p.project_id = pu.project_id
+                    inner join project p on p.project_id = pu.project_id and p.is_active = 1
                     inner join user mu on mu.user_id = m.user_id
                     left join idea i on i.idea_id = m.idea_id
                     where m.is_active = 1
@@ -252,7 +253,7 @@ where u.user_id = $id"""
                         i.submission_type as idea_submission_type,
                         i.created_datetime as idea_created_datetime
                     from project_invite inv
-                    inner join project p on p.project_id = inv.project_id
+                    inner join project p on p.project_id = inv.project_id and p.is_active = 1
                     inner join user iu on iu.user_id = inv.inviter_user_id
                     inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id =$userId
                     order by created_datetime desc
@@ -441,13 +442,4 @@ def getAdminUsers(db, limit = 10, offset = 0):
         log.error(e)
         
     return data
-    
-#temp get dummy data
-def getDummyDictionary():
-    data = dict(u_id = 37,
-                f_name = "Andrew",
-                l_name = "Mahon",
-                email = "andrew@typeslashcode.com",
-                mobile = "9173241470")
-                
-    return data    
+  
