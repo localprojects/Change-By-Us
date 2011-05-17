@@ -37,11 +37,11 @@ select p.project_id
     ,u.email as owner_email
     ,u.image_id as owner_image_id
 from project p
-left join location l on l.location_id = p.location_id
-left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
-left join user u on u.user_id = pu.user_id
+inner join location l on l.location_id = p.location_id
+inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
+inner join user u on u.user_id = pu.user_id
 left join featured_project fp on fp.project_id = p.project_id
-where p.project_id = $id
+where p.project_id = $id and p.is_active = 1
 limit 1"""
         
         try:

@@ -94,19 +94,22 @@ class Project(Controller):
             return self.not_found()
         
     def showProject(self, projectId):
-        if (not projectId or projectId == -1):
-            projDictionary = mProject.getTestData()
-        else:
+        if (projectId):
             project = mProject.Project(self.db, projectId)
             
-            projDictionary = project.getFullDictionary()
+            if (project.data):
+                projDictionary = project.getFullDictionary()
             
-        project_user = self.getProjectUser(projectId)  
-        self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
-        
-        self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
-    
-        return self.render('project')
+                project_user = self.getProjectUser(projectId)  
+                self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
+                
+                self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
+            
+                return self.render('project')
+            else:
+                return self.not_found()
+        else:
+            return self.not_found()
         
     def showConversationRSS(self, projectId):
         if (not projectId or projectId == -1):
