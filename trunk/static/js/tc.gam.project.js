@@ -66,11 +66,6 @@ tc.gam.project = function(options){
 					break;
 				case 'goals_add':
 					e.data.project.components.goals_main.hide(false);
-					//if (tc.gam.project_widgets.goals_stack) {
-					//	e.data.project.components.goals_stack.hide(false);
-					//}
-					//e.data.project.components.members.hide(false);
-					//e.data.project.components.conversation.hide(false);
 					break;
 				case 'goals_stack':
 					e.data.project.components.goals_add.hide(false);
@@ -144,8 +139,8 @@ tc.gam.project = function(options){
 	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
 	this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
 	
-	//window.location.hash = hash_onload;
-	//tc.jQ(window).trigger('hashchange');
+	window.location.hash = hash_onload;
+	tc.jQ(window).trigger('hashchange');
 };
 
 
