@@ -780,6 +780,13 @@ Change by Us NYC - CMS Content
 								this.components.resources_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
 							}
 						});
+					} else {
+						var itemsheight;
+						itemsheight = 0;
+						e.data.app.components.resources_pagination.data.current_page.find('li').each(function(i,j){
+							itemsheight += (tc.jQ(j).height() + 30);
+						});
+						e.data.app.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
 					}
 				});
 				
