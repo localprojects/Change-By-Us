@@ -570,10 +570,13 @@ Change by Us NYC - Search Results
 							
 							},
 							finish: function(merlin, dom) {
-								merlin.options.data = tc.jQ.extend(merlin.options.data, {
-									project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
-									project_resource_id: event_target.hash.split(',')[1]
-								});
+								if(merlin.current_step.inputs.project_radios.dom.filter(":checked").length){
+									alert(merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1]);
+									merlin.options.data = tc.jQ.extend(merlin.options.data, {
+										project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
+										project_resource_id: event_target.hash.split(',')[1]
+									});
+								}
 							}
 						},
 						'add-resource-submit':{
