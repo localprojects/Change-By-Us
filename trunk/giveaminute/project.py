@@ -323,7 +323,26 @@ def deleteItem(db, table, id):
         log.info("*** couldn't delete item for table = %s, id = %s" % (table, id))
         log.error(e)
         return False 
+        
+def deleteItemsByUser(db, table, userId):
+    try:
+        db.update(table, where = "user_id = $userId", is_active = 0, vars = { 'userId': userId })
+        return True
+    except:
+        log.info("*** couldn't delete item for table =  %s, user_id = %s" % (table, userId))
+        log.error(e)
+        return False
     
+def deleteProjectsByUser(db, userId):
+    try:
+        sql = """update project p, project__user pu set p.is_active = 1
+                    where p.project_id = pu.project_id and pu.is_project_admin = 1 and pu.user_id = $userId"""
+        db.query(sql, { 'userId':userId })
+    except:
+        log.info("*** couldn't delete projects for user_id = %s" % userId)
+        log.error(e)
+        return False 
+            
 def updateProjectImage(db, projectId, imageId):
     try:
         sql = "update project set image_id = $imageId where project_id = $projectId"
@@ -426,6 +445,15 @@ def removeUserFromProject(db, projectId, userId):
         log.info("*** couldn't remove user from project")
         log.error(e)
         return False
+      
+def removeUserFromAllProjects(db, userId):
+    try:
+        db.delete('project__user', where = "user_id = $userId", vars = {'userId':userId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't remove user from project")
+        log.error(e)
+        return False      
         
 def addKeywords(db, projectId, newKeywords):
     try:

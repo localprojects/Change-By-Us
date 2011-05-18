@@ -7,7 +7,8 @@ class UserAccount(Controller):
     def GET(self, action=None):
         userId = util.try_f(int, action)
     
-        if (userId):
+        if (userId and
+            (not self.user or self.user.id != userId)):
             return self.showProfilePage(userId)
         else:
             return self.showAccountPage()
@@ -25,7 +26,7 @@ class UserAccount(Controller):
             return self.not_found()
         
     def showAccountPage(self):
-        if (self.user):
+        if (self.user and self.user.data):
             self.user.updateAccountPageVisit()
         
             userActivity = self.user.getActivityDictionary()
@@ -55,16 +56,21 @@ class UserAccount(Controller):
             
     def showProfilePage(self, userId):
         user = mUser.User(self.db, userId)
-        userActivity = user.getProfileActivityDictionary()
         
-        if (self.user and
-            (self.user.isModerator or
-            self.user.isAdmin)):
-            self.template_data['user_profile_email'] = user.email
-    
-        self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
+        if (user.data):
+            userActivity = user.getProfileActivityDictionary()
+            
+            if (self.user and
+                (self.user.isModerator or
+                self.user.isAdmin)):
+                self.template_data['user_profile_email'] = user.email
         
-        return self.render('useraccount')
+            self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
+            
+            return self.render('useraccount')
+        else:
+            # user doesn't exist/is inactive
+            return self.not_found()
         
     def getUserMessages(self):
         limit = self.request('n_messages')
