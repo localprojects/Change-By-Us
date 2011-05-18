@@ -73,35 +73,8 @@ class Home(Controller):
             return self.submitFeedback()
         elif (action == 'beta' and param0 == 'submit'):
             return self.submitInviteRequest()
-        elif (action == 'tempupload'):
-            self.tempUpload()
-            return self.showTempUpload() 
         else:
             return self.not_found()
-         
-    # BEGIN temp page for uploading resource images
-    def showTempUpload(self):
-        sql = "select project_resource_id, title, image_id from project_resource order by title;"
-        res = list(self.db.query(sql))
-        
-        self.template_data['res'] = res
-        
-        return self.render('tempupload')   
-
-    def tempUpload(self):
-        data = [s for s in web.input().items() if "image_" in s[0]]
-        
-        for item in data:
-            if (self.request(item[0])):
-                imageId = ImageServer.add(self.db, item[1], 'giveaminute', [100, 100])
-                resourceId = item[0].split('_')[1]
-                if (mResource.updateProjectResourceImage(self.db, resourceId, imageId)):
-                    log.info("*** resource %s image %s" % (resourceId, imageId))
-                else:
-                    log.info("*** FAILED: resource %s image %s" % (resourceId, imageId))
-
-
-    # END temp page for uploading resource images
             
     def showHome(self):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
