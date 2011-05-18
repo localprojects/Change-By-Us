@@ -463,8 +463,14 @@ class Admin(Controller):
             
     def deleteUser(self):
         userId = self.request('user_id')
-        
+              
         if (self.deleteItem('user', userId)):
+            self.removeUserFromAllProjects(userId)
+            self.deleteProjectsByUser(userId)
+            self.deleteItemsByUser('project_goal', userId)
+            self.deleteItemsByUser('project_message', userId)
+            self.deleteItemsByUser('idea', userId)
+            
             # email deleted user
 # TODO: temporarily commenting out because the only place this currently gets sent from is deletion of admins
 #             u = mUser.User(self.db, userId)
@@ -490,6 +496,27 @@ class Admin(Controller):
             return False
         else:
             return mProject.deleteItem(self.db, table, id)
+
+    def deleteItemsByUser(self, table, userId):
+        if (not userId):
+            log.error("*** delete items by user attempted w/o user_id for table = %s" % table)
+            return False
+        else:
+            return mProject.deleteItemsByUser(self.db, table, userId)
+
+    def deleteProjectsByUser(self, userId):
+        if (not userId):
+            log.error("*** delete projects by user attempted w/o user_id ")
+            return False
+        else:
+            return mProject.deleteProjectsByUser(self.db, userId)
+            
+    def removeUserFromAllProjects(self, userId):
+        if (not userId):
+            log.error("*** remove user from projects attempted w/o user_id ")
+            return False
+        else:
+            return mProject.removeUserFromAllProjects(self.db, userId)
             
     def approveProjectResource(self):
         projectResourceId = self.request('resource_id')

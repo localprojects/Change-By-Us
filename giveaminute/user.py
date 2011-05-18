@@ -82,7 +82,7 @@ left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id 
 left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
 left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
 left join project_leader pl on pl.user_id = u.user_id
-where u.user_id = $id"""
+where u.user_id = $id and u.is_active = 1"""
         
         try:
             data = list(self.db.query(sql, {'id':self.id}))[0]
