@@ -938,7 +938,8 @@ def getGoals(db, projectId):
     sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
                   u.user_id, u.first_name, u.last_name, u.image_id
             from project_goal g
-            inner join user u on u.user_id = g.user_id
+            inner join user u on u.user_id = g.user_id 
+            inner join project__user pu on pu.user_id = g.user_id and pu.project_id = g.project_id
             where g.project_id = $id and g.is_active = 1"""
             
     try:
@@ -985,6 +986,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     i.created_datetime as idea_created_datetime
                 from project_message m
                 inner join user u on u.user_id = m.user_id
+                inner join project__user pu on pu.user_id = m.user_id and pu.project_id = m.project_id
                 left join idea i on i.idea_id = m.idea_id
                 where m.project_id = $id and m.is_active = 1
                 and ($filterBy is null or m.message_type = $filterBy)
