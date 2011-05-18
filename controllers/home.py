@@ -99,12 +99,15 @@ class Home(Controller):
         return self.render('mobile')
         
     def showLogin(self):
-        referer = web.ctx.env.get('HTTP_REFERER')
+        if (not self.user):
+            referer = web.ctx.env.get('HTTP_REFERER')
+            
+            if (referer and "/join" not in referer and "/login" not in referer):
+                self.template_data['redir_from'] = referer
         
-        if (referer and "/join" not in referer and "/login" not in referer):
-            self.template_data['redir_from'] = referer
-    
-        return self.render('login')
+            return self.render('login')
+        else:
+            return self.redirect('/')
         
     def showAddResource(self):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
