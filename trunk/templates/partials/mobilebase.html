@@ -69,7 +69,19 @@
 		{% block page_js %}{% endblock %}
 		
 		<script type="text/javascript">
+			
+			// having an initial hash seems to be causing problems when loading the page on win 7
+			// (document.ready() not firing) -- clearing the hash appears to fix the issue
+			// though that is really bonkers. This needs to be revisited!
+			// -- LK
+			if (window.location.hash) {
+				//alert("has hash");
+				window.location.hash = "";
+			}
+			
 			tc.jQ(function(){
+				//alert("documenty.ready");
+				
 				{% if d.template_data and d.template_data.user %}
 					app_page.user = {{ d.template_data.user.json }}; 
 				{% else %} 
@@ -93,11 +105,12 @@
 					if (typeof window.orientation !== "undefined") {
 						
 						switch (Math.abs(window.orientation)) {
-							case 0: // when switching TO portrait mode
+							case 0: 
+								// when switching TO portrait mode:
 								// update the dimensions since the page width has decreased
 								handle_dimensions();
 								break;
-							case 90: // when switching TO landscape mode
+							case 90: // when switching TO landscape mode:
 								// do nothing
 								break;
 								
