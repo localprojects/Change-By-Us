@@ -16,7 +16,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 		get_url: null
 	}, options);
 	this.tooltip = this.options.tooltip_element;
-	this.triggers = options.triggers;
+	this.triggers = this.options.triggers;
 	this.triggers.bind('mouseover',{me:this},this.handlers.trigger_mouseover);
 	this.triggers.bind('mouseout',{me:this},this.handlers.trigger_mouseout);
 	this.tooltip.bind('mouseover',{me:this},this.handlers.tooltip_mouseover);
@@ -41,7 +41,6 @@ tc.resource_tooltip.prototype.add_trigger = function(trigger){
 
 tc.resource_tooltip.prototype.clear_triggers = function(trigger){
 	tc.util.log("tc.resource_tooltip.clear_triggers");
-	var i;
 	this.triggers.each(function(i,j){
 		tc.jQ(j).unbind('mouseover').unbind('mouseout');
 	});
