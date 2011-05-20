@@ -361,20 +361,17 @@
 					</div>
 					<div class="row">
 						<p class="signup"><a href="/join">Click Here</a> to create a traditional login</p>
-						<a class="submit" href="#mobile-login,finish">Submit</a>
+						<a class="submit-login submit" href="#">Submit</a>
 					</div>
 				</div>
 				<div class='step finish clearfix spinner-message' style='display:none;'>
 					<p>Thanks for logging in&hellip;</p>
 					<p><img class="loading" src='/static/images/loader32x32.gif' /></p>
 				</div>
+				<div class="step failure clearfix" style="display:none;">
+					<p>There was an error logging you in.</p>
+				</div>
 			</div>
-			<!--
-			<div class="primary-action">
-				<a class="ca-btn" href="#">
-					<span>Post</span>
-				</a>
-			</div>-->
 		</div>
 	</div>
 	
@@ -807,7 +804,7 @@
 		app.components.mobile_login = new tc.merlin(app,{
 			name:'mobile-login',
 			dom:tc.jQ('.merlin.mobile-login'),
-			next_step:tc.jQ(''),
+			next_button:tc.jQ('.submit-login'),
 			first_step:'inputs',
 			data:{
 				email:null,
@@ -820,11 +817,11 @@
 					inputs:{
 						email:{
 							selector:'input.email',
-							validators:['min-3','max-180','email']
+							validators:['required','min-3','max-180','email']
 						},
 						password:{
 							selector:'input.password',
-							validators:['min-3','max-180']
+							validators:['required','min-3','max-180']
 						}
 					},
 					init:function(merlin,dom){
@@ -861,6 +858,12 @@
 								}
 							}
 						});
+					}
+				},
+				"login-failure": {
+					selector:".step.failure",
+					init: function(merlin, dom) {
+						
 					}
 				}
 			}
