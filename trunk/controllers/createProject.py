@@ -25,7 +25,7 @@ class CreateProject(Controller):
             
     def POST(self, action=None):
         if (action == 'photo'):
-            image_id = ImageServer.add(self.db, web.data(), 'giveaminute', [100, 100])
+            image_id = ImageServer.add(self.db, self.request('qqfile'), 'giveaminute', [100, 100])
                         
             return self.json(dict(thumbnail_id = image_id))
         else:
