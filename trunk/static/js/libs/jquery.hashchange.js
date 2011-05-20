@@ -230,7 +230,7 @@
     // Called only when the first 'hashchange' event is bound to window.
     setup: function() {
       // If window.onhashchange is supported natively, there's nothing to do..
-      if ( supports_onhashchange ) { return false; }
+      if ( supports_onhashchange && ! ) { return false; }
       
       // Otherwise, we need to create our own. And we don't want to call this
       // until the user binds to the event, just in case they never do, since it
@@ -241,7 +241,7 @@
     // Called only when the last 'hashchange' event is unbound from window.
     teardown: function() {
       // If window.onhashchange is supported natively, there's nothing to do..
-      if ( supports_onhashchange ) { return false; }
+      if ( supports_onhashchange || (window.navigator.userAgent.indexOf('Android 2.1') == -1) ) { return false; }
       
       // Otherwise, we need to stop ours (if possible).
       $( fake_onhashchange.stop );
