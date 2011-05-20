@@ -73,11 +73,11 @@
 							{% elif message.message_type == 'goal_achieved' %}
 							
 							{% elif message.message_type == 'endorsement' %}
-
+							
 							{% elif message.message_type == 'member_comment' or message.message_type == 'admin_comment' %}
 								<cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> said</cite>
 							{% endif %}
-
+							
 							{% if message.idea %}
 								<div class="note-card">
 									<cite class="note-meta-hd"></cite>
@@ -148,7 +148,7 @@
 		</div>
 		<div class="main">
 			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
-			<cite class="meta-hd"><strong><a></a></strong> said</cite>
+			<!-- <cite class="meta-hd"><strong><a></a></strong> said</cite> -->
 			<blockquote class="serif">
 				<p class='message-body'></p>
 			</blockquote>
@@ -196,6 +196,54 @@
 			n_to_fetch:10,
 			offset:{{ d.template_data.project.data.info.messages['items']|length }},
 			message_template:tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children())
+		};
+		
+		this.generate_message = function(d){
+			var out, $main;
+			out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children());
+			$main = out.find('.main');
+			
+			//add user image
+			if(d.owner.image_id){
+				out.find('img').attr('src','/images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
+			} else {
+				out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
+			}
+			
+			//handle message type for message author heading
+			switch(d.message_type){
+				case 'join':
+					$main.prepend('<cite class="meta-hd"><strong><a href="/useraccount/'+'XX'+'">'+'XX'+'</a></strong> joined the project!</cite>');
+					break;
+				default:
+					$main.prepend('<cite class="meta-hd"><strong><a href="/useraccount/'+'XX'+'">'+'XX'+'</a></strong> said</cite>');
+					break;
+			}
+			
+			//add the idea card if idea is present
+			if(d.idea){
+				$main.append('<div class="note-card">\
+					<cite class="note-meta-hd"></cite>\
+					<blockquote>\
+						<p>'+d.idea.text+'</p>\
+					</blockquote>\
+					<cite class="note-meta-ft"></cite>\
+				</div>');
+			}
+			
+			//add message body, text dependent on message type
+			$main.append('<blockquote class="serif">\
+				<p>'+(d.message_type == 'join' ? d.idea.text : d.body)+'</p>\
+			</blockquote>');
+			
+			//add timestamp
+			$main.append('<cite class="meta-ft">Just Now&hellip;</cite>');
+			
+			out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
+			out.attr('id','message-'+d.message_id);
+			out.find('.meta-ft').text(d.created);
+			out.find('a.close').attr('href','#remove,'+d.message_id);
+			return out;
 		};
 		
 		this.elements = {
@@ -262,18 +310,7 @@
 							});
 						}
 						for(i in d){
-							tempdom = this.runtime_data.message_template.clone().removeClass('message-markup');
-							if(d[i].owner.image_id){
-								tempdom.find('img').attr('src','/images/'+(d[i].owner.image_id%10)+'/'+d[i].owner.image_id+'.png' );
-							} else {
-								tempdom.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
-							}
-							tempdom.find('.meta-hd strong a').text(d[i].owner.name).attr('href','/useraccount/'+d[i].owner.u_id);
-							tempdom.attr('id','message-'+d[i].message_id);
-							tempdom.find('.meta-ft').text(d[i].created);
-							tempdom.find('.message-body').text(d[i].body);
-							tempdom.find('a.close').attr('href','#remove,'+d[i].message_id);
-							this.elements.message_stack.append(tempdom);
+							this.elements.message_stack.append(this.generate_message(d[i]));
 							this.runtime_data.offset++;
 						}
 						this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
@@ -311,19 +348,7 @@
 							});
 						}
 						for(i in d){
-							tempdom = this.runtime_data.message_template.clone().removeClass('message-markup');
-							if(d[i].owner.image_id){
-								tempdom.find('img').attr('src','/images/'+(d[i].owner.image_id%10)+'/'+d[i].owner.image_id+'.png' );
-							} else {
-								tempdom.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
-							}
-							
-							tempdom.attr('id','message-'+d[i].message_id);
-							tempdom.find('.meta-ft').text(d[i].created);
-							tempdom.find('.message-body').text(d[i].body);
-							tempdom.find('a.close').attr('href','#remove,'+d[i].message_id);
-							this.elements.message_stack.append(tempdom);
-							this.runtime_data.offset++;
+							this.elements.message_stack.append(this.generate_message(d[i]));
 						}
 						this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 					}
