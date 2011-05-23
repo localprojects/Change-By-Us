@@ -377,7 +377,7 @@ Change by Us NYC - CMS Admin Settings
 								<label for="user-oncall-xx-check" class="white">On Call</label>\
 							</td>\
 							<td class="control-delete">\
-								<a href="#">Delete</a>\
+								<a href="#" class="delete">Delete</a>\
 							</td>\
 						</tr>')
 					},
@@ -399,7 +399,7 @@ Change by Us NYC - CMS Admin Settings
 							merlin.current_step.runtime_data.offset = merlin.current_step.components.admins_pagination.carousel.getItems().first().find('tr').length;
 							
 							dom.find('input').bind('change', {me:merlin, dom:dom}, merlin.current_step.fn.admin_input_change);
-							dom.find('a.delete').bind('click', {me:merlin, dom:dom}, merlin.current_step.fn.delete_admin);
+							dom.find('a.delete').unbind('click').bind('click', {me:merlin, dom:dom}, merlin.current_step.fn.delete_admin);
 							
 							merlin.current_step.components.admins_pagination.carousel.getRoot().bind('onSeek', {me:merlin,dom:dom}, function(e,d){
 								e.data.me.current_step.runtime_data.current_page = e.data.me.current_step.components.admins_pagination.carousel.getItems().eq(e.data.me.current_step.components.admins_pagination.carousel.getIndex());
@@ -462,11 +462,13 @@ Change by Us NYC - CMS Admin Settings
 												if(d[i].is_oncall){
 													temprow.find('input.checkbox-oncall').attr('checked',true);
 												}
+												temprow.find('a.delete').attr('href','#delete,'+d[i].user_id);
 												temptbody.append(temprow);
 												this.current_step.runtime_data.offset++;
 											}
 											temptbody.find('input').bind('change', {me:this}, this.current_step.fn.admin_input_change);
-											temptbody.find('a.delete').bind('change', {me:this}, this.current_step.fn.admin_input_change);
+											tc.util.dump(temptbody.find('a.delete'));
+											temptbody.find('a.delete').bind('click', {me:this}, this.current_step.fn.delete_admin);
 											this.current_step.runtime_data.current_page.find('tbody').replaceWith(temptbody);
 											dom.find('input[type=checkbox],input[type=radio]').not('.has-prettycheckbox').prettyCheckboxes();
 										}
