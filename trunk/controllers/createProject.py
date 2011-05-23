@@ -25,9 +25,9 @@ class CreateProject(Controller):
             
     def POST(self, action=None):
         if (action == 'photo'):
-            image_id = ImageServer.add(self.db, self.request('qqfile'), 'giveaminute', [100, 100])
-                        
-            return self.json(dict(thumbnail_id = image_id))
+            imageId = self.uploadImage()
+        
+            return self.json(dict(thumbnail_id = imageId, success = (imageId != None) ))
         else:
             return self.newProject()  
         
@@ -102,4 +102,14 @@ class CreateProject(Controller):
         
         return self.json(obj)
     
+    def uploadImage(self):
+        if (len(self.request('qqfile')) > 100):
+            data = self.request('qqfile')
+        else:
+            data = web.data()
+        
+        imageId = ImageServer.add(self.db, data, 'giveaminute', [100, 100])
+        
+        return imageId
+                        
     
