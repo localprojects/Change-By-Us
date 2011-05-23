@@ -319,7 +319,7 @@ qq.FileUploaderBasic.prototype = {
         } else {
             handlerClass = 'UploadHandlerForm';
         }
-
+        
         var handler = new qq[handlerClass]({
             debug: this._options.debug,
             action: this._options.action,         
@@ -615,8 +615,7 @@ qq.extend(qq.FileUploader.prototype, {
         qq.remove(this._find(item, 'cancel'));
         qq.remove(this._find(item, 'spinner'));
         
-				//modified amahon type/code for give a minutev2
-        if (result.thumbnail_id){
+        if (result.success){
             qq.addClass(item, this._classes.success);    
         } else {
             qq.addClass(item, this._classes.fail);
@@ -941,7 +940,7 @@ qq.UploadHandlerAbstract.prototype = {
                 
         var max = this._options.maxConnections;
         
-        if (this._queue.length >= max){
+        if (this._queue.length >= max && i < max){
             var nextId = this._queue[max-1];
             this._upload(nextId, this._params[nextId]);
         }
@@ -1059,13 +1058,13 @@ qq.extend(qq.UploadHandlerForm.prototype, {
             response;
         
         this.log("converting iframe's innerHTML to JSON");
-        this.log("innerHTML = " + doc.body.innerHTML);
-                        
+        this.log("innerHTML = " + doc.body.innerHTML.replace(/<\/?pre>/ig, ''));
+        
         try {
-            response = eval("(" + doc.body.innerHTML + ")");
+            response = eval("(" + doc.body.innerHTML.replace(/<\/?pre>/ig, '') + ")");
         } catch(err){
             response = {};
-        }        
+        }
 
         return response;
     },
