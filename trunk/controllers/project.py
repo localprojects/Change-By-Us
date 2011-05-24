@@ -37,7 +37,10 @@ class Project(Controller):
         if (action == 'join'):
             return self.join()
         elif (action == 'endorse'):
-            return self.endorse()
+            if (param0 == 'remove'):
+                return self.removeEndorsement()        
+            else:
+                return self.endorse()
         elif (action == 'link'):
             if (param0 == 'add'):
                 return self.addLink()
@@ -270,6 +273,21 @@ class Project(Controller):
                     log.error("*** new message not created for user %s on endorsing project %s" % (self.user.id, projectId))
             
             return isEndorsed
+            
+    def removeEndorsement(self):
+        projectId = self.request('project_id')
+        userId = util.try_f(int, self.request('user_id'))
+        
+        log.info("*** un-endorse user_id, project_id, self.user.id, self.user.isLeader,  self.user.isAdmin = ")
+        log.info("*** %s, %s, %s, %s, %s " % (userId, projectId, self.user.id, self.user.isLeader,  self.user.isAdmin))
+        
+        if (self.user and
+            ((self.user.isLeader and self.user.id == userId) or
+            self.user.isAdmin)):
+            return mProject.removeEndorsement(self.db, projectId, userId)
+        else:
+            log.error("*** attempt to remove endorsement w/o proper credentials")
+            return False
          
     def addLink(self):
         projectId = self.request('project_id')

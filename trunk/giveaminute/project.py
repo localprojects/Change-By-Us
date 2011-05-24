@@ -160,22 +160,6 @@ def smallProject(id, title, description, imageId, numMembers, ownerUserId, owner
                 image_id = imageId,
                 num_members = numMembers,
                 owner = smallUser(ownerUserId, ownerFirstName, ownerLastName, ownerImageId))
-        
-# def message(id, type, message, createdDatetime, userId, firstName, lastName, ideaId = None, idea = None, ideaSubType = None, ideaCreatedDatetime = None, goalId = None):
-#     if (ideaId):
-#         ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
-#     else:
-#         ideaObj = None
-#          
-#     #something for goals here
-#     
-#     return dict(message_id = id,
-#                 message_type = type,
-#                 owner = smallUser(userId, firstName, lastName, None),
-#                 body = message,
-#                 created = str(createdDatetime),
-#                 idea = ideaObj,
-#                 project_goal_id = goalId)
                 
 def message(id, 
             type, 
@@ -387,7 +371,16 @@ def endorse(db, projectId, userId):
     else:
         log.info("*** user already in project")
         return False
-        
+ 
+def removeEndorsement(db, projectId, userId):
+    try:    
+        db.delete('project_endorsement', where = "project_id = $projectId and user_id = $userId", vars = { 'userId':userId, 'projectId':projectId })
+
+        return True
+    except Exception, e:
+        log.info("*** error deleting endorsement")
+        log.error(e)
+        return False       
     
 def isUserInProject(db, projectId, userId):
     try:
