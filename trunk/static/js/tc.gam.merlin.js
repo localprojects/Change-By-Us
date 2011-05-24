@@ -11,6 +11,7 @@ tc.merlin.prototype.options = {
 	watch_keypress:true,
 	first_step:'start',
 	allow_hash_override_onload:false,
+	use_hashchange:true,
 	steps:{
 		'start':{
 			progress_selector:'.1',
@@ -35,8 +36,8 @@ tc.merlin.prototype.init = function(app,options){
 	this.handle_controls(options.controls);
 	this.setup_events(app);
 	tc.util.dump(this.options);
-	if(this.options.allow_hash_override_onload){
-		this.handlers.handle_hash(this,window.location.hash.substring(1,window.location.hash.length));
+	if(this.options.use_hashchange && this.options.allow_hash_override_onload){
+		this.set_address(window.location.hash.substring(1,window.location.hash.length));
 	} else {
 		if(this.options.first_step){
 			this.show_step(this.options.first_step);
@@ -53,16 +54,18 @@ tc.merlin.prototype.init = function(app,options){
 
 tc.merlin.prototype.setup_events = function(app){
 	tc.util.log('tc.merlin.setup_events');
-	tc.jQ(window)
-		.unbind('hashchange',this.event_data,this.handlers.hashchange)
-		.bind('hashchange',this.event_data,this.handlers.hashchange);
+	if (this.options.use_hashchange) {
+		tc.jQ(window)
+			.unbind('hashchange',this.event_data,this.handlers.hashchange)
+			.bind('hashchange',this.event_data,this.handlers.hashchange);
+	}
 	if(this.dom){
 		this.dom.find('a.step_link').unbind('click').bind('click',this.event_data,this.handlers.a_click);
 		this.dom.bind('merlin-step-valid',this.event_data,this.handlers.valid);
 		this.dom.bind('merlin-step-invalid',this.event_data,this.handlers.invalid);
 	}
 	if(this.options.back_button){
-		this.options.back_button.unbind('click').bind('click',this.event_data,this.handlers.last_step);
+		this.options.back_button.unbind('click').bind('click',this.event_data,this.handlers.prev_step);
 	}
 	if(this.options.next_button){
 		this.options.next_button.addClass('disabled');
@@ -71,14 +74,16 @@ tc.merlin.prototype.setup_events = function(app){
 };
 
 tc.merlin.prototype.deallocate_magic = function() {
-	tc.jQ(window).unbind('hashchange', this.handlers.hashchange);
+	if (this.options.use_hashchange) {
+		tc.jQ(window).unbind('hashchange', this.handlers.hashchange);
+	}
 	if (this.dom) {
 		this.dom.find('a.step_link').unbind('click', this.handlers.a_click);
 		this.dom.unbind('merlin-step-valid', this.handlers.valid);
 		this.dom.unbind('merlin-step-invalid', this.handlers.invalid);
 	}
 	if (this.options.back_button) {
-		this.options.back_button.unbind('click', this.handlers.last_step);
+		this.options.back_button.unbind('click', this.handlers.prev_step);
 	}
 	if (this.options.next_button) {
 		this.options.next_button.unbind('click', this.handlers.next_step);
@@ -203,7 +208,7 @@ tc.merlin.prototype.magic_spell = function(){
 			this.merlin.dom.css({
 				//'marginLeft': ((-1 * this.item_metadata.marginLeft) - ( step.magic_dom.position().left )) + 'px'
 				'marginLeft': (( step.magic_dom.position().left )) + 'px'
-			})
+			});
 			
 			
 		}
@@ -327,16 +332,37 @@ tc.merlin.prototype.show_step = function(step,force){
 		}
 	}
 	
-	if(this.options.name){
-		window.location.hash = this.options.name+','+step;
-	} else {
-		window.location.hash = step;
+	if (this.options.use_hashchange) {
+		if(this.options.name){
+			window.location.hash = this.options.name+','+step;
+		} else {
+			window.location.hash = step;
+		}
 	}
+	
 	if(tc.jQ.isFunction(this.current_step.init)){
 		this.current_step.init(this,this.current_step.dom);
 	}
 	this.validate(false);
 	this.current_step.has_been_initialized = true;
+};
+
+tc.merlin.prototype.set_address = function(hash) {
+	tc.util.log("tc.merlin.set_address");
+	var hash_buffer, force;
+	hash_buffer = hash.split(",");
+	if (this.options.name) {
+		if (hash_buffer[0] !== this.options.name) {
+			this.current_hash = null;
+			return;
+		}
+		hash = hash_buffer[1];
+		force = true;
+	} else if (this.current_hash !== hash) {
+		force = false;
+	}
+	this.current_hash = hash;
+	this.show_step(this.current_hash, force);
 };
 
 tc.merlin.prototype.validate = function(on_submit){
@@ -392,22 +418,7 @@ tc.merlin.prototype.validate = function(on_submit){
 tc.merlin.prototype.handlers = {
 	hashchange:function(e,d){
 		tc.util.log('tc.merlin.handlers.hashchange['+window.location.hash+']');
-		e.data.me.handlers.handle_hash(e.data.me,window.location.hash.substring(1,window.location.hash.length));
-	},
-	handle_hash:function(merlin,hash){
-		tc.util.log('tc.merlin.handlers.handle_hash');
-		if(merlin.options.name){
-			if(hash.split(',')[0] != merlin.options.name){
-				merlin.current_hash = null;
-				return;
-			}
-			hash = hash.split(',')[1];
-			merlin.current_hash = hash;
-			merlin.show_step(merlin.current_hash,true);
-		} else if(merlin.current_hash != hash){
-			merlin.current_hash = hash;
-			merlin.show_step(merlin.current_hash,false);
-		}
+		e.data.me.set_address(window.location.hash.substring(1,window.location.hash.length));
 	},
 	indicator_click:function(e,d){
 		tc.util.log('tc.merlin.handlers.indicator_click');
@@ -416,12 +427,15 @@ tc.merlin.prototype.handlers = {
 	a_click:function(e,d){
 		tc.util.log('tc.merlin.handlers.a_click');
 	},
-	last_step:function(e,d){
-		tc.util.log('tc.merlin.handlers.last_step');
+	prev_step:function(e,d){
+		tc.util.log('tc.merlin.handlers.prev_step');
 		e.preventDefault();
 		if(e.data.me.current_step && e.data.me.current_step.prev_step){
-			window.location.hash = e.data.me.current_step.prev_step;
-			//e.data.me.show_step(e.data.me.current_step.prev_step);
+			if (e.data.me.options.use_hashchange) {
+				window.location.hash = e.data.me.current_step.prev_step;
+			} else {
+				e.data.me.show_step( e.data.me.current_step.prev_step );
+			}
 		}
 	},
 	next_step:function(e,d){
@@ -443,13 +457,15 @@ tc.merlin.prototype.handlers = {
 			return;
 		}
 		if(e.data.me.current_step && e.data.me.current_step.next_step){
-			if(e.data.me.options.name){
-				window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
+			if (e.data.me.options.use_hashchange) {
+				if(e.data.me.options.name){
+					window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
+				} else {
+					window.location.hash = e.data.me.current_step.next_step;
+				}
 			} else {
-				window.location.hash = e.data.me.current_step.next_step;
+				e.data.me.show_step( e.data.me.current_step.next_step );
 			}
-			
-			//e.data.me.show_step(e.data.me.current_step.next_step);
 		}
 	},
 	focus:function(e,d){
