@@ -381,6 +381,15 @@ def removeEndorsement(db, projectId, userId):
         log.info("*** error deleting endorsement")
         log.error(e)
         return False       
+
+def removeEndorsementMessage(db, projectId, userId):
+    try:
+        db.update('project_message', where = "project_id = $projectId and user_id = $userId", is_active = 0, vars = {'projectId':projectId, 'userId':userId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't delete endorsement message")
+        log.error(e)
+        return False
     
 def isUserInProject(db, projectId, userId):
     try:
@@ -1007,7 +1016,6 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     i.created_datetime as idea_created_datetime
                 from project_message m
                 inner join user u on u.user_id = m.user_id
-                inner join project__user pu on pu.user_id = m.user_id and pu.project_id = m.project_id
                 left join idea i on i.idea_id = m.idea_id
                 where m.project_id = $id and m.is_active = 1
                 and ($filterBy is null or m.message_type = $filterBy)
