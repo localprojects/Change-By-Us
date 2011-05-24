@@ -8,14 +8,6 @@
 		
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
 		<link rel="stylesheet" href="/static/css/tc.gam.bb.css" type="text/css" media="screen" charset="utf-8" />
-		
-		<script>
-			var app_page = {
-				data:{},
-				features:[]
-			};
-		</script>
-		
 	</head>
 	
 	<body class='earth'>
@@ -37,11 +29,11 @@
 		
 		<div class='continent'>
 			
-			<div class="step start current">
+			<div class="step start">
 				<h1>Hey NYC, How can we make our city a greener, greater place to live?</h1>
 				<form>
-					<input type="text" id="idea-input" class="idea-input" name="idea-input" value="What's your idea?" />
-					<input type="submit" id="idea-submit" class="idea-submit" name="idea-submit" value="Post" />
+					<input type="text" id="idea-input" class="idea-input" name="idea-input" />
+					<input type="submit" id="idea-submit" class="submit idea-submit" name="idea-submit" value="Post" />
 				</form>
 			</div><!--end step-->
 			
@@ -50,7 +42,7 @@
 				<h1>Thanks for your idea!<br /><span class="unbold">We need a little more information.</span></h1>
 				<form>
 					<input type="text" id="email-input" class="email-input" name="email-input" value="Email address" />
-					<input type="submit" id="email-submit" class="email-submit" name="email-submit" value="Next" />
+					<input type="submit" id="email-submit" class="submit email-submit" name="email-submit" value="Next" />
 				</form>
 			</div><!--end step-->
 			
@@ -64,7 +56,7 @@
 					</div>
 					<input type="text" id="hood-neighborhood-enter" class="hood-neighborhood-enter" name="hood-neighborhood-enter" value="" />
 					<p>Ex. Harlem, East Village, Bronx, etc.</p>
-					<input type="submit" id="email-submit" class="email-submit" name="email-submit" value="Next" />
+					<input type="submit" id="hood-submit" class="submit hood-submit" name="hood-submit" value="Next" />
 				</form>
 			</div><!--end step-->
 			
@@ -104,7 +96,7 @@
 					<span class="title">Start a Garden in the Bronx</span>
 					<span class="creator"><em>Created by </em>Shawna T.</span>
 					<span class="description">Wouldn’t it be great if we had a garden on 161st and Melrose...</span>
-					<input type="button" id="project-1-join" class="project-1-join" name="project-1-join" value="Join" />
+					<input type="button" id="project-1-join" class="submit project-1-join" name="project-1-join" value="Join" />
 				</div>
 			</div><!--end step-->
 			
@@ -153,7 +145,7 @@
 				<a href="http://www.nyc.gov/html/planyc2030/html/home/home.shtml">PlaNYC</a>
 			</p>
 			<p class="sitemap">
-				<a href="#bb,about">About Change by Us</a><br />
+				<a href="#bb,about" class="about-link">About Change by Us</a><br />
 				<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml">About NYC Simplicity</a><br />
 				<a href="http://nycblog.changeby.us">News</a><br />
 				<a href="/tou#community">Community Policy</a><br />
@@ -166,41 +158,119 @@
 		
 		
 		
-		<!--<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>-->
 		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>
+		<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
+		<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
+		<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script><!--
+		<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>-->
 		<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
 		
 		<script type="text/javascript">
+			(function(window, $) {
 			
-			$('input[type="text"]').focus(function() {
-				$(this).attr('value','');
-			});
-			
-			// having an initial hash seems to be causing problems when loading the page on win 7
-			// (document.ready() not firing) -- clearing the hash appears to fix the issue
-			// though that is really bonkers. This needs to be revisited!
-			// -- LK
-			if (window.location.hash) {
-				//alert("has hash");
-				window.location.hash = "";
-			}
-			
-			tc.jQ(function(){
+				var app_page = {
+					data:{},
+					features:[]
+				};
 				
 				{% if d.template_data and d.template_data.user %}
 					app_page.user = {{ d.template_data.user.json }}; 
-				{% else %} 
-					app_page.user = null; 
 				{% endif %}
 				
-				tc.app(app_page);
+				{% if d.template_data and d.template_data.locations %} 
+					app_page.data.locations = {{ d.template_data.locations.json }}; 
+				{% endif %}
+				
+				
+				app_page.features.push(function(app) {
+					tc.util.log("!!!!!!!!!!!! Change By Us Mobile (Lite) !!!!!!!!!!!!");
+					
+					app.data = { idea: null };
+					
+					app.components.merlin = new tc.merlin(app, {
+						use_hashchange: false,
+						name: "mobile-lite",
+						dom: $(".continent"),
+						first_step: "start",
+						next_button: $(".submit"),
+						data: {
+							
+						},
+						steps: {
+							"start": {
+								selector: ".step.start",
+								next_step: "email",
+								inputs: {
+									idea: {
+										selector: "#idea-input",
+										validators: ["required", "min-3", "max-180"],
+										hint: "What's your idea?"
+									}
+								},
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								},
+								finish: function(merlin, dom) {
+									merlin.options.data.idea_text = merlin.current_step.inputs.idea.dom.val();
+								}
+							},
+							"email": {
+								selector: ".step.email",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							},
+							"hood": {
+								selector: ".step.hood",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							},
+							"find-projects": {
+								selector: ".step.find-projects",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							},
+							"invited-project": {
+								selector: ".step.invited-project",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							},
+							"joined-project": {
+								selector: ".step.joined-project",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							},
+							"login-join": {
+								selector: ".step.login-join",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							},
+							"about": {
+								selector: ".step.about",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
+								}
+							}
+						}
+					});
+					
+					$("a.about-link").bind("click", function(e) {
+						e.preventDefault();
+						app.components.merlin.show_step("about");
+					});
+					
+				});
 			
-			});
 			
+				$(function() {
+					tc.app(app_page);
+				});
+			}(this, this.jQuery));
 		</script>
 	</body>
 	
