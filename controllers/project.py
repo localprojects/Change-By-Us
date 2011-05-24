@@ -278,13 +278,16 @@ class Project(Controller):
         projectId = self.request('project_id')
         userId = util.try_f(int, self.request('user_id'))
         
-        log.info("*** un-endorse user_id, project_id, self.user.id, self.user.isLeader,  self.user.isAdmin = ")
-        log.info("*** %s, %s, %s, %s, %s " % (userId, projectId, self.user.id, self.user.isLeader,  self.user.isAdmin))
-        
         if (self.user and
             ((self.user.isLeader and self.user.id == userId) or
             self.user.isAdmin)):
-            return mProject.removeEndorsement(self.db, projectId, userId)
+            isRemoved = mProject.removeEndorsement(self.db, projectId, userId)
+            
+            # if successfully removed, remove messages as well
+            if (isRemoved):
+                mProject.removeEndorsementMessage(self.db, projectId, userId)
+            
+            return isRemoved
         else:
             log.error("*** attempt to remove endorsement w/o proper credentials")
             return False
