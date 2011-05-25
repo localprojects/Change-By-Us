@@ -22,12 +22,34 @@
 		<div class="carousel">
 			<div class="scrollable">
 				<ul class="items">
-					{% for goal in d.template_data.project.data.info.goals['items'] %}
+					
+					{% macro generate_goal(goal) -%}
 						<li rel='{{ goal.goal_id }},{{ goal.active }}'>
 							<div class="goal-card">
 								{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
 								{% endif %}
+								
+								{% if d.template_data.project_user.data.is_project_admin %}
+									{% if not goal.active %}
+										<div class="make-this-active">
+											<a href="#makeActive,{{ goal.goal_id }}" class="fancy-caps">Make <span>this the</span> Active Goal</a>
+										</div>
+									{% endif %}
+								{% endif %}
+								
+								{% if goal.accomplished %}
+									<div class="label-accomplished">
+										Accomplished!
+									</div>
+								{% elif d.template_data.project_user.data.is_project_admin %}
+									<div class="control-accomplished">
+										<a class="fancy-caps" href="#markAccomplished,{{ goal.goal_id }}">
+											Mark <span>as</span> Accomplished
+										</a>
+									</div>
+								{% endif %}
+								
 								<p>{{ goal.text }}</p>
 								<div class="meta">
 									<dl>
@@ -40,7 +62,20 @@
 								</div>
 							</div>
 						</li>
+					{%- endmacro %}
+					
+					{% for goal in d.template_data.project.data.info.goals['items'] %}
+						{% if goal.active %}
+							{{ generate_goal(goal) }}
+						{% endif %}
 					{% endfor %}
+					
+					{% for goal in d.template_data.project.data.info.goals['items'] %}
+						{% if not goal.active %}
+							{{ generate_goal(goal) }}
+						{% endif %}
+					{% endfor %}
+					
 				</ul>
 			</div>
 			<div class="carousel-controls">
@@ -76,6 +111,23 @@
 		{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 			<a class="close" href="#close,"><span>Close</span></a>
 		{% endif %}
+		
+		{% if d.template_data.project_user.data.is_project_admin %}
+			<div class="make-this-active">
+				<a href="#makeActive," class="fancy-caps">Make <span>this the</span> Active Goal</a>
+			</div>
+			<div class="control-accomplished">
+				<a class="fancy-caps" href="#markAccomplished,">
+					Mark <span>as</span> Accomplished
+				</a>
+			</div>
+		{% endif %}
+		
+		
+		<div class="label-accomplished">
+			Accomplished!
+		</div>
+		
 		<p class='goal-title'></p>
 		<div class="meta">
 			<dl>
@@ -102,6 +154,61 @@
 		this.dom = dom;
 		widget = tc.gam.widget(this,project);
 		this.handlers = {
+			make_goal_active: function(e, d) {
+				var t, goal_id;
+				
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				goal_id = t.href.split(",")[1];
+				
+				tc.jQ.ajax({
+					type:'POST',
+					url:'/project/goal/active',
+					data:{
+						project_id: e.data.me.options.app.app_page.data.project.project_id,
+						goal_id: goal_id
+					},
+					context:e.data.me,
+					dataType:'text',
+					success:function(data,ts,xhr){
+						if(data == 'False'){
+							return false;
+						}
+						this.project.dom.trigger('goals-refresh');
+					}
+				});
+			},
+			mark_goal_accomplished: function(e, d) {
+				var t, goal_id;
+				
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				goal_id = t.href.split(",")[1];
+				
+				tc.jQ.ajax({
+					type:'POST',
+					url:'/project/goal/accomplish',
+					data:{
+						project_id: e.data.me.options.app.app_page.data.project.project_id,
+						goal_id: goal_id
+					},
+					context:e.data.me,
+					dataType:'text',
+					success:function(data,ts,xhr){
+						if(data == 'False'){
+							return false;
+						}
+						this.project.dom.trigger('goals-refresh');
+					}
+				});
+			},
+			{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 			remove_goal: function(e, d) {
 				e.preventDefault();
 				
@@ -128,6 +235,7 @@
 					}
 				});
 			},
+			{% endif %}
 			goals_refresh:function(e){
 				tc.util.dump('goals_main.goals-refresh');
 				tc.jQ.ajax({
@@ -158,12 +266,26 @@
 		
 		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
 				
-		this.generate_markup = function(data){
+		this.generate_goal = function(data){
 			var temphtml;
-			temphtml = tc.jQ('<li class="goal"></li>').append(tc.jQ('.template-content.goal').clone().children());//.removeClass('template-content');
-			temphtml.attr('rel',data.goal_id+','+data.active);
-			temphtml.css('width','512px');
+			temphtml = tc.jQ('<li class="goal"></li>').append(tc.jQ('.template-content.goal').clone().children());
+			
+			temphtml.attr('rel',data.goal_id+','+data.active).css('width','512px');
 			temphtml.find('a.close').attr('href','#removeGoal,'+data.goal_id);
+			
+			if(data.active){
+				temphtml.find('.make-this-active').remove();
+			} else {
+				temphtml.find('.make-this-active a').attr('href','#makeActive,'+data.goal_id);
+			}
+			
+			if (data.accomplished) {
+				temphtml.find(".control-accomplished").remove();
+			} else {
+				temphtml.find(".label-accomplished").remove();
+				temphtml.find('.control-accomplished a').attr("href", "#markAccomplished,"+data.goal_id);
+			}
+			
 			temphtml.find('.goal-title').text(data.text);
 			temphtml.find('.timeframe').text(data.timeframe);
 			temphtml.find('.owner-name').html("<a href='/useraccount/"+data.owner.u_id+"'>"+data.owner.name+"</a>");
@@ -201,13 +323,13 @@
 				
 				for(i in data){
 					if(data[i].active){
-						list.append(this.generate_markup(data[i]));
+						list.append(this.generate_goal(data[i]));
 						delete data[i];
 						break;
 					}
 				}
 				for(i in data){
-					list.append(this.generate_markup(data[i]));
+					list.append(this.generate_goal(data[i]));
 				}
 				this.carousel.render();
 				
@@ -215,13 +337,13 @@
 				this.carousel.carousel.getItems().remove();
 				for(i in data){
 					if(data[i].active){
-						this.carousel.carousel.addItem(this.generate_markup(data[i]));
+						this.carousel.carousel.addItem(this.generate_goal(data[i]));
 						delete data[i];
 						break;
 					}
 				}
 				for(i in data){
-					this.carousel.carousel.addItem(this.generate_markup(data[i]));
+					this.carousel.carousel.addItem(this.generate_goal(data[i]));
 				}
 				if(list.children().length > n_goals){
 					this.carousel.carousel.end();
@@ -244,7 +366,13 @@
 			this.carousel.carousel.getRoot().trigger('onSeek');
 		}
 		
+		
+		{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 		this.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, this.handlers.remove_goal);
+		{% endif %}
+		
+		this.dom.find(".control-accomplished a").unbind("click").bind("click", { project:project, me:me }, this.handlers.mark_goal_accomplished);
+		this.dom.find(".make-this-active a").unbind('click').bind("click", { project:project, me:me }, this.handlers.make_goal_active);
 		
 		return {
 			show:function(propagate){
