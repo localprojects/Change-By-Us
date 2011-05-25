@@ -46,6 +46,9 @@
 								{% if endorsement.title or endorsement.organization %},{% endif %}
 								<cite>{% if endorsement.title %}{{ endorsement.title }}{% endif %} {% if endorsement.organization %}{{ endorsement.organization }}{% endif %}</cite>
 							</div>
+							{% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}
+								<a class='close remove-endorse' href="#removeEndorsement,{{ d.template_data.project.data.project_id }},{{ endorsement.u_id }}"><span>close</span></a>
+							{% endif %}
 						</li>
 					{% endfor %}
 				</ul>
@@ -101,6 +104,20 @@
 		</div>
 		<div class="actions yesno">
 			<a class="submit rounded-button" href="#">Yes</a>
+			<a class="cancel rounded-button" href="#">No</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+<div class="template-content modal-content confirm-delete remove-endorse-project">
+	<div class="step">
+		<h2>Are you sure you want to <strong>remove</strong> this endorsement?</h2>
+		<div>
+			<p>Are you sure you want to remove this endorsement? To restore the endorsement, the city leader will need to endorse this project again.</p>
+		</div>
+		<div class="actions yesno">
+			<a class="submit rounded-button" href="#">Yes, Remove Endorsement</a>
 			<a class="cancel rounded-button" href="#">No</a>
 		</div>
 	</div>
@@ -379,11 +396,44 @@
 						});
 					}
 				});
+			},
+			remove_endorse:function(e){
+				e.preventDefault();
+				
+				var t;
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				
+				e.data.project.options.app.components.modal.show({
+					app:e.data.project.options.app,
+					source_element:tc.jQ('.modal-content.remove-endorse-project'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/project/endorse/remove',
+							data:{
+								project_id: t.href.split(',')[1],
+								user_id: t.href.split(',')[2]
+							},
+							context:e.data.me,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								location.reload(true);
+							}
+						});
+					}
+				});
 			}
 		};
 		
 		this.dom.find('a.remove-btn.keyword').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_keyword);
 		this.dom.find('a.endorse-button').unbind('click').bind('click', {project:project,me:this}, this.handlers.endorse_project);
+		this.dom.find('a.remove-endorse').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_endorse);
 		
 		this.elements.mission.init( this.dom.find(".our-mission.editable") );
 		this.elements.location_map.init();
