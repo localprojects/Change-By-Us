@@ -115,21 +115,20 @@ class Project(Controller):
             return self.not_found()
         
     def showConversationRSS(self, projectId):
-        if (not projectId or projectId == -1):
-            projDictionary = mProject.getTestData()
-        else:
+        if (projectId):
             project = mProject.Project(self.db, projectId)
             projDictionary = project.getFullDictionary()
             
-        self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
+            self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
+            
+            msgs = self.template_data['project']['data']['info']['messages']['items']
+            
+            for item in msgs:
+                item['created'] = datetime.datetime.strptime(item['created'], '%Y-%m-%d %H:%M:%S').strftime('%a, %d %b %Y %H:%M:%S EST')
         
-        msgs = self.template_data['project']['data']['info']['messages']['items']
-        
-        for item in msgs:
-            item['created'] = datetime.datetime.strptime(item['created'], '%Y-%m-%d %H:%M:%S').strftime('%a, %d %b %Y %H:%M:%S EST')
-    
-        return self.render('project/conversation_rss', suffix='xml.rss')
-
+            return self.render('project/conversation_rss', suffix='xml.rss')
+        else:
+            return self.not_found()
         
     def getProjectUser(self, projectId):
         projectUser = dict(is_project_admin = False, is_member = False, is_invited_by_idea = False, can_endorse = False)
