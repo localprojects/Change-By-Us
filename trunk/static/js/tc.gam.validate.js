@@ -45,6 +45,7 @@ tc.validate = function(element,validators){
 	
 	for(i in validators){
 		if(validators[i].substring(0,3) == 'min'){
+			value = tc.validator_utils.val_escape_hints(element);
 			if(value.length < (validators[i].split('-')[1]*1.0)){
 				valid = false;
 				errors.push("Too short.");
@@ -52,6 +53,7 @@ tc.validate = function(element,validators){
 			continue;
 		}
 		if(validators[i].substring(0,3) == 'max'){
+			value = tc.validator_utils.val_escape_hints(element);
 			if(value.length > (validators[i].split('-')[1]*1.0)){
 				valid = false;
 				errors.push("Too long.");
