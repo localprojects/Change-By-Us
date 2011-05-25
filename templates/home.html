@@ -340,7 +340,7 @@ Change by Us NYC
 						<li>
 							<cite class="meta">{{ item.datetime }}</cite>
 							<h3><a href="{{ item.link }}">{{ item.title }}</a></h3>
-							<p>{{ item.text|truncate(115, true) }}</p>
+							<p>{{ item.text }}</p>
 						</li>
 				        {% endfor %}
 					</ul>
@@ -481,13 +481,23 @@ Change by Us NYC
 							start:merlin.dom.find('.step-one'),
 							two:merlin.dom.find('.info-input')
 						};
+						
 						elements.idea_input.css('height','93.2px').animate({
 							width:'0px',
 							opacity:0
 						},400,'easeOutCubic',function(){
-							tc.jQ(this).hide();
+							//tc.jQ(this).hide();
+							
 							elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
 							tc.animate_bg(elements.pane,5,7.5);
+							
+							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
+								opacity:1.0,
+								height:'142px'
+							},400,'easeOutCubic',null);
+							
+							return;
+							
 							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
 								opacity:1.0,
 								height:'142px'
@@ -496,6 +506,22 @@ Change by Us NYC
 								elements.two.css("height", "");
 							});
 						});
+						
+						//elements.idea_input.css('height','93.2px').animate({
+						//	width:'0px',
+						//	opacity:0
+						//},400,'easeOutCubic',function(){
+						//	tc.jQ(this).hide();
+						//	elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
+						//	tc.animate_bg(elements.pane,5,7.5);
+						//	elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
+						//		opacity:1.0,
+						//		height:'142px'
+						//	},400,'easeOutCubic',function(){
+						//		// taking off the height after the animation to prevent IE overflow problem:
+						//		elements.two.css("height", "");
+						//	});
+						//});
 					},
 					init:function(merlin,dom){
 						if(!merlin.current_step.step_data.locationDropdown){
