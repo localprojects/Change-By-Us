@@ -83,12 +83,11 @@ class Home(Controller):
         locations = dict(data = locationData, json = json.dumps(locationData))
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
         
-        #news = self.getNewsItems()
-        news = []
+        news = self.getNewsItems()
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
-        self.template_data['news'] = dict()#news
+        self.template_data['news'] = news
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
@@ -390,32 +389,18 @@ class Home(Controller):
         web.setcookie('cbu_key', None, expires = -1, domain = ".changeby.us")
 
         return True    
-        
+
     def getNewsItems(self):
-        MORE_TAG = '<span id="more'
         data = []
+        feedUrl = "%s?feed=cbujson" % Config.get('blog_host')
 
         try:
-            feed = feedparser.parse("%s?feed=rss2" % Config.get('blog_host'))
-            
-            # is there an easier way to sort rss entries by tag?
-            filtered = [item for item in feed.entries if (hasattr(item, 'tags') and (len([t for t in item.tags if t.term == 'featured']) > 0))]
-            
-            for entry in filtered[0:2]:
-                if (MORE_TAG in entry.content[0].value):
-                    text = entry.content[0].value.split(MORE_TAG)[0]
-                else:
-                    text = ' '.join(entry.content[0].value.split()[0:20]) + "..."
-            
-                data.append({'title':entry.title,
-                            'datetime':time.strftime("%m.%d.%Y", entry.updated_parsed),
-                            'link':entry.links[0].href,
-                            'text':util.strip_html(text)})
+            data = json.load(urllib2.urlopen(feedUrl, timeout = 5))
         except Exception, e:
-            log.info("*** couldn't get rss feed for news items")
+            log.info("*** couldn't get feed for news items at %s" % feedUrl)
             log.error(e)
                         
-        return data
+        return data        
         
     def addResource(self):
         title = self.request('title')
