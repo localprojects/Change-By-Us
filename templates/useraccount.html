@@ -25,20 +25,22 @@ Change by Us NYC - User Account
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
-					<div class="thumb">
-						{% if d.template_data.user_activity.data.user.image_id > -1 %}
-							<img width='50' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
-						{% else %}
-							<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
-						{% endif %}
+					<div class='box box-thumb'>
+						<div class="thumb">
+							{% if d.template_data.user_activity.data.user.image_id > -1 %}
+								<img width='90' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
+							{% else %}
+								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+							{% endif %}
+						</div>
 					</div>
-					<div class="user-info">
-						{{ d.template_data.user_activity.data.user.name }}
-						{%- if d.template_data.user_profile_email -%}
-							<div class="user-email">
-								(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)
-							</div>
-						{%- endif -%}
+					<div class='box box-info'>
+						<div class="user-info serif">
+							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
+							<span class="location"><em>from</em> <a href=''>Bedford-Stuyvesant</a></span>
+							<span class="description">This is a great little description of me and who I am and stuff.</a></span>
+							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
+						</div>
 					</div>
 				</div>
 				<div class="bd">
@@ -48,6 +50,7 @@ Change by Us NYC - User Account
 						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
 							<li class="account"><a href="#user-account,account">Account</a></li>
+							<li class="resources"><a href="#user-account,resources">Resources</a></li>
 						{% endif %}
 					</ul>
 				</div>
@@ -106,7 +109,8 @@ Change by Us NYC - User Account
 							{% endfor %}
 							
 						</div>
-					</div>
+					</div><!-- end my-projects -->
+					
 					<div class="box my-ideas">
 						<div class="hd">
 							<h2>
@@ -118,7 +122,7 @@ Change by Us NYC - User Account
 								Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
 							</h2>
 						</div>
-						<div class="bd">
+						<div class="bd clearfix">
 							<ul class="idea-cards">
 								
 								{% for idea in d.template_data.user_activity.data.ideas %}
@@ -150,7 +154,98 @@ Change by Us NYC - User Account
 								
 							</ul>
 						</div>
-					</div>
+					</div><!--end my-ideas-->
+					
+					<div class="box my-resources">
+						<div class="hd">
+							<h2>
+								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+									<span class="light">My</span>
+								{% else %}
+									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+								{% endif %}
+								Resources <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
+							</h2>
+						</div>
+						<div class="bd">
+							<!--table template format can be copied from search.html line 126-159-->
+							<!-- START DELETING DUMMY TABLE-->
+							<table class="resources-list triplewide clearfix">
+								<tbody>
+									<tr>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							<!-- STOP DELETING DUMMY TABLE-->
+						</div>
+					</div><!--end my-resources-->
 				</div><!--end activity-view-->
 				
 				{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
