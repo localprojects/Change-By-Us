@@ -56,8 +56,8 @@
 				<h1>Where is your idea located?</span></h1>
 				<form>
 					<div class="radio-buttons">
-						<span><input type="radio" id="location-city" class="location-city location-group" name="location-input" value="city" />The city<br /></span>
-						<span><input type="radio" id="location-hood" class="location-hood location-group" name="location-input" value="neighborhood" />A neighborhood or borough<br /></span>
+						<span><input type="radio" id="location-city" class="location-city location-group" name="location-input" value="city" /><label for="location-city">The city</label></span>
+						<span><input type="radio" id="location-hood" class="location-hood location-group" name="location-input" value="neighborhood" /><label for="location-hood">A neighborhood or borough</label></span>
 					</div>
 					<input type="text" id="location-neighborhood-enter" class="location-hood-enter location-group" name="hood-neighborhood-enter" value="" />
 					<div class="location-hood-list">
@@ -96,10 +96,10 @@
 			<div class="step invited-project">
 				<h1>You've been invited to<br />join a project!</h1>
 				<div class="project">
-					<span class="title">Start a Garden in the Bronx</span>
-					<span class="creator"><em>Created by </em>Shawna T.</span>
-					<span class="description">Wouldn’t it be great if we had a garden on 161st and Melrose...</span>
-					<input type="button" id="project-1-join" class="submit project-1-join" name="project-1-join" value="Join" />
+					<span class="title"></span>
+					<span class="creator"><em>Created by </em><span></span></span>
+					<span class="description"></span>
+					<input type="button" id=" " class="submit project-1-join" name=" " value="Join" />
 				</div>
 			</div><!--end step-->
 			
@@ -139,7 +139,9 @@
 			<div class="step login">
 				<h1>Login</h1>
 				<form>
+					<label for="login-email">Email</label>
 					<input type="text" id="login-email" class="login-email" name="login-email" />
+					<label for="login-pass">Password</label>
 					<input type="password" id="login-pass" class="login-pass" name="login-pass" />
 					<input type="submit" id="login-submit" class="submit login-submit" name="login-submit" value="Login" />
 				</form>
@@ -220,8 +222,9 @@
 		
 		<script type="text/javascript">
 			(function(window, $) {
+				var app_page, $userland;
 			
-				var app_page = {
+				app_page = {
 					data:{},
 					features:[]
 				};
@@ -232,6 +235,10 @@
 				
 				{% if d.template_data and d.template_data.locations %} 
 					app_page.data.locations = {{ d.template_data.locations.json }}; 
+				{% else %}
+					tc.util.log("missing location data!!!!", "warn");
+					//TEMPORARY FALLBACK FOR DEV PURPOSES
+					app_page.data.locations = [{location_id:1, name:"Annadale"}, {location_id:2, name:"Arden Heights"}];
 				{% endif %}
 				
 				
@@ -245,12 +252,16 @@
 						first_step: "start",
 						next_button: $(".submit"),
 						data: {
-							idea: {},
-							idea_id: null,
 							login: {
 								email: null,
 								password: null
 							},
+							idea: {
+								text: null,
+								email: null,
+								location_id: null
+							},
+							idea_id: null,
 							ref_project_id: null
 						},
 						steps: {
@@ -319,12 +330,10 @@
 											radios: dom.find("input[type=radio]"),
 											input: dom.find("input.location-hood-enter"),
 											list: dom.find(".location-hood-list"),
-											locations: merlin.app.app_page.data.locations
+											locations: merlin.app.app_page.data.locations,
+											scrollMenuThreshold: 5
 										});
 									}
-									
-									tc.util.dump(merlin.app.app_page.data.locations);
-									
 								},
 								finish: function(merlin, dom) {
 									merlin.options.data.idea.location_id = merlin.current_step.data.locationDropdown.getLocation();
@@ -359,7 +368,7 @@
 							"idea-error": {
 								selector: ".step.idea-error",
 								init: function(merlin, dom) {
-									
+									window.scroll(0, 0);
 								}
 							},
 							"related-processing": {
@@ -367,7 +376,10 @@
 								init: function(merlin, doom) {
 									$.ajax({
 										url: "/idea/related",
-										data: merlin.data.idea,
+										data: {
+											idea_id: merlin.options.data.idea_id,
+											n_limit: 10
+										},
 										context: merlin,
 										dataType: "json",
 										success: function(data, ts, xhr) {
@@ -381,16 +393,19 @@
 							},
 							"browse-projects": {
 								selector: ".step.browse-projects",
+								data: {},
 								init: function(merlin, dom) {
 									var $list = dom.find("ol").eq(0).empty(), 
+									    $proj_temp = $(".template-content.project"),
 									    n_projects = 0;
 									
 									function render_proj_group(data) {
 										$.each(data, function(i, d) {
 											var $proj;
 											n_projects += 1;
-											$proj = $("<li class='project'></li>").append($(".template-content.project").clone().children());
-
+											$proj = $("<li class='project'></li>").append($proj_temp.clone().children());
+											
+											$proj.attr("id", "project"+ d.project_id);
 											$proj.find(".num").text(n_projects +".");
 											$proj.find(".title").text(d.title);
 											$proj.find(".creator span").text(d.owner.name);
@@ -406,7 +421,16 @@
 									
 									dom.find(".proj-count").text(n_projects);
 									
-									window.scroll(0, 0);
+									if (merlin.options.data.ref_project_id) {
+										try {
+											window.scroll(0, $("#project"+ merlin.options.data.ref_project_id).offset().top);
+										} catch (err) {
+											tc.util.log("could not find project "+ merlin.options.data.ref_project_id, "warn");
+											window.scroll(0, 0);
+										}
+									} else {
+										window.scroll(0, 0);
+									}
 								},
 								join_click_handler: function(e) {
 									e.preventDefault();
@@ -421,6 +445,10 @@
 								},
 								init: function(merlin, dom) {
 									
+									// if the user is not logged in,
+									// redirect to signup/login, 
+									// and store the id of the project they were trying to join
+									// (so that we can get back to it after login)
 									if (!merlin.app.app_page.user) {
 										merlin.options.data.ref_project_id = merlin.current_step.data.project.project_id;
 										merlin.show_step("signup-login");
@@ -450,7 +478,7 @@
 							"join-error": {
 								selector: ".step.join-error",
 								init: function(merlin, dom) {
-									
+									window.scroll(0, 0);
 								}
 							},
 							"joined-project": {
@@ -479,7 +507,8 @@
 							},
 							
 							
-							// TODO
+							// TODO == this feature is not implemented
+							// but may need to be later on
 							"invited-project": {
 								selector: ".step.invited-project",
 								init: function(merlin, dom) {
@@ -539,8 +568,12 @@
 												this.show_step("login-error");
 												return false;
 											}
+											// if the user was prompted to login upon trying to join a project,
+											// return them to the project list
 											if (this.options.data.ref_project_id) {
-												
+												$userland.find(".login").hide();
+												$userland.find(".logout").show();
+												this.show_step("browse-projects");
 											} else {
 												window.location.reload(true);
 											}
@@ -579,22 +612,25 @@
 					});
 					
 					
-					$(".about-link").bind("click", function(e) {
-						e.preventDefault();
-						app.components.merlin.show_step("about");
-					});
-					
-					
-					var $userland = $(".atmosphere .userland");
-					$userland.find(".login").click(function(e) {
+					// HEADER LOGIN/LOGOUT
+					$userland = $(".atmosphere .userland");
+					$userland.find(".login a").click(function(e) {
 						e.preventDefault();
 						app.components.merlin.show_step("signup-login");
 					});
-					$userland.find(".logout").click(function(e) {
+					$userland.find(".logout a").click(function(e) {
 						e.preventDefault();
 						app.components.merlin.show_step("logout");
 					});
 					
+					// LOCATION LIST
+					$(".location-hood-enter").attr("autocomplete", "off");
+					
+					// FOOTER ABOUT LINK
+					$(".about-link").bind("click", function(e) {
+						e.preventDefault();
+						app.components.merlin.show_step("about");
+					});
 					
 				});
 			
