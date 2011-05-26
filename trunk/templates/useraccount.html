@@ -19,14 +19,16 @@ Change by Us NYC - User Account
 <div class='continent user-account'>
 	<!--<div class='headlands'>
 	</div>-->
-
+	
+	<!-- once template data is ready, add class .is-leader to .midlands if user is a city leader!!!! -->
 	<div class='midlands merlin clearfix'>
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
 					<div class='box box-thumb'>
+						<div class="leader-tag"><span>City Leader</span></div>
 						<div class="thumb">
-							{% if d.template_data.user_activity.data.user.image_id > -1 %}
+							{% if d.template_data.user_activity.data.user.image_id > 0 %}
 								<img width='90' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
 							{% else %}
 								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
@@ -42,7 +44,7 @@ Change by Us NYC - User Account
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
 							<span class="location"><em>from</em> <a href=''>Bedford-Stuyvesant</a></span>
-							<span class="description">This is a great little description of me and who I am and stuff.</a></span>
+							<span class="description">This is a great little description of me and who I am and stuff.</span>
 							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
 						</div>
 					</div>
@@ -275,13 +277,16 @@ Change by Us NYC - User Account
 													{% endif %}
 												</div>
 												<div class="main">
-													<div class="meta">
+													<div class="meta meta-top">
 														<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
-														<cite class="time-since">{{ message.created }}</cite>
+														<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}" class="serif">{{ message.project_title }}</a></cite>
 													</div>
 													<blockquote class="excerpt">
 														<p>{{ message.body }}</p>
 													</blockquote>
+													<div class="meta meta-bottom">
+														<cite class="time-since">{{ message.created }}</cite>
+													</div>
 												</div>
 											</li>
 											
@@ -400,6 +405,8 @@ Change by Us NYC - User Account
 											</div>
 										</div>
 										
+										<div style="clear:both"></div>
+										
 									</div>
 								</form>	
 								{%- if d.template_data.app_mode != 'beta' -%}
@@ -444,8 +451,8 @@ Change by Us NYC - User Account
 										</div>
 										<h4 class="serif">Resource Name</h4>
 										<div class='box'>
-											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
-											<div class="location-hood-list" style="display: none"><ul><a href="">Mmmm... data...</a></li></ul></div>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-1' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
 										</div>
 									</div>
 									<div class='right'>
@@ -479,8 +486,8 @@ Change by Us NYC - User Account
 										</div>
 										<h4 class="serif">Resource Name</h4>
 										<div class='box'>
-											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
-											<div class="location-hood-list" style="display: none"><ul><a href="">Mmmm... data...</a></li></ul></div>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-2' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
 										</div>
 									</div>
 									<div class='right'>
@@ -514,8 +521,8 @@ Change by Us NYC - User Account
 										</div>
 										<h4 class="serif">Resource Name</h4>
 										<div class='box'>
-											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
-											<div class="location-hood-list" style="display: none"><ul><a href="">Mmmm... data...</a></li></ul></div>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-3' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
 										</div>
 									</div>
 									<div class='right'>
