@@ -17,9 +17,8 @@ Change by Us NYC - User Account
 {% block continent %}
 
 <div class='continent user-account'>
-	<div class='headlands'>
-
-	</div>
+	<!--<div class='headlands'>
+	</div>-->
 
 	<div class='midlands merlin clearfix'>
 		<div class="west">
@@ -31,6 +30,11 @@ Change by Us NYC - User Account
 								<img width='90' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
 							{% else %}
 								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+							{% endif %}
+							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+								<div class="addphoto" style="display:none">
+									<a href="#">Change Photo</a>
+								</div>
 							{% endif %}
 						</div>
 					</div>
@@ -337,16 +341,6 @@ Change by Us NYC - User Account
 							</div>
 							<div class="bd step edit-account-details">
 								<form action="" method="POST" class="account-info">
-									<div class="thumb user-pic">
-										{% if d.template_data.user_activity.data.user.image_id %}
-											<img width='50' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
-										{% else %}
-											<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
-										{% endif %}
-										<div class="addphoto">
-											<a href="#">Change<br /><span>Photo</span></a>
-										</div>
-									</div>
 									<div class="user-details">
 										<div class="fields">
 											<div class="row row-first-name">
@@ -361,11 +355,18 @@ Change by Us NYC - User Account
 												<label>Email address</label>
 												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.email }}" />
 											</div>
+											<div class="row row-hood clearfix">
+												<label>Neighborhood</label>
+												<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' />
+												<div class="location-hood-list"><ul><li><a href="">Feed me template data!</a><a href="">Mmmm... data...</a></li></ul></div>
+											</div>
 										</div>
-										<div class="clearfix">
+										<div class="">
 											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
-											<a href="#change-password,edit-password-details" class="change-password rounded-button small">Change Password</a>
+											<a href="#change-password,edit-password-details" class="change-password">Change Password</a>
 										</div>
+										
+										<div style="clear:both"></div>
 										
 										<div class="password-info merlin">
 											<div class="step edit-password-details">
@@ -427,8 +428,125 @@ Change by Us NYC - User Account
 						</div>
 						
 					</div><!--end account-view-->
+					
+					
+					<div class="resources-view step merlin">
+						<div class="hd">
+							<h2><span class="light">My </span>Resources <span class="counter">2</span></h2>
+						</div>
+						<div class="bd">
+							<ul class='my-res'>
+								<li class='clearfix'>
+									<div class='left'>
+										<div class="thumb">
+											<a class="change-image"><span>Change Photo</span></a>
+											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+										</div>
+										<h4 class="serif">Resource Name</h4>
+										<div class='box'>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><a href="">Mmmm... data...</a></li></ul></div>
+										</div>
+									</div>
+									<div class='right'>
+										<div class='box'>
+											<span class='section-title'>Mission</span>
+											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>URL</span>
+											<p><a href=''>http://www.thisisawebaddress.com</a></p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>Email</span>
+											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Physical Address</span>
+											<p>315 W. 39th Street</p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Keywords</span>
+											<p>lorem, ipsum, sit, eros</p>
+										</div>
+									</div>
+								</li>
+								<li class='clearfix'>
+									<div class='left'>
+										<div class="thumb">
+											<a class="change-image"><span>Change Photo</span></a>
+											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+										</div>
+										<h4 class="serif">Resource Name</h4>
+										<div class='box'>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><a href="">Mmmm... data...</a></li></ul></div>
+										</div>
+									</div>
+									<div class='right'>
+										<div class='box'>
+											<span class='section-title'>Mission</span>
+											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>URL</span>
+											<p><a href=''>http://www.thisisawebaddress.com</a></p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>Email</span>
+											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Physical Address</span>
+											<p>315 W. 39th Street</p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Keywords</span>
+											<p>lorem, ipsum, sit, eros</p>
+										</div>
+									</div>
+								</li>
+								<li class='clearfix'>
+									<div class='left'>
+										<div class="thumb">
+											<a class="change-image"><span>Change Photo</span></a>
+											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+										</div>
+										<h4 class="serif">Resource Name</h4>
+										<div class='box'>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><a href="">Mmmm... data...</a></li></ul></div>
+										</div>
+									</div>
+									<div class='right'>
+										<div class='box'>
+											<span class='section-title'>Mission</span>
+											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>URL</span>
+											<p><a href=''>http://www.thisisawebaddress.com</a></p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>Email</span>
+											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Physical Address</span>
+											<p>315 W. 39th Street</p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Keywords</span>
+											<p>lorem, ipsum, sit, eros</p>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div><!--end resources-view-->
 				
 				{% endif %}
+				
 				
 			</div>	
 		</div>
@@ -611,6 +729,7 @@ Change by Us NYC - User Account
 					selector:'.activity-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".activity").addClass("active");
+						tc.jQ('.addphoto').hide();
 						
 						dom.find('a.remove-idea').unbind("click").bind('click', {app:app}, function(e){
 							e.preventDefault();
@@ -656,6 +775,7 @@ Change by Us NYC - User Account
 					has_run_init: false,
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
+						tc.jQ('.addphoto').hide();
 						
 						if (!merlin.current_step.has_run_init) {
 							(function() {
@@ -775,6 +895,15 @@ Change by Us NYC - User Account
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
 						window.location.hash = "account-info,edit-account-details";
+						tc.jQ('.addphoto').show();
+					}
+				},
+				'resources':{
+					selector:'.resources-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".resources").addClass("active");
+						window.location.hash = "resources-info";
+						tc.jQ('.addphoto').hide();
 					}
 				}
 			}
