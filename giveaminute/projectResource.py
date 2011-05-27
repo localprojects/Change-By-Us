@@ -31,7 +31,7 @@ class ProjectResource():
                     location_id = self.data.location_id)
         return data
 
-def searchProjectResources(db, terms, locationId):
+def searchProjectResources(db, terms, locationId, limit=1000, offset=0):
     data = []
 
     match = ' '.join([(item + "*") for item in terms])
@@ -43,9 +43,10 @@ def searchProjectResources(db, terms, locationId):
                     is_active = 1 and is_hidden = 0
                     and ($locationId is null or location_id = $locationId)
                     and ($match = '' or match(title, description) against ($match in boolean mode))
-                    order by created_datetime desc"""
+                    order by created_datetime desc
+                    limit $limit offset $offset"""
 
-        data = list(db.query(sql, {'match':match, 'locationId':locationId}))
+        data = list(db.query(sql, {'match':match, 'locationId':locationId, 'limit':limit, 'offset':offset	}))
     except Exception, e:
         log.info("*** couldn't get resources search data")
         log.error(e)

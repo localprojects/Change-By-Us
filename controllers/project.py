@@ -382,12 +382,7 @@ class Project(Controller):
         keywords = project.data.keywords.split()
         locationId = project.data.location_id
                 
-        if (locationId and len(keywords) > 0):
-            resources = mProjectResource.getProjectResources(self.db, keywords, locationId, projectId)
-        elif (locationId):
-            resources = mProjectResource.getProjectResourcesByLocation(self.db, locationId, projectId)
-        elif (len(keywords) > 0):
-            resources = mProjectResource.getProjectResourcesByKeywords(self.db, keywords, projectId)
+        resources = mProjectResource.searchProjectResources(self.db, keywords, locationId)
         
         obj = dict(resources = resources)
         

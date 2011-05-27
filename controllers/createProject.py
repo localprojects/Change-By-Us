@@ -1,6 +1,6 @@
 import giveaminute.keywords as keywords
-import giveaminute.project as project
-import giveaminute.projectResource as resource
+import giveaminute.project as mProject
+import giveaminute.projectResource as mProjectResource
 import giveaminute.location as mLocation
 import framework.util as util
 from framework.controller import *
@@ -43,11 +43,11 @@ class CreateProject(Controller):
             resourceIds = self.request('resources').split(',')
             isOfficial = self.user.isAdmin
             
-            projectId = project.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId, isOfficial, organization)
+            projectId = mProject.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId, isOfficial, organization)
             
             for resourceId in resourceIds:
                 log.info("*** insert resource id %s" % resourceId)
-                project.addResourceToProject(self.db, projectId, resourceId)
+                mProject.addResourceToProject(self.db, projectId, resourceId)
                 
             if (projectId):
                 return projectId
@@ -72,14 +72,7 @@ class CreateProject(Controller):
         locationId = self.request('location_id')
         keywords = self.request('keywords').split(',') if self.request('keywords') else []
                 
-        if (locationId and len(keywords) > 0):
-            projects = project.getProjects(self.db, keywords, locationId)
-        elif (locationId):
-            projects = project.getProjectsByLocation(self.db, locationId)
-        elif (len(keywords) > 0):
-            projects = project.getProjectsByKeywords(self.db, keywords)
-        else:
-            return None
+        projects = mProject.searchProjects(self.db, keywords, locationId)
         
         obj = dict(projects = projects)
         
@@ -89,14 +82,7 @@ class CreateProject(Controller):
         locationId = self.request('location')
         keywords = self.request('keywords').split(',') if self.request('keywords') else []
                 
-        if (locationId and len(keywords) > 0):
-            resources = resource.getProjectResources(self.db, keywords, locationId)
-        elif (locationId):
-            resources = resource.getProjectResourcesByLocation(self.db, locationId)
-        elif (len(keywords) > 0):
-            resources = resource.getProjectResourcesByKeywords(self.db, keywords)
-        else:
-            return None
+        resources = mProjectResource.searchProjectResources(self.db, keywords, locationId)
         
         obj = dict(resources = resources)
         

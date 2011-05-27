@@ -173,8 +173,8 @@ class Home(Controller):
         details = urllib2.urlopen("https://graph.facebook.com/%s?access_token=%s" % (self.request('uid'), self.request("access_token")))    
         profile = json.loads(details.read())
         
-        sql = "select * from facebook_user where facebook_id = %s" % str(profile['id'])
-        res = list(self.db.query(sql))
+        sql = "select * from facebook_user where facebook_id = $id"
+        res = list(self.db.query(sql, { 'id':profile['id'] }))
         
         associated_user = -1
         
@@ -188,8 +188,8 @@ class Home(Controller):
             
         else:
             email = profile["email"]
-            check_if_email_exists = "select * from user where email = '%s'" % str(email)
-            users_with_this_email = list(self.db.query(check_if_email_exists))
+            check_if_email_exists = "select * from user where email = $email"
+            users_with_this_email = list(self.db.query(check_if_email_exists, {'email':email}))
             email_exists = len(users_with_this_email)
             
             # see if we have a user with this email on a regular account
@@ -290,8 +290,8 @@ class Home(Controller):
         log.info(str(access_token))
     
         # Step 3. Lookup the user or create them if they don't exist
-        sql = "select * from twitter_user where twitter_id = %s" % str(access_token['user_id'])
-        res = list(self.db.query(sql))
+        sql = "select * from twitter_user where twitter_id = $id"
+        res = list(self.db.query(sql, {'id':access_token['user_id']}))
         
         associated_user = -1
         
