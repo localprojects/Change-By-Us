@@ -140,6 +140,25 @@
 						<ul class="adminbar">
 							<li class="content"><a href="/cms/content">Content</a></li>
 							<li class="admin-settings"><a href="/cms/admin">Admin Settings</a></li>
+							{% if d.template_data.show_questions %}
+								<!--<li class="adminQuestion add">
+									<a href="#" class="addEditQuestion"><strong>ADD</strong> <em>or</em> <strong>EDIT</strong><br>QUESTIONS</a>
+								<li>
+								<li class="adminQuestion">
+									<form action="#">
+										<select class="questions">
+											<option value="question0">All question campaigns</option>
+											<option value="question1">Hey NYC, how can we make ...</option>
+											<option value="question2">Hey NYC, how can we grow ...</option>
+											<option value="question3">Hey NYC, how can we do ...</option>
+											<option value="question4">Hey NYC, how can we fit ...</option>
+										</select>
+									</form>
+								</li>
+								<li class="adminQuestion question">
+									Question:
+								</li>-->
+							{% endif %}
 							{% block project_admin %}{% endblock %}
 						<ul>
 					{% endif %}
@@ -294,6 +313,7 @@
 		<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
 		<script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
 		<script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
+		<script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
 				
 		<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
 		<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
@@ -338,6 +358,24 @@
 		
 		<script type='text/javascript'>
 			jQuery(document).one('ready',function(e){
+				
+				if( tc.jQ('ul.adminbar li.adminQuestion select.questions').length > 0 )
+				{
+					tc.jQ('ul.adminbar li.adminQuestion select.questions').jqDropDown({
+						effect: 'fade',
+						effectSpeed: 150,
+						afterToggle: function(){
+							$('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').addClass('down');
+						
+							var removeDownClass = function(){
+								$('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').removeClass('down');
+								$(document).unbind('mousedown', removeDownClass);
+							};
+						
+							$(document).bind('mousedown', removeDownClass );
+						}
+					});
+				};
 				
 				tc.jQ('input[type=checkbox],input[type=radio]')
 					.not('.has-prettycheckbox')
