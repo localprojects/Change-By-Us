@@ -140,6 +140,11 @@ class Controller():
             self.session.flash = None
             self.session.invalidate()
         template_values['session_id'] = self.session.session_id    
+        
+        # debug debug gubed
+        log.info("*** session  = %s" % self.session)
+        
+        
         for key in self.session:
             template_values[key] = self.session[key]
         template_values['template_name'] = template_name

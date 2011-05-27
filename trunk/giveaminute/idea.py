@@ -52,20 +52,6 @@ def createIdea(db, description, locationId, submissionType, userId=None, email=N
         
     return ideaId
     
-# deprecated
-def attachIdeasToUser(db, userId, ideaIdList):
-    try:    
-        for id in ideaIdList:
-            db.update('idea', 'idea_id = $id', user_id = userId, vars = locals())
-            
-        return True
-    except Exception, e:
-        log.info("*** problem adding ideas to user")
-        log.error(e)    
-        return False
-        
-    return True
-    
 def attachIdeasByEmail(db, email):
     try:
         sql = """
@@ -75,7 +61,7 @@ where i.email = u.email
     and u.email = $email
     and u.is_active = 1
 """ 
-        db.query(sql, vars = locals())
+        db.query(sql, {'email':email})
         return True;
     except Exception, e:
         log.info("*** problem updating ideas by email")
@@ -91,7 +77,7 @@ where (i.phone is not null and i.phone <> '' and i.phone = u.phone)
     and u.phone = $phone
     and u.is_active = 1
 """ 
-        db.query(sql, vars = locals())
+        db.query(sql, {'phone':phone})
         return True;
     except Exception, e:
         log.info("*** problem updating ideas by phone")
@@ -101,53 +87,11 @@ where (i.phone is not null and i.phone <> '' and i.phone = u.phone)
 def findIdeasByPhone(db, phone):
     try:
         sql = "select idea_id from idea where phone = $phone"
-        return list(db.query(sql, vars = locals()))
+        return list(db.query(sql, {'phone':phone}))
     except Exception, e:
         log.info("*** problem getting ideas by phone")
         log.error(e)    
         return None
-
-def findIdeasByKeywords(db, keywords):
-    ideas = []
-    
-    try:
-        clauseList = []
-    
-        for word in keywords:
-            clauseList.append("match(i.description) against ('%s')" % word)
-
-        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, u.first_name, u.last_name, i.created_datetime
-                    from idea i 
-                    left join user u on u.user_id = i.user_id
-                    where %s and i.is_active = 1""" % ' and '.join(clauseList)
-        
-        ideas = list(db.query(sql))
-    except Exception, e:
-        log.info("*** problem getting ideas by keywords")
-        log.error(e)    
-    
-    return ideas
-
-def findIdeas(db, keywords, locationId):
-    ideas = []
-    
-    try:
-        clauseList = []
-    
-        for word in keywords:
-            clauseList.append("match(i.description) against ('%s')" % word)
-
-        sql = """select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, u.first_name, u.last_name, i.created_datetime
-                from idea i 
-                left join user u on u.user_id = i.user_id
-                where i.is_active = 1 and i.location_id = $locationId and (%s)""" % ' or '.join(clauseList)
-        
-        ideas = list(db.query(sql, { 'locationId':locationId}))
-    except Exception, e:
-        log.info("*** problem getting ideas")
-        log.error(e)    
-    
-    return ideas 
 
 def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = None):
     betterData = []

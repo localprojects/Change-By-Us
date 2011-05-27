@@ -37,13 +37,13 @@ class UserAccount(Controller):
             connected_tw = False
             s = SessionHolder.get_session()
             if s.user_id:
-                check_fb = "select * from facebook_user where user_id = %s" % str(s.user_id)
-                res_fb = list(self.db.query(check_fb))
+                check_fb = "select * from facebook_user where user_id = $id"
+                res_fb = list(self.db.query(check_fb, {'id':s.user_id }))
                 if len(res_fb) == 1:
                     connected_fb = True
                     
-                check_tw = "select * from twitter_user where user_id = %s" % str(s.user_id)
-                res_tw = list(self.db.query(check_tw))
+                check_tw = "select * from twitter_user where user_id = $id"
+                res_tw = list(self.db.query(check_tw, {'id':s.user_id }))
                 if len(res_tw) == 1:
                     connected_tw = True
 
