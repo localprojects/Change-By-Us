@@ -90,7 +90,7 @@
 			
 			<div class="step browse-projects">
 				<h1>Be part of the solution<br /><span class="unbold">Join one of the projects listed below or <a href="/">visit the full site</a> to start your own.</span></h1>
-				<h2><span class="unbold">Found </span><span class='proj-count'></span> Projects</h2>
+				<h2><span class="unbold">Found </span><span class='proj-count'></span> <span class='proj-qualifier'>Projects</span></h2>
 				<ol>
 					<li></li>
 				</ol>
@@ -235,13 +235,15 @@
 				
 				{% if d.template_data and d.template_data.user %}
 					app_page.user = {{ d.template_data.user.json }}; 
+					tc.util.log("User:");
+					tc.util.dump( app_page.user );
 				{% endif %}
 				
 				{% if d.template_data and d.template_data.locations %} 
 					app_page.data.locations = {{ d.template_data.locations.json }}; 
 				{% else %}
 					tc.util.log("missing location data!!!!", "warn");
-					//TEMPORARY FALLBACK FOR DEV PURPOSES
+					// TEMPORARY FALLBACK FOR DEV PURPOSES
 					// should be removed once we have locations in the template data
 					app_page.data.locations = [
 						{location_id:1, name:"Annadale"}, 
@@ -423,33 +425,69 @@
 								init: function(merlin, dom) {
 									var $list = dom.find("ol").eq(0).empty(), 
 									    $proj_temp = $(".template-content.project"),
-									    n_projects = 0;
-									
-									function render_proj_group(data) {
-										$.each(data, function(i, d) {
-											var $proj;
-											n_projects += 1;
-											$proj = $("<li class='project'></li>").append($proj_temp.clone().children());
+									    n_projects = 0,
+									    render_proj_group = function(data) {
+											$.each(data, function(i, d) {
+												var $proj;
+												n_projects += 1;
+												$proj = $("<li class='project'></li>").append($proj_temp.clone().children());
 											
-											$proj.attr("id", "project"+ d.project_id);
-											$proj.find(".num").text(n_projects +".");
-											$proj.find(".title").text(d.title);
-											$proj.find(".creator span").text(d.owner.name);
-											$proj.find(".description").text(d.description);
-											$proj.find(".join").bind("click", {merlin: merlin, project: d}, merlin.current_step.join_click_handler);
+												$proj.attr("id", "project"+ d.project_id);
+												$proj.find(".num").text(n_projects +".");
+												$proj.find(".title").text(d.title);
+												$proj.find(".creator span").text(d.owner.name);
+												$proj.find(".description").text(d.description);
+												
+												$proj.find(".join").bind("click", {merlin: merlin, project: d}, 
+													merlin.current_step.join_click_handler);
 
-											$list.append($proj);
-										});
-									}
+												$list.append($proj);
+											});
+										};
+										
+										
+										function buildListOldSchool(data) {
+											var buf;
+											buf = "";
+											$.each(data, function(i, d) {
+												var proj;
+												n_projects += 1;
+												proj = 
+													"<li class='project'>"+
+														"<span class='num'>"+ n_projects +".</span>"+
+														"<span class='title'>"+ d.title + "</span>"+
+														""
+													"</li>";
+												buf += proj;
+											});
+											
+											return buf;
+										}
+										
+										
+										<div class="template-content project"><!-- should be transformed into an LI -->
+											<span class="num"></span>
+											<span class="title"></span>
+											<span class="creator"><em>Created by </em><span></span></span>
+											<span class="description"></span>
+											<input type="button" class="join" value="Join" />
+										</div>
+										
+										
+										
 									
-									render_proj_group(merlin.current_step.data.related);
-									render_proj_group(merlin.current_step.data.citywide);
+									if (merlin.current_step.data.related.length) {
+										render_proj_group( merlin.current_step.data.related );
+									}
+									if (merlin.current_step.data.citywide.length) {
+										render_proj_group( merlin.current_step.data.citywide );
+									}
 									
 									if (n_projects === 0) {
 										// TODO ==> explicitly handle case when no projects have been found
 										dom.find(".proj-count").text("0");
 									} else {
-										dom.find(".proj-count").text(n_projects);
+										dom.find(".proj-count").text(n_projects).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" );
 									}
 									
 									if (merlin.options.data.ref_project_id) {
@@ -668,6 +706,15 @@
 			
 				$(function() {
 					tc.app(app_page);
+										
+					$("<div class='tester'>hello world</div>").appendTo("body");
+										
+					if ($(".tester").length) {
+						alert("ok");
+					} else {
+						alert("NOT OKAY");
+					}
+					
 				});
 			}(this, this.jQuery));
 		</script>
