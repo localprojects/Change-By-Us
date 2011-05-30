@@ -59,16 +59,78 @@ Change by Us NYC - Search Results
 				<a class="sidebar-item ideas" href="#ideas"><span>Ideas</span><span class="counter">{{ d.template_data.results.data.ideas|length }}</span></a>
 			</div>
 			<div class="east">
+				
+				
 				<div class="box results-box results-projects clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
 						<h2><span class="counter">{{ d.template_data.results.data.projects|length }}</span> Project{% if d.template_data.results.data.projects|length > 1 %}s{% endif %}</h2>
 						{% if d.template_data.results.data.projects|length > 6 %}
-						<span class="control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
+						<span class="control see-all-control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
+						
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev project-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<p>Page 1 of <span class='n_pages'>XX</span></p>
+								<a class="next project-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+						
 					</div>
-					<div class="bd">		
+					<div class="bd">
+						
+						<div class="carousel project">
+							<div class="scrollable">
+								<ul class="items">
+									
+									
+										<li class='project-carousel-item clearfix loaded'>
+											<table class="projects-list doublewide clearfix">
+												<tbody>
+													{% for project in d.template_data.results.data.projects %}
+														{% if loop.index is odd %}
+														<tr class="{% if loop.index > 6 %}hidden-result {% endif %}{% if loop.index == 5 %}last-initial-row{% endif %}">
+														{% endif %}
+															<td>
+																{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+																<a class="close delete-project" href="#removeProject,{{ project.project_id }}"><span>Close</span></a>
+																{% endif %}
+																<div class="thumb">
+																	{% if project.image_id > -1 %}
+																	<a href="/project/{{ project.project_id }}"><img width='50' height='50' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/></a>
+																	{% else %}
+																	<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+																	{% endif %}
+																	<span class="overlay-tag"></span>
+																	<span class="member-count">{{ project.num_members }}</span>
+																</div>
+																<div class="project-info">
+																	<span class="link"><a href="/project/{{ project.project_id }}">{{ project.title|truncate(50) }}</a></span>
+																	<span class="creator"><em>Created by </em> <a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></span>
+																	<span class="description"><a href="/project/{{ project.project_id }}">{{ project.description|truncate(70) }}</a></span>
+																</div>
+															</td>
+														{% if loop.index is even %}
+														</tr>
+														{% endif %}
+													{% endfor %}
+												</tbody>
+											</table>
+										</li>
+									
+										<li class='project-carousel-item clearfix spinner-message'>
+											<ul class="items warning-list-stack">
+												<li><p>Loading&hellip;</p></li>
+											</ul>
+										</li>
+									
+								</ul>
+							</div>
+						</div>
+						
+						
 						{% if d.template_data.results.data.projects|length > 0 %}
-						<table class="projects-list doublewide clearfix">
+						<!-- <table class="projects-list doublewide clearfix">
 							<tbody>
 								{% for project in d.template_data.results.data.projects %}
 									{% if loop.index is odd %}
@@ -98,7 +160,7 @@ Change by Us NYC - Search Results
 									{% endif %}
 								{% endfor %}
 							</tbody>
-						</table>
+						</table> -->
 						{% endif %}
 						<div class="none-found-message clearfix">
 							<h2>There were <span class="counter">0</span> <strong>Projects</strong> found</h2>
@@ -106,11 +168,20 @@ Change by Us NYC - Search Results
 							<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
 							{% endif %}
 						</div>
+						
+						
 					</div>
 					<div class="ft">
 						{% if d.template_data and d.template_data.user %}
 						<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
 						{% endif %}
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev project-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<p>Page 1 of <span class='n_pages'>XX</span></p>
+								<a class="next project-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
 					</div>
 				</div><!-- end results-box -->
 				
@@ -119,7 +190,7 @@ Change by Us NYC - Search Results
 					<div class="hd">
 						<h2><span class="counter">{{ d.template_data.results.data.resources|length }}</span> Resource{% if d.template_data.results.data.resources|length > 1 %}s{% endif %}</h2>
 						{% if d.template_data.results.data.resources|length > 6 %}
-						<span class="control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
+						<span class="see-all-control control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
 					</div>
 					<div class="bd">		
@@ -172,7 +243,7 @@ Change by Us NYC - Search Results
 					<div class="hd">
 						<h2><span class="counter active">{{ d.template_data.results.data.ideas|length }}</span> Idea{% if d.template_data.results.data.ideas|length > 1 %}s{% endif %}</h2>
 						{% if d.template_data.results.data.ideas|length > 3 %}
-						<span class="control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
+						<span class="see-all-control control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
 					</div>
 					<div class="bd">		
@@ -443,6 +514,8 @@ Change by Us NYC - Search Results
 			tc.jQ('.sidebar').children('.sidebar-item').removeClass('active');
 			tc.jQ('.sidebar').children('.'+theCat).addClass('active');
 			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
+			//tc.jQ('.results-'+theCat).addClass('single').find('.carousel').trigger('make-single');
+			tc.jQ('.results-box').not('.single').find('.carousel').trigger('make-multiple');
 		};
 		
 		tc.jQ('.search-terms-container a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
@@ -496,21 +569,18 @@ Change by Us NYC - Search Results
 					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('projects');
-						tc.jQ('.results-projects').addClass('single');
 					}
 				},
 				'resources':{
 					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('resources');
-						tc.jQ('.results-resources').addClass('single');
 					}
 				},
 				'ideas':{
 					selector:'#list-view',
 					init:function(merlin,dom){
 						changeListCat('ideas');
-						tc.jQ('.results-ideas').addClass('single');
 					}
 				},
 				'map':{
@@ -524,6 +594,112 @@ Change by Us NYC - Search Results
 				}
 			}
 		});
+		
+		
+		
+		function build_carousel(app){
+			var data, fn;
+			
+			if(app.components.project_carousel){
+				return;
+			}
+				
+			app.components.project_carousel = new tc.carousel({
+				element: tc.jQ(".project.carousel"),
+				next_button: tc.jQ('.project-carousel-next'),
+				prev_button: tc.jQ('.project-carousel-prev'),
+				scrollable: {
+					items: ".items",
+					speed: 300,
+					circular: false
+				}
+			});
+			
+			
+			if(!app.components.project_carousel.carousel){
+				
+				tc.jQ(".project.carousel").one('make-single make-multiple',{app:app},function(e){
+					tc.util.dump('yO YO YO')
+					build_carousel(e.data.app);
+				});
+				
+				app.components.project_carousel = null;
+				
+			} else {
+				
+				app.components.project_carousel.data = {
+					current_section:null,
+					current_page:null,
+					n_to_fetch: 10,
+					offset:10,
+					temp_item_source:tc.jQ('.template-content.item-box-project-list'),
+					location_input:tc.jQ('#location-hood-enter'),
+					terms_input:tc.jQ('input.search-terms'),
+					item_generator:function(d){
+					
+					}
+				};
+				
+				tc.jQ(".project.carousel").bind('make-single make-multiple',{app:app, carousel:app.components.project_carousel},function(e){
+					var target_height;
+					target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+					e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+				});
+				
+				app.components.project_carousel.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
+					e.data.app.components.project_carousel.data.current_page = e.data.app.components.project_carousel.carousel.getItems().eq(e.data.app.components.project_carousel.carousel.getIndex());
+					if(!e.data.app.components.project_carousel.data.current_page.hasClass('loaded')){
+						
+						e.data.app.components.project_carousel.data.current_page.addClass('loaded');
+						tc.jQ.ajax({
+							type:"GET",
+							url:"/search/projects",
+							data:{ 
+								location_id: app.components.project_carousel.data.location_input.attr('location_id'),
+								terms: app.components.project_carousel.data.terms_input.val(),
+								n: app.components.project_carousel.data.n_to_fetch,
+								offset: app.components.project_carousel.data.offset
+							},
+							context:e.data.app,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								var d;
+								try {
+									d = tc.jQ.parseJSON(data);
+								} catch(e) {
+									tc.util.log("/search/projects: json parsing error", "warn");
+									return;
+								}
+								this.components.project_carousel.data.current_page.children('ul').children().remove();
+								if(!d.length && this.components.project_carousel.data.offset > 0){
+									this.components.project_carousel.data.current_page.remove();
+									return;
+								} else if(!d.length){
+									this.components.project_carousel.data.current_page.children('ul').append('<li><p>No Projects.</p></li>');
+								}
+								if(d.length == this.components.project_carousel.data.n_to_fetch){
+									this.components.project_carousel.carousel.addItem('\
+										<li class="flagged-content-carousel-item clearfix spinner-message">\
+											<ul class="items warning-list-stack">\
+												<li><p>Loading...</p></li>\
+											</ul>\
+										</li>');
+								}
+							}
+						});
+					}
+				});
+			}
+			
+			app.components.project_carousel.carousel.begin();
+		};
+		
+		build_carousel(app);
+		
+		
+		
+		
+		
 		
 		app.components.tooltips = tc.resource_tooltip({
 			triggers: tc.jQ(".resource-tooltip_trigger"),
@@ -612,38 +788,6 @@ Change by Us NYC - Search Results
 			e.preventDefault();
 			e.data.app.components.modal.show(e.data, e.target);
 		});
-		
-		//tc.jQ('a.remove-project').bind('click', {app:app}, function(e){
-		//	e.preventDefault();
-		//	var $t;
-		//	$t = tc.jQ(e.target);
-		//	e.data.app.components.modal.show({
-		//			app:e.data.app,
-		//			source_element:tc.jQ('.modal-content.remove-project'),
-		//			submit:function(){
-		//				tc.jQ.ajax({
-		//					type:'POST',
-		//					url:'/admin/project/delete',
-		//					data:{
-		//						idea_id: e.target.hash.split(',')[1]
-		//					},
-		//					context:$t,
-		//					dataType:'text',
-		//					success:function(data,ts,xhr){
-		//						if(data == 'False'){
-		//							return false;
-		//						}
-		//						this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
-		//						this.parent().parent().parent().animate({
-		//							width:0
-		//						}, 400, 'easeOutCubic', function(e,d){
-		//							tc.jQ(this).hide();
-		//						});
-		//					}
-		//				});
-		//			}
-		//		});
-		//});
 		
 		tc.jQ('a.flag-idea').bind('click', {app:app}, function(e){
 			e.preventDefault();
