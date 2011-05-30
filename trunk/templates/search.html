@@ -315,6 +315,13 @@ Change by Us NYC - Search Results
 										</div>
 										{% endif %}
 									</li>
+									
+									<li class='idea-carousel-item clearfix spinner-message'>
+										<ul class="items warning-list-stack">
+											<li><p>Loading&hellip;</p></li>
+										</ul>
+									</li>
+									
 								</ul>
 							</div>
 						</div>
@@ -555,6 +562,49 @@ Change by Us NYC - Search Results
 		</div>
 	</div>
 	
+	<div class='template-content resource-cell'>
+		{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+			<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
+		{% endif %}
+		
+		<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+		<span class="resource-name">
+			<span rel="#organization," class='resource-tooltip_trigger tooltip_trigger'>
+				<span><a target='_blank' href="" class='resource_link'><span></span></a></span>
+			</span>
+		</span>
+		<div class="added-dialog">
+			<span class="added-header">Added <em>to</em> your project<br /></span>
+			<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+			<!-- <span class="added-close"></span> -->
+		</div>
+	</div>
+	
+	<div class='template-content idea-cell'>
+		{% if d.template_data and d.template_data.user %}
+		<div class="note-card-public-controls">
+			{% if d.template_data.user.data.projects|length > 0 %}
+				<a class="invite rounded-button small" href="#invite,,">Invite</a>
+			{% endif %}
+			<span class="flag"><a href="#flagIdea," class='flag-idea'>Flag as Inappropriate</a></span>
+		</div>
+		{% endif %}
+		<div class="note-card">
+			<div class="membrane">
+				{% if d.template_data and d.template_data.user %}
+					{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+					<a class="close remove-idea" href="#removeIdea,"><span>Close</span></a>
+					{% endif %}
+				{% endif %}
+				<cite class="note-meta-hd"><strong>
+					<a class='user-link' href="/useraccount/"></a>
+				</strong> said &mdash;</cite>
+				<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p class='idea-text'></p></blockquote>
+				<cite class="note-meta-ft">Posted <strong class="time-since"></strong> via <strong class='sub-type'></strong></cite>
+			</div>
+		</div>
+	</div>
+	
 </div>
 
 {% endblock continent %}
@@ -747,6 +797,8 @@ Change by Us NYC - Search Results
 					}
 				}
 				
+				out.find('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
+				
 				return out;
 			}
 		});
@@ -770,11 +822,22 @@ Change by Us NYC - Search Results
 					}
 					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.resource-cell').html());
 					
+					tempcell.find('.add-button').attr('href','#addProject,'+d.results[i].link_id);
+					if(d.results[i].image_id){
+						tempcell.find('img').attr('src','/images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
+					}
+					tempcell.find('.resource-tooltip_trigger').attr('rel','#organization,'+d.results[i].link_id);
+					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,28,'...'));
+					
 					temprow.append(tempcell);
 					if(i%3==1){
 						out.children('tbody').append(temprow);
 					}
 				}
+				
+				out.find('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
+				out.find('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
+				app.components.tooltips.add_trigger(out.find('.resource-tooltip_trigger'));
 				
 				return out;
 			}
@@ -789,21 +852,24 @@ Change by Us NYC - Search Results
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
-				out = tc.jQ('<table class="ideas-list triplewide clearfix">\
-					<tbody></tbody>\
-				</table>');
+				out = tc.jQ('<ul class="ideas-list clearfix"></ul>');
 				
 				for(i = 0; i < d.results.length; i++){
-					if(i%3==0){
-						temprow = tc.jQ('<tr></tr>');
-					}
-					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.idea-cell').html());
+					tempcell = tc.jQ('<li></li>').append(tc.jQ('.template-content.idea-cell').html());
 					
-					temprow.append(tempcell);
-					if(i%3==1){
-						out.children('tbody').append(temprow);
-					}
+					tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
+					tempcell.find('.flag-idea').attr('href','#flagIdea,'+d.results[i].idea_id);
+					tempcell.find('.remove-idea').attr('href','#removeIdea,'+d.results[i].idea_id);
+					tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+					tempcell.find('.idea-text').text(d.results[i].message);
+					tempcell.find('.time-since').text(d.results[i].created);
+					tempcell.find('.sub-type').text(d.results[i].submssion_type);
+					
+					out.append(tempcell);
 				}
+				
+				out.find('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
+				out.find('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
 				
 				return out;
 			}
@@ -860,155 +926,181 @@ Change by Us NYC - Search Results
 		
 		tc.gam.ideas_invite( app );
 		
-		tc.jQ('a.add-resource').bind('click',{
-			app:app,
-			source_element:tc.jQ('.modal-content.add-resource'),
-			init:function(modal,event_target,callback){
-				var modal_merlin;
-				modal_merlin = new tc.merlin(app,{
-					name:'add-resource',
-					dom:modal.options.element.find('.add-resource'),
-					next_button: tc.jQ('a.submit'),
-					first_step: 'add-resource-project-info',
-					data:{
-						project_id: null,
-						project_resource_id: null
-					},
-					steps:{
-						'add-resource-project-info':{
-							selector:'.add-resource-project-info',
-							next_step:'add-resource-submit',
-							inputs:{
-								project_radios:{
-									selector:'.project-radio',
-									vallidators:['required']
-								}
-							},
-							init: function(merlin, dom) {
-								var name;
+		
+		app.components.handlers = {
+			add_resource_data:{
+				app:app,
+				source_element:tc.jQ('.modal-content.add-resource'),
+				init:function(modal,event_target,callback){
+					var modal_merlin;
+					modal_merlin = new tc.merlin(app,{
+						name:'add-resource',
+						dom:modal.options.element.find('.add-resource'),
+						next_button: tc.jQ('a.submit'),
+						first_step: 'add-resource-project-info',
+						data:{
+							project_id: null,
+							project_resource_id: null
+						},
+						steps:{
+							'add-resource-project-info':{
+								selector:'.add-resource-project-info',
+								next_step:'add-resource-submit',
+								inputs:{
+									project_radios:{
+										selector:'.project-radio',
+										vallidators:['required']
+									}
+								},
+								init: function(merlin, dom) {
+									var name;
 								
-								dom.find('input[type=checkbox],input[type=radio]').prettyCheckboxes();
+									dom.find('input[type=checkbox],input[type=radio]').prettyCheckboxes();
 								
-								if(dom.find('.project-radio').length == 1){
-									dom.find('.project-radio').first().attr('checked',true);
-									//window.location.hash = 'add-resource,add-resource-submit';
-								}
+									if(dom.find('.project-radio').length == 1){
+										dom.find('.project-radio').first().attr('checked',true);
+										//window.location.hash = 'add-resource,add-resource-submit';
+									}
 							
+								},
+								finish: function(merlin, dom) {
+									if(merlin.current_step.inputs.project_radios.dom.filter(":checked").length){
+										merlin.options.data = tc.jQ.extend(merlin.options.data, {
+											project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
+											project_resource_id: event_target.hash.split(',')[1]
+										});
+									}
+								}
 							},
-							finish: function(merlin, dom) {
-								if(merlin.current_step.inputs.project_radios.dom.filter(":checked").length){
-									merlin.options.data = tc.jQ.extend(merlin.options.data, {
-										project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
-										project_resource_id: event_target.hash.split(',')[1]
+							'add-resource-submit':{
+								selector:'.add-resource-submit',
+								init: function(merlin, dom) {
+								
+								
+									tc.jQ.ajax({
+										type:"POST",
+										url:"/project/resource/add",
+										data:merlin.options.data,
+										context:merlin,
+										dataType:"text",
+										success: function(data, ts, xhr) {
+											//if (data == "False") {
+											//	return false;
+											//}
+											//tc.jQ(event_target).addClass("disabled").text("Added");
+											tc.jQ(event_target).parents('td').addClass('added');
+											tc.timer(1000, function() {
+												modal.hide();
+											});
+										}
 									});
 								}
 							}
-						},
-						'add-resource-submit':{
-							selector:'.add-resource-submit',
-							init: function(merlin, dom) {
-								
-								
-								tc.jQ.ajax({
-									type:"POST",
-									url:"/project/resource/add",
-									data:merlin.options.data,
-									context:merlin,
-									dataType:"text",
-									success: function(data, ts, xhr) {
-										//if (data == "False") {
-										//	return false;
-										//}
-										//tc.jQ(event_target).addClass("disabled").text("Added");
-										tc.jQ(event_target).parents('td').addClass('added');
-										tc.timer(1000, function() {
-											modal.hide();
-										});
-									}
-								});
-							}
-						}
-					}
-				});
-				if(tc.jQ.isFunction(callback)){
-					callback(modal);
-				}
-			}
-		},function(e,d){
-			e.preventDefault();
-			e.data.app.components.modal.show(e.data, e.target);
-		});
-		
-		tc.jQ('a.flag-idea').bind('click', {app:app}, function(e){
-			e.preventDefault();
-			tc.jQ.ajax({
-				type:"POST",
-				url:'/idea/flag',
-				data:{
-					idea_id:e.target.hash.split(',')[1]
-				},
-				context:tc.jQ(e.target),
-				dataType:"text",
-				success: function(data, ts, xhr) {
-					if (data == "False") {
-						return false;
-					}
-					this.parent().text('Flagged');
-				}
-			});
-		});
-		
-		tc.jQ('a.remove-idea').bind('click', {app:app}, function(e){
-			e.preventDefault();
-			var $t;
-			$t = tc.jQ(e.target);
-			e.data.app.components.modal.show({
-				app:e.data.app,
-				source_element:tc.jQ('.modal-content.remove-idea'),
-				submit:function(){
-					tc.jQ.ajax({
-						type:'POST',
-						url:'/idea/remove',
-						data:{
-							idea_id: e.target.hash.split(',')[1]
-						},
-						context:$t,
-						dataType:'text',
-						success:function(data,ts,xhr){
-							if(data == 'False'){
-								return false;
-							}
-							this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
-							this.parent().parent().parent().animate({
-								width:0
-							}, 400, 'easeOutCubic', function(e,d){
-								tc.jQ(this).hide();
-							}).remove();
-							tc.jQ('ul.ideas-list li').removeClass('every-third').filter(function(index) {
-					 			return index % 3 == 2;
-							}).addClass('every-third');
-							tc.jQ('ul.ideas-list li').eq(2).removeClass('hidden-result');
 						}
 					});
+					if(tc.jQ.isFunction(callback)){
+						callback(modal);
+					}
 				}
-			});
-		});
-		
-		tc.jQ('a.delete-resource').bind('click', {app:app}, function(e){
-			e.preventDefault();
-			var $t;
-			$t = tc.jQ(e.target);
-			e.data.app.components.modal.show({
+			},
+			add_resource_hander:function(e,d){
+				e.preventDefault();
+				e.data.app.components.modal.show(e.data, e.target);
+			},
+			flag_idea_handler:function(e){
+				e.preventDefault();
+				tc.jQ.ajax({
+					type:"POST",
+					url:'/idea/flag',
+					data:{
+						idea_id:e.target.hash.split(',')[1]
+					},
+					context:tc.jQ(e.target),
+					dataType:"text",
+					success: function(data, ts, xhr) {
+						if (data == "False") {
+							return false;
+						}
+						this.parent().text('Flagged');
+					}
+				});
+			},
+			remove_idea_handler:function(e){
+				e.preventDefault();
+				var $t;
+				$t = tc.jQ(e.target);
+				e.data.app.components.modal.show({
 					app:e.data.app,
-					source_element:tc.jQ('.modal-content.remove-resource'),
+					source_element:tc.jQ('.modal-content.remove-idea'),
 					submit:function(){
 						tc.jQ.ajax({
 							type:'POST',
-							url:'/admin/resource/delete',
+							url:'/idea/remove',
 							data:{
-								resource_id: e.target.hash.split(',')[1]
+								idea_id: e.target.hash.split(',')[1]
 							},
 							context:$t,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+								this.parent().parent().parent().animate({
+									width:0
+								}, 400, 'easeOutCubic', function(e,d){
+									tc.jQ(this).hide();
+								}).remove();
+								tc.jQ('ul.ideas-list li').removeClass('every-third').filter(function(index) {
+						 			return index % 3 == 2;
+								}).addClass('every-third');
+								tc.jQ('ul.ideas-list li').eq(2).removeClass('hidden-result');
+							}
+						});
+					}
+				});
+			},
+			delete_resource_handler:function(e){
+				e.preventDefault();
+				var $t;
+				$t = tc.jQ(e.target);
+				e.data.app.components.modal.show({
+						app:e.data.app,
+						source_element:tc.jQ('.modal-content.remove-resource'),
+						submit:function(){
+							tc.jQ.ajax({
+								type:'POST',
+								url:'/admin/resource/delete',
+								data:{
+									resource_id: e.target.hash.split(',')[1]
+								},
+								context:$t,
+								dataType:'text',
+								success:function(data,ts,xhr){
+									location.reload(true);
+								}
+							});
+						}
+					});
+			},
+			delete_project_handler:function(e,d){
+				var t;
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				e.data.app.components.modal.show({
+					app:app,
+					source_element:tc.jQ('.modal-content.project-delete'),
+					submit:function(modal,callback){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/project/delete',
+							data:{
+								project_id:t.hash.split(',')[1]
+							},
+							context:app,
 							dataType:'text',
 							success:function(data,ts,xhr){
 								location.reload(true);
@@ -1016,34 +1108,15 @@ Change by Us NYC - Search Results
 						});
 					}
 				});
-		});
-		
-		tc.jQ('a.delete-project').bind('click',{app:app},function(e,d){
-			var t;
-			e.preventDefault();
-			t = e.target;
-			if(t.nodeName == 'SPAN'){
-				t = t.parentNode;
 			}
-			e.data.app.components.modal.show({
-				app:app,
-				source_element:tc.jQ('.modal-content.project-delete'),
-				submit:function(modal,callback){
-					tc.jQ.ajax({
-						type:'POST',
-						url:'/admin/project/delete',
-						data:{
-							project_id:t.hash.split(',')[1]
-						},
-						context:app,
-						dataType:'text',
-						success:function(data,ts,xhr){
-							location.reload(true);
-						}
-					});
-				}
-			});
-		});
+		};
+		
+		
+		tc.jQ('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
+		tc.jQ('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
+		tc.jQ('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
+		tc.jQ('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
+		tc.jQ('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
 		
 		// turn location field autocomplete off
 		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
