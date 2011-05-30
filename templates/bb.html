@@ -83,6 +83,10 @@
 				<p><img src='/static/images/loader32x32.gif' /></p>
 			</div><!--end step-->
 			
+			<div class="step related-error">
+				<p>There was a problem finding related projects.</p>
+			</div><!--end step-->
+			
 			
 			<div class="step browse-projects">
 				<h1>Be part of the solution<br /><span class="unbold">Join one of the projects listed below or <a href="/">visit the full site</a> to start your own.</span></h1>
@@ -201,7 +205,7 @@
 		
 		<!-- TEMPLATE CONTENT -->
 		
-		<div class="template-content project">
+		<div class="template-content project"><!-- should be transformed into an LI -->
 			<span class="num"></span>
 			<span class="title"></span>
 			<span class="creator"><em>Created by </em><span></span></span>
@@ -238,7 +242,19 @@
 				{% else %}
 					tc.util.log("missing location data!!!!", "warn");
 					//TEMPORARY FALLBACK FOR DEV PURPOSES
-					app_page.data.locations = [{location_id:1, name:"Annadale"}, {location_id:2, name:"Arden Heights"}];
+					// should be removed once we have locations in the template data
+					app_page.data.locations = [
+						{location_id:1, name:"Annadale"}, 
+						{location_id:2, name:"Arden Heights"},
+						{location_id:3, name:"Arlington"},
+						{location_id:4, name:"Arrochar"},
+						{location_id:5, name:"Arverne"},
+						{location_id:6, name:"Astoria"},
+						{location_id:7, name:"Astoria Heights"},
+						{location_id:8, name:"Auburndale"},
+						{location_id:9, name:"Bath Beach"},
+						{location_id:10, name:"Battery Park City"}
+					];
 				{% endif %}
 				
 				
@@ -374,21 +390,31 @@
 							"related-processing": {
 								selector: ".step.related-procesing",
 								init: function(merlin, doom) {
-									$.ajax({
-										url: "/idea/related",
-										data: {
-											idea_id: merlin.options.data.idea_id,
-											n_limit: 10
-										},
-										context: merlin,
-										dataType: "json",
-										success: function(data, ts, xhr) {
-											if (data.citywide.length || data.related.length) {
-												this.options.steps["browse-projects"].data = data;
-												this.show_step("browse-projects");
+									if (!merlin.options.data.idea_id && merlin.options.data.idea !== 0) {
+										merlin.show_step("related-error");
+									} else {
+										$.ajax({
+											url: "/idea/related",
+											data: {
+												idea_id: merlin.options.data.idea_id,
+												n_limit: 10
+											},
+											context: merlin,
+											dataType: "json",
+											success: function(data, ts, xhr) {
+												if (data.citywide.length || data.related.length) {
+													this.options.steps["browse-projects"].data = data;
+													this.show_step("browse-projects");
+												}
 											}
-										}
-									});
+										});
+									}
+								}
+							},
+							"related-error": {
+								selector: ".step.related-error",
+								init: function(merlin, dom) {
+									window.scroll(0, 0);
 								}
 							},
 							"browse-projects": {
@@ -419,7 +445,12 @@
 									render_proj_group(merlin.current_step.data.related);
 									render_proj_group(merlin.current_step.data.citywide);
 									
-									dom.find(".proj-count").text(n_projects);
+									if (n_projects === 0) {
+										// TODO ==> explicitly handle case when no projects have been found
+										dom.find(".proj-count").text("0");
+									} else {
+										dom.find(".proj-count").text(n_projects);
+									}
 									
 									if (merlin.options.data.ref_project_id) {
 										try {
@@ -507,8 +538,8 @@
 							},
 							
 							
-							// TODO == this feature is not implemented
-							// but may need to be later on
+							// TODO ==> notifying user when they've been invited to a project 
+							// is not implemented, but may need to be later on
 							"invited-project": {
 								selector: ".step.invited-project",
 								init: function(merlin, dom) {
@@ -570,7 +601,7 @@
 											}
 											// if the user was prompted to login upon trying to join a project,
 											// return them to the project list
-											if (this.options.data.ref_project_id) {
+											if (this.options.data.ref_project_id || this.options.data.ref_project_id === 0) {
 												$userland.find(".login").hide();
 												$userland.find(".logout").show();
 												this.show_step("browse-projects");
