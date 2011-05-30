@@ -85,6 +85,8 @@ Change by Us NYC - Search Results
 									
 									
 										<li class='project-carousel-item clearfix loaded'>
+											{% if d.template_data.results.data.projects|length > 0 %}
+											
 											<table class="projects-list doublewide clearfix">
 												<tbody>
 													{% for project in d.template_data.results.data.projects %}
@@ -116,6 +118,17 @@ Change by Us NYC - Search Results
 													{% endfor %}
 												</tbody>
 											</table>
+											
+											{% else %}
+											
+											<div class="none-found-message clearfix">
+												<h2>There were <span class="counter">0</span> <strong>Projects</strong> found</h2>
+												{% if d.template_data and d.template_data.user %}
+												<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
+												{% endif %}
+											</div>
+											
+											{% endif %}
 										</li>
 									
 										<li class='project-carousel-item clearfix spinner-message'>
@@ -127,48 +140,6 @@ Change by Us NYC - Search Results
 								</ul>
 							</div>
 						</div>
-						
-						
-						{% if d.template_data.results.data.projects|length > 0 %}
-						<!-- <table class="projects-list doublewide clearfix">
-							<tbody>
-								{% for project in d.template_data.results.data.projects %}
-									{% if loop.index is odd %}
-									<tr class="{% if loop.index > 6 %}hidden-result {% endif %}{% if loop.index == 5 %}last-initial-row{% endif %}">
-									{% endif %}
-										<td>
-											{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-											<a class="close delete-project" href="#removeProject,{{ project.project_id }}"><span>Close</span></a>
-											{% endif %}
-											<div class="thumb">
-												{% if project.image_id > -1 %}
-												<a href="/project/{{ project.project_id }}"><img width='50' height='50' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/></a>
-												{% else %}
-												<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
-												{% endif %}
-												<span class="overlay-tag"></span>
-												<span class="member-count">{{ project.num_members }}</span>
-											</div>
-											<div class="project-info">
-												<span class="link"><a href="/project/{{ project.project_id }}">{{ project.title|truncate(50) }}</a></span>
-												<span class="creator"><em>Created by </em> <a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></span>
-												<span class="description"><a href="/project/{{ project.project_id }}">{{ project.description|truncate(70) }}</a></span>
-											</div>
-										</td>
-									{% if loop.index is even %}
-									</tr>
-									{% endif %}
-								{% endfor %}
-							</tbody>
-						</table> -->
-						{% endif %}
-						<div class="none-found-message clearfix">
-							<h2>There were <span class="counter">0</span> <strong>Projects</strong> found</h2>
-							{% if d.template_data and d.template_data.user %}
-							<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
-							{% endif %}
-						</div>
-						
 						
 					</div>
 					<div class="ft">
@@ -186,104 +157,179 @@ Change by Us NYC - Search Results
 				</div><!-- end results-box -->
 				
 				
+				
+				
 				<div class="box results-box results-resources clearfix {% if d.template_data.total_count.data.resources == 0 %}none-found{% endif %}">
+					
 					<div class="hd">
 						<h2><span class="counter">{{ d.template_data.total_count.data.resources }}</span> Resource{% if d.template_data.total_count.data.resources > 1 %}s{% endif %}</h2>
 						{% if d.template_data.total_count.data.resources > 6 %}
 						<span class="see-all-control control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
-					</div>
-					<div class="bd">		
-						{% if d.template_data.total_count.data.resources > 0 %}
-						<table class="resources-list triplewide clearfix">
-							<tbody>
-								{% for resource in d.template_data.results.data.resources %}
-									{% if loop.index % 3 == 1 %}
-									<tr class="{% if loop.index > 6 %}hidden-result {% endif %}{% if loop.index == 4 %}last-initial-row{% endif %}">
-									{% endif %}
-										<td>
-											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-												<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
-											{% endif %}
-											{% if resource.image_id > -1 %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
-											{% else %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-											{% endif %}
-											<span class="resource-name">
-												<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30, true) }}</span></a></span>
-												</span>
-											</span>
-											<div class="added-dialog">
-												<span class="added-header">Added <em>to</em> your project<br /></span>
-												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
-												<!-- <span class="added-close"></span> -->
-											</div>
-										</td>
-									{% if loop.index % 3 == 0 %}
-									</tr>
-									{% endif %}
-								{% endfor %}
-							</tbody>
-						</table>
-						{% endif %}
-						<div class="none-found-message clearfix">
-							<h2>There were <span class="counter">0</span> <strong>Resources</strong> found</h2>
-							<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
+						
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev resource-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<p>Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ d.template_data.total_count.data.resources // 6 }}</span></p>
+								<a class="next resource-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
 						</div>
+						
 					</div>
+					
+					<div class="bd">
+						
+						<div class="carousel resource">
+							<div class="scrollable">
+								<ul class="items">
+						
+									<li class='resource-carousel-item clearfix loaded'>
+										{% if d.template_data.total_count.data.resources > 0 %}
+										<table class="resources-list triplewide clearfix">
+											<tbody>
+												{% for resource in d.template_data.results.data.resources %}
+													{% if loop.index % 3 == 1 %}
+													<tr class="{% if loop.index > 6 %}hidden-result {% endif %}{% if loop.index == 4 %}last-initial-row{% endif %}">
+													{% endif %}
+														<td>
+															{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+																<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
+															{% endif %}
+															{% if resource.image_id > -1 %}
+																<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+															{% else %}
+																<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+															{% endif %}
+															<span class="resource-name">
+																<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+																	<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30, true) }}</span></a></span>
+																</span>
+															</span>
+															<div class="added-dialog">
+																<span class="added-header">Added <em>to</em> your project<br /></span>
+																<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+																<!-- <span class="added-close"></span> -->
+															</div>
+														</td>
+													{% if loop.index % 3 == 0 %}
+													</tr>
+													{% endif %}
+												{% endfor %}
+											</tbody>
+										</table>
+										{% else %}
+										<div class="none-found-message clearfix">
+											<h2>There were <span class="counter">0</span> <strong>Resources</strong> found</h2>
+											<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
+										</div>
+										{% endif %}
+									</li>
+									
+									<li class='resource-carousel-item clearfix spinner-message'>
+										<ul class="items warning-list-stack">
+											<li><p>Loading&hellip;</p></li>
+										</ul>
+									</li>
+									
+								</ul>
+							</div>
+						</div>
+						
+					</div>
+					
 					<div class="ft">
 						<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
+						
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev resource-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<p>Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ d.template_data.total_count.data.resources // 6 }}</span></p>
+								<a class="next resource-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
 					</div>
+					</div>
+				
 				</div><!-- end results-box -->
 				
 				
+				
+				
+				
+				
 				<div class="box results-box results-ideas clearfix {% if d.template_data.total_count.data.ideas == 0 %}none-found{% endif %}">
+					
 					<div class="hd">
 						<h2><span class="counter active">{{ d.template_data.total_count.data.ideas }}</span> Idea{% if d.template_data.total_count.data.ideas > 1 %}s{% endif %}</h2>
 						{% if d.template_data.total_count.data.ideas > 3 %}
 						<span class="see-all-control control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
-					</div>
-					<div class="bd">		
-						{% if d.template_data.total_count.data.ideas > 0 %}
-						<ul class="ideas-list clearfix">
-							{% for idea in d.template_data.results.data.ideas %}
-								<li class="{% if loop.index % 3 == 0  %}every-third {% endif %}{% if loop.index > 3 %}hidden-result{% endif %}">
-									{% if d.template_data and d.template_data.user %}
-									<div class="note-card-public-controls">
-										{% if d.template_data.user.data.projects|length > 0 %}
-											<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-										{% endif %}
-										<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
-									</div>
-									{% endif %}
-									<div class="note-card">
-										<div class="membrane">
-											{% if d.template_data and d.template_data.user %}
-												{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
-												<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
-												{% endif %}
-											{% endif %}
-											{% if idea.owner %}<cite class="note-meta-hd"><strong>
-												<a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a>
-											</strong> said &mdash;</cite>{% endif %}
-											<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p>{{ idea.message|truncate(165) }}</p></blockquote>
-											<cite class="note-meta-ft">Posted <strong class="time-since">{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
-										</div>
-									</div>
-								</li>
-							{% endfor %}
-						</ul>
-						{% endif %}
-						<div class="none-found-message clearfix">
-							<h2>There were <span class="counter">0</span> <strong>Ideas</strong> found</h2>
-							<a class="rounded-button small fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev idea-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<p>Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ d.template_data.total_count.data.ideas // 6 }}</span></p>
+								<a class="next idea-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
 						</div>
 					</div>
+					
+					<div class="bd">
+						
+						<div class="carousel idea">
+							<div class="scrollable">
+								<ul class="items">
+						
+									<li class='idea-carousel-item clearfix loaded'>
+										{% if d.template_data.total_count.data.ideas > 0 %}
+										<ul class="ideas-list clearfix">
+											{% for idea in d.template_data.results.data.ideas %}
+												<li class="{% if loop.index % 3 == 0  %}every-third {% endif %}{% if loop.index > 3 %}hidden-result{% endif %}">
+													{% if d.template_data and d.template_data.user %}
+													<div class="note-card-public-controls">
+														{% if d.template_data.user.data.projects|length > 0 %}
+															<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+														{% endif %}
+														<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+													</div>
+													{% endif %}
+													<div class="note-card">
+														<div class="membrane">
+															{% if d.template_data and d.template_data.user %}
+																{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+																<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+																{% endif %}
+															{% endif %}
+															{% if idea.owner %}<cite class="note-meta-hd"><strong>
+																<a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a>
+															</strong> said &mdash;</cite>{% endif %}
+															<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p>{{ idea.message|truncate(165) }}</p></blockquote>
+															<cite class="note-meta-ft">Posted <strong class="time-since">{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
+														</div>
+													</div>
+												</li>
+											{% endfor %}
+										</ul>
+										{% else %}
+										<div class="none-found-message clearfix">
+											<h2>There were <span class="counter">0</span> <strong>Ideas</strong> found</h2>
+											<a class="rounded-button small fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+										</div>
+										{% endif %}
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					
 					<div class="ft">
 						<a class="rounded-button small fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev idea-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<p>Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ d.template_data.total_count.data.ideas // 6 }}</span></p>
+								<a class="next idea-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
 					</div>
 				</div><!-- end results-box -->
 				
@@ -531,7 +577,7 @@ Change by Us NYC - Search Results
 			tc.jQ('.sidebar').children('.sidebar-item').removeClass('active');
 			tc.jQ('.sidebar').children('.'+theCat).addClass('active');
 			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
-			//tc.jQ('.results-'+theCat).addClass('single').find('.carousel').trigger('make-single');
+			tc.jQ('.results-'+theCat).addClass('single').find('.carousel').trigger('make-single');
 			tc.jQ('.results-box').not('.single').find('.carousel').trigger('make-multiple');
 		};
 		
@@ -570,6 +616,200 @@ Change by Us NYC - Search Results
 			list:tc.jQ('div.location-hood-list'),
 			locations:app.app_page.data.locations
 		});
+		
+		function build_carousel(app,name,data){
+			var mycarousel, data, fn;
+			
+			mycarousel = app.components[name+'_carousel'];
+			
+			if(mycarousel && mycarousel.carousel){
+				return;
+			}
+				
+			app.components[name+'_carousel'] = new tc.carousel({
+				element: tc.jQ("."+name+".carousel"),
+				next_button: tc.jQ('.'+name+'-carousel-next'),
+				prev_button: tc.jQ('.'+name+'-carousel-prev'),
+				scrollable: {
+					items: ".items",
+					speed: 300,
+					circular: false
+				}
+			});
+			
+			mycarousel = app.components[name+'_carousel'];
+			
+			
+			if(!mycarousel.carousel){
+				tc.jQ("."+name+".carousel").one('make-single make-multiple',{app:app},function(e){
+					build_carousel(e.data.app);
+				});
+				app.components[name+'_carousel'] = null;
+				mycarousel = null;
+			} else {
+				
+				app.components[name+'_carousel'].data = data;
+				
+				tc.jQ("."+name+".carousel").bind('make-single make-multiple',{app:app, carousel:mycarousel},function(e){
+					var target_height;
+					target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+					e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+				});
+				
+				mycarousel.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app, carousel:mycarousel}, function(e,d){
+					e.data.carousel.data.current_page = e.data.carousel.carousel.getItems().eq(e.data.carousel.carousel.getIndex());
+					e.data.carousel.get_element().parent().parent().find('.current_page_number').text(e.data.app.components.project_carousel.carousel.getIndex()+1);
+					
+					if(!e.data.carousel.data.current_page.hasClass('loaded')){
+						e.data.carousel.data.current_page.addClass('loaded');
+						tc.jQ.ajax({
+							type:"GET",
+							url:"/search/"+name+"s",
+							data:{ 
+								location_id: e.data.carousel.data.location_input.attr('location_id'),
+								terms: e.data.carousel.data.terms_input.val(),
+								n: e.data.carousel.data.n_to_fetch,
+								offset: e.data.carousel.data.offset
+							},
+							context:e.data.app,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								var d, target_height;
+								try {
+									d = tc.jQ.parseJSON(data);
+								} catch(e) {
+									tc.util.log("/search/"+name+"s: json parsing error", "warn");
+									return;
+								}
+								
+								e.data.carousel.data.current_page.removeClass('spinner-message').children().remove();
+								
+								if(!d.results.length && e.data.carousel.data.offset > 0){
+									e.data.carousel.data.current_page.remove();
+									return;
+								}
+								
+								e.data.carousel.data.offset += d.results.length;
+								
+								if(d.results.length == e.data.carousel.data.n_to_fetch){
+									e.data.carousel.carousel.addItem('\
+										<li class="project-carousel-item clearfix spinner-message">\
+											<ul class="items warning-list-stack">\
+												<li><p>Loading...</p></li>\
+											</ul>\
+										</li>');
+								}
+								
+								e.data.carousel.data.current_page.append(e.data.carousel.data.page_generator(d));
+								target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+								e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+							}
+						});
+					} else {
+						var target_height;
+						target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+					}
+					
+				});
+				mycarousel.carousel.begin();
+			}
+			
+		};
+		
+		build_carousel(app, 'project', {
+			current_section:null,
+			current_page:null,
+			n_to_fetch: 6,
+			offset:6,
+			location_input:tc.jQ('#location-hood-enter'),
+			terms_input:tc.jQ('input.search-terms'),
+			page_generator:function(d){
+				var out, i, temprow, tempcell;
+				out = tc.jQ('<table class="projects-list doublewide clearfix">\
+					<tbody></tbody>\
+				</table>');
+				
+				for(i = 0; i < d.results.length; i++){
+					if(i%2==0){
+						temprow = tc.jQ('<tr></tr>');
+					}
+					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.project-cell').html());
+					tempcell.find('.delete-project').attr('href','#removeProject,'+d.results[i].project_id);
+					tempcell.find('img');
+					tempcell.find('.member-count').text(d.results[i].num_members);
+					tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].title);
+					tempcell.find('.creator').children('a').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+					tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].description);
+					
+					temprow.append(tempcell);
+					if(i%2==1){
+						out.children('tbody').append(temprow);
+					}
+				}
+				
+				return out;
+			}
+		});
+		
+		build_carousel(app, 'resource', {
+			current_section:null,
+			current_page:null,
+			n_to_fetch: 6,
+			offset:6,
+			location_input:tc.jQ('#location-hood-enter'),
+			terms_input:tc.jQ('input.search-terms'),
+			page_generator:function(d){
+				var out, i, temprow, tempcell;
+				out = tc.jQ('<table class="resources-list triplewide clearfix">\
+					<tbody></tbody>\
+				</table>');
+				
+				for(i = 0; i < d.results.length; i++){
+					if(i%3==0){
+						temprow = tc.jQ('<tr></tr>');
+					}
+					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.resource-cell').html());
+					
+					temprow.append(tempcell);
+					if(i%3==1){
+						out.children('tbody').append(temprow);
+					}
+				}
+				
+				return out;
+			}
+		});
+		
+		build_carousel(app, 'idea', {
+			current_section:null,
+			current_page:null,
+			n_to_fetch: 6,
+			offset:6,
+			location_input:tc.jQ('#location-hood-enter'),
+			terms_input:tc.jQ('input.search-terms'),
+			page_generator:function(d){
+				var out, i, temprow, tempcell;
+				out = tc.jQ('<table class="ideas-list triplewide clearfix">\
+					<tbody></tbody>\
+				</table>');
+				
+				for(i = 0; i < d.results.length; i++){
+					if(i%3==0){
+						temprow = tc.jQ('<tr></tr>');
+					}
+					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.idea-cell').html());
+					
+					temprow.append(tempcell);
+					if(i%3==1){
+						out.children('tbody').append(temprow);
+					}
+				}
+				
+				return out;
+			}
+		});
+		
 		
 		app.components.merlin = new tc.merlin(app,{
 			dom:tc.jQ('.merlin'),
@@ -611,141 +851,6 @@ Change by Us NYC - Search Results
 				}
 			}
 		});
-		
-		
-		
-		function build_carousel(app){
-			var data, fn;
-			
-			if(app.components.project_carousel){
-				return;
-			}
-				
-			app.components.project_carousel = new tc.carousel({
-				element: tc.jQ(".project.carousel"),
-				next_button: tc.jQ('.project-carousel-next'),
-				prev_button: tc.jQ('.project-carousel-prev'),
-				scrollable: {
-					items: ".items",
-					speed: 300,
-					circular: false
-				}
-			});
-			
-			
-			if(!app.components.project_carousel.carousel){
-				tc.jQ(".project.carousel").one('make-single make-multiple',{app:app},function(e){
-					build_carousel(e.data.app);
-				});
-				app.components.project_carousel = null;
-			} else {
-				
-				app.components.project_carousel.data = {
-					current_section:null,
-					current_page:null,
-					n_to_fetch: 6,
-					offset:6,
-					temp_item_source:tc.jQ('.template-content.item-box-project-list'),
-					location_input:tc.jQ('#location-hood-enter'),
-					terms_input:tc.jQ('input.search-terms'),
-					page_generator:function(d){
-						var out, i, temprow, tempcell;
-						out = tc.jQ('<table class="projects-list doublewide clearfix">\
-							<tbody></tbody>\
-						</table>');
-						
-						for(i = 0; i < d.results.length; i++){
-							if(i%3==0){
-								temprow = tc.jQ('<tr></tr>');
-							}
-							tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.project-cell').html());
-							tempcell.find('.delete-project').attr('href','#removeProject,'+d.results[i].project_id);
-							tempcell.find('img');
-							tempcell.find('.member-count').text(d.results[i].num_members);
-							tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].title);
-							tempcell.find('.creator').children('a').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
-							tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].description);
-							
-							temprow.append(tempcell);
-							if(i%3==2){
-								out.children('tbody').append(temprow);
-							}
-						}
-						
-						return out;
-					}
-				};
-				
-				tc.jQ(".project.carousel").bind('make-single make-multiple',{app:app, carousel:app.components.project_carousel},function(e){
-					var target_height;
-					target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
-					e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
-				});
-				
-				app.components.project_carousel.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
-					e.data.app.components.project_carousel.data.current_page = e.data.app.components.project_carousel.carousel.getItems().eq(e.data.app.components.project_carousel.carousel.getIndex());
-					e.data.app.components.project_carousel.get_element().parent().parent().find('.current_page_number').text(e.data.app.components.project_carousel.carousel.getIndex()+1);
-					
-					if(!e.data.app.components.project_carousel.data.current_page.hasClass('loaded')){
-						e.data.app.components.project_carousel.data.current_page.addClass('loaded');
-						tc.jQ.ajax({
-							type:"GET",
-							url:"/search/projects",
-							data:{ 
-								location_id: app.components.project_carousel.data.location_input.attr('location_id'),
-								terms: app.components.project_carousel.data.terms_input.val(),
-								n: app.components.project_carousel.data.n_to_fetch,
-								offset: app.components.project_carousel.data.offset
-							},
-							context:e.data.app,
-							dataType:"text",
-							success: function(data, ts, xhr) {
-								var d;
-								try {
-									d = tc.jQ.parseJSON(data);
-								} catch(e) {
-									tc.util.log("/search/projects: json parsing error", "warn");
-									return;
-								}
-								
-								this.components.project_carousel.data.current_page.removeClass('spinner-message').children().remove();
-								
-								if(!d.results.length && this.components.project_carousel.data.offset > 0){
-									this.components.project_carousel.data.current_page.remove();
-									return;
-								}
-								
-								this.components.project_carousel.data.offset += d.results.length;
-								
-								if(d.results.length == this.components.project_carousel.data.n_to_fetch){
-									this.components.project_carousel.carousel.addItem('\
-										<li class="project-carousel-item clearfix spinner-message">\
-											<ul class="items warning-list-stack">\
-												<li><p>Loading...</p></li>\
-											</ul>\
-										</li>');
-								}
-								
-								this.components.project_carousel.data.current_page.append(this.components.project_carousel.data.page_generator(d));
-							}
-						});
-					} else {
-						var target_height;
-						target_height = tc.jQ(e.data.app.components.project_carousel.carousel.getItems()[e.data.app.components.project_carousel.carousel.getIndex()]).height()+'px';
-						e.data.app.components.project_carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
-					}
-				});
-			}
-			
-			app.components.project_carousel.carousel.begin();
-		};
-		
-		build_carousel(app);
-		
-		
-		
-		
-		
 		
 		app.components.tooltips = tc.resource_tooltip({
 			triggers: tc.jQ(".resource-tooltip_trigger"),
