@@ -46,8 +46,6 @@ tc.carousel.prototype.render = function() {
 		item = tc.jQ(this);
 		item.width(w);
 		item_height = item.outerHeight();
-		tc.util.dump(item);
-		tc.util.dump(item.outerHeight());
 		if (item_height > h) {
 			h = item_height;
 		}

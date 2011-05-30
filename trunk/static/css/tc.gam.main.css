@@ -1010,13 +1010,26 @@ PAGE-SPECIFIC STYLES
 .mission .our-mission textarea { width:268px; height:75px; }
 
 /* mission --> endorsements */
-.endorsements-stack { overflow:hidden; }
-.endorsements-stack > li { clear:left; margin:15px 0; padding:0 0 0 30px; min-height:30px; }
+.endorsements-stack { overflow:visible; }
+.endorsements-stack > li { clear:left; margin:15px 0; padding:0 0 0 30px; min-height:30px; position:relative; }
 .endorsements-stack > li:first-child { margin-top:0; }
 .endorsements-stack > li .thumb { float:left; margin:0 10px 0 0; }
 .endorsements-stack > li .thumb .overlay-tag { width:25px; height:25px; top:3px; left:-30px; background-image:url("../images/icon_yes.png"); }
 .endorsements-stack > li .main { overflow:hidden; font-size:11px; }
 .endorsements-stack > li .main cite { font-style:normal; }
+.endorsements-stack > li .close {
+	background: url("../images/control_close_7.png") no-repeat scroll center center transparent;
+	height: 7px;
+	left: -10px;
+	padding: 3px;
+	position: absolute;
+	top: 0px;
+	width: 7px;
+	z-index: 10001;
+}
+.endorsements-stack > li .close:hover {
+	background-color:#55504B;
+}
 
 .endorse-button { 
 	padding: 4px 12px; background-color: #e5e4e1; border: 1px solid #cccbc8; font-size: 19px; text-transform: uppercase; display: block;
@@ -1255,7 +1268,7 @@ div.continent.home .headlands .splash .top-pane.info div.console { float:none; w
 div.continent.home .headlands .splash .top-pane.info div.console span.after-idea-message { display: none; }
 div.continent.home .headlands .splash .top-pane div.console span.console-message { font-size: 38px; line-height: 40px; font-weight:bold; max-width: 550px; margin-bottom:5px; display: block;}
 	
-div.continent.home .headlands .splash .top-pane div.idea-input { float:right; margin-top: 11px;overflow:hidden;padding-right:116px;}
+div.continent.home .headlands .splash .top-pane div.idea-input { /*float:right;*/ margin-top: 11px;overflow:hidden;padding-right:116px;}
 div.continent.home .headlands .splash .top-pane div.idea-input textarea { float:none; width: 294px; min-height: 56px; }
 div.continent.home .headlands .splash .top-pane div.idea-input div.helpers a { font-size: 11px; line-height: 11px; font-weight: bold; color: #3d3a36; text-transform: uppercase; margin:0 8px; }
 div.continent.home .headlands .splash .top-pane div.idea-input div.primary-action { position: absolute; width:111px; height: 84px; /*top: 14px; right: 10px;*/ top:28px; right:30px; }
@@ -2052,7 +2065,7 @@ div.continent.search-results #list-view .sidebar .sidebar-item.active:hover { cu
 div.continent.search-results #list-view .sidebar .sidebar-item.active:hover span { text-decoration: none; cursor: default; color: #55504b }
 div.continent.search-results #list-view .results-box { clear: both; margin-bottom: 25px;}
 div.continent.search-results #list-view .results-box .bd { background-color: #fff; width: 805px; }
-div.continent.search-results #list-view .results-box .bd ul { padding: 20px; }
+/*div.continent.search-results #list-view .results-box .bd ul { padding: 20px; }*/
 div.continent.search-results #list-view .results-box .bd ul li { display: block; float: left; border-top: 1px solid #f5f4f0; border-right: 1px solid #f5f4f0; }
 div.continent.search-results #list-view .results-box .bd ul.ideas-list li { border: none; }
 div.continent.search-results #list-view .results-box .ft { margin-top: 8px; text-align:right; }
@@ -2114,9 +2127,16 @@ div.continent.search-results #list-view.resources table tr:last-child td { paddi
 div.continent.search-results #list-view.ideas .results-projects,
 div.continent.search-results #list-view.ideas .results-resources { display: none; }
 div.continent.search-results #list-view.ideas .results-ideas li.hidden-result { display: block;  }
-div.continent.search-results #list-view.projects .results-box .hd .control a,
-div.continent.search-results #list-view.resources .results-box .hd .control a,
-div.continent.search-results #list-view.ideas .results-box .hd .control a { visibility: hidden; }
+
+div.continent.search-results #list-view .results-box .pagination-controls { visibility: hidden; }
+
+div.continent.search-results #list-view.projects .results-box .hd .see-all-control,
+div.continent.search-results #list-view.resources .results-box .hd .see-all-control,
+div.continent.search-results #list-view.ideas .results-box .hd .see-all-control { visibility: hidden; }
+
+div.continent.search-results #list-view.projects .results-box .pagination-controls,
+div.continent.search-results #list-view.resources .results-box .pagination-controls,
+div.continent.search-results #list-view.ideas .results-box .pagination-controls { visibility: visible; }
 
 div.continent.search-results #map-view { margin-top: 38px; border-top: 1px solid #E5E5E3; }
 div.continent.search-results #map-view .map-results { width: 960px; margin-top: 15px; margin-bottom: 15px;}
