@@ -202,19 +202,6 @@
 		
 		
 		
-		
-		<!-- TEMPLATE CONTENT -->
-		
-		<div class="template-content project"><!-- should be transformed into an LI -->
-			<span class="num"></span>
-			<span class="title"></span>
-			<span class="creator"><em>Created by </em><span></span></span>
-			<span class="description"></span>
-			<input type="button" class="join" value="Join" />
-		</div>
-		
-		
-		
 		<!-- JS -->
 		
 		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>
@@ -424,64 +411,39 @@
 								data: {},
 								init: function(merlin, dom) {
 									var $list = dom.find("ol").eq(0).empty(), 
-									    $proj_temp = $(".template-content.project"),
 									    n_projects = 0,
-									    render_proj_group = function(data) {
-											$.each(data, function(i, d) {
-												var $proj;
-												n_projects += 1;
-												$proj = $("<li class='project'></li>").append($proj_temp.clone().children());
-											
-												$proj.attr("id", "project"+ d.project_id);
-												$proj.find(".num").text(n_projects +".");
-												$proj.find(".title").text(d.title);
-												$proj.find(".creator span").text(d.owner.name);
-												$proj.find(".description").text(d.description);
-												
-												$proj.find(".join").bind("click", {merlin: merlin, project: d}, 
-													merlin.current_step.join_click_handler);
-
-												$list.append($proj);
-											});
-										};
-										
-										
-										function buildListOldSchool(data) {
-											var buf;
+									    project_data = [],
+										// adding elements with string concatenation and innerHTML
+										// because jQuery .append() and .html() is breaking on Blackberry
+										render_proj_group = function(data) {
+											var buf
 											buf = "";
 											$.each(data, function(i, d) {
 												var proj;
 												n_projects += 1;
+												project_data.push(d);
 												proj = 
 													"<li class='project'>"+
 														"<span class='num'>"+ n_projects +".</span>"+
 														"<span class='title'>"+ d.title + "</span>"+
-														""
+														"<span class='creator'><em>Created by </em><span>"+ d.owner.name +"</span></span>"+
+														"<span class='description'>"+ d.description +"</span>"+
+														"<input type='button' class='join' value='Join' />"+
 													"</li>";
 												buf += proj;
 											});
 											
 											return buf;
-										}
-										
-										
-										<div class="template-content project"><!-- should be transformed into an LI -->
-											<span class="num"></span>
-											<span class="title"></span>
-											<span class="creator"><em>Created by </em><span></span></span>
-											<span class="description"></span>
-											<input type="button" class="join" value="Join" />
-										</div>
-										
-										
-										
-									
-									if (merlin.current_step.data.related.length) {
-										render_proj_group( merlin.current_step.data.related );
-									}
-									if (merlin.current_step.data.citywide.length) {
+										};
+								
+									$list[0].innerHTML =
+										render_proj_group( merlin.current_step.data.related ) + 
 										render_proj_group( merlin.current_step.data.citywide );
-									}
+										
+									$list.find(".join").each(function(i) {
+										$(this).bind("click", {merlin: merlin, project: project_data[i]},
+											merlin.current_step.join_click_handler);
+									});
 									
 									if (n_projects === 0) {
 										// TODO ==> explicitly handle case when no projects have been found
@@ -706,15 +668,6 @@
 			
 				$(function() {
 					tc.app(app_page);
-										
-					$("<div class='tester'>hello world</div>").appendTo("body");
-										
-					if ($(".tester").length) {
-						alert("ok");
-					} else {
-						alert("NOT OKAY");
-					}
-					
 				});
 			}(this, this.jQuery));
 		</script>
