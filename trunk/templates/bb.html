@@ -6,8 +6,8 @@
 		
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 		
-		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-		<link rel="stylesheet" href="/static/css/tc.gam.bb.css" type="text/css" media="screen" charset="utf-8" />
+		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/tc.gam.bb.css" type="text/css" media="screen" />
 	</head>
 	
 	<body class='earth'>
@@ -53,7 +53,7 @@
 			
 			
 			<div class="step location">
-				<h1>Where is your idea located?</span></h1>
+				<h1>Where is your idea located?</h1>
 				<form>
 					<div class="radio-buttons">
 						<span><input type="radio" id="location-city" class="location-city location-group" name="location-input" value="city" /><label for="location-city">The city</label></span>
@@ -72,7 +72,7 @@
 			
 			
 			<div class="step idea-processing">
-				<p><img src='/static/images/loader32x32.gif' /></p>
+				<p><img src='/static/images/loader32x32.gif' alt='' /></p>
 			</div><!--end step-->
 			
 			<div class="step idea-error">
@@ -80,7 +80,7 @@
 			</div><!--end step-->
 			
 			<div class="step related-processing">
-				<p><img src='/static/images/loader32x32.gif' /></p>
+				<p><img src='/static/images/loader32x32.gif' alt='' /></p>
 			</div><!--end step-->
 			
 			<div class="step related-error">
@@ -103,13 +103,13 @@
 					<span class="title"></span>
 					<span class="creator"><em>Created by </em><span></span></span>
 					<span class="description"></span>
-					<input type="button" id=" " class="submit project-1-join" name=" " value="Join" />
+					<input type="button" class="submit project-1-join" value="Join" />
 				</div>
 			</div><!--end step-->
 			
 			
 			<div class="step join-processing">
-				<p><img src='/static/images/loader32x32.gif' /></p>
+				<p><img src='/static/images/loader32x32.gif' alt='' /></p>
 			</div><!--end step-->
 			
 			
@@ -153,7 +153,7 @@
 			
 			
 			<div class="step login-processing">
-				<p><img src='/static/images/loader32x32.gif' /></p>
+				<p><img src='/static/images/loader32x32.gif' alt='' /></p>
 			</div><!--end step-->
 			
 			
@@ -163,7 +163,7 @@
 			
 			
 			<div class="step logout-processing">
-				<p><img src='/static/images/loader32x32.gif' /></p>
+				<p><img src='/static/images/loader32x32.gif' alt='' /></p>
 			</div><!--end step-->
 			
 			
@@ -413,9 +413,10 @@
 									var $list = dom.find("ol").eq(0).empty(), 
 									    n_projects = 0,
 									    project_data = [],
+									
 										// adding elements with string concatenation and innerHTML
 										// because jQuery .append() and .html() is breaking on Blackberry
-										render_proj_group = function(data) {
+										generate_proj_group = function(data) {
 											var buf
 											buf = "";
 											$.each(data, function(i, d) {
@@ -437,8 +438,8 @@
 										};
 								
 									$list[0].innerHTML =
-										render_proj_group( merlin.current_step.data.related ) + 
-										render_proj_group( merlin.current_step.data.citywide );
+										generate_proj_group( merlin.current_step.data.related ) + 
+										generate_proj_group( merlin.current_step.data.citywide );
 										
 									$list.find(".join").each(function(i) {
 										$(this).bind("click", {merlin: merlin, project: project_data[i]},
@@ -595,10 +596,15 @@
 										context: merlin,
 										dataType: "text",
 										success: function(data, ts, xhr) {
+											
+											// TODO ==> set app.app_page.user
+											// once this service returns a "user" object
+											
 											if (data === "False") {
 												this.show_step("login-error");
 												return false;
 											}
+											
 											// if the user was prompted to login upon trying to join a project,
 											// return them to the project list
 											if (this.options.data.ref_project_id || this.options.data.ref_project_id === 0) {
