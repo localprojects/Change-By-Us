@@ -53,25 +53,25 @@ Change by Us NYC - Search Results
 		<!-- LIST VIEW -->
 		<div id="list-view" class="step">
 			<div class="west sidebar">
-				<a class="sidebar-item all active" href="#all"><span>All</span><span class="counter">{{ d.template_data.results.data.projects|length + d.template_data.results.data.ideas|length + d.template_data.results.data.resources|length }}</span></a>
-				<a class="sidebar-item projects" href="#projects"><span>Projects</span><span class="counter">{{ d.template_data.results.data.projects|length }}</span></a>
-				<a class="sidebar-item resources" href="#resources"><span>Resources</span><span class="counter">{{ d.template_data.results.data.resources|length }}</span></a>
-				<a class="sidebar-item ideas" href="#ideas"><span>Ideas</span><span class="counter">{{ d.template_data.results.data.ideas|length }}</span></a>
+				<a class="sidebar-item all active" href="#all"><span>All</span><span class="counter">{{ d.template_data.total_count.data.projects + d.template_data.total_count.data.ideas + d.template_data.total_count.data.resources }}</span></a>
+				<a class="sidebar-item projects" href="#projects"><span>Projects</span><span class="counter">{{ d.template_data.total_count.data.projects }}</span></a>
+				<a class="sidebar-item resources" href="#resources"><span>Resources</span><span class="counter">{{ d.template_data.total_count.data.resources }}</span></a>
+				<a class="sidebar-item ideas" href="#ideas"><span>Ideas</span><span class="counter">{{ d.template_data.total_count.data.ideas }}</span></a>
 			</div>
 			<div class="east">
 				
 				
 				<div class="box results-box results-projects clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">{{ d.template_data.results.data.projects|length }}</span> Project{% if d.template_data.results.data.projects|length > 1 %}s{% endif %}</h2>
-						{% if d.template_data.results.data.projects|length > 6 %}
+						<h2><span class="counter">{{ d.template_data.total_count.data.projects }}</span> Project{% if d.template_data.total_count.data.projects > 1 %}s{% endif %}</h2>
+						{% if d.template_data.total_count.data.projects > 6 %}
 						<span class="control see-all-control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
 						
 						<div class="pagination-controls">
 							<span class="control">
 								<a class="prev project-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
-								<p>Page 1 of <span class='n_pages'>XX</span></p>
+								<p>Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ d.template_data.total_count.data.projects // 6 }}</span></p>
 								<a class="next project-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
 							</span>
 						</div>
@@ -178,7 +178,7 @@ Change by Us NYC - Search Results
 						<div class="pagination-controls">
 							<span class="control">
 								<a class="prev project-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
-								<p>Page 1 of <span class='n_pages'>XX</span></p>
+								<p>Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ d.template_data.total_count.data.projects // 6 }}</span></p>
 								<a class="next project-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
 							</span>
 						</div>
@@ -186,15 +186,15 @@ Change by Us NYC - Search Results
 				</div><!-- end results-box -->
 				
 				
-				<div class="box results-box results-resources clearfix {% if d.template_data.results.data.resources|length == 0 %}none-found{% endif %}">
+				<div class="box results-box results-resources clearfix {% if d.template_data.total_count.data.resources == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter">{{ d.template_data.results.data.resources|length }}</span> Resource{% if d.template_data.results.data.resources|length > 1 %}s{% endif %}</h2>
-						{% if d.template_data.results.data.resources|length > 6 %}
+						<h2><span class="counter">{{ d.template_data.total_count.data.resources }}</span> Resource{% if d.template_data.total_count.data.resources > 1 %}s{% endif %}</h2>
+						{% if d.template_data.total_count.data.resources > 6 %}
 						<span class="see-all-control control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
 					</div>
 					<div class="bd">		
-						{% if d.template_data.results.data.resources|length > 0 %}
+						{% if d.template_data.total_count.data.resources > 0 %}
 						<table class="resources-list triplewide clearfix">
 							<tbody>
 								{% for resource in d.template_data.results.data.resources %}
@@ -235,19 +235,19 @@ Change by Us NYC - Search Results
 					</div>
 					<div class="ft">
 						<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
-					</div>					
+					</div>
 				</div><!-- end results-box -->
 				
 				
-				<div class="box results-box results-ideas clearfix {% if d.template_data.results.data.ideas|length == 0 %}none-found{% endif %}">
+				<div class="box results-box results-ideas clearfix {% if d.template_data.total_count.data.ideas == 0 %}none-found{% endif %}">
 					<div class="hd">
-						<h2><span class="counter active">{{ d.template_data.results.data.ideas|length }}</span> Idea{% if d.template_data.results.data.ideas|length > 1 %}s{% endif %}</h2>
-						{% if d.template_data.results.data.ideas|length > 3 %}
+						<h2><span class="counter active">{{ d.template_data.total_count.data.ideas }}</span> Idea{% if d.template_data.total_count.data.ideas > 1 %}s{% endif %}</h2>
+						{% if d.template_data.total_count.data.ideas > 3 %}
 						<span class="see-all-control control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
 					</div>
 					<div class="bd">		
-						{% if d.template_data.results.data.ideas|length > 0 %}
+						{% if d.template_data.total_count.data.ideas > 0 %}
 						<ul class="ideas-list clearfix">
 							{% for idea in d.template_data.results.data.ideas %}
 								<li class="{% if loop.index % 3 == 0  %}every-third {% endif %}{% if loop.index > 3 %}hidden-result{% endif %}">
@@ -353,13 +353,13 @@ Change by Us NYC - Search Results
 				
 				<div class="box results-box results-resources">
 					<div class="hd">
-						<h2><span class="uncaps">Citywide</span> Resources <span class="counter">{{ d.template_data.results.data.resources|length }}</span></h2>
-						{% if d.template_data.results.data.resources|length > 0 %}
+						<h2><span class="uncaps">Citywide</span> Resources <span class="counter">{{ d.template_data.total_count.data.resources }}</span></h2>
+						{% if d.template_data.total_count.data.resources > 0 %}
 						<span class="control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
 						{% endif %}
 					</div>
 					<div class="bd">
-						{% if d.template_data.results.data.resources|length > 0 %}
+						{% if d.template_data.total_count.data.resources > 0 %}
 						<table class="resources-list clearfix">
 							<tbody>
 								<tr>
@@ -493,6 +493,23 @@ Change by Us NYC - Search Results
 		<a class='close' href="#"><span>close</span></a>
 	</div>
 	
+	<div class='template-content project-cell'>
+		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<a class="close delete-project" href="#removeProject,"><span>Close</span></a>
+		{% endif %}
+		
+		<div class="thumb">
+			<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+			<span class="overlay-tag"></span>
+			<span class="member-count"></span>
+		</div>
+		<div class="project-info">
+			<span class="link"><a href="/project/"></a></span>
+			<span class="creator"><em>Created by </em> <a href="/useraccount/"></a></span>
+			<span class="description"><a href="/project/"></a></span>
+		</div>
+	</div>
+	
 </div>
 
 {% endblock continent %}
@@ -617,26 +634,45 @@ Change by Us NYC - Search Results
 			
 			
 			if(!app.components.project_carousel.carousel){
-				
 				tc.jQ(".project.carousel").one('make-single make-multiple',{app:app},function(e){
-					tc.util.dump('yO YO YO')
 					build_carousel(e.data.app);
 				});
-				
 				app.components.project_carousel = null;
-				
 			} else {
 				
 				app.components.project_carousel.data = {
 					current_section:null,
 					current_page:null,
-					n_to_fetch: 10,
-					offset:10,
+					n_to_fetch: 6,
+					offset:6,
 					temp_item_source:tc.jQ('.template-content.item-box-project-list'),
 					location_input:tc.jQ('#location-hood-enter'),
 					terms_input:tc.jQ('input.search-terms'),
-					item_generator:function(d){
-					
+					page_generator:function(d){
+						var out, i, temprow, tempcell;
+						out = tc.jQ('<table class="projects-list doublewide clearfix">\
+							<tbody></tbody>\
+						</table>');
+						
+						for(i = 0; i < d.results.length; i++){
+							if(i%3==0){
+								temprow = tc.jQ('<tr></tr>');
+							}
+							tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.project-cell').html());
+							tempcell.find('.delete-project').attr('href','#removeProject,'+d.results[i].project_id);
+							tempcell.find('img');
+							tempcell.find('.member-count').text(d.results[i].num_members);
+							tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].title);
+							tempcell.find('.creator').children('a').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+							tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].description);
+							
+							temprow.append(tempcell);
+							if(i%3==2){
+								out.children('tbody').append(temprow);
+							}
+						}
+						
+						return out;
 					}
 				};
 				
@@ -648,8 +684,9 @@ Change by Us NYC - Search Results
 				
 				app.components.project_carousel.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
 					e.data.app.components.project_carousel.data.current_page = e.data.app.components.project_carousel.carousel.getItems().eq(e.data.app.components.project_carousel.carousel.getIndex());
+					e.data.app.components.project_carousel.get_element().parent().parent().find('.current_page_number').text(e.data.app.components.project_carousel.carousel.getIndex()+1)
+					
 					if(!e.data.app.components.project_carousel.data.current_page.hasClass('loaded')){
-						
 						e.data.app.components.project_carousel.data.current_page.addClass('loaded');
 						tc.jQ.ajax({
 							type:"GET",
@@ -670,23 +707,32 @@ Change by Us NYC - Search Results
 									tc.util.log("/search/projects: json parsing error", "warn");
 									return;
 								}
-								this.components.project_carousel.data.current_page.children('ul').children().remove();
-								if(!d.length && this.components.project_carousel.data.offset > 0){
+								
+								this.components.project_carousel.data.current_page.removeClass('spinner-message').children().remove();
+								
+								if(!d.results.length && this.components.project_carousel.data.offset > 0){
 									this.components.project_carousel.data.current_page.remove();
 									return;
-								} else if(!d.length){
-									this.components.project_carousel.data.current_page.children('ul').append('<li><p>No Projects.</p></li>');
 								}
-								if(d.length == this.components.project_carousel.data.n_to_fetch){
+								
+								this.components.project_carousel.data.offset += d.results.length;
+								
+								if(d.results.length == this.components.project_carousel.data.n_to_fetch){
 									this.components.project_carousel.carousel.addItem('\
-										<li class="flagged-content-carousel-item clearfix spinner-message">\
+										<li class="project-carousel-item clearfix spinner-message">\
 											<ul class="items warning-list-stack">\
 												<li><p>Loading...</p></li>\
 											</ul>\
 										</li>');
 								}
+								
+								this.components.project_carousel.data.current_page.append(this.components.project_carousel.data.page_generator(d));
 							}
 						});
+					} else {
+						var target_height;
+						target_height = tc.jQ(e.data.app.components.project_carousel.carousel.getItems()[e.data.app.components.project_carousel.carousel.getIndex()]).height()+'px';
+						e.data.app.components.project_carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 					}
 				});
 			}
