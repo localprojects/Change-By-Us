@@ -1,4 +1,5 @@
 import yaml, memcache, json
+from cgi import escape
 import helpers.custom_filters as custom_filters
 from lib.web.contrib.template import render_jinja
 from lib import web
@@ -6,6 +7,7 @@ from framework.log import log
 from framework.config import *
 from framework.session_holder import *
 from framework.task_manager import *
+import framework.util as util
 import giveaminute.user as mUser
 
 class Controller():
@@ -111,11 +113,14 @@ class Controller():
                 return None
         else:
             var = web.input()[var] if hasattr(web.input(), var) else None
-        if type(var) is basestring:
-            var = util.strip_html(var)
+            
+        if isinstance(var, basestring):
+            #var = util.strip_html(var)
+            var = escape(var)
             var = var.strip()
             if len(var) == 0: return None
             var = util.safeuni(var)
+        
         return var              
         
     def render(self, template_name, template_values=None, suffix="html"):
