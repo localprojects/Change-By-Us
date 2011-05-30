@@ -7,9 +7,15 @@ from framework.controller import *
 import json
 
 class Search(Controller):
-    def GET(self, action=None):
+    def GET(self, action = None):
         if action == 'map':
             return self.showMap()
+        elif (action == 'ideas'):
+            return self.searchIdeasJSON() 
+        elif (action == 'resources'):
+            return self.searchProjectResourcesJSON() 
+        elif (action == 'projects'):
+            return self.searchProjectsJSON() 
         else:
             return self.showSearch()   
                         
@@ -22,25 +28,25 @@ class Search(Controller):
         return self.render('map')
         
     def showSearch(self):
-        if (self.request('terms')):
-            terms = self.request('terms').split(',')
-        else:
-            terms = []
-            
+        terms = self.request('terms').split(',') if self.request('terms') else []
+        limit = int(self.request('n')) if self.request('n') else 6
+        offset = int(self.request('offset')) if self.request('offset') else 0
         locationId = self.request('location_id')
         
         self.template_data['search_terms'] = self.request('terms')
         self.template_data['search_location_id'] = locationId
         
-        log.info("*** search for '%s', %s" % (terms, locationId))
-        
-        projects = self.searchProjects(terms, locationId)
-        resources = self.searchProjectResources(terms, locationId)
-        ideas = self.searchIdeas(terms, locationId)
+        projects = self.searchProjects(terms, locationId, limit, offset)
+        resources = self.searchProjectResources(terms, locationId, limit, offset)
+        ideas = self.searchIdeas(terms, locationId, limit, offset)
         
         results = dict(projects = projects, resources = resources, ideas = ideas)
         
         self.template_data['results'] = dict(json = json.dumps(results), data = results)
+
+        total_count = dict(projects = 100, resources = 100, ideas = 100)
+
+        self.template_data['total_count'] = dict(json = json.dumps(total_count), data = total_count)
         
         locations_list = mLocation.getSimpleLocationDictionary(self.db)
         self.template_data['locations'] = dict(json = json.dumps(locations_list), data = locations_list)
@@ -77,24 +83,42 @@ class Search(Controller):
         score = numProjects + numIdeas + numResources
         
         return score 
-
-    ## DEBUG ONLY
-    def getDummyResources(self):
-        limit = 10
-        sql = "select project_resource_id as link_id, title, url, image_id from project_resource limit $limit"
-        data = list(self.db.query(sql, {'limit':limit}))
-                
-        return data
-    ## END DEBUG ONLY
-
-    def searchProjects(self, terms, locationId):
-        return mProject.searchProjects(self.db, terms, locationId)
         
-    def searchProjectResources(self, terms, locationId):
-        return mProjectResource.searchProjectResources(self.db, terms, locationId)
+    def searchProjectsJSON(self):
+        terms = self.request('terms').split(',') if self.request('terms') else []
+        limit = int(self.request('n')) if self.request('n') else 6
+        offset = int(self.request('offset')) if self.request('offset') else 0
+        locationId = self.request('location_id')
+    
+        return self.json({'results':mProject.searchProjects(self.db, terms, locationId, limit, offset),
+                          'total_count':100})
+        
+    def searchProjectResourcesJSON(self):
+        terms = self.request('terms').split(',') if self.request('terms') else []
+        limit = int(self.request('n')) if self.request('n') else 6
+        offset = int(self.request('offset')) if self.request('offset') else 0
+        locationId = self.request('location_id')
+        
+        return self.json({'results':mProjectResource.searchProjectResources(self.db, terms, locationId, limit, offset),
+                          'total_count':100})
 
-    def searchIdeas(self, terms, locationId):
-        return mIdea.searchIdeas(self.db, terms, locationId)
+    def searchIdeasJSON(self):
+        terms = self.request('terms').split(',') if self.request('terms') else []
+        limit = int(self.request('n')) if self.request('n') else 6
+        offset = int(self.request('offset')) if self.request('offset') else 0
+        locationId = self.request('location_id')
+        
+        return self.json({'results':mIdea.searchIdeas(self.db, terms, locationId, limit, offset),
+                          'total_count':100})
+
+    def searchProjects(self, terms, locationId, limit, offset):
+        return mProject.searchProjects(self.db, terms, locationId, limit, offset)
+        
+    def searchProjectResources(self, terms, locationId, limit, offset):
+        return mProjectResource.searchProjectResources(self.db, terms, locationId, limit, offset)
+
+    def searchIdeas(self, terms, locationId, limit, offset):
+        return mIdea.searchIdeas(self.db, terms, locationId, limit, offset)
 
             
             
