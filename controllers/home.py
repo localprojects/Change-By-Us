@@ -13,8 +13,6 @@ import oauth2 as oauth
 import urllib2
 import json
 import hashlib
-import feedparser
-import time
 
 tw_settings = Config.get('twitter')
 tw_consumer = oauth.Consumer(tw_settings['consumer_key'], tw_settings['consumer_secret'])
