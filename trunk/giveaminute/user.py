@@ -408,6 +408,24 @@ def authenticateUser(db, email, password):
     else:
         log.warning("*** No record for email= %s" % email)
         return None
+
+def authGetUser(db, email, password):
+    sql = "select user_id, first_name, last_name, image_id, email, password, salt from user where email = $email"
+    data = db.query(sql, {'email':email})
+    
+    if (len(data) > 0):
+        user = list(data)[0]
+        hashed_password = makePassword(password, user.salt)
+    
+        if (hashed_password[0] == user.password):
+            log.info("*** User authenticated")
+            return mProject.smallUser(user.user_id, user.first_name, user.last_name, user.image_id)
+        else:
+            log.warning("*** User not authenticated for email = %s" % email)
+            return None
+    else:
+        log.warning("*** No record for email= %s" % email)
+        return None
         
 def resetPassword(db, userId):
     forgetfulUser = User(db, userId)
