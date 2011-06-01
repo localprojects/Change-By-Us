@@ -489,15 +489,15 @@ class Project(Controller):
     
         project = mProject.Project(self.db, projectId)
         
-        return mProject.smallProject(project.id, 
-                                project.data.title, 
-                                project.data.description, 
-                                project.data.image_id, 
-                                project.data.num_members,
-                                project.data.owner_user_id, 
-                                project.data.owner_first_name, 
-                                project.data.owner_last_name, 
-                                project.data.owner_image_id)
+        return self.json(mProject.smallProject(project.id, 
+                                                project.data.title, 
+                                                project.data.description, 
+                                                project.data.image_id, 
+                                                project.data.num_members,
+                                                project.data.owner_user_id, 
+                                                project.data.owner_first_name, 
+                                                project.data.owner_last_name, 
+                                                project.data.owner_image_id))
                   
     def addKeywords(self):
         projectId = self.request('project_id')
