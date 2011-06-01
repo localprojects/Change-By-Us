@@ -31,6 +31,27 @@ class ProjectResource():
                     location_id = self.data.location_id)
         return data
 
+def searchProjectResourcesCount(db, terms, locationId):
+    count = 0
+    match = ' '.join([(item + "*") for item in terms])
+    
+    try:
+        sql = """select count(*) as count
+                from project_resource
+                    where
+                    is_active = 1 and is_hidden = 0
+                    and ($locationId is null or location_id = $locationId)
+                    and ($match = '' or match(title, description) against ($match in boolean mode))"""
+
+        data = list(db.query(sql, {'match':match, 'locationId':locationId}))
+        
+        count = data[0].count
+    except Exception, e:
+        log.info("*** couldn't get resources search data")
+        log.error(e)
+                
+    return count
+
 def searchProjectResources(db, terms, locationId, limit=1000, offset=0):
     data = []
 

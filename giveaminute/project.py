@@ -806,6 +806,28 @@ def getProjectsByUser(db, userId, limit = 100):
             
     return betterData
     
+def searchProjectsCount(db, terms, locationId):
+    count = 0
+    match = ' '.join([(item + "*") for item in terms])
+  
+    try:
+        sql = """select count(*) as count
+                    from project p
+                    where
+                    p.is_active = 1 
+                    and ($locationId is null or p.location_id = $locationId)
+                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))"""
+                    
+        data = list(db.query(sql, {'match':match, 'locationId':locationId}))
+        
+        count = data[0].count
+    except Exception, e:
+        log.info("*** couldn't get project search count")
+        log.error(e)
+        
+    return count
+
+
 # find projects by full text search and location id
 def searchProjects(db, terms, locationId, limit=1000, offset=0):
     betterData = []
