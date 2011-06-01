@@ -988,7 +988,7 @@ def getGoals(db, projectId):
     goals = []
     
     sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
-                  u.user_id, u.first_name, u.last_name, u.image_id
+                  u.user_id, u.first_name, u.last_name, u.image_id, g.created_datetime
             from project_goal g
             inner join user u on u.user_id = g.user_id 
             inner join project__user pu on pu.user_id = g.user_id and pu.project_id = g.project_id
