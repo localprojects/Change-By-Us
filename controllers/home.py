@@ -114,15 +114,16 @@ class Home(Controller):
         password = self.request("password")
         
         if (email and password):
-            userId = mUser.authenticateUser(self.db, email, password)
+            #userId = mUser.authenticateUser(self.db, email, password)
+            user = mUser.authGetUser(self.db, email, password)
                 
-            if (userId):        
-                self.session.user_id = userId
+            if (user):        
+                self.session.user_id = user['u_id']
                 self.session.invalidate()
                 # set cbu_key for blog access
-                web.setcookie('cbu_key', util.obfuscate(userId), domain = ".changeby.us")
+                web.setcookie('cbu_key', util.obfuscate(user['u_id']), domain = ".changeby.us")
                 
-                return userId
+                return self.json(user)
             else:
                 return False    
         else:
