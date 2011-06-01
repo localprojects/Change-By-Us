@@ -126,6 +126,26 @@ def emailTempPassword(email, password):
         log.info("*** couldn't send forgot password email")
         log.error(e)
         return False
+        
+# email unauthenticated users
+def emailUnauthenticatedUser(email, authGuid):
+    emailAccount = Config.get('email')
+    subject = "Please authenticate your account"
+    link = "%sjoin/auth/%s" % (Config.get('default_host'), authGuid)
+    body = Emailer.render('email/auth_user',
+                        {'link':link},
+                        suffix = 'txt')
+                        
+    try:
+        return Emailer.send(email, 
+                            subject, 
+                            body,
+                            from_name = emailAccount['from_name'],
+                            from_address = emailAccount['from_email'])  
+    except Exception, e:
+        log.info("*** couldn't send authenticate user email")
+        log.error(e)
+        return False
 
 ### SMS FUNCTIONS
         
