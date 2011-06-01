@@ -18,6 +18,8 @@ class Resource(Controller):
         
         
     def addResource(self):
+        if (self.request('main_text')): return False
+
         title = self.request('title')
         description = self.request('description')
         physical_address = self.request('physical_address')

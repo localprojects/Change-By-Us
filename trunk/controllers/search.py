@@ -27,7 +27,9 @@ class Search(Controller):
     
         return self.render('map')
         
-    def showSearch(self):
+    def showSearch(self):            
+        if (self.request('main_text')): return False
+    
         terms = self.request('terms').split(',') if self.request('terms') else []
         limit = int(self.request('n')) if self.request('n') else 6
         offset = int(self.request('offset')) if self.request('offset') else 0

@@ -292,6 +292,8 @@ class Project(Controller):
             return False
          
     def addLink(self):
+        if (self.request('main_text')): return False
+
         projectId = self.request('project_id')
         title = self.request('title')
         url = self.request('url')
@@ -434,6 +436,8 @@ class Project(Controller):
         return self.json(mProject.getGoals(self.db, projectId))
         
     def addMessage(self):
+        if (self.request('main_text')): return False
+
         projectId = self.request('project_id')
         message = self.request('message')
         

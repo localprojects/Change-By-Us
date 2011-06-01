@@ -32,6 +32,8 @@ class CreateProject(Controller):
             return self.newProject()  
         
     def newProject(self):
+        if (self.request('main_text')): return False
+
         if (self.user):
             owner_user_id = self.user.id
             title = self.request('title')
