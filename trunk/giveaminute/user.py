@@ -92,7 +92,7 @@ where u.user_id = $id and u.is_active = 1"""
             else:
                 return None
         except Exception, e:
-            log.info("*** couldn't get user into")
+            log.info("*** couldn't get user info user id %s" % self.id)
             log.error(e)
             return None
             
@@ -303,8 +303,8 @@ where u.user_id = $id and u.is_active = 1"""
                     
         
 def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
+    userId = None
     key = util.random_string(10)
-
     encrypted_password, salt = makePassword(password)
     
     try:
@@ -322,7 +322,48 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
     except Exception, e:
         log.info("*** problem creating user")
         log.error(e)    
-        return None
+        
+    return userId
+
+def createUserFromAuthGuid(db, authGuid):
+    userId = None
+
+    try:
+        sql = "select email, password, salt, phone, first_name, last_name from unauthenticated_user where auth_guid = $guid limit 1"
+        data = list(db.query(sql, {'guid':authGuid}))
+        
+        if (len(data) == 1):
+            userData = data[0]
+            userId = db.insert('user', email = userData.email, 
+                                        password = userData.password, 
+                                        salt = userData.salt, 
+                                        phone = userData.phone, 
+                                        first_name = userData.first_name, 
+                                        last_name = userData.last_name, 
+                                        created_datetime = None)
+    except Exception, e:
+        log.info("*** problem creating user from auth guid %s" % authGuid)
+        log.error(e)      
+    
+    return userId 
+
+def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
+    encrypted_password, salt = makePassword(password)
+    
+    try:
+        db.insert('unauthenticated_user', auth_guid=authGuid,
+                                    email=email, 
+                                    password=encrypted_password, 
+                                    salt=salt, 
+                                    phone=phone, 
+                                    first_name=firstName, 
+                                    last_name=lastName)
+        
+        return True                            
+    except Exception, e:
+        log.info("*** problem creating unauthenticated user record")
+        log.error(e)    
+        return False
         
     return userId
         
