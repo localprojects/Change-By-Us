@@ -137,7 +137,9 @@ class Join(Controller):
     
         return self.render('join', {'is_email_auth_attempt':True, 'is_email_auth_attempt_successful': isSuccess})
                 
-    def newUnauthenticatedUser(self):    
+    def newUnauthenticatedUser(self):  
+        if (self.request('main_text')): return False
+  
         firstName = self.request('f_name')
         lastName = self.request('l_name')
         email = self.request('email')

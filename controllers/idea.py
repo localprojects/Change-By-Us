@@ -21,6 +21,8 @@ class Idea(Controller):
             return self.newIdea()
         
     def newIdea(self):
+        if (self.request('main_text')): return False
+    
         description = self.request('text')
         locationId = util.try_f(int, self.request('location_id'), -1)
 
