@@ -36,15 +36,17 @@ class Search(Controller):
         self.template_data['search_terms'] = self.request('terms')
         self.template_data['search_location_id'] = locationId
         
-        projects = self.searchProjects(terms, locationId, limit, offset)
-        resources = self.searchProjectResources(terms, locationId, limit, offset)
-        ideas = self.searchIdeas(terms, locationId, limit, offset)
+        projects = mProject.searchProjects(self.db, terms, locationId, limit, offset)
+        resources = mProjectResource.searchProjectResources(self.db, terms, locationId, limit, offset)
+        ideas = mIdea.searchIdeas(self.db, terms, locationId, limit, offset)
         
         results = dict(projects = projects, resources = resources, ideas = ideas)
         
         self.template_data['results'] = dict(json = json.dumps(results), data = results)
 
-        total_count = dict(projects = 100, resources = 100, ideas = 100)
+        total_count = dict(projects = mProject.searchProjectsCount(self.db, terms, locationId), 
+                          resources = mProjectResource.searchProjectResourcesCount(self.db, terms, locationId), 
+                          ideas = mIdea.searchIdeasCount(self.db, terms, locationId))
 
         self.template_data['total_count'] = dict(json = json.dumps(total_count), data = total_count)
         
@@ -111,14 +113,6 @@ class Search(Controller):
         return self.json({'results':mIdea.searchIdeas(self.db, terms, locationId, limit, offset),
                           'total_count':100})
 
-    def searchProjects(self, terms, locationId, limit, offset):
-        return mProject.searchProjects(self.db, terms, locationId, limit, offset)
-        
-    def searchProjectResources(self, terms, locationId, limit, offset):
-        return mProjectResource.searchProjectResources(self.db, terms, locationId, limit, offset)
-
-    def searchIdeas(self, terms, locationId, limit, offset):
-        return mIdea.searchIdeas(self.db, terms, locationId, limit, offset)
 
             
             

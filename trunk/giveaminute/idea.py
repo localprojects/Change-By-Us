@@ -93,6 +93,28 @@ def findIdeasByPhone(db, phone):
         log.error(e)    
         return None
 
+def searchIdeasCount(db, terms, locationId, excludeProjectId = None):
+    count = 0
+    match = ' '.join([(item + "*") for item in terms])
+            
+    try:
+        sql = """select count(*) as count
+                from idea i
+                where
+                i.is_active = 1 
+                and ($locationId is null or i.location_id = $locationId)
+                and ($match = '' or match(i.description) against ($match in boolean mode))
+                and ($projectId is null or i.idea_id not in (select pi.idea_id from project__idea pi where pi.project_id = $projectId))"""  
+
+        data = list(db.query(sql, {'match':match, 'locationId':locationId, 'projectId':excludeProjectId}))
+        
+        count = data[0].count
+    except Exception, e:
+        log.info("*** couldn't get idea search count")
+        log.error(e)
+            
+    return count
+
 def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = None):
     betterData = []
     match = ' '.join([(item + "*") for item in terms])
