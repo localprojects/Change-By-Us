@@ -7,54 +7,86 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 		
-		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" charset="utf-8" />
-		<link rel="stylesheet" href="/static/css/tc.gam.mobile.css" type="text/css" media="screen" charset="utf-8" />
-		
-		<script type="text/javascript">
-			ipdConfig = {
-				baseUrl: '/static/js/libs/iphonedebug/client/', // trailing slash!
-				consoleBaseUrl: 'http://192.168.0.194:8170/' // trailing slash!
-			};
-		</script>
-		<script type="text/javascript" src="/static/js/libs/iphonedebug/client/ipd.js"></script>
-		
-		<script>
-			var app_page = {
-				data:{},
-				features:[]
-			};
-		</script>
+		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/static/css/tc.gam.mobile.css" type="text/css" media="screen" />
 		
 	</head>
 	
 	<body class='earth'>
-		
-		<div class='atmosphere'>
-			<div class='stratosphere'>
-				<ul class="clearfix">
-					<li class="home">
-						<a href="/mobile"><span>NYC SimpliCity | Change by Us NYC</span></a>
-					</li>
-					{% if d.template_data and d.template_data.user %}
-					<li class="userland">
-						<div class='logout'><a href='#mobile,logout'>Logout</a></div>
-					</li>
-					{% else %}
-					<li class="userland">
-						<div class='login'><a href='#mobile,login'>Login</a></div>
-						<div class="join"><a href='#mobile,join'>Join</a></div>
-					</li>
-					{% endif %}
-				</ul>
-			</div>
-		</div>
-		
-		<div class='continent'>
+		<div class='exosphere'>
 			
-			{% block continent %}Main{% endblock %}
+			<div class='atmosphere'>
+				<div class='stratosphere'>
+					<ul class="clearfix">
+						<li class="home">
+							<a href="/mobile"><span>NYC SimpliCity | Change by Us NYC</span></a>
+						</li>
+						<li class="userland">
+							<div class='logout' style="{% if d.template_data and d.template_data.user %}{% else %}display:none;{% endif %}">
+								<a href='#'>Logout</a>
+							</div>
+							<div class='login' style="{% if d.template_data and d.template_data.user %}display:none;{% endif %}">
+								<a href='#'>Login</a>
+							</div>
+							<div class="join" style="{% if d.template_data and d.template_data.user %}display:none;{% endif %}">
+								<a href='#'>Join</a>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div><!-- end .atmosphere -->
+		
+			{% block continent %}
+				Main
+			{% endblock %}
 			
-		</div>
+			<div class='seafloor'>
+				<div class="row">
+					<div class="west">
+						<a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml' target='_blank' class="simplicity"><img src='/static/images/footer-nycsimplicity2.png' alt='NYC Simplicity' /></a>
+					</div>
+					<div class="east">
+						<a href="/feedback" class="feedback-button rounded-button small" target="_blank">Contact Us</a>
+					</div>
+				</div>
+				<div class="row logos">
+					<div class="row nomb">
+						<a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
+						<a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
+						<a href='http://www.nyc.gov/html/planyc2030/html/home/home.shtml' target='_blank'><img src='/static/images/footer-planyc.png' alt='PLANYC' /></a>
+					</div>
+					<div class="row nomb">
+						<span class="supported-by fancy-caps">Supported <span>by</span></span>
+						<a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
+						<a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
+					</div>
+				</div>
+				<div class="west">
+					<div class="box">
+						<ul>
+							<li><a href='/about'>About Change by Us NYC</a></li>
+							<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
+							<li><a href='http://nycblog.changeby.us'>News</a></li>
+							<li><a href='/tou#community-policy'>Community Policy</a></li>
+							<li class="sitemap-tou"><a href='/tou'>Terms of Use</a></li>
+							<li><a href='/tou#privacy'>Privacy Policy</a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="east">
+					<div class='box'>
+						<p class="fancy-caps">Design <span>and</span> Development</p>
+						<p>&copy; 2011 <strong>Local Projects, LLC.</strong><br />All rights reserved.</p>
+					</div>
+					<div class='box'>
+						<p class="fancy-caps">Content <span>and</span> NYC Logo</p>
+						<p>&copy; 2011 <strong>Mayor's Fund to Advance the City of New York</strong><br />All rights reserved.</p>
+					</div>
+				</div>
+			</div><!-- end .seafloor -->
+		
+		</div><!-- end .exosphere -->
 		
 		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>
 		<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
@@ -66,65 +98,57 @@
 		<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
 		<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
 		
+		<script type="text/javascript">
+			var app_page = {
+				data:{},
+				features:[]
+			};
+			
+			{% if d.template_data and d.template_data.user %}
+				app_page.user = {{ d.template_data.user.json }}; 
+			{% endif %}
+			
+			{% if d.template_data and d.template_data.locations %} 
+				app_page.data.locations = {{ d.template_data.locations.json }}; 
+			{% endif %}
+			
+		</script>
+		
 		{% block page_js %}{% endblock %}
 		
 		<script type="text/javascript">
-			
-			// having an initial hash seems to be causing problems when loading the page on win 7
-			// (document.ready() not firing) -- clearing the hash appears to fix the issue
-			// though that is really bonkers. This needs to be revisited!
-			// -- LK
-			if (window.location.hash) {
-				//alert("has hash");
-				window.location.hash = "";
-			}
-			
-			tc.jQ(function(){
-				//alert("documenty.ready");
-				
-				{% if d.template_data and d.template_data.user %}
-					app_page.user = {{ d.template_data.user.json }}; 
-				{% else %} 
-					app_page.user = null; 
-				{% endif %}
-				
-				function handle_dimensions() {
-					var page_width, rmargin;
-					page_width = tc.jQ(window).width();
-					rmargin = 30;
-					tc.jQ(".stratosphere").width(page_width);
-					tc.jQ(".nav").width(page_width);
-					tc.jQ(".page").width(page_width - rmargin);
-				}
-				
-				tc.jQ("body").bind("orientationchange", function(e) {
-					
-					//tc.util.log("Orientation change!!");
-					//tc.util.dump(e);
-					
-					if (typeof window.orientation !== "undefined") {
-						
-						switch (Math.abs(window.orientation)) {
-							case 0: 
-								// when switching TO portrait mode:
-								// update the dimensions since the page width has decreased
-								handle_dimensions();
-								break;
-							case 90: // when switching TO landscape mode:
-								// do nothing
-								break;
+			(function(window, $) {
+				$(function() {
+					$(window).bind("orientationchange", function(e) {
+						if (typeof window.orientation !== "undefined") {
+							switch (Math.abs(window.orientation)) {
+								case 0: // portrait
+									
+									break;
 								
-							default:
-								//tc.util.log("unexpected orientation!", "warn");
-								//tc.util.dump(window.orientation);
-								break;
+								case 90: // landscape
+									
+									break;
+								
+								default:
+									break;
+							}
 						}
-					}
+					});
+					
+					$.ajaxSetup({
+						error: function(xhr, ts, err) {
+							tc.util.log("AJAX ERROR", "warn");
+							tc.util.log(ts, "warn");
+							if (err) {
+								tc.util.dump(err);
+							}
+						}
+					});
+					
+					tc.app(app_page);
 				});
-				
-				handle_dimensions();
-				tc.app(app_page);
-			});
+			}(this, this.jQuery));
 		</script>
 	</body>
 	
