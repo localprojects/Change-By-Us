@@ -28,6 +28,8 @@ class Home(Controller):
             return self.showHome()
         elif (action == 'mobile'):
             return self.showMobile()
+        elif (action == 'bb'):
+            return self.showMobile(isBlackBerry = True)
         elif (action == 'login'):
             return self.showLogin() 
         elif (action == 'login_twitter'):
@@ -44,8 +46,6 @@ class Home(Controller):
             return self.disconnect_facebook()
         elif (action == 'disconnect_twitter'):
             return self.disconnect_twitter()
-        elif (action == 'tempupload'):
-            return self.showTempUpload()
         elif (action == 'nyc'):
             self.redirect('http://nyc.changeby.us/')
         elif (action == 'beta'):
@@ -84,11 +84,14 @@ class Home(Controller):
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
-    def showMobile(self):
+    def showMobile(self, isBlackBerry = False):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
         locations = dict(data =locationData, json = json.dumps(locationData))
         self.template_data['locations'] = locations
-        return self.render('mobile')
+        
+        t = 'bb' if isBlackBerry else 'mobile'
+        
+        return self.render(t)
         
     def showLogin(self):
         if (not self.user):
