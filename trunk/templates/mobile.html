@@ -5,7 +5,7 @@
 	
 	<div class="nav">
 		<ul>
-			<li><a class="idea" href="#">Add an Idea</a></li>
+			<li><a class="idea current" href="#">Add an Idea</a></li>
 			<li><a class='join' href="#">Join a Project</a></li>
 		</ul>
 	</div>
@@ -619,14 +619,12 @@
 								context: merlin,
 								dataType: "text",
 								success: function(data, ts, xhr) {
-									
-									// TODO ==> set app.app_page.user
-									// once this service returns a "user" object
-									
 									if (data === "False") {
 										this.show_step("login-error");
 										return false;
 									}
+									
+									this.app.app_page.user = data;
 									
 									// if the user was prompted to login upon trying to join a project,
 									// return them to the project list
@@ -637,6 +635,7 @@
 										$userland.find(".login").hide();
 										$userland.find(".join").hide();
 										$userland.find(".logout").show();
+										//this.show_step("");
 										
 									} else {
 										window.location.reload(true);

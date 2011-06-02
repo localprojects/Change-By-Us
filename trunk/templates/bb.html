@@ -228,22 +228,6 @@
 				
 				{% if d.template_data and d.template_data.locations %} 
 					app_page.data.locations = {{ d.template_data.locations.json }}; 
-				{% else %}
-					tc.util.log("missing location data!!!!", "warn");
-					// TEMPORARY FALLBACK FOR DEV PURPOSES
-					// should be removed once we have locations in the template data
-					app_page.data.locations = [
-						{location_id:1, name:"Annadale"}, 
-						{location_id:2, name:"Arden Heights"},
-						{location_id:3, name:"Arlington"},
-						{location_id:4, name:"Arrochar"},
-						{location_id:5, name:"Arverne"},
-						{location_id:6, name:"Astoria"},
-						{location_id:7, name:"Astoria Heights"},
-						{location_id:8, name:"Auburndale"},
-						{location_id:9, name:"Bath Beach"},
-						{location_id:10, name:"Battery Park City"}
-					];
 				{% endif %}
 				
 				
@@ -596,14 +580,12 @@
 										context: merlin,
 										dataType: "text",
 										success: function(data, ts, xhr) {
-											
-											// TODO ==> set app.app_page.user
-											// once this service returns a "user" object
-											
 											if (data === "False") {
 												this.show_step("login-error");
 												return false;
 											}
+											
+											this.app.app_page.user = data;
 											
 											// if the user was prompted to login upon trying to join a project,
 											// return them to the project list
