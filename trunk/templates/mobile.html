@@ -117,7 +117,7 @@
 					<a class="prev" href="#"><span>back</span></a>
 					<a class="next" href="#"><span>next</span></a>
 				</div>
-				<p><span class="light">FOUND</span> <strong class='n_projects'>20</strong>&nbsp;projects</p>
+				<p><span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span></p>
 			</div>
 			<div class="row carousel">
 				
@@ -127,7 +127,7 @@
 						so that the carousel can be rendered initially,
 						This gets stripped out by the JS before filling the carousel
 						with items -->
-						<li></li>
+						<li><img src='/static/images/loader32x32.gif' alt='' /></li>
 					</ul>
 				</div>
 				
@@ -151,12 +151,12 @@
 					<a class="prev" href="#"><span>back</span></a>
 					<a class="next" href="#"><span>next</span></a>
 				</div>
-				<p><span class="light">FOUND</span> <strong class='n_projects'></strong>&nbsp;projects</p>
+				<p><span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span></p>
 			</div>
 			<div class="row carousel">
 				<div class="scrollable featured">
 					<ul class="projects-list clearfix items">
-						<li></li>
+						<li><img src='/static/images/loader32x32.gif' alt='' /></li>
 					</ul>
 				</div>
 				
@@ -201,12 +201,11 @@
 		<div class="detail-input">
 			<div class="row login-social">
 				<div class='social-login clearfix'>
-					<p class="mid-strong">LOGIN</p>
 					<a href='' class='login-facebook west'><span>Facebook</span></a>
 					<a href='' class='login-twitter west'><span>Twitter</span></a>
 				</div>
-				<span class="login-or">or</span>
 			</div>
+			<p class="mid-strong">LOGIN</p>
 			<div class="inputs">
 				<div class="row">
 					<label for='email'>Email Address</label>
@@ -304,7 +303,10 @@
 						location_id: null
 					},
 					idea_id: null,
-					ref_project_id: null
+					ref_project: {
+						id: null,
+						step: null
+					}
 				},
 				steps: {
 					"idea-start": {
@@ -450,6 +452,8 @@
 						init: function(merlin, dom) {
 							var scrollpane, n_projects;
 							
+							merlin.options.data.ref_project.step = "related-projects";
+							
 							window.scroll(0, 0);
 							merlin.app.components.merlin_nav.find("a").removeClass("current").filter(".join").addClass("current");
 							merlin.app.components.merlin_nav.show();
@@ -470,11 +474,16 @@
 							scrollpane.carousel.getItems().remove();
 							n_projects = 0;
 							
-							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.related, scrollpane.carousel);
-							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.citywide, scrollpane.carousel);
+							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.related, scrollpane);
+							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.citywide, scrollpane);
 							
-							dom.find(".n_projects").text( n_projects );
-							scrollpane.carousel.begin();
+							dom.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" );
+							
+							if (merlin.options.data.ref_project.id) {
+								merlin.options.seek_to_project(merlin.options.data.ref_project.id, scrollpane);
+							} else {
+								scrollpane.carousel.begin();
+							}
 						}
 					},
 					"featured-projects": {
@@ -482,6 +491,8 @@
 						scrollpane: null,
 						init: function(merlin, dom) {
 							var scrollpane;
+							
+							merlin.options.data.ref_project.step = "featured-projects";
 							
 							window.scroll(0, 0);
 							merlin.app.components.merlin_nav.find("a").removeClass("current").filter(".join").addClass("current");
@@ -509,8 +520,14 @@
 									success: function(data, ts, xhr) {
 										var n_projects;
 										scrollpane.carousel.getItems().remove();
-										n_projects = merlin.options.render_proj_group.call(this, data, scrollpane.carousel);
-										this.current_step.dom.find(".n_projects").text(n_projects);
+										n_projects = this.options.render_proj_group.call(this, data, scrollpane);
+										this.current_step.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" );
+										
+										if (this.options.data.ref_project.id) {
+											this.options.seek_to_project(this.options.data.ref_project.id, scrollpane);
+										} else {
+											scrollpane.carousel.begin();
+										}
 									}
 								});
 							}
@@ -524,7 +541,7 @@
 						init: function(merlin, dom) {
 							
 							if (!merlin.app.app_page.user) {
-								merlin.options.data.ref_project_id = merlin.current_step.data.project_id;
+								merlin.options.data.ref_project.id = merlin.current_step.data.project_id;
 								merlin.show_step("login");
 								return;
 							}
@@ -547,7 +564,6 @@
 									this.show_step("joined-project");
 								}
 							});
-							
 						}
 					},
 					"join-error": {
@@ -582,6 +598,9 @@
 									}
 									this.current_step.dom.find(".project-title").text( data.title );
 									this.current_step.dom.find("a").attr("href", "/project/"+ data.project_id);
+									
+									this.options.data.ref_project.id = null;
+									this.options.data.ref_project.step = null;
 								}
 							});
 							
@@ -627,15 +646,15 @@
 									this.app.app_page.user = data;
 									
 									// if the user was prompted to login upon trying to join a project,
-									// return them to the project list
-									if (this.options.data.ref_project_id || this.options.data.ref_project_id === 0) {
-										
-										// TODO
+									// return them to the corresponding project list step
+									if ((this.options.data.ref_project.id || this.options.data.ref_project.id === 0) && 
+									     this.options.data.ref_project.step) {
 										
 										$userland.find(".login").hide();
 										$userland.find(".join").hide();
 										$userland.find(".logout").show();
-										//this.show_step("");
+										
+										this.show_step(this.options.data.ref_project.step);
 										
 									} else {
 										window.location.reload(true);
@@ -647,7 +666,7 @@
 					"login-error": {
 						selector: ".step.login-error",
 						init: function(merlin, dom) {
-							
+
 						}
 					},
 					"logout": {
@@ -673,13 +692,13 @@
 						}
 					}
 				},
-				render_proj_group: function(data, carousel) {
+				render_proj_group: function(data, scrollpane) {
 					var merlin, n, root_width;
 					tc.util.log("merlin --> render_proj_group");
 					
 					merlin = this;
 					n = 0;
-					root_width = carousel.getRoot().width();
+					root_width = scrollpane.carousel.getRoot().width();
 					
 					$.each(data, function(i, d) {
 						var $proj;
@@ -694,7 +713,7 @@
 						merlin.options.fill_project_item(d, $proj);
 						
 						$proj.width(root_width);
-						carousel.addItem($proj);
+						scrollpane.carousel.addItem($proj);
 					});
 					return n;
 				},
@@ -708,6 +727,14 @@
 					$proj.find("a").attr("href", "/project/"+ data.project_id).text( data.title );
 					$proj.find(".description").text( data.description );
 					$proj.find(".owner").text( data.owner.name );
+				},
+				seek_to_project: function(id, scrolllpane) {
+					scrollpane.carousel.getItems().each(function(i) {
+						if ($(this).attr("id") === "project,"+ id) {
+							scrollpane.carousel.seekTo(i);
+							return false;
+						}
+					});
 				},
 				join_click_handler: function(e) {
 					var merlin, carousel;
