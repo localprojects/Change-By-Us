@@ -761,28 +761,7 @@ Change by Us NYC - Create a Project
 						dom.find('table.resources-list').children().remove();
 						dom.find('table.resources-list').append(tbody);
 						
-						//me.elements.resources_table.empty().append(tbody);
-						//me.elements.empty_box.hide();
-						//me.elements.resource_counter.text(d.resources.length);
-						//tc.resource_tooltip({
-						//	triggers: me.elements.resources_table.find(".tooltip_trigger"),
-						//	trigger_class:'tooltip_trigger',
-						//	markup_source_element:tc.jQ('#organization-markup-source'),
-						//	get_url: "/project/resource/info"
-						//});
-						
-						function addOfficialResourceTags(tableName) {
-							var officialResourceCells = tc.jQ(tableName + ' td.official-resource');
-							for(var i = 0; i < officialResourceCells.length; i++) {
-								var td = officialResourceCells.eq(i)
-								var tdPos = td.position();
-								var tdWidth = td.outerWidth();
-
-								td.parents('.resources-list').before('<div class="official-resource-tag" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
-								td.css({'padding-top' : '25px'});
-							};
-						};
-						addOfficialResourceTags('table.resources-list');
+						tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
 					}
 				},
 				'add-noresources':{
