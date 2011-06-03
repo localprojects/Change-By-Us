@@ -117,7 +117,9 @@
 					<a class="prev" href="#"><span>back</span></a>
 					<a class="next" href="#"><span>next</span></a>
 				</div>
-				<p><span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span></p>
+				<p class="found-projects">
+					<span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span>
+				</p>
 			</div>
 			<div class="row carousel">
 				
@@ -151,7 +153,9 @@
 					<a class="prev" href="#"><span>back</span></a>
 					<a class="next" href="#"><span>next</span></a>
 				</div>
-				<p><span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span></p>
+				<p class="found-projects">
+					<span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span>
+				</p>
 			</div>
 			<div class="row carousel">
 				<div class="scrollable featured">
@@ -202,7 +206,7 @@
 			<div class="row login-social">
 				<div class='social-login clearfix'>
 					<a href='' class='login-facebook west'><span>Facebook</span></a>
-					<a href='' class='login-twitter west'><span>Twitter</span></a>
+					<a href='/login_twitter' class='login-twitter west'><span>Twitter</span></a>
 				</div>
 			</div>
 			<p class="mid-strong">LOGIN</p>
@@ -214,7 +218,7 @@
 				<div class="row">
 					<label for='email'>Password</label>
 					<input value='' type='password' name='password' id='password' class='password' tabindex='2'/>
-					<p class="light">Forgot your password?</p>
+					<p class="light forgot-password"><a href="#">Forgot your password?</a></p>
 				</div>
 				<div class="row">
 					<p class="signup"><a href="/join">Click Here</a> to create a traditional login</p>
@@ -279,12 +283,99 @@
 {% block page_js %}
 <script type="text/javascript">
 	(function(window, $) {
-		var $userland;
-	
 		app_page.features.push(function(app) {
 			tc.util.log("!!!!!!!!!!!! Change By Us Mobile !!!!!!!!!!!!");
+
+			app.components.merlin_nav = (function() {
+				var $nav, tab;
+				
+				$nav = $(".continent .nav");
+				tab = {
+					idea: $nav.find(".idea"),
+					join: $nav.find(".join")
+				};
+				
+				tab.idea.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("idea-start");
+				});
+				tab.join.click(function(e) {
+					e.preventDefault();
+
+					// if we have already loaded related projects, go there,
+					// otherwise show the featured projects
+					if (app.components.merlin.options.steps["related-projects"].data) {
+						app.components.merlin.show_step("related-projects");
+					} else {
+						app.components.merlin.show_step("featured-projects");
+					}
+				});
+				
+				return {
+					displayIdeaTab: function() {
+						tab.join.removeClass("current");
+						tab.idea.addClass("current");
+						$nav.show();
+					},
+					displayJoinTab: function() {
+						tab.idea.removeClass("current");
+						tab.join.addClass("current");
+						$nav.show();
+					},
+					hide: function() {
+						$nav.hide();
+					}
+				};
+			}());
 			
-			app.components.merlin_nav = $(".continent .nav");
+			app.components.userland = (function() {
+				var $userland, btn; 
+				
+				$userland = $(".atmosphere .userland");
+				btn = {
+					login: $userland.find(".login a"),
+					signup: $userland.find(".join a"),
+					logout: $userland.find(".logout a")
+				};
+				
+				btn.login.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("login");
+				});
+				
+				btn.signup.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("signup");
+				});
+				
+				btn.logout.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("logout");
+				});
+				
+				return {
+					displayLoggedIn: function() {
+						btn.login.hide();
+						btn.signup.hide();
+						btn.logout.show();
+					},
+					displayLoggedOut: function() {
+						btn.login.show();
+						btn.signup.show();
+						btn.logout.hide();
+					},
+					activateLogin: function() {
+						btn.login.addClass("active");
+						btn.signup.removeClass("active");
+						app.components.merlin_nav.hide();
+					},
+					activateSignup: function() {
+						btn.signup.addClass("active");
+						btn.login.removeClass("active");
+						app.components.merlin_nav.hide();
+					}
+				};
+			}());
 		
 			app.components.merlin = new tc.merlin(app, {
 				use_hashchange: false,
@@ -324,8 +415,7 @@
 						},
 						init: function(merlin, dom) {
 							window.scroll(0, 0);
-							merlin.app.components.merlin_nav.find("a").removeClass("current").filter(".idea").addClass("current");
-							merlin.app.components.merlin_nav.show();
+							merlin.app.components.merlin_nav.displayIdeaTab();
 						},
 						finish: function(merlin, dom) {
 							merlin.options.data.idea.text = merlin.current_step.inputs.idea.dom.val();
@@ -455,8 +545,7 @@
 							merlin.options.data.ref_project.step = "related-projects";
 							
 							window.scroll(0, 0);
-							merlin.app.components.merlin_nav.find("a").removeClass("current").filter(".join").addClass("current");
-							merlin.app.components.merlin_nav.show();
+							merlin.app.components.merlin_nav.displayJoinTab();
 							
 							if (!merlin.current_step.scrollpane) {
 								merlin.current_step.scrollpane = new tc.carousel({
@@ -477,7 +566,7 @@
 							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.related, scrollpane);
 							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.citywide, scrollpane);
 							
-							dom.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" );
+							dom.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" ).parent().css("visibility", "visible");
 							
 							if (merlin.options.data.ref_project.id) {
 								merlin.options.seek_to_project(merlin.options.data.ref_project.id, scrollpane);
@@ -495,8 +584,7 @@
 							merlin.options.data.ref_project.step = "featured-projects";
 							
 							window.scroll(0, 0);
-							merlin.app.components.merlin_nav.find("a").removeClass("current").filter(".join").addClass("current");
-							merlin.app.components.merlin_nav.show();
+							merlin.app.components.merlin_nav.displayJoinTab();
 							
 							if (!merlin.current_step.scrollpane) {
 								merlin.current_step.scrollpane = new tc.carousel({
@@ -521,7 +609,7 @@
 										var n_projects;
 										scrollpane.carousel.getItems().remove();
 										n_projects = this.options.render_proj_group.call(this, data, scrollpane);
-										this.current_step.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" );
+										this.current_step.dom.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" ).parent().css("visibility", "visible");
 										
 										if (this.options.data.ref_project.id) {
 											this.options.seek_to_project(this.options.data.ref_project.id, scrollpane);
@@ -621,7 +709,7 @@
 						},
 						init: function(merlin, dom) {
 							window.scroll(0, 0);
-							merlin.app.components.merlin_nav.hide();
+							merlin.app.components.userland.activateLogin();
 						},
 						finish: function(merlin, dom) {
 							merlin.options.data.login.email = merlin.current_step.inputs.email.dom.val();
@@ -650,10 +738,7 @@
 									if ((this.options.data.ref_project.id || this.options.data.ref_project.id === 0) && 
 									     this.options.data.ref_project.step) {
 										
-										$userland.find(".login").hide();
-										$userland.find(".join").hide();
-										$userland.find(".logout").show();
-										
+										this.app.components.userland.displayLoggedIn();
 										this.show_step(this.options.data.ref_project.step);
 										
 									} else {
@@ -688,7 +773,7 @@
 						selector: ".step.signup",
 						init: function(merlin, dom) {
 							window.scroll(0,0);
-							merlin.app.components.merlin_nav.hide();
+							merlin.app.components.userland.activateSignup();
 						}
 					}
 				},
@@ -748,39 +833,6 @@
 						carousel.getItems().eq(carousel.getIndex()).attr("id").split(",")[1];
 					
 					merlin.show_step("join-processing");
-				}
-			});
-			
-			// HEADER LOGIN/LOGOUT
-			$userland = $(".atmosphere .userland");
-			$userland.find(".login a").click(function(e) {
-				e.preventDefault();
-				app.components.merlin.show_step("login");
-			});
-			$userland.find(".join a").click(function(e) {
-				e.preventDefault();
-				app.components.merlin.show_step("signup");
-			});
-			$userland.find(".logout a").click(function(e) {
-				e.preventDefault();
-				app.components.merlin.show_step("logout");
-			});
-			
-			// NAVIGATION
-			app.components.merlin_nav.find(".idea").bind("click", {merlin: app.components.merlin}, function(e) {
-				e.preventDefault();
-				e.data.merlin.show_step("idea-start");
-			});
-			app.components.merlin_nav.find(".join").bind("click", {merlin: app.components.merlin}, function(e) {
-				e.preventDefault();
-				
-				// if we have already loaded related projects, go there,
-				// otherwise show the featured projects
-				
-				if (e.data.merlin.options.steps["related-projects"].data) {
-					e.data.merlin.show_step("related-projects");
-				} else {
-					e.data.merlin.show_step("featured-projects");
 				}
 			});
 		
