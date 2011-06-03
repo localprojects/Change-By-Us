@@ -586,14 +586,14 @@ Change by Us NYC - Search Results
 		<div class="note-card">
 			<div class="membrane">
 				{% if d.template_data and d.template_data.user %}
-					{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+					{% if d.template_data.user.is_admin %}
 					<a class="close remove-idea" href="#removeIdea,"><span>Close</span></a>
 					{% endif %}
 				{% endif %}
 				<cite class="note-meta-hd"><strong>
 					<a class='user-link' href="/useraccount/"></a>
 				</strong> said &mdash;</cite>
-				<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p class='idea-text'></p></blockquote>
+				<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% endif %}<p class='idea-text'></p></blockquote>
 				<cite class="note-meta-ft">Posted <strong class="time-since"></strong> via <strong class='sub-type'></strong></cite>
 			</div>
 		</div>
@@ -780,6 +780,7 @@ Change by Us NYC - Search Results
 					tempcell.find('img');
 					tempcell.find('.member-count').text(d.results[i].num_members);
 					tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].title);
+					
 					tempcell.find('.creator').children('a').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
 					tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].description);
 					
@@ -849,10 +850,13 @@ Change by Us NYC - Search Results
 				for(i = 0; i < d.results.length; i++){
 					tempcell = tc.jQ('<li></li>').append(tc.jQ('.template-content.idea-cell').html());
 					
-					tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
+					if(d.results[i].owner){
+						tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
+						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+					}
 					tempcell.find('.flag-idea').attr('href','#flagIdea,'+d.results[i].idea_id);
 					tempcell.find('.remove-idea').attr('href','#removeIdea,'+d.results[i].idea_id);
-					tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+					
 					tempcell.find('.idea-text').text(d.results[i].message);
 					tempcell.find('.time-since').text(d.results[i].created);
 					tempcell.find('.sub-type').text(d.results[i].submssion_type);
