@@ -751,13 +751,11 @@ Change by Us NYC - CMS Content
 									if(d[i].image_id != -1 && d[i].image_id != 'null' && d[i].image_id){
 										tempitem.find('div.west').prepend('<img src="/images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
 									}
-									tempitem.find('div.west').append('<p><strong>'+d[i].location_name+'</strong></p>');
+									tempitem.find('div.west').append('<input type="checkbox" name="mark-official-checkbox-'+i+'" class="mark-official-checkbox" id="mark-official-checkbox-'+i+'" value="3" />');
+									tempitem.find('div.west').append('<label for="mark-official-checkbox-'+i+'">Official</label>');
+									
 									if(d[i].contact_name && d[i].contact_name.length) {  
 										tempitem.find('div.west').append('<p><strong>Name:</strong> '+d[i].contact_name+'</p>');
-									}
-									tempitem.find('div.west').append('<p><strong>Email:</strong> <a href="mailto:'+d[i].contact_email+'">'+tc.truncate(d[i].contact_email, 24)+'</a></p>');
-									if(d[i].url && d[i].url.length){
-										tempitem.find('div.west').append('<p><strong>URL:</strong> <a href="'+d[i].url+'" target="_blank">'+tc.truncate(d[i].url,24)+'</a></p>');
 									}
 									if(d[i].twitter_url && d[i].twitter_url.length){
 										tempitem.find('div.west').append('<p><a href="'+d[i].twitter_url+'" target="_blank">Twitter</a></p>');
@@ -765,12 +763,16 @@ Change by Us NYC - CMS Content
 									if(d[i].facebook_url && d[i].facebook_url.length){
 										tempitem.find('div.west').append('<p><a href="'+d[i].facebook_url+'" target="_blank">Facebook</a></p>');
 									}
+									if(d[i].url && d[i].url.length){
+										tempitem.find('div.mission').append('<h4>URL</h4>');
+										tempitem.find('div.mission').append("<span class='serif'><p><a href='"+d[i].url+"' target='_blank'>"+tc.truncate(d[i].url,24)+"</a></p></span>");
+									}
+									tempitem.find('div.mission').append('<h4>Email</h4>');
+									tempitem.find('div.mission').append("<span class='serif'><p><a href='mailto:"+d[i].contact_email+"'>"+tc.truncate(d[i].contact_email, 24)+"</a></p></span>");
 									
-									tempitem.find('div.mission').append('<h4>Physical Address</h4>');
-									tempitem.find('div.mission').append("<span class='serif'><p>"+d[i].physical_address+"</p></span>");
+									tempitem.find('div.mission').append("<div class='box half'><h4>Physical Address</h4><span class='serif'><p>"+d[i].physical_address+"<br /><strong>"+d[i].location_name+"</strong></p></span></div>");
 									
-									tempitem.find('div.mission').append('<h4>Keywords</h4>');
-									tempitem.find('div.mission').append("<span class='serif'><p>"+d[i].keywords+"</p></span>");
+									tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords+"</p></span></div>");
 									this.components.resources_pagination.data.offset++;
 									this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
 									itemsheight += (tempitem.height() + 30);
@@ -778,6 +780,7 @@ Change by Us NYC - CMS Content
 								this.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
 								this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
 								this.components.resources_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
+								this.components.resources_pagination.data.current_page.find('input[type=checkbox],input[type=radio]').not('.has-prettycheckbox').prettyCheckboxes();
 							}
 						});
 					} else {

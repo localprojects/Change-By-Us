@@ -94,7 +94,8 @@ tc.addOfficialResourceTags = function(dom){
 		var td = officialResourceCells.eq(i)
 		var tdPos = td.position();
 		var tdWidth = td.outerWidth();
-
+		
+		td.parents('table').parent().children('.official-resource-tag').remove();
 		td.parents('table').before('<div class="official-resource-tag" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
 		td.css({'padding-top' : '25px'});
 	};
