@@ -457,7 +457,7 @@ app_page.features.push(function(app){
 									tc.jQ(this).hide();
 								}).remove();
 								tc.jQ('ul.ideas-list li').removeClass('every-third').filter(function(index) {
-						 			return index % 3 == 2;
+									return index % 3 == 2;
 								}).addClass('every-third');
 								tc.jQ('ul.ideas-list li').eq(2).removeClass('hidden-result');
 							}
