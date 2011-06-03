@@ -105,7 +105,7 @@ app_page.features.push(function(app){
 							context:e.data.app,
 							dataType:"text",
 							success: function(data, ts, xhr) {
-								var d, target_height;
+								var d, target_height, dom;
 								try {
 									d = tc.jQ.parseJSON(data);
 								} catch(e) {
@@ -129,7 +129,11 @@ app_page.features.push(function(app){
 										</li>');
 								}
 								
-								e.data.carousel.data.current_page.append(e.data.carousel.data.page_generator(d));
+								dom = e.data.carousel.data.page_generator(d);
+								e.data.carousel.data.current_page.append(dom);
+								if(tc.jQ.isFunction(e.data.carousel.data.appended)){
+									e.data.carousel.data.appended(dom);
+								}
 								switch(name){
 									case 'idea':
 										target_height = '625';
@@ -217,8 +221,7 @@ app_page.features.push(function(app){
 					if(i%3==0){
 						temprow = tc.jQ('<tr></tr>');
 					}
-					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.resource-cell').html());
-					
+					tempcell = tc.jQ('<td class="' + (d.results[i].is_official ? "official-resource" : "") + '"></td>').append(tc.jQ('.template-content.resource-cell').html());
 					tempcell.find('.add-button').attr('href','#addProject,'+d.results[i].link_id);
 					if(d.results[i].image_id){
 						tempcell.find('img').attr('src','/images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
@@ -235,8 +238,10 @@ app_page.features.push(function(app){
 				out.find('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
 				out.find('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
 				app.components.tooltips.add_trigger(out.find('.resource-tooltip_trigger'));
-				
 				return out;
+			},
+			appended:function(dom){
+				tc.addOfficialResourceTags(dom);
 			}
 		});
 		
@@ -274,7 +279,6 @@ app_page.features.push(function(app){
 				out.find('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
 				out.find('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
 				tc.gam.ideas_invite(app, out.find('a.invite'));
-				
 				
 				return out;
 			}
@@ -516,7 +520,6 @@ app_page.features.push(function(app){
 			}
 		};
 		
-		
 		tc.jQ('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
 		tc.jQ('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
 		tc.jQ('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
@@ -532,19 +535,6 @@ app_page.features.push(function(app){
 			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
 		}
 		
-		// add 'official resource' tags to resources
-		function addOfficialResourceTags(tableName) {
-			var officialResourceCells = tc.jQ(tableName + ' td.official-resource');
-			for(var i = 0; i < officialResourceCells.length; i++) {
-				var td = officialResourceCells.eq(i)
-				var tdPos = td.position();
-				var tdWidth = td.outerWidth();
-
-				td.parents('.resources-list').before('<div class="official-resource-tag" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
-				td.css({'padding-top' : '25px'});
-			};
-		};
-		addOfficialResourceTags('table.resources-list');
-		
+		tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
 		
 	});

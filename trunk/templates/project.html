@@ -571,34 +571,8 @@ Change by Us NYC - Project
 			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
 		}
 		
-		// add 'official resource' tags to resources
-		function addOfficialResourceTags(tableName) {
-			var officialResourceCells = tc.jQ(tableName + ' td.official-resource');
-			for(var i = 0; i < officialResourceCells.length; i++) {
-				var td = officialResourceCells.eq(i)
-				var tdPos = td.position();
-				var tdWidth = td.outerWidth();
-			
-				td.parents('.resources-list').before('<div class="official-resource-tag" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
-				td.css({'padding-top' : '25px'});
-			};
-		};
-		
-	});
-	
 	// add 'official resource' tags to resources
-	function addOfficialResourceTags(tableName) {
-		var officialResourceCells = tc.jQ(tableName + ' td.official-resource');
-		for(var i = 0; i < officialResourceCells.length; i++) {
-			var td = officialResourceCells.eq(i)
-			var tdPos = td.position();
-			var tdWidth = td.outerWidth();
-	
-			td.parents('.resources-list').before('<div class="official-resource-tag" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
-			td.css({'padding-top' : '25px'});
-		};
-	};
-	addOfficialResourceTags('.box.resources .organizations table.resources-list');
+	tc.addOfficialResourceTags(tc.jQ('.box.resources .organizations table.resources-list'));
 </script>
 
 <script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>

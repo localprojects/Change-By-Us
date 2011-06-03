@@ -87,6 +87,19 @@ tc.animate_bg = function(ele, from, to) {
 		}
 };
 
+tc.addOfficialResourceTags = function(dom){
+	tc.util.log('tc.addOfficialResourceTags');
+	var officialResourceCells = dom.find('td.official-resource');
+	for(var i = 0; i < officialResourceCells.length; i++) {
+		var td = officialResourceCells.eq(i)
+		var tdPos = td.position();
+		var tdWidth = td.outerWidth();
+
+		td.parents('table').before('<div class="official-resource-tag" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
+		td.css({'padding-top' : '25px'});
+	};
+};
+
 tc.jQ.fn.time_since = function() {
 	return this.each(function() {
 		var me, raw;
