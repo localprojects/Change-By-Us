@@ -63,7 +63,7 @@
 									{% if goal.created_datetime %}
 										<div class="timestamp">
 											<strong>Added:</strong>
-											{{ goal.created_datetime }}
+											<span class="datetime">{{ goal.created_datetime }}</span>
 										</div>
 									{% endif %}
 								</div>
@@ -144,10 +144,10 @@
 				<dd class='owner-name'></dd>
 			</dl>
 			
-			<!--
 			<div class="timestamp">
 				<strong>Added:</strong>
-			</div>-->
+				<span class="datetime"></span>
+			</div>
 		</div>
 	</div>
 </div>
@@ -296,6 +296,10 @@
 			} else {
 				temphtml.find(".label-accomplished").remove();
 				temphtml.find('.control-accomplished a').attr("href", "#markAccomplished,"+data.goal_id);
+			}
+			
+			if (data.created_datetime) {
+				temphtml.find(".timestamp .datetime").text(data.created_datetime);
 			}
 			
 			temphtml.find('.goal-title').text(data.text);
