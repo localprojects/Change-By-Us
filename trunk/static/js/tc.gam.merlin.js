@@ -482,7 +482,7 @@ tc.merlin.prototype.handlers = {
 	},
 	keypress:function(e,d){
 		e.data.me.validate(false);
-		if(e.which == 13){
+		if(e.which == 13 && e.target.nodeName != 'TEXTAREA'){
 			if(e.data.me.options.next_button && e.data.me.options.next_button.hasClass('enabled')){
 				e.data.me.options.next_button.click();
 			}
