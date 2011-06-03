@@ -1,9 +1,9 @@
 if(!tc){ var tc = {}; }
 if(!tc.gam){ tc.gam = {}; }
 
-tc.gam.ideas_invite = function(app) {
+tc.gam.ideas_invite = function(app,elements) {
 	// Invite
-	tc.jQ('a.invite').bind('click',{
+	elements.bind('click',{
 		app:app,
 		source_element:tc.jQ('.modal-content.invite-user'),
 		init:function(modal,event_target,callback){
