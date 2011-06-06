@@ -223,3 +223,29 @@ def addInvitedIdeaToProject(db, projectId, userId):
         log.info("*** couldn't add invited idea(s) from user id %s to project %s" % (userId, projectId))
         log.error(e)
         return False
+        
+def getMostRecentIdeas(db, limit=100, offset=0):
+    data = []
+    betterData = []
+    
+    sql = """select i.idea_id, i.description as text, u.user_id, u.first_name as f_name, u.last_name as l_name, i.submission_type as submitted_by 
+            from idea i
+            left join user u on u.user_id = i.user_id
+            order by i.created_datetime desc
+            limit $limit offset $offset"""
+            
+    try:
+        data = list(db.query(sql, {'limit':limit, 'offset':offset}))
+    
+        for item in data:
+            betterData.append(dict(text = str(item.text),
+                        user_id = item.user_id,
+                        f_name = str(item.f_name) if item.f_name else '',
+                        l_name = str(item.l_name)[0] + '.' if item.l_name else '',
+                        submitted_by =  str(item.submitted_by)))   
+    
+    except Exception, e:
+        log.info("*** couldn't get most recent ideas")
+        log.error(e)    
+        
+    return betterData

@@ -711,101 +711,6 @@ def getProjectsByLocation(db, locationId, limit = 100):
         log.error(e)
         
     return data
-
-# find projects by keyword match
-def getProjectsByKeywords(db, keywords, limit = 100):
-    data = []
-    # there's a better way to do this
-    keywordClause = "%%' or p.keywords like '%%".join(keywords)
-    
-    try:
-        sql = """select p.project_id, 
-                        p.title, 
-                        p.description, 
-                        p.image_id, 
-                        p.location_id,
-                        o.user_id as owner_user_id,
-                        o.first_name as owner_first_name,
-                        o.last_name as owner_last_name,
-                        o.image_id as owner_image_id, 
-                    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
-                    from project p
-                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
-                    inner join user o on o.user_id = opu.user_id
-                    where p.is_active = 1 and (p.keywords like '%%%%%s%%%%')
-                    limit $limit""" % keywordClause
-        data = list(db.query(sql, {'limit':limit}))
-
-    except Exception, e:
-        log.info("*** couldn't get projects by keywords")
-        log.error(e)
-        
-    return data
-
-# find projects by keyword match and location id              
-def getProjects(db, keywords, locationId, limit = 100):
-    data = []
-    keywordClause = "%%' or p.keywords like '%%".join(keywords)
-    
-    try:
-        sql = """select p.project_id, 
-                        p.title, 
-                        p.description, 
-                        p.image_id, 
-                        p.location_id,
-                        o.user_id as owner_user_id,
-                        o.first_name as owner_first_name,
-                        o.last_name as owner_last_name,
-                        o.image_id as owner_image_id, 
-                    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
-                    from project p
-                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
-                    inner join user o on o.user_id = opu.user_id
-                    where p.is_active = 1 and (p.location_id = $locationId and (p.keywords like '%%%%%s%%%%'))
-                    limit $limit""" % keywordClause
-        data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
-    except Exception, e:
-        log.info("*** couldn't get projects")
-        log.error(e)
-            
-    return data
-
-# find project by user id        
-def getProjectsByUser(db, userId, limit = 100):
-    betterData = []
-
-    try:
-        sql = """select p.project_id, 
-                        p.title, 
-                        p.description, 
-                        p.image_id, 
-                        p.location_id,
-                        o.user_id as owner_user_id,
-                        o.first_name as owner_first_name,
-                        o.last_name as owner_last_name,
-                        o.image_id as owner_image_id, 
-                    (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
-                from project p
-                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
-                inner join user o on o.user_id = opu.user_id
-                inner join project__user pu on pu.user_id = $userId and pu.project_id = p.project_id
-                 where p.is_active = 1
-                 limit $limit"""
-        data = list(db.query(sql, {'userId':userId, 'limit':limit}))
-        
-        for item in data:
-            betterData.append(dict(project_id = item.project_id,
-                            title = item.title,
-                            description = item.description,
-                            image_id = item.image_id,
-                            location_id = item.location_id,
-                            owner = smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
-                            num_members = item.num_members))
-    except Exception, e:
-        log.info("*** couldn't get projects")
-        log.error(e)
-            
-    return betterData
     
 def searchProjectsCount(db, terms, locationId):
     count = 0
@@ -872,6 +777,36 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
         log.error(e)
         
     return betterData
+    
+def getLeaderboardProjects(db, limit = 10, offset = 0):
+    data = []
+    
+    try:
+        sql = """select @rownum := @rownum + 1 as ordinal, 
+                      p.title,
+                      p.project_id,
+                      p.image_id,
+                      u.first_name as owner_first_name,
+                      u.last_name as owner_last_name,
+                      u.user_id as owner_user_id,
+                      (select count(*) from project_goal pg where pg.project_id = p.project_id and pg.is_accomplished = 1 and pg.is_active)
+                        as goal_count,
+                      (select count(*) from project__user pu where pu.project_id = p.project_id)
+                        as user_count
+                from project p
+                inner join (select @rownum := 0) r
+                inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1
+                inner join user u on u.user_id = o.user_id and u.is_active = 1
+                where p.is_active = 1
+                order by (goal_count * 2) + (user_count * 5) desc
+                limit $limit offset $offset"""
+                
+        data = list(db.query(sql, {'limit':limit, 'offset':offset}))
+    except Exception, e:
+        log.info("*** couldn't get project leaderboard data")
+        log.error(e)
+        
+    return data    
         
 def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
     try:
