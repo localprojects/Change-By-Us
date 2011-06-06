@@ -53,6 +53,9 @@ app_page.features.push(function(app){
 							validators:['min-0']
 						}
 					},
+					init:function(merlin,dom){
+						tc.jQ('.note-card-submit-idea textarea').attr("disabled", false);
+					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
 							text:merlin.current_step.inputs.idea.dom.val(),
@@ -85,7 +88,7 @@ app_page.features.push(function(app){
 							idea_input:merlin.dom.find('.idea-input-inner-wrapper'),
 							cons:merlin.dom.find('.console'),
 							start:merlin.dom.find('.step-one'),
-							two:merlin.dom.find('.info-input')
+							two:merlin.dom.find('.step-info')
 						};
 						
 						elements.idea_input.css('height','93.2px').animate({
@@ -141,7 +144,15 @@ app_page.features.push(function(app){
 						};
 						if(app_page.data.user && app_page.data.user.email){
 							tc.jQ('#email').addClass('always-focused disabled').attr("disabled", true);
-						}
+						};
+						// temp stuff to make it look OK - IL
+						tc.jQ('.console .start').hide();
+						tc.jQ('.console .more-info').show();
+						tc.jQ('.top-pane').css('background-color', 'rgba(255, 255, 255, 0.7)');
+						tc.jQ('.note-card-submit-idea .charlimit').hide();
+						tc.jQ('.note-card-submit-idea textarea').attr("disabled", true);
+						// end temp stuff
+						
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
@@ -439,11 +450,11 @@ app_page.features.push(function(app){
 					hoverZindexCounter++;
 				}
 			).click(function(e) {
-				var me, href;
+				/*var me, href;
 				e.preventDefault();
 				me = tc.jQ(this);
 				href = me.parent().parent().children(".hd").find("a").eq(0).attr("href");
-				window.location.assign(href);
+				window.location.assign(href);*/
 			});
 			
 			tc.jQ(".projects-pane").mouseleave(function () {
