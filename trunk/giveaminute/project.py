@@ -229,13 +229,14 @@ def idea(id, description, userId, firstName, lastName, createdDatetime, submissi
                 created = str(createdDatetime),
                 submission_type = submissionType)
                 
-def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, firstName, lastName, imageId):
+def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, firstName, lastName, imageId, createdDatetime):
     return dict(goal_id = id,
                 text = description,
                 active = isFeatured,
                 accomplished = isAccomplished,
                 timeframe = "%s %s" % (str(time_n), time_unit),
-                owner = smallUser(userId, firstName, lastName, imageId))
+                owner = smallUser(userId, firstName, lastName, imageId),
+                created_datetime = str(createdDatetime))
                 
 ## END FORMATTING FUNCTIONS
                 
@@ -996,7 +997,6 @@ def getGoals(db, projectId):
             
     try:
         data = list(db.query(sql, {'id':projectId}))
-
     
         if len(data) > 0:
             for item in data:
@@ -1009,7 +1009,8 @@ def getGoals(db, projectId):
                                   item.user_id, 
                                   item.first_name, 
                                   item.last_name,
-                                  item.image_id))
+                                  item.image_id,
+                                  item.created_datetime))
     except Exception, e:
         log.info("*** couldn't get goals")
         log.error(e)                  
