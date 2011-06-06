@@ -50,7 +50,7 @@ app_page.features.push(function(app){
 						},
 						main_text:{
 							selector:'input.main_text',
-							validators:[]
+							validators:['min-0']
 						}
 					},
 					finish:function(merlin,dom){
@@ -79,7 +79,7 @@ app_page.features.push(function(app){
 						}
 					},
 					step_data:{},
-					transition:function(merlin,dom){
+					transition_no:function(merlin,dom){
 						var elements = {
 							pane:merlin.dom.find('.top-pane'),
 							idea_input:merlin.dom.find('.idea-input-inner-wrapper'),
@@ -154,7 +154,7 @@ app_page.features.push(function(app){
 					prev_step:'idea-details',
 					next_step:'related',
 					selector:'.idea-processing',
-					transition:function(merlin,dom){},
+					transition_no:function(merlin,dom){},
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							type:'POST',
@@ -180,7 +180,7 @@ app_page.features.push(function(app){
 					prev_step:'idea-details',
 					next_step:null,
 					//selector:'.related-processing',
-					transition:function(merlin,dom){
+					transition_no:function(merlin,dom){
 						merlin.dom.find('.grouping').hide();
 						var elements = {
 							hey:merlin.dom.parent().siblings('.hey'),
@@ -318,14 +318,14 @@ app_page.features.push(function(app){
 			var maxY = theArea.height() - 46;
 			
 			// shuffle note array order (adapted from http://jsfiddle.net/Tjirp/D288p)
-		    var l = smallNote.length, r, j, y, o;
-		    for (j = 0, y = l - 1; j < l; j++, y--) {
-		        r = Math.floor(Math.random() * (l - j));
-		        o = smallNote[r];
-		        smallNote[r] = smallNote[y];
-		        smallNote[y] = o;
-		    };
-
+			var l = smallNote.length, r, j, y, o;
+			for (j = 0, y = l - 1; j < l; j++, y--) {
+				r = Math.floor(Math.random() * (l - j));
+				o = smallNote[r];
+				smallNote[r] = smallNote[y];
+				smallNote[y] = o;
+			};
+			
 			// loops through and positions each small note; also adds bg
 			for(var i = 0; i < smallNote.length; i++) {
 				var thisNote = smallNote.eq(i);
