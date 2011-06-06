@@ -2,6 +2,7 @@ from framework.controller import *
 import giveaminute.location as mLocation
 import giveaminute.user as mUser
 import giveaminute.project as mProject
+import giveaminute.idea as mIdea
 import framework.util as util
 import lib.web
 #temp
@@ -26,6 +27,8 @@ class Home(Controller):
                                           
         if (not action or action == 'home'):
             return self.showHome()
+        elif (action == 'leaderboard'):
+            return self.showLeaderboard()
         elif (action == 'mobile'):
             return self.showMobile()
         elif (action == 'bb'):
@@ -71,19 +74,28 @@ class Home(Controller):
             
     def showHome(self):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
-        allIdeasData = self.getFeaturedProjectIdeas();
+        allIdeasData = mIdea.getMostRecentIdeas(self.db, 75);
 
         locations = dict(data = locationData, json = json.dumps(locationData))
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
         
         news = self.getNewsItems()
+        leaderboardProjects = mProject.getLeaderboardProjects(self.db, 6)
         
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
         self.template_data['news'] = news
+        self.template_data['leaderboard'] = leaderboardProjects
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
+    def showLeaderboard(self):
+        leaderboardProjects = mProject.getLeaderboardProjects(self.db, 10)
+    
+        self.template_data['leaderboard'] = leaderboardProjects
+        
+        return self.render('leaderboard')
+    
     def showMobile(self, isBlackBerry = False):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
         locations = dict(data =locationData, json = json.dumps(locationData))
@@ -391,47 +403,6 @@ class Home(Controller):
             log.error(e)
                         
         return data        
-        
-    def getFeaturedProjectIdeas(self):
-        data = []
-        
-        sql = """select p.project_id, p.title from project p
-                inner join featured_project fp on fp.project_id = p.project_id order by fp.ordinal"""
-        
-        featured = list(self.db.query(sql))
-        
-        for project in featured:
-            data.append(dict(project_id = str(project.project_id),
-                            title = str(project.title),
-                            ideas = self.getProjectIdeas(project.project_id, 30)))
-        
-        return data
-        
-    def getProjectIdeas(self, projectId, limit):
-        data = []
-        betterData = []
-        
-        sql = """select i.idea_id, i.description as text, u.user_id, u.first_name as f_name, u.last_name as l_name, i.submission_type as submitted_by 
-                from idea i
-                inner join project__idea pi on pi.idea_id = i.idea_id and pi.project_id = $id
-                left join user u on u.user_id = i.user_id
-                limit $limit"""
-                
-        try:
-            data = list(self.db.query(sql, {'id':projectId, 'limit':limit}))
-        
-            for item in data:
-                betterData.append(dict(text = str(item.text),
-                            user_id = item.user_id,
-                            f_name = str(item.f_name) if item.f_name else '',
-                            l_name = str(item.l_name)[0] + '.' if item.l_name else '',
-                            submitted_by =  str(item.submitted_by)))   
-        
-        except Exception, e:
-            log.info("*** couldn't get project ideas for home page")
-            log.error(e)    
-            
-        return betterData
                 
     def submitFeedback(self):
         name = self.request('name')
