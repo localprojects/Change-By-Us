@@ -60,12 +60,10 @@
 										<dd><a href='/useraccount/{{ goal.owner.u_id }}'>{{ goal.owner.name }}</a></dd>
 									</dl>
 									
-									{% if goal.created_datetime %}
-										<div class="timestamp">
-											<strong>Added:</strong>
-											<span class="datetime">{{ goal.created_datetime }}</span>
-										</div>
-									{% endif %}
+									<div class="timestamp">
+										<strong>Added:</strong>
+										<span class="datetime">{{ goal.created_datetime }}</span>
+									</div>
 								</div>
 							</div>
 						</li>
@@ -298,13 +296,11 @@
 				temphtml.find('.control-accomplished a').attr("href", "#markAccomplished,"+data.goal_id);
 			}
 			
-			if (data.created_datetime) {
-				temphtml.find(".timestamp .datetime").text(data.created_datetime);
-			}
-			
 			temphtml.find('.goal-title').text(data.text);
 			temphtml.find('.timeframe').text(data.timeframe);
 			temphtml.find('.owner-name').html("<a href='/useraccount/"+data.owner.u_id+"'>"+data.owner.name+"</a>");
+			temphtml.find(".timestamp .datetime").text(data.created_datetime);
+			
 			return temphtml;
 		};
 		
