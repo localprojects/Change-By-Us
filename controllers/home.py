@@ -385,7 +385,7 @@ class Home(Controller):
         feedUrl = "%s?feed=cbujson" % Config.get('blog_host')
 
         try:
-            data = json.load(urllib2.urlopen(feedUrl, timeout = 5))
+            data = json.load(urllib2.urlopen(feedUrl, timeout = 1))
         except Exception, e:
             log.info("*** couldn't get feed for news items at %s" % feedUrl)
             log.error(e)
