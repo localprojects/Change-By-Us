@@ -63,6 +63,8 @@ class Admin(Controller):
                     return self.getTagsCSV()
                 elif (param1 == 'project'):
                     return self.getProjectCSV()
+                elif (param1 == 'resource'):
+                    return self.getResourceCSV()
                 elif (param1 == 'user'):
                     return self.getUserCSV()
                 elif (param1 == 'location'):
@@ -351,6 +353,17 @@ class Admin(Controller):
             csv.append('"%s","%s","%s","%s","%s","%s"' % (item.title, item.num_users, item.num_ideas, item.num_resources, item.num_endorsements, len(item.keywords.split())))
         
         return self.csv('\n'.join(csv), "change_by_us.project.csv")
+        
+    def getResourceCSV(self):
+        data = mMetrics.getResourceCounts(self.db)
+        csv = []
+        
+        csv.append('"RESOURCE","DETAIL","NUM PROJECTS ADDED","DATE CREATED"')
+        
+        for item in data:
+            csv.append('"%s","%s","%s","%s"' % (item.title, item.description, item.project_count, item.created_datetime))
+        
+        return self.csv('\n'.join(csv), "change_by_us.resource.csv")
 
     def getUserCSV(self):
         data = mMetrics.getUserCounts(self.db)
@@ -373,7 +386,6 @@ class Admin(Controller):
             csv.append('"%s","%s","%s","%s","%s"' % (item.name, item.borough, item.num_projects, item.num_ideas, item.num_resources))            
         
         return self.csv('\n'.join(csv), "change_by_us.location.csv")
-    # END metrics methods
 
     def getSiteFeedbackCSV(self):
         csv = []
@@ -408,6 +420,7 @@ class Admin(Controller):
             log.error(e)
         
         return self.csv('\n'.join(csv), "change_by_us.beta_invite_requests.csv")
+    # END metrics methods
     
     def getAdminUsers(self):
         limit = util.try_f(int, self.request('n_users'), 10)

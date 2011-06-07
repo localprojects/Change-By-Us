@@ -55,6 +55,27 @@ def getProjectCounts(db):
         
     return data
     
+def getResourceCounts(db):
+    data = []
+    
+    try:
+        sql = """select r.project_resource_id,
+                       r.title, 
+                       r.description,
+                       r.created_datetime,
+                       (select count(*) from project__project_resource ppr
+                          inner join project p on p.project_id = ppr.project_id and p.is_active = 1
+                          where ppr.project_resource_id = r.project_resource_id) as project_count
+                from project_resource r
+                where r.is_active = 1 and is_hidden = 0
+                order by r.title"""
+        data = list(db.query(sql))
+    except Exception, e:
+        log.info("*** couldn't get resource counts")
+        log.error(e)
+        
+    return data
+    
 def getUserCounts(db):
     data = []
     
