@@ -1021,7 +1021,7 @@ def getLinks(db, projectId):
 def getResources(db, projectId):
     resources = []
     
-    sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id 
+    sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id, pr.is_official 
             from project_resource pr 
             inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id
             where pr.is_active = 1 and pr.is_hidden = 0"""

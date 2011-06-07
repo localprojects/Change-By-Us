@@ -7,7 +7,7 @@ class ProjectResource():
         self.data = self.populateResourceData()
         
     def populateResourceData(self):
-        sql = """select project_resource_id, title, description, url, contact_name, contact_email, image_id, location_id
+        sql = """select project_resource_id, title, description, url, contact_name, contact_email, image_id, location_id, is_official
                 from project_resource where project_resource_id = $id;"""
         
         try:
@@ -58,7 +58,7 @@ def searchProjectResources(db, terms, locationId, limit=1000, offset=0):
     match = ' '.join([(item + "*") for item in terms])
     
     try:
-        sql = """select project_resource_id as link_id, title, url, image_id 
+        sql = """select project_resource_id as link_id, title, url, image_id, is_official 
                 from project_resource
                     where
                     is_active = 1 and is_hidden = 0
@@ -73,59 +73,6 @@ def searchProjectResources(db, terms, locationId, limit=1000, offset=0):
         log.error(e)
                 
     return data
-        
-def getProjectResourcesByLocation(db, locationId, notInProjectId = None):
-    try:
-        sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 0 and pr.location_id = $locationId"""
-                    
-        if (notInProjectId):
-            sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
-                    
-        data = list(db.query(sql, {'locationId':locationId}))
-    
-        return data
-    except Exception, e:
-        log.info("*** couldn't get project resources by location")
-        log.error(e)
-        return None
-        
-def getProjectResourcesByKeywords(db, keywords, notInProjectId = None):
-    # there's a better way to do this
-    keywordClause = "%%' or pr.keywords like '%%".join(keywords)
-    
-    try:
-        sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 0 and (pr.keywords like '%%%%%s%%%%')""" % keywordClause
-
-        if (notInProjectId):
-            sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
-
-        data = list(db.query(sql))
-    
-        return data
-    except Exception, e:
-        log.info("*** couldn't get project resources by keywords")
-        log.error(e)
-        return None        
-        
-def getProjectResources(db, keywords, locationId, notInProjectId = None):
-    keywordClause = "%%' or pr.keywords like '%%".join(keywords)
-    
-    try:
-        sql = """select pr.project_resource_id, pr.title, pr.description, pr.image_id, pr.location_id, pr.url 
-                    from project_resource pr where pr.is_active = 1 and pr.is_hidden = 0 and (location_id = $locationId and (pr.keywords like '%%%%%s%%%%'))""" % keywordClause
-
-        if (notInProjectId):
-            sql += " and pr.project_resource_id not in (select project_resource_id from project__project_resource where project_id = %s)" % notInProjectId
-
-        data = list(db.query(sql, {'locationId':locationId}))
-    
-        return data
-    except Exception, e:
-        log.info("*** couldn't get projects by keywords")
-        log.error(e)
-        return None
         
 def updateProjectResourceImage(db, projectResourceId, imageId):
     try:
@@ -165,9 +112,9 @@ def getUnreviewedProjectResources(db, limit = 10, offset = 0):
         
     return data
     
-def approveProjectResource(db, projectResourceId):
+def approveProjectResource(db, projectResourceId, isOfficial = False):
     try:
-        db.update('project_resource', where = "project_resource_id = $projectResourceId", is_hidden = 0, vars = {'projectResourceId':projectResourceId})
+        db.update('project_resource', where = "project_resource_id = $projectResourceId", is_hidden = 0, is_official = isOfficial, vars = {'projectResourceId':projectResourceId})
         return True
     except Exception, e:
         log.info("*** couldn't approve project resource %s" % projectResourceId)
