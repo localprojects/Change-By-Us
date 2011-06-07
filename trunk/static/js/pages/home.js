@@ -328,15 +328,6 @@ app_page.features.push(function(app){
 			var maxX = theArea.width() - 45;
 			var maxY = theArea.height() - 46;
 			
-			// shuffle note array order (adapted from http://jsfiddle.net/Tjirp/D288p)
-			var l = smallNote.length, r, j, y, o;
-			for (j = 0, y = l - 1; j < l; j++, y--) {
-				r = Math.floor(Math.random() * (l - j));
-				o = smallNote[r];
-				smallNote[r] = smallNote[y];
-				smallNote[y] = o;
-			};
-			
 			// loops through and positions each small note; also adds bg
 			for(var i = 0; i < smallNote.length; i++) {
 				var thisNote = smallNote.eq(i);
@@ -362,15 +353,17 @@ app_page.features.push(function(app){
 			
 				// background image
 				var bgImgClass;
+				var bgImgColor = Math.floor(Math.random()*5);
 				var bgImgCounter = i%3 + 1;
 				
 				if (bgImgCounter == 1 && i%2 == 0) { bgImgCounter++ }; // makes style 1 of the small notes less common
 				
-				if      (thisNote.hasClass('1')) { bgImgClass = "a" + bgImgCounter }
-				else if (thisNote.hasClass('2')) { bgImgClass = "b" + bgImgCounter }
-				else if (thisNote.hasClass('3')) { bgImgClass = "c" + bgImgCounter }
-				else if (thisNote.hasClass('4')) { bgImgClass = "d" + bgImgCounter }
-				else							 { bgImgClass = "e" + bgImgCounter };
+				
+				if      (bgImgColor == 0) { bgImgClass = "a" + bgImgCounter; thisNote.addClass('color1') }
+				else if (bgImgColor == 1) { bgImgClass = "b" + bgImgCounter; thisNote.addClass('color2') }
+				else if (bgImgColor == 2) { bgImgClass = "c" + bgImgCounter; thisNote.addClass('color3') }
+				else if (bgImgColor == 3) { bgImgClass = "d" + bgImgCounter; thisNote.addClass('color4') }
+				else					  { bgImgClass = "e" + bgImgCounter; thisNote.addClass('color5') };
 				
 				// set style
 				thisNote.addClass(bgImgClass).css({'display' : 'block', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex});
@@ -410,11 +403,11 @@ app_page.features.push(function(app){
 					if (ideaInputIsEmpty == true) {
 						var colorNum;
 
-						if      (thisNote.hasClass('1')) { colorNum = 1 }
-						else if (thisNote.hasClass('2')) { colorNum = 2 }
-						else if (thisNote.hasClass('3')) { colorNum = 3 }
-						else if (thisNote.hasClass('4')) { colorNum = 4 }
-						else							 { colorNum = 5 };
+						if      (thisNote.hasClass('color1')) { colorNum = 1 }
+						else if (thisNote.hasClass('color2')) { colorNum = 2 }
+						else if (thisNote.hasClass('color3')) { colorNum = 3 }
+						else if (thisNote.hasClass('color4')) { colorNum = 4 }
+						else							 	  { colorNum = 5 };
 
 						var theContents = $(this).find('div').html();			
 
@@ -449,13 +442,7 @@ app_page.features.push(function(app){
 					}
 					hoverZindexCounter++;
 				}
-			).click(function(e) {
-				/*var me, href;
-				e.preventDefault();
-				me = tc.jQ(this);
-				href = me.parent().parent().children(".hd").find("a").eq(0).attr("href");
-				window.location.assign(href);*/
-			});
+			);
 			
 			tc.jQ(".projects-pane").mouseleave(function () {
 				if (ideaInputIsEmpty == true) {
