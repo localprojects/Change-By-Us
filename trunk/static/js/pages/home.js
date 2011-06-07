@@ -195,7 +195,7 @@ app_page.features.push(function(app){
 						elements.submit_button.animate({
 							left:'500px'
 						},1200, 'easeOutCubic',function(){
-							elements.submit_button.hide();dfsdfs
+							elements.submit_button.hide();
 						});
 						
 						elements.bkg.animate({
