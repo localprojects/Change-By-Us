@@ -712,6 +712,43 @@ def getProjectsByLocation(db, locationId, limit = 100):
         
     return data
     
+# find project by user id        
+def getProjectsByUser(db, userId, limit = 100):
+    betterData = []
+
+    try:
+        sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
+                from project p
+                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                inner join user o on o.user_id = opu.user_id
+                inner join project__user pu on pu.user_id = $userId and pu.project_id = p.project_id
+                 where p.is_active = 1
+                 limit $limit"""
+        data = list(db.query(sql, {'userId':userId, 'limit':limit}))
+        
+        for item in data:
+            betterData.append(dict(project_id = item.project_id,
+                            title = item.title,
+                            description = item.description,
+                            image_id = item.image_id,
+                            location_id = item.location_id,
+                            owner = smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                            num_members = item.num_members))
+    except Exception, e:
+        log.info("*** couldn't get projects")
+        log.error(e)
+            
+    return betterData
+    
 def searchProjectsCount(db, terms, locationId):
     count = 0
     match = ' '.join([(item + "*") for item in terms])
