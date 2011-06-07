@@ -289,7 +289,7 @@ tc.merlin.prototype.show_step = function(step,force){
 	
 	if(tc.jQ.isFunction(this.current_step.transition)){
 		this.current_step.transition(this);
-	}else if(this.magic){
+	} else if(this.magic){
 		this.magic.show_step(this.current_step);
 	} else if(this.dom && !this.magic){
 		this.dom.find('.step').hide();

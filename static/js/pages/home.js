@@ -67,7 +67,7 @@ app_page.features.push(function(app){
 					prev_step:'start',
 					force_prev_step:'start',
 					next_step:'idea-processing',
-					selector:'.step-two',
+					selector:'.step-info',
 					inputs:{
 						email:{
 							selector:'input.email',
@@ -82,55 +82,47 @@ app_page.features.push(function(app){
 						}
 					},
 					step_data:{},
-					transition_no:function(merlin,dom){
-						var elements = {
-							pane:merlin.dom.find('.top-pane'),
-							idea_input:merlin.dom.find('.idea-input-inner-wrapper'),
-							cons:merlin.dom.find('.console'),
-							start:merlin.dom.find('.step-one'),
-							two:merlin.dom.find('.step-info')
+					
+					transition:function(merlin,dom){
+						var i, elements, phases;
+						
+						elements = {
+							question:merlin.dom.find('.question-wrap')
 						};
 						
-						elements.idea_input.css('height','93.2px').animate({
-							width:'0px',
-							opacity:0
-						},400,'easeOutCubic',function(){
-							//tc.jQ(this).hide();
+						elements.question.animate({
+							opacity:0.0,
+							width:'0px'
+						},600,'easeOutQuint',function(){
+							elements.question.hide();
 							
-							elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
+							elements.pane = merlin.dom.find('.top-pane');
+							elements.counter = merlin.dom.find('.note-card-submit-idea .charlimit');
+							elements.textarea = merlin.dom.find('.note-card-submit-idea textarea');
+							elements.more_info = merlin.dom.find('.more-info');
+							elements.step_info = merlin.dom.find('.step-info');
+							elements.info_input = merlin.dom.find('.info-input');
+							
 							tc.animate_bg(elements.pane,5,7.5);
 							
-							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
-								opacity:1.0,
-								height:'142px'
-							},400,'easeOutCubic',null);
+							elements.more_info.css({
+								opacity:0.0
+							}).show().animate({
+								opacity:1.0
+							},550,'easeOutQuint');
 							
-							return;
+							elements.counter.hide();
+							elements.textarea.attr("disabled", true);
 							
-							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
-								opacity:1.0,
-								height:'142px'
-							},400,'easeOutCubic',function(){
-								// taking off the height after the animation to prevent IE overflow problem:
-								elements.two.css("height", "");
-							});
+							elements.info_input.css({
+								height:'0px'
+							})
+							elements.step_info.show();
+							elements.info_input.show().animate({
+								height:'180px'
+							},600,'easeOutQuint');
 						});
 						
-						//elements.idea_input.css('height','93.2px').animate({
-						//	width:'0px',
-						//	opacity:0
-						//},400,'easeOutCubic',function(){
-						//	tc.jQ(this).hide();
-						//	elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
-						//	tc.animate_bg(elements.pane,5,7.5);
-						//	elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
-						//		opacity:1.0,
-						//		height:'142px'
-						//	},400,'easeOutCubic',function(){
-						//		// taking off the height after the animation to prevent IE overflow problem:
-						//		elements.two.css("height", "");
-						//	});
-						//});
 					},
 					init:function(merlin,dom){
 						if(!merlin.current_step.step_data.locationDropdown){
@@ -142,16 +134,10 @@ app_page.features.push(function(app){
 								locations:merlin.app.app_page.data.locations
 							});
 						};
+						
 						if(app_page.data.user && app_page.data.user.email){
 							tc.jQ('#email').addClass('always-focused disabled').attr("disabled", true);
 						};
-						// temp stuff to make it look OK - IL
-						tc.jQ('.console .start').hide();
-						tc.jQ('.console .more-info').show();
-						tc.jQ('.top-pane').css('background-color', 'rgba(255, 255, 255, 0.7)');
-						tc.jQ('.note-card-submit-idea .charlimit').hide();
-						tc.jQ('.note-card-submit-idea textarea').attr("disabled", true);
-						// end temp stuff
 						
 					},
 					finish:function(merlin,dom){
@@ -161,11 +147,12 @@ app_page.features.push(function(app){
 						});
 					}
 				},
+				
 				'idea-processing':{
 					prev_step:'idea-details',
 					next_step:'related',
 					selector:'.idea-processing',
-					transition_no:function(merlin,dom){},
+					transition:function(merlin,dom){},
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							type:'POST',
@@ -187,32 +174,40 @@ app_page.features.push(function(app){
 						});
 					}
 				},
+				
 				'related-processing':{
 					prev_step:'idea-details',
 					next_step:null,
-					//selector:'.related-processing',
-					transition_no:function(merlin,dom){
-						merlin.dom.find('.grouping').hide();
-						var elements = {
-							hey:merlin.dom.parent().siblings('.hey'),
-							note:merlin.dom.siblings('.note-card-pane'),
-							bkg:merlin.dom.siblings('.splash-background')
-						};
+					selector:'.related-processing',
+					transition:function(merlin){
+						var elements;
+						elements = {
+							hey:merlin.dom.siblings('.hey'),
+							submit_button:merlin.dom.find('.primary-action'),
+							splash:merlin.dom.find('.splash'),
+							bkg:merlin.dom.find('.splash-background')
+						}
+						
 						elements.hey.animate({
 							top:'-210px'
 						},1200,'easeOutCubic');
+						
+						elements.submit_button.animate({
+							left:'500px'
+						},1200, 'easeOutCubic',function(){
+							elements.submit_button.hide();dfsdfs
+						});
+						
 						elements.bkg.animate({
 							marginLeft:'-220px'
-						},1400,'easeInOutQuad');
-						merlin.dom.animate({
+						},1200,'easeInOutQuart');
+						
+						elements.splash.animate({
 							marginLeft:'-1260px'
-						}, 1400,"easeInOutCubic",function(){
+						},1200,"easeInOutQuart", function(){
 							window.location.hash = 'related-processing-2';
 						});
-						elements.note.css('zIndex',10000).delay(300).animate({
-							width:'366px',
-							height:'609px'
-						},1000,'easeOutCubic');
+						
 					}
 				},
 				'related-processing-2':{
