@@ -520,12 +520,13 @@ class Admin(Controller):
             
     def approveProjectResource(self):
         projectResourceId = self.request('resource_id')
-        
+        isOfficial = bool(self.request('is_official'))
+
         if (not projectResourceId):
             log.error("*** attempted to approve resource w/o id")
             return False
         else:
-            return mProjectResource.approveProjectResource(self.db, projectResourceId)
+            return mProjectResource.approveProjectResource(self.db, projectResourceId, isOfficial)
            
     def updateBlacklist(self):
         blacklist = self.request('blacklist')
