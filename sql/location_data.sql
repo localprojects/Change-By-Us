@@ -1,3 +1,6 @@
+#citywide
+insert into location (location_id, name, city, lat, lon, state) values (-1, 'Citywide', 'New York', 40.714353, -74.005973, 'NY');
+
 #boroughs
 insert into location (location_id, name, borough, city, lat, lon, state) values (501, 'Manhattan', 'Manhattan', 'New York', 40.783435, -73.966250, 'NY');
 insert into location (location_id, name, borough, city, lat, lon, state) values (502, 'Brooklyn', 'Brooklyn', 'Brooklyn', 40.6500000, -73.9500000, 'NY');
