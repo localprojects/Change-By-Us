@@ -196,6 +196,7 @@ Change by Us NYC
 	
 
 	<div class='midlands clearfix'>
+				
 		<div class="box box-mission">
 			<h1><strong>Change by Us NYC</strong> is a place to share ideas, create projects, discover resources, and make our city better.</h1>
 		</div>
@@ -207,134 +208,38 @@ Change by Us NYC
 		</div>
 		
 		<div class="box box-leaderboard">
-			<h3>Top <strong>6 Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
+			<h3>Top <strong>{{ d.template_data.leaderboard|length }} Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
 			<ol class="leaderboard">
-				<li>
+				{% for item in d.template_data.leaderboard %}
+				<li {% if loop.index is even %}class="every-other"{% endif %}>
 					<table>
 						<tbody>
 							<tr>
-								<td class="num">1</td>
+								<td class="num">{{ item.ordinal }}</td>
 								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+									<div class='thumb'>							
+										{% if item.image_id > 0 %}
+										<a href="/project/{{ item.project_id }}"><img width="60" height="60" src=""/images/{{ item.image_id % 10 }}/{{ item.image_id }}.png"" alt="" class='proj'/></a>
+										{% else %}
+										<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
+										{% endif %}
 										<span class="overlay-tag"></span>
 									</div>
 									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
+										<h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(50) }}</a></h1>
+										<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
 									</div>
 								</td>
-								<td class="score">1,234</td>
+								<td class="score">{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
 							</tr>
 						</tbody>
 					</table>
 				</li>
-				<!-- DELETE THESE AFTER TEMPLATING-->
-				<li class="every-other">
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">4</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">783</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
+				{% if loop.index is even %}
 				<li class="clearrow">
 				</li>
-				<li>
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">2</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">965</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<li class="every-other">
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">5</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">503</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<li class="clearrow">
-				</li>
-				<li>
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">3</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">794</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<li class="every-other">
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">6</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">334</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<!-- STOP DELETING -->
+				{% endif %}
+				{% endfor %}
 			</ol>
 			<div style="clear:both"></div>
 		</div>
@@ -373,24 +278,16 @@ Change by Us NYC
 			<h2>Find out what's happening on Change by Us NYC.</h2>
 			
 			<ul>
-				<li>
-					<span class="date">05.28.2011</span>
-					<span class="title serif">New grants program announced!</span>
-					<span class="excerpt serif">The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform.</span>
-					<a href="" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
-				</li>
-				<li>
-					<span class="date">05.28.2011</span>
-					<span class="title serif">New grants program announced!</span>
-					<span class="excerpt serif">The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform.</span>
-					<a href="" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
-				</li>
-				<li class="every-third">
-					<span class="date">05.28.2011</span>
-					<span class="title serif">New grants program announced!</span>
-					<span class="excerpt serif">The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform.</span>
-					<a href="" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
-				</li>
+				{% for item in d.template_data.news %}
+					{% if loop.index < 3 %}
+					<li {% if loop.index % 3 == 0 %}class="every-third"{% endif %}>
+						<span class="date">{{ item.datetime }}</span>
+						<span class="title serif">{{ item.title }}</span>
+						<span class="excerpt serif">{{ item.text }}</span>
+						<a href="{{ item.link }}" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
+					</li>
+					{% endif %}
+				{% endfor %}
 			</ul>
 			
 			<div style="clear:both"></div>

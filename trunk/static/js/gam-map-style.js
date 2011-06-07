@@ -109,7 +109,7 @@ var gamMapStyle = [
     elementType: "all",
     stylers: [
       { visibility: "on" },
-      { lightness: 100 }
+      { lightness: 80 }
     ]
   },{
     featureType: "administrative.neighborhood",
