@@ -230,7 +230,8 @@ def getMostRecentIdeas(db, limit=100, offset=0):
     
     sql = """select i.idea_id, i.description as text, u.user_id, u.first_name as f_name, u.last_name as l_name, i.submission_type as submitted_by 
             from idea i
-            left join user u on u.user_id = i.user_id
+            left join user u on u.user_id = i.user_id and u.is_active = 1
+            where i.is_active = 1
             order by i.created_datetime desc
             limit $limit offset $offset"""
             
