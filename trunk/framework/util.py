@@ -53,7 +53,7 @@ def validate_email(emailaddress):
     domains = ["aero", "asia", "biz", "cat", "com", "coop", \
         "edu", "gov", "info", "int", "jobs", "mil", "mobi", "museum", \
         "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
-        "in", "us", "il", "de", "it", ""
+        "in", "us", "il", "de", "it", "fr"
         ]
     if len(emailaddress) < 7:
         # TODO: SR: Why? i@u.nu is valid!

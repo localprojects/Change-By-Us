@@ -16,25 +16,23 @@ Change by Us NYC
 					<div class='top-pane clearfix start'>
 						
 						<div class="console">
-							<span class="start console-message"><span class="spacer"></span>How can we make our city a greener, greater place to live?<a class="next-quest">Next Question</a></span>
+							<div class='question-wrap'><span class="start console-message"><span class="spacer"></span>How can we make our city a greener, greater place to live?<a class="next-quest">Next Question</a></span></div>
 							<span class="more-info after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">We need just a little more information.</span></span>
 							<span class="thanks after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">Please wait while we process your idea!</span></span>
 						</div>
 						
-						<div class="step-one step-two step">						
-							<div class="info-input clearfix" style='display:none;'>
-								<div class="west">
-									<div>
-										<span class="col-head">Your email?</span>
-										<input value='{% if d.template_data.user and d.template_data.user.data.email %}{{ d.template_data.user.data.email }}{% endif %}' type='text' name='email' id='email' class='email'/>
-										<div class="email-info">
-											<p class="email-error">Please enter a valid email address</p>
-											<p>We will never send spam or sell your email address.</p>
-											<p><em>See our <a href="/tou" class='toc-link'>privacy policy</a> for more details.</em></p>
-										</div>
+						<div class="step-info step" style='display:none;'>
+							<div class="info-input clearfix">
+								<div class="box box-info box-info-email">
+									<span class="col-head">Your email?</span>
+									<input value='{% if d.template_data.user and d.template_data.user.data.email %}{{ d.template_data.user.data.email }}{% endif %}' type='text' name='email' id='email' class='email'/>
+									<div class="email-info">
+										<p class="email-error">Please enter a valid email address</p>
+										<p>We will never send spam or sell your email address.</p> 
+										<p><em>See our <a href="/tou" class='toc-link'>privacy policy</a> for more details.</em></p>
 									</div>
 								</div>
-								<div class="east">
+								<div class="box box-info box-info-hood">
 									<span class="col-head">Your idea is for...</span>
 									<div class="row row-1 clearfix">
 										<input type='radio' name='location-check' id='location-city' class='location-city location-group styled'/>
@@ -57,7 +55,7 @@ Change by Us NYC
 									</div>
 								</div>
 							</div>
-						</div><!--end .top-pane.info-input-->
+						</div><!--end .step-info-->
 				
 						<div class="step idea-processing" style="display:none"></div>
 					</div>
@@ -68,20 +66,15 @@ Change by Us NYC
 								<a class="rounded-button small west" href="/search#ideas">See more ideas <span class="sm-arrow-forward"></span></a>
 								<h3>New Ideas</h3>
 								<div class="small-note-area">
-									{% for idea_group in d.template_data.all_ideas.data %}
-										{% set area = loop.index %}
-									
-										{% for idea in idea_group.ideas %}
-											<div class="small-note {{ area }}">
-												<div class="wrap">
-													<div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}>
-														<strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;
-													</div>
-													<blockquote><p>{{ idea.text|truncate(175) }}</p></blockquote>
+									{% for idea in d.template_data.all_ideas.data %}
+										<div class="small-note">
+											<div class="wrap">
+												<div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}>
+													<strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;
 												</div>
+												<blockquote><p>{{ idea.text|truncate(175) }}</p></blockquote>
 											</div>
-										{% endfor %}
-
+										</div>
 									{% endfor %}
 								</div>
 								
@@ -173,22 +166,14 @@ Change by Us NYC
 			<div class="note-card-pane color3">
 				<div class="membrane">
 					<div class="note-card-splash" style="display:none">
-						{% if d.template_data.all_ideas.data and d.template_data.all_ideas.data[0].ideas and d.template_data.all_ideas.data[0].ideas[0].text %}
-							<cite class="note-meta-hd">
-								{% if d.template_data.all_ideas.data[0].ideas[0].f_name and d.template_data.all_ideas.data[0].ideas[0].l_name %}
-									<strong><a href="/useraccount/{{ d.template_data.all_ideas.data[0].ideas[0].user_id }}">{{ d.template_data.all_ideas.data[0].ideas[0].f_name }} {{ d.template_data.all_ideas.data[0].ideas[0].l_name }}</a></strong> <em>said</em> &mdash;
-								{% endif %}
-							</cite>
-							<blockquote>
-								<p>{{ d.template_data.all_ideas.data[0].ideas[0].text|truncate(180) }}</p>
-							</blockquote>
-						{% endif %}
+						<!-- content loaded here by js when hovering on a .small-note -->
 					</div>
 					
 					<div class="note-card-submit-idea">
 						<span class="hd serif">My idea is:</span>
 						<textarea class="idea"></textarea>
 						<span class="charlimit idea">0/175</span>
+						<input type='text' name='main_text' class='main_text' style='display:none;' />
 					</div>
 				</div>
 				
@@ -200,9 +185,9 @@ Change by Us NYC
 				<div class="oops" style="display:none;">
 					<span>Oops! Please limit your idea to 175 characters.</span>
 				</div>
-				
-				<div class="hand">
-				</div>
+			</div>
+			
+			<div class="hand">
 			</div>
 				
 		</div><!--end .splash-container-->
@@ -211,6 +196,7 @@ Change by Us NYC
 	
 
 	<div class='midlands clearfix'>
+				
 		<div class="box box-mission">
 			<h1><strong>Change by Us NYC</strong> is a place to share ideas, create projects, discover resources, and make our city better.</h1>
 		</div>
@@ -222,130 +208,38 @@ Change by Us NYC
 		</div>
 		
 		<div class="box box-leaderboard">
-			<h3>Top <strong>6 Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
+			<h3>Top <strong>{{ d.template_data.leaderboard|length }} Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
 			<ol class="leaderboard">
-				<li>
+				{% for item in d.template_data.leaderboard %}
+				<li {% if loop.index is even %}class="every-other"{% endif %}>
 					<table>
 						<tbody>
 							<tr>
-								<td class="num">1</td>
+								<td class="num">{{ item.ordinal }}</td>
 								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+									<div class='thumb'>							
+										{% if item.image_id > 0 %}
+										<a href="/project/{{ item.project_id }}"><img width="60" height="60" src="/images/{{ item.image_id % 10 }}/{{ item.image_id }}.png" alt="" class='proj'/></a>
+										{% else %}
+										<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
+										{% endif %}
 										<span class="overlay-tag"></span>
 									</div>
 									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
+										<h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(45) }}</a></h1>
+										<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
 									</div>
 								</td>
-								<td class="score">1,234</td>
+								<td class="score">{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
 							</tr>
 						</tbody>
 					</table>
 				</li>
-				<!-- DELETE THESE AFTER TEMPLATING-->
-				<li class="every-other">
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">4</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">783</td>
-							</tr>
-						</tbody>
-					</table>
+				{% if loop.index is even %}
+				<li class="clearrow">
 				</li>
-				<li>
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">2</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">965</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<li class="every-other">
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">5</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">503</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<li>
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">3</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">794</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<li class="every-other">
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">6</td>
-								<td class="project-header">
-									<div class='thumb'>
-										<img width='60' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="">Some Project That Could Be This Long in There!</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="">Alexander M.</a></cite>
-									</div>
-								</td>
-								<td class="score">334</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				<!-- STOP DELETING -->
+				{% endif %}
+				{% endfor %}
 			</ol>
 			<div style="clear:both"></div>
 		</div>
@@ -384,24 +278,16 @@ Change by Us NYC
 			<h2>Find out what's happening on Change by Us NYC.</h2>
 			
 			<ul>
-				<li>
-					<span class="date">05.28.2011</span>
-					<span class="title serif">New grants program announced!</span>
-					<span class="excerpt serif">The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform.</span>
-					<a href="" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
-				</li>
-				<li>
-					<span class="date">05.28.2011</span>
-					<span class="title serif">New grants program announced!</span>
-					<span class="excerpt serif">The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform.</span>
-					<a href="" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
-				</li>
-				<li class="every-third">
-					<span class="date">05.28.2011</span>
-					<span class="title serif">New grants program announced!</span>
-					<span class="excerpt serif">The city is happy to announce a new grant program of up to $4000 for innovative ideas that transform.</span>
-					<a href="" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
-				</li>
+				{% for item in d.template_data.news %}
+					{% if loop.index < 3 %}
+					<li {% if loop.index % 3 == 0 %}class="every-third"{% endif %}>
+						<span class="date">{{ item.datetime }}</span>
+						<span class="title serif">{{ item.title }}</span>
+						<span class="excerpt serif">{{ item.text }}</span>
+						<a href="{{ item.link }}" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
+					</li>
+					{% endif %}
+				{% endfor %}
 			</ul>
 			
 			<div style="clear:both"></div>
@@ -441,491 +327,13 @@ Change by Us NYC
 {% endblock continent %}
 
 {% block page_js %}
-<script>
-	app_page.features.push(function(app){
-		tc.util.log('Give A Minute: HOME');
+	<script type="text/javascript">
+		{% if d.template_data.user %}
+			app_page.data.user = {{ d.template_data.user.json }};
+		{% endif %}
 		
-		tc.jQ('a.toc-link').bind('click',{
-			app:app,
-			source_element:tc.jQ('.modal-content.toc'),
-			init:function(modal,callback){
-				if(tc.jQ.isFunction(callback)){
-					callback(modal);
-				}
-			}
-		},function(e,d){
-			e.preventDefault();
-			e.data.app.components.modal.show(e.data);
-		});
-		
-		app.components.merlin = new tc.merlin(app,{
-			dom:tc.jQ('.splash-container.merlin'),
-			progress_element:tc.jQ('.merlin-progress'),
-			next_button:tc.jQ('.primary-action .ca-btn'),
-			error_indicator:tc.jQ('.oops'),
-			watch_keypress:true,
-			first_step:'start',
-			data:{
-				text:null,
-				email:null,
-				location_id:null,
-				main_text:""
-			},
-			steps:{
-				'start':{
-					prev_step:null,
-					next_step:'idea-details',
-					selector:'.note-card-submit-idea',
-					inputs:{
-						idea:{
-							selector:'textarea.idea',
-							validators:['min-3','max-175','required'],
-							hint:'',
-							focus_first:true,
-							counter:{
-								selector:'.charlimit.idea',
-								limit:175
-							},
-							handlers:{
-								focus:function(e){
-									e.data.me.options.error_indicator.hide();
-								}
-							}
-						},
-						main_text:{
-							selector:'input.main_text',
-							validators:['max-0']
-						}
-					},
-					finish:function(merlin,dom){
-						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							text:merlin.current_step.inputs.idea.dom.val(),
-							main_text:merlin.current_step.inputs.main_text.dom.val()
-						});
-					}
-				},
-				'idea-details':{
-					prev_step:'start',
-					force_prev_step:'start',
-					next_step:'idea-processing',
-					selector:'.step-two',
-					inputs:{
-						email:{
-							selector:'input.email',
-							validators:['min-3','max-200','required','email'],
-							
-							{% if d.template_data.user and d.template_data.user.data.email %}
-								hint:false,
-							{% else %}
-								hint:'Please enter your email address',
-							{% endif %}
-							
-							focus_first:true
-						},
-						location:{
-							selector:'.location-group',
-							validators:tc.locationDropdown.validator,
-							hint:'Start typing neighborhood or borough...'
-						}
-					},
-					step_data:{},
-					transition:function(merlin,dom){
-						var elements = {
-							pane:merlin.dom.find('.top-pane'),
-							idea_input:merlin.dom.find('.idea-input-inner-wrapper'),
-							cons:merlin.dom.find('.console'),
-							start:merlin.dom.find('.step-one'),
-							two:merlin.dom.find('.info-input')
-						};
-						
-						elements.idea_input.css('height','93.2px').animate({
-							width:'0px',
-							opacity:0
-						},400,'easeOutCubic',function(){
-							//tc.jQ(this).hide();
-							
-							elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
-							tc.animate_bg(elements.pane,5,7.5);
-							
-							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
-								opacity:1.0,
-								height:'142px'
-							},400,'easeOutCubic',null);
-							
-							return;
-							
-							elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
-								opacity:1.0,
-								height:'142px'
-							},400,'easeOutCubic',function(){
-								// taking off the height after the animation to prevent IE overflow problem:
-								elements.two.css("height", "");
-							});
-						});
-						
-						//elements.idea_input.css('height','93.2px').animate({
-						//	width:'0px',
-						//	opacity:0
-						//},400,'easeOutCubic',function(){
-						//	tc.jQ(this).hide();
-						//	elements.cons.css('width','775px').children('.more-info').show().siblings().hide();
-						//	tc.animate_bg(elements.pane,5,7.5);
-						//	elements.two.css('height','0px').css('opacity',0).show().delay(200).animate({
-						//		opacity:1.0,
-						//		height:'142px'
-						//	},400,'easeOutCubic',function(){
-						//		// taking off the height after the animation to prevent IE overflow problem:
-						//		elements.two.css("height", "");
-						//	});
-						//});
-					},
-					init:function(merlin,dom){
-						if(!merlin.current_step.step_data.locationDropdown){
-							merlin.current_step.step_data.locationDropdown = new tc.locationDropdown({
-								radios:dom.find('input[type=radio]'),
-								input:dom.find('input.location-hood-enter'),
-								list:dom.find('div.location-hood-list'),
-								warning:dom.find('span.error'),
-								locations:merlin.app.app_page.data.locations
-							});
-						};
-						{% if d.template_data.user and d.template_data.user.data.email %}
-							tc.jQ('#email').addClass('always-focused disabled').attr("disabled", true);
-						{% endif %}
-					},
-					finish:function(merlin,dom){
-						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							email:merlin.current_step.inputs.email.dom.val(),
-							location_id:merlin.current_step.step_data.locationDropdown.getLocation()
-						});
-					}
-				},
-				'idea-processing':{
-					prev_step:'idea-details',
-					next_step:'related',
-					selector:'.idea-processing',
-					transition:function(merlin,dom){},
-					init:function(merlin,dom){
-						tc.jQ.ajax({
-							type:'POST',
-							url:'/idea',
-							data:merlin.options.data,
-							context:merlin,
-							dataType:'text',
-							success:function(data,ts,xhr){
-								if(data == 'False'){
-									return false;
-								}
-								this.options.data.idea_id = data;
-								this.dom.siblings('.note-card-pane').find('strong').text('You');
-								this.dom.siblings('.note-card-pane').find('em').text('say');
-								this.dom.siblings('.note-card-pane').find('cite').show();
-								this.dom.siblings('.note-card-pane').find('blockquote').html('<p>'+merlin.options.data.text+'</p>');
-								window.location.hash = 'related-processing';
-							}
-						});
-					}
-				},
-				'related-processing':{
-					prev_step:'idea-details',
-					next_step:null,
-					//selector:'.related-processing',
-					transition:function(merlin,dom){
-						merlin.dom.find('.grouping').hide();
-						var elements = {
-							hey:merlin.dom.parent().siblings('.hey'),
-							note:merlin.dom.siblings('.note-card-pane'),
-							bkg:merlin.dom.siblings('.splash-background')
-						};
-						elements.hey.animate({
-							top:'-210px'
-						},1200,'easeOutCubic');
-						elements.bkg.animate({
-							marginLeft:'-220px'
-						},1400,'easeInOutQuad');
-						merlin.dom.animate({
-							marginLeft:'-1260px'
-						}, 1400,"easeInOutCubic",function(){
-							window.location.hash = 'related-processing-2';
-						});
-						elements.note.css('zIndex',10000).delay(300).animate({
-							width:'366px',
-							height:'609px'
-						},1000,'easeOutCubic');
-					}
-				},
-				'related-processing-2':{
-					prev_step:'idea-details',
-					next_step:null,
-					selector:'.related-processing',
-					init:function(merlin,dom){
-						tc.jQ.ajax({
-							url:'/idea/related',
-							data:merlin.options.data,
-							context:merlin,
-							dataType:'json',
-							success:function(data,ts,xhr){
-								if(data.citywide.length > 0 || data.related.length > 0){
-									this.options.steps['related'].step_data = data;
-									window.location.hash = 'related';
-								} else {
-									window.location.hash = 'related-not-found';
-								}
-							}
-						});
-					}
-				},
-				'related':{
-					prev_step:'idea-details',
-					force_prev_step:'related',
-					next_step:null,
-					selector:'.step-three',
-					init:function(merlin,dom){
-						
-						function build_project_items(data, selector) {
-							var i, temphtml, box;
-							box = dom.find(selector);
-							box.find("ul").children().remove();
-							for (i in data) {
-								if (i == 2) { break; }
-								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
-								if (data[i].image_id > -1){
-									temphtml.find('img').attr('src','/images/'+(data[i].image_id % 10)+'/'+data[i].image_id+'.png');
-								} else {
-									temphtml.find('img').attr('src','/static/images/thumb_genAvatar50.png');
-								}
-								temphtml.find('.link a').html( tc.truncate(data[i].title, 45) )
-									.attr('href','/project/'+ data[i].project_id)
-									.attr("target", "_blank");
-								temphtml.find('.creator').html('<span class="creator"><em>Created by </em> <a href="/useraccount/'+ data[i].owner.u_id +'">'+ data[i].owner.name +'</a></span>');
-								temphtml.find('.description').html( tc.truncate(data[i].description, 110) );
-								temphtml.find('.member-count').text(data[i].num_members);
-								if (data[i].endorsement) {
-									temphtml.find('.endorser-thumb').show();
-								}
-								box.find("ul").append(temphtml);
-								box.css("opacity", 0.0).show().animate({
-									opacity:1.0
-								}, 100, "easeOutCubic");
-							}
-						}
-						
-						if(merlin.current_step.step_data){
-							if(!merlin.current_step.step_data.related.length && !merlin.current_step.step_data.citywide.length){
-								window.location.hash = 'related-not-found';
-								return;
-							}
-							
-							if(!merlin.current_step.step_data.related.length){
-								dom.find('.related-projects').hide();
-								dom.find('.citywide-projects').addClass('single');
-							} else {
-								build_project_items(merlin.current_step.step_data.related, ".related-projects");
-							}
-							if(!merlin.current_step.step_data.citywide.length){
-								dom.find('.citywide-projects').hide();
-								dom.find('.related-projects').addClass('single');
-							} else {
-								build_project_items(merlin.current_step.step_data.citywide, ".citywide-projects");
-							}
-							
-							if (merlin.options.steps['idea-details'].step_data.locationDropdown.getLocation() > 0) {
-								dom.find("a.more-projects-related").attr("href", "search?terms=&location_id="+merlin.options.steps['idea-details'].step_data.locationDropdown.getLocation()+"#projects");
-							} else {
-								dom.find("a.more-projects-related").attr("href", "/search?terms="+ merlin.current_step.step_data.search_terms.split(",").join("+") +"#projects").text('See more related projects &rarr;');
-							}
-						}
-					}
-				},
-				'related-not-found':{
-					prev_step:'idea-details',
-					force_prev_step:'related-not-found',
-					next_step:null,
-					selector:'.related-not-found',
-					init:function(merlin,dom){
-						tc.jQ('.projects-pane.not-found').fadeIn();
-					}
-				}
-			}
-		});
-		
-		var note_source = {{ d.all_ideas.json }};
-				
-		
-		// .small-note arrange
-		function arrangeNotes() {
-			//settings
-			var gridDistance = 48; // spacing between notes, in pixels
-			var maxOffset = 14; // maximum random offset from given position, in pixels
-			
-			// selectors
-			var theArea = $('.small-note-area');
-			var smallNote = $('.small-note-area .small-note');
-			
-			// initial values
-			var positionX = 0 - gridDistance;
-			var positionY = 0;
-			var rowCount = 0;
-			
-			var maxX = theArea.width() - 45;
-			var maxY = theArea.height() - 46;
-			
-			// shuffle note array order (adapted from http://jsfiddle.net/Tjirp/D288p)
-		    var l = smallNote.length, r, j, y, o;
-		    for (j = 0, y = l - 1; j < l; j++, y--) {
-		        r = Math.floor(Math.random() * (l - j));
-		        o = smallNote[r];
-		        smallNote[r] = smallNote[y];
-		        smallNote[y] = o;
-		    };
-
-			// loops through and positions each small note; also adds bg
-			for(var i = 0; i < smallNote.length; i++) {
-				var thisNote = smallNote.eq(i);
-				
-				// set initial position according to gridDistance
-				positionX = positionX + gridDistance;
-				if (positionX > maxX) { 
-					if (rowCount%2 == 0) { positionX = gridDistance / 2 } 
-					else { positionX = 0 - gridDistance };
-					positionY = positionY + (gridDistance / 2);
-					rowCount++;
-				};
-				
-				// z-index & new position
-				var posOrNegOffset = 1;
-				var randomZindex = Math.floor(Math.random()*(100)) + 5;
-				var newX = positionX + (Math.floor(Math.random()*maxOffset) * posOrNegOffset);
-				var newY = positionY + (Math.floor(Math.random()*maxOffset) * posOrNegOffset);
-				
-				// randomly place note if it falls out-of-bounds
-				if (newX > maxX || newX < 0) { newX = Math.floor(Math.random()*(maxX + 1)); }
-				if (newY > maxY || newY < 0) { newY = Math.floor(Math.random()*(maxY + 1)); }
-			
-				// background image
-				var bgImgClass;
-				var bgImgCounter = i%3 + 1;
-				
-				if (bgImgCounter == 1 && i%2 == 0) { bgImgCounter++ }; // makes style 1 of the small notes less common
-				
-				if      (thisNote.hasClass('1')) { bgImgClass = "a" + bgImgCounter }
-				else if (thisNote.hasClass('2')) { bgImgClass = "b" + bgImgCounter }
-				else if (thisNote.hasClass('3')) { bgImgClass = "c" + bgImgCounter }
-				else if (thisNote.hasClass('4')) { bgImgClass = "d" + bgImgCounter }
-				else							 { bgImgClass = "e" + bgImgCounter };
-				
-				// set style
-				thisNote.addClass(bgImgClass).css({'display' : 'block', 'top' : newY, 'left' : newX, 'zIndex' : randomZindex});
-			};
-		};
-		
-
-		// .small-note hover and click
-		var isMsie8 = false;
-		if( ua && ua.msie && ua.version < 9 ) {
-			isMsie8 = true;
-		};
-		
-		function smallNoteEvents() {
-			var hoverZindexCounter = 106;
-			var bigNoteCardContentArea = tc.jQ(".note-card-splash");
-			var bigNoteCardIdeaInputContainer = tc.jQ(".note-card-submit-idea");
-			var bigNoteCardIdeaInputTextarea = tc.jQ(".note-card-submit-idea textarea");
-			var noteCardPane = tc.jQ(".note-card-pane");
-						
-			var hoveredNoteTop;
-			
-			var ideaInputIsEmpty = true;
-			
-			$(".small-note").hover(
-				function () {
-					var thisNote = tc.jQ(this);
-					
-					if (bigNoteCardIdeaInputTextarea.val() == '') { 
-						ideaInputIsEmpty = true 
-					} else { 
-						ideaInputIsEmpty = false 
-					};
-					
-					tc.jQ(this).css({'zIndex' : hoverZindexCounter});
-					
-					if (ideaInputIsEmpty == true) {
-						var colorNum;
-
-						if      (thisNote.hasClass('1')) { colorNum = 1 }
-						else if (thisNote.hasClass('2')) { colorNum = 2 }
-						else if (thisNote.hasClass('3')) { colorNum = 3 }
-						else if (thisNote.hasClass('4')) { colorNum = 4 }
-						else							 { colorNum = 5 };
-
-						var theContents = $(this).find('div').html();			
-
-						if( isMsie8 == true ) {
-							bigNoteCardIdeaInputContainer.hide();
-							bigNoteCardContentArea.show().html( theContents );
-						} else {
-							bigNoteCardIdeaInputContainer.hide();
-							bigNoteCardContentArea.stop(true, true).fadeOut(50);
-							bigNoteCardContentArea.html( theContents ).fadeIn(150);
-						};
-
-						if (noteCardPane.hasClass('color' + colorNum)) {
-							// do nothing
-						} else {
-							noteCardPane.removeClass('color1 color2 color3 color4 color5').addClass('color' + colorNum);
-						};
-					};
-					
-					if( isMsie8 != true ) {
-						hoveredNoteTop = tc.jQ(this).position().top;
-						tc.jQ(this).animate({ 
-							top: "-=3px"
-						}, { "duration": 400, "easing": "easeOutCubic" });
-					}
-				},
-				function () {
-					if( isMsie8 != true ) {
-						tc.jQ(this).stop(true, true).animate({ 
-							top: hoveredNoteTop+"px"
-						}, { "duration": 50, "easing": "swing" });
-					}
-					hoverZindexCounter++;
-				}
-			).click(function(e) {
-				var me, href;
-				e.preventDefault();
-				me = tc.jQ(this);
-				href = me.parent().parent().children(".hd").find("a").eq(0).attr("href");
-				window.location.assign(href);
-			});
-			
-			tc.jQ(".projects-pane").mouseleave(function () {
-				if (ideaInputIsEmpty == true) {
-					if( isMsie8 == true ) {
-						bigNoteCardContentArea.hide();
-						bigNoteCardIdeaInputContainer.show();
-						noteCardPane.removeClass('color1 color2 color3 color4 color5').addClass('color3');
-					} else {
-						bigNoteCardContentArea.stop(true, true).fadeOut(50);
-						noteCardPane.removeClass('color1 color2 color3 color4 color5').addClass('color3');
-						bigNoteCardIdeaInputContainer.fadeIn(125);
-					}
-				}
-			});
-		};
-		
-		arrangeNotes();
-		smallNoteEvents();
-		
-		// show .hand
-		tc.jQ('.hand').addClass('hand' + (Math.floor(Math.random()*3) + 1)).show();
-		
-		// turn location field autocomplete off
-		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
-		
-		// focus idea input
-		tc.jQ('textarea.idea').focus();
-
-	});
-</script>
+	</script>
+	<script type="text/javascript" src='/static/js/pages/home.js'></script>
 {% endblock page_js %}
+
+
