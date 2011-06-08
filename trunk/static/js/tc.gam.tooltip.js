@@ -107,7 +107,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	markup.find('h2').text(data.title);
 	if(data.is_official && data.is_official == true)
 	{
-		markup.find('.tooltip-hd').after('<div class="tooltip-md"><span>Official Project</span></div>');
+		markup.find('.tooltip-hd').after('<div class="tooltip-md"><span>Official Resource</span></div>');
 	}
 	if (data.image_id > 1) {
 		markup.find('img').attr('src','/images/'+(data.image_id % 10)+'/'+data.image_id+'.png');

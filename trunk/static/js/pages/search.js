@@ -115,6 +115,8 @@ app_page.features.push(function(app){
 								
 								e.data.carousel.data.current_page.removeClass('spinner-message').children().remove();
 								
+								tc.util.log(d.results);
+								
 								if(!d.results.length && e.data.carousel.data.offset > 0){
 									e.data.carousel.data.current_page.remove();
 									return;
@@ -199,7 +201,7 @@ app_page.features.push(function(app){
 				}
 				
 				out.find('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
-				
+
 				return out;
 			}
 		});
@@ -463,7 +465,6 @@ app_page.features.push(function(app){
 								tc.jQ('ul.ideas-list li').removeClass('every-third').filter(function(index) {
 									return index % 3 == 2;
 								}).addClass('every-third');
-								tc.jQ('ul.ideas-list li').eq(2).removeClass('hidden-result');
 							}
 						});
 					}
