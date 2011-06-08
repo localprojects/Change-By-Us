@@ -229,7 +229,7 @@
 					<input value='' type='email' name='email' id='email' class='email' tabindex='1'/>
 				</div>
 				<div class="row">
-					<label for='email'>Password</label>
+					<label for='password'>Password</label>
 					<input value='' type='password' name='password' id='password' class='password' tabindex='2'/>
 					<p class="light forgot-password"><a href="#">Forgot your password?</a></p>
 				</div>
@@ -249,6 +249,34 @@
 	<div class="step login-error">
 		<p>There was an error logging you in.</p>
 	</div><!-- end step -->
+	
+	<div class="step forgot-password">
+		<p class="mid-strong">FORGOT YOUR PASSWORD?</p>
+		<p>We'll send you an email with instructions to reset your password.</p>
+		<div class="detail-input">
+			<div class="inputs">
+				<div class="row">
+					<label for='forgot-pw-email'>Enter your email</label>
+					<input value='' type='email' name='forgot-pw-email' id='forgot-pw-email' class='email' />
+				</div>
+				<div class="row">
+					<a class="next-step submit" href="#">Send Instructions</a>
+				</div>
+			</div>
+		</div>
+	</div><!-- end step -->
+	
+	<div class="step forgot-password-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step forgot-password-finished">
+		<p>You will receive an email with further details on retrieving your password.</p>
+	</div><!--end step-->
+	
+	<div class="step forgot-password-error">	
+		<p>There was an error finding your account. Please double check your email.</p>
+	</div><!--end step-->
 	
 	<div class="step logout-processing spinner-message">
 		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
@@ -738,6 +766,10 @@
 						init: function(merlin, dom) {
 							window.scroll(0, 0);
 							merlin.app.components.userland.activateLogin();
+							dom.find(".forgot-password a").unbind("click").bind("click", {merlin: merlin}, function(e) {
+								e.preventDefault();
+								e.data.merlin.show_step("forgot-password");
+							});
 						},
 						finish: function(merlin, dom) {
 							merlin.options.data.login.email = merlin.current_step.inputs.email.dom.val();
@@ -780,6 +812,60 @@
 						selector: ".step.login-error",
 						init: function(merlin, dom) {
 
+						}
+					},
+					"forgot-password": {
+						selector: ".step.forgot-password",
+						next_step: "forgot-password-processing",
+						inputs: {
+							email: {
+								selector: "input.email",
+								validators: ["required", "min-3", "max-180", "email"]
+							}
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+						},
+						finish: function(merlin, dom) {
+							merlin.options.steps["forgot-password-processing"].data.email = merlin.current_step.inputs.email.dom.val();
+						}
+					},
+					"forgot-password-processing": {
+						selector: ".step.forgot-password-processing",
+						data: {
+							email: null
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							
+							if (merlin.current_step.data.email) {
+								$.ajax({
+									type: "POST",
+									url: "/login/forgot",
+									data: merlin.current_step.data,
+									context: merlin,
+									dataType: "text",
+									success: function(data, ts, xhr) {
+										if (data === "False") {
+											this.show_step("forgot-password-error");
+											return false;
+										}
+										this.show_step("forgot-password-finished");
+									}
+								});
+							}
+						}
+					},
+					"forgot-password-finished": {
+						selector: ".step.forgot-password-finished",
+						init: function(merlin, dom) {
+							
+						}
+					},
+					"forgot-password-error": {
+						selector: ".step.forgot-password-error",
+						init: function(merlin, dom) {
+							
 						}
 					},
 					"logout": {
