@@ -57,7 +57,7 @@
 										<dd>{{ goal.timeframe }}</dd>
 										
 										<dt>Point Person</dt>
-										<dd><a href='/useraccount/{{ goal.owner.u_id }}'>{{ goal.owner.name }}</a></dd>
+										<dd><a href='/useraccount/{{ goal.owner.u_id }}'>{{ goal.owner.name|truncate(15) }}</a></dd>
 									</dl>
 									
 									<div class="timestamp">
@@ -298,7 +298,7 @@
 			
 			temphtml.find('.goal-title').text(data.text);
 			temphtml.find('.timeframe').text(data.timeframe);
-			temphtml.find('.owner-name').html("<a href='/useraccount/"+data.owner.u_id+"'>"+data.owner.name+"</a>");
+			temphtml.find('.owner-name').html("<a href='/useraccount/"+data.owner.u_id+"'>"+tc.truncate(data.owner.name,15)+"</a>");
 			temphtml.find(".timestamp .datetime").text(data.created_datetime);
 			
 			return temphtml;
