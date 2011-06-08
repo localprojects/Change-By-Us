@@ -119,3 +119,40 @@ tc.truncate = function(str, len, suffix) {
 	}
 	return str;
 };
+
+
+
+
+/* Browser Detection Stuff */
+var ua = tc.jQ.browser;
+var os;
+var isMsie8orBelow = false;
+var isMsie7orBelow = false;
+
+if( ua && ua.msie && ua.version < 9 ) {
+	isMsie8orBelow = true;
+	
+	if( ua.version < 8 ) {
+		tc.jQ('body').addClass('ie7');
+		isMsie7orBelow = true
+	}
+};
+
+if (ua.mozilla) { /* gecko 1.9.1 is for FF3.5, 1.9.0 for FF3 */
+	if (ua.version.slice(0,5) == "1.9.0") { tc.jQ('body').addClass('ff3') }
+	else if (ua.version.slice(0,5) == "1.9.1") {  }
+} else if (ua.webkit) {
+	tc.jQ('body').addClass('webkit')
+};
+
+if (navigator.userAgent.indexOf('Chrome')!=-1) {
+	tc.jQ('body').addClass('chrome')
+}
+
+if (navigator.appVersion.indexOf("Win")!=-1) {
+	os = 'windows';
+} else if (navigator.appVersion.indexOf("Mac")!=-1) {
+	os = 'mac'
+};	
+
+tc.jQ('body').addClass(os);
