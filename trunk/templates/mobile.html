@@ -69,7 +69,7 @@
 					<input type='radio' name='city' id='location-hood' class='location-group location-hood'/>
 					<label for='location-hood'>It's for a specific neighborhood</label>
 			</div>
-			<div class="row nomb">
+			<div class="row nomb location-hood-holder">
 				<input value='' type='text' name='neighborhood' id='neighborhood' class='location-group neighborhood location-hood-enter' tabindex='2'/>
 				<div class="location-hood-list">
 					<ul>
@@ -196,6 +196,19 @@
 			</div>
 		</div>
 	</div><!--end step-->
+	
+	<div class="step login-or-signup">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="row">
+			<a class="submit btn-signup" href="#">Sign Up</a>
+			<span class=" ">or</span>
+			<a class="submit btn-login" href="#">Login</a>
+			<span class=" ">to join or start a project.</span>
+		</div>
+	</div><!-- end step -->
 	
 	<div class="step login">
 		<div class="about">
@@ -630,7 +643,7 @@
 							
 							if (!merlin.app.app_page.user) {
 								merlin.options.data.ref_project.id = merlin.current_step.data.project_id;
-								merlin.show_step("login");
+								merlin.show_step("login-or-signup");
 								return;
 							}
 							
@@ -692,6 +705,21 @@
 								}
 							});
 							
+						}
+					},
+					"login-or-signup": {
+						selector: ".step.login-or-signup",
+						init: function(merlin, dom) {
+							merlin.app.components.merlin_nav.hide();
+							window.scroll(0, 0);
+							dom.find(".btn-signup").unbind("click").bind("click", {merlin: merlin}, function(e) {
+								e.preventDefault();
+								e.data.merlin.show_step("signup");
+							});
+							dom.find(".btn-login").unbind("click").bind("click", {merlin: merlin}, function(e) {
+								e.preventDefault();
+								e.data.merlin.show_step("login");
+							});
 						}
 					},
 					"login": {
