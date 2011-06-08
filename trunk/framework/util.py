@@ -50,10 +50,13 @@ def safestr(s):
         return str(obj)
 
 def validate_email(emailaddress):
-    domains = "aero", "asia", "biz", "cat", "com", "coop", \
+    domains = ["aero", "asia", "biz", "cat", "com", "coop", \
         "edu", "gov", "info", "int", "jobs", "mil", "mobi", "museum", \
-        "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk"
+        "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
+        "in", "us", "il", "de", "it", ""
+        ]
     if len(emailaddress) < 7:
+        # TODO: SR: Why? i@u.nu is valid!
         return False # Address too short.
     try:
         localpart, domainname = emailaddress.rsplit('@', 1)
@@ -62,7 +65,8 @@ def validate_email(emailaddress):
         return False # Address does not have enough parts.
     if len(toplevel) != 2 and toplevel not in domains:
         return False # Not a domain name.
-    for i in '-_.%+.':
+    for i in '-_.%.':
+        # Keep in mind that google allows +: my+name@gmail.com
         localpart = localpart.replace(i, "")
     for i in '-_.':
         host = host.replace(i, "")
