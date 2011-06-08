@@ -1058,17 +1058,13 @@ def getLinks(db, projectId):
 def getResources(db, projectId):
     resources = []
     
-    sql = """select pr.project_resource_id, pr.title, pr.url, pr.image_id, pr.is_official 
+    sql = """select pr.project_resource_id as organization, pr.title, pr.url, pr.image_id, pr.is_official 
             from project_resource pr 
             inner join project__project_resource ppr on ppr.project_resource_id = pr.project_resource_id and ppr.project_id = $id
             where pr.is_active = 1 and pr.is_hidden = 0"""
             
     try:
-        data = list(db.query(sql, {'id':projectId}))
-        
-        if len(data) > 0:
-            for item in data:
-                resources.append(resource(item.project_resource_id, item.title, item.url, item.image_id))
+        resources = list(db.query(sql, {'id':projectId}))
     except Exception, e:
         log.info("*** couldn't get project resources")
         log.error(e)                  
