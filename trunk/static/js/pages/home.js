@@ -365,13 +365,14 @@ app_page.features.push(function(app){
 			};
 		};
 		
-
-		// .small-note hover and click
-		var isMsie8 = false;
+		/*	THIS IS NOW IN BASE.HTML	
+		var isMsie8orBelow = false;
 		if( ua && ua.msie && ua.version < 9 ) {
-			isMsie8 = true;
+			isMsie8orBelow = true;
 		};
+		*/
 		
+		// .small-note hover and click	
 		function smallNoteEvents() {
 			var hoverZindexCounter = 106;
 			var bigNoteCardContentArea = tc.jQ(".note-card-splash");
@@ -406,7 +407,7 @@ app_page.features.push(function(app){
 
 						var theContents = $(this).find('div').html();			
 
-						if( isMsie8 == true ) {
+						if( isMsie8orBelow == true ) {
 							bigNoteCardIdeaInputContainer.hide();
 							bigNoteCardContentArea.show().html( theContents );
 						} else {
@@ -422,7 +423,7 @@ app_page.features.push(function(app){
 						};
 					};
 					
-					if( isMsie8 != true ) {
+					if( isMsie8orBelow != true ) {
 						hoveredNoteTop = tc.jQ(this).position().top;
 						tc.jQ(this).animate({ 
 							top: "-=3px"
@@ -430,7 +431,7 @@ app_page.features.push(function(app){
 					}
 				},
 				function () {
-					if( isMsie8 != true ) {
+					if( isMsie8orBelow != true ) {
 						tc.jQ(this).stop(true, true).animate({ 
 							top: hoveredNoteTop+"px"
 						}, { "duration": 50, "easing": "swing" });
@@ -441,7 +442,7 @@ app_page.features.push(function(app){
 			
 			tc.jQ(".projects-pane").mouseleave(function () {
 				if (ideaInputIsEmpty == true) {
-					if( isMsie8 == true ) {
+					if( isMsie8orBelow == true ) {
 						bigNoteCardContentArea.hide();
 						bigNoteCardIdeaInputContainer.show();
 						noteCardPane.removeClass('color1 color2 color3 color4 color5').addClass('color3');
