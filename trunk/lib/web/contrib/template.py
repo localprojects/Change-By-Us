@@ -4,7 +4,7 @@ Interface to various templating engines.
 import os.path
 
 __all__ = [
-    "render_cheetah", "render_genshi", "render_mako", "render_jinja",
+    "render_cheetah", "render_genshi", "render_mako",
     "cache", 
 ]
 
@@ -93,10 +93,6 @@ class render_jinja:
         # Assuming all templates end with .html
         path = name + '.html'
         t = self._lookup.get_template(path)
-        return t.render
-
-    def __getitem__(self, name):	# bh added
-        t = self._lookup.get_template(name)
         return t.render
         
 class render_mako:

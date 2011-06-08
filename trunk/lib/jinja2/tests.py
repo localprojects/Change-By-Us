@@ -5,15 +5,31 @@
 
     Jinja test functions. Used with the "is" operator.
 
-    :copyright: 2007 by Armin Ronacher.
+    :copyright: (c) 2010 by the Jinja Team.
     :license: BSD, see LICENSE for more details.
 """
 import re
 from jinja2.runtime import Undefined
 
+try:
+    from collections import Mapping as MappingType
+except ImportError:
+    import UserDict
+    MappingType = (UserDict.UserDict, UserDict.DictMixin, dict)
+
+# nose, nothing here to test
+__test__ = False
+
 
 number_re = re.compile(r'^-?\d+(\.\d+)?$')
 regex_type = type(number_re)
+
+
+try:
+    test_callable = callable
+except NameError:
+    def test_callable(x):
+        return hasattr(x, '__call__')
 
 
 def test_odd(value):
@@ -73,6 +89,14 @@ def test_string(value):
     return isinstance(value, basestring)
 
 
+def test_mapping(value):
+    """Return true if the object is a mapping (dict etc.).
+
+    .. versionadded:: 2.6
+    """
+    return isinstance(value, MappingType)
+
+
 def test_number(value):
     """Return true if the variable is a number."""
     return isinstance(value, (int, long, float, complex))
@@ -127,10 +151,11 @@ TESTS = {
     'lower':            test_lower,
     'upper':            test_upper,
     'string':           test_string,
+    'mapping':          test_mapping,
     'number':           test_number,
     'sequence':         test_sequence,
     'iterable':         test_iterable,
-    'callable':         callable,
+    'callable':         test_callable,
     'sameas':           test_sameas,
     'escaped':          test_escaped
 }

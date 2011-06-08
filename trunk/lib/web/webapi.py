@@ -15,13 +15,13 @@ __all__ = [
     "OK", "Created", "Accepted",    
     "ok", "created", "accepted",
     
-    # 301, 302, 303, 304, 407
+    # 301, 302, 303, 304, 307
     "Redirect", "Found", "SeeOther", "NotModified", "TempRedirect", 
     "redirect", "found", "seeother", "notmodified", "tempredirect",
 
     # 400, 401, 403, 404, 405, 406, 409, 410, 412
-    "BadRequest", "Unauthorized", "Forbidden", "NoMethod", "NotFound", "NotAcceptable", "Conflict", "Gone", "PreconditionFailed",
-    "badrequest", "unauthorized", "forbidden", "nomethod", "notfound", "notacceptable", "conflict", "gone", "preconditionfailed",
+    "BadRequest", "Unauthorized", "Forbidden", "NotFound", "NoMethod", "NotAcceptable", "Conflict", "Gone", "PreconditionFailed",
+    "badrequest", "unauthorized", "forbidden", "notfound", "nomethod", "notacceptable", "conflict", "gone", "preconditionfailed",
 
     # 500
     "InternalError", 
@@ -29,7 +29,7 @@ __all__ = [
 ]
 
 import sys, cgi, Cookie, pprint, urlparse, urllib
-from utils import storage, storify, threadeddict, dictadd, intget, utf8
+from utils import storage, storify, threadeddict, dictadd, intget, safestr
 
 config = storage()
 config.__doc__ = """
@@ -122,8 +122,8 @@ tempredirect = TempRedirect
 class BadRequest(HTTPError):
     """`400 Bad Request` error."""
     message = "bad request"
-    def __init__(self, message="Bad Request"):
-        status = "400 %s" % message
+    def __init__(self):
+        status = "400 Bad Request"
         headers = {'Content-Type': 'text/html'}
         HTTPError.__init__(self, status, headers, self.message)
 
@@ -131,7 +131,7 @@ badrequest = BadRequest
 
 class _NotFound(HTTPError):
     """`404 Not Found` error."""
-    message = "404 Not Found"
+    message = "not found"
     def __init__(self, message=None):
         status = '404 Not Found'
         headers = {'Content-Type': 'text/html'}
@@ -210,7 +210,7 @@ def header(hdr, value, unique=False):
     If `unique` is True and a header with that name already exists,
     it doesn't add a new one. 
     """
-    hdr, value = utf8(hdr), utf8(value)
+    hdr, value = safestr(hdr), safestr(value)
     # protection against HTTP response splitting attack
     if '\n' in hdr or '\r' in hdr or '\n' in value or '\r' in value:
         raise ValueError, 'invalid characters in header'
@@ -287,7 +287,7 @@ def data():
         ctx.data = ctx.env['wsgi.input'].read(cl)
     return ctx.data
 
-def setcookie(name, value, expires="", domain=None, secure=False):
+def setcookie(name, value, expires="", domain=None, secure=False, httponly=False):
     """Sets a cookie."""
     if expires < 0: 
         expires = -1000000000 
@@ -298,10 +298,14 @@ def setcookie(name, value, expires="", domain=None, secure=False):
         kargs['secure'] = secure
     # @@ should we limit cookies to a different path?
     cookie = Cookie.SimpleCookie()
-    cookie[name] = urllib.quote(utf8(value))
+    cookie[name] = urllib.quote(safestr(value))
     for key, val in kargs.iteritems(): 
         cookie[name][key] = val
-    header('Set-Cookie', cookie.items()[0][1].OutputString())
+
+    value = cookie.items()[0][1].OutputString()
+    if httponly:
+        value += '; httponly'
+    header('Set-Cookie', value)
 
 def cookies(*requireds, **defaults):
     """
