@@ -28,7 +28,8 @@ class ProjectResource():
                     description = self.data.description,
                     title = self.data.title,
                     url = self.data.url,
-                    location_id = self.data.location_id)
+                    location_id = self.data.location_id,
+                    is_official = self.data.is_official)
         return data
 
 def searchProjectResourcesCount(db, terms, locationId):
