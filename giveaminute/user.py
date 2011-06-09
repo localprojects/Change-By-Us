@@ -210,6 +210,7 @@ where u.user_id = $id and u.is_active = 1"""
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
                     messages = self.getMessages(10, 0),
+                    resources = self.getUserResources(),
                     user = user)
                     
         return data
