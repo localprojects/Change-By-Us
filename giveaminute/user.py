@@ -8,9 +8,9 @@ from framework.log import log
 class User():
     def __init__(self, db, userId):
         self.db = db
-        self.id = userId
+        self.id = userId        
         self.data = self.populateUserData()
-        
+
         if (self.data):
             self.projectData = self.getUserProjectList()
             
@@ -21,6 +21,8 @@ class User():
             self.lastName = self.data.last_name
             self.imageId = self.data.image_id
             self.locationId = self.data.location_id
+            self.location = self.data.location_name
+            self.description = self.data.description
             self.emailNotification = self.data.email_notification
             self.isAdmin = bool(self.data.is_admin)
             self.isModerator = bool(self.data.is_moderator)
@@ -70,6 +72,8 @@ select u.user_key
       ,u.last_name
       ,u.image_id
       ,u.location_id
+      ,l.name as location_name
+      ,u.description
       ,u.email_notification
       ,coalesce(u.last_account_page_access_datetime, u.created_datetime) as last_account_page_access_datetime
       ,if(ug1.user_group_id, 1, 0) as is_admin
@@ -78,6 +82,7 @@ select u.user_key
       ,pl.title
       ,pl.organization
 from user u 
+left join location l on l.location_id = u.location_id
 left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id = 1
 left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
 left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
@@ -107,18 +112,20 @@ where u.user_id = $id and u.is_active = 1"""
             log.error(e)
             return False
             
-    def updateInfo(self, email, first, last, imageId):
+    def updateInfo(self, email, first, last, imageId = None, locationId = None, description = None):
         # check if email already in user
         if not (findUserByEmail(self.db, self.email)):
-            log.info("*** cannot find user email["+email+"]")
             return False
     
         try:
-            if (not imageId):
-                imageId = None
-        
-            sql = "update user set first_name = $first, last_name = $last, email = $email, image_id = $imageId where user_id = $userId"
-            self.db.query(sql, {'userId':self.id, 'first':first, 'last':last, 'email':email, 'imageId':imageId})
+            self.db.update('user', where = 'user_id = $userId', 
+                            first_name = first,
+                            last_name = last,
+                            email = email,
+                            image_id = imageId,
+                            location_id = locationId,
+                            description = description,
+                            vars = {'userId':self.id})
             
             return True
         except Exception, e:
@@ -177,19 +184,32 @@ where u.user_id = $id and u.is_active = 1"""
             
         return data    
         
+    def getUserResources(self):
+        return []
+        
     def getActivityDictionary(self):
+        user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)
+        user['location_id'] = self.locationId
+        user['location'] = self.location
+        user['description'] = self.description
+    
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
                     messages = self.getMessages(10, 0),
-                    user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId))
+                    user = user)
                     
         return data
         
     # data for other users accessing a user's profile/account page
     def getProfileActivityDictionary(self):
+        user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)
+        user['location_id'] = self.locationId
+        user['location'] = self.location
+        user['description'] = self.description
+    
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
-                    user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId))
+                    user = user)
                     
         return data
         
