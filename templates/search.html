@@ -141,7 +141,7 @@ Change by Us NYC - Search Results
 						
 					</div>
 					<div class="ft">
-						{% if d.template_data and d.template_data.user %}
+						{% if d.template_data and d.template_data.user and d.template_data.results.data.projects|length > 0 %}
 						<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
 						{% endif %}
 						<!-- <div class="pagination-controls">
@@ -235,8 +235,9 @@ Change by Us NYC - Search Results
 					</div>
 					
 					<div class="ft">
+						{% if d.template_data.total_count.data.resources > 0 %}
 						<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
-						
+						{% endif %}
 						<!-- <div class="pagination-controls">
 													<span class="control">
 														<a class="prev resource-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
@@ -329,7 +330,9 @@ Change by Us NYC - Search Results
 					</div>
 					
 					<div class="ft">
+						{% if d.template_data.total_count.data.ideas > 0 %}
 						<a class="rounded-button small fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+						{% endif %}
 						<!-- <div class="pagination-controls">
 													<span class="control">
 														<a class="prev idea-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
@@ -418,7 +421,7 @@ Change by Us NYC - Search Results
 								<tr>
 									{% for resource in d.template_data.results.data.resources %}
 										{% if loop.index < 2 %}
-										<td>
+										<td {% if resource.is_official %}class="official-resource"{% endif %}>
 											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
 												<a href="#addProject,{{ resource.link_id }}" class="add-button rounded-button small">Add</a>
 											{% endif %}
@@ -427,8 +430,11 @@ Change by Us NYC - Search Results
 											{% else %}
 											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
-											<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger resource-name tooltip_trigger'>
-												<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(30) }}</span></a></span>
+											<span class="resource-name">
+												{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
+												<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
+												</span>
 											</span>
 											<div class="added-dialog">
 												<span class="added-header">Added <em>to</em> your project<br /></span>
