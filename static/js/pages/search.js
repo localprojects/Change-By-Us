@@ -70,7 +70,6 @@ app_page.features.push(function(app){
 			
 			mycarousel = app.components[name+'_carousel'];
 			
-			
 			if(!mycarousel.carousel){
 				tc.jQ("."+name+".carousel").one('make-single make-multiple',{app:app},function(e){
 					build_carousel(e.data.app);
@@ -91,7 +90,25 @@ app_page.features.push(function(app){
 					e.data.carousel.data.current_page = e.data.carousel.carousel.getItems().eq(e.data.carousel.carousel.getIndex());
 					e.data.carousel.get_element().parent().parent().find('.current_page_number').text(e.data.carousel.carousel.getIndex()+1);
 					
-					if(!e.data.carousel.data.current_page.hasClass('loaded')){
+					if(e.data.carousel.data.current_page.hasClass('loaded')){
+						
+						var target_height;
+						switch(name){
+							case 'idea':
+								if(e.data.carousel.data.current_page.find('.none-found-message').length){
+									target_height = '30';
+								} else {
+									target_height = '625';
+								}
+								
+								break;
+							default:
+								target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+								break;
+						}
+						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+						
+					} else {
 						e.data.carousel.data.current_page.addClass('loaded');
 						tc.jQ.ajax({
 							type:"GET",
@@ -147,20 +164,10 @@ app_page.features.push(function(app){
 								e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 							}
 						});
-					} else {
-						var target_height;
-						switch(name){
-							case 'idea':
-								target_height = '625';
-								break;
-							default:
-								target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
-								break;
-						}
-						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 					}
 					
 				});
+				
 				mycarousel.carousel.begin();
 			}
 			
@@ -175,6 +182,7 @@ app_page.features.push(function(app){
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
+				
 				out = tc.jQ('<table class="projects-list doublewide clearfix">\
 					<tbody></tbody>\
 				</table>');
@@ -201,7 +209,7 @@ app_page.features.push(function(app){
 				}
 				
 				out.find('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
-
+				
 				return out;
 			}
 		});
