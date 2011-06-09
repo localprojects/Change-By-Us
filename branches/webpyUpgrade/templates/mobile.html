@@ -1,0 +1,959 @@
+{% extends "./partials/mobilebase.html" %}
+
+{% block continent %}
+<div class='continent mobile merlin'>
+	
+	<div class="nav">
+		<ul>
+			<li><a class="idea current" href="#">Add an Idea</a></li>
+			<li><a class='join' href="#">Join a Project</a></li>
+		</ul>
+	</div>
+	
+	<!-- steps -->
+	
+	<div class="step idea-start initial">
+		<div class="console">
+			<span class="hey"><span>Hey NYC!</span></span>
+			<span class="console-message"><span></span>How can we make our city a greener, greater place to live?</span>
+		</div>
+		<div class="input">
+			<div class="row">
+				<textarea class='idea-text'></textarea>
+				<div class="char-count">200</div>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn next-step" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+			<div class="about">
+				<p class="m14 welcome-about">
+					<strong>Change by Us NYC</strong> is a place to share ideas, create projects, build teams, and make our city better.
+				</p>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step email user-details">
+		<div class="about">
+			<p class="m18"><strong>Thanks for your idea!</strong></p>
+			<p class="m18">We need a little more information.</p>
+		</div>
+		<div class="detail-input">
+			<div class="row">
+				<label for='email'>E-mail Address</label>
+				<input value='{% if d.template_data.user and d.template_data.user.data.email %}{{ d.template_data.user.data.email }}{% endif %}' type='email' name='email' class='email' tabindex='3'/>
+				<div class="email-info">
+					<p style="display: none;" class="email-error">Please enter a valid email address</p>
+				</div>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn next-step" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step location idea-location">
+		<div class="about">
+			<p class="m18"><strong>Where is your idea located?</strong></p>
+		</div>
+		<div class="location-input">
+			<div class="row">
+					<input type='radio' name='city' id='location-city' class='location-group location-city'/>
+					<label for='location-city'>It's for the whole city</label>
+			</div>
+			<div class="row">
+					<input type='radio' name='city' id='location-hood' class='location-group location-hood'/>
+					<label for='location-hood'>It's for a specific neighborhood</label>
+			</div>
+			<div class="row nomb location-hood-holder">
+				<input value='' type='text' name='neighborhood' id='neighborhood' class='location-group neighborhood location-hood-enter' tabindex='2'/>
+				<div class="location-hood-list">
+					<ul>
+						<li></li>
+					</ul>
+				</div>
+				<span class="error">Please try entering a neighborhood name, or a nearby borough.</span>
+			</div>
+			<div class="row">
+				<p><strong>Ex.</strong> East Village, Bronx, Harlem, etc.</p>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn next-step" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step idea-processing spinner-message">
+		<p>Thank you for your idea!</p>
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step idea-error">
+		<p>There was a problem submitting your idea.</p>
+	</div><!-- end step -->
+	
+	<div class="step related-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+
+	<div class="step related-error">
+		<p>There was a problem finding related projects.</p>
+	</div><!--end step-->
+	
+	<div class="step join-list related-projects">
+		<div class="about">
+			<p class="m24"><strong>Be a part of the solution.</strong></p> 
+			<p class="m18">Join a project or <strong><a href='/'>visit the full site</a></strong> to start your own.</p>
+		</div>
+		<div class="projects">
+			<div class="row">
+				<div class="carousel-nav east">
+					<a class="prev" href="#"><span>back</span></a>
+					<a class="next" href="#"><span>next</span></a>
+				</div>
+				<p class="found-projects">
+					<span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span>
+				</p>
+			</div>
+			<div class="row carousel">
+				
+				<div class="scrollable related">
+					<ul class="projects-list clearfix items">
+						<!-- keeping an empty one here 
+						so that the carousel can be rendered initially,
+						This gets stripped out by the JS before filling the carousel
+						with items -->
+						<li><img src='/static/images/loader32x32.gif' alt='' /></li>
+					</ul>
+				</div>
+				
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step join-list featured-projects">
+		<div class="about">
+			<p class="m24"><strong>Be a part of the solution.</strong></p> 
+			<p class="m18">Join a project or <strong><a href='/'>visit the full site</a></strong> to start your own.</p>
+		</div>
+		<div class="projects">
+			<div class="row">
+				<div class="carousel-nav east">
+					<a class="prev" href="#"><span>back</span></a>
+					<a class="next" href="#"><span>next</span></a>
+				</div>
+				<p class="found-projects">
+					<span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span>
+				</p>
+			</div>
+			<div class="row carousel">
+				<div class="scrollable featured">
+					<ul class="projects-list clearfix items">
+						<li><img src='/static/images/loader32x32.gif' alt='' /></li>
+					</ul>
+				</div>
+				
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class='step join-processing spinner-message'>
+		<p>Please wait while we add you to this project.</p>
+		<p><img class="loading" src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class='step join-error'>
+		<p>There was a problem adding you to the project.</p>
+	</div><!--end step-->
+	
+	<div class="step join-list joined-project">
+		<div class="joined">
+			<p class="m24">
+				<strong>Thanks, you've joined!</strong><br />
+				<a class="project-title" href="#"></a>
+			</p>
+		</div>
+		<div class="projects">
+			<div class="view-project">
+				<p>Leave the mobile site and</p>
+				<a class="submit fancy-caps" href="#">View <span>this</span> project  ></a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step login-or-signup">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="row">
+			<a class="submit btn-signup" href="#">Sign Up</a>
+			<span class=" ">or</span>
+			<a class="submit btn-login" href="#">Login</a>
+			<span class=" ">to join or start a project.</span>
+		</div>
+	</div><!-- end step -->
+	
+	<div class="step login">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="detail-input">
+			<div class="row login-social">
+				<div class='social-login clearfix'>
+					<a href='#' onclick="facebookConnector.connect();" class='login-facebook west'><span>Facebook</span></a>
+					<a href='/login_twitter' class='login-twitter west'><span>Twitter</span></a>
+				</div>
+			</div>
+			<p class="mid-strong">LOGIN</p>
+			<div class="inputs">
+				<div class="row">
+					<label for='email'>Email Address</label>
+					<input value='' type='email' name='email' id='email' class='email' tabindex='1'/>
+				</div>
+				<div class="row">
+					<label for='password'>Password</label>
+					<input value='' type='password' name='password' id='password' class='password' tabindex='2'/>
+					<p class="light forgot-password"><a href="#">Forgot your password?</a></p>
+				</div>
+				<div class="row">
+					<p class="signup"><a href="/join">Click Here</a> to create a traditional login</p>
+					<a class="next-step submit" href="#">Submit</a>
+				</div>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class='step login-processing spinner-message'>
+		<p>Thanks for logging in&hellip;</p>
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step login-error">
+		<p>There was an error logging you in.</p>
+	</div><!-- end step -->
+	
+	<div class="step forgot-password">
+		<p class="mid-strong">FORGOT YOUR PASSWORD?</p>
+		<p>We'll send you an email with instructions to reset your password.</p>
+		<div class="detail-input">
+			<div class="inputs">
+				<div class="row">
+					<label for='forgot-pw-email'>Enter your email</label>
+					<input value='' type='email' name='forgot-pw-email' id='forgot-pw-email' class='email' />
+				</div>
+				<div class="row">
+					<a class="next-step submit" href="#">Send Instructions</a>
+				</div>
+			</div>
+		</div>
+	</div><!-- end step -->
+	
+	<div class="step forgot-password-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step forgot-password-finished">
+		<p>You will receive an email with further details on retrieving your password.</p>
+	</div><!--end step-->
+	
+	<div class="step forgot-password-error">	
+		<p>There was an error finding your account. Please double check your email.</p>
+	</div><!--end step-->
+	
+	<div class="step logout-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step signup">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="detail-input">
+			<div class="row login-social">
+				<!--<p class="m18">LOGIN</p>-->
+				<div class='social-login clearfix'>
+					<!--<label class="m24" for='social'><strong>LOGIN</strong></label>-->
+					<p class="mid-strong">SIGN UP</p>
+					<a href='#' onclick="facebookConnector.connect();" class='login-facebook west'><span>Facebook</span></a>
+					<a href='/login_twitter' class='login-twitter west'><span>Twitter</span></a>
+				</div>
+			</div>
+			<div class="row">
+				<p class="signup"><a href="/join">Click Here</a> to sign up on the full website without Facebook or Twitter</p>
+			</div>
+		</div>
+	</div><!--end step-->
+
+	<!-- templates -->
+
+	<div class="template-content project-carousel-item"><!-- to be transformed into an LI -->
+		<div class="thumb">
+			<img src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+			<span class="overlay-tag"></span>
+			<span class="member-count"></span>
+		</div>
+		<div class="project-info">
+			<span class="link"><a href="/project"></a></span>
+			<span class="creator"><em>Created by </em> <span class='owner'></span></span>
+			<span class="description"></span>
+		</div>
+	</div>
+
+</div><!-- end .continent -->
+{% endblock continent %}
+
+{% block page_js %}
+<script type="text/javascript">
+	(function(window, $) {
+		app_page.features.push(function(app) {
+			tc.util.log("!!!!!!!!!!!! Change By Us Mobile !!!!!!!!!!!!");
+
+			app.components.merlin_nav = (function() {
+				var $nav, tab;
+				
+				$nav = $(".continent .nav");
+				tab = {
+					idea: $nav.find(".idea"),
+					join: $nav.find(".join")
+				};
+				
+				tab.idea.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("idea-start");
+				});
+				tab.join.click(function(e) {
+					e.preventDefault();
+
+					// if we have already loaded related projects, go there,
+					// otherwise show the featured projects
+					if (app.components.merlin.options.steps["related-projects"].data) {
+						app.components.merlin.show_step("related-projects");
+					} else {
+						app.components.merlin.show_step("featured-projects");
+					}
+				});
+				
+				return {
+					displayIdeaTab: function() {
+						tab.join.removeClass("current");
+						tab.idea.addClass("current");
+						$nav.show();
+					},
+					displayJoinTab: function() {
+						tab.idea.removeClass("current");
+						tab.join.addClass("current");
+						$nav.show();
+					},
+					hide: function() {
+						$nav.hide();
+					}
+				};
+			}());
+			
+			app.components.userland = (function() {
+				var $userland, btn; 
+				
+				$userland = $(".atmosphere .userland");
+				btn = {
+					login: $userland.find(".login a"),
+					signup: $userland.find(".join a"),
+					logout: $userland.find(".logout a")
+				};
+				
+				btn.login.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("login");
+				});
+				
+				btn.signup.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("signup");
+				});
+				
+				btn.logout.click(function(e) {
+					e.preventDefault();
+					app.components.merlin.show_step("logout");
+				});
+				
+				return {
+					displayLoggedIn: function() {
+						btn.login.hide();
+						btn.signup.hide();
+						btn.logout.show();
+					},
+					displayLoggedOut: function() {
+						btn.login.show();
+						btn.signup.show();
+						btn.logout.hide();
+					},
+					activateLogin: function() {
+						btn.login.addClass("active");
+						btn.signup.removeClass("active");
+						app.components.merlin_nav.hide();
+					},
+					activateSignup: function() {
+						btn.signup.addClass("active");
+						btn.login.removeClass("active");
+						app.components.merlin_nav.hide();
+					}
+				};
+			}());
+		
+			app.components.merlin = new tc.merlin(app, {
+				use_hashchange: false,
+				name: "mobile",
+				dom: $("body"),
+				first_step: "idea-start",
+				next_button: $(".next-step"),
+				data: {
+					login: {
+						email: null,
+						password: null
+					},
+					idea: {
+						text: null,
+						email: null,
+						location_id: null
+					},
+					idea_id: null,
+					ref_project: {
+						id: null,
+						step: null
+					}
+				},
+				steps: {
+					"idea-start": {
+						selector: ".step.idea-start",
+						next_step: "email",
+						inputs: {
+							idea: {
+								selector: "textarea.idea-text",
+								validators: ["required", "min-3", "max-200"],
+								counter: {
+									selector: ".char-count",
+									limit: 200
+								}
+							}
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							merlin.app.components.merlin_nav.displayIdeaTab();
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data.idea.text = merlin.current_step.inputs.idea.dom.val();
+						}	
+					},
+					"email": {
+						selector: ".step.email",
+						prev_step: "idea-start",
+						next_step: "location",
+						inputs: {
+							email: {
+								selector: "input.email",
+								validators: ["required", "min-3", "max-32", "email"]
+							}
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							if (merlin.app.app_page.user && merlin.app.app_page.user.email) {
+								merlin.current_step.inputs.email.dom.addClass("always-focused disabled").attr("disabled", true);
+							} else {
+								merlin.current_step.inputs.email.dom.removeClass("always-focused disabled").attr("disabled", false);
+							}
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data.idea.email = merlin.current_step.inputs.email.dom.val();
+						}
+					},
+					"location": {
+						selector: ".step.location",
+						prev_step: "email",
+						next_step: "idea-processing",
+						inputs: {
+							location: {
+								selector: ".location-group",
+								validators: tc.locationDropdown.validator
+							}
+						},
+						locationDropdown: null,
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							if (!merlin.current_step.locationDropdown) {
+								merlin.current_step.locationDropdown = new tc.locationDropdown({
+									radios: dom.find('input[type=radio]'),
+									input: dom.find('input.location-hood-enter'),
+									list: dom.find('div.location-hood-list'),
+									warning: dom.find('span.error'),
+									locations: merlin.app.app_page.data.locations,
+									scrollMenuThreshold: 10
+								});
+							}
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data.idea.location_id = merlin.current_step.locationDropdown.getLocation();
+						}
+					},
+					"idea-processing": {
+						selector: ".step.idea-processing",
+						init: function(merlin, dom) {
+							var idea;
+							idea = merlin.options.data.idea;
+							if (!(idea.text && idea.email && idea.location_id)) {
+								merlin.show_step("idea-error");
+								return false;
+							}
+							$.ajax({
+								type: "POST",
+								url: "/idea",
+								data: idea,
+								context: merlin,
+								dataType: "text",
+								success: function(data, ts, xhr) {
+									if (data === "False") {
+										this.show_step("idea-error");
+										return false;
+									}
+									this.options.data.idea_id = data;
+									this.show_step("related-processing");
+								}
+							});
+						}
+					},
+					"idea-error": {
+						selector: ".step.idea-error",
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+						}
+					},
+					"related-processing": {
+						selector: ".step.related-processing",
+						init: function(merlin, dom) {
+							if (!merlin.options.data.idea_id && merlin.options.data.idea_id !== 0) {
+								merlin.show_step("related-error");
+							} else {
+								$.ajax({
+									url: "/idea/related",
+									data: {
+										idea_id: merlin.options.data.idea_id,
+										n_limit: 5
+									},
+									context: merlin,
+									dataType: "json",
+									success: function(data, ts, xhr) {
+										if (data.citywide.length || data.related.length) {
+											this.options.steps["related-projects"].data = data;
+											this.show_step("related-projects");
+										} else {
+											this.show_step("featured-projects");
+										}
+									}
+								})
+							}
+						}
+					},
+					"related-error": {
+						selector: ".step.related-error",
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+						}
+					},
+					"related-projects": {
+						selector: ".step.related-projects",
+						data: null,
+						scrollpane: null,
+						init: function(merlin, dom) {
+							var scrollpane, n_projects;
+							
+							merlin.options.data.ref_project.step = "related-projects";
+							
+							window.scroll(0, 0);
+							merlin.app.components.merlin_nav.displayJoinTab();
+							
+							if (!merlin.current_step.scrollpane) {
+								merlin.current_step.scrollpane = new tc.carousel({
+									element: dom.find(".carousel"),
+									prev_button: dom.find(".prev"),
+									next_button: dom.find(".next")
+								});
+							}
+							scrollpane = merlin.current_step.scrollpane;
+							
+							dom.find(".ca-btn").unbind("click").bind("click", 
+								{merlin: merlin, scrollpane: scrollpane}, 
+								merlin.options.join_click_handler);
+							
+							scrollpane.carousel.getItems().remove();
+							n_projects = 0;
+							
+							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.related, scrollpane);
+							n_projects += merlin.options.render_proj_group.call(merlin, merlin.current_step.data.citywide, scrollpane);
+							
+							dom.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" ).parent().css("visibility", "visible");
+							
+							if (merlin.options.data.ref_project.id) {
+								merlin.options.seek_to_project(merlin.options.data.ref_project.id, scrollpane);
+							} else {
+								scrollpane.carousel.begin();
+							}
+						}
+					},
+					"featured-projects": {
+						selector: ".step.featured-projects",
+						scrollpane: null,
+						init: function(merlin, dom) {
+							var scrollpane;
+							
+							merlin.options.data.ref_project.step = "featured-projects";
+							
+							window.scroll(0, 0);
+							merlin.app.components.merlin_nav.displayJoinTab();
+							
+							if (!merlin.current_step.scrollpane) {
+								merlin.current_step.scrollpane = new tc.carousel({
+									element: dom.find(".carousel"),
+									prev_button: dom.find(".prev"),
+									next_button: dom.find(".next")
+								});
+								scrollpane = merlin.current_step.scrollpane;
+								
+								tc.util.dump(scrollpane);
+								
+								dom.find(".ca-btn").bind("click", 
+									{merlin: merlin, scrollpane: scrollpane}, 
+									merlin.options.join_click_handler);
+									
+								$.ajax({
+									type: "GET",
+									url: "/project/featured",
+									context: merlin,
+									dataType: "json",
+									success: function(data, ts, xhr) {
+										var n_projects;
+										scrollpane.carousel.getItems().remove();
+										n_projects = this.options.render_proj_group.call(this, data, scrollpane);
+										this.current_step.dom.find(".proj-count").text( n_projects ).next(".proj-qualifier").text( n_projects === 1 ? "Project" : "Projects" ).parent().css("visibility", "visible");
+										
+										if (this.options.data.ref_project.id) {
+											this.options.seek_to_project(this.options.data.ref_project.id, scrollpane);
+										} else {
+											scrollpane.carousel.begin();
+										}
+									}
+								});
+							}
+						}
+					},
+					"join-processing": {
+						selector: ".step.join-processing",
+						data: {
+							project_id: null
+						},
+						init: function(merlin, dom) {
+							
+							if (!merlin.app.app_page.user) {
+								merlin.options.data.ref_project.id = merlin.current_step.data.project_id;
+								merlin.show_step("login-or-signup");
+								return;
+							}
+							
+							$.ajax({
+								type: "POST",
+								url: "/project/join",
+								data: {
+									project_id: merlin.current_step.data.project_id,
+									message: "I joined from my mobile device!"
+								},
+								context: merlin,
+								dataType: "text",
+								success: function(data, ts, xhr) {
+									if (data === "False") {
+										this.show_step("join-error");
+										return false;
+									}
+									this.options.steps["joined-project"].data.project_id = this.current_step.data.project_id;
+									this.show_step("joined-project");
+								}
+							});
+						}
+					},
+					"join-error": {
+						selector: ".step.join-error",
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+						}						
+					},
+					"joined-project": {
+						selector: ".step.joined-project",
+						data: {
+							project_id: null
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							
+							if (!merlin.current_step.data.project_id) {
+								tc.util.log("joined-project: missing project data!", "error");
+								return;
+							}
+							
+							$.ajax({
+								type: "GET",
+								url: "/project/small",
+								data: merlin.current_step.data,
+								context: merlin,
+								dataType: "json",
+								success: function(data, ts, xhr) {
+									if (data === "False") {
+										this.show_step("join-error");
+										return false;
+									}
+									this.current_step.dom.find(".project-title").text( data.title );
+									this.current_step.dom.find("a").attr("href", "/project/"+ data.project_id);
+									
+									this.options.data.ref_project.id = null;
+									this.options.data.ref_project.step = null;
+								}
+							});
+							
+						}
+					},
+					"login-or-signup": {
+						selector: ".step.login-or-signup",
+						init: function(merlin, dom) {
+							merlin.app.components.merlin_nav.hide();
+							window.scroll(0, 0);
+							dom.find(".btn-signup").unbind("click").bind("click", {merlin: merlin}, function(e) {
+								e.preventDefault();
+								e.data.merlin.show_step("signup");
+							});
+							dom.find(".btn-login").unbind("click").bind("click", {merlin: merlin}, function(e) {
+								e.preventDefault();
+								e.data.merlin.show_step("login");
+							});
+						}
+					},
+					"login": {
+						selector: ".step.login",
+						next_step: "login-processing",
+						inputs: {
+							email: {
+								selector: "input.email",
+								validators: ["required", "min-3", "max-180", "email"]
+							},
+							password: {
+								selector: "input.password",
+								validators: ["required", "min-3", "max-180"]
+							}
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							merlin.app.components.userland.activateLogin();
+							dom.find(".forgot-password a").unbind("click").bind("click", {merlin: merlin}, function(e) {
+								e.preventDefault();
+								e.data.merlin.show_step("forgot-password");
+							});
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data.login.email = merlin.current_step.inputs.email.dom.val();
+							merlin.options.data.login.password = merlin.current_step.inputs.password.dom.val();
+						}
+					},
+					"login-processing": {
+						selector: ".step.login-processing",
+						init: function(merlin, dom) {
+							$.ajax({
+								type: "POST",
+								url: "/login",
+								data: merlin.options.data.login,
+								context: merlin,
+								dataType: "text",
+								success: function(data, ts, xhr) {
+									if (data === "False") {
+										this.show_step("login-error");
+										return false;
+									}
+									
+									this.app.app_page.user = data;
+									
+									// if the user was prompted to login upon trying to join a project,
+									// return them to the corresponding project list step
+									if ((this.options.data.ref_project.id || this.options.data.ref_project.id === 0) && 
+									     this.options.data.ref_project.step) {
+										
+										this.app.components.userland.displayLoggedIn();
+										this.show_step(this.options.data.ref_project.step);
+										
+									} else {
+										window.location.reload(true);
+									}
+								}
+							});
+						}
+					},
+					"login-error": {
+						selector: ".step.login-error",
+						init: function(merlin, dom) {
+
+						}
+					},
+					"forgot-password": {
+						selector: ".step.forgot-password",
+						next_step: "forgot-password-processing",
+						inputs: {
+							email: {
+								selector: "input.email",
+								validators: ["required", "min-3", "max-180", "email"]
+							}
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+						},
+						finish: function(merlin, dom) {
+							merlin.options.steps["forgot-password-processing"].data.email = merlin.current_step.inputs.email.dom.val();
+						}
+					},
+					"forgot-password-processing": {
+						selector: ".step.forgot-password-processing",
+						data: {
+							email: null
+						},
+						init: function(merlin, dom) {
+							window.scroll(0, 0);
+							
+							if (merlin.current_step.data.email) {
+								$.ajax({
+									type: "POST",
+									url: "/login/forgot",
+									data: merlin.current_step.data,
+									context: merlin,
+									dataType: "text",
+									success: function(data, ts, xhr) {
+										if (data === "False") {
+											this.show_step("forgot-password-error");
+											return false;
+										}
+										this.show_step("forgot-password-finished");
+									}
+								});
+							}
+						}
+					},
+					"forgot-password-finished": {
+						selector: ".step.forgot-password-finished",
+						init: function(merlin, dom) {
+							
+						}
+					},
+					"forgot-password-error": {
+						selector: ".step.forgot-password-error",
+						init: function(merlin, dom) {
+							
+						}
+					},
+					"logout": {
+						selector: ".step.logout-processing",
+						init: function(merlin, dom) {
+							if (merlin.app.app_page.user) {
+								$.ajax({
+									type: "POST",
+									url: "/logout",
+									dataType: "text",
+									success: function() {
+										window.location.reload(true);
+									}
+								});
+							}
+						}
+					},
+					"signup": {
+						selector: ".step.signup",
+						init: function(merlin, dom) {
+							window.scroll(0,0);
+							merlin.app.components.userland.activateSignup();
+						}
+					}
+				},
+				render_proj_group: function(data, scrollpane) {
+					var merlin, n, root_width;
+					tc.util.log("merlin --> render_proj_group");
+					
+					merlin = this;
+					n = 0;
+					root_width = scrollpane.carousel.getRoot().width();
+					
+					$.each(data, function(i, d) {
+						var $proj;
+						n += 1;
+						
+						$proj = 
+							$("<li class='project-carousel-item'></li>").append( 
+								$(".template-content.project-carousel-item").clone(false).children() 
+							);
+							
+						$proj.attr("id", "project,"+ d.project_id);
+						merlin.options.fill_project_item(d, $proj);
+						
+						$proj.width(root_width);
+						scrollpane.carousel.addItem($proj);
+					});
+					return n;
+				},
+				fill_project_item: function(data, $proj) {
+					tc.util.log("merlin --> fill_project_item");
+					
+					if (data.image_id || data.image_id === 0) {
+						$proj.find(".thumb img").attr("src", "/images/"+ (data.image_id % 10) +"/"+ data.image_id +".png");
+					}
+					$proj.find(".member-count").text( data.num_members );
+					$proj.find("a").attr("href", "/project/"+ data.project_id).text( data.title );
+					$proj.find(".description").text( data.description );
+					$proj.find(".owner").text( data.owner.name );
+				},
+				seek_to_project: function(id, scrolllpane) {
+					scrollpane.carousel.getItems().each(function(i) {
+						if ($(this).attr("id") === "project,"+ id) {
+							scrollpane.carousel.seekTo(i);
+							return false;
+						}
+					});
+				},
+				join_click_handler: function(e) {
+					var merlin, carousel;
+					
+					e.preventDefault();
+					
+					merlin = e.data.merlin;
+					carousel = e.data.scrollpane.carousel;
+					
+					merlin.options.steps["join-processing"].data.project_id =
+						carousel.getItems().eq(carousel.getIndex()).attr("id").split(",")[1];
+					
+					merlin.show_step("join-processing");
+				}
+			});
+		
+		});
+		
+	}(this, this.jQuery));
+		
+</script>
+
+{% endblock page_js  %}

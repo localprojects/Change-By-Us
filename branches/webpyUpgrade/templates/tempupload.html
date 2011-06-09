@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <title>temp resource image upload</title>
+        <style type="text/css">
+        * { font-family: helvetica; font-size: 12px; }
+        h1 { font-weight: bold; font-size: 24px; }
+        .button { border:solid 1px #ccc; background-color: #e0e0e0; padding: 5px 10px 5px 10px; font-size: 18px; font-weight: bold; }
+        </style>
+        <script type="text/javascript">
+        </script>
+    </head>
+<body>
+<form  id="frmUpload" name="frmUpload" action="/tempupload" method="POST" enctype="multipart/form-data">
+    <h1>Upload Resource Images</h1>
+    <table cellpadding="5" cellspacing="0">
+        <tr>
+            <td colspan="3" align="center">
+                <input type="submit" name="btnSubmit" class="button" value="submit all"/>
+            </td>
+        </tr>
+        {% for item in d.template_data.res %}
+        <tr style="background-color:{{ loop.cycle('#ccc', '#fff') }}">
+            <td>
+                {%- if item.image_id and item.image_id|int() != -1 -%}
+                <img src="images/{{ (item.image_id|int() % 10)|string() }}/{{ item.image_id }}.png" />
+                {%- else -%}
+                <img src="/static/images/thumb_genAvatar100.png"/>
+                {%- endif -%}
+            </td>
+            <td>{{ item.title }}</td>
+            <td>
+                <input type="file" name="image_{{ item.project_resource_id }}"/>
+            </td>
+        </tr>    
+        {% endfor %}
+        <tr>
+            <td colspan="3" align="center">
+                <input type="submit" name="btnSubmit" class="button" value="submit all"/>
+            </td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>
+
+

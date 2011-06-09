@@ -1,0 +1,243 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - Login
+{% endblock title %}
+
+{% block continent %}
+
+<script type="text/javascript" src='/static/js/lp.gam.facebookConnect.js'></script>
+
+<div class='continent login'>
+	<div class='headlands clearfix'>
+		<div class='west'>
+			<h1>Change by Us NYC is a place to make your city better.</h1>
+			<h3>Share your ideas. Build projects. Make a change.</h3>
+		</div>
+	</div>
+
+	<div class='midlands merlin login clearfix'>
+		
+		<div class="step start clearfix" >
+			<div class='west'>
+				<h4>Login</h4>
+				{% if d.template_data.app_mode != 'beta' %}
+				<div class='oauth-login'>
+					<a class="login-facebook" href='#' onclick="F.connect();"><span>Sign in with Facebook</span></a>
+					<a class="login-twitter" href='/login_twitter'><span>Sign in with Twitter</span></a>
+				</div>
+				<div class='or'>
+					<em>or</em>
+				</div>
+				{% endif %}
+				<div class='email-login'>
+						<div class="row">
+							<label for='email'>Email</label>
+							<input type='text' name='email' id='email' class='email' />
+						</div>
+						<div class="row">
+							<label for='password'>Password</label>
+							<input type='password' name='password' id='password'  class='password'/>
+							<a class="forgot-pass-link" href="#forgot-password">Forgot your password?</a>
+						</div>
+						<div class="row">
+							<button id='login-button' class='next-button rounded-button'>Login</button>
+						</div>
+				</div>
+			</div>
+			
+			<div class='east clearfix'>
+				<p>Don't have an account?</p>
+				<p><a class="rounded-button" href='/join'>Sign Up</a></p>
+			</div>
+		</div><!--end .step-->
+		
+		<div class="step login-process spinner-message" style="display:none;">	
+			<p>Thank you for logging in&hellip;</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div><!--end .step-->
+		
+		<div class="step login-failure" style="display:none;">	
+			<p>There was an error logging you in.</p>
+			<a href="#start" class="retry-login-link"><span class="sm-arrow-back light"></span>Click here to go back to the<br /><span class="spacer"></span>login screen and try again</a>
+		</div><!--end .step-->
+		
+		<div class="step forgot-password clearfix" style="display:none;">	
+			<div class='west'>
+				<h4>Forgot your password? <span>We'll send you an email with instructions to reset your password.</span></h4>
+				<div class='email-login'>
+						<div class="row">
+							<label for='email'>Enter your email</label>
+							<input type='text' name='email-forgot-pass' id='email-forgot-pass' class='email' />
+						</div>
+						<div class="row">
+							<button id='send-instructions' class='next-button rounded-button'>Send Instructions</button>
+						</div>
+				</div>
+			</div>
+			
+			<div class='east clearfix'>
+				<div class='oauth-login' style="{% if d.template_data and d.template_data.app_mode == 'beta' %}display:none;{% endif %}">
+					<a class="login-facebook" href='#' onclick="F.connect();"><span>Sign in with Facebook</span></a>
+					<a class="login-twitter" href='/login_twitter'><span>Sign in with Twitter</span></a>
+				</div>
+			</div>
+		</div><!--end .step-->
+		
+		<div class="step forgot-password-process spinner-message" style="display:none;">	
+			<p>Please wait&hellip;</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div><!--end .step-->
+		
+		<div class="step forgot-password-finished" style="display:none;">	
+			<p>You will receive an email with further details on retrieving your password.</p>
+		</div><!--end .step-->
+		
+		<div class="step forgot-password-error" style="display:none;">	
+			<p>There was an error finding your account. Please double check your email.</p>
+			<a href="#forgot-password" class="retry-login-link"><span class="sm-arrow-back light"></span>Click here to go back to the<br /><span class="spacer"></span>forgot password screen and try again</a>
+		</div><!--end .step-->
+		
+	</div>
+
+	<div class='foothills'>
+		<!-- <a class='back' href='#'><span>Back</span></a> -->
+	</div>	
+</div>
+{% endblock continent %}
+
+
+{% block page_js %}
+<script>
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: Login');
+
+		tc.util.dump(window.location.hash);
+			
+		tc.jQ('a.login-facebook, a.login-twitter').bind('click', {buttons:tc.jQ('a.login-facebook, a.login-twitter')}, function(e){
+			var $t;
+			$t = tc.jQ(this);
+			if($t.hasClass('has-been-clicked') || $t.hasClass('cannot-be-clicked')){
+				e.preventDefault();
+			}
+			$t.addClass('has-been-clicked').siblings().addClass('cannot-be-clicked');
+		})
+		
+		app.components.merlin = new tc.merlin(app,{
+			dom:tc.jQ('.merlin.login'),
+			next_button:tc.jQ('button.next-button'),
+			first_step: (window.location.hash == '#forgot-password') ? 'forgot-password' : 'start',
+			data:{
+				email:null,
+				password:null
+			},
+			steps:{
+				'start':{
+					selector:'.start',
+					next_step:'login-process',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-100','required'],
+							hint:''
+						},
+						password:{
+							selector:'input.password',
+							validators:['min-3','max-200','required'],
+							hint:''
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend({},merlin.options.data,{
+							email:merlin.current_step.inputs.email.dom.val(),
+							password:merlin.current_step.inputs.password.dom.val()
+						});
+					}
+				},
+				'login-process':{
+					selector:'.login-process',
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/login',
+							data:merlin.options.data,
+							context:merlin,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									window.location.hash = 'login-failure';
+									return;
+								}
+								if(merlin.app.app_page.data.redir_from){
+									window.location = merlin.app.app_page.data.redir_from;
+								} else {
+									window.location = '/useraccount';
+								}
+							}
+						});
+					}
+				},
+				'login-failure':{
+					selector:'.login-failure',
+					init:function(merlin,dom){
+						
+					}
+				},
+				'forgot-password':{
+					selector:'.forgot-password',
+					next_step:'forgot-password-process',
+					inputs:{
+						email:{
+							selector:'input.email',
+							validators:['min-3','max-32','required'],
+							hint:''
+						}
+					},
+					finish:function(merlin,dom){
+						merlin.options.data = tc.jQ.extend(merlin.options.data,{
+							email:merlin.current_step.inputs.email.dom.val()
+						});
+					}
+				},
+				'forgot-password-process':{
+					selector:'.forgot-password-process',
+					init:function(merlin,dom){
+						tc.jQ.ajax({
+							type:"POST",
+							url:"/login/forgot",
+							data:merlin.options.data,
+							context:merlin,
+							dataType:"text",
+							success: function(data, ts, xhr) {
+								if (data == "False") {
+									window.location.hash = "forgot-password-error";
+									return;
+								}
+								window.location.hash = "forgot-password-finished";
+							}
+						});
+					}
+				},
+				'forgot-password-error':{
+					selector:'.forgot-password-error',
+					init:function(merlin,dom){
+						
+					}
+				},
+				'forgot-password-finished':{
+					selector:'.forgot-password-finished',
+					init:function(merlin,dom){
+						
+					}
+				},
+				"forget-password-error": {
+					selector:".forgot-password-error",
+					init: function(merlin, dom) {
+
+					}
+				}
+			}
+		});
+	});
+</script>
+{% endblock page_js %}

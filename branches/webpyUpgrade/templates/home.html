@@ -1,0 +1,339 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC
+{% endblock title %}
+
+{% block continent %}
+<div class='continent home'>
+	<div class='headlands'>
+		<span class="hey"><span>Hey NYC!</span></span>
+		<div class='splash-container merlin'>
+			<div class='splash-background'></div>
+			<div class='splash'>
+				<div class="splash-inner first">
+					<!-- post your idea step -->
+					<div class='top-pane clearfix start'>
+						
+						<div class="console">
+							<div class='question-wrap'><span class="start console-message"><span class="spacer"></span>How can we make our city a greener, greater place to live?<a class="next-quest">Next Question</a></span></div>
+							<span class="more-info after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">We need just a little more information.</span></span>
+							<span class="thanks after-idea-message" style='display:none;'>Thanks for your idea<br /><span class="sm">Please wait while we process your idea!</span></span>
+						</div>
+						
+						<div class="step-info step" style='display:none;'>
+							<div class="info-input clearfix">
+								<div class="box box-info box-info-email">
+									<span class="col-head">Your email?</span>
+									<input value='{% if d.template_data.user and d.template_data.user.data.email %}{{ d.template_data.user.data.email }}{% endif %}' type='text' name='email' id='email' class='email'/>
+									<div class="email-info">
+										<p class="email-error">Please enter a valid email address</p>
+										<p>We will never send spam or sell your email address.</p> 
+										<p><em>See our <a href="/tou" class='toc-link'>privacy policy</a> for more details.</em></p>
+									</div>
+								</div>
+								<div class="box box-info box-info-hood">
+									<span class="col-head">Your idea is for...</span>
+									<div class="row row-1 clearfix">
+										<input type='radio' name='location-check' id='location-city' class='location-city location-group styled'/>
+										<label class="location-city-label" for='location-city'>The city</label>
+									</div>
+									<div class="row row-2 clearfix">
+										<input type='radio' name='location-check' id='location-hood' class='location-hood location-group styled'/>
+										<label class="location-hood-label" for='location-hood'>A neighborhood or borough</label>
+									</div>
+									<div class="row row-3">
+										<span class="dropdown-indicator"></span>
+										<input type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
+										<div class="location-hood-list">
+											<ul>
+												<li><strong>So</strong>Ho</li>
+												<li><strong>So</strong>uth Bronx</li>
+											</ul>
+										</div>
+										<span class="error">Please enter a neighborhood or borough.</span>
+									</div>
+								</div>
+							</div>
+						</div><!--end .step-info-->
+				
+						<div class="step idea-processing" style="display:none"></div>
+					</div>
+					
+					<div class="projects-pane">
+						<div class="project-cards">
+							<div class="membrane">
+								<a class="rounded-button small west" href="/search#ideas">See more ideas <span class="sm-arrow-forward"></span></a>
+								<h3>New Ideas</h3>
+								<div class="small-note-area">
+									{% for idea in d.template_data.all_ideas.data %}
+										<div class="small-note">
+											<div class="wrap">
+												<div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}>
+													<strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;
+												</div>
+												<blockquote><p>{{ idea.text|truncate(175) }}</p></blockquote>
+											</div>
+										</div>
+									{% endfor %}
+								</div>
+								
+								<div class="social-networking">
+									{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+									<div class="facebook" style="height: 30px">
+										<!-- <iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fchangeby.us&amp;layout=standard&amp;show_faces=false&amp;width=900&amp;action=like&amp;font&amp;colorscheme=light&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:900px; height:35px;" allowTransparency="true"></iframe> -->
+										<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script><fb:like href="http://changeby.us" show_faces="false" width="900" font=""></fb:like>
+									</div>
+									{% endif %}
+								</div>
+								
+							</div>
+						</div>
+					</div>
+					
+					<div class="photocredit">
+						Photo: &copy; Julienne Schaer/NYC &amp; Company
+					</div>
+				
+				</div><!--end .splash-inner-->
+				
+				<div class="splash-inner">
+					<!-- after idea is posted step -->
+				
+					<div class="top-pane related-processing step-three">
+						<div class="console">
+							<span class="console-message">
+								Turn ideas into solutions.
+								Join a project. Or start your own.
+							</span>
+						</div>
+					</div>
+				
+					<div class="projects-pane step-three found">
+						<div class="box related-projects">
+							<div class="hd">
+								<h2>Related Projects <!-- <em>near</em> <span class="serif"><strong></strong></span> --></h2>
+							</div>
+							<div class="bd">
+								<ul class="projects-list">
+								</ul>
+								<a href="/search" class="see-more more-projects more-projects-related">See more projects <em>near</em> you &rarr;</a>
+							</div>
+						</div>
+						<div class="box citywide-projects">
+							<div class="hd">
+								<h2>Citywide Projects</h2>
+							</div>
+							<div class="bd">
+								<ul class="projects-list">
+								</ul>
+								<a href="/search#projects" class="see-more more-projects">See more citywide projects &rarr;</a>
+							</div>
+						</div>
+						<div class="controls">
+							<a href="/search#projects" class="rounded-button">Browse All</a><span>or</span><a href="/create" class="rounded-button">Start Your Own</a>
+						</div>
+					</div>
+				
+				
+					<div class="projects-pane not-found" style="display:none" >
+						<div class="box no-related-projects">
+							<div class="hd">
+								<h2>No projects found!</h2>
+								<p>We didn't find any projects based on your idea or location.  But don't stop there.</p>
+							</div>
+							<div class="bd">
+								<div class="row clearfix">
+									<p>Search for projects that interest you:</p>
+									<a href="/search#projects" class="rounded-button">Browse All</a>
+								</div>
+								<div class="row clearfix">
+									<p class="center"><em>or</em></p>
+								</div>
+								<div class="row clearfix">
+									<p>Take the lead, and begin a project today.</p>
+									<a href="/create" class="rounded-button">Start Your Own</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				
+				
+				</div><!--end .splash-inner-->
+
+			</div><!--end .splash .merlin-->
+			
+			<div class="note-card-pane color3">
+				<div class="membrane">
+					<div class="note-card-splash" style="display:none">
+						<!-- content loaded here by js when hovering on a .small-note -->
+					</div>
+					
+					<div class="note-card-submit-idea">
+						<span class="hd serif">My idea is:</span>
+						<textarea class="idea"></textarea>
+						<span class="charlimit idea">0/175</span>
+						<input type='text' name='main_text' class='main_text' style='display:none;' />
+					</div>
+				</div>
+				
+				<div class="primary-action">
+					<a class="ca-btn" href="#">
+						<span>Post</span>
+					</a>
+				</div>
+				<div class="oops" style="display:none;">
+					<span>Oops! Please limit your idea to 175 characters.</span>
+				</div>
+			</div>
+			
+			<div class="hand">
+			</div>
+				
+		</div><!--end .splash-container-->
+	</div><!-- end headlands -->
+	
+	
+
+	<div class='midlands clearfix'>
+				
+		<div class="box box-mission">
+			<h1><strong>Change by Us NYC</strong> is a place to share ideas, create projects, discover resources, and make our city better.</h1>
+		</div>
+		
+		<div class="box box-project">
+			<a href="/search#projects" class="ca-btn"><span>Browse and join projects</span></a>
+			<h1><strong>Put your ideas into action:</strong></h1>
+			<h2><a href="/search#projects">Join a project</a>. Or <a href="/create">start your own project</a>.</h2>
+		</div>
+		
+		<div class="box box-leaderboard">
+			<h3>Top <strong>{{ d.template_data.leaderboard|length }} Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
+			<ol class="leaderboard">
+				{% for item in d.template_data.leaderboard %}
+				<li {% if loop.index is even %}class="every-other"{% endif %}>
+					<table>
+						<tbody>
+							<tr>
+								<td class="num">{{ item.ordinal }}</td>
+								<td class="project-header">
+									<div class='thumb'>							
+										{% if item.image_id > 0 %}
+										<a href="/project/{{ item.project_id }}"><img width="60" height="60" src="/images/{{ item.image_id % 10 }}/{{ item.image_id }}.png" alt="" class='proj'/></a>
+										{% else %}
+										<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
+										{% endif %}
+										<span class="overlay-tag"></span>
+									</div>
+									<div class='main'>
+										<h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(45) }}</a></h1>
+										<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
+									</div>
+								</td>
+								<td class="score">{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				{% if loop.index is even %}
+				<li class="clearrow">
+				</li>
+				{% endif %}
+				{% endfor %}
+			</ol>
+			<div style="clear:both"></div>
+		</div>
+		
+		<div class="box box-whoslistening">
+			<h1><strong>Who's listening</strong></h1>
+			<h2>A network of leaders from across the city is ready to read <a href="/search#ideas">ideas</a>, follow <a href="/search#projects">projects</a>, and connect online.</h2>
+			<ul class="clearfix">
+				<li>
+					<img src="/static/images/thumb_lshepherd.jpg" alt="" width="200" height="150" />
+					<p class="name">Lisbeth Shepherd</p>
+					<p class="job">Founder &amp; Executive Director, Green City Force Corps</p>
+				</li>
+				<li>
+					<img src="/static/images/thumb_kmdnor.jpg" alt="" width="200" height="150" />
+					<p class="name">Khairi Mdnor</p>
+					<p class="job">Creative Director,<br />Joao</p>
+				</li>
+				<li>
+					<img src="/static/images/thumb_dshabazz.jpg" alt="" width="200" height="150" />
+					<p class="name">Diallo Shabazz</p>
+					<p class="job">Director of Green Career Development, Solar One</p>
+				</li>
+				<li class="every-fourth">
+					<img src="/static/images/thumb_cgreer.jpg" alt="" width="200" height="150" />
+					<p class="name">Christina Greer</p>
+					<p class="job">Assistant Professor, Political Science, Fordham University</p>
+				</li>
+			</ul>
+			
+			<div style="clear:both"></div>
+		</div>
+		
+		<div class="box box-news">
+			<h1><strong>Recent News</strong></h1>
+			<h2>Find out what's happening on Change by Us NYC.</h2>
+			
+			<ul>
+				{% for item in d.template_data.news %}
+					{% if loop.index < 3 %}
+					<li {% if loop.index % 3 == 0 %}class="every-third"{% endif %}>
+						<span class="date">{{ item.datetime }}</span>
+						<span class="title serif">{{ item.title }}</span>
+						<span class="excerpt serif">{{ item.text }}</span>
+						<a href="{{ item.link }}" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
+					</li>
+					{% endif %}
+				{% endfor %}
+			</ul>
+			
+			<div style="clear:both"></div>
+		</div>
+	</div><!-- end midlands -->
+
+	<div class='foothills'>
+
+	</div>
+	
+	<div class='template-content modal-content toc'>
+		<h2><strong>Terms of Use</strong></h2>
+		<div class="scroll-pane">
+			{% include 'partials/toc.html' %}
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<li class='template-content project-item'>
+		<div class="thumb">
+			<img src="http://placehold.it/50x50" alt="" class="proj"/>
+			<span class="overlay-tag"></span>
+			<span class="member-count">58</span>
+		</div>
+		<div class="project-info">
+			<div class="endorser-thumb clearfix" style='display:none;'>
+				<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
+				<span class="overlay-tag"></span>
+			</div>
+			<span class="link"><a href="/project">Plant a Million Trees</a></span>
+			<span class="creator"><em>Created by </em> Terry Richardson<br /><em>from </em> <strong>MillionTreesNYC</strong></span>
+			<span class="description">Tired of the empty lot at 161st and Melrose? Let&rsquo;s start a garden...</span>
+		</div>
+	</li>
+	
+</div>
+{% endblock continent %}
+
+{% block page_js %}
+	<script type="text/javascript">
+		{% if d.template_data.user %}
+			app_page.data.user = {{ d.template_data.user.json }};
+		{% endif %}
+		
+	</script>
+	<script type="text/javascript" src='/static/js/pages/home.js'></script>
+{% endblock page_js %}
+
+
