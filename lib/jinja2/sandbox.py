@@ -9,14 +9,15 @@
 
     The behavior can be changed by subclassing the environment.
 
-    :copyright: (c) 2010 by the Jinja Team.
+    :copyright: Copyright 2008 by Armin Ronacher.
     :license: BSD.
 """
 import operator
+from types import FunctionType, MethodType, TracebackType, CodeType, \
+     FrameType, GeneratorType
+from jinja2.runtime import Undefined
 from jinja2.environment import Environment
 from jinja2.exceptions import SecurityError
-from jinja2.utils import FunctionType, MethodType, TracebackType, CodeType, \
-     FrameType, GeneratorType
 
 
 #: maximum number of items a range may produce
@@ -30,34 +31,13 @@ UNSAFE_FUNCTION_ATTRIBUTES = set(['func_closure', 'func_code', 'func_dict',
 UNSAFE_METHOD_ATTRIBUTES = set(['im_class', 'im_func', 'im_self'])
 
 
-import warnings
-
-# make sure we don't warn in python 2.6 about stuff we don't care about
-warnings.filterwarnings('ignore', 'the sets module', DeprecationWarning,
-                        module='jinja2.sandbox')
-
 from collections import deque
-
-_mutable_set_types = (set,)
-_mutable_mapping_types = (dict,)
-_mutable_sequence_types = (list,)
-
-
-# on python 2.x we can register the user collection types
-try:
-    from UserDict import UserDict, DictMixin
-    from UserList import UserList
-    _mutable_mapping_types += (UserDict, DictMixin)
-    _mutable_set_types += (UserList,)
-except ImportError:
-    pass
-
-# if sets is still available, register the mutable set from there as well
-try:
-    from sets import Set
-    _mutable_set_types += (Set,)
-except ImportError:
-    pass
+from sets import Set, ImmutableSet
+from UserDict import UserDict, DictMixin
+from UserList import UserList
+_mutable_set_types = (ImmutableSet, Set, set)
+_mutable_mapping_types = (UserDict, DictMixin, dict)
+_mutable_sequence_types = (UserList, list)
 
 #: register Python 2.6 abstract base classes
 try:
@@ -98,9 +78,8 @@ def safe_range(*args):
 
 
 def unsafe(f):
-    """Marks a function or method as unsafe.
-
-    ::
+    """
+    Mark a function or method as unsafe::
 
         @unsafe
         def delete(self):
@@ -182,81 +161,9 @@ class SandboxedEnvironment(Environment):
     """
     sandboxed = True
 
-    #: default callback table for the binary operators.  A copy of this is
-    #: available on each instance of a sandboxed environment as
-    #: :attr:`binop_table`
-    default_binop_table = {
-        '+':        operator.add,
-        '-':        operator.sub,
-        '*':        operator.mul,
-        '/':        operator.truediv,
-        '//':       operator.floordiv,
-        '**':       operator.pow,
-        '%':        operator.mod
-    }
-
-    #: default callback table for the unary operators.  A copy of this is
-    #: available on each instance of a sandboxed environment as
-    #: :attr:`unop_table`
-    default_unop_table = {
-        '+':        operator.pos,
-        '-':        operator.neg
-    }
-
-    #: a set of binary operators that should be intercepted.  Each operator
-    #: that is added to this set (empty by default) is delegated to the
-    #: :meth:`call_binop` method that will perform the operator.  The default
-    #: operator callback is specified by :attr:`binop_table`.
-    #:
-    #: The following binary operators are interceptable:
-    #: ``//``, ``%``, ``+``, ``*``, ``-``, ``/``, and ``**``
-    #:
-    #: The default operation form the operator table corresponds to the
-    #: builtin function.  Intercepted calls are always slower than the native
-    #: operator call, so make sure only to intercept the ones you are
-    #: interested in.
-    #:
-    #: .. versionadded:: 2.6
-    intercepted_binops = frozenset()
-
-    #: a set of unary operators that should be intercepted.  Each operator
-    #: that is added to this set (empty by default) is delegated to the
-    #: :meth:`call_unop` method that will perform the operator.  The default
-    #: operator callback is specified by :attr:`unop_table`.
-    #:
-    #: The following unary operators are interceptable: ``+``, ``-``
-    #:
-    #: The default operation form the operator table corresponds to the
-    #: builtin function.  Intercepted calls are always slower than the native
-    #: operator call, so make sure only to intercept the ones you are
-    #: interested in.
-    #:
-    #: .. versionadded:: 2.6
-    intercepted_unops = frozenset()
-
-    def intercept_unop(self, operator):
-        """Called during template compilation with the name of a unary
-        operator to check if it should be intercepted at runtime.  If this
-        method returns `True`, :meth:`call_unop` is excuted for this unary
-        operator.  The default implementation of :meth:`call_unop` will use
-        the :attr:`unop_table` dictionary to perform the operator with the
-        same logic as the builtin one.
-
-        The following unary operators are interceptable: ``+`` and ``-``
-
-        Intercepted calls are always slower than the native operator call,
-        so make sure only to intercept the ones you are interested in.
-
-        .. versionadded:: 2.6
-        """
-        return False
-
-
     def __init__(self, *args, **kwargs):
         Environment.__init__(self, *args, **kwargs)
         self.globals['range'] = safe_range
-        self.binop_table = self.default_binop_table.copy()
-        self.unop_table = self.default_unop_table.copy()
 
     def is_safe_attribute(self, obj, attr, value):
         """The sandboxed environment will call this method to check if the
@@ -273,26 +180,8 @@ class SandboxedEnvironment(Environment):
         True.  Override this method to alter the behavior, but this won't
         affect the `unsafe` decorator from this module.
         """
-        return not (getattr(obj, 'unsafe_callable', False) or
+        return not (getattr(obj, 'unsafe_callable', False) or \
                     getattr(obj, 'alters_data', False))
-
-    def call_binop(self, context, operator, left, right):
-        """For intercepted binary operator calls (:meth:`intercepted_binops`)
-        this function is executed instead of the builtin operator.  This can
-        be used to fine tune the behavior of certain operators.
-
-        .. versionadded:: 2.6
-        """
-        return self.binop_table[operator](left, right)
-
-    def call_unop(self, context, operator, arg):
-        """For intercepted unary operator calls (:meth:`intercepted_unops`)
-        this function is executed instead of the builtin operator.  This can
-        be used to fine tune the behavior of certain operators.
-
-        .. versionadded:: 2.6
-        """
-        return self.unop_table[operator](arg)
 
     def getitem(self, obj, argument):
         """Subscribe an object from sandboxed code."""
@@ -302,7 +191,7 @@ class SandboxedEnvironment(Environment):
             if isinstance(argument, basestring):
                 try:
                     attr = str(argument)
-                except Exception:
+                except:
                     pass
                 else:
                     try:
@@ -323,14 +212,14 @@ class SandboxedEnvironment(Environment):
             value = getattr(obj, attribute)
         except AttributeError:
             try:
-                return obj[attribute]
+                return obj[argument]
             except (TypeError, LookupError):
                 pass
         else:
             if self.is_safe_attribute(obj, attribute, value):
                 return value
             return self.unsafe_undefined(obj, attribute)
-        return self.undefined(obj=obj, name=attribute)
+        return self.undefined(obj=obj, name=argument)
 
     def unsafe_undefined(self, obj, attribute):
         """Return an undefined object for unsafe attributes."""

@@ -23,17 +23,16 @@
         {% endblock %}
 
 
-    :copyright: (c) 2010 by the Jinja Team.
+    :copyright: 2008 by Armin Ronacher, Christoph Hack.
     :license: BSD, see LICENSE for more details.
 """
 __docformat__ = 'restructuredtext en'
 try:
     __version__ = __import__('pkg_resources') \
         .get_distribution('Jinja2').version
-except Exception:
+except:
     __version__ = 'unknown'
 
-# We need to load the correct path since that's where the libs start from
 import sys, os
 sys.path.append(os.path.dirname(__file__) + "/../")
 
@@ -42,36 +41,26 @@ from jinja2.environment import Environment, Template
 
 # loaders
 from jinja2.loaders import BaseLoader, FileSystemLoader, PackageLoader, \
-     DictLoader, FunctionLoader, PrefixLoader, ChoiceLoader, \
-     ModuleLoader
-
-# bytecode caches
-from jinja2.bccache import BytecodeCache, FileSystemBytecodeCache, \
-     MemcachedBytecodeCache
+     DictLoader, FunctionLoader, PrefixLoader, ChoiceLoader
 
 # undefined types
 from jinja2.runtime import Undefined, DebugUndefined, StrictUndefined
 
 # exceptions
 from jinja2.exceptions import TemplateError, UndefinedError, \
-     TemplateNotFound, TemplatesNotFound, TemplateSyntaxError, \
-     TemplateAssertionError
+     TemplateNotFound, TemplateSyntaxError, TemplateAssertionError
 
 # decorators and public utilities
-from jinja2.filters import environmentfilter, contextfilter, \
-     evalcontextfilter
+from jinja2.filters import environmentfilter, contextfilter
 from jinja2.utils import Markup, escape, clear_caches, \
-     environmentfunction, evalcontextfunction, contextfunction, \
-     is_undefined
+     environmentfunction, contextfunction, is_undefined
 
 __all__ = [
     'Environment', 'Template', 'BaseLoader', 'FileSystemLoader',
     'PackageLoader', 'DictLoader', 'FunctionLoader', 'PrefixLoader',
-    'ChoiceLoader', 'BytecodeCache', 'FileSystemBytecodeCache',
-    'MemcachedBytecodeCache', 'Undefined', 'DebugUndefined',
-    'StrictUndefined', 'TemplateError', 'UndefinedError', 'TemplateNotFound',
-    'TemplatesNotFound', 'TemplateSyntaxError', 'TemplateAssertionError',
-    'ModuleLoader', 'environmentfilter', 'contextfilter', 'Markup', 'escape',
-    'environmentfunction', 'contextfunction', 'clear_caches', 'is_undefined',
-    'evalcontextfilter', 'evalcontextfunction'
+    'ChoiceLoader', 'Undefined', 'DebugUndefined', 'StrictUndefined',
+    'TemplateError', 'UndefinedError', 'TemplateNotFound',
+    'TemplateSyntaxError', 'TemplateAssertionError', 'environmentfilter',
+    'contextfilter', 'Markup', 'escape', 'environmentfunction',
+    'contextfunction', 'clear_caches', 'is_undefined'
 ]

@@ -3,8 +3,8 @@ Session Management
 (from web.py)
 """
 
-import os, time, datetime, random, base64
-import os.path
+import os, time, datetime, random, base64, sys
+# from framework.log import log   # bh -- kills ip
 try:
     import cPickle as pickle
 except ImportError:
@@ -32,46 +32,25 @@ web.config.session_parameters = utils.storage({
     'ignore_change_ip': True,
     'secret_key': 'fLjUfxqXtfNoIldA0A0J',
     'expired_message': 'Session expired',
-    'httponly': True
 })
 
 class SessionExpired(web.HTTPError): 
     def __init__(self, message):
         web.HTTPError.__init__(self, '200 OK', {}, data=message)
 
-class Session(object):
+class Session(utils.ThreadedDict):
     """Session management for web.py
     """
-    __slots__ = [
-        "store", "_initializer", "_last_cleanup_time", "_config", "_data",
-        "__getitem__", "__setitem__", "__delitem__"
-    ]
 
     def __init__(self, app, store, initializer=None):
-        self.store = store
-        self._initializer = initializer
-        self._last_cleanup_time = 0
-        self._config = utils.storage(web.config.session_parameters)
-        self._data = utils.threadeddict()
-
-        self.__getitem__ = self._data.__getitem__
-        self.__setitem__ = self._data.__setitem__
-        self.__delitem__ = self._data.__delitem__
+        self.__dict__['store'] = store
+        self.__dict__['_initializer'] = initializer
+        self.__dict__['_last_cleanup_time'] = 0
+        self.__dict__['_config'] = utils.storage(web.config.session_parameters)
+        self.__dict__['_changed'] = False
 
         if app:
             app.add_processor(self._processor)
-
-    def __getattr__(self, name):
-        return getattr(self._data, name)
-
-    def __setattr__(self, name, value):
-        if name in self.__slots__:
-            object.__setattr__(self, name, value)
-        else:
-            setattr(self._data, name, value)
-
-    def __delattr__(self, name):
-        delattr(self._data, name)
 
     def _processor(self, handler):
         """Application processor to setup session for every request"""
@@ -87,7 +66,6 @@ class Session(object):
         """Load the session from the store, by the id from cookie"""
         cookie_name = self._config.cookie_name
         cookie_domain = self._config.cookie_domain
-        httponly = self._config.httponly
         self.session_id = web.cookies().get(cookie_name)
 
         # protection against session_id tampering
@@ -128,13 +106,13 @@ class Session(object):
     def _save(self):
         cookie_name = self._config.cookie_name
         cookie_domain = self._config.cookie_domain
-        httponly = self._config.httponly
-
         if not self.get('_killed'):
-            web.setcookie(cookie_name, self.session_id, domain=cookie_domain, httponly=httponly)
-            self.store[self.session_id] = dict(self._data)
+            web.setcookie(cookie_name, self.session_id, domain=cookie_domain)
+            if '_changed' not in self or self['_changed'] is True:
+                self._changed = False
+                self.store[self.session_id] = dict(self)
         else:
-            web.setcookie(cookie_name, self.session_id, expires=-1, domain=cookie_domain, httponly=httponly)
+            web.setcookie(cookie_name, self.session_id, expires=-1, domain=cookie_domain)
     
     def _generate_session_id(self):
         """Generate a random id for session"""
@@ -159,7 +137,7 @@ class Session(object):
         timeout = self._config.timeout
         if current_time - self._last_cleanup_time > timeout:
             self.store.cleanup(timeout)
-            self._last_cleanup_time = current_time
+            self.__dict__['_last_cleanup_time'] = current_time
 
     def expired(self):
         """Called when an expired session is atime"""
@@ -171,6 +149,10 @@ class Session(object):
         """Kill the session, make it no longer available"""
         del self.store[self.session_id]
         self._killed = True
+        
+    def invalidate(self):
+        """Only save when the session is invalidated"""
+        self._changed = True
 
 class Store:
     """Base class for session stores"""
@@ -193,10 +175,14 @@ class Store:
         pickled = pickle.dumps(session_dict)
         return base64.encodestring(pickled)
 
-    def decode(self, session_data):
+    def decode(self, session_data, key=None):
         """decodes the data to get back the session dict """
-        pickled = base64.decodestring(session_data)
-        return pickle.loads(pickled)
+        try:
+            pickled = base64.decodestring(session_data)            
+            session_dict = pickle.loads(pickled)
+        except Exception, e:
+            session_dict = {'session_id': key, 'ip': web.ctx.ip}    # bh: this is a hack, because sometimes we are failing here based on corrupt session data
+        return session_dict
 
 class DiskStore(Store):
     """
@@ -218,9 +204,7 @@ class DiskStore(Store):
     def __init__(self, root):
         # if the storage root doesn't exists, create it.
         if not os.path.exists(root):
-            os.makedirs(
-                    os.path.abspath(root)
-                    )
+            os.mkdir(root)
         self.root = root
 
     def _get_path(self, key):
@@ -236,11 +220,12 @@ class DiskStore(Store):
         path = self._get_path(key)
         if os.path.exists(path): 
             pickled = open(path).read()
-            return self.decode(pickled)
+            return self.decode(pickled, key)
         else:
             raise KeyError, key
 
     def __setitem__(self, key, value):
+        # log.info("Writing to session...")
         path = self._get_path(key)
         pickled = self.encode(value)    
         try:
@@ -261,7 +246,8 @@ class DiskStore(Store):
         now = time.time()
         for f in os.listdir(self.root):
             path = self._get_path(f)
-            atime = os.stat(path).st_atime
+            if path[9] == ".": continue     # bh: added this to stop trying to delete .svn directories ("sessions/.XXX")
+            atime = os.stat(path).st_mtime  # bh: changed this from st_atime (last access) to st_mtime (last modified) -- files are being 'accessed' by some process (OSX mds?).
             if now - atime > timeout :
                 os.remove(path)
 
@@ -285,11 +271,11 @@ class DBStore(Store):
         now = datetime.datetime.now()
         try:
             s = self.db.select(self.table, where="session_id=$key", vars=locals())[0]
-            self.db.update(self.table, where="session_id=$key", atime=now, vars=locals())
+            # self.db.update(self.table, where="session_id=$key", atime=now, vars=locals())     # bh: writing everytime leads to problems. expiration is a day from initial session creation -- that's fine.
         except IndexError:
             raise KeyError
         else:
-            return self.decode(s.data)
+            return self.decode(s.data, key)
 
     def __setitem__(self, key, value):
         pickled = self.encode(value)

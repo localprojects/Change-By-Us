@@ -54,7 +54,7 @@ class UnknownParamstyle(Exception):
     """
     pass
     
-class SQLParam(object):
+class SQLParam:
     """
     Parameter in SQLQuery.
     
@@ -66,8 +66,6 @@ class SQLParam(object):
         >>> q.values()
         ['joe']
     """
-    __slots__ = ["value"]
-
     def __init__(self, value):
         self.value = value
         
@@ -97,7 +95,7 @@ class SQLParam(object):
 
 sqlparam =  SQLParam
 
-class SQLQuery(object):
+class SQLQuery:
     """
     You can pass this sort of thing as a clause in any db function.
     Otherwise, you can pass a dictionary to the keyword argument `vars`
@@ -106,10 +104,8 @@ class SQLQuery(object):
     Internally, consists of `items`, which is a list of strings and
     SQLParams, which get concatenated to produce the actual query.
     """
-    __slots__ = ["items"]
-
     # tested in sqlquote's docstring
-    def __init__(self, items=None):
+    def __init__(self, items=[]):
         r"""Creates a new SQLQuery.
         
             >>> SQLQuery("x")
@@ -122,9 +118,7 @@ class SQLQuery(object):
             >>> SQLQuery(SQLParam(1))
             <sql: '1'>
         """
-        if items is None:
-            self.items = []
-        elif isinstance(items, list):
+        if isinstance(items, list):
             self.items = items
         elif isinstance(items, SQLParam):
             self.items = [items]
@@ -137,9 +131,6 @@ class SQLQuery(object):
         for i, item in enumerate(self.items):
             if isinstance(item, SQLParam) and isinstance(item.value, SQLLiteral):
                 self.items[i] = item.value.v
-
-    def append(self, value):
-        self.items.append(value)
 
     def __add__(self, other):
         if isinstance(other, basestring):
@@ -159,12 +150,13 @@ class SQLQuery(object):
         return SQLQuery(items + self.items)
 
     def __iadd__(self, other):
-        if isinstance(other, (basestring, SQLParam)):
-            self.items.append(other)
+        if isinstance(other, basestring):
+            items = [other]
         elif isinstance(other, SQLQuery):
-            self.items.extend(other.items)
+            items = other.items
         else:
             return NotImplemented
+        self.items.extend(items)
         return self
 
     def __len__(self):
@@ -179,20 +171,12 @@ class SQLQuery(object):
             >>> q.query(paramstyle='qmark')
             'SELECT * FROM test WHERE name=?'
         """
-        s = []
+        s = ''
         for x in self.items:
             if isinstance(x, SQLParam):
                 x = x.get_marker(paramstyle)
-                s.append(safestr(x))
-            else:
-                x = safestr(x)
-                # automatically escape % characters in the query
-                # For backward compatability, ignore escaping when the query looks already escaped
-                if paramstyle in ['format', 'pyformat']:
-                    if '%' in x and '%%' not in x:
-                        x = x.replace('%', '%%')
-                s.append(x)
-        return "".join(s)
+            s += safestr(x)
+        return s
     
     def values(self):
         """
@@ -203,39 +187,21 @@ class SQLQuery(object):
         """
         return [i.value for i in self.items if isinstance(i, SQLParam)]
         
-    def join(items, sep=' ', prefix=None, suffix=None, target=None):
+    def join(items, sep=' '):
         """
         Joins multiple queries.
         
         >>> SQLQuery.join(['a', 'b'], ', ')
         <sql: 'a, b'>
-
-        Optinally, prefix and suffix arguments can be provided.
-
-        >>> SQLQuery.join(['a', 'b'], ', ', prefix='(', suffix=')')
-        <sql: '(a, b)'>
-
-        If target argument is provided, the items are appended to target instead of creating a new SQLQuery.
         """
-        if target is None:
-            target = SQLQuery()
+        if len(items) == 0:
+            return SQLQuery("")
 
-        target_items = target.items
-
-        if prefix:
-            target_items.append(prefix)
-
-        for i, item in enumerate(items):
-            if i != 0:
-                target_items.append(sep)
-            if isinstance(item, SQLQuery):
-                target_items.extend(item.items)
-            else:
-                target_items.append(item)
-
-        if suffix:
-            target_items.append(suffix)
-        return target
+        q = SQLQuery(items[0])
+        for item in items[1:]:
+            q += sep
+            q += item
+        return q
     
     join = staticmethod(join)
     
@@ -487,9 +453,10 @@ class DB:
         self.db_module = db_module
         self.keywords = keywords
 
+        
         self._ctx = threadeddict()
         # flag to enable/disable printing queries
-        self.printing = config.get('debug_sql', config.get('debug', False))
+        self.printing = config.get('debug', False)
         self.supports_multiple_insert = False
         
         try:
@@ -581,22 +548,26 @@ class DB:
         """executes an sql query"""
         self.ctx.dbq_count += 1
         
+        from framework.log import log #bh - executing this at load will nullify ips        
+        
         try:
             a = time.time()
             paramstyle = getattr(self, 'paramstyle', 'pyformat')
             out = cur.execute(sql_query.query(paramstyle), sql_query.values())
             b = time.time()
         except:
-            if self.printing:
-                print >> debug, 'ERR:', str(sql_query)
+            log.error(str(sql_query))   # bh
+            # if self.printing:
+            #     print >> debug, 'ERR:', str(sql_query)
             if self.ctx.transactions:
                 self.ctx.transactions[-1].rollback()
             else:
                 self.ctx.rollback()
             raise
 
-        if self.printing:
-            print >> debug, '%s (%s): %s' % (round(b-a, 2), self.ctx.dbq_count, str(sql_query))
+        #log.info('%s (%s): %s' % (round(b-a, 2), self.ctx.dbq_count, str(sql_query)))   # bh
+        # if self.printing:
+        #     print >> debug, '%s (%s): %s' % (round(b-a, 2), self.ctx.dbq_count, str(sql_query))
         return out
     
     def _where(self, where, vars): 
@@ -743,7 +714,7 @@ class DB:
             _values = SQLQuery.join([sqlparam(v) for v in values.values()], ', ')
             sql_query = "INSERT INTO %s " % tablename + q(_keys) + ' VALUES ' + q(_values)
         else:
-            sql_query = SQLQuery(self._get_insert_default_values_query(tablename))
+            sql_query = SQLQuery("INSERT INTO %s DEFAULT VALUES" % tablename) # bh: note, doesnt work with MySQL
 
         if _test: return sql_query
         
@@ -769,9 +740,6 @@ class DB:
             self.ctx.commit()
         return out
         
-    def _get_insert_default_values_query(self, table):
-        return "INSERT INTO %s DEFAULT VALUES" % table
-
     def multiple_insert(self, tablename, values, seqname=None, _test=False):
         """
         Inserts multiple rows into `tablename`. The `values` must be a list of dictioanries, 
@@ -804,12 +772,13 @@ class DB:
             if v.keys() != keys:
                 raise ValueError, 'Bad data'
 
-        sql_query = SQLQuery('INSERT INTO %s (%s) VALUES ' % (tablename, ', '.join(keys)))
+        sql_query = SQLQuery('INSERT INTO %s (%s) VALUES ' % (tablename, ', '.join(keys))) 
 
-        for i, row in enumerate(values):
-            if i != 0:
-                sql_query.append(", ")
-            SQLQuery.join([SQLParam(row[k]) for k in keys], sep=", ", target=sql_query, prefix="(", suffix=")")
+        data = []
+        for row in values:
+            d = SQLQuery.join([SQLParam(row[k]) for k in keys], ', ')
+            data.append('(' + d + ')')
+        sql_query += SQLQuery.join(data, ', ')
 
         if _test: return sql_query
 
@@ -942,11 +911,7 @@ class PostgresDB(DB):
 
     def _connect(self, keywords):
         conn = DB._connect(self, keywords)
-        try:
-            conn.set_client_encoding('UTF8')
-        except AttributeError:
-            # fallback for pgdb driver
-            conn.cursor().execute("set client_encoding to 'UTF-8'")
+        conn.set_client_encoding('UTF8')
         return conn
         
     def _connect_with_pooling(self, keywords):
@@ -974,9 +939,6 @@ class MySQLDB(DB):
     def _process_insert_query(self, query, tablename, seqname):
         return query, SQLQuery('SELECT last_insert_id();')
 
-    def _get_insert_default_values_query(self, table):
-        return "INSERT INTO %s () VALUES()" % table
-
 def import_driver(drivers, preferred=None):
     """Import the first available driver or preferred driver.
     """
@@ -997,9 +959,9 @@ class SqliteDB(DB):
         if db.__name__ in ["sqlite3", "pysqlite2.dbapi2"]:
             db.paramstyle = 'qmark'
 
-        # sqlite driver doesn't create datatime objects for timestamp columns unless `detect_types` option is passed.
-        # It seems to be supported in sqlite3 and pysqlite2 drivers, not surte about sqlite.
-        keywords.setdefault('detect_types', db.PARSE_DECLTYPES)
+        if 'pw' in keywords: del keywords['pw']    # bh: added to make db interface agnostic
+        if 'user' in keywords: del keywords['user']        
+        if 'host' in keywords: del keywords['host']        
 
         self.paramstyle = db.paramstyle
         keywords['database'] = keywords.pop('db')
@@ -1012,7 +974,11 @@ class SqliteDB(DB):
     def query(self, *a, **kw):
         out = DB.query(self, *a, **kw)
         if isinstance(out, iterbetter):
+            # rowcount is not provided by sqlite
+            def _nonzero(): 
+                raise self.db_module.NotSupportedError("rowcount is not supported by sqlite")
             del out.__len__
+            out.__nonzero__ = _nonzero
         return out
 
 class FirebirdDB(DB):

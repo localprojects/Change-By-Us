@@ -56,8 +56,8 @@ def modified(date=None, etag=None):
     
     This function takes the last-modified date `date` and the ETag `etag`
     and checks the headers to see if they match. If they do, it returns 
-    `True`, or otherwise it raises NotModified error. It also sets
-    `Last-Modified` and `ETag` output headers.
+    `True` and sets the response status to `304 Not Modified`. It also
+    sets `Last-Modified and `ETag` output headers.
     """
     try:
         from __builtin__ import set
@@ -77,12 +77,10 @@ def modified(date=None, etag=None):
         if date-datetime.timedelta(seconds=1) <= m:
             validate = True
     
+    if validate: web.ctx.status = '304 Not Modified'
     if date: lastmodified(date)
     if etag: web.header('ETag', '"' + etag + '"')
-    if validate:
-        raise web.notmodified()
-    else:
-        return True
+    return not validate
 
 def urlencode(query, doseq=0):
     """
@@ -97,7 +95,7 @@ def urlencode(query, doseq=0):
         if doseq and isinstance(value, list):
             return [convert(v) for v in value]
         else:
-            return utils.safestr(value)
+            return utils.utf8(value)
         
     query = dict([(k, convert(v, doseq)) for k, v in query.items()])
     return urllib.urlencode(query, doseq=doseq)
@@ -120,7 +118,7 @@ def changequery(query=None, **kw):
         out += '?' + urlencode(query, doseq=True)
     return out
 
-def url(path=None, doseq=False, **kw):
+def url(path=None, **kw):
     """
     Makes url by concatinating web.ctx.homepath and path and the 
     query string created using the arguments.
@@ -133,7 +131,7 @@ def url(path=None, doseq=False, **kw):
         out = path
 
     if kw:
-        out += '?' + urlencode(kw, doseq=doseq)
+        out += '?' + urlencode(kw)
     
     return out
 

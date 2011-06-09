@@ -5,7 +5,7 @@
 
     Various constants.
 
-    :copyright: (c) 2010 by the Jinja Team.
+    :copyright: 2007 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 

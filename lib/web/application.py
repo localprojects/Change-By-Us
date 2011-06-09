@@ -107,9 +107,15 @@ class application:
                 web.ctx.fullpath = oldctx.fullpath
                 
     def _cleanup(self):
-        # Threads can be recycled by WSGI servers.
-        # Clearing up all thread-local state to avoid interefereing with subsequent requests.
-        utils.ThreadedDict.clear_all()
+        #@@@
+        # Since the CherryPy Webserver uses thread pool, the thread-local state is never cleared.
+        # This interferes with the other requests. 
+        # clearing the thread-local storage to avoid that.
+        # see utils.ThreadedDict for details
+        import threading
+        t = threading.currentThread()
+        if hasattr(t, '_d'):
+            del t._d
     
     def add_mapping(self, pattern, classname):
         self.mapping += (pattern, classname)
@@ -264,9 +270,6 @@ class application:
         def is_generator(x): return x and hasattr(x, 'next')
         
         def wsgi(env, start_resp):
-            # clear threadlocal to avoid inteference of previous requests
-            self._cleanup()
-
             self.load(env)
             try:
                 # allow uppercase methods only
@@ -281,7 +284,7 @@ class application:
             except web.HTTPError, e:
                 result = [e.data]
 
-            result = web.safestr(iter(result))
+            result = web.utf8(iter(result))
 
             status, headers = web.ctx.status, web.ctx.headers
             start_resp(status, headers)

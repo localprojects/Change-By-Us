@@ -140,52 +140,49 @@ def parsehttpdate(string_):
     return datetime.datetime(*t[:6])
 
 def htmlquote(text):
-    r"""
+    """
     Encodes `text` for raw use in HTML.
     
-        >>> htmlquote(u"<'&\">")
-        u'&lt;&#39;&amp;&quot;&gt;'
+        >>> htmlquote("<'&\\">")
+        '&lt;&#39;&amp;&quot;&gt;'
     """
-    text = text.replace(u"&", u"&amp;") # Must be done first!
-    text = text.replace(u"<", u"&lt;")
-    text = text.replace(u">", u"&gt;")
-    text = text.replace(u"'", u"&#39;")
-    text = text.replace(u'"', u"&quot;")
+    text = text.replace("&", "&amp;") # Must be done first!
+    text = text.replace("<", "&lt;")
+    text = text.replace(">", "&gt;")
+    text = text.replace("'", "&#39;")
+    text = text.replace('"', "&quot;")
     return text
 
 def htmlunquote(text):
-    r"""
+    """
     Decodes `text` that's HTML quoted.
 
-        >>> htmlunquote(u'&lt;&#39;&amp;&quot;&gt;')
-        u'<\'&">'
+        >>> htmlunquote('&lt;&#39;&amp;&quot;&gt;')
+        '<\\'&">'
     """
-    text = text.replace(u"&quot;", u'"')
-    text = text.replace(u"&#39;", u"'")
-    text = text.replace(u"&gt;", u">")
-    text = text.replace(u"&lt;", u"<")
-    text = text.replace(u"&amp;", u"&") # Must be done last!
+    text = text.replace("&quot;", '"')
+    text = text.replace("&#39;", "'")
+    text = text.replace("&gt;", ">")
+    text = text.replace("&lt;", "<")
+    text = text.replace("&amp;", "&") # Must be done last!
     return text
-    
-def websafe(val):
-    r"""Converts `val` so that it is safe for use in Unicode HTML.
 
-        >>> websafe("<'&\">")
-        u'&lt;&#39;&amp;&quot;&gt;'
+def websafe(val):
+    """
+    Converts `val` so that it's safe for use in UTF-8 HTML.
+    
+        >>> websafe("<'&\\">")
+        '&lt;&#39;&amp;&quot;&gt;'
         >>> websafe(None)
-        u''
+        ''
         >>> websafe(u'\u203d')
-        u'\u203d'
-        >>> websafe('\xe2\x80\xbd')
-        u'\u203d'
+        '\\xe2\\x80\\xbd'
     """
     if val is None:
-        return u''
-    elif isinstance(val, str):
-        val = val.decode('utf-8')
-    elif not isinstance(val, unicode):
-        val = unicode(val)
-
+        return ''
+    if isinstance(val, unicode):
+        val = val.encode('utf-8')
+    val = str(val)
     return htmlquote(val)
 
 if __name__ == "__main__":

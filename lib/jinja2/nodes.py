@@ -9,17 +9,14 @@
     `get_nodes` used by the parser and translator in order to normalize
     python and jinja nodes.
 
-    :copyright: (c) 2010 by the Jinja Team.
+    :copyright: 2008 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 import operator
+from copy import copy
 from itertools import chain, izip
 from collections import deque
-from jinja2.utils import Markup, MethodType, FunctionType
-
-
-#: the types we support for context functions
-_context_function_types = (FunctionType, MethodType)
+from jinja2.utils import Markup
 
 
 _binop_to_func = {
@@ -69,37 +66,6 @@ class NodeType(type):
             d[attr] = tuple(storage)
         d.setdefault('abstract', False)
         return type.__new__(cls, name, bases, d)
-
-
-class EvalContext(object):
-    """Holds evaluation time information.  Custom attributes can be attached
-    to it in extensions.
-    """
-
-    def __init__(self, environment, template_name=None):
-        self.environment = environment
-        if callable(environment.autoescape):
-            self.autoescape = environment.autoescape(template_name)
-        else:
-            self.autoescape = environment.autoescape
-        self.volatile = False
-
-    def save(self):
-        return self.__dict__.copy()
-
-    def revert(self, old):
-        self.__dict__.clear()
-        self.__dict__.update(old)
-
-
-def get_eval_context(node, ctx):
-    if ctx is None:
-        if node.environment is None:
-            raise RuntimeError('if no eval context is passed, the '
-                               'node must have an attached '
-                               'environment.')
-        return EvalContext(node.environment)
-    return ctx
 
 
 class Node(object):
@@ -181,14 +147,36 @@ class Node(object):
             return result
 
     def find_all(self, node_type):
-        """Find all the nodes of a given type.  If the type is a tuple,
-        the check is performed for any of the tuple items.
-        """
+        """Find all the nodes of a given type."""
         for child in self.iter_child_nodes():
             if isinstance(child, node_type):
                 yield child
             for result in child.find_all(node_type):
                 yield result
+
+    def copy(self):
+        """Return a deep copy of the node."""
+        result = object.__new__(self.__class__)
+        for field, value in self.iter_fields():
+            if isinstance(value, Node):
+                new_value = value.copy()
+            elif isinstance(value, list):
+                new_value = []
+                for item in value:
+                    if isinstance(item, Node):
+                        item = item.copy()
+                    else:
+                        item = copy(item)
+                    new_value.append(item)
+            else:
+                new_value = copy(value)
+            setattr(result, field, new_value)
+        for attr in self.attributes:
+            try:
+                setattr(result, attr, getattr(self, attr))
+            except AttributeError:
+                pass
+        return result
 
     def set_ctx(self, ctx):
         """Reset the context of a node and all child nodes.  Per default the
@@ -299,6 +287,11 @@ class CallBlock(Stmt):
     fields = ('call', 'args', 'defaults', 'body')
 
 
+class Set(Stmt):
+    """Allows defining own variables."""
+    fields = ('name', 'expr')
+
+
 class FilterBlock(Stmt):
     """Node for filter sections."""
     fields = ('body', 'filter')
@@ -306,12 +299,12 @@ class FilterBlock(Stmt):
 
 class Block(Stmt):
     """A node that represents a block."""
-    fields = ('name', 'body', 'scoped')
+    fields = ('name', 'body')
 
 
 class Include(Stmt):
     """A node that represents the include tag."""
-    fields = ('template', 'with_context', 'ignore_missing')
+    fields = ('template', 'with_context')
 
 
 class Import(Stmt):
@@ -347,16 +340,19 @@ class Expr(Node):
     """Baseclass for all expressions."""
     abstract = True
 
-    def as_const(self, eval_ctx=None):
+    def as_const(self):
         """Return the value of the expression as constant or raise
-        :exc:`Impossible` if this was not possible.
+        :exc:`Impossible` if this was not possible:
 
-        An :class:`EvalContext` can be provided, if none is given
-        a default context is created which requires the nodes to have
-        an attached environment.
+        >>> Add(Const(23), Const(42)).as_const()
+        65
+        >>> Add(Const(23), Name('var', 'load')).as_const()
+        Traceback (most recent call last):
+          ...
+        Impossible
 
-        .. versionchanged:: 2.4
-           the `eval_ctx` parameter was added.
+        This requires the `environment` attribute of all nodes to be
+        set to the environment that created the nodes.
         """
         raise Impossible()
 
@@ -371,16 +367,11 @@ class BinExpr(Expr):
     operator = None
     abstract = True
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        # intercepted operators cannot be folded at compile time
-        if self.environment.sandboxed and \
-           self.operator in self.environment.intercepted_binops:
-            raise Impossible()
+    def as_const(self):
         f = _binop_to_func[self.operator]
         try:
-            return f(self.left.as_const(eval_ctx), self.right.as_const(eval_ctx))
-        except Exception:
+            return f(self.left.as_const(), self.right.as_const())
+        except:
             raise Impossible()
 
 
@@ -390,16 +381,11 @@ class UnaryExpr(Expr):
     operator = None
     abstract = True
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        # intercepted operators cannot be folded at compile time
-        if self.environment.sandboxed and \
-           self.operator in self.environment.intercepted_unops:
-            raise Impossible()
+    def as_const(self):
         f = _uaop_to_func[self.operator]
         try:
-            return f(self.node.as_const(eval_ctx))
-        except Exception:
+            return f(self.node.as_const())
+        except:
             raise Impossible()
 
 
@@ -431,7 +417,7 @@ class Const(Literal):
     """
     fields = ('value',)
 
-    def as_const(self, eval_ctx=None):
+    def as_const(self):
         return self.value
 
     @classmethod
@@ -450,11 +436,8 @@ class TemplateData(Literal):
     """A constant template string."""
     fields = ('data',)
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        if eval_ctx.volatile:
-            raise Impossible()
-        if eval_ctx.autoescape:
+    def as_const(self):
+        if self.environment.autoescape:
             return Markup(self.data)
         return self.data
 
@@ -466,9 +449,8 @@ class Tuple(Literal):
     """
     fields = ('items', 'ctx')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return tuple(x.as_const(eval_ctx) for x in self.items)
+    def as_const(self):
+        return tuple(x.as_const() for x in self.items)
 
     def can_assign(self):
         for item in self.items:
@@ -481,9 +463,8 @@ class List(Literal):
     """Any list literal such as ``[1, 2, 3]``"""
     fields = ('items',)
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return [x.as_const(eval_ctx) for x in self.items]
+    def as_const(self):
+        return [x.as_const() for x in self.items]
 
 
 class Dict(Literal):
@@ -492,27 +473,21 @@ class Dict(Literal):
     """
     fields = ('items',)
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return dict(x.as_const(eval_ctx) for x in self.items)
+    def as_const(self):
+        return dict(x.as_const() for x in self.items)
 
 
 class Pair(Helper):
     """A key, value pair for dicts."""
     fields = ('key', 'value')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return self.key.as_const(eval_ctx), self.value.as_const(eval_ctx)
+    def as_const(self):
+        return self.key.as_const(), self.value.as_const()
 
 
 class Keyword(Helper):
     """A key, value pair for keyword arguments where key is a string."""
     fields = ('key', 'value')
-
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return self.key, self.value.as_const(eval_ctx)
 
 
 class CondExpr(Expr):
@@ -521,16 +496,15 @@ class CondExpr(Expr):
     """
     fields = ('test', 'expr1', 'expr2')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        if self.test.as_const(eval_ctx):
-            return self.expr1.as_const(eval_ctx)
+    def as_const(self):
+        if self.test.as_const():
+            return self.expr1.as_const()
 
         # if we evaluate to an undefined object, we better do that at runtime
         if self.expr2 is None:
             raise Impossible()
 
-        return self.expr2.as_const(eval_ctx)
+        return self.expr2.as_const()
 
 
 class Filter(Expr):
@@ -542,38 +516,31 @@ class Filter(Expr):
     """
     fields = ('node', 'name', 'args', 'kwargs', 'dyn_args', 'dyn_kwargs')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        if eval_ctx.volatile or self.node is None:
+    def as_const(self, obj=None):
+        if self.node is obj is None:
             raise Impossible()
-        # we have to be careful here because we call filter_ below.
-        # if this variable would be called filter, 2to3 would wrap the
-        # call in a list beause it is assuming we are talking about the
-        # builtin filter function here which no longer returns a list in
-        # python 3.  because of that, do not rename filter_ to filter!
-        filter_ = self.environment.filters.get(self.name)
-        if filter_ is None or getattr(filter_, 'contextfilter', False):
+        filter = self.environment.filters.get(self.name)
+        if filter is None or getattr(filter, 'contextfilter', False):
             raise Impossible()
-        obj = self.node.as_const(eval_ctx)
-        args = [x.as_const(eval_ctx) for x in self.args]
-        if getattr(filter_, 'evalcontextfilter', False):
-            args.insert(0, eval_ctx)
-        elif getattr(filter_, 'environmentfilter', False):
+        if obj is None:
+            obj = self.node.as_const()
+        args = [x.as_const() for x in self.args]
+        if getattr(filter, 'environmentfilter', False):
             args.insert(0, self.environment)
-        kwargs = dict(x.as_const(eval_ctx) for x in self.kwargs)
+        kwargs = dict(x.as_const() for x in self.kwargs)
         if self.dyn_args is not None:
             try:
-                args.extend(self.dyn_args.as_const(eval_ctx))
-            except Exception:
+                args.extend(self.dyn_args.as_const())
+            except:
                 raise Impossible()
         if self.dyn_kwargs is not None:
             try:
-                kwargs.update(self.dyn_kwargs.as_const(eval_ctx))
-            except Exception:
+                kwargs.update(self.dyn_kwargs.as_const())
+            except:
                 raise Impossible()
         try:
-            return filter_(obj, *args, **kwargs)
-        except Exception:
+            return filter(obj, *args, **kwargs)
+        except:
             raise Impossible()
 
 
@@ -593,36 +560,30 @@ class Call(Expr):
     """
     fields = ('node', 'args', 'kwargs', 'dyn_args', 'dyn_kwargs')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        if eval_ctx.volatile:
-            raise Impossible()
-        obj = self.node.as_const(eval_ctx)
+    def as_const(self):
+        obj = self.node.as_const()
 
         # don't evaluate context functions
-        args = [x.as_const(eval_ctx) for x in self.args]
-        if isinstance(obj, _context_function_types):
-            if getattr(obj, 'contextfunction', False):
-                raise Impossible()
-            elif getattr(obj, 'evalcontextfunction', False):
-                args.insert(0, eval_ctx)
-            elif getattr(obj, 'environmentfunction', False):
-                args.insert(0, self.environment)
+        args = [x.as_const() for x in self.args]
+        if getattr(obj, 'contextfunction', False):
+            raise Impossible()
+        elif getattr(obj, 'environmentfunction', False):
+            args.insert(0, self.environment)
 
-        kwargs = dict(x.as_const(eval_ctx) for x in self.kwargs)
+        kwargs = dict(x.as_const() for x in self.kwargs)
         if self.dyn_args is not None:
             try:
-                args.extend(self.dyn_args.as_const(eval_ctx))
-            except Exception:
+                args.extend(self.dyn_args.as_const())
+            except:
                 raise Impossible()
         if self.dyn_kwargs is not None:
             try:
-                kwargs.update(self.dyn_kwargs.as_const(eval_ctx))
-            except Exception:
+                kwargs.update(self.dyn_kwargs.as_const())
+            except:
                 raise Impossible()
         try:
             return obj(*args, **kwargs)
-        except Exception:
+        except:
             raise Impossible()
 
 
@@ -630,14 +591,13 @@ class Getitem(Expr):
     """Get an attribute or item from an expression and prefer the item."""
     fields = ('node', 'arg', 'ctx')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
+    def as_const(self):
         if self.ctx != 'load':
             raise Impossible()
         try:
-            return self.environment.getitem(self.node.as_const(eval_ctx),
-                                            self.arg.as_const(eval_ctx))
-        except Exception:
+            return self.environment.getitem(self.node.as_const(),
+                                            self.arg.as_const())
+        except:
             raise Impossible()
 
     def can_assign(self):
@@ -650,14 +610,12 @@ class Getattr(Expr):
     """
     fields = ('node', 'attr', 'ctx')
 
-    def as_const(self, eval_ctx=None):
+    def as_const(self):
         if self.ctx != 'load':
             raise Impossible()
         try:
-            eval_ctx = get_eval_context(self, eval_ctx)
-            return self.environment.getattr(self.node.as_const(eval_ctx),
-                                            self.attr)
-        except Exception:
+            return self.environment.getattr(self.node.as_const(), arg)
+        except:
             raise Impossible()
 
     def can_assign(self):
@@ -670,12 +628,11 @@ class Slice(Expr):
     """
     fields = ('start', 'stop', 'step')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
+    def as_const(self):
         def const(obj):
             if obj is None:
-                return None
-            return obj.as_const(eval_ctx)
+                return obj
+            return obj.as_const()
         return slice(const(self.start), const(self.stop), const(self.step))
 
 
@@ -685,9 +642,8 @@ class Concat(Expr):
     """
     fields = ('nodes',)
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return ''.join(unicode(x.as_const(eval_ctx)) for x in self.nodes)
+    def as_const(self):
+        return ''.join(unicode(x.as_const()) for x in self.nodes)
 
 
 class Compare(Expr):
@@ -696,15 +652,14 @@ class Compare(Expr):
     """
     fields = ('expr', 'ops')
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        result = value = self.expr.as_const(eval_ctx)
+    def as_const(self):
+        result = value = self.expr.as_const()
         try:
             for op in self.ops:
-                new_value = op.expr.as_const(eval_ctx)
+                new_value = op.expr.as_const()
                 result = _cmpop_to_func[op.op](value, new_value)
                 value = new_value
-        except Exception:
+        except:
             raise Impossible()
         return result
 
@@ -760,18 +715,16 @@ class And(BinExpr):
     """Short circuited AND."""
     operator = 'and'
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return self.left.as_const(eval_ctx) and self.right.as_const(eval_ctx)
+    def as_const(self):
+        return self.left.as_const() and self.right.as_const()
 
 
 class Or(BinExpr):
     """Short circuited OR."""
     operator = 'or'
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return self.left.as_const(eval_ctx) or self.right.as_const(eval_ctx)
+    def as_const(self):
+        return self.left.as_const() or self.right.as_const()
 
 
 class Not(UnaryExpr):
@@ -836,40 +789,12 @@ class MarkSafe(Expr):
     """Mark the wrapped expression as safe (wrap it as `Markup`)."""
     fields = ('expr',)
 
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        return Markup(self.expr.as_const(eval_ctx))
-
-
-class MarkSafeIfAutoescape(Expr):
-    """Mark the wrapped expression as safe (wrap it as `Markup`) but
-    only if autoescaping is active.
-
-    .. versionadded:: 2.5
-    """
-    fields = ('expr',)
-
-    def as_const(self, eval_ctx=None):
-        eval_ctx = get_eval_context(self, eval_ctx)
-        if eval_ctx.volatile:
-            raise Impossible()
-        expr = self.expr.as_const(eval_ctx)
-        if eval_ctx.autoescape:
-            return Markup(expr)
-        return expr
+    def as_const(self):
+        return Markup(self.expr.as_const())
 
 
 class ContextReference(Expr):
-    """Returns the current template context.  It can be used like a
-    :class:`Name` node, with a ``'load'`` ctx and will return the
-    current :class:`~jinja2.runtime.Context` object.
-
-    Here an example that assigns the current template name to a
-    variable named `foo`::
-
-        Assign(Name('foo', ctx='store'),
-               Getattr(ContextReference(), 'name'))
-    """
+    """Returns the current template context."""
 
 
 class Continue(Stmt):
@@ -878,30 +803,6 @@ class Continue(Stmt):
 
 class Break(Stmt):
     """Break a loop."""
-
-
-class Scope(Stmt):
-    """An artificial scope."""
-    fields = ('body',)
-
-
-class EvalContextModifier(Stmt):
-    """Modifies the eval context.  For each option that should be modified,
-    a :class:`Keyword` has to be added to the :attr:`options` list.
-
-    Example to change the `autoescape` setting::
-
-        EvalContextModifier(options=[Keyword('autoescape', Const(True))])
-    """
-    fields = ('options',)
-
-
-class ScopedEvalContextModifier(EvalContextModifier):
-    """Modifies the eval context and reverts it later.  Works exactly like
-    :class:`EvalContextModifier` but will only modify the
-    :class:`~jinja2.nodes.EvalContext` for nodes in the :attr:`body`.
-    """
-    fields = ('body',)
 
 
 # make sure nobody creates custom nodes

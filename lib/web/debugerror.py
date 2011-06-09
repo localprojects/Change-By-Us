@@ -11,9 +11,9 @@ http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5
 __all__ = ["debugerror", "djangoerror", "emailerrors"]
 
 import sys, urlparse, pprint, traceback
-from template import Template
 from net import websafe
-from utils import sendmail, safestr
+from template import Template
+from utils import sendmail
 import webapi as web
 
 import os, os.path
@@ -162,7 +162,7 @@ $def dicttable_items(items, kls='req', id=None):
 $for frame in frames:
     <li class="frame">
     <code>$frame.filename</code> in <code>$frame.function</code>
-    $if frame.context_line is not None:
+    $if frame.context_line:
         <div class="context" id="c$frame.id">
         $if frame.pre_context:
             <ol start="$frame.pre_context_lineno" class="pre-context" id="pre$frame.id">
@@ -245,7 +245,7 @@ def djangoerror():
                 [line.strip('\n') for line in source[lineno + 1:upper_bound]]
 
             return lower_bound, pre_context, context_line, post_context
-        except (OSError, IOError, IndexError):
+        except (OSError, IOError):
             return None, [], None, []    
     
     exception_type, exception_value, tback = sys.exc_info()
@@ -254,26 +254,20 @@ def djangoerror():
         filename = tback.tb_frame.f_code.co_filename
         function = tback.tb_frame.f_code.co_name
         lineno = tback.tb_lineno - 1
-
-        # hack to get correct line number for templates
-        lineno += tback.tb_frame.f_locals.get("__lineoffset__", 0)
-
         pre_context_lineno, pre_context, context_line, post_context = \
             _get_lines_from_file(filename, lineno, 7)
-
-        if '__hidetraceback__' not in tback.tb_frame.f_locals:
-            frames.append(web.storage({
-                'tback': tback,
-                'filename': filename,
-                'function': function,
-                'lineno': lineno,
-                'vars': tback.tb_frame.f_locals,
-                'id': id(tback),
-                'pre_context': pre_context,
-                'context_line': context_line,
-                'post_context': post_context,
-                'pre_context_lineno': pre_context_lineno,
-            }))
+        frames.append(web.storage({
+            'tback': tback,
+            'filename': filename,
+            'function': function,
+            'lineno': lineno,
+            'vars': tback.tb_frame.f_locals,
+            'id': id(tback),
+            'pre_context': pre_context,
+            'context_line': context_line,
+            'post_context': post_context,
+            'pre_context_lineno': pre_context_lineno,
+        }))
         tback = tback.tb_next
     frames.reverse()
     urljoin = urlparse.urljoin
@@ -323,18 +317,26 @@ def emailerrors(to_address, olderror, from_address=None):
         tb_txt = ''.join(traceback.format_exception(*tb))
         path = web.ctx.path
         request = web.ctx.method + ' ' + web.ctx.home + web.ctx.fullpath
+        text = ("""\
+------here----
+Content-Type: text/plain
+Content-Disposition: inline
 
-        message = "\n%s\n\n%s\n\n" % (request, tb_txt)
+%(request)s
 
+%(tb_txt)s
+
+------here----
+Content-Type: text/html; name="bug.html"
+Content-Disposition: attachment; filename="bug.html"
+
+""" % locals()) + str(djangoerror())
         sendmail(
-            "your buggy site <%s>" % from_address,
-            "the bugfixer <%s>" % to_address,
-            "bug: %(error_name)s: %(error_value)s (%(path)s)" % locals(),
-            message,
-            attachments=[
-                dict(filename="bug.html", content=safestr(djangoerror()))
-            ],
-        )
+          "your buggy site <%s>" % from_address,
+          "the bugfixer <%s>" % to_address,
+          "bug: %(error_name)s: %(error_value)s (%(path)s)" % locals(),
+          text, 
+          headers={'Content-Type': 'multipart/mixed; boundary="----here----"'})
         return error
     
     return emailerrors_internal
