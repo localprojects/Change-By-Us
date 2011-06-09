@@ -5,7 +5,7 @@
 
     This module implements a visitor for the nodes.
 
-    :copyright: (c) 2010 by the Jinja Team.
+    :copyright: Copyright 2008 by Armin Ronacher.
     :license: BSD.
 """
 from jinja2.nodes import Node

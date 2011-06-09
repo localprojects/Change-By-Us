@@ -2,13 +2,13 @@
 
 import os, sys
 from os import environ
-from lib import web
 from framework.log import log
 from framework.session_holder import *
 from framework.task_manager import *
 from framework.image_server import *
 
 sys.path.append("lib/")
+from lib import web
 
 ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/cms/?([^/.]*)', 'controllers.admin.Admin',

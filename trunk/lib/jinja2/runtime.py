@@ -5,30 +5,22 @@
 
     Runtime helpers.
 
-    :copyright: (c) 2010 by the Jinja Team.
+    :copyright: Copyright 2008 by Armin Ronacher.
     :license: BSD.
 """
+import sys
+from types import FunctionType, MethodType
 from itertools import chain, imap
-from jinja2.nodes import EvalContext, _context_function_types
-from jinja2.utils import Markup, partial, soft_unicode, escape, missing, \
-     concat, internalcode, next, object_type_repr
-from jinja2.exceptions import UndefinedError, TemplateRuntimeError, \
-     TemplateNotFound
+from jinja2.utils import Markup, partial, soft_unicode, escape, missing, concat
+from jinja2.exceptions import UndefinedError, TemplateRuntimeError
 
 
 # these variables are exported to the template runtime
-__all__ = ['LoopContext', 'TemplateReference', 'Macro', 'Markup',
+__all__ = ['LoopContext', 'Context', 'TemplateReference', 'Macro', 'Markup',
            'TemplateRuntimeError', 'missing', 'concat', 'escape',
-           'markup_join', 'unicode_join', 'to_string', 'identity',
-           'TemplateNotFound']
+           'markup_join', 'unicode_join']
 
-#: the name of the function that is used to convert something into
-#: a string.  2to3 will adopt that automatically and the generated
-#: code can take advantage of it.
-to_string = unicode
-
-#: the identity function.  Useful for certain things in the environment
-identity = lambda x: x
+_context_function_types = (FunctionType, MethodType)
 
 
 def markup_join(seq):
@@ -45,43 +37,6 @@ def markup_join(seq):
 def unicode_join(seq):
     """Simple args to unicode conversion and concatenation."""
     return concat(imap(unicode, seq))
-
-
-def new_context(environment, template_name, blocks, vars=None,
-                shared=None, globals=None, locals=None):
-    """Internal helper to for context creation."""
-    if vars is None:
-        vars = {}
-    if shared:
-        parent = vars
-    else:
-        parent = dict(globals or (), **vars)
-    if locals:
-        # if the parent is shared a copy should be created because
-        # we don't want to modify the dict passed
-        if shared:
-            parent = dict(parent)
-        for key, value in locals.iteritems():
-            if key[:2] == 'l_' and value is not missing:
-                parent[key[2:]] = value
-    return Context(environment, parent, template_name, blocks)
-
-
-class TemplateReference(object):
-    """The `self` in templates."""
-
-    def __init__(self, context):
-        self.__context = context
-
-    def __getitem__(self, name):
-        blocks = self.__context.blocks[name]
-        return BlockReference(name, self.__context, blocks, 0)
-
-    def __repr__(self):
-        return '<%s %r>' % (
-            self.__class__.__name__,
-            self.__context.name
-        )
 
 
 class Context(object):
@@ -103,14 +58,13 @@ class Context(object):
     method that doesn't fail with a `KeyError` but returns an
     :class:`Undefined` object for missing variables.
     """
-    __slots__ = ('parent', 'vars', 'environment', 'eval_ctx', 'exported_vars',
-                 'name', 'blocks', '__weakref__')
+    __slots__ = ('parent', 'vars', 'environment', 'exported_vars', 'name',
+                 'blocks')
 
     def __init__(self, environment, parent, name, blocks):
         self.parent = parent
-        self.vars = {}
+        self.vars = vars = {}
         self.environment = environment
-        self.eval_ctx = EvalContext(self.environment, name)
         self.exported_vars = set()
         self.name = name
 
@@ -123,13 +77,15 @@ class Context(object):
         """Render a parent block."""
         try:
             blocks = self.blocks[name]
-            index = blocks.index(current) + 1
-            blocks[index]
+            block = blocks[blocks.index(current) + 1]
         except LookupError:
             return self.environment.undefined('there is no parent block '
                                               'called %r.' % name,
                                               name='super')
-        return BlockReference(name, self, blocks, index)
+        wrap = self.environment.autoescape and Markup or (lambda x: x)
+        render = lambda: wrap(concat(block(self)))
+        render.__name__ = render.name = name
+        return render
 
     def get(self, key, default=None):
         """Returns an item from the template context, if it doesn't exist
@@ -160,7 +116,6 @@ class Context(object):
         """
         return dict(self.parent, **self.vars)
 
-    @internalcode
     def call(__self, __obj, *args, **kwargs):
         """Call the callable with the arguments and keyword arguments
         provided but inject the active context or environment as first
@@ -172,25 +127,9 @@ class Context(object):
         if isinstance(__obj, _context_function_types):
             if getattr(__obj, 'contextfunction', 0):
                 args = (__self,) + args
-            elif getattr(__obj, 'evalcontextfunction', 0):
-                args = (__self.eval_ctx,) + args
             elif getattr(__obj, 'environmentfunction', 0):
                 args = (__self.environment,) + args
-        try:
-            return __obj(*args, **kwargs)
-        except StopIteration:
-            return __self.environment.undefined('value was undefined because '
-                                                'a callable raised a '
-                                                'StopIteration exception')
-
-    def derived(self, locals=None):
-        """Internal helper function to create a derived context."""
-        context = new_context(self.environment, self.name, {},
-                              self.parent, True, None, locals)
-        context.vars.update(self.vars)
-        context.eval_ctx = self.eval_ctx
-        context.blocks.update((k, list(v)) for k, v in self.blocks.iteritems())
-        return context
+        return __obj(*args, **kwargs)
 
     def _all(meth):
         proxy = lambda self: getattr(self.get_all(), meth)()
@@ -201,12 +140,9 @@ class Context(object):
     keys = _all('keys')
     values = _all('values')
     items = _all('items')
-
-    # not available on python 3
-    if hasattr(dict, 'iterkeys'):
-        iterkeys = _all('iterkeys')
-        itervalues = _all('itervalues')
-        iteritems = _all('iteritems')
+    iterkeys = _all('iterkeys')
+    itervalues = _all('itervalues')
+    iteritems = _all('iteritems')
     del _all
 
     def __contains__(self, name):
@@ -229,39 +165,33 @@ class Context(object):
         )
 
 
-# register the context as mapping if possible
+# register the context as mutable mapping if possible
 try:
-    from collections import Mapping
-    Mapping.register(Context)
+    from collections import MutableMapping
+    MutableMapping.register(Context)
 except ImportError:
     pass
 
 
-class BlockReference(object):
-    """One block on a template reference."""
+class TemplateReference(object):
+    """The `self` in templates."""
 
-    def __init__(self, name, context, stack, depth):
-        self.name = name
-        self._context = context
-        self._stack = stack
-        self._depth = depth
+    def __init__(self, context):
+        self.__context = context
 
-    @property
-    def super(self):
-        """Super the block."""
-        if self._depth + 1 >= len(self._stack):
-            return self._context.environment. \
-                undefined('there is no parent block called %r.' %
-                          self.name, name='super')
-        return BlockReference(self.name, self._context, self._stack,
-                              self._depth + 1)
+    def __getitem__(self, name):
+        func = self.__context.blocks[name][0]
+        wrap = self.__context.environment.autoescape and \
+               Markup or (lambda x: x)
+        render = lambda: wrap(concat(func(self.__context)))
+        render.__name__ = render.name = name
+        return render
 
-    @internalcode
-    def __call__(self):
-        rv = concat(self._stack[self._depth](self._context))
-        if self._context.eval_ctx.autoescape:
-            rv = Markup(rv)
-        return rv
+    def __repr__(self):
+        return '<%s %r>' % (
+            self.__class__.__name__,
+            self._context.name
+        )
 
 
 class LoopContext(object):
@@ -299,7 +229,6 @@ class LoopContext(object):
     def __iter__(self):
         return LoopContextIterator(self)
 
-    @internalcode
     def loop(self, iterable):
         if self._recurse is None:
             raise TypeError('Tried to call non recursive loop.  Maybe you '
@@ -308,8 +237,7 @@ class LoopContext(object):
 
     # a nifty trick to enhance the error message if someone tried to call
     # the the loop without or with too many arguments.
-    __call__ = loop
-    del loop
+    __call__ = loop; del loop
 
     @property
     def length(self):
@@ -344,11 +272,11 @@ class LoopContextIterator(object):
     def next(self):
         ctx = self.context
         ctx.index0 += 1
-        return next(ctx._iterator), ctx
+        return ctx._iterator.next(), ctx
 
 
 class Macro(object):
-    """Wraps a macro function."""
+    """Wraps a macro."""
 
     def __init__(self, environment, func, name, arguments, defaults,
                  catch_kwargs, catch_varargs, caller):
@@ -362,26 +290,21 @@ class Macro(object):
         self.catch_varargs = catch_varargs
         self.caller = caller
 
-    @internalcode
     def __call__(self, *args, **kwargs):
-        # try to consume the positional arguments
-        arguments = list(args[:self._argument_count])
-        off = len(arguments)
-
-        # if the number of arguments consumed is not the number of
-        # arguments expected we start filling in keyword arguments
-        # and defaults.
-        if off != self._argument_count:
-            for idx, name in enumerate(self.arguments[len(arguments):]):
+        arguments = []
+        for idx, name in enumerate(self.arguments):
+            try:
+                value = args[idx]
+            except:
                 try:
                     value = kwargs.pop(name)
-                except KeyError:
+                except:
                     try:
-                        value = self.defaults[idx - self._argument_count + off]
-                    except IndexError:
+                        value = self.defaults[idx - self._argument_count]
+                    except:
                         value = self._environment.undefined(
                             'parameter %r was not provided' % name, name=name)
-                arguments.append(value)
+            arguments.append(value)
 
         # it's important that the order of these arguments does not change
         # if not also changed in the compiler's `function_scoping` method.
@@ -396,7 +319,7 @@ class Macro(object):
             arguments.append(kwargs)
         elif kwargs:
             raise TypeError('macro %r takes no keyword argument %r' %
-                            (self.name, next(iter(kwargs))))
+                            (self.name, iter(kwargs).next()))
         if self.catch_varargs:
             arguments.append(args[self._argument_count:])
         elif len(args) > self._argument_count:
@@ -428,54 +351,42 @@ class Undefined(object):
     __slots__ = ('_undefined_hint', '_undefined_obj', '_undefined_name',
                  '_undefined_exception')
 
-    def __init__(self, hint=None, obj=missing, name=None, exc=UndefinedError):
+    def __init__(self, hint=None, obj=None, name=None, exc=UndefinedError):
         self._undefined_hint = hint
         self._undefined_obj = obj
         self._undefined_name = name
         self._undefined_exception = exc
 
-    @internalcode
     def _fail_with_undefined_error(self, *args, **kwargs):
         """Regular callback function for undefined objects that raises an
         `UndefinedError` on call.
         """
         if self._undefined_hint is None:
-            if self._undefined_obj is missing:
+            if self._undefined_obj is None:
                 hint = '%r is undefined' % self._undefined_name
             elif not isinstance(self._undefined_name, basestring):
-                hint = '%s has no element %r' % (
-                    object_type_repr(self._undefined_obj),
+                hint = '%r object has no element %r' % (
+                    self._undefined_obj.__class__.__name__,
                     self._undefined_name
                 )
             else:
-                hint = '%r has no attribute %r' % (
-                    object_type_repr(self._undefined_obj),
+                hint = '%r object has no attribute %r' % (
+                    self._undefined_obj.__class__.__name__,
                     self._undefined_name
                 )
         else:
             hint = self._undefined_hint
         raise self._undefined_exception(hint)
 
-    @internalcode
-    def __getattr__(self, name):
-        if name[:2] == '__':
-            raise AttributeError(name)
-        return self._fail_with_undefined_error()
-
     __add__ = __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
-    __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
+    __realdiv__ = __rrealdiv__ = __floordiv__ = __rfloordiv__ = \
     __mod__ = __rmod__ = __pos__ = __neg__ = __call__ = \
-    __getitem__ = __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
-    __float__ = __complex__ = __pow__ = __rpow__ = \
-        _fail_with_undefined_error
+    __getattr__ = __getitem__ = __lt__ = __le__ = __gt__ = __ge__ = \
+    __int__ = __float__ = __complex__ = _fail_with_undefined_error
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8')
 
-    # unicode goes after __str__ because we configured 2to3 to rename
-    # __unicode__ to __str__.  because the 2to3 tree is not designed to
-    # remove nodes from it, we leave the above __str__ around and let
-    # it override at runtime.
     def __unicode__(self):
         return u''
 
@@ -510,10 +421,10 @@ class DebugUndefined(Undefined):
 
     def __unicode__(self):
         if self._undefined_hint is None:
-            if self._undefined_obj is missing:
+            if self._undefined_obj is None:
                 return u'{{ %s }}' % self._undefined_name
             return '{{ no such element: %s[%r] }}' % (
-                object_type_repr(self._undefined_obj),
+                self._undefined_obj.__class__.__name__,
                 self._undefined_name
             )
         return u'{{ undefined value printed: %s }}' % self._undefined_hint
@@ -539,8 +450,8 @@ class StrictUndefined(Undefined):
     UndefinedError: 'foo' is undefined
     """
     __slots__ = ()
-    __iter__ = __unicode__ = __str__ = __len__ = __nonzero__ = __eq__ = \
-        __ne__ = __bool__ = Undefined._fail_with_undefined_error
+    __iter__ = __unicode__ = __len__ = __nonzero__ = __eq__ = __ne__ = \
+        Undefined._fail_with_undefined_error
 
 
 # remove remaining slots attributes, after the metaclass did the magic they

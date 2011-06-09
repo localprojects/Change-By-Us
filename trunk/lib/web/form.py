@@ -12,7 +12,7 @@ def attrget(obj, attr, value=None):
     if hasattr(obj, attr): return getattr(obj, attr)
     return value
 
-class Form(object):
+class Form:
     r"""
     HTML form.
     
@@ -37,7 +37,7 @@ class Form(object):
         out += '<table>\n'
         
         for i in self.inputs:
-            html = utils.safeunicode(i.pre) + i.render() + self.rendernote(i.note) + utils.safeunicode(i.post)
+            html = i.pre + i.render() + self.rendernote(i.note) + i.post
             if i.is_hidden():
                 out += '    <tr style="display: none;"><th></th><td>%s</td></tr>\n' % (html)
             else:
@@ -70,7 +70,7 @@ class Form(object):
             if _validate:
                 out = i.validate(v) and out
             else:
-                i.set_value(v)
+                i.value = v
         if _validate:
             out = out and self._validate(source)
             self.valid = out
@@ -154,7 +154,7 @@ class Input(object):
     def render(self):
         attrs = self.attrs.copy()
         attrs['type'] = self.get_type()
-        if self.value is not None:
+        if self.value:
             attrs['value'] = self.value
         attrs['name'] = self.name
         return '<input %s/>' % attrs
@@ -164,8 +164,7 @@ class Input(object):
         else: return ""
         
     def addatts(self):
-        # add leading space for backward-compatibility
-        return " " + str(self.attrs)
+        return str(self.attrs)
 
 class AttributeList(dict):
     """List of atributes of input.
@@ -178,7 +177,7 @@ class AttributeList(dict):
         return AttributeList(self)
         
     def __str__(self):
-        return " ".join(['%s="%s"' % (k, net.websafe(v)) for k, v in self.items()])
+        return " ".join('%s="%s"' % (k, net.websafe(v)) for k, v in self.items())
         
     def __repr__(self):
         return '<attrs: %s>' % repr(str(self))
@@ -188,8 +187,6 @@ class Textbox(Input):
     
         >>> Textbox(name='foo', value='bar').render()
         '<input type="text" id="foo" value="bar" name="foo"/>'
-        >>> Textbox(name='foo', value=0).render()
-        '<input type="text" id="foo" value="0" name="foo"/>'
     """        
     def get_type(self):
         return 'text'
@@ -240,8 +237,7 @@ class Dropdown(Input):
             else:
                 value, desc = arg, arg 
 
-            if self.value == value or (isinstance(self.value, list) and value in self.value):
-                select_p = ' selected="selected"'
+            if self.value == value: select_p = ' selected="selected"'
             else: select_p = ''
             x += '  <option%s value="%s">%s</option>\n' % (select_p, net.websafe(value), net.websafe(desc))
             
@@ -263,8 +259,8 @@ class Radio(Input):
             attrs = self.attrs.copy()
             attrs['name'] = self.name
             attrs['type'] = 'radio'
-            attrs['value'] = value
-            if self.value == value:
+            attrs['value'] = arg
+            if self.value == arg:
                 attrs['checked'] = 'checked'
             x += '<input %s/> %s' % (attrs, net.websafe(desc))
         x += '</span>'
@@ -288,7 +284,7 @@ class Checkbox(Input):
         Input.__init__(self, name, *validators, **attrs)
         
     def get_default_id(self):
-        value = utils.safestr(self.value or "")
+        value = self.value or ""
         return self.name + '_' + value.replace(' ', '_')
 
     def render(self):
@@ -302,7 +298,8 @@ class Checkbox(Input):
         return '<input %s/>' % attrs
 
     def set_value(self, value):
-        self.checked = bool(value)
+        if value:
+            self.checked = True
 
     def get_value(self):
         return self.checked
