@@ -179,13 +179,27 @@ where u.user_id = $id and u.is_active = 1"""
                     where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
         except Exception,e:
-            log.info("*** couldn't get user data")
+            log.info("*** couldn't get user projects")
             log.error(e)
             
         return data    
         
     def getUserResources(self):
-        return []
+        data = []
+        
+        try:
+            sql = """select r.project_resource_id, r.title, r.description, r.location_id, l.name as location_name,
+                            r.url, r.contact_email, r.physical_address, r.keywords 
+                    from project_resource r
+                    inner join location l on l.location_id = r.location_id
+                    where r.is_active = 1 and r.is_hidden = 0 and r.contact_user_id = $id"""
+            data  = list(self.db.query(sql, { 'id': self.id }))
+        except Exception,e:
+            log.info("*** couldn't get user resources")
+            log.error(e)
+            
+        return data    
+        
         
     def getActivityDictionary(self):
         user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)

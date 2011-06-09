@@ -4,10 +4,15 @@ import giveaminute.location as mLocation
 
 class Resource(Controller):
     def GET(self, action = None):
+        self.require_login("/login")
+        
         return self.showAddResource()    
     
     def POST(self, action = None):
-        return self.addResource()
+        if (self.user):
+            return self.addResource()
+        else:
+            return self.not_found()
         
     def showAddResource(self):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
@@ -50,7 +55,8 @@ class Resource(Controller):
                                         contact_email = contact_email,
                                         created_datetime = None,
                                         image_id = image_id,
-                                        is_hidden = 1)
+                                        is_hidden = 1,
+                                        contact_user_id = self.user.id)
             
             return True
         except Exception,e:
