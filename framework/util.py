@@ -55,7 +55,7 @@ def validate_email(emailaddress):
         "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
         "in", "us", "il", "de", "it", "fr"
         ]
-    if len(emailaddress) < 7:
+    if len(emailaddress) < 6:
         # TODO: SR: Why? i@u.nu is valid!
         return False # Address too short.
     try:
