@@ -237,8 +237,12 @@ app_page.features.push(function(app){
 						tempcell.find('img').attr('src','/images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
 					}
 					tempcell.find('.resource-tooltip_trigger').attr('rel','#organization,'+d.results[i].link_id);
-					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,28,'...'));
+					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,25,'...'));
 					
+					if (d.results[i].is_official == 1) {
+						tempcell.find('.official-resource-alt').attr('style','display:block');
+					};
+										
 					temprow.append(tempcell);
 					if(i%3==1){
 						out.children('tbody').append(temprow);
@@ -251,7 +255,7 @@ app_page.features.push(function(app){
 				return out;
 			},
 			appended:function(dom){
-				tc.addOfficialResourceTags(dom);
+				//tc.addOfficialResourceTags(dom);
 			}
 		});
 		
@@ -544,6 +548,6 @@ app_page.features.push(function(app){
 			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
 		}
 		
-		tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
+		//tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
 		
 	});
