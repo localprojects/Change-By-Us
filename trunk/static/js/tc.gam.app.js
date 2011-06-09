@@ -8,22 +8,23 @@ tc.app.prototype.events = tc.jQ({});
 
 tc.app.prototype.init = function(page){
 	tc.util.log('tc.app.init');
-	var _me;
+	var _me, feature_status;
 	_me = this;
 	this.app_page = page;
 	
 	if(page.features){
 		for(i in page.features){
-			
-			tc.util.dump(page.features[i]);
-			
 			if(tc.jQ.isFunction(page.features[i])){
+				tc.util.dump(i);
 				if(page.features[i](_me) === false){
+					tc.util.dump('FEATURE FAILED');
 					break;
 				}
 			}
 		}
 	}
+	
+	tc.util.dump('HERE HERE HERE');
 	
 	// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
 	this.finish_logout = function(e){
@@ -37,7 +38,11 @@ tc.app.prototype.init = function(page){
 		window.location.reload(true);
 	};
 	
+	tc.util.dump('HERE HERE HERE');
+	
 	tc.jQ(window).bind('hashchange',{app:this}, function(e){
+		tc.util.dump('here');
+		tc.util.dump(window.location.hash);
 		if(window.location.hash.substring(1,window.location.hash.length) === 'logout'){
 			tc.jQ.ajax({
 				type:'POST',
