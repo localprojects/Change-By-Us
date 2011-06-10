@@ -21,6 +21,8 @@ class UserAccount(Controller):
             return self.setUserMessagePreferences()
         elif (action == 'edit'):
             return self.editUser()
+        elif (action == 'editdescription'):
+            return self.editDescription()
         elif (action == 'password'):
             return self.changePassword()
         else:
@@ -106,13 +108,21 @@ class UserAccount(Controller):
         email = self.request('email')
         imageId = self.request('image_id')
         locationId = self.request('location_id')
-        description = self.request('description')
-        
+         
         if (not util.strNullOrEmpty(firstName) and
             not util.strNullOrEmpty(lastName) and
             not util.strNullOrEmpty(email)):
-            return self.user.updateInfo(email, firstName, lastName, imageId, locationId, description)
+            return self.user.updateInfo(email, firstName, lastName, imageId, locationId)
         else:
+            log.info("*** not enough info to update user")
+            return False
+            
+    def editDescription(self):
+        description = self.request('description')
+        
+        if (not util.strNullOrEmpty(description)):
+            return self.user.updateDescription(description)        
+        else: 
             log.info("*** not enough info to update user")
             return False
         
