@@ -189,7 +189,7 @@ where u.user_id = $id and u.is_active = 1"""
         
         try:
             sql = """select r.project_resource_id, r.title, r.description, r.location_id, l.name as location_name,
-                            r.url, r.contact_email, r.physical_address, r.keywords 
+                            r.image_id, r.url, r.contact_email, r.physical_address, r.keywords 
                     from project_resource r
                     inner join location l on l.location_id = r.location_id
                     where r.is_active = 1 and r.is_hidden = 0 and r.contact_user_id = $id"""
