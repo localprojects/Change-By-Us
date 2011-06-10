@@ -120,11 +120,7 @@ class UserAccount(Controller):
     def editDescription(self):
         description = self.request('description')
         
-        if (not util.strNullOrEmpty(description)):
-            return self.user.updateDescription(description)        
-        else: 
-            log.info("*** not enough info to update user")
-            return False
+        return self.user.updateDescription(description)        
         
     def changePassword(self):
         password = self.request('new_password')
