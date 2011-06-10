@@ -66,7 +66,7 @@
 	<script type="text/javascript" src="/static/js/libs/jquery.easing.1.3.js"></script>
 	
 	<!-- detect user agent for js + css browser fixes later -->
-	<script type="text/javascript">var ua = tc.jQ.browser</script>
+	<script type="text/javascript">var ua = $.browser</script>
 	
 </body>
 
