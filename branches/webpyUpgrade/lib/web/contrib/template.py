@@ -95,6 +95,10 @@ class render_jinja:
         t = self._lookup.get_template(path)
         return t.render
         
+    def __getitem__(self, name):    # bh added
+        t = self._lookup.get_template(name)
+        return t.render
+
 class render_mako:
     """Rendering interface to Mako Templates.
 

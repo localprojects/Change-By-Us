@@ -172,6 +172,11 @@ class Session(object):
         del self.store[self.session_id]
         self._killed = True
 
+    # Added by SR
+    def invalidate(self):
+        """Only save when the session is invalidated"""
+        self._changed = True
+
 class Store:
     """Base class for session stores"""
 
