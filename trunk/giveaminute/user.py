@@ -211,6 +211,30 @@ where u.user_id = $id and u.is_active = 1"""
             
         return data    
         
+    def getEndorsedProjects(self):
+        data = []
+        
+        try:
+            sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
+                from project p
+                inner join project_endorsement pe on pe.project_id = p.project_id and pe.user_id = $id
+                inner join user o on o.user_id = $id
+                 where p.is_active = 1"""
+            data  = list(self.db.query(sql, { 'id': self.id }))
+        except Exception,e:
+            log.info("*** couldn't get user endorsed projects")
+            log.error(e)
+            
+        return data         
         
     def getActivityDictionary(self):
         user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)
@@ -222,6 +246,7 @@ where u.user_id = $id and u.is_active = 1"""
                     ideas = self.getIdeas(),
                     messages = self.getMessages(10, 0),
                     resources = self.getUserResources(),
+                    endorsed_projects = self.getEndorsedProjects(),
                     user = user)
                     
         return data
@@ -235,6 +260,7 @@ where u.user_id = $id and u.is_active = 1"""
     
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
+                    endorsed_projects = self.getEndorsedProjects(),
                     user = user)
                     
         return data
