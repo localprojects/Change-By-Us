@@ -48,7 +48,8 @@ create table user (
     ,last_name varchar(50) NULL
     ,image_id int NULL
     ,location_id int null
-    ,description varchar(255)   NULL
+    ,description varchar(255) NULL
+    ,affiliation varchar(100) null
     ,is_oncall bool not null default 0
     ,email_notification enum('none', 'digest') not null default 'digest'
     ,last_account_page_access_datetime timestamp null
@@ -177,6 +178,7 @@ create table project_resource (
     ,physical_address varchar(255) null
     ,contact_name varchar(255) NULL
     ,contact_email varchar(100) null
+    ,contact_user_id int null
     ,image_id int NULL
     ,location_id int null
     ,keywords text null
