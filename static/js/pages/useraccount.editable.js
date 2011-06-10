@@ -198,5 +198,14 @@
 			e.data.app.components.modal.show(e.data);
 		});
 		
+		new tc.inlineEditor({
+			dom: tc.jQ(".user-info .description"),
+			service: {
+				url: "/useraccount/editdescription",
+				param: "description"
+			},
+			empty_text: "Click here to add something about yourself."
+		});
+		
 	});
 	
