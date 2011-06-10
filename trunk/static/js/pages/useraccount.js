@@ -90,7 +90,7 @@
 							});
 						});
 						// add official resource tags
-						tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
+						//tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
 					}
 				},
 				'messages':{
