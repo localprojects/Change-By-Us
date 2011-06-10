@@ -15,17 +15,13 @@ tc.app.prototype.init = function(page){
 	if(page.features){
 		for(i in page.features){
 			if(tc.jQ.isFunction(page.features[i])){
-				tc.util.dump(i);
 				if(page.features[i](_me) === false){
-					tc.util.dump('FEATURE FAILED');
 					break;
 				}
 			}
 		}
 	}
-	
-	tc.util.dump('HERE HERE HERE');
-	
+		
 	// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
 	this.finish_logout = function(e){
 		window.location.hash = '';
@@ -37,8 +33,6 @@ tc.app.prototype.init = function(page){
 		}
 		window.location.reload(true);
 	};
-	
-	tc.util.dump('HERE HERE HERE');
 	
 	tc.jQ(window).bind('hashchange',{app:this}, function(e){
 		tc.util.dump('here');

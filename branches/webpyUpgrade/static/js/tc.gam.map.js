@@ -13,9 +13,6 @@ var marker_up = false;
 function initialize(app) {
 	tc.util.log('Give A Minute: Map Search Init');
 	
-	tc.util.dump(nychoods);
-	tc.util.dump(max_score);
-	
 	var mapOptions = {
 		zoom: 11,
 		center: brooklyn,

@@ -34,11 +34,14 @@
 	});
 	
 	
-	
-	
-	
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: User Account');
+		var offset;
+		
+		offset = 0;
+		if(app.app_page.data.user_activity && app.app_page.data.user_activity.messages){
+			offset = app.app_page.data.user_activity.messages.length - 1;
+		}
 		
 		app.components.user_page_merlin = new tc.merlin(app,{
 			name: "user-account",
@@ -92,7 +95,7 @@
 				},
 				'messages':{
 					selector:'.messages-view',
-					current_offset: app.app_page.data.user_activity.messages.length-1,
+					current_offset: offset,
 					n_to_fetch:5,
 					has_run_init: false,
 					init:function(merlin,dom){

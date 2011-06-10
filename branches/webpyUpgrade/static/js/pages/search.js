@@ -70,7 +70,6 @@ app_page.features.push(function(app){
 			
 			mycarousel = app.components[name+'_carousel'];
 			
-			
 			if(!mycarousel.carousel){
 				tc.jQ("."+name+".carousel").one('make-single make-multiple',{app:app},function(e){
 					build_carousel(e.data.app);
@@ -91,7 +90,25 @@ app_page.features.push(function(app){
 					e.data.carousel.data.current_page = e.data.carousel.carousel.getItems().eq(e.data.carousel.carousel.getIndex());
 					e.data.carousel.get_element().parent().parent().find('.current_page_number').text(e.data.carousel.carousel.getIndex()+1);
 					
-					if(!e.data.carousel.data.current_page.hasClass('loaded')){
+					if(e.data.carousel.data.current_page.hasClass('loaded')){
+						
+						var target_height;
+						switch(name){
+							case 'idea':
+								if(e.data.carousel.data.current_page.find('.none-found-message').length){
+									target_height = '30';
+								} else {
+									target_height = '625';
+								}
+								
+								break;
+							default:
+								target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+								break;
+						}
+						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+						
+					} else {
 						e.data.carousel.data.current_page.addClass('loaded');
 						tc.jQ.ajax({
 							type:"GET",
@@ -147,20 +164,10 @@ app_page.features.push(function(app){
 								e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 							}
 						});
-					} else {
-						var target_height;
-						switch(name){
-							case 'idea':
-								target_height = '625';
-								break;
-							default:
-								target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
-								break;
-						}
-						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 					}
 					
 				});
+				
 				mycarousel.carousel.begin();
 			}
 			
@@ -175,6 +182,7 @@ app_page.features.push(function(app){
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
+				
 				out = tc.jQ('<table class="projects-list doublewide clearfix">\
 					<tbody></tbody>\
 				</table>');
@@ -201,7 +209,7 @@ app_page.features.push(function(app){
 				}
 				
 				out.find('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
-
+				
 				return out;
 			}
 		});
@@ -229,8 +237,12 @@ app_page.features.push(function(app){
 						tempcell.find('img').attr('src','/images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
 					}
 					tempcell.find('.resource-tooltip_trigger').attr('rel','#organization,'+d.results[i].link_id);
-					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,28,'...'));
+					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,25,'...'));
 					
+					if (d.results[i].is_official == 1) {
+						tempcell.find('.official-resource-alt').attr('style','display:block');
+					};
+										
 					temprow.append(tempcell);
 					if(i%3==1){
 						out.children('tbody').append(temprow);
@@ -243,7 +255,7 @@ app_page.features.push(function(app){
 				return out;
 			},
 			appended:function(dom){
-				tc.addOfficialResourceTags(dom);
+				//tc.addOfficialResourceTags(dom);
 			}
 		});
 		
@@ -536,6 +548,6 @@ app_page.features.push(function(app){
 			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
 		}
 		
-		tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
+		//tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
 		
 	});

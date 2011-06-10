@@ -43,8 +43,8 @@ Change by Us NYC - User Account
 					<div class='box box-info'>
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
-							<!-- <span class="location"><em>from</em> <a href=''>Bedford-Stuyvesant</a></span> --> <!-- hidden for testing -->
-							<!-- <span class="description">This is a great little description of me and who I am and stuff.</span> --> <!-- hidden for testing -->
+							{% if d.template_data.user_activity.data.user.location %}<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>{% endif %}
+							{% if d.template_data.user_activity.data.user.description %}<span class="description">{{ d.template_data.user_activity.data.user.description }}</span>{% endif %}
 							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
 						</div>
 					</div>
@@ -60,7 +60,8 @@ Change by Us NYC - User Account
 						{% endif %}
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id) %}
-							<a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>
+							<!-- COMMENTED OUT FOR TESTING!!!!!
+							<a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>-->
 						{% endif %}
 					</ul>
 				</div>
