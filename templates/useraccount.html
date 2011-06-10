@@ -44,7 +44,11 @@ Change by Us NYC - User Account
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
 							{% if d.template_data.user_activity.data.user.location %}<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>{% endif %}
-							{% if d.template_data.user_activity.data.user.description %}<span class="description">{{ d.template_data.user_activity.data.user.description }}</span>{% endif %}
+							{% if d.template_data.user_activity.data.user.description %}
+								<span class="description">{{ d.template_data.user_activity.data.user.description }}</span>
+							{% elif d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+								<span class="no-description">Click here to add something about yourself.</span>
+							{% endif %}
 							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
 						</div>
 					</div>
@@ -192,7 +196,11 @@ Change by Us NYC - User Account
 												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
 													<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
 												{% endif %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												{% if resource.image_id > 0 %}
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+												{% else %}
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												{% endif %}
 												<span class="resource-name">
 													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
 													<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
@@ -330,10 +338,10 @@ Change by Us NYC - User Account
 												<div class="location-hood-list" style="display:none"><ul></ul></div>
 											</div>
 											{% endif %}
-											<!-- only for testing, DELETE after-->
+											<!-- only for testing, DELETE after
 											<div class="row row-hood clearfix" style="width:285px; height: 64px;">
 											</div>
-											<!-- STOP DELETING -->
+											STOP DELETING -->
 										</div>
 										<div class="">
 											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
@@ -418,7 +426,11 @@ Change by Us NYC - User Account
 										<div class='left'>
 											<div class="thumb">
 												<a class="change-image"><span>Change Photo</span></a>
-												<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+												{% if resource.image_id > 0 %}
+												<img width='90' height='90' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" />
+												{% else %}
+												<img width='90' height='90' src='/static/images/thumb_genAvatar100.png' alt="" />
+												{% endif %}
 											</div>
 											<h4 class="serif">{{ resource.title }}</h4>
 											<div class='box'>
