@@ -42,17 +42,35 @@ Change by Us NYC - User Account
 					<div class='box box-info'>
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
-							
+
 							{% if d.template_data.user_activity.data.endorsed_projects|length > 0 %}
 								<span class="location"><em>from</em> Organization</span>
 							{% elif d.template_data.user_activity.data.user.location %}
-								<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
+							<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
 							{% endif %}
-							{% if d.template_data.user_activity.data.user.description %}
-								<span class="description">{{ d.template_data.user_activity.data.user.description }}</span>
-							{% elif d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-								<span class="no-description">Click here to add something about yourself.</span>
+							
+							{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+								
+								{% if d.template_data.user_activity.data.user.description %}
+									<div class="description mod-inline-edit">
+										<div class="editable-content">{{ d.template_data.user_activity.data.user.description }}</div>
+									</div>
+								{% else %}
+									<div class="description mod-inline-edit no-description">
+										<div class="editable-content">Click here to add something about yourself.</div>
+									</div>
+								{% endif %}
+								
+							{% else %}
+							
+								{% if d.template_data.user_activity.data.user.description %}
+									<div class="description">
+										{{ d.template_data.user_activity.data.user.description }}
+									</div>
+								{% endif %}
+							
 							{% endif %}
+							
 							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
 						</div>
 					</div>
