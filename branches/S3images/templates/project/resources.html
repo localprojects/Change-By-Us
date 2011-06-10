@@ -30,7 +30,7 @@
 										<a class="close" href="#removeLink,{{ link.link_id }}"><span>remove</span></a>
 									{% endif %}
 									{% if link.image_id %}
-										<img width='30' src='/images/{{ link.image_id % 10 }}/{{ link.image_id }}.png' alt=""/>
+										<img width='30' src='{{d.template_data.media_root}}images/{{ link.image_id % 10 }}/{{ link.image_id }}.png' alt=""/>
 									{% else %}
 										<img width='30' src="/static/images/thumb_genAvatar30.png" alt=""/>
 									{% endif %}
@@ -87,7 +87,7 @@
 										<a class="close" href="#removeOrganization,{{ org.organization }}"><span>remove</span></a>
 									{% endif %}
 									{% if org.image_id %}
-										<img width='30' src='/images/{{ org.image_id % 10 }}/{{ org.image_id }}.png' alt=""/>
+										<img width='30' src='{{d.template_data.media_root}}images/{{ org.image_id % 10 }}/{{ org.image_id }}.png' alt=""/>
 									{% else %}
 										<img width='30' src="/static/images/thumb_genAvatar30.png" alt=""/>
 									{% endif %}
@@ -270,7 +270,7 @@
 							}
 							temptd = tc.jQ('<td></td>').append(tc.jQ('.template-content.link-table-cell').clone().children());
 							if(d.links[i].image_id){
-								temptd.find('img').attr('src','/images/'+(d.links[i].image_id%10)+'/'+d.links[i].image_id+'.png');
+								temptd.find('img').attr('src','{{d.template_data.media_root}}images/'+(d.links[i].image_id%10)+'/'+d.links[i].image_id+'.png');
 							}
 							temptd.find('a.close').attr('href','#removeLink,'+d.links[i].link_id);
 							temptd.find('.link-link').attr('href',d.links[i].url).children('span').text(d.links[i].title);
@@ -294,7 +294,7 @@
 							temptd = tc.jQ('<td></td>').append(tc.jQ('.template-content.organization-table-cell').clone().children());
 							temptd.attr('title',d.resources[i].title);
 							if(d.resources[i].image_id){
-								temptd.find('img').attr('src','/images/'+(d.resources[i].image_id%10)+'/'+d.resources[i].image_id+'.png');
+								temptd.find('img').attr('src','{{d.template_data.media_root}}images/'+(d.resources[i].image_id%10)+'/'+d.resources[i].image_id+'.png');
 							}
 							temptd.find('a.close').attr('href','#removeResource,'+d.resources[i].organization);
 							temptd.find('.tooltip_trigger')

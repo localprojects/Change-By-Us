@@ -110,7 +110,7 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 		markup.find('.tooltip-hd').after('<div class="tooltip-md"><span>Official Project</span></div>');
 	}
 	if (data.image_id > 1) {
-		markup.find('img').attr('src','/images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
+		markup.find('img').attr('src',app_page.media_root + 'images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
 	} else {
 		markup.find('img').attr('src','/static/images/thumb_genAvatar100.png');
 	}

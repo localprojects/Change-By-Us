@@ -409,7 +409,7 @@ Change by Us NYC - Create a Project
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
-								merlin.dom.find('img.proj').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.dom.find('img.proj').attr('src','{{d.template_data.media_root}}images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image = d.responseJSON.thumbnail_id;
 							}
 						});
@@ -521,7 +521,7 @@ Change by Us NYC - Create a Project
 								temp = "<tr>";
 							}
 							if (project.image_id > 0) {
-								tempImgPath = '/images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
+								tempImgPath = '{{d.template_data.media_root}}images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}
@@ -615,7 +615,7 @@ Change by Us NYC - Create a Project
 						//for(i in merlin.current_step.step_data.resources){
 						//	temphtml = tc.jQ("<li class='organization-item'></li>").append(tc.jQ('.template-content.organization-item').clone().children());
 						//	if(merlin.current_step.step_data.resources[i].image_id){
-						//		temphtml.find('img').attr('src','/images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
+						//		temphtml.find('img').attr('src','{{d.template_data.media_root}}images/'+(merlin.current_step.step_data.resources[i].image_id % 10)+'/'+merlin.current_step.step_data.resources[i].image_id+'.png')
 						//	}
 						//	temphtml.find('.organization-name').text(merlin.current_step.step_data.resources[i].title);
 						//	temphtml.find('.add-button').attr('href','#add,'+merlin.current_step.step_data.resources[i].project_resource_id);
@@ -683,7 +683,7 @@ Change by Us NYC - Create a Project
 								temp = "<tr>";
 							}
 							if (resource.image_id > 0) {
-								tempImgPath = '/images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
+								tempImgPath = '{{d.template_data.media_root}}images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}
