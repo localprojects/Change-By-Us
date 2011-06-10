@@ -33,7 +33,7 @@
 						<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
 						<li><a href='http://nycblog.changeby.us'>News</a></li>
 						<li><a href='http://nyc.changeby.us/tou#community-policy'>Community Policy</a></li>
-						<li class="sitemap-tou"><a href='http://nyc.changeby.us/tou'>Terms of Service</a></li>
+						<li class="sitemap-tou"><a href='http://nyc.changeby.us/tou'>Terms of Use</a></li>
 						<li><a href='http://nyc.changeby.us/tou#privacy'>Privacy Policy</a></li>
 					</ul>
 					<div class="search generic-search clearfix">
