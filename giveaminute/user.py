@@ -112,7 +112,7 @@ where u.user_id = $id and u.is_active = 1"""
             log.error(e)
             return False
             
-    def updateInfo(self, email, first, last, imageId = None, locationId = None, description = None):
+    def updateInfo(self, email, first, last, imageId = None, locationId = None):
         # check if email already in user
         if not (findUserByEmail(self.db, self.email)):
             return False
@@ -124,12 +124,23 @@ where u.user_id = $id and u.is_active = 1"""
                             email = email,
                             image_id = imageId,
                             location_id = locationId,
-                            description = description,
                             vars = {'userId':self.id})
             
             return True
         except Exception, e:
             log.info("*** problem updating user info")
+            log.error(e)
+            return False
+            
+    def updateDescription(self, description):
+        try:
+            self.db.update('user', 
+                            where = 'user_id = $userId', 
+                            description = description,
+                            vars = {'userId':self.id})
+            return True
+        except Exception, e:
+            log.info("*** problem updating user description")
             log.error(e)
             return False
             
