@@ -79,7 +79,8 @@ class Home(Controller):
         locations = dict(data = locationData, json = json.dumps(locationData))
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
         
-        news = self.getNewsItems()
+        #news = self.getNewsItems()
+        news = []
         leaderboardProjects = mProject.getLeaderboardProjects(self.db, 6)
         
         self.template_data['locations'] = locations
