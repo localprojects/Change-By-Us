@@ -164,8 +164,6 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	if(dropdown.options.radios && dropdown.options.radios.filter('.location-hood').length){
 		dropdown.options.radios.filter('.location-hood').attr('checked',true);//[0].checked = true;
-		
-		
 		//tc.jQ('label[for="location-hood"]').trigger('click',{preventChange:true});
 	}
 	dropdown.open();

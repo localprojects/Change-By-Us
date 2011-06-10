@@ -51,16 +51,15 @@ Change by Us NYC - User Account
 							
 							{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 								
-								{% if d.template_data.user_activity.data.user.description %}
-									<div class="description mod-inline-edit">
-										<div class="editable-content">{{ d.template_data.user_activity.data.user.description }}</div>
+								<div class="description mod-inline-edit">
+									<div class="editable-content">
+										{% if d.template_data.user_activity.data.user.description %}
+											{{ d.template_data.user_activity.data.user.description }}
+										{% endif %}
 									</div>
-								{% else %}
-									<div class="description mod-inline-edit no-description">
-										<div class="editable-content">Click here to add something about yourself.</div>
-									</div>
-								{% endif %}
-								
+									<div class="inline-edit-controls"></div>
+								</div>
+							
 							{% else %}
 							
 								{% if d.template_data.user_activity.data.user.description %}
@@ -644,6 +643,7 @@ Change by Us NYC - User Account
 		<script type="text/javascript" src='/static/js/pages/useraccount.admin.js'></script>
 	{% endif %}
 	{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+		<script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
 		<script type="text/javascript" src='/static/js/pages/useraccount.editable.js'></script>
 	{% endif %}
 
