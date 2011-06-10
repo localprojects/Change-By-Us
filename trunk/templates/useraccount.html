@@ -56,7 +56,9 @@ Change by Us NYC - User Account
 						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
 							<li class="account"><a href="#user-account,account">Account</a></li>
+							{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
 							<li class="resources"><a href="#user-account,resources">Resources</a></li>
+							{% endif %}
 						{% endif %}
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id) %}
@@ -167,7 +169,7 @@ Change by Us NYC - User Account
 						</div>
 					</div><!--end my-ideas-->
 					
-					{% if 1==1 %} <!-- hidden for testing -->
+					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 and (d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 					<div class="box my-resources">
 						<div class="hd">
 							<h2>
@@ -176,86 +178,39 @@ Change by Us NYC - User Account
 								{% else %}
 									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
 								{% endif %}
-								Resources <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
+								Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span>
 							</h2>
 						</div>
 						<div class="bd">
-							<!--table template format can be copied from search.html line 126-159-->
-							<!-- START DELETING DUMMY TABLE-->
 							<table class="resources-list triplewide clearfix">
 								<tbody>
-									<tr>
-										<td>
-											<a class="add-button rounded-button small add-resource" href="">Add</a>
-											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-											<span class="resource-name">
-												<span class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+									{% for resource in d.template_data.user_activity.data.resources %}
+										{% if loop.index % 3 == 1 %}
+										<tr>
+										{% endif %}
+											<td {% if resource.is_official %}class="official-resource"{% endif %}>
+												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+													<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
+												{% endif %}
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												<span class="resource-name">
+													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
+													<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+														<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
+													</span>
 												</span>
-											</span>
-											<div class="added-dialog">
-												<span class="added-header">Added <em>to</em> your project<br /></span>
-												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
-											</div>
-										</td>
-										<td class="official-resource">
-											<a class="add-button rounded-button small add-resource" href="">Add</a>
-											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-											<span class="resource-name">
-												<span class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
-												</span>
-											</span>
-											<div class="added-dialog">
-												<span class="added-header">Added <em>to</em> your project<br /></span>
-												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
-											</div>
-										</td>
-										<td>
-											<a class="add-button rounded-button small add-resource" href="">Add</a>
-											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-											<span class="resource-name">
-												<span class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
-												</span>
-											</span>
-											<div class="added-dialog">
-												<span class="added-header">Added <em>to</em> your project<br /></span>
-												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
-											</div>
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<a class="add-button rounded-button small add-resource" href="">Add</a>
-											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-											<span class="resource-name">
-												<span class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
-												</span>
-											</span>
-											<div class="added-dialog">
-												<span class="added-header">Added <em>to</em> your project<br /></span>
-												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
-											</div>
-										</td>
-										<td>
-											<a class="add-button rounded-button small add-resource" href="">Add</a>
-											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-											<span class="resource-name">
-												<span class='resource-tooltip_trigger tooltip_trigger'>
-													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
-												</span>
-											</span>
-											<div class="added-dialog">
-												<span class="added-header">Added <em>to</em> your project<br /></span>
-												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
-											</div>
-										</td>
-									</tr>
+												<div class="added-dialog">
+													<span class="added-header">Added <em>to</em> your project<br /></span>
+													<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+													<!-- <span class="added-close"></span> -->
+												</div>
+											</td>
+										{% if loop.index % 3 == 0 %}
+										</tr>
+										{% endif %}
+									{% endfor %}
 								</tbody>
 							</table>
-							<!-- STOP DELETING DUMMY TABLE-->
 						</div>
 					</div><!--end my-resources-->
 					{% endif %}
@@ -450,118 +405,51 @@ Change by Us NYC - User Account
 						
 					</div><!--end account-view-->
 					
-					{% if 1==1 %} <!-- hidden for testing -->
+					
+					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
 					<div class="resources-view step merlin">
 						<div class="hd">
-							<h2><span class="light">My </span>Resources <span class="counter">2</span></h2>
+							<h2><span class="light">My </span>Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span></h2>
 						</div>
 						<div class="bd">
 							<ul class='my-res'>
-								<li class='clearfix'>
-									<div class='left'>
-										<div class="thumb">
-											<a class="change-image"><span>Change Photo</span></a>
-											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+								{% for resource in d.template_data.user_activity.data.resources %}
+									<li class='clearfix'>
+										<div class='left'>
+											<div class="thumb">
+												<a class="change-image"><span>Change Photo</span></a>
+												<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+											</div>
+											<h4 class="serif">{{ resource.title }}</h4>
+											<div class='box'>
+												<input type='text' name='location-hood-enter-{{ loop.index }} has-been-focused' id='location-hood-enter-{{ loop.index }}' class='search-location location-group location-hood-enter always-focused' value='{{ resource.location_name }}'/>
+												<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+											</div>
 										</div>
-										<h4 class="serif">Resource Name</h4>
-										<div class='box'>
-											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-1' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
-											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+										<div class='right'>
+											<div class='box'>
+												<span class='section-title'>Mission</span>
+												<p>{{ resource.description }}</p>
+											</div>
+											<div class='box'>
+												<span class='section-title'>URL</span>
+												<p><a href='{{ resource.url }}'>{{ resource.url }}</a></p>
+											</div>
+											<div class='box'>
+												<span class='section-title'>Email</span>
+												<p><a href=''>{{ resource.contact_email }}</a></p>
+											</div>
+											<div class='box box-half'>
+												<span class='section-title'>Physical Address</span>
+												<p>{{ resource.physical_address }}</p>
+											</div>
+											<div class='box box-half'>
+												<span class='section-title'>Keywords</span>
+												<p>{{ resource.keywords }}</p>
+											</div>
 										</div>
-									</div>
-									<div class='right'>
-										<div class='box'>
-											<span class='section-title'>Mission</span>
-											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
-										</div>
-										<div class='box'>
-											<span class='section-title'>URL</span>
-											<p><a href=''>http://www.thisisawebaddress.com</a></p>
-										</div>
-										<div class='box'>
-											<span class='section-title'>Email</span>
-											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
-										</div>
-										<div class='box box-half'>
-											<span class='section-title'>Physical Address</span>
-											<p>315 W. 39th Street</p>
-										</div>
-										<div class='box box-half'>
-											<span class='section-title'>Keywords</span>
-											<p>lorem, ipsum, sit, eros</p>
-										</div>
-									</div>
-								</li>
-								<li class='clearfix'>
-									<div class='left'>
-										<div class="thumb">
-											<a class="change-image"><span>Change Photo</span></a>
-											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
-										</div>
-										<h4 class="serif">Resource Name</h4>
-										<div class='box'>
-											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-2' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
-											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
-										</div>
-									</div>
-									<div class='right'>
-										<div class='box'>
-											<span class='section-title'>Mission</span>
-											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
-										</div>
-										<div class='box'>
-											<span class='section-title'>URL</span>
-											<p><a href=''>http://www.thisisawebaddress.com</a></p>
-										</div>
-										<div class='box'>
-											<span class='section-title'>Email</span>
-											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
-										</div>
-										<div class='box box-half'>
-											<span class='section-title'>Physical Address</span>
-											<p>315 W. 39th Street</p>
-										</div>
-										<div class='box box-half'>
-											<span class='section-title'>Keywords</span>
-											<p>lorem, ipsum, sit, eros</p>
-										</div>
-									</div>
-								</li>
-								<li class='clearfix'>
-									<div class='left'>
-										<div class="thumb">
-											<a class="change-image"><span>Change Photo</span></a>
-											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
-										</div>
-										<h4 class="serif">Resource Name</h4>
-										<div class='box'>
-											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-3' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
-											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
-										</div>
-									</div>
-									<div class='right'>
-										<div class='box'>
-											<span class='section-title'>Mission</span>
-											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
-										</div>
-										<div class='box'>
-											<span class='section-title'>URL</span>
-											<p><a href=''>http://www.thisisawebaddress.com</a></p>
-										</div>
-										<div class='box'>
-											<span class='section-title'>Email</span>
-											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
-										</div>
-										<div class='box box-half'>
-											<span class='section-title'>Physical Address</span>
-											<p>315 W. 39th Street</p>
-										</div>
-										<div class='box box-half'>
-											<span class='section-title'>Keywords</span>
-											<p>lorem, ipsum, sit, eros</p>
-										</div>
-									</div>
-								</li>
+									</li>
+								{% endfor %}
 							</ul>
 						</div>
 					</div><!--end resources-view-->
