@@ -20,8 +20,7 @@ Change by Us NYC - User Account
 	<!--<div class='headlands'>
 	</div>-->
 	
-	<!-- once template data is ready, add class .is-leader to .midlands if user is a city leader!!!! -->
-	<div class='midlands merlin clearfix'>
+	<div class='midlands merlin clearfix {% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}is-leader{% endif %}'>
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
@@ -43,10 +42,15 @@ Change by Us NYC - User Account
 					<div class='box box-info'>
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
-							{% if d.template_data.user_activity.data.user.location %}<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>{% endif %}
+							
+							{% if d.template_data.user_activity.data.endorsed_projects|length > 0 %}
+								<span class="location"><em>from</em> Organization</span>
+							{% elif d.template_data.user_activity.data.user.location %}
+								<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
+							{% endif %}
 							{% if d.template_data.user_activity.data.user.description %}
 								<span class="description">{{ d.template_data.user_activity.data.user.description }}</span>
-							{% elif d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+							{% elif d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
 								<span class="no-description">Click here to add something about yourself.</span>
 							{% endif %}
 							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
@@ -55,7 +59,7 @@ Change by Us NYC - User Account
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
+						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
@@ -77,6 +81,7 @@ Change by Us NYC - User Account
 			<div>
 			
 				<div class="activity-view step">
+					{% if d.template_data and d.template_data.user_activity.data.projects|length > 0 %}
 					<div class="box my-projects">
 						<div class="hd">
 							<h2>
@@ -127,7 +132,9 @@ Change by Us NYC - User Account
 							
 						</div>
 					</div><!-- end my-projects -->
+					{% endif %}
 					
+					{% if d.template_data and d.template_data.user_activity.data.ideas|length > 0%}
 					<div class="box my-ideas">
 						<div class="hd">
 							<h2>
@@ -172,6 +179,7 @@ Change by Us NYC - User Account
 							</ul>
 						</div>
 					</div><!--end my-ideas-->
+					{% endif %}
 					
 					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 and (d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 					<div class="box my-resources">
@@ -221,6 +229,59 @@ Change by Us NYC - User Account
 							</table>
 						</div>
 					</div><!--end my-resources-->
+					{% endif %}
+					
+					{% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}
+					<div class="box my-endorsed-projects my-projects">
+						<div class="hd">
+							<h2>
+								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+									<span class="light">My</span>
+								{% else %}
+									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+								{% endif %}
+								Supported Projects <span class="counter">{{ d.template_data.user_activity.data.endorsed_projects|length }}</span>
+							</h2>
+						</div>
+						<div class="bd">
+							
+							{% for project in d.template_data.user_activity.data.endorsed_projects %}
+							
+								<div class='clearfix project-header'>
+									<div class="thumb">
+										{% if project.image_id > -1  %}
+											<img width='80' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+										{% else %}
+											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+										{% endif %}
+										<span class="overlay-tag"></span>
+									</div>
+									<div class="tools">
+										<div class="members">
+											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+										</div>
+									</div>
+									<div class="main">
+										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner_user_id }}">{{ project.owner_first_name }} {{ project.owner_last_name|truncate(1,true,'.') }}</a></strong></cite>
+										<div class="sub-ft">
+											{% if d.template_data and d.template_data.app_mode != 'beta' %}
+												<div class="twitter">
+													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+												</div>
+												<div class="facebook">
+													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+													<fb:like href="http://changeby.us/project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
+												</div>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							
+							{% endfor %}
+							
+						</div>
+					</div><!-- end my-endorsed-projects -->
 					{% endif %}
 					
 				</div><!--end activity-view-->
