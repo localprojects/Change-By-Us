@@ -296,13 +296,13 @@ class Project(Controller):
 
         projectId = self.request('project_id')
         title = self.request('title')
-        url = self.request('url')
+        url = util.makeUrlAbsolute(self.request('url')) if self.request('url') else None
         
         if (not projectId or util.strNullOrEmpty(title) or util.strNullOrEmpty(url)):
             log.error("*** link submitted w/o id, title, or url")
             return False
         else:
-            return mProject.addLinkToProject(self.db, projectId, title, util.makeUrlAbsolute(url))
+            return mProject.addLinkToProject(self.db, projectId, title, url)
             
     def removeLink(self):
         projectId = self.request('project_id')
@@ -538,4 +538,3 @@ class Project(Controller):
         description = self.request('text')
         
         return mProject.updateProjectDescription(self.db, projectId, description)
-            
