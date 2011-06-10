@@ -1,7 +1,7 @@
 import yaml, memcache, json
 from cgi import escape
 import helpers.custom_filters as custom_filters
-# from lib.web.contrib.template import render_jinja
+from lib.web.contrib.template import render_jinja
 from lib import web
 from framework.log import log
 from framework.config import *
@@ -9,7 +9,6 @@ from framework.session_holder import *
 from framework.task_manager import *
 import framework.util as util
 import giveaminute.user as mUser
-from lib.jinja2 import Environment,FileSystemLoader
 
 class Controller():
     
@@ -124,20 +123,6 @@ class Controller():
         
         return var              
         
-    def render_template(self, template_name, context):
-        extensions = context.pop('extensions', [])
-        globals = context.pop('globals', {})
-        templatesPath = os.path.join(os.path.dirname(__file__), '../templates/')
-
-        jinja_env = Environment(
-                loader=FileSystemLoader(templatesPath),
-                extensions=extensions,
-                )
-        jinja_env.globals.update(globals)
-
-        #jinja_env.update_template_context(context)
-        return jinja_env.get_template(template_name).render(context)
-
     def render(self, template_name, template_values=None, suffix="html"):
         if template_values is None: template_values = {}        
         
@@ -168,14 +153,12 @@ class Controller():
         for key in keys:
             template_values[key] = self.session[key]
         template_values['template_name'] = template_name
-        # renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', encoding = 'utf-8')
-        # renderer._lookup.filters.update(custom_filters.filters)
+        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', encoding = 'utf-8')
+        renderer._lookup.filters.update(custom_filters.filters)
         web.header("Content-Type", "text/html")
         #log.info("TEMPLATE %s: %s" % (template_name, template_values))
         log.info("200: text/html (%s)" % template_name)
-        # return (renderer[template_name + "." + suffix](dict(d=template_values)))
-        # context = template_values
-        return self.render_template(template_name + '.' + suffix, context=dict(d=template_values))
+        return (renderer[template_name + "." + suffix](dict(d=template_values)))
 
     def json(self, data):
         output = json.dumps(data)
