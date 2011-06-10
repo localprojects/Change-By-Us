@@ -1,0 +1,1171 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - User Account
+{% endblock title %}
+
+
+{% block project_admin %}
+	{{ super() }}
+	{% if d.template_data.user_activity.data.user and d.template_data.user_activity.data.user.u_id %}
+		<li class="delete"><a href="#deleteUser,{{ d.template_data.user_activity.data.user.u_id }}" class="fancy-caps delete-user">Delete <span>this</span> user</a></li>
+	{% endif %}
+{% endblock %}
+
+
+
+{% block continent %}
+
+<div class='continent user-account'>
+	<!--<div class='headlands'>
+	</div>-->
+	
+	<!-- once template data is ready, add class .is-leader to .midlands if user is a city leader!!!! -->
+	<div class='midlands merlin clearfix'>
+		<div class="west">
+			<div class="box user-account-nav">
+				<div class="hd clearfix">
+					<div class='box box-thumb'>
+						<div class="leader-tag"><span>City Leader</span></div>
+						<div class="thumb">
+							{% if d.template_data.user_activity.data.user.image_id > 0 %}
+								<img width='90' src='/images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
+							{% else %}
+								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+							{% endif %}
+							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+								<div class="addphoto" style="display:none">
+									<a href="#">Change Photo</a>
+								</div>
+							{% endif %}
+						</div>
+					</div>
+					<div class='box box-info'>
+						<div class="user-info serif">
+							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
+							<!-- <span class="location"><em>from</em> <a href=''>Bedford-Stuyvesant</a></span> --> <!-- hidden for testing -->
+							<!-- <span class="description">This is a great little description of me and who I am and stuff.</span> --> <!-- hidden for testing -->
+							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
+						</div>
+					</div>
+				</div>
+				<div class="bd">
+					<ul class="tabs">
+						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
+						
+						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
+							<li class="account"><a href="#user-account,account">Account</a></li>
+							<!-- <li class="resources"><a href="#user-account,resources">Resources</a></li> --> <!-- hidden for testing -->
+						{% endif %}
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="east">
+			<div>
+			
+				<div class="activity-view step">
+					<div class="box my-projects">
+						<div class="hd">
+							<h2>
+								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+									<span class="light">My</span>
+								{% else %}
+									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+								{% endif %}
+								Projects <span class="counter">{{ d.template_data.user_activity.data.projects|length }}</span>
+							</h2>
+						</div>
+						<div class="bd">
+							
+							{% for project in d.template_data.user_activity.data.projects %}
+							
+								<div class='clearfix project-header'>
+									<div class="thumb">
+										{% if project.image_id > -1  %}
+											<img width='80' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+										{% else %}
+											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+										{% endif %}
+										<span class="overlay-tag"></span>
+									</div>
+									<div class="tools">
+										<div class="members">
+											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+										</div>
+									</div>
+									<div class="main">
+										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
+										<div class="sub-ft">
+											{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode != 'beta' %}
+												<div class="twitter">
+													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+												</div>
+												<div class="facebook">
+													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+													<fb:like href="http://changeby.us/project/{{ project.project_id }}" layout="button_count" show_faces="true" width="100"></fb:like>
+												</div>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							
+							{% endfor %}
+							
+						</div>
+					</div><!-- end my-projects -->
+					
+					<div class="box my-ideas">
+						<div class="hd">
+							<h2>
+								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+									<span class="light">My</span>
+								{% else %}
+									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+								{% endif %}
+								Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
+							</h2>
+						</div>
+						<div class="bd clearfix">
+							<ul class="idea-cards">
+								
+								{% for idea in d.template_data.user_activity.data.ideas %}
+								
+									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
+										{% if d.template_data and d.template_data.user and d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id %}
+										<div class="note-card-public-controls">
+											{% if d.template_data.user.data.projects|length > 0 %}
+												<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+											{% endif %}
+											<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+										</div>
+										{% endif %}
+										<div class="note-card">
+											<div class="membrane">
+												{% if d.template_data and d.template_data.user %}
+													{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+														<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+													{% endif %}
+												{% endif %}
+												<cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
+												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
+												<cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
+											</div>
+										</div>
+									</li>
+								
+								{% endfor %}
+								
+							</ul>
+						</div>
+					</div><!--end my-ideas-->
+					
+					{% if 1==0 %} <!-- hidden for testing -->
+					<div class="box my-resources">
+						<div class="hd">
+							<h2>
+								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+									<span class="light">My</span>
+								{% else %}
+									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+								{% endif %}
+								Resources <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
+							</h2>
+						</div>
+						<div class="bd">
+							<!--table template format can be copied from search.html line 126-159-->
+							<!-- START DELETING DUMMY TABLE-->
+							<table class="resources-list triplewide clearfix">
+								<tbody>
+									<tr>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+										<td class="official-resource">
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+										<td>
+											<a class="add-button rounded-button small add-resource" href="">Add</a>
+											<span class="thumb"><a class="close delete-resource" href=""><span>Close</span></a><img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="resource-name">
+												<span class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href=""><span>Resource Title</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							<!-- STOP DELETING DUMMY TABLE-->
+						</div>
+					</div><!--end my-resources-->
+					{% endif %}
+					
+				</div><!--end activity-view-->
+				
+				{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+				
+					<div class="messages-view step" >
+						<div class="box messages">
+							<div class="hd">
+								<h2>Messages</h2>
+							</div>
+							<div class="bd">
+								<ol class="message-stack">
+									
+									{% for message in d.template_data.user_activity.data.messages %}
+										{% if message.message_type == "member_comment" %}
+										
+											<li class="message-item member-comment">
+												<!--<a class="close" href="#"><span>Close</span></a>-->
+												<div class="thumb">
+													{% if message.owner.image_id %}
+														<img width='50' src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt="{{ message.owner.name }}" class='avatar'/>
+													{% else %}
+														<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ message.owner.name }}" class="avatar"/>
+													{% endif %}
+												</div>
+												<div class="main">
+													<div class="meta meta-top">
+														<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
+														<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}" class="serif">{{ message.project_title }}</a></cite>
+													</div>
+													<blockquote class="excerpt">
+														<p>{{ message.body }}</p>
+													</blockquote>
+													<div class="meta meta-bottom">
+														<cite class="time-since">{{ message.created }}</cite>
+													</div>
+												</div>
+											</li>
+											
+										{% elif message.message_type == "join" %}
+											
+											<li class="message-item user-notification join-notification">
+												<!--<a class="close" href="#"><span>Close</span></a>-->
+												<span class="title">{{ message.body }}</span>
+												<div class="controls">
+													<a href="/project/{{ message.project_id }}#show,members">Click to see member</a>
+												</div>
+											</li>
+											
+										{% elif message.message_type == "invite" %}
+										
+											<li class="message-item user-notification invite-notification">
+												<!--<a class="close" href="#"><span>Close</span></a>-->
+												<span class="title">{{ message.body }}</span>
+												<div class="controls">
+													<a href="/project/{{ message.project_id }}">Click to see project</a>
+												</div>
+											</li>
+											
+										{% endif %}
+									{% endfor %}
+									
+								</ol>
+							</div>
+							<div class="load-more">
+								<a href=""><span>Older messages</span></a>
+							</div>
+						</div>
+						<div class="box preferences">
+							<div class="hd">
+								<h3>Email Preferences</h3>
+							</div>
+							<div class="bd">
+								<ul class="checklist">
+									<li>
+										<input type="radio" name="pref-emails-option" id="pref-emails-daily"/>
+										<label for="pref-emails-daily">Email daily digest</label>
+									</li>
+									<li>
+										<input type="radio" name="pref-emails-option" id="pref-no-emails"/>
+										<label for="pref-no-emails">No emails</label>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div><!-- end messages-view -->
+				
+					<div class="account-view step merlin">
+						
+						<div class="box user-account">
+							<div class="hd">
+								<h2>Account</h2>
+							</div>
+							<div class="bd step edit-account-details">
+								<form action="" method="POST" class="account-info">
+									<div class="user-details">
+										<div class="fields">
+											<div class="row row-first-name">
+												<label>First name</label>
+												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.f_name }}" />
+											</div>
+											<div class="row row-last-name">
+												<label>Last name</label>
+												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.l_name }}" />
+											</div>
+											<div class="row row-email clearfix">
+												<label>Email address</label>
+												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.email }}" />
+											</div>
+											{% if 1==0 %} <!-- hidden for testing -->
+											<div class="row row-hood clearfix">
+												<label>Neighborhood</label>
+												<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' />
+												<div class="location-hood-list" style="display:none"><ul></ul></div>
+											</div>
+											{% endif %}
+											<!-- only for testing, DELETE after-->
+											<div class="row row-hood clearfix" style="width:285px; height: 64px;">
+											</div>
+											<!-- STOP DELETING -->
+										</div>
+										<div class="">
+											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
+											<a href="#change-password,edit-password-details" class="change-password">Change Password</a>
+										</div>
+										
+										<div style="clear:both"></div>
+										
+										<div class="password-info merlin">
+											<div class="step edit-password-details">
+												<div class="row">
+													<label>Old Password</label>
+													<input type="password" class="has-been-focused old-password" />
+												</div>
+												<div class="row">
+													<label>New Password</label>
+													<input type="password" class="has-been-focused new-password" />
+													<span class="pass-strength"></span>
+												</div>
+												<div class="row">
+													<label>Confirm Password</label>
+													<input type="password" class="has-been-focused confirm-new-password" />
+												</div>
+												<div class="controls">
+													<input class="rounded-button password-save-button" type="submit" value="Save"/>
+													<a href="#account-info,edit-account-details" class="cancel">Cancel</a>
+												</div>
+											</div>
+											<div class="step submit-password-details">
+												<p>Changing your password&hellip;</p>
+												<p><img src='/static/images/loader32x32.gif' /></p>
+											</div>
+											<div class="step password-details-submitted">
+												<p>Password Changed</p>
+											</div>
+											<div class="step password-details-error">
+												<p>There was an error changing your password.</p>
+											</div>
+										</div>
+										
+										<div style="clear:both"></div>
+										
+									</div>
+								</form>	
+								{%- if d.template_data.app_mode != 'beta' -%}
+									<div class="social-networking">
+										<div class="social-connect-wrapper">
+											<a href="" class="connect-facebook"></a>
+											<!-- <a href="" class="disconnect disconnect-facebook">Disconnect</a> -->
+										</div>
+										<div class="social-connect-wrapper">
+											<a href="/login_twitter" class="connect-twitter"></a>
+											<!-- <a href="" class="disconnect disconnect-twitter">Disconnect</a> -->
+										</div>
+									</div>
+								{%- endif -%}
+							</div>
+							<div class="bd step submit-account-details">
+								<p>Processing your account details&hellip;</p>
+								<p><img src='/static/images/loader32x32.gif' /></p>
+							</div>
+							<div class="bd step account-details-submitted">
+								<p>Your account details have been updated!</p>
+							</div>
+							<div class="bd step account-details-error">
+								<p>There was an error updating your account details.</p>
+							</div>
+						</div>
+						
+					</div><!--end account-view-->
+					
+					{% if 1==0 %} <!-- hidden for testing -->
+					<div class="resources-view step merlin">
+						<div class="hd">
+							<h2><span class="light">My </span>Resources <span class="counter">2</span></h2>
+						</div>
+						<div class="bd">
+							<ul class='my-res'>
+								<li class='clearfix'>
+									<div class='left'>
+										<div class="thumb">
+											<a class="change-image"><span>Change Photo</span></a>
+											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+										</div>
+										<h4 class="serif">Resource Name</h4>
+										<div class='box'>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-1' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+										</div>
+									</div>
+									<div class='right'>
+										<div class='box'>
+											<span class='section-title'>Mission</span>
+											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>URL</span>
+											<p><a href=''>http://www.thisisawebaddress.com</a></p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>Email</span>
+											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Physical Address</span>
+											<p>315 W. 39th Street</p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Keywords</span>
+											<p>lorem, ipsum, sit, eros</p>
+										</div>
+									</div>
+								</li>
+								<li class='clearfix'>
+									<div class='left'>
+										<div class="thumb">
+											<a class="change-image"><span>Change Photo</span></a>
+											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+										</div>
+										<h4 class="serif">Resource Name</h4>
+										<div class='box'>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-2' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+										</div>
+									</div>
+									<div class='right'>
+										<div class='box'>
+											<span class='section-title'>Mission</span>
+											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>URL</span>
+											<p><a href=''>http://www.thisisawebaddress.com</a></p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>Email</span>
+											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Physical Address</span>
+											<p>315 W. 39th Street</p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Keywords</span>
+											<p>lorem, ipsum, sit, eros</p>
+										</div>
+									</div>
+								</li>
+								<li class='clearfix'>
+									<div class='left'>
+										<div class="thumb">
+											<a class="change-image"><span>Change Photo</span></a>
+											<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+										</div>
+										<h4 class="serif">Resource Name</h4>
+										<div class='box'>
+											<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter-3' class='search-location location-group location-hood-enter always-focused' value='Citywide'/>
+											<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+										</div>
+									</div>
+									<div class='right'>
+										<div class='box'>
+											<span class='section-title'>Mission</span>
+											<p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus. In.</p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>URL</span>
+											<p><a href=''>http://www.thisisawebaddress.com</a></p>
+										</div>
+										<div class='box'>
+											<span class='section-title'>Email</span>
+											<p><a href=''>mayor.bloomberg@nyc.gov</a></p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Physical Address</span>
+											<p>315 W. 39th Street</p>
+										</div>
+										<div class='box box-half'>
+											<span class='section-title'>Keywords</span>
+											<p>lorem, ipsum, sit, eros</p>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div><!--end resources-view-->
+					{% endif %}
+					
+				
+				{% endif %}
+				
+				
+			</div>	
+		</div>
+	</div>
+
+	<div class='foothills'>
+
+	</div>
+	
+	<li class="template-content message-item member-comment">
+		<!--<a class="close" href="#"><span>Close</span></a>-->
+		<div class="thumb">
+			<img width='50' src=" " alt=" " class="avatar"/>
+		</div>
+		<div class="main">
+			<div class="meta">
+				<cite class="sender"></cite>
+				<cite></cite>
+			</div>
+			<blockquote class="excerpt">
+				<p></p>
+			</blockquote>
+		</div>
+	</li>
+	
+	<li class="template-content message-item user-notification join-notification">
+		<!--<a class="close" href="#"><span>Close</span></a>-->
+		<span class="title"></span>
+		<div class="controls">
+			<a href="">Click to see member</a>
+		</div>
+	</li>
+	
+	<li class="template-content message-item user-notification invite-notification">
+		<!--<a class="close" href="#"><span>Close</span></a>-->
+		<span class="title"></span>
+		<div class="controls">
+			<a href="">Click to see project</a>
+		</div>
+	</li>
+	
+	<div class='template-content modal-content upload-image'>
+		<div class='step'>
+			<h2><strong>Upload</strong> a photo for your account.</h2>
+			<div>
+				<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+			</div>
+			<div class="file-uploader"></div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<div class="template-content modal-content confirm-delete user-delete">
+			<div class="step">
+				<h2><strong>Delete</strong> this User?</h2>
+				<div>
+					<p>You are about to delete this User and all projects owned by this user from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete User and Projects</a>
+					<a class="cancel" href="#">No, keep them.</a>
+				</div>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+	{% endif %}
+	
+</div>
+
+{% endblock continent %}
+
+{% block page_js %}
+<script>
+
+    facebookClass = function() { this.initialize.apply(this, arguments); };
+    facebookClass.prototype = {
+        initialize: function () {
+        },
+        
+        connect: function () {
+        
+            var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
+
+            FB.login(
+                function(response) {
+                    if(response.session)
+                    {
+                        //window.location.href="/login_facebook?connect=1";
+                        window.location.href = "/login_facebook?uid="+response.session.uid+"&access_token="+response.session.access_token;
+                    }
+                    else
+                    {
+                        // login failure, do something here
+                    }
+                },
+                {perms: requiredPerms.join(',')}
+            );
+        }
+    };
+
+    F = new facebookClass();
+  
+    $(document).ready(function()
+    {
+        $(".connect-facebook").click(function(event){
+            event.preventDefault();
+            F.connect();
+        });
+        
+     /*FB.getLoginStatus(function(response) 
+     {
+		if (response.session) 
+			$(".connect-facebook").closest(".social-networking").addClass("facebook-connected");
+     }); */
+     
+     {% if d.connected_fb %}
+        $(".connect-facebook").closest(".social-networking").addClass("facebook-connected");
+        
+        $(".disconnect-facebook").click(function(event){
+            
+            event.preventDefault();
+            
+            $.getJSON("/disconnect_facebook", function(data){
+             
+                if(data.success)
+                {
+                    $(".connect-facebook").closest(".social-networking").removeClass("facebook-connected");
+                }   
+                
+            });
+        });
+        
+     {%endif%}
+    
+     {% if d.connected_tw %}
+        $(".connect-twitter").closest(".social-networking").addClass("twitter-connected");
+        
+        $(".disconnect-twitter").click(function(event){
+            
+            event.preventDefault();
+            
+            $.getJSON("/disconnect_twitter", function(data){
+             
+                if(data.success)
+                {
+                    $(".connect-twitter").closest(".social-networking").removeClass("twitter-connected");
+                }   
+                
+            });
+        });
+        
+     {%endif%}
+        
+    });
+        
+        
+
+
+
+	app_page.features.push(function(app){
+		tc.util.log('Give A Minute: User Account');
+		
+		tc.util.log("User Account Data!!!!!!!!!!!!");
+		tc.util.dump({{ d.template_data.user_activity.json }});
+		
+		{% if d.template_data.user %}
+			tc.util.log("Logged in User:");
+			tc.util.dump({{ d.template_data.user.json }});
+		{% else %}
+			tc.util.log("Not logged in!");
+		{% endif %}
+
+		app.components.user_page_merlin = new tc.merlin(app,{
+			name: "user-account",
+			dom:tc.jQ('.midlands.merlin'),
+			first_step:'activity',
+			steps:{
+				'activity':{
+					selector:'.activity-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".activity").addClass("active");
+						tc.jQ('.addphoto').hide();
+						
+						dom.find('a.remove-idea').unbind("click").bind('click', {app:app}, function(e){
+							e.preventDefault();
+							e.data.app.components.modal.show({
+								app:e.data.app,
+								source_element:tc.jQ('.modal-content.remove-idea'),
+								submit:function(){
+									tc.jQ.ajax({
+										type:'POST',
+										url:'/idea/remove',
+										data:{
+											idea_id: e.target.hash.split(',')[1]
+										},
+										context: tc.jQ(e.target),
+										dataType:'text',
+										success:function(data,ts,xhr){
+											var item;
+											if(data == 'False'){
+												return false;
+											}
+											item = this.parents("li").eq(0);
+											
+											(function(counter, n) {
+												counter.text(n);
+											}(this.parents(".box").eq(0).children(".hd").find(".counter"), item.siblings().length));
+																																
+											item.remove();
+											
+											tc.jQ('ul.idea-cards > li').removeClass('every-third').filter(function(index) {
+									 			return index % 3 == 2;
+											}).addClass('every-third');
+										}
+									});
+								}
+							});
+						});
+						// add official resource tags
+						tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
+					}
+				},
+				'messages':{
+					selector:'.messages-view',
+					current_offset: {{ d.template_data.user_activity.data.messages|length }}-1,
+					n_to_fetch:5,
+					has_run_init: false,
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
+						tc.jQ('.addphoto').hide();
+						
+						if (!merlin.current_step.has_run_init) {
+							(function() {
+								var checklist, pref; 
+								checklist = tc.jQ(".messages-view .preferences .checklist");
+								pref = app.app_page.user.email_notification;
+								switch (pref) {
+									case "digest":
+										checklist.find("label[for='pref-emails-daily']").click();
+										break;
+									case "none":
+										checklist.find("label[for='pref-no-emails']").click();
+								}
+							}());
+							merlin.current_step.has_run_init = true;
+						}
+						
+						//Click event to handle "prettyCheckbox" custom check boxes
+						//This event is namespaced to avoid collisions with the click events bound by $.fn.prettyCheckboxes()
+						dom.find(".preferences .checklist .prettyCheckbox.radio").unbind("click.message_prefs")
+						   .bind("click.message_prefs", {merlin:merlin}, function(e, d) {
+								var pref;
+								switch (tc.jQ(this).attr("for")) {
+									case "pref-emails-daily":
+										pref = "digest";
+										break;
+									case "pref-no-emails":
+										pref = "none";
+										break;
+								}
+								if (!pref) {
+									tc.util.log("error parsing email pref", "warn");
+									return false;
+								}
+								tc.jQ.ajax({
+									type:"POST",
+									url:"/useraccount/messageprefs",
+									data:{
+										pref: pref
+									},
+									context:e.data.merlin,
+									dataType:"text",
+									success: function(data, ts, xhr) {
+										if (data == "False") {
+											return false;
+										}
+									}
+								});
+							});
+						
+						dom.find(".load-more a").unbind("click").bind("click", {merlin:merlin, dom:dom}, function(e, d) {
+							var $t;
+							$t = tc.jQ(e.target);
+							$t.parent().addClass("loading");
+							e.preventDefault();
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/messages",
+								data:{
+									n_messages: e.data.merlin.current_step.n_to_fetch,
+									offset: e.data.merlin.current_step.current_offset
+								},
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									var d, dom_stack;
+									$t.parent().removeClass("loading");
+									try {
+										d = tc.jQ.parseJSON(data);
+									} catch(e) {
+										tc.util.log("/useraccount/messages: json parsing error", "warn");
+										return;
+									}
+									if (!d.length) {
+										$t.hide();
+										return;
+									}
+									dom_stack = e.data.dom.find("ol.message-stack");
+									tc.jQ.each(d, function(i, message) {
+										var template;
+										switch (message.message_type) {
+											case "member_comment":
+												template = tc.jQ(".template-content.message-item.member-comment").clone().removeClass("template-content");
+												if (message.owner.image_id) {
+													template.find(".thumb img").attr("src", "/images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
+												} else {
+													template.find(".thumb img").attr("src", "/static/images/thumb_genAvatar50.png").attr("alt", message.owner.name);
+												}
+												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>").next().text(message.created).time_since();
+												template.find(".excerpt p").text(message.body);
+												break;
+											case "join":
+												template = tc.jQ(".template-content.message-item.join-notification").clone().removeClass("template-content");
+												template.find(".title").text(message.body);
+												template.find(".controls > a").attr("href", "/project/"+ message.project_id +"#show,members");
+												break;
+											case "invite":
+												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
+												template.find(".title").text(message.body);
+												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
+												break;
+											default:
+												break;
+										}
+										if (template) {
+											dom_stack.append(template);
+										}
+									});
+									this.current_step.current_offset += d.length;
+								}
+							});
+						});
+					}
+				},
+				'account':{
+					selector:'.account-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
+						window.location.hash = "account-info,edit-account-details";
+						tc.jQ('.addphoto').show();
+					}
+				},
+				'resources':{
+					selector:'.resources-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".resources").addClass("active");
+						window.location.hash = "resources-info";
+						tc.jQ('.addphoto').hide();
+					}
+				}
+			}
+		});
+		
+		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+			tc.jQ('a.delete-user').bind('click',{app:app},function(e,d){
+				var t;
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				e.data.app.components.modal.show({
+					app:app,
+					source_element:tc.jQ('.modal-content.user-delete'),
+					submit:function(modal,callback){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/user/delete',
+							data:{
+								user_id:t.hash.split(',')[1]
+							},
+							context:app,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(this.app_page.data.redir_from){
+									window.location = this.app_page.data.redir_from;
+								} else {
+									window.location = '/';
+								}
+							}
+						});
+					}
+				});
+			});
+		{% endif %}
+		
+		
+		{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+			app.components.account_merlin = new tc.merlin(app,{
+				name: "account-info",
+				dom:tc.jQ(".account-view.merlin"),
+				first_step: "edit-account-details",
+				data: {
+					f_name: app.app_page.user.f_name,
+					l_name: app.app_page.user.l_name,
+					email: app.app_page.user.email,
+					image_id: app.app_page.user.image_id || null
+				},
+				steps: {
+					"edit-account-details":{
+						selector: ".step.edit-account-details",
+						inputs: {
+							first_name:{
+								selector:'.row-first-name input',
+								validators:["required"]
+							},
+							last_name:{
+								selector:".row-last-name input",
+								validators:["required"]
+							},
+							email:{
+								selector:".row-email input",
+								validators:["required"]
+							}
+						},
+						init: function(merlin, dom) {
+							dom.find('.info-save-button').bind('click',{merlin:merlin,dom:dom},function(e,d){
+								e.preventDefault();
+								if(e.data.dom.hasClass('invalid')){
+									return;
+								}
+								window.location.hash = 'account-info,submit-account-details';
+							});
+							
+							tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
+								e.data.merlin.app.components.modal.hide();
+								if(d.responseJSON.thumbnail_id){
+									merlin.dom.find('.user-pic img').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+									tc.jQ(".user-account-nav img.avatar").attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+									merlin.options.data.image_id = d.responseJSON.thumbnail_id;
+								}
+							});
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data = tc.jQ.extend(merlin.options.data, {
+								f_name: merlin.current_step.inputs.first_name.dom.val(),
+								l_name: merlin.current_step.inputs.last_name.dom.val(),
+								email: merlin.current_step.inputs.email.dom.val()
+							});
+						}
+					},
+					"submit-account-details":{
+						selector:".step.submit-account-details",
+						init: function(merlin, dom) {
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/edit",
+								data:merlin.options.data,
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										window.location.hash = "account-info,account-details-error";
+										return false;
+									}
+									
+									tc.timer(2000, function() {
+										window.location.assign("/useraccount#account-info,edit-account-details");
+									});
+								}
+							});
+						}
+					},
+					"account-details-submitted":{
+						selector:".step.account-details-submitted",
+						init: function(merlin, dom) {
+							tc.timer(1000, function() {
+								window.location.hash = "user-account,account";
+							});
+						}
+					},
+					"account-details-error":{
+						selector:".step.account-details-error",
+						init: function(merlin, dom) {
+							
+						}
+					}
+				}
+			});
+			
+			app.components.change_pass_merlin = new tc.merlin(app,{
+				name: "change-password",
+				dom: tc.jQ(".password-info.merlin"),
+				next_button: tc.jQ(".password-save-button"),
+				first_step: "edit-password-details",
+				data: {
+					old_password: null,
+					new_password: null
+				},
+				steps: {
+					"edit-password-details":{
+						selector:".step.edit-password-details",
+						next_step:"submit-password-details",
+						inputs: {
+							old_password: {
+								selector: ".old-password",
+								validators:["required"]
+							},
+							new_password: {
+								selector: ".new-password",
+								validators:["password-20", "required"]
+							},
+							confirm_new_password: {
+								selector: ".confirm-new-password",
+								validators:["required"]
+							}
+						},
+						finish: function(merlin, dom) {
+							merlin.options.data = tc.jQ.extend(merlin.options.data, {
+								old_password: merlin.current_step.inputs.old_password.dom.val(),
+								new_password: merlin.current_step.inputs.new_password.dom.val()
+							});
+						}
+					},
+					"submit-password-details":{
+						selector:".step.submit-password-details",
+						init: function(merlin, dom) {
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/password",
+								data:merlin.options.data,
+								context:merlin,
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										window.location.hash = "change-password,password-details-error";
+										return false;
+									}
+									tc.timer(2000, function() {
+										window.location.hash = "change-password,password-details-submitted";
+									});
+								}
+							});
+						}
+					},
+					"password-details-submitted":{
+						selector:".step.password-details-submitted",
+						init: function(merlin, dom) {
+							tc.timer(1000, function() {
+								window.location.hash = "user-account,account";
+							});
+						}
+					},
+					"password-details-error":{
+						selector:".step.password-details-error",
+						init: function(merlin, dom) {
+							
+						}
+					}
+				}
+			});
+			
+			tc.jQ('.addphoto a').bind('click',{
+				app:app,
+				source_element:tc.jQ('.modal-content.upload-image'),
+				init:function(modal,callback){
+					var uploader = new qq.FileUploader({
+						element: modal.options.element.find('.file-uploader').get(0),
+						action: '/create/photo',
+						onComplete: function(id, fileName, responseJSON){
+							
+							tc.jQ(document).trigger('create-image-uploaded',{
+								id:id,
+								fileName:fileName,
+								responseJSON:responseJSON
+							});
+							
+							return true;
+						}
+					});
+					if(tc.jQ.isFunction(callback)){
+						callback(modal);
+					}
+				}
+			},function(e,d){
+				e.preventDefault();
+				e.data.app.components.modal.show(e.data);
+			});
+			
+		{% endif %}
+		
+		tc.gam.ideas_invite(app);
+		
+		// random note-card backgrounds
+		var ideasList = tc.jQ('.idea-cards li');
+		for (i=0; i < ideasList.length; i++) {
+			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
+		}
+		
+	});
+	
+</script>
+{% endblock page_js %}

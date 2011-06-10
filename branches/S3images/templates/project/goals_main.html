@@ -1,0 +1,406 @@
+<!-- begin goals-main -->	
+<div class="box goals-main">
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Goals 
+				<span class="counter">{{ d.template_data.project.data.info.goals['items']|length }}</span>
+				{% if d.template_data.project_user.data.is_project_admin %}
+					<span class="control"><a href="#show,goals_stack" class="manage">Manage</a></span>
+				{% endif %}
+			</span>
+		</h2>
+		<div class="actions">
+			{% if d.template_data.project_user.data.is_member %}
+				<a href="#show,goals_add" class='add'>Propose Your Own</a>
+			{% endif %}
+		</div>
+	</div>
+	
+	<div class="goals-display" style="{% if not d.template_data.project.data.info.goals['items']|length > 0 %}display:none;{% endif %}">
+		<h3 class="fancy-caps active-goal-indicator"><span>The</span> Active Goal <span>for this</span> Project</h3>
+		<div class="carousel">
+			<div class="scrollable">
+				<ul class="items">
+					
+					{% macro generate_goal(goal) -%}
+						<li rel='{{ goal.goal_id }},{{ goal.active }}'>
+							<div class="goal-card">
+								{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+									<a class="close" href="#close,{{ goal.goal_id }}"><span>Close</span></a>
+								{% endif %}
+								
+								{% if d.template_data.project_user.data.is_project_admin %}
+									{% if not goal.active %}
+										<div class="make-this-active">
+											<a href="#makeActive,{{ goal.goal_id }}" class="fancy-caps">Make <span>this the</span> Active Goal</a>
+										</div>
+									{% endif %}
+								{% endif %}
+								
+								{% if goal.accomplished %}
+									<div class="label-accomplished">
+										Accomplished!
+									</div>
+								{% elif d.template_data.project_user.data.is_project_admin %}
+									<div class="control-accomplished">
+										<a class="fancy-caps" href="#markAccomplished,{{ goal.goal_id }}">
+											Mark <span>as</span> Accomplished
+										</a>
+									</div>
+								{% endif %}
+								
+								<p>{{ goal.text }}</p>
+								<div class="meta">
+									<dl>
+										<dt>Timeframe</dt>
+										<dd>{{ goal.timeframe }}</dd>
+										
+										<dt>Point Person</dt>
+										<dd><a href='/useraccount/{{ goal.owner.u_id }}'>{{ goal.owner.name }}</a></dd>
+									</dl>
+									
+									<div class="timestamp">
+										<strong>Added:</strong>
+										<span class="datetime">{{ goal.created_datetime }}</span>
+									</div>
+								</div>
+							</div>
+						</li>
+					{%- endmacro %}
+					
+					{% for goal in d.template_data.project.data.info.goals['items'] %}
+						{% if goal.active %}
+							{{ generate_goal(goal) }}
+						{% endif %}
+					{% endfor %}
+					
+					{% for goal in d.template_data.project.data.info.goals['items'] %}
+						{% if not goal.active %}
+							{{ generate_goal(goal) }}
+						{% endif %}
+					{% endfor %}
+					
+				</ul>
+			</div>
+			<div class="carousel-controls">
+				<a class="next" href="#">
+					<span>Next</span>
+				</a>
+			</div>
+		</div>
+	</div>
+	
+	{% if d.template_data.project_user.data.is_member %}
+		<div class="goals-empty" style="{% if d.template_data.project.data.info.goals['items']|length > 0 %}display:none;{% endif %}">
+			<h3 class="fancy-caps active-goal-indicator">Make <span>an</span> Active Goal <span>for this</span> Project</h3>
+			<div class="empty-state-box big">
+				<!--<a class="close" href="#"><span>Close</span></a>-->
+				<p>Goals help define what you want to do and help you get it done. Why not <a href="#show,goals_add">add a goal now?</a></p>
+			</div>
+		</div>
+	{% else %}
+		<div class="goals-empty" style="{% if d.template_data.project.data.info.goals['items']|length > 0 %}display:none;{% endif %}">
+			
+			<h3 class="fancy-caps"></h3>
+			<div class="empty-state-box big">
+				<p>Goals help you define what you want to do and get your project done more efficiently. No goals have been added to this project yet.</p>
+			</div>
+		</div>
+	{% endif %}
+	
+</div>
+
+<div class='template-content goal'>
+	<div class="goal-card">
+		{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+			<a class="close" href="#close,"><span>Close</span></a>
+		{% endif %}
+		
+		{% if d.template_data.project_user.data.is_project_admin %}
+			<div class="make-this-active">
+				<a href="#makeActive," class="fancy-caps">Make <span>this the</span> Active Goal</a>
+			</div>
+			<div class="control-accomplished">
+				<a class="fancy-caps" href="#markAccomplished,">
+					Mark <span>as</span> Accomplished
+				</a>
+			</div>
+		{% endif %}
+		
+		
+		<div class="label-accomplished">
+			Accomplished!
+		</div>
+		
+		<p class='goal-title'></p>
+		<div class="meta">
+			<dl>
+				<dt>Timeframe</dt>
+				<dd class='timeframe'></dd>
+				<dt>Point Person</dt>
+				<dd class='owner-name'></dd>
+			</dl>
+			
+			<div class="timestamp">
+				<strong>Added:</strong>
+				<span class="datetime"></span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
+		var widget, me;
+		me = this;
+		tc.util.log("project.goals_main");
+		this.project = project;
+		this.options = tc.jQ.extend({name:'goals_main'},options);
+		this.dom = dom;
+		widget = tc.gam.widget(this,project);
+		this.handlers = {
+			make_goal_active: function(e, d) {
+				var t, goal_id;
+				
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				goal_id = t.href.split(",")[1];
+				
+				tc.jQ.ajax({
+					type:'POST',
+					url:'/project/goal/active',
+					data:{
+						project_id: e.data.me.options.app.app_page.data.project.project_id,
+						goal_id: goal_id
+					},
+					context:e.data.me,
+					dataType:'text',
+					success:function(data,ts,xhr){
+						if(data == 'False'){
+							return false;
+						}
+						this.project.dom.trigger('goals-refresh');
+					}
+				});
+			},
+			mark_goal_accomplished: function(e, d) {
+				var t, goal_id;
+				
+				e.preventDefault();
+				t = e.target;
+				if(t.nodeName == 'SPAN'){
+					t = t.parentNode;
+				}
+				goal_id = t.href.split(",")[1];
+				
+				tc.jQ.ajax({
+					type:'POST',
+					url:'/project/goal/accomplish',
+					data:{
+						project_id: e.data.me.options.app.app_page.data.project.project_id,
+						goal_id: goal_id
+					},
+					context:e.data.me,
+					dataType:'text',
+					success:function(data,ts,xhr){
+						if(data == 'False'){
+							return false;
+						}
+						this.project.dom.trigger('goals-refresh');
+					}
+				});
+			},
+			{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+			remove_goal: function(e, d) {
+				e.preventDefault();
+				
+				e.data.project.options.app.components.modal.show({
+					app:e.data.project.options.app,
+					source_element:tc.jQ('.modal-content.remove-goal'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/project/goal/remove',
+							data:{
+								project_id:e.data.project.project_id,
+								goal_id:e.target.href.split(',')[1]
+							},
+							context:this,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
+								project.dom.trigger('goals-refresh');
+							}
+						});
+					}
+				});
+			},
+			{% endif %}
+			goals_refresh:function(e){
+				tc.util.dump('goals_main.goals-refresh');
+				tc.jQ.ajax({
+					type:'GET',
+					url:'/project/goals',
+					data:{
+						project_id:e.data.me.project.data.project_id
+					},
+					context:e.data.me,
+					dataType:'text',
+					success:function(data,ts,xhr){
+						var d;
+						try{
+							d = tc.jQ.parseJSON(data);
+						}catch(e){
+							return;
+						}
+						this.handle_goals(d);
+					}
+				});
+			}
+		};
+		
+		this.elements = {
+			state_empty:dom.find('.goals-empty'),
+			state_not_empty:dom.find('.goals-display')
+		};
+		
+		project.dom.bind('goals-refresh',{me:this},this.handlers.goals_refresh);
+				
+		this.generate_goal = function(data){
+			var temphtml;
+			temphtml = tc.jQ('<li class="goal"></li>').append(tc.jQ('.template-content.goal').clone().children());
+			
+			temphtml.attr('rel',data.goal_id+','+data.active).css('width','512px');
+			temphtml.find('a.close').attr('href','#removeGoal,'+data.goal_id);
+			
+			if(data.active){
+				temphtml.find('.make-this-active').remove();
+			} else {
+				temphtml.find('.make-this-active a').attr('href','#makeActive,'+data.goal_id);
+			}
+			
+			if (data.accomplished) {
+				temphtml.find(".control-accomplished").remove();
+			} else {
+				temphtml.find(".label-accomplished").remove();
+				temphtml.find('.control-accomplished a').attr("href", "#markAccomplished,"+data.goal_id);
+			}
+			
+			temphtml.find('.goal-title').text(data.text);
+			temphtml.find('.timeframe').text(data.timeframe);
+			temphtml.find('.owner-name').html("<a href='/useraccount/"+data.owner.u_id+"'>"+data.owner.name+"</a>");
+			temphtml.find(".timestamp .datetime").text(data.created_datetime);
+			
+			return temphtml;
+		};
+		
+		this.handle_carousel_seek = function(e){
+			var active;
+			active = e.data.me.carousel.carousel.getItems().eq(e.data.me.carousel.carousel.getIndex()).attr('rel').split(',')[1];
+			if(active == 'True' || active == 'true' || active == true){
+				e.data.project.dom.find('.active-goal-indicator').stop().animate({
+					'opacity':1.0
+				},600,'easeOutCubic');
+			} else {
+				e.data.project.dom.find('.active-goal-indicator').stop().animate({
+					'opacity':0.0
+				},600,'easeOutCubic');
+			}
+		};
+		
+		this.handle_goals = function(data){
+			var i, list, temphtml, n_goals;
+			if(!data.length){
+				this.elements.state_not_empty.hide();
+				this.elements.state_empty.show();
+				return;
+			} else {
+				this.elements.state_empty.hide();
+				this.elements.state_not_empty.show();
+			}
+			this.dom.find('.counter').text(data.length);
+			list = this.dom.find('ul.items');
+			n_goals = list.children().length;
+			if (!this.carousel.is_rendered()) {
+				
+				for(i in data){
+					if(data[i].active){
+						list.append(this.generate_goal(data[i]));
+						delete data[i];
+						break;
+					}
+				}
+				for(i in data){
+					list.append(this.generate_goal(data[i]));
+				}
+				this.carousel.render();
+				
+			} else {
+				this.carousel.carousel.getItems().remove();
+				for(i in data){
+					if(data[i].active){
+						this.carousel.carousel.addItem(this.generate_goal(data[i]));
+						delete data[i];
+						break;
+					}
+				}
+				for(i in data){
+					this.carousel.carousel.addItem(this.generate_goal(data[i]));
+				}
+				if(list.children().length > n_goals){
+					this.carousel.carousel.end();
+				} else {
+					this.carousel.carousel.begin();
+				}
+			}
+			this.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, this.handlers.remove_goal);
+			if(this.carousel.carousel){
+				this.carousel.carousel.getRoot().unbind('onSeek').bind('onSeek', { project:project, me:me }, this.handle_carousel_seek);
+			}
+		};
+		
+		this.carousel = new tc.carousel({
+			element: this.dom.find(".carousel")
+		});
+		
+		if(this.carousel.carousel){
+			this.carousel.carousel.getRoot().unbind('onSeek').bind('onSeek', { project:project, me:me }, this.handle_carousel_seek);
+			this.carousel.carousel.getRoot().trigger('onSeek');
+		}
+		
+		
+		{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		this.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, this.handlers.remove_goal);
+		{% endif %}
+		
+		this.dom.find(".control-accomplished a").unbind("click").bind("click", { project:project, me:me }, this.handlers.mark_goal_accomplished);
+		this.dom.find(".make-this-active a").unbind('click').bind("click", { project:project, me:me }, this.handlers.make_goal_active);
+		
+		return {
+			show:function(propagate){
+				var has_items;
+				has_items = me.carousel.has_items();
+				if (has_items) {
+					me.dom.find('.goals-empty').hide().siblings('.goals-display').show();
+				}
+				widget.show(propagate);
+				if (has_items && !me.carousel.is_rendered()) {
+					me.carousel.render();
+				}
+			},
+			hide:widget.hide
+		};
+	};
+	
+</script>
+<!-- end .goals-main -->
