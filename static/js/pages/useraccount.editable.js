@@ -31,8 +31,14 @@
 							validators:["required"]
 						},
 						location: {
-							selector: ".row-hood .location-group",
-							validators: tc.locationDropdown.validator
+							selector: ".row-hood .location-group",/*
+							validators: tc.locationDropdown.validator*/
+							validators: function(merlin, elements) {
+								return {
+									valid: true,
+									errors: []
+								};
+							}
 						}
 					},
 					locationDropdown: null,
@@ -64,11 +70,16 @@
 						
 					},
 					finish: function(merlin, dom) {
+						var location_id;
+						location_id = merlin.current_step.locationDropdown.getLocation();
+						if (!location_id) {
+							location_id = "-1";
+						}
 						merlin.options.data = tc.jQ.extend(merlin.options.data, {
 							f_name: merlin.current_step.inputs.first_name.dom.val(),
 							l_name: merlin.current_step.inputs.last_name.dom.val(),
 							email: merlin.current_step.inputs.email.dom.val(),
-							location_id: merlin.current_step.locationDropdown.getLocation()
+							location_id: location_id
 						});
 					}
 				},
@@ -223,6 +234,60 @@
 			},
 			empty_text: "Click here to add something about yourself."
 		});
+
+		function editableResource($r) {
+			
+			// mission
+			new tc.inlineEditor({
+				dom: $r.find(".box.res-description")/*,
+				service: {
+					url: ,
+					param: 
+				}*/
+			});
+			
+			//url
+			new tc.inlineLinkEditor({
+				dom: $r.find(".box.res-url")/*,
+				service: {
+					url: ,
+					param: 
+				}*/
+			});
+			
+			//url
+			new tc.inlineLinkEditor({
+				dom: $r.find(".box.res-email")/*,
+				service: {
+					url: ,
+					param: 
+				}*/
+			});
+			
+			//physical address
+			new tc.inlineEditor({
+				dom: $r.find(".box.res-addr")/*,
+				service: {
+					url: ,
+					param: 
+				}*/
+			});
+			
+			//keywords
+			new tc.inlineKeywordsEditor({
+				dom: $r.find(".box.res-keywords")/*,
+				service: {
+					url: ,
+					param: 
+				}*/
+			});
+			
+		}
+		
+		tc.jQ(".resources-view ul.my-res > li").each(function() {
+			editableResource( tc.jQ(this) );
+		});
+		
 		
 	});
 	
