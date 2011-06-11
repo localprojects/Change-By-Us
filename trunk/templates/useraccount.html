@@ -45,7 +45,7 @@ Change by Us NYC - User Account
 
 							{% if d.template_data.user_activity.data.endorsed_projects|length > 0 %}
 								<span class="location"><em>from</em> Organization</span>
-							{% elif d.template_data.user_activity.data.user.location %}
+							{% elif d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}
 							<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
 							{% endif %}
 							
@@ -412,7 +412,7 @@ Change by Us NYC - User Account
 											<div class="row row-hood clearfix">
 												<label>Neighborhood</label>
 												<span class="dropdown-indicator"></span>
-												<input type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter has-been-focused' value='{% if d.template_data.user_activity.data.user.location %}{{ d.template_data.user_activity.data.user.location }}{% endif %}' />
+												<input autocomplete='off' type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter has-been-focused' value='{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}{{ d.template_data.user_activity.data.user.location }}{% endif %}' {% if d.template_data.user_activity.data.user.location %}location_id='{{ d.template_data.user_activity.data.user.location_id }}'{% endif %}/>
 												<div class="location-hood-list" style="display:none"><ul><li></li></ul></div>
 											</div>
 											
@@ -513,29 +513,34 @@ Change by Us NYC - User Account
 											<h4 class="serif">{{ resource.title }}</h4>
 											<div class='box'>
 												<input type='text' name='location-hood-enter-{{ loop.index }} has-been-focused' id='location-hood-enter-{{ loop.index }}' class='search-location location-group location-hood-enter always-focused' value='{{ resource.location_name }}'/>
-												<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+												<div class="location-hood-list" style="display: none"><ul><li></li></ul></div>
 											</div>
 										</div>
 										<div class='right'>
-											<div class='box'>
+											<div class='box res-description mod-inline-edit'>
 												<span class='section-title'>Mission</span>
-												<p>{{ resource.description }}</p>
+												<div class="inline-edit-controls"></div>
+												<p class="editable-content">{{ resource.description }}</p>
 											</div>
-											<div class='box'>
+											<div class='box res-url mod-inline-edit'>
 												<span class='section-title'>URL</span>
-												<p><a href='{{ resource.url }}'>{{ resource.url }}</a></p>
+												<div class="inline-edit-controls"></div>
+												<p class="editable-content"><a href='{{ resource.url }}'>{{ resource.url }}</a></p>
 											</div>
-											<div class='box'>
+											<div class='box res-email mod-inline-edit'>
 												<span class='section-title'>Email</span>
-												<p><a href=''>{{ resource.contact_email }}</a></p>
+												<div class="inline-edit-controls"></div>
+												<p class="editable-content"><a href=''>{{ resource.contact_email }}</a></p>
 											</div>
-											<div class='box box-half'>
+											<div class='box res-addr mod-inline-edit box-half'>
 												<span class='section-title'>Physical Address</span>
-												<p>{{ resource.physical_address }}</p>
+												<p class="editable-content">{{ resource.physical_address }}</p>
+												<div class="inline-edit-controls"></div>
 											</div>
-											<div class='box box-half'>
+											<div class='box mod-inline-edit res-keywords box-half'>
 												<span class='section-title'>Keywords</span>
-												<p>{{ resource.keywords }}</p>
+												<p class="editable-content">{{ resource.keywords }}</p>
+												<div class="inline-edit-controls"></div>
 											</div>
 										</div>
 									</li>
