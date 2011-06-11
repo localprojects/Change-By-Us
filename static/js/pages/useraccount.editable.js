@@ -226,6 +226,9 @@
 			e.data.app.components.modal.show(e.data);
 		});
 		
+		
+		
+		// user description
 		new tc.inlineEditor({
 			dom: tc.jQ(".user-info .description"),
 			service: {
@@ -234,6 +237,8 @@
 			},
 			empty_text: "Click here to add something about yourself."
 		});
+
+
 
 		function editableResource($r) {
 			

@@ -20,8 +20,7 @@ tc.inlineEditor.prototype = {
 		this.dom = this.options.dom;
 
 		this.controls = this.dom.find(".inline-edit-controls");
-		this.controls.hide().html('<a href="#" class="ca-btn save-btn">Save</a>\
-			<a href="#" class="cancel-btn">Cancel</a>');
+		this.controls.hide().empty().append(this._generateControls());
 
 		this.controls.find(".save-btn").bind("click", {me: this}, function(e) {
 			e.preventDefault();
@@ -70,9 +69,6 @@ tc.inlineEditor.prototype = {
 		this.dom.removeClass("state-editing").addClass("state-display");
 		this.state = "display";
 	},
-	_renderDisplayContent: function() {
-		this.content.text(this.data);
-	},
 	save: function() {
 		var post_data;
 		
@@ -98,6 +94,15 @@ tc.inlineEditor.prototype = {
 			});
 			
 		}
+	},
+	
+	// for internal use:
+	
+	_generateControls: function() {
+		return '<a href="#" class="ca-btn save-btn">Save</a><a href="#" class="cancel-btn">Cancel</a>';
+	},
+	_renderDisplayContent: function() {
+		this.content.text(this.data);
 	}
 };
 
@@ -114,6 +119,8 @@ tc.inlineKeywordsEditor = function(options) {
 	this.init(options);
 };
 tc.inlineKeywordsEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
-
+	_generateControls: function() {
+		return '<a href="#" class="ca-btn save-btn">Add</a><a href="#" class="cancel-btn">Cancel</a>';
+	}
 });
 
