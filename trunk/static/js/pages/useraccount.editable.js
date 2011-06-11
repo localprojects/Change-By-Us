@@ -11,7 +11,8 @@
 				f_name: app.app_page.user.f_name,
 				l_name: app.app_page.user.l_name,
 				email: app.app_page.user.email,
-				image_id: app.app_page.user.image_id || null
+				image_id: app.app_page.user.image_id || null,
+				location_id: app.app_page.user.location_id || null
 			},
 			steps: {
 				"edit-account-details":{
@@ -28,8 +29,13 @@
 						email:{
 							selector:".row-email input",
 							validators:["required"]
+						},
+						location: {
+							selector: ".row-hood .location-group",
+							validators: tc.locationDropdown.validator
 						}
 					},
+					locationDropdown: null,
 					init: function(merlin, dom) {
 						dom.find('.info-save-button').bind('click',{merlin:merlin,dom:dom},function(e,d){
 							e.preventDefault();
@@ -47,12 +53,22 @@
 								merlin.options.data.image_id = d.responseJSON.thumbnail_id;
 							}
 						});
+						
+						if (!merlin.current_step.locationDropdown) {
+							merlin.current_step.locationDropdown = new tc.locationDropdown({
+								input: dom.find('input.location-hood-enter'),
+								list: dom.find('div.location-hood-list'),
+								locations: merlin.app.app_page.data.locations
+							});
+						}
+						
 					},
 					finish: function(merlin, dom) {
 						merlin.options.data = tc.jQ.extend(merlin.options.data, {
 							f_name: merlin.current_step.inputs.first_name.dom.val(),
 							l_name: merlin.current_step.inputs.last_name.dom.val(),
-							email: merlin.current_step.inputs.email.dom.val()
+							email: merlin.current_step.inputs.email.dom.val(),
+							location_id: merlin.current_step.locationDropdown.getLocation()
 						});
 					}
 				},
@@ -72,7 +88,8 @@
 								}
 								
 								tc.timer(2000, function() {
-									window.location.assign("/useraccount#account-info,edit-account-details");
+									//window.location.assign("/useraccount#account-info,edit-account-details");
+									window.location.reload(true);
 								});
 							}
 						});
