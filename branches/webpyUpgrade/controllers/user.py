@@ -32,10 +32,8 @@ class UserAccount(Controller):
                     
             userActivity = self.user.getActivityDictionary()
             locations = mLocation.getSimpleLocationDictionary(self.db)
-            resources = self.user.getUserResources()
             self.template_data['user_activity'] = dict(data = userActivity, json = json.dumps(userActivity))
             self.template_data['locations'] = dict(json = json.dumps(locations), data = locations)
-            self.template_data['resources'] = dict(json = json.dumps(resources), data = resources)
             
             connected_fb = False
             connected_tw = False
@@ -122,4 +120,3 @@ class UserAccount(Controller):
         password = self.request('new_password')
         
         return self.user.updatePassword(password)   
-    

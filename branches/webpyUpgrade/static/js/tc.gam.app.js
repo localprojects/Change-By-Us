@@ -89,6 +89,7 @@ tc.animate_bg = function(ele, from, to) {
 tc.addOfficialResourceTags = function(dom){
 	tc.util.log('tc.addOfficialResourceTags');
 	var officialResourceCells = dom.find('td.official-resource');
+
 	for(var i = 0; i < officialResourceCells.length; i++) {
 		var td = officialResourceCells.eq(i)
 		var tdPos = td.position();
@@ -118,8 +119,6 @@ tc.truncate = function(str, len, suffix) {
 	}
 	return str;
 };
-
-
 
 
 /* Browser Detection Stuff */
