@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # Overview
 # 
 # The purpose if this script is to:
@@ -28,14 +30,24 @@
 # and you'll be prompted to fill out all the parameters
 #
 
-now=`date -u +%Y%m%d%H%M%S`
-# fname="giveaminute.$now.gpg"
-fname="giveaminute.$now.gz"
 
-recipient="cybertoast@gmail.com"	# change this to the correct recipient
-s3cfgfile="$HOME/scripts/.lp-cbu.s3cfg"
+#----- CONFIGURABLES ----
+# The s3cmd configuration file. See example.s3cfg
+s3cfgfile="$HOME/.lp-cbu.s3cfg"
+
+# S3 bucket to which the upload should go. This MUST be changed for production!
 s3bucket="s3://sandbox-changebyus"
+
+# Target path on S3 to which to upload the backed-up file
 targetpath="/backups/mysql"
+
+#
+# GPG is disabled by default. Uncomment the next line to use it
+# use_gpg=true
+# The recipient for whom to sign the content
+recipient="admin@changeby.us"	# change this to the correct recipient
+
+#-----------
 
 usage() {
     echo "$0 dbname"
@@ -44,10 +56,9 @@ usage() {
 
 sanity_test() {
     # Check that s3cmd exists
-    if [ -z "$1" ];then
+    if [ -z "$dbname" ];then
         usage
     else
-        dbname="$1"
         echo "Will process $dbname"
     fi
 
@@ -64,12 +75,35 @@ sanity_test() {
     # Test all the gpg stuff
 }
 
-sanity_test $1    # make sure the basics are in place
+do_mysqldump() {
+    # Run the actual command
+    if [ $use_gpg ];then
+        fname="$dbname.$now.gpg"
+        resp=$(mysqldump $dbname | gpg -e -r $recipient --output $fname && gzip $fname)
+    else
+        fname="$dbname.$now.gz"
+        resp=$(mysqldump $dbname | gzip > $fname)
+    fi
 
-# Run the actual command
-# mysqldump giveaminute | gpg -e -r $recipient --output $fname && gzip $fname
-mysqldump giveaminute | gzip > $fname
-echo "Uploading $fname to $s3bucket$targetpath/$fname"
-s3cmd --config="$s3cfgfile" put "$fname" "$s3bucket$targetpath/"
-s3cmd --config="$s3cfgfile" ls "$s3bucket$targetpath/"
-# s3cmd --config=/Users/sundar/.lp-cbu.s3cfg put --recursive mybkup s3://sandbox-changebyus/
+    # Verify that the mysqldump worked
+    [ $resp ] && exit 1
+}
+
+upload_to_s3() {
+    echo "Uploading $fname to $s3bucket$targetpath/$fname"
+    s3cmd --config="$s3cfgfile" put "$fname" "$s3bucket$targetpath/"
+
+    # ls just gets the list so that we can verify that the file was uploaded
+    # s3cmd --config="$s3cfgfile" ls "$s3bucket$targetpath/"
+}
+
+# The code ...
+
+dbname="$1"
+now=`date -u +%Y%m%d%H%M%S`
+sanity_test $dbname    # make sure the basics are in place
+do_mysqldump
+upload_to_s3
+
+now=`date -u +%Y%m%d%H%M%S`
+echo "Completed $0 at $now"
