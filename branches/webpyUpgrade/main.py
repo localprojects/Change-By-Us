@@ -32,6 +32,22 @@ if __name__ == "__main__":
         web.config.debug = True        
     log.info("Debug: %s" % web.config.debug)
     web.config.session_parameters['cookie_name'] = 'gam'
+
+    # Set the email configurations:
+    if Config.get('email').get('smtp'):
+        smtp_config = Config.get('email').get('smtp')
+        web.webapi.config.smtp_server = smtp_config.get('host')
+        web.config.smtp_port = smtp_config.get('port')
+        web.config.smtp_username = smtp_config.get('username')
+        web.config.smtp_password = smtp_config.get('password')
+
+    elif Config.get('email').get('aws_ses'):
+        # AWS SES config
+        ses_config = Config.get('email').get('aws_ses')
+        web.webapi.config.email_engine = 'aws'
+        web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
+        web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
+
     app = web.application(ROUTES, globals())
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))

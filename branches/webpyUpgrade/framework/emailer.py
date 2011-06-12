@@ -8,6 +8,7 @@ from lib.web.contrib.template import render_jinja
 from lib.jinja2.exceptions import TemplateNotFound
 from framework.log import log
 from framework.controller import *
+import lib.web.utils as webutils
 
 class Emailer():
 
@@ -39,30 +40,42 @@ class Emailer():
             msg.attach(MIMEText(html, 'html'))
         else:
             msg = MIMEText(text, 'plain')
-        if attachment:
-            tmpmsg = msg
-            msg = MIMEMultipart()
-            msg.attach(tmpmsg)
-            msg.attach(MIMEText("\n\n", 'plain')) # helps to space the attachment from the body of the message
-            log.info("--> adding attachment")
-            part = MIMEBase('application', 'octet-stream')
-            part.set_payload(open(attachment, 'rb').read())
-            Encoders.encode_base64(part)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attachment))
-            msg.attach(part)                
+#        if attachment:
+#            tmpmsg = msg
+#            msg = MIMEMultipart()
+#            msg.attach(tmpmsg)
+#            msg.attach(MIMEText("\n\n", 'plain')) # helps to space the attachment from the body of the message
+#            log.info("--> adding attachment")
+#            part = MIMEBase('application', 'octet-stream')
+#            part.set_payload(open(attachment, 'rb').read())
+#            Encoders.encode_base64(part)
+#            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attachment))
+#            msg.attach(part)
         sender = from_name + "<" + from_address + ">"
-        msg['From'] = sender
-        msg['To'] = ','.join(addresses)
-        msg['Subject'] = subject
+        # msg['From'] = sender
+        # msg['To'] = ','.join(addresses)
+        # msg['Subject'] = subject
         # log.info("\n%s" % msg.as_string())                        
         try:
-            server = smtplib.SMTP(account['host'], account['port'])
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(account['username'], account['password'])
-            server.sendmail(sender, addresses, msg.as_string())
-            server.close()
+            # server = smtplib.SMTP(account['host'], account['port'])
+            # server.ehlo()
+            # server.starttls()
+            # server.ehlo()
+            # server.login(account['username'], account['password'])
+            # server.sendmail(sender, addresses, msg.as_string())
+            # server.close()
+
+#            if webapi.config.get('smtp_server'):
+#            server = webapi.config.get('smtp_server')
+#            port = webapi.config.get('smtp_port', 0)
+#            username = webapi.config.get('smtp_username')
+#            password = webapi.config.get('smtp_password')
+#            debug_level = webapi.config.get('smtp_debuglevel', None)
+#            starttls = webapi.config.get('smtp_starttls', False)
+
+            webutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment)
+            # def sendmail(from_address, to_address, subject, message, headers=None, **kw):
+
         except Exception, e:
             log.error("Could not send email (%s)" % e)
             return False
