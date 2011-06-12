@@ -1482,8 +1482,11 @@ class _EmailMessage:
             c = boto.ses.SESConnection(
               aws_access_key_id = webapi.config.get('aws_access_key_id'),
               aws_secret_access_key = webapi.config.get('aws_secret_access_key'))
-            # c.send_raw_email(self.from_address, message_text, self.recipients)
-            c.send_email(self.from_address, self.subject, message_text, self.recipients)
+
+            # TODO: Need to add proper exception handling or at least error reporting!
+            # Use raw_email since this allows for attachments
+            c.send_raw_email(self.from_address, message_text, self.recipients)
+
         else:
             sendmail = webapi.config.get('sendmail_path', '/usr/sbin/sendmail')
         

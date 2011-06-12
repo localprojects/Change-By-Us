@@ -153,12 +153,12 @@ class Controller():
         for key in keys:
             template_values[key] = self.session[key]
         template_values['template_name'] = template_name
-        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', encoding = 'utf-8')
+        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')
         renderer._lookup.filters.update(custom_filters.filters)
         web.header("Content-Type", "text/html")
         #log.info("TEMPLATE %s: %s" % (template_name, template_values))
         log.info("200: text/html (%s)" % template_name)
-        return (renderer[template_name + "." + suffix](dict(d=template_values)))
+        return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
 
     def json(self, data):
         output = json.dumps(data)

@@ -38,8 +38,10 @@ if __name__ == "__main__":
         smtp_config = Config.get('email').get('smtp')
         web.webapi.config.smtp_server = smtp_config.get('host')
         web.webapi.config.smtp_port = smtp_config.get('port')
+        web.webapi.config.smtp_starttls = smtp_config.get('starttls')
         web.webapi.config.smtp_username = smtp_config.get('username')
         web.webapi.config.smtp_password = smtp_config.get('password')
+
 
     elif Config.get('email').get('aws_ses'):
         # AWS SES config
