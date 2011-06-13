@@ -81,12 +81,16 @@ tc.inlineEditor.prototype = {
 		if (!tc.jQ.isArray(this.options.validators)) { return true; }
 		return tc.validate(field, this.options.validators).valid;
 	},
-	save: function() {
+	save: function(callback) {
 		var post_data, field, val;
 		
 		if (this.state === "edit") {
 			field = this.content.find(".data");
-			val = tc.jQ.trim( field.val() );
+			if (tc.jQ.isFunction(this._getPostData)) {
+				val = this._getPostData();
+			} else {
+				val = tc.jQ.trim( field.val() );
+			}
 			
 			if (field.hasClass("not-valid")) {
 				return false;
@@ -109,6 +113,10 @@ tc.inlineEditor.prototype = {
 				data: post_data,
 				context: this,
 				success: function(data, ts, xhr) {
+					if (tc.jQ.isFunction(callback)) {
+						callback.apply(this, [data, ts, xhr]);
+						return;
+					}
 					if (data === "False") {
 						//TODO handle error?
 						this.display();
@@ -141,12 +149,48 @@ tc.inlineLinkEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
 	}
 });
 
-tc.inlineKeywordsEditor = function(options) {
+tc.inlineLocationEditor = function(options) {
 	this.init(options);
+	this.locationDropdown = null;
 };
-tc.inlineKeywordsEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
-	/*_generateControls: function() {
-		return '<a href="#" class="ca-btn save-btn">Add</a><a href="#" class="cancel-btn">Cancel</a>';
-	}*/
+tc.inlineLocationEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
+	edit: function() {
+		if (this.state === "edit") { return; }
+		
+		this.content.html("<input type='text' class='location-group location-hood-enter always-focused' value='"+ tc.jQ.trim( this.content.text() ) +"'/>\
+				<div class='location-hood-list' style='display: none'><ul><li></li></ul></div>");
+		
+		this.locationDropdown = new tc.locationDropdown({
+			input: this.content.find('input.location-hood-enter'),
+			list: this.content.find('div.location-hood-list'),
+			locations: this.options.locations
+		});	
+		
+		this.controls.show();
+		this.dom.addClass("state-editing").removeClass("state-display");
+		this.state = "edit";
+	},
+	save: function() {
+		tc.inlineEditor.prototype.save.call(this, function(data, ts, xhr) {
+			if (data === "False") {
+				this.display();
+				return;
+			}
+			if (this._getPostData() === "-1") {
+				this.data = "Citywide";
+			} else {
+				this.data = this.content.find("input.location-hood-enter").val();
+			}
+			this.display();
+		});
+	},
+	_getPostData: function() {
+		if (this.locationDropdown) {
+			return this.locationDropdown.getLocation() || "-1";
+		}
+		return "-1";
+	}
 });
+
+
 

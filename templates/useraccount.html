@@ -415,11 +415,6 @@ Change by Us NYC - User Account
 												<input autocomplete='off' type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter has-been-focused' value='{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}{{ d.template_data.user_activity.data.user.location }}{% endif %}' {% if d.template_data.user_activity.data.user.location %}location_id='{{ d.template_data.user_activity.data.user.location_id }}'{% endif %}/>
 												<div class="location-hood-list" style="display:none"><ul><li></li></ul></div>
 											</div>
-											
-											<!-- only for testing, DELETE after
-											<div class="row row-hood clearfix" style="width:285px; height: 64px;">
-											</div>
-											STOP DELETING -->
 										</div>
 										<div class="">
 											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
@@ -511,9 +506,13 @@ Change by Us NYC - User Account
 												{% endif %}
 											</div>
 											<h4 class="serif">{{ resource.title }}</h4>
-											<div class='box'>
-												<input type='text' name='location-hood-enter-{{ loop.index }} has-been-focused' id='location-hood-enter-{{ loop.index }}' class='search-location location-group location-hood-enter always-focused' value='{{ resource.location_name }}'/>
-												<div class="location-hood-list" style="display: none"><ul><li></li></ul></div>
+											<div class='box res-location mod-inline-edit' location_id='{% if resource.location_id %}{{ resource.location_id }}{% endif %}'>
+												<div class="editable-content serif">
+												{% if resource.location_name %}
+													{{ resource.location_name }}
+												{% endif %}
+												</div>
+												<div class="inline-edit-controls"></div>
 											</div>
 										</div>
 										<div class='right'>
