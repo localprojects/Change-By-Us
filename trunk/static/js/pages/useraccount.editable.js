@@ -288,6 +288,17 @@
 				e.data.app.components.modal.show(e.data);
 			});
 			
+			//location
+			new tc.inlineLocationEditor({
+				dom: $r.find(".box.res-location"),
+				locations: app.app_page.data.locations,
+				service: {
+					url: "/resource/edit/location",
+					param: "location_id",
+					post_data: post_data
+				}
+			});
+			
 			// mission
 			new tc.inlineEditor({
 				dom: $r.find(".box.res-description"),
@@ -331,7 +342,7 @@
 			});
 			
 			//keywords
-			new tc.inlineKeywordsEditor({
+			new tc.inlineEditor({
 				dom: $r.find(".box.res-keywords"),
 				service: {
 					url: "/resource/edit/keywords",
