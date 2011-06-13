@@ -70,6 +70,9 @@ tc.inlineEditor.prototype = {
 		this.dom.removeClass("state-editing").addClass("state-display");
 		this.state = "display";
 	},
+	validate: function() {
+		// TODO
+	},
 	save: function() {
 		var post_data;
 		
@@ -124,8 +127,8 @@ tc.inlineKeywordsEditor = function(options) {
 	this.init(options);
 };
 tc.inlineKeywordsEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
-	_generateControls: function() {
+	/*_generateControls: function() {
 		return '<a href="#" class="ca-btn save-btn">Add</a><a href="#" class="cancel-btn">Cancel</a>';
-	}
+	}*/
 });
 
