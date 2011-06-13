@@ -12,7 +12,8 @@ tc.inlineEditor.prototype = {
 				param: null,
 				post_data:  {}
 			}*/,
-			empty_text: "Click here to edit."
+			empty_text: "Click here to edit.",
+			validators: null
 		}, options);
 
 		if (typeof this.options.dom === "string") {
@@ -46,9 +47,15 @@ tc.inlineEditor.prototype = {
 		this.display();
 	},
 	edit: function() {
+		var field;
 		if (this.state === "edit") { return; }
 		
 		this.content.html("<textarea class='data serif'>"+ (this.data || "") + "</textarea>");
+		
+		field = this.content.find(".data");
+		field.bind("keypress", {me: this, field: field}, function(e) {
+			e.data.me.validate(e.data.field);
+		});
 		
 		this.controls.show();
 		this.dom.addClass("state-editing").removeClass("state-display");
@@ -70,19 +77,30 @@ tc.inlineEditor.prototype = {
 		this.dom.removeClass("state-editing").addClass("state-display");
 		this.state = "display";
 	},
-	validate: function() {
-		// TODO
+	validate: function(field) {
+		if (!tc.jQ.isArray(this.options.validators)) { return true; }
+		return tc.validate(field, this.options.validators).valid;
 	},
 	save: function() {
-		var post_data;
+		var post_data, field, val;
 		
 		if (this.state === "edit") {
+			field = this.content.find(".data");
+			val = tc.jQ.trim( field.val() );
+			
+			if (field.hasClass("not-valid")) {
+				return false;
+			}
+			if (!this.validate(field)) {
+				return false;
+			}
+			
 			if (this.options.service.post_data) {
 				post_data = tc.jQ.extend({}, this.options.service.post_data);
 			} else {
 				post_data = {};
 			}
-			post_data[this.options.service.param] = tc.jQ.trim( this.content.find(".data").val() );
+			post_data[this.options.service.param] = val;
 			
 			tc.jQ.ajax({
 				type: "POST",
