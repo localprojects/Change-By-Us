@@ -290,7 +290,7 @@
 			new tc.inlineKeywordsEditor({
 				dom: $r.find(".box.res-keywords"),
 				service: {
-					url: "/resources/edit/keywords",
+					url: "/resource/edit/keywords",
 					param: "keywords",
 					post_data: post_data
 				}
