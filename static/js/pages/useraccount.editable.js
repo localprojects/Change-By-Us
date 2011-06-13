@@ -242,49 +242,58 @@
 
 		function editableResource($r) {
 			
+			var post_data = { 
+				resource_id: $r.attr("id")
+			};
+			
 			// mission
 			new tc.inlineEditor({
-				dom: $r.find(".box.res-description")/*,
+				dom: $r.find(".box.res-description"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/description",
+					param: "description",
+					post_data: post_data
+				}
 			});
 			
 			//url
 			new tc.inlineLinkEditor({
-				dom: $r.find(".box.res-url")/*,
+				dom: $r.find(".box.res-url"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/url",
+					param: "url",
+					post_data: post_data
+				}
 			});
 			
-			//url
+			//email
 			new tc.inlineLinkEditor({
-				dom: $r.find(".box.res-email")/*,
+				dom: $r.find(".box.res-email"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/contactemail",
+					param: "contactemail",
+					post_data: post_data
+				}
 			});
 			
 			//physical address
 			new tc.inlineEditor({
-				dom: $r.find(".box.res-addr")/*,
+				dom: $r.find(".box.res-addr"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/address",
+					param: "address",
+					post_data: post_data
+				}
 			});
 			
 			//keywords
 			new tc.inlineKeywordsEditor({
-				dom: $r.find(".box.res-keywords")/*,
+				dom: $r.find(".box.res-keywords"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resources/edit/keywords",
+					param: "keywords",
+					post_data: post_data
+				}
 			});
 			
 		}
