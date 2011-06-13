@@ -25,21 +25,31 @@ beanstalk:
     
 email:
   # Common configuration
+
+  # This needs to be an email address that has been validated by SES
+  # run ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -l
+  # and 
+  # ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -v newaddr@localprojects.net
   from_email: nyc@changeby.us
   from_name: 'Change by Us NYC'
-
-  # SMTP specific configuration
-  # smtp:
-  #   host: smtp.gmail.com
-  #   port: 587
-  #   username: changebyusnyc@gmail.com
-  #   password: tr4f!0ma
-
-  # Amazon SES
+  
+  # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if 
+  # the aws send quota is close then we switch over to SMTP
+   
+  # SMTP specific configuration. 
+  smtp:
+    host: smtp.gmail.com
+    port: 587
+    username: 'changebyusnyc@gmail.com'
+    password: 'tr4f!0ma'
+    # Generally TLS is necessary for gmail. So set it here
+    starttls: True
+  
+  # Amazon SES - only used if smtp is disabled!
   aws_ses:
     access_key_id: AKIAIUP6UG5LN4CTQS7A
     secret_access_key: 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
-
+    
 twilio:
     sid: AC2f8000ed6b6560de2f1f6b6bf962280a
     token: XXXXXXX
