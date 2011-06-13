@@ -3,6 +3,7 @@ import giveaminute.location as mLocation
 import giveaminute.user as mUser
 import giveaminute.project as mProject
 import giveaminute.idea as mIdea
+import giveaminute.messaging as mMessaging
 import framework.util as util
 import lib.web
 #temp
@@ -69,6 +70,8 @@ class Home(Controller):
             return self.submitFeedback()
         elif (action == 'beta' and param0 == 'submit'):
             return self.submitInviteRequest()
+        elif (action == 'directmsg'):
+            return self.directMessageUser()
         else:
             return self.not_found()
             
@@ -434,3 +437,21 @@ class Home(Controller):
             log.info("*** problem submitting beta invite request")
             log.error(e)
             return False
+            
+    def directMessageUser(self):
+        toUserId = util.try_f(int, self.request('to_user_id'))
+        fromUserId = self.user.id
+        message = self.request('message')
+        
+        if (toUserId and message):
+            fromName = mProject.userName(self.user.firstName, self.user.lastName)
+            
+            toUser = mUser.User(self.db, toUserId)
+            toName = "%s %s" % (toUser.firstName, toUser.lastName)
+            toEmail = toUser.email
+            
+            return mMessaging.directMessageUser(self.db, toUserId, toName, toEmail, fromUserId, fromName, message)
+        else:
+            log.error("*** direct message missing to user_id or message")
+            return False
+            
