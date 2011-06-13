@@ -158,13 +158,13 @@ tc.locationDropdown.prototype.listBlurHandler = function(e){
 	
 };
 
-tc.locationDropdown.prototype.inputFocusHandler = function(e){
+tc.locationDropdown.prototype.inputFocusHandler = function(e){	
 	var dropdown;
 	dropdown = e.data.dropdown;
 	tc.util.log('tc.locationDropdown.inputFocusHandler');
 	if(dropdown.options.radios && dropdown.options.radios.filter('.location-hood').length){
-		dropdown.options.radios.filter('.location-hood').attr('checked',true)[0].checked = true;;
-		tc.jQ('label[for=location-hood]').trigger('click',{preventChange:true});
+		dropdown.options.radios.filter('.location-hood').attr('checked',true);//[0].checked = true;
+		//tc.jQ('label[for="location-hood"]').trigger('click',{preventChange:true});
 	}
 	dropdown.open();
 	if(e.target.value.toLowerCase() == 'all neighborhoods'){
@@ -174,7 +174,7 @@ tc.locationDropdown.prototype.inputFocusHandler = function(e){
 
 tc.locationDropdown.prototype.inputBlurHandler = function(e){
 	tc.util.log('tc.locationDropdown.inputBlurHandler');
-	
+
 };
 
 tc.locationDropdown.prototype.inputKeyUpHandler = function(e){

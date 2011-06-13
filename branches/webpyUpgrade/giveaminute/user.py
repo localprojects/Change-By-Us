@@ -38,7 +38,20 @@ class User():
             return (len(data) > 0)
         except Exception, e:
             log.info("*** couldn't get user project admin status")
-            log.err(e)
+            log.error(e)
+            return False
+            
+    def isResourceOwner(self, projectResourceId):
+        sql = "select project_resource_id from project_resource where contact_user_id = $userId and project_resource_id = $projectResourceId"
+        
+        try:
+            data = self.db.query(sql,{'userId':self.id, 'projectResourceId':projectResourceId})
+
+            return (len(data) > 0)
+        except Exception, e:
+            
+            log.info("*** couldn't get user resource ownership status")
+            log.error(e)
             return False
     
     def getDictionary(self):
@@ -112,7 +125,7 @@ where u.user_id = $id and u.is_active = 1"""
             log.error(e)
             return False
             
-    def updateInfo(self, email, first, last, imageId = None, locationId = None, description = None):
+    def updateInfo(self, email, first, last, imageId = None, locationId = None):
         # check if email already in user
         if not (findUserByEmail(self.db, self.email)):
             return False
@@ -124,12 +137,23 @@ where u.user_id = $id and u.is_active = 1"""
                             email = email,
                             image_id = imageId,
                             location_id = locationId,
-                            description = description,
                             vars = {'userId':self.id})
             
             return True
         except Exception, e:
             log.info("*** problem updating user info")
+            log.error(e)
+            return False
+            
+    def updateDescription(self, description):
+        try:
+            self.db.update('user', 
+                            where = 'user_id = $userId', 
+                            description = description,
+                            vars = {'userId':self.id})
+            return True
+        except Exception, e:
+            log.info("*** problem updating user description")
             log.error(e)
             return False
             
@@ -186,10 +210,10 @@ where u.user_id = $id and u.is_active = 1"""
         
     def getUserResources(self):
         data = []
-
+        
         try:
             sql = """select r.project_resource_id, r.title, r.description, r.location_id, l.name as location_name,
-                            r.image_id, r.url, r.contact_email, r.physical_address, r.keywords
+                            r.image_id, r.url, r.contact_email, r.physical_address, r.keywords 
                     from project_resource r
                     inner join location l on l.location_id = r.location_id
                     where r.is_active = 1 and r.is_hidden = 0 and r.contact_user_id = $id"""
@@ -197,9 +221,33 @@ where u.user_id = $id and u.is_active = 1"""
         except Exception,e:
             log.info("*** couldn't get user resources")
             log.error(e)
-
-        return data
-
+            
+        return data    
+        
+    def getEndorsedProjects(self):
+        data = []
+        
+        try:
+            sql = """select p.project_id, 
+                        p.title, 
+                        p.description, 
+                        p.image_id, 
+                        p.location_id,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.image_id as owner_image_id, 
+                    (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
+                from project p
+                inner join project_endorsement pe on pe.project_id = p.project_id and pe.user_id = $id
+                inner join user o on o.user_id = $id
+                 where p.is_active = 1"""
+            data  = list(self.db.query(sql, { 'id': self.id }))
+        except Exception,e:
+            log.info("*** couldn't get user endorsed projects")
+            log.error(e)
+            
+        return data         
         
     def getActivityDictionary(self):
         user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)
@@ -211,6 +259,7 @@ where u.user_id = $id and u.is_active = 1"""
                     ideas = self.getIdeas(),
                     messages = self.getMessages(10, 0),
                     resources = self.getUserResources(),
+                    endorsed_projects = self.getEndorsedProjects(),
                     user = user)
                     
         return data
@@ -224,6 +273,7 @@ where u.user_id = $id and u.is_active = 1"""
     
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
+                    endorsed_projects = self.getEndorsedProjects(),
                     user = user)
                     
         return data
@@ -536,3 +586,4 @@ def getAdminUsers(db, limit = 10, offset = 0):
         log.error(e)
         
     return data
+  

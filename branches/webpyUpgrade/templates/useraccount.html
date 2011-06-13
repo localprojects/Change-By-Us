@@ -20,8 +20,7 @@ Change by Us NYC - User Account
 	<!--<div class='headlands'>
 	</div>-->
 	
-	<!-- once template data is ready, add class .is-leader to .midlands if user is a city leader!!!! -->
-	<div class='midlands merlin clearfix'>
+	<div class='midlands merlin clearfix {% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}is-leader{% endif %}'>
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
@@ -43,15 +42,41 @@ Change by Us NYC - User Account
 					<div class='box box-info'>
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
-							{% if d.template_data.user_activity.data.user.location %}<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>{% endif %}
-							{% if d.template_data.user_activity.data.user.description %}<span class="description">{{ d.template_data.user_activity.data.user.description }}</span>{% endif %}
+
+							{% if d.template_data.user_activity.data.endorsed_projects|length > 0 %}
+								<span class="location"><em>from</em> Organization</span>
+							{% elif d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}
+							<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
+							{% endif %}
+							
+							{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+								
+								<div class="description mod-inline-edit">
+									<div class="editable-content">
+										{% if d.template_data.user_activity.data.user.description %}
+											{{ d.template_data.user_activity.data.user.description }}
+										{% endif %}
+									</div>
+									<div class="inline-edit-controls"></div>
+								</div>
+							
+							{% else %}
+							
+								{% if d.template_data.user_activity.data.user.description %}
+									<div class="description">
+										{{ d.template_data.user_activity.data.user.description }}
+									</div>
+								{% endif %}
+							
+							{% endif %}
+							
 							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
 						</div>
 					</div>
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length }}</span></a></li>
+						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
@@ -73,6 +98,7 @@ Change by Us NYC - User Account
 			<div>
 			
 				<div class="activity-view step">
+					{% if d.template_data and d.template_data.user_activity.data.projects|length > 0 %}
 					<div class="box my-projects">
 						<div class="hd">
 							<h2>
@@ -123,7 +149,9 @@ Change by Us NYC - User Account
 							
 						</div>
 					</div><!-- end my-projects -->
+					{% endif %}
 					
+					{% if d.template_data and d.template_data.user_activity.data.ideas|length > 0%}
 					<div class="box my-ideas">
 						<div class="hd">
 							<h2>
@@ -168,6 +196,7 @@ Change by Us NYC - User Account
 							</ul>
 						</div>
 					</div><!--end my-ideas-->
+					{% endif %}
 					
 					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 and (d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 					<div class="box my-resources">
@@ -192,7 +221,11 @@ Change by Us NYC - User Account
 												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
 													<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
 												{% endif %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												{% if resource.image_id > 0 %}
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+												{% else %}
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												{% endif %}
 												<span class="resource-name">
 													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
 													<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
@@ -201,7 +234,7 @@ Change by Us NYC - User Account
 												</span>
 												<div class="added-dialog">
 													<span class="added-header">Added <em>to</em> your project<br /></span>
-													<span class="added-text">We've sent them a link to your project page. <a href="">?</a></span>
+													<span class="added-text">We've sent them a link to your project page.</span>
 													<!-- <span class="added-close"></span> -->
 												</div>
 											</td>
@@ -213,6 +246,59 @@ Change by Us NYC - User Account
 							</table>
 						</div>
 					</div><!--end my-resources-->
+					{% endif %}
+					
+					{% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}
+					<div class="box my-endorsed-projects my-projects">
+						<div class="hd">
+							<h2>
+								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+									<span class="light">My</span>
+								{% else %}
+									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+								{% endif %}
+								Supported Projects <span class="counter">{{ d.template_data.user_activity.data.endorsed_projects|length }}</span>
+							</h2>
+						</div>
+						<div class="bd">
+							
+							{% for project in d.template_data.user_activity.data.endorsed_projects %}
+							
+								<div class='clearfix project-header'>
+									<div class="thumb">
+										{% if project.image_id > -1  %}
+											<img width='80' src='/images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+										{% else %}
+											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+										{% endif %}
+										<span class="overlay-tag"></span>
+									</div>
+									<div class="tools">
+										<div class="members">
+											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+										</div>
+									</div>
+									<div class="main">
+										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner_user_id }}">{{ project.owner_first_name }} {{ project.owner_last_name|truncate(1,true,'.') }}</a></strong></cite>
+										<div class="sub-ft">
+											{% if d.template_data and d.template_data.app_mode != 'beta' %}
+												<div class="twitter">
+													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+												</div>
+												<div class="facebook">
+													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+													<fb:like href="http://changeby.us/project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
+												</div>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							
+							{% endfor %}
+							
+						</div>
+					</div><!-- end my-endorsed-projects -->
 					{% endif %}
 					
 				</div><!--end activity-view-->
@@ -323,17 +409,17 @@ Change by Us NYC - User Account
 												<label>Email address</label>
 												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.email }}" />
 											</div>
-											{% if 1==1 %} <!-- hidden for testing -->
 											<div class="row row-hood clearfix">
 												<label>Neighborhood</label>
-												<input type='text' name='location-hood-enter has-been-focused' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' />
-												<div class="location-hood-list" style="display:none"><ul></ul></div>
+												<span class="dropdown-indicator"></span>
+												<input autocomplete='off' type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter has-been-focused' value='{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}{{ d.template_data.user_activity.data.user.location }}{% endif %}' {% if d.template_data.user_activity.data.user.location %}location_id='{{ d.template_data.user_activity.data.user.location_id }}'{% endif %}/>
+												<div class="location-hood-list" style="display:none"><ul><li></li></ul></div>
 											</div>
-											{% endif %}
-											<!-- only for testing, DELETE after-->
+											
+											<!-- only for testing, DELETE after
 											<div class="row row-hood clearfix" style="width:285px; height: 64px;">
 											</div>
-											<!-- STOP DELETING -->
+											STOP DELETING -->
 										</div>
 										<div class="">
 											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
@@ -405,7 +491,7 @@ Change by Us NYC - User Account
 						
 					</div><!--end account-view-->
 					
-
+					
 					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
 					<div class="resources-view step merlin">
 						<div class="hd">
@@ -418,34 +504,43 @@ Change by Us NYC - User Account
 										<div class='left'>
 											<div class="thumb">
 												<a class="change-image"><span>Change Photo</span></a>
-												<img width="90" src="/static/images/thumb_genAvatar100.png" alt='' />
+												{% if resource.image_id > 0 %}
+												<img width='90' height='90' src='/images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" />
+												{% else %}
+												<img width='90' height='90' src='/static/images/thumb_genAvatar100.png' alt="" />
+												{% endif %}
 											</div>
 											<h4 class="serif">{{ resource.title }}</h4>
 											<div class='box'>
 												<input type='text' name='location-hood-enter-{{ loop.index }} has-been-focused' id='location-hood-enter-{{ loop.index }}' class='search-location location-group location-hood-enter always-focused' value='{{ resource.location_name }}'/>
-												<div class="location-hood-list" style="display: none"><ul><li><a href="">Mmmm... data...</a></li></ul></div>
+												<div class="location-hood-list" style="display: none"><ul><li></li></ul></div>
 											</div>
 										</div>
 										<div class='right'>
-											<div class='box'>
+											<div class='box res-description mod-inline-edit'>
 												<span class='section-title'>Mission</span>
-												<p>{{ resource.description }}</p>
+												<div class="inline-edit-controls"></div>
+												<p class="editable-content">{{ resource.description }}</p>
 											</div>
-											<div class='box'>
+											<div class='box res-url mod-inline-edit'>
 												<span class='section-title'>URL</span>
-												<p><a href='{{ resource.url }}'>{{ resource.url }}</a></p>
+												<div class="inline-edit-controls"></div>
+												<p class="editable-content"><a href='{{ resource.url }}'>{{ resource.url }}</a></p>
 											</div>
-											<div class='box'>
+											<div class='box res-email mod-inline-edit'>
 												<span class='section-title'>Email</span>
-												<p><a href=''>{{ resource.contact_email }}</a></p>
+												<div class="inline-edit-controls"></div>
+												<p class="editable-content"><a href=''>{{ resource.contact_email }}</a></p>
 											</div>
-											<div class='box box-half'>
+											<div class='box res-addr mod-inline-edit box-half'>
 												<span class='section-title'>Physical Address</span>
-												<p>{{ resource.physical_address }}</p>
+												<p class="editable-content">{{ resource.physical_address }}</p>
+												<div class="inline-edit-controls"></div>
 											</div>
-											<div class='box box-half'>
+											<div class='box mod-inline-edit res-keywords box-half'>
 												<span class='section-title'>Keywords</span>
-												<p>{{ resource.keywords }}</p>
+												<p class="editable-content">{{ resource.keywords }}</p>
+												<div class="inline-edit-controls"></div>
 											</div>
 										</div>
 									</li>
@@ -553,6 +648,7 @@ Change by Us NYC - User Account
 		<script type="text/javascript" src='/static/js/pages/useraccount.admin.js'></script>
 	{% endif %}
 	{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+		<script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
 		<script type="text/javascript" src='/static/js/pages/useraccount.editable.js'></script>
 	{% endif %}
 

@@ -460,8 +460,17 @@ input.hiddenCheckbox { position: absolute; left: -10000px; /* Hide the input */ 
 label.prettyCheckbox span.holderWrap { display: block; float: left; /*position: relative;*/ margin-right: 10px; overflow: hidden; }
 label.prettyCheckbox span.holder { display: block; /*position: absolute; top: 0; left: 0;*/ }
 
-/* inline edit controls */
-.inline-edit-controls { float:left; }
+/* inline edit */
+.mod-inline-edit.state-display .editable-content:hover { background-color:#ffffff; cursor:pointer; }
+.mod-inline-edit.state-display.state-empty .editable-content { color:#878786; font-family:"ff-din-web-1","ff-din-web-2", "Franklin Gothic Medium", Helvetica, Arial, sans-serif; }
+
+.mod-inline-edit .editable-content .data { width:92%; padding:4px; float:none; font-size:13px; font-style:normal; color:#55504b; }
+
+.mod-inline-edit .inline-edit-controls { margin:0; }
+.mod-inline-edit .inline-edit-controls a { margin-left:5px; }
+.mod-inline-edit .inline-edit-controls a:first-child { margin-left:0; }
+
+.inline-edit-controls { float:left; overflow:hidden; }
 .inline-edit-controls a { 
 	display:block; float:left; padding:2px 5px; margin:0 0 0 10px; 
 	border:1px solid transparent; text-transform:uppercase; 
@@ -817,8 +826,9 @@ table.projects-list td div.project-info { margin-left: 70px; overflow: hidden; -
 table.projects-list td div.project-info span { display: block; font-family: "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, Times, Times New Roman, serif; font-size: 13px; line-height: 16px;  }
 table.projects-list td span.link { margin-bottom: 2px; }
 table.projects-list td span.link a { font-size: 17px; line-height: 19px; font-weight: bold; color: #55504b; }
-table.projects-list td span.link a:hover { color: #3d3a36; }
+table.projects-list td span.link a:hover { text-decoration: underline; }
 table.projects-list td span.creator { margin-bottom: 6px; }
+table.projects-list td span.creator a:hover { text-decoration: underline; }
 table.projects-list td span.description { text-overflow: ellipsis; }
 table.projects-list td div.endorser-thumb { position: relative; float: right; width: 35px; height: 35px; margin: 0 4px; }
 table.projects-list td div.endorser-thumb img.endorser-photo { position: absolute; top: 5px; left: 5px; z-index: 1; }
@@ -949,7 +959,7 @@ PAGE-SPECIFIC STYLES
 .thumb .change-image:hover span,
 .thumb .change-image.hover span { display: block; }
 
-.project-header .tools { float:right; width:184px; }
+.project-header .tools { float:right; width:184px; margin-left: 20px; }
 .project-header .tools .join-project { margin:0 0 10px 15px; width:118px; height:94px; background-image:url("../images/button_join2.png"); }
 .project-header .tools .members { 
 	padding:0 0 10px 50px; font-size:18px; line-height:1; text-transform:uppercase; 
@@ -1032,8 +1042,9 @@ PAGE-SPECIFIC STYLES
 .endorsements-stack > li:first-child { margin-top:0; }
 .endorsements-stack > li .thumb { float:left; margin:0 10px 0 0; }
 .endorsements-stack > li .thumb .overlay-tag { width:25px; height:25px; top:3px; left:-30px; background-image:url("../images/icon_yes.png"); }
-.endorsements-stack > li .main { overflow:hidden; font-size:11px; }
+.endorsements-stack > li .main { overflow:hidden; font-size:11px; padding-top: 7px; }
 .endorsements-stack > li .main cite { font-style:normal; }
+.endorsements-stack > li .main a:hover { text-decoration: underline; }
 .endorsements-stack > li .close {
 	background: url("../images/control_close_7.png") no-repeat scroll center center transparent;
 	height: 7px;
@@ -1055,7 +1066,7 @@ PAGE-SPECIFIC STYLES
 	padding-left: 50px; display: block; height: 42px; 
 	background: url(../images/icon_yes_big_sprite.png) 0px 0px no-repeat #e5e4e1; }
 .endorse-button:hover > span { background-position: 0 -84px; }
-.endorse-button > span > span{ position: relative; top: 10px; }
+.endorse-button > span > span{ position: relative; top: 13px; }
 
 /* mission --> location */
 .box.mission .location { width:50%; float:left; clear:left; }
@@ -1742,16 +1753,18 @@ div.continent.user-account .midlands div.user-account-nav div.thumb { width: 90p
 div.continent.user-account .midlands div.user-account-nav div.thumb img {border: 1px solid #a6a5a4;}
 div.continent.user-account .midlands div.user-account-nav div.user-info { font: 13px/15px "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, Times, Times New Roman, serif; }
 div.continent.user-account .midlands div.user-account-nav div.user-info span { display: block; }
-div.continent.user-account .midlands div.user-account-nav div.user-info .name { font-size: 20px; line-height: 22px; margin-bottom: 15px; }
-div.continent.user-account .midlands div.user-account-nav div.user-info .location { margin-bottom: 15px; }
+div.continent.user-account .midlands div.user-account-nav div.user-info .name { font-size: 20px; line-height: 22px; }
+div.continent.user-account .midlands div.user-account-nav div.user-info .location { margin-top: 10px; }
 div.continent.user-account .midlands div.user-account-nav div.user-info .location a { text-decoration: underline; }
+div.continent.user-account .midlands div.user-account-nav div.user-info .description { margin-top: 10px; }
+div.continent.user-account .midlands div.user-account-nav div.user-info .description .inline-edit-controls { float:none; margin-top:8px; }
 .user-account .user-info .user-email { font-size:11px; color:#A6A5A4; }
 .user-account .user-info .user-email a { color:#A6A5A4; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs { text-transform: uppercase; font-size: 11px; line-height: 11px; letter-spacing: 0.25px; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs li { padding: 5px 5px 3px; margin-bottom: 6px; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs li.active { font-weight: bold; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs li.active,
-div.continent.user-account .midlands div.user-account-nav ul.tabs li:hover { background-color: #e1e1e1; -moz-border-radius: 2px; -webkit-border-radius: 2px; -khtml-border-radius: 2px; border-radius: 2px; }
+div.continent.user-account .midlands div.user-account-nav ul.tabs li:hover { background-color: #E5E5E3; -moz-border-radius: 2px; -webkit-border-radius: 2px; -khtml-border-radius: 2px; border-radius: 2px; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs li.unread { font-weight: bold; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs li span.counter { font-size: 9px; margin-left: 1px; }
 div.continent.user-account .midlands div.user-account-nav ul.tabs a { display: block; width: 100%; }
@@ -1814,6 +1827,7 @@ div.continent.user-account .addphoto a:hover {background-color: transparent;}
 .account-view div.bd .user-details .row { margin-bottom: 25px; width: 285px; float: left; }
 .account-view div.bd .user-details .row.row-hood { position: relative; }
 .account-view div.bd .user-details .row.row-hood .location-hood-list { width: 266px; top: 64px; left: 0;}
+.account-view div.bd .user-details .row.row-hood .dropdown-indicator { top:38px; right:28px; }
 
 .account-view .bd .user-details .password-info .step { overflow:hidden; margin:50px 0 0; padding:15px; background-color:#e6e6e4; }
 .account-view .bd .user-details .password-info .password-details-submitted { font-size:24px; }
@@ -1845,14 +1859,14 @@ div.continent.user-account .resources-view ul.my-res > li:last-child { border-bo
 div.continent.user-account .resources-view ul.my-res > li .left { width: 195px; float: left;}
 div.continent.user-account .resources-view ul.my-res > li .right { margin-left: 195px; width: 355px; }
 div.continent.user-account .resources-view ul.my-res > li h4 { font-size: 20px; line-height: 24px; font-weight: normal; width: 95%; margin: 12px 0 15px 8px;}
-div.continent.user-account .resources-view ul.my-res > li .left .thumb { margin-left: 8px; }
+div.continent.user-account .resources-view ul.my-res > li .left .thumb { margin-left: 8px; min-height: 90px; min-width: 90px; }
 div.continent.user-account .resources-view ul.my-res > li .left .thumb img { width: 90px; height: 90px;}
 div.continent.user-account .resources-view ul.my-res > li .left .thumb .change-image { height: 90px; width: 90px; left: 0;}
 div.continent.user-account .resources-view ul.my-res > li .left .thumb .change-image span { width: 90px; top: 40px;}
 div.continent.user-account .resources-view ul.my-res > li .left .box { position: relative; }
 div.continent.user-account .resources-view ul.my-res > li .left input { width: 148px; border: none; }
 div.continent.user-account .resources-view ul.my-res > li .left .location-hood-list { top:40px; width: 164px; }
-div.continent.user-account .resources-view ul.my-res > li .right .box { margin-bottom: 20px; }
+div.continent.user-account .resources-view ul.my-res > li .right .box { position:relative; margin-bottom: 20px; }
 div.continent.user-account .resources-view ul.my-res > li .right .box.box-half { width: 160px; float: left; }
 div.continent.user-account .resources-view ul.my-res > li .right .box.box-half + .box.box-half { margin-left: 16px; }
 div.continent.user-account .resources-view ul.my-res > li .right .section-title { text-transform: uppercase; color: #878786; font-weight: normal; display: block;
@@ -1860,7 +1874,10 @@ div.continent.user-account .resources-view ul.my-res > li .right .section-title 
 div.continent.user-account .resources-view ul.my-res > li .right p { font: 14px/18px "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, Times, Times New Roman, serif; }
 div.continent.user-account .resources-view ul.my-res > li .right a:hover { text-decoration: underline; }
 
-
+div.continent.user-account .resources-view ul.my-res > li .right .box .inline-edit-controls { float:none; position:absolute; top:-6px; right:0; }
+div.continent.user-account .resources-view ul.my-res > li .right .box.box-half .inline-edit-controls { position:static; margin-top:6px; }
+div.continent.user-account .resources-view ul.my-res > li .right .mod-inline-edit .editable-content .data { width:342px; }
+div.continent.user-account .resources-view ul.my-res > li .right .mod-inline-edit.box-half .editable-content .data { width:150px; }
 
 /* ADD RESOURCE PAGE */
 div.continent.add-resource h1 { font-weight: normal; margin-bottom:25px; }

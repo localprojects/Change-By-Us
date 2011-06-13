@@ -538,3 +538,4 @@ class Project(Controller):
         description = self.request('text')
         
         return mProject.updateProjectDescription(self.db, projectId, description)
+            
