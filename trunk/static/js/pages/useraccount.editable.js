@@ -263,7 +263,8 @@
 					url: "/resource/edit/url",
 					param: "url",
 					post_data: post_data
-				}
+				},
+				validators: ["url"]
 			});
 			
 			//email
@@ -273,7 +274,8 @@
 					url: "/resource/edit/contactemail",
 					param: "contactemail",
 					post_data: post_data
-				}
+				},
+				validators: ["email"]
 			});
 			
 			//physical address
