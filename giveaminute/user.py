@@ -38,7 +38,20 @@ class User():
             return (len(data) > 0)
         except Exception, e:
             log.info("*** couldn't get user project admin status")
-            log.err(e)
+            log.error(e)
+            return False
+            
+    def isResourceOwner(self, projectResourceId):
+        sql = "select project_resource_id from project_resource where contact_user_id = $userId and project_resource_id = $projectResourceId"
+        
+        try:
+            data = self.db.query(sql,{'userId':self.id, 'projectResourceId':projectResourceId})
+
+            return (len(data) > 0)
+        except Exception, e:
+            
+            log.info("*** couldn't get user resource ownership status")
+            log.error(e)
             return False
     
     def getDictionary(self):
