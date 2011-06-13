@@ -31,7 +31,7 @@ Change by Us NYC - Project
 			<a class="change-image"><span>Change Photo</span></a>
 			{% endif %}
 			{% if d.template_data.project.data.info.image_id > -1 %}
-				<img width='100' src='/images/{{ d.template_data.project.data.info.image_id % 10 }}/{{ d.template_data.project.data.info.image_id }}.png' alt="" class='proj'/>
+				<img width='100' src='{{d.template_data.media_root}}images/{{ d.template_data.project.data.info.image_id % 10 }}/{{ d.template_data.project.data.info.image_id }}.png' alt="" class='proj'/>
 			{% else %}
 				<img width='100' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
 			{% endif %}
@@ -290,7 +290,7 @@ Change by Us NYC - Project
 					},
 					dataType:'text',
 					success:function(data,ts,xhr){
-						tc.jQ('img.proj').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+						tc.jQ('img.proj').attr('src','{{d.template_data.media_root}}images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 					}
 				});
 			}

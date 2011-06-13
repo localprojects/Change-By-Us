@@ -51,6 +51,9 @@ class Controller():
         self.template_data['app_mode'] = self.appMode = Config.get('app_mode') 
         self.template_data['app_env'] = self.appEnv = Config.get('app_env') 
         
+        #set media root
+        self.template_data['media_root'] = Config.get('media')['root']
+        
         # user
         self.user = None
         if hasattr(self.session, 'user_id'):
