@@ -1,4 +1,5 @@
 from framework.log import log
+import helpers.censor as censor
 
 class ProjectResource():
     def __init__(self, db, projectResourceId):
@@ -77,11 +78,32 @@ def searchProjectResources(db, terms, locationId, limit=1000, offset=0):
         
 def updateProjectResourceImage(db, projectResourceId, imageId):
     try:
-        sql = "update project_resource set image_id = $imageId where project_resource_id = $projectResourceId"
-        db.query(sql, {'projectResourceId':projectResourceId, 'imageId':imageId})
+        db.update('project_resource', where = "project_resource_id = $id", image_id = imageId, vars = {'id':projectResourceId})
         return True
     except Exception, e:
         log.info("*** couldn't update project image")
+        log.error(e)
+        return False
+
+def updateProjectResourceLocation(db, projectResourceId, locationId):
+    try:
+        db.update('project_resource', where = "project_resource_id = $id", location_id = locationId, vars = {'id':projectResourceId})
+        return True
+    except Exception, e:
+        log.info("*** couldn't update project location")
+        log.error(e)
+        return False
+
+        
+def updateProjectResourceTextData(db, projectResourceId, field, text):
+    isHidden = (censor.badwords(db, text) > 0)
+    
+    try:
+        sql = "update project_resource set %s = $text, is_hidden = $isHidden where project_resource_id = $id" % field
+        db.query(sql, {'id':projectResourceId, 'text':text, 'isHidden':isHidden})
+        return True
+    except Exception, e:
+        log.info("*** couldn't update project %s" % field)
         log.error(e)
         return False
         
