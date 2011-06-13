@@ -51,14 +51,14 @@ class Resource(Controller):
         title = self.request('title')
         description = self.request('description')
         physical_address = self.request('physical_address')
-        location_id = util.util.try_f(int, self.request('location_id'), -1)
+        location_id = util.try_f(int, self.request('location_id'), -1)
         url = util.makeUrlAbsolute(self.request('url')) if self.request('url')  else None
         keywords = ' '.join([word.strip() for word in self.request('keywords').split(',')]) if not util.strNullOrEmpty(self.request('keywords')) else None
         contact_name = self.request('contact_name')
         contact_email = self.request('contact_email')
         facebook_url = util.makeUrlAbsolute(self.request('facebook_url')) if self.request('facebook_url') else None
         twitter_url = util.makeUrlAbsolute(self.request('twitter_url')) if self.request('twitter_url') else None
-        image_id = util.util.try_f(int, self.request('image')) 
+        image_id = util.try_f(int, self.request('image')) 
         
         # TODO this is a temp fix for a form issue
         if (contact_name == 'null'):
