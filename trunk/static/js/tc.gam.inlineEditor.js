@@ -81,8 +81,6 @@ tc.inlineEditor.prototype = {
 			}
 			post_data[this.options.service.param] = tc.jQ.trim( this.content.find(".data").val() );
 			
-			tc.util.dump(post_data);
-			
 			tc.jQ.ajax({
 				type: "POST",
 				dataType: "text",
