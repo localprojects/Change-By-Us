@@ -9,7 +9,8 @@ tc.inlineEditor.prototype = {
 			dom: null,
 			service: null/*{
 				url: null,
-				param: null
+				param: null,
+				post_data:  {}
 			}*/,
 			empty_text: "Click here to edit."
 		}, options);
@@ -73,8 +74,14 @@ tc.inlineEditor.prototype = {
 		var post_data;
 		
 		if (this.state === "edit") {
-			post_data = {};
+			if (this.options.service.post_data) {
+				post_data = tc.jQ.extend({}, this.options.service.post_data);
+			} else {
+				post_data = {};
+			}
 			post_data[this.options.service.param] = tc.jQ.trim( this.content.find(".data").val() );
+			
+			tc.util.dump(post_data);
 			
 			tc.jQ.ajax({
 				type: "POST",
