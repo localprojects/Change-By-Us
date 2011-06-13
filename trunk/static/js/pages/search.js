@@ -106,6 +106,7 @@ app_page.features.push(function(app){
 								target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
 								break;
 						}
+						
 						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 						
 					} else {
@@ -131,8 +132,6 @@ app_page.features.push(function(app){
 								}
 								
 								e.data.carousel.data.current_page.removeClass('spinner-message').children().remove();
-								
-								tc.util.log(d.results);
 								
 								if(!d.results.length && e.data.carousel.data.offset > 0){
 									e.data.carousel.data.current_page.remove();
@@ -547,7 +546,5 @@ app_page.features.push(function(app){
 		for (i=0; i < ideasList.length; i++) {
 			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
 		}
-		
-		//tc.addOfficialResourceTags(tc.jQ('table.resources-list'));
 		
 	});
