@@ -75,7 +75,7 @@
 				}
 				
 				// fixes IE bug (see #1500)
-				e.preventDefault();
+				//e.preventDefault();
 			});
 			
 			$('input#' + $label.attr('for')).unbind('keypress').bind('keypress', {label:$label}, function(e){
