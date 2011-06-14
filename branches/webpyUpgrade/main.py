@@ -63,8 +63,8 @@ if __name__ == "__main__":
         import boto
 
         c = boto.connect_ses(
-          aws_access_key_id = web.webapi.config.get('aws_access_key_id'),
-          aws_secret_access_key = web.webapi.config.get('aws_secret_access_key'))
+          aws_access_key_id     = Config.get('email').get('aws_ses').get('access_key_id'),
+          aws_secret_access_key = Config.get('email').get('aws_ses').get('secret_access_key'))
 
         # TODO: Need to add proper exception handling or at least error reporting!
         # Use raw_email since this allows for attachments
