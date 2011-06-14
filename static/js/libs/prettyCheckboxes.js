@@ -73,6 +73,9 @@
 				if(!d || !d.preventChange){
 					e.data.input.trigger('change');
 				}
+				
+				// fixes IE bug (see #1500)
+				e.preventDefault();
 			});
 			
 			$('input#' + $label.attr('for')).unbind('keypress').bind('keypress', {label:$label}, function(e){
