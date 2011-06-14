@@ -83,7 +83,7 @@
 				</div> -->
 				<div class="search generic-search">
 					<form class="searchform" method="get" action="<?php bloginfo( 'url' ); ?>">
-						<input class="search" name="s" type="text" value="Search..." tabindex="1" />
+						<input class="search" name="s" type="text" value="Search blog..." tabindex="1" />
 					    <input class="search-btn rounded-button" type="submit" tabindex="2" name='headlands-search-btn' value='Search'/>
 					</form>
 				</div>
