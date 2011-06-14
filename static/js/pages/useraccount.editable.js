@@ -54,8 +54,8 @@
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
-								merlin.dom.find('.user-pic img').attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
-								tc.jQ(".user-account-nav img.avatar").attr('src','/images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.dom.find('.user-pic img').attr('src',app_page.media_root + 'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								tc.jQ(".user-account-nav img.avatar").attr('src',app_page.media_root + 'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image_id = d.responseJSON.thumbnail_id;
 							}
 						});
@@ -271,7 +271,7 @@
 											//TODO handle error?
 											return false;
 										}
-										$r.find(".thumb img").attr('src', '/images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');
+										$r.find(".thumb img").attr('src', app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');
 									}
 								});
 							}
