@@ -77,7 +77,7 @@ tc.animate_bg = function(ele, from, to) {
 				});
 			}else{
 				//ele.css({background:'transparent',filter:"none"}); 
-				tc.jQ('.more-info.after-idea-message').attr('style','');  
+				//tc.jQ('.more-info.after-idea-message').attr('style','');  
 			}
 		}else{
 			ele.css("backgroundColor", "rgba(255, 255, 255, " + (from) / 10 + ")"); 

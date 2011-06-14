@@ -105,11 +105,15 @@ app_page.features.push(function(app){
 							
 							tc.animate_bg(elements.pane,5,7.5);
 							
-							elements.more_info.css({
-								opacity:0.0
-							}).show().animate({
-								opacity:1.0
-							},550,'easeOutQuint');
+							if (isMsie8orBelow != true) {
+								elements.more_info.css({
+									opacity:0.0
+								}).show().animate({
+									opacity:1.0
+								},550,'easeOutQuint');
+							} else {
+								elements.more_info.show();
+							};
 							
 							elements.counter.hide();
 							elements.textarea.attr("disabled", true);
