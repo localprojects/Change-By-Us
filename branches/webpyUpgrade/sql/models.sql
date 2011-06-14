@@ -332,6 +332,17 @@ create table beta_invite_request (
     ,primary key(beta_invite_request_id)
 );
 
+## direct messaging
+drop table if exists direct_message;
+create table direct_message (
+    direct_message_id int not null auto_increment
+    ,to_user_id int not NULL
+    ,from_user_id int not NULL
+    ,message text
+    ,created_datetime timestamp not null default CURRENT_TIMESTAMP
+    ,primary key(direct_message_id)
+);
+
 ## web session
 drop table if exists web_session;
 CREATE TABLE `web_session` (

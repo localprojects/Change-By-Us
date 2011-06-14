@@ -127,6 +127,34 @@ def emailTempPassword(email, password):
         log.error(e)
         return False
         
+def directMessageUser(db, toUserId, toName, toEmail, fromUserId, fromName, message):
+    emailAccount = Config.get('email')
+    
+    #email = "%s <%s>" % (toName, toEmail)
+    email = toEmail
+    subject = "Change By Us message from %s" % fromName
+    link = "%suseraccount/%s" % (Config.get('default_host'), fromUserId)
+    body = Emailer.render('email/direct_message',
+                        {'message':message, 'link':link},
+                        suffix = 'txt')
+
+    try:
+        isSent = Emailer.send(email, 
+                            subject, 
+                            body,
+                            from_name = "NYC Change By Us",
+                            from_address = 'donotreply@nyc.changeby.us')  
+                            
+        if (isSent):
+            db.insert('direct_message', message = message, to_user_id = toUserId, from_user_id = fromUserId)
+        else:
+            log.info("*** couldn't log direct message")
+            log.error(e)
+    except Exception, e:
+        log.info("*** couldn't send direct message email")
+        log.error(e)
+        return False
+        
 # email unauthenticated users
 def emailUnauthenticatedUser(email, authGuid):
     emailAccount = Config.get('email')

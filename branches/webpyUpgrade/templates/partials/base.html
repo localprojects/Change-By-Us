@@ -23,7 +23,7 @@
 		{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
 		<link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
 		{% endif %}
-		{% if d.template_data and d.template_data.user %}
+		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 		<link rel="stylesheet" href="/static/css/tc.gam.admin.css" type="text/css" media="screen" />
 		{% endif %}
 		
@@ -299,6 +299,37 @@
 			</div>
 			<a class='close' href="#"><span>close</span></a>
 		</div>
+		
+		<!-- MESSAGE MODAL -->
+		{% if d.template_data and d.template_data.user %}
+			<div class="template-content modal-content contact-user">
+				<div class="step step-start contact-message">
+					<h2>Send <strong class='to_u_name'></strong> a message</h2>
+					<div class="clearfix">
+						<textarea class="contact-user-text" id="contact-user-text" name="contact-user-text"></textarea>
+						<input type="submit" class="contact-user-submit rounded-button" id="contact-user-submit" name="contact-user-submit" value="Send" />
+					</div>
+					<div>
+						<span class="charlimit">0/200</span>
+					</div>
+				</div>
+				
+				<div class="step step-submit contact-message-submit" style="display:none">
+					<h2>Sending <strong class='to_u_name'></strong> a message!</h2>
+				</div>
+				
+				<div class="step step-success contact-message-success" style="display:none">
+					<h2>You sent <strong class='to_u_name'></strong> a message!</h2>
+					<a class="rounded-button" href="#">Close</a>
+				</div>
+				
+				<div class="step step-success contact-message-error" style="display:none">
+					<h2>There was an error sending your message.</h2>
+				</div>
+				
+				<a class='close' href="#"><span>close</span></a>
+			</div>
+		{% endif %}
 		
 		<!-- Javascript goes here -->
 		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>

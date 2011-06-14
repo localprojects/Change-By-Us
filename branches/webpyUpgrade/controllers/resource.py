@@ -51,14 +51,14 @@ class Resource(Controller):
         title = self.request('title')
         description = self.request('description')
         physical_address = self.request('physical_address')
-        location_id = util.util.try_f(int, self.request('location_id'), -1)
+        location_id = util.try_f(int, self.request('location_id'), -1)
         url = util.makeUrlAbsolute(self.request('url')) if self.request('url')  else None
         keywords = ' '.join([word.strip() for word in self.request('keywords').split(',')]) if not util.strNullOrEmpty(self.request('keywords')) else None
         contact_name = self.request('contact_name')
         contact_email = self.request('contact_email')
         facebook_url = util.makeUrlAbsolute(self.request('facebook_url')) if self.request('facebook_url') else None
         twitter_url = util.makeUrlAbsolute(self.request('twitter_url')) if self.request('twitter_url') else None
-        image_id = util.util.try_f(int, self.request('image')) 
+        image_id = util.try_f(int, self.request('image')) 
         
         # TODO this is a temp fix for a form issue
         if (contact_name == 'null'):
@@ -91,6 +91,7 @@ class Resource(Controller):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         imageId = util.try_f(int, self.request('image_id'))
@@ -98,12 +99,14 @@ class Resource(Controller):
         if (imageId):
             return mProjectResource.updateProjectResourceImage(self.db, resourceId, imageId)
         else:
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
             return False
         
     def updateResourceLocation(self):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         locationId = util.try_f(int, self.request('location_id'))
@@ -111,12 +114,14 @@ class Resource(Controller):
         if (locationId):
             return mProjectResource.updateProjectResourceLocation(self.db, resourceId, locationId)
         else:
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
             return False
         
     def updateResourceDescription(self):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         description = self.request('description')
@@ -124,12 +129,14 @@ class Resource(Controller):
         if (description):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'description', description)
         else:
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
             return False
         
     def updateResourceUrl(self):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         url = self.request('url')
@@ -137,12 +144,14 @@ class Resource(Controller):
         if (url):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'url', util.makeUrlAbsolute(url))
         else:
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
             return False
                 
     def updateResourceContactEmail(self):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         email = self.request('email')
@@ -150,12 +159,14 @@ class Resource(Controller):
         if (email):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'contact_email', email)
         else:
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
             return False
         
     def updateResourceAddress(self):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         address = self.request('address')
@@ -163,12 +174,14 @@ class Resource(Controller):
         if (address):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'physical_address', address)
         else:
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
             return False
     
     def updateResourceKeywords(self):
         resourceId = util.try_f(int, self.request('resource_id'))
 
         if (not self.user or not self.user.isResourceOwner(resourceId)): 
+            log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
         keywords = ' '.join([word.strip() for word in self.request('keywords').split(',')]) if not util.strNullOrEmpty(self.request('keywords')) else None

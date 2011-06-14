@@ -41,13 +41,13 @@ Change by Us NYC - CMS Admin Settings
 									<label>Password</label>
 									<input class='password' type="password"/>
 								</div>
+								<div class="row organization-row">
+									<label>Affiliation</label>
+									<input class='organization' type="text"/>
+								</div>
 								<div class="row clearfix">
 									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="city-leaders-radio" value="3" />
 									<label for="city-leaders-radio" class="white"><strong>City Leaders</strong> can endorse projects</label>
-								</div>
-								<div class="row organization-row" style='display:none;'>
-									<label>Organization</label>
-									<input class='organization' type="text"/>
 								</div>
 								<div class="row clearfix">
 									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="administrators-radio" value="2" />
@@ -501,7 +501,7 @@ Change by Us NYC - CMS Admin Settings
 				email:null,
 				password:null,
 				role:null,
-				organization:null
+				affiliation:null
 			},
 			steps:{
 				'main':{
@@ -510,11 +510,24 @@ Change by Us NYC - CMS Admin Settings
 					inputs:{
 						f_name:{
 							selector:'input.f_name',
-							validators:['min-3','max-64','required']
+							validators: function(merlin,dom,current_step){
+								if(current_step.inputs.organization.dom.val().length){
+									return tc.validate(dom,['min-3','max-64']);
+								} else {
+									return tc.validate(dom,['min-3','max-64','required']);
+								}
+							}
 						},
 						l_name:{
 							selector:'input.l_name',
-							validators:['min-3','max-64','required']
+							validators: function(merlin,dom,current_step){
+								if(current_step.inputs.organization.dom.val().length){
+									return tc.validate(dom,['min-3','max-64']);
+								} else {
+									return tc.validate(dom,['min-3','max-64','required']);
+								}
+								
+							}
 						},
 						email:{
 							selector:'input.email',
@@ -526,7 +539,13 @@ Change by Us NYC - CMS Admin Settings
 						},
 						organization:{
 							selector:'input.organization',
-							validators:[]
+							validators: function(merlin,dom,current_step){
+								if(current_step.inputs.f_name.dom.val().length){
+									return tc.validate(dom,['min-3','max-64']);
+								} else {
+									return tc.validate(dom,['min-3','max-64','required']);
+								}
+							}
 						},
 						role:{
 							selector:'.add-admin-radio',
@@ -534,13 +553,7 @@ Change by Us NYC - CMS Admin Settings
 						}
 					},
 					init:function(merlin,dom){
-						merlin.current_step.inputs.role.dom.bind('change', {merlin:merlin}, function(e){
-							if(e.target.value == '3'){
-								e.data.merlin.current_step.inputs.organization.dom.parent().show();
-							} else {
-								e.data.merlin.current_step.inputs.organization.dom.parent().hide();
-							};
-						});
+						
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
@@ -549,7 +562,7 @@ Change by Us NYC - CMS Admin Settings
 							email:merlin.current_step.inputs.email.dom.val(),
 							password:merlin.current_step.inputs.password.dom.val(),
 							role:merlin.current_step.inputs.role.dom.filter(':checked').val(),
-							organization:merlin.current_step.inputs.organization.dom.val()
+							affiliation:merlin.current_step.inputs.organization.dom.val()
 						});
 					}
 				},
@@ -624,7 +637,7 @@ Change by Us NYC - CMS Admin Settings
 									window.location.hash = 'error';
 									return;
 								}
-								location.reload('true');
+								location.reload(true);
 							}
 						});
 					}

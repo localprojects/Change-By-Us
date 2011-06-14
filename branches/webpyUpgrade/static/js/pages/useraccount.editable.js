@@ -242,49 +242,113 @@
 
 		function editableResource($r) {
 			
+			var post_data = { 
+				resource_id: $r.attr("id")
+			};
+			
+			// photo
+			$r.find("a.change-image").bind("click", {
+				app: app,
+				source_element:tc.jQ('.modal-content.upload-resource-image'),
+				init: function(modal, callback) {
+					var uploader = new qq.FileUploader({
+						element: modal.options.element.find('.file-uploader')[0],
+						action: "/create/photo",
+						onComplete: function(id, fileName, responseJSON){
+							modal.hide();
+							
+							if (responseJSON.thumbnail_id) {
+								tc.jQ.ajax({
+									type: "POST",
+									dataType: "text",
+									url: "/resource/edit/image",
+									data: {
+										resource_id: post_data.resource_id,
+										image_id: responseJSON.thumbnail_id
+									},
+									success: function(data, ts, xhr) {
+										if (data === "False") {
+											//TODO handle error?
+											return false;
+										}
+										$r.find(".thumb img").attr('src', '/images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');
+									}
+								});
+							}
+							
+							return true;
+						}
+					});
+					if (tc.jQ.isFunction(callback)) {
+						callback(modal);
+					}
+				}
+			}, function(e, d) {
+				e.preventDefault();
+				e.data.app.components.modal.show(e.data);
+			});
+			
+			//location
+			new tc.inlineLocationEditor({
+				dom: $r.find(".box.res-location"),
+				locations: app.app_page.data.locations,
+				service: {
+					url: "/resource/edit/location",
+					param: "location_id",
+					post_data: post_data
+				}
+			});
+			
 			// mission
 			new tc.inlineEditor({
-				dom: $r.find(".box.res-description")/*,
+				dom: $r.find(".box.res-description"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/description",
+					param: "description",
+					post_data: post_data
+				}
 			});
 			
 			//url
 			new tc.inlineLinkEditor({
-				dom: $r.find(".box.res-url")/*,
+				dom: $r.find(".box.res-url"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/url",
+					param: "url",
+					post_data: post_data
+				},
+				validators: ["url"]
 			});
 			
-			//url
+			//email
 			new tc.inlineLinkEditor({
-				dom: $r.find(".box.res-email")/*,
+				dom: $r.find(".box.res-email"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/contactemail",
+					param: "contactemail",
+					post_data: post_data
+				},
+				validators: ["email"]
 			});
 			
 			//physical address
 			new tc.inlineEditor({
-				dom: $r.find(".box.res-addr")/*,
+				dom: $r.find(".box.res-addr"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/address",
+					param: "address",
+					post_data: post_data
+				}
 			});
 			
 			//keywords
-			new tc.inlineKeywordsEditor({
-				dom: $r.find(".box.res-keywords")/*,
+			new tc.inlineEditor({
+				dom: $r.find(".box.res-keywords"),
 				service: {
-					url: ,
-					param: 
-				}*/
+					url: "/resource/edit/keywords",
+					param: "keywords",
+					post_data: post_data
+				}
 			});
 			
 		}
