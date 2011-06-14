@@ -149,7 +149,7 @@ def directMessageUser(db, toUserId, toName, toEmail, fromUserId, fromName, messa
             db.insert('direct_message', message = message, to_user_id = toUserId, from_user_id = fromUserId)
         else:
             log.info("*** couldn't log direct message")
-            log.error(e)
+
     except Exception, e:
         log.info("*** couldn't send direct message email")
         log.error(e)
