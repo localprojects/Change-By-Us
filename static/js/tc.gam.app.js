@@ -71,12 +71,13 @@ tc.animate_bg = function(ele, from, to) {
 			if(from != to){
 				var opStr = (Math.round(from * 25.5)).toString(16);
 				ele.css({
-					background:'transparent',
+					backgroundColor:'transparent',
 					filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF) !important",
 					'-ms-filter':"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF) !important"
 				});
 			}else{
-				ele.css({background:'transparent',filter:"none"});   
+				//ele.css({background:'transparent',filter:"none"}); 
+				tc.jQ('.more-info.after-idea-message').attr('style','');  
 			}
 		}else{
 			ele.css("backgroundColor", "rgba(255, 255, 255, " + (from) / 10 + ")"); 
