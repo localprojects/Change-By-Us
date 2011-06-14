@@ -1,5 +1,6 @@
 import cStringIO
 import framework.util as util
+from framework.s3uploader import *
 from framework.log import log
 from framework.controller import *
 from PIL import Image, ImageOps
@@ -50,9 +51,16 @@ class ImageServer(Controller):
             log.error(e)
             return None
         log.info("--> saved %s" % path)  
-        # eholda temporarily comment out mirror stuff
-        #if Config.get('mirror')['active'] and mirror:
-        #    Tasks().add(tube=Config.get('mirror')['tube'], data={'image_id': id, 'app': app}, timeout=120)  
+        
+        log.info("*** config = %s, mirror = %s" % (Config.get('media')['isS3mirror'] , mirror))
+        
+        if (Config.get('media')['isS3mirror'] and mirror):
+            try:
+                result = S3Uploader.upload(path, path)
+                log.info(result)
+            except Exception, e:
+                log.error(e)  
+        
         return id
         
     #

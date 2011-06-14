@@ -20,6 +20,8 @@ Python packages:
     PIL
     oauth2
 
+    boto    # necessary for AWS / SES / S3
+
 Mysql setup for the first time:
     mysql -u root -p
     > create database gam2; grant all on gam2.* to gam@localhost identified by 'gam';
