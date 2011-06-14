@@ -8,6 +8,7 @@ from lib.web.contrib.template import render_jinja
 from lib.jinja2.exceptions import TemplateNotFound
 from framework.log import log
 from framework.controller import *
+import lib.web.utils as webpyutils
 
 class Emailer():
 
@@ -29,16 +30,17 @@ class Emailer():
 
     @classmethod
     def send(cls, addresses, subject, text, html=None, attachment=None, from_name=None, from_address=None):
-        log.info("Emailer.send [%s] [%s]" % (addresses, subject))   
+        log.info("Emailer.send [%s] [%s]" % (addresses, subject))
         if isinstance(addresses, basestring):
             addresses = [r.strip() for r in addresses.split(',')]
-        account = Config.get('email')    
+
         if html:
             msg = MIMEMultipart('alternative')
-            msg.attach(MIMEText(text, 'plain'))  
+            msg.attach(MIMEText(text, 'plain'))
             msg.attach(MIMEText(html, 'html'))
         else:
             msg = MIMEText(text, 'plain')
+
         if attachment:
             tmpmsg = msg
             msg = MIMEMultipart()
@@ -49,20 +51,14 @@ class Emailer():
             part.set_payload(open(attachment, 'rb').read())
             Encoders.encode_base64(part)
             part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attachment))
-            msg.attach(part)                
+            msg.attach(part)
+
         sender = from_name + "<" + from_address + ">"
-        msg['From'] = sender
-        msg['To'] = ','.join(addresses)
-        msg['Subject'] = subject
-        # log.info("\n%s" % msg.as_string())                        
+
+        account = Config.get('email').get('smtp')
         try:
-            server = smtplib.SMTP(account['host'], account['port'])
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(account['username'], account['password'])
-            server.sendmail(sender, addresses, msg.as_string())
-            server.close()
+            webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment)
+
         except Exception, e:
             log.error("Could not send email (%s)" % e)
             return False

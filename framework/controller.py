@@ -51,6 +51,9 @@ class Controller():
         self.template_data['app_mode'] = self.appMode = Config.get('app_mode') 
         self.template_data['app_env'] = self.appEnv = Config.get('app_env') 
         
+        #set media root
+        self.template_data['media_root'] = Config.get('media')['root']
+        
         # user
         self.user = None
         if hasattr(self.session, 'user_id'):
@@ -149,11 +152,11 @@ class Controller():
         # debug debug gubed
         log.info("*** session  = %s" % self.session)
         
-        
-        for key in self.session:
+        keys = self.session.keys()
+        for key in keys:
             template_values[key] = self.session[key]
         template_values['template_name'] = template_name
-        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')      
+        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')
         renderer._lookup.filters.update(custom_filters.filters)
         web.header("Content-Type", "text/html")
         #log.info("TEMPLATE %s: %s" % (template_name, template_values))

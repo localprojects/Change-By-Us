@@ -62,7 +62,7 @@
 					<div class="membrane">
 						<div class="thumb">
 							{% if message.owner.image_id %}
-								<img width='50' src='/images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
+								<img width='50' src='{{d.template_data.media_root}}images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
 							{% else %}
 								<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
 							{% endif %}
@@ -205,7 +205,7 @@
 			
 			//add user image
 			if(d.owner.image_id){
-				out.find('img').attr('src','/images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
+				out.find('img').attr('src','{{d.template_data.media_root}}images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
 			} else {
 				out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
 			}
@@ -406,7 +406,7 @@
 			
 			{% if d.template_data.user %}
 				{% if d.template_data.user.data.image_id %}
-					markup.find(".thumb img").attr("src", "/images/{{ d.template_data.user.data.image_id % 10 }}/{{ d.template_data.user.data.image_id }}.png");
+					markup.find(".thumb img").attr("src", "{{d.template_data.media_root}}images/{{ d.template_data.user.data.image_id % 10 }}/{{ d.template_data.user.data.image_id }}.png");
 				{% endif %}
 			
 				markup.find(".meta-hd > strong").html("<a href='/useraccount/{{ d.template_data.user.data.u_id }}'>{{ d.template_data.user.data.f_name }} {{ d.template_data.user.data.l_name|truncate(1, true, '.') }}</a>");
