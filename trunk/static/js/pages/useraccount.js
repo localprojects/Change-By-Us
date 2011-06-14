@@ -185,7 +185,7 @@
 											case "member_comment":
 												template = tc.jQ(".template-content.message-item.member-comment").clone().removeClass("template-content");
 												if (message.owner.image_id) {
-													template.find(".thumb img").attr("src", "/images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
+													template.find(".thumb img").attr("src", app_page.media_root + "images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
 												} else {
 													template.find(".thumb img").attr("src", "/static/images/thumb_genAvatar50.png").attr("alt", message.owner.name);
 												}
