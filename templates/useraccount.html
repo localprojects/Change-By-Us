@@ -87,8 +87,7 @@ Change by Us NYC - User Account
 						{% endif %}
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id) %}
-							<!-- COMMENTED OUT FOR TESTING!!!!!
-							<a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>-->
+							<a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>
 						{% endif %}
 					</ul>
 				</div>
@@ -650,9 +649,17 @@ Change by Us NYC - User Account
 		{% if d.template_data.user %}
 			app_page.data.user = {{ d.template_data.user.json }};
 		{% endif %}
-	
+		
+		{% if d.template_data.user_activity %}
+			app_page.data.contact_modal = {
+				to_u_name: '{{ d.template_data.user_activity.data.user.name }}',
+				to_u_id: {{ d.template_data.user_activity.data.user.u_id }}
+			};
+		{% endif %}
+		
 	</script>
-
+	
+	<script type="text/javascript" src='/static/js/tc.gam.contact.js'></script>
 	<script type="text/javascript" src='/static/js/pages/useraccount.js'></script>
 	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 		<script type="text/javascript" src='/static/js/pages/useraccount.admin.js'></script>
@@ -661,6 +668,8 @@ Change by Us NYC - User Account
 		<script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
 		<script type="text/javascript" src='/static/js/pages/useraccount.editable.js'></script>
 	{% endif %}
+	
+	
 
 {% endblock page_js %}
 
