@@ -13,7 +13,7 @@ import lib.web.utils as webpyutils
 class Emailer():
 
     @classmethod
-    def send_from_template(cls, addresses, subject, template_name, template_values=None, attachment=None, from_name=None, from_address=None):
+    def send_from_template(cls, addresses, subject, template_name, template_values=None, attachment=None, from_name=None, from_address=None, **kwags):
         log.info("Emailer.send_from_template (%s)" % template_name)
         try:
             html = Emailer.render(template_name, template_values)
@@ -29,7 +29,7 @@ class Emailer():
         return cls.send(addresses, subject, text, html, attachment, from_name, from_address)
 
     @classmethod
-    def send(cls, addresses, subject, text, html=None, attachment=None, from_name=None, from_address=None):
+    def send(cls, addresses, subject, text, html=None, attachment=None, from_name=None, from_address=None, **kwargs):
         log.info("Emailer.send [%s] [%s]" % (addresses, subject))
         if isinstance(addresses, basestring):
             addresses = [r.strip() for r in addresses.split(',')]
@@ -55,12 +55,13 @@ class Emailer():
 
         sender = from_name + "<" + from_address + ">"
 
-        account = Config.get('email').get('smtp')
+        # account = Config.get('email').get('smtp')
         try:
-            webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment)
+            webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment, **kwargs)
 
         except Exception, e:
             log.error("Could not send email (%s)" % e)
+            raise
             return False
         return True    
 
