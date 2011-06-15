@@ -34,6 +34,7 @@ select p.project_id
     ,u.user_id as owner_user_id
     ,u.first_name as owner_first_name
     ,u.last_name as owner_last_name
+    ,u.full_display_name as owner_full_display_name
     ,u.email as owner_email
     ,u.image_id as owner_image_id
 from project p
@@ -69,7 +70,7 @@ limit 1"""
                     editable = True,
                     info = dict(title = self.data.title,
                                 image_id = self.data.image_id,
-                                owner = smallUser(self.data.owner_user_id, self.data.owner_first_name, self.data.owner_last_name, self.data.owner_image_id),
+                                owner = smallUserDisplay(self.data.owner_user_id, self.data.owner_full_display_name, self.data.owner_image_id),
                                 mission = self.data.description,
                                 keywords = (self.data.keywords.split() if self.data.keywords else []),
                                 endorsements = dict(items = endorsements),
@@ -198,6 +199,15 @@ def smallUser(id, first, last, image):
                     name = userName(first, last))
     else:
         return None
+        
+def smallUserDisplay(id, fullDisplayName, image = None):
+    if (id and fullDisplayName):
+        return dict(u_id = id,
+                    image_id = image,
+                    name = fullDisplayName)
+    else:
+        return None
+    
   
 def userName(first, last):
     return "%s %s." % (first, last[0]) 
@@ -617,7 +627,7 @@ def unfeatureProject(db, projectId):
         return -1
              
   
-def getFeaturedProjects(db):
+def getFeaturedProjects(db, limit = 6):
     data = []
     
     try:
@@ -630,17 +640,16 @@ def getFeaturedProjects(db):
                     o.user_id as owner_user_id,
                     o.first_name as owner_first_name,
                     o.last_name as owner_last_name,
-                    o.image_id as owner_image_id, 
-                    (select count(npu.user_id) from project__user npu 
-                        inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
-                        where npu.project_id = p.project_id)  as num_members 
+                    o.full_display_name as owner_full_display_name,
+                    o.image_id as owner_image_id
                 from project p 
                 inner join featured_project fp on fp.project_id = p.project_id
                 inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
                 inner join user o on o.user_id = opu.user_id
                 where p.is_active = 1
-                order by fp.ordinal"""
-        data = list(db.query(sql))
+                order by fp.ordinal
+                limit $limit"""
+        data = list(db.query(sql, {'limit':limit}))
     except Exception, e:
         log.info("*** couldn't get featured projects")
         log.error(e)
@@ -660,6 +669,7 @@ def getFeaturedProjectsWithStats(db):
                     o.user_id as owner_user_id,
                     o.first_name as owner_first_name,
                     o.last_name as owner_last_name,
+                    o.full_display_name as owner_full_display_name,
                     o.image_id as owner_image_id, 
                     fp.updated_datetime as featured_datetime,
                     (select count(npu.user_id) from project__user npu 

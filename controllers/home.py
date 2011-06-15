@@ -83,12 +83,20 @@ class Home(Controller):
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
         
         news = self.getNewsItems()
-        leaderboardProjects = mProject.getLeaderboardProjects(self.db, 6)
         
+        homepage = Config.get('homepage')
+        
+        if (bool(homepage['is_display_leaderboard'])):
+            leaderboardProjects = mProject.getLeaderboardProjects(self.db, 6)
+            self.template_data['leaderboard'] = leaderboardProjects
+        
+        if (bool(homepage['is_display_featured_projects'])):
+            featuredProjects = mProject.getFeaturedProjects(self.db, 6)
+            self.template_data['featured_projects'] = featuredProjects
+            
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
         self.template_data['news'] = news
-        self.template_data['leaderboard'] = leaderboardProjects
         
         return self.render('home', {'locations':locations, 'all_ideas':allIdeas})
         
