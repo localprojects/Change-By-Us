@@ -20,6 +20,9 @@ Python packages:
     PIL
     oauth2
 
+    # Make sure that boto is the latest version. If on ubuntu ensure that you're not
+    # using the system boto, which is outdated. Remove the apt-installed boto,
+    # and install from pip
     boto    # necessary for AWS / SES / S3
 
 Mysql setup for the first time:

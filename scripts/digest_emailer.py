@@ -1,7 +1,9 @@
 #
 # Get a list of posts for the day
 # Send to the recipient list for this group
-#
+# TODO:
+#   * Add digest to database
+#   * Document all the functions
 # 
 
 import yaml
@@ -9,40 +11,40 @@ import os, sys
 import boto
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from optparse import OptionParser, IndentedHelpFormatter  # for command-line menu
 
 # Assuming we start in the scripts folder, we need
 # to traverse up for everything in our project
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from framework import util
 from framework.emailer import Emailer
 from lib import web
+import logging
 
-def uniquify(seq):
-    # f3() From http://www.peterbe.com/plog/uniqifiers-benchmark
-    keys = {}
-    for e in seq:
-        keys[e] = 1
-    return keys.keys()
+LOG_LEVELS = {
+  'debug': logging.DEBUG,
+  'info': logging.INFO,
+  'warning': logging.WARNING,
+  'error': logging.ERROR,
+  'critical': logging.CRITICAL }
 
-def flatten(l, ltypes=(list, tuple)):
-    '''
-    Flatten a list of lists into a single list. Not as cool as ruby's flatten, but it works
-    Thanks to: http://rightfootin.blogspot.com/2006/09/more-on-python-flatten.html
-    '''
+class Loggable():
+    def configureLogger(self):
+        conf = self.Config
+        if 'log_file' in conf and 'log_level' in conf:
+            if not os.path.exists((os.path.split(conf.get('log_file'))[0])):
+                print("Created folder for logfile %s" % conf['log_file'])
+                os.makedirs((os.path.split(conf['log_file'])[0]))
+        else:
+            return
 
-    ltype = type(l)
-    l = list(l)
-    i = 0
-    while i < len(l):
-        while isinstance(l[i], ltypes):
-            if not l[i]:
-                l.pop(i)
-                i -= 1
-                break
-            else:
-                l[i:i + 1] = l[i]
-        i += 1
-    return ltype(l)
+        print "Logging to file %s" % conf.get('log_file')
+        logging.basicConfig(filename=conf.get('log_file'),
+                            level=LOG_LEVELS.get(conf['log_level']),
+                            format='[%(asctime)s] %(levelname)s: %(message)s',
+                            filemode='a')
+        logging.info('Started logging')
 
 class Mailable():
     SESHandle = None
@@ -54,6 +56,10 @@ class Mailable():
         self.MailerSettings['FromEmail'] = settings.get('from_email')
 
         print self.MailerSettings
+        if not settings.get('aws_ses'):
+            self._enable_smtp(settings)
+            return
+
         self.SESHandle = boto.connect_ses(
           aws_access_key_id     = settings.get('aws_ses').get('access_key_id'),
           aws_secret_access_key = settings.get('aws_ses').get('secret_access_key'))
@@ -69,10 +75,32 @@ class Mailable():
             max24HourSend = 0
         max24HourSend = int(float(max24HourSend))
         if sentLast24Hours >= max24HourSend- 10:
-            enable_smtp()
+            self._enable_smtp()
 
-    def sendEmailMessage(self):
-        pass
+        self._enable_aws_ses(settings)
+
+    def _enable_smtp(self, settings):
+        smtp_config = settings.get('smtp')
+        web.webapi.config.smtp_server = smtp_config.get('host')
+        web.webapi.config.smtp_port = smtp_config.get('port')
+        web.webapi.config.smtp_starttls = smtp_config.get('starttls')
+        web.webapi.config.smtp_username = smtp_config.get('username')
+        web.webapi.config.smtp_password = smtp_config.get('password')
+
+    def _enable_aws_ses(self, settings):
+        # AWS SES config
+        ses_config = settings.get('aws_ses')
+        web.webapi.config.email_engine = 'aws'
+        web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
+        web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
+
+    def sendEmail(self, to=None, recipients=None, subject=None, body=None):
+        return Emailer.send(to,
+                        subject,
+                        body,
+                        from_name = self.MailerSettings.get('FromName'),
+                        from_address = self.MailerSettings.get('FromEmail'),
+                        bcc=recipients)
 
 
 class Configurable():
@@ -106,13 +134,14 @@ class WebpyDBConnectable():
     def executeSQL(self, sql, params):
         return self.DBHandle.query(sql, params)
 
-class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable):
+class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable, Loggable):
     Config = None
+    FromDate = None     # date that queries should use for created_datetime > filter
 
     def __init__(self, configFile=None):
-        print "Will load from config file %s" % configFile
         # Connect to the mysql database based on the params from Config.yaml
         self.Config = self.loadConfigs(config_file=configFile)
+        self.configureLogger()
         dbParams = self.Config.get('database')
         self.setupMailer(settings=self.Config.get('email'))
         self.connectDB(dbParams)
@@ -122,12 +151,10 @@ class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable):
         
     # Publicly visible functions
 
-    def getRecentMessages(self, projectId=None, fromDate=None, filterBy='member_comment'):
+    def getRecentMessages(self, projectId=None, filterBy='member_comment'):
         """
         from: datetime of last digest
         """
-        if fromDate is None:
-            raise "Cannot continue wihthout an explicit FromDate!"
 
         sql = """
 select 
@@ -157,7 +184,7 @@ order by pm.created_datetime desc
         # Should we be ordering/grouping by something other than the creationtime?
 
         # cursor = self.DBHandle.cursor()
-        comments = self.executeSQL(sql, {'id':int(projectId), 'fromDate':fromDate, 'filterBy':filterBy})
+        comments = self.executeSQL(sql, {'id':int(projectId), 'fromDate':self.FromDate, 'filterBy':filterBy})
         groups = {}
         for comment in comments:
             if not groups.get(comment.project_id):
@@ -169,13 +196,10 @@ order by pm.created_datetime desc
 
         return groups
  
-    def getRecentMembers(self, fromDate=None):
+    def getRecentMembers(self):
         """
         from: datetime of last digest
         """
-
-        if fromDate is None:
-            raise "Cannot continue wihthout an explicit FromDate!"
 
         sql = """
 select 
@@ -191,7 +215,7 @@ join project__user as pu on u.user_id = pu.user_id
 where u.created_datetime >= $fromDate
 order by pu.project_id, u.created_datetime desc
 """
-        members = self.executeSQL(sql, params = {'fromDate':fromDate})
+        members = self.executeSQL(sql, params = {'fromDate':self.FromDate})
         projects = {}
         for member in members:
             if not projects.get(member.project_id):
@@ -232,37 +256,28 @@ order by pu.project_id, u.created_datetime desc
 
         return projects
 
-    def getDataToCreateDigest(self, fromDate=None):
-        members_by_project = self.getRecentMembers(fromDate=fromDate)
-        projects = [int(p.project_id) for p in self.getProjects(fromDate=fromDate)]
-        projects.append([int(m) for m in members_by_project.keys()])
-        projects = uniquify(flatten(projects))
-        recipients_by_project = self.getProjectNotificationRecipients(projects)
+    def getDataToCreateDigest(self):
+        members_by_project = self.getRecentMembers()
+        projects_new_members = [int(m) for m in members_by_project.keys()]
+        projects = self.getProjects(projects=projects_new_members)
+        projectIds = projects.keys()
+        recipients_by_project = self.getProjectNotificationRecipients(projectIds)
 
         project_feed = {}
-        for project in projects:
-            projId = int(project)
-            print "Will get messages and recipients for project %s" % projId
-
+        for projId in projectIds:
             if project_feed.get(projId) is None:
                 project_feed[projId] = {}
 
-            messages_by_project = self.getRecentMessages(projectId=projId, fromDate=fromDate)
+            messages_by_project = self.getRecentMessages(projectId=projId)
 
             if members_by_project.get(projId) is not None:
-                if project_feed[projId].get('members') is None:
-                    project_feed[projId]['members'] = []
                 project_feed[projId]['members'] = members_by_project.get(projId)
             
             if messages_by_project:
-                if project_feed[projId].get('messages') is None:
-                    project_feed[projId]['messages'] = []
                 project_feed[projId]['messages'] = messages_by_project.get(projId)
 
-            if project_feed[projId].get('recipients') is None:
-                project_feed[projId]['recipients'] = []
             project_feed[projId]['recipients'] = recipients_by_project.get(projId)
-
+            project_feed[projId]['title'] = projects.get(projId).get('title')
         return project_feed
 
 
@@ -272,9 +287,10 @@ order by pu.project_id, u.created_datetime desc
             # Create the digest()
 
     def createDigests(self):
-        fromDate = datetime.now() + relativedelta(days=-31)
+        if not self.FromDate:
+            self.FromDate = datetime.now() + relativedelta(days=-31)
         
-        resp = self.getDataToCreateDigest(fromDate=fromDate)
+        resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
         member_profile_url = "%s/member/#" % base_url
         digests = {}
@@ -288,8 +304,9 @@ order by pu.project_id, u.created_datetime desc
             # Initialize the digest data structure
             if digests.get(projId) is None:
                 digests[projId] = {'members':[], 'messages':[], 'recipients': ""}
-            
+
             digests[projId]['recipients'] = resp[projId].get('recipients')
+            digests[projId]['title'] = resp[projId].get('title')
 
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
                 for user in resp[projId].get('members'):
@@ -317,48 +334,93 @@ order by pu.project_id, u.created_datetime desc
         resp = "%(userName)s on %(msgDate)s\n\"%(msgText)s\"" % msg_vars
         return resp
 
-    def getProjects(self, fromDate=None):
+    def getProjects(self, projects=[]):
         sql = """
-select
-    distinct pm.project_id
+select distinct
+    pm.project_id,
+    p.title
 from project_message pm
-where pm.created_datetime > $fromDate
-    and pm.message_type='member_comment'
+    join project p on pm.project_id = p.project_id
+where pm.message_type='member_comment'
+    and (pm.created_datetime > $fromDate or pm.project_id in $projects)
     order by pm.project_id
 """
-        projects = self.executeSQL(sql, params = {'fromDate':fromDate})
-        return projects
+        projectInfo = {}
+        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'projects': projects})
+        for project in results:
+            projectInfo[int(project.project_id)] = project
+        return projectInfo
 
-    def sendDigestEmail(self, recipients=None, subject=None, body=None):
-        # We can send the digest either via SES or SMTP, let's
-        # do the quota-based detection
-        return Emailer.send(recipients,
-                        subject,
-                        body,
-                        from_name = self.MailerSettings.get('FromName'),
-                        from_address = self.MailerSettings.get('FromEmail'))
+
+    def createAndSendDigests(self):
+        if not self.FromDate:
+            self.FromDate = datetime.now() + relativedelta(days=-31)
+
+        digests = self.createDigests()
+        for digest in digests:
+            subject = "%s%s\n\n" % (self.Config.get('email').get('digest_subject_prefix'), digests.get(digest).get('title'))
+            body = ""
+            body += subject + "\n\n"
+            if digests.get(digest).get('members'):
+                body += "Recent Members:\n\n"
+                body += '\n'.join(digests.get(digest).get('members'))
+                body += "\n\n\n"
+            if digests.get(digest).get('messages'):
+                body += "Recent Messages:\n\n"
+                body += '\n'.join(digests.get(digest).get('messages'))
+                body += "\n\n\n"
+
+            body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
+
+            recipients = digests.get(digest).get('recipients')
+
+            if self.Config.get('dev') == 'Yes':
+                recipients = self.Config.get('email').get('digest_email_recipients').split(',')
+
+            self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
 
 
 # End class definition
 
-# We don't want all the debug stuff that webpy gives us
-# .. especially not the SQL statements
-web.webapi.config.debug = False
+def usage():
+    print "Usage: %s -c/--configFile=<configfile> ] " % sys.argv[0]
+    sys.exit(2)
 
-gamDigest = GiveAMinuteDigest(configFile="/Users/sundar/Projects/LP/gam2/branches/webpyUpgrade/config.yaml")
-# gamDigest.sendDigestEmail(recipients=["cybertoast@gmail.com"], subject="Test", body="Test")
-digests = gamDigest.createDigests()
-for digest in digests:
-    body = "Digest for Project ID %s:\n\n" % digest
-    if digests.get(digest).get('members'):
-        body += "Recent Members:\n"
-        body += '\n\n'.join(digests.get(digest).get('members'))
-    if digests.get(digest).get('messages'):
-        body += "\n"
-        body += "Recent Messages:\n"
-        body += '\n\n'.join(digests.get(digest).get('messages'))
+def main():
+    if (len(sys.argv) == 1):
+        print "Try -h for help"
+        exit(0)
 
-    body += "\n\n"
-    body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
-    print body
-    gamDigest.sendDigestEmail(recipients=['cybertoast@gmail.com'], subject=gamDigest.Config.get('email').get('digest_subject'), body=body)
+    description = """
+Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -h for help
+    """
+
+    parser = OptionParser()
+    parser.add_option("-c", "--configFile", help="Configuration Yaml file", default="config.yaml")
+    parser.add_option("-d", "--dateFrom", help="Date to use as last digest point")
+
+    (opts, args) = parser.parse_args()
+
+    # Ensure that mandatory options exist
+    if not (opts.configFile):
+        parser.print_help()
+        exit(-1)
+    if not opts.dateFrom:
+        print "Warning: using the default start-date as 1 day ago. It's recommended that you pass in -d (--dateFrom)"
+
+    gamDigest = GiveAMinuteDigest(opts.configFile)
+    if opts.dateFrom:
+        # gamDigest.FromDate = datetime.strptime(opts.dateFrom, '%Y/%m/%d %H:%M:%S')
+        gamDigest.FromDate = opts.dateFrom
+
+    gamDigest.createAndSendDigests()
+
+
+if __name__ == "__main__":
+
+    # We don't want all the debug stuff that webpy gives us
+    # .. especially not the SQL statements
+    web.webapi.config.debug = True
+
+    main()
+    exit(0)

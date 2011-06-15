@@ -61,7 +61,7 @@ class Emailer():
 
         except Exception, e:
             log.error("Could not send email (%s)" % e)
-            raise
+
             return False
         return True    
 
