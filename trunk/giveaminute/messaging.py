@@ -142,8 +142,8 @@ def directMessageUser(db, toUserId, toName, toEmail, fromUserId, fromName, messa
         isSent = Emailer.send(email, 
                             subject, 
                             body,
-                            from_name = "NYC Change By Us",
-                            from_address = 'donotreply@nyc.changeby.us')  
+                            from_name = emailAccount['from_name'],
+                            from_address = emailAccount['from_email'])  
                             
         if (isSent):
             db.insert('direct_message', message = message, to_user_id = toUserId, from_user_id = fromUserId)
