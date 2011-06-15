@@ -447,15 +447,9 @@ class Admin(Controller):
         password = self.request('password')    
         userGroupId = util.try_f(int, self.request('role'))
         title = self.request('title')
-        organization = self.request('organization')
+        affiliation = self.request('affiliation')
         
-        if (util.strNullOrEmpty(firstName)): 
-            log.error("*** cms user submitted with no first name")
-            return False
-        elif (util.strNullOrEmpty(lastName)): 
-            log.error("*** cms user submitted with no last name")
-            return False
-        elif (util.strNullOrEmpty(email)or not util.validate_email(email)): 
+        if (util.strNullOrEmpty(email)or not util.validate_email(email)): 
             log.error("*** cms user submitted with invalid email")
             return False
         elif (util.strNullOrEmpty(password)): 
@@ -465,12 +459,12 @@ class Admin(Controller):
             log.error("*** cms user submitted with no role")
             return False
         else:
-            userId = mUser.createUser(self.db, email, password, firstName, lastName)
+            userId = mUser.createUser(self.db, email, password, firstName, lastName, affiliation = affiliation, isAdmin = (userGroupId == 1 or userGroupId == 3))
             
             # do we want to attach ideas to cms users?
             mIdea.attachIdeasByEmail(self.db, email)
 
-            mUser.assignUserToGroup(self.db, userId, userGroupId, title, organization)
+            mUser.assignUserToGroup(self.db, userId, userGroupId, title)
 
             return userId
             
