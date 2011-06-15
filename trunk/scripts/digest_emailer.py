@@ -8,13 +8,39 @@ import yaml
 import os, sys
 import boto
 
-sys.path.append("..")
-sys.path.append("..")
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from framework.emailer import Emailer
 from lib import web
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+def uniquify(seq):
+    # f3() From http://www.peterbe.com/plog/uniqifiers-benchmark
+    keys = {}
+    for e in seq:
+        keys[e] = 1
+    return keys.keys()
+
+def flatten(l, ltypes=(list, tuple)):
+    '''
+    Flatten a list of lists into a single list. Not as cool as ruby's flatten, but it works
+    Thanks to: http://rightfootin.blogspot.com/2006/09/more-on-python-flatten.html
+    '''
+
+    ltype = type(l)
+    l = list(l)
+    i = 0
+    while i < len(l):
+        while isinstance(l[i], ltypes):
+            if not l[i]:
+                l.pop(i)
+                i -= 1
+                break
+            else:
+                l[i:i + 1] = l[i]
+        i += 1
+    return ltype(l)
 
 class Mailable():
     SESHandle = None
@@ -79,12 +105,14 @@ class WebpyDBConnectable():
         return self.DBHandle.query(sql, params)
 
 class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable):
+    Config = None
+
     def __init__(self, configFile=None):
         print "Will load from config file %s" % configFile
         # Connect to the mysql database based on the params from Config.yaml
-        confs = self.loadConfigs(config_file=configFile)
-        dbParams = confs.get('database')
-        self.setupMailer(settings=confs.get('email'))
+        self.Config = self.loadConfigs(config_file=configFile)
+        dbParams = self.Config.get('database')
+        self.setupMailer(settings=self.Config.get('email'))
         self.connectDB(dbParams)
 
     # def __del__(self):
@@ -132,14 +160,14 @@ order by pm.created_datetime desc
         for comment in comments:
             if not groups.get(comment.project_id):
                 groups[comment.project_id] = []
-            groups[comment.project_id].append(comment)
+            groups[int(comment.project_id)].append(comment)
         
         if len(groups.keys()) == 0:
             return False
 
         return groups
  
-    def getRecentUsers(self, fromDate=None):
+    def getRecentMembers(self, fromDate=None):
         """
         from: datetime of last digest
         """
@@ -161,86 +189,146 @@ join project__user as pu on u.user_id = pu.user_id
 where u.created_datetime >= $fromDate
 order by pu.project_id, u.created_datetime desc
 """
-        users = self.executeSQL(sql, params = {'fromDate':fromDate})
+        members = self.executeSQL(sql, params = {'fromDate':fromDate})
         projects = {}
-        for user in users:
-            if not projects.get(user.project_id):
-                projects[user.project_id] = []
-            projects[user.project_id].append(user)
+        for member in members:
+            if not projects.get(member.project_id):
+                projects[member.project_id] = []
+            projects[int(member.project_id)].append(member)
+
+        return projects
+
+    def getProjectNotificationRecipients(self, projects=[]):
+        """
+        Get a list of all the members of a project who should receive digest emails
+        This includes admins, who might not have "digest" notification set, but since
+        they're project
+        """
+
+        sql = """
+select
+    u.user_id,
+    u.first_name,
+    u.last_name,
+    u.image_id,
+    u.email,
+    u.email_notification,
+    u.created_datetime,
+    pu.project_id
+from user u
+    join project__user as pu on u.user_id = pu.user_id
+    where pu.project_id in ($projectId)
+order by pu.project_id, u.created_datetime desc
+"""
+        # We have to map() because python is too stupid to deal with dynamic typecasting for
+        members = self.executeSQL(sql, params = {'projectId':','.join(map(str,projects))})
+        projects = {}
+        for member in members:
+            if not projects.get(member.project_id):
+                projects[member.project_id] = []
+            projects[int(member.project_id)].append(member.email)
 
         return projects
 
     def getDataToCreateDigest(self, fromDate=None):
-        users_by_project = self.getRecentUsers(fromDate=fromDate)
+        members_by_project = self.getRecentMembers(fromDate=fromDate)
+        projects = [int(p.project_id) for p in self.getProjects(fromDate=fromDate)]
+        projects.append([int(m) for m in members_by_project.keys()])
+        projects = uniquify(flatten(projects))
+        recipients_by_project = self.getProjectNotificationRecipients(projects)
 
         project_feed = {}
-        projects = self.getProjects(fromDate=fromDate)
         for project in projects:
-            projId = int(project.project_id)
-            print "Will get messages for project %s" % projId
+            projId = int(project)
+            print "Will get messages and recipients for project %s" % projId
 
             if project_feed.get(projId) is None:
                 project_feed[projId] = {}
 
             messages_by_project = self.getRecentMessages(projectId=projId, fromDate=fromDate)
 
-            if users_by_project.get(projId) is not None:
-                if project_feed[projId].get('users') is None:
-                    project_feed[projId]['users'] = []
-                project_feed[projId]['users'].append(users_by_project.get(projId))
+            if members_by_project.get(projId) is not None:
+                if project_feed[projId].get('members') is None:
+                    project_feed[projId]['members'] = []
+                project_feed[projId]['members'].append(members_by_project.get(projId))
             
             if messages_by_project:
                 if project_feed[projId].get('messages') is None:
                     project_feed[projId]['messages'] = []
                 project_feed[projId]['messages'].append(messages_by_project.get(projId))
 
+            if project_feed[projId].get('recipients') is None:
+                project_feed[projId]['recipients'] = []
+            project_feed[projId]['recipients'].append(recipients_by_project.get(projId))
+
         return project_feed
 
-        # Uniquify the list
-        # groups = dict((x[0], x) for x in groups).values()
 
         # Create the message
         # for group in groups:
         #    pass
             # Create the digest()
 
-    def createDigest(self):
+    def createDigests(self):
         fromDate = datetime.now() + relativedelta(days=-31)
         
         resp = self.getDataToCreateDigest(fromDate=fromDate)
+        base_url = self.Config.get('default_host')
+        member_profile_url = "%s/member/#" % base_url
+        digests = {}
         for projId in resp.keys():
-            body = ""
-            if resp[projId].get('users') is not None and len(resp[projId].get('users')) > 0:
-                body += "Users:\n"
-                for user in resp[projId].get('users'):
-                    body += ("<a href='http://link-to-user-profile'>%s %s</a>" % (user[0].first_name, user[0].last_name)) + "\n" 
+            # Ignore all empty projects, and projects that have no recipients
+            if ((resp[projId].get('members') is None or len(resp[projId].get('members')) == 0) and\
+                (resp[projId].get('messages') is None or len(resp[projId].get('messages')) == 0)) or\
+                resp[projId].get('recipients') is None or len(resp[projId].get('recipients')) == 0:
+               continue
+            
+            # Initialize the digest data structure
+            if digests.get(projId) is None:
+                digests[projId] = {'members':[], 'messages':[], 'recipients': ""}
+            
+            digests[projId]['recipients'] = resp[projId].get('recipients')
+            if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
+                for user in resp[projId].get('members'):
+                    username = (user[0].first_name + ' ' + user[0].last_name[1] + '.').title()
+                    digests[projId]['members'].append("<a href='%s%s'>%s</a>" % (member_profile_url, user[0].user_id, username))
             
             if resp[projId].get('messages') is not None and len(resp[projId].get('messages')) > 0:
-                body += "Messages:\n"
                 for message in resp[projId].get('messages'):
-                    body += message[0].get('message')
-                
-            print "Messages for Project %s: ..." % projId
-            print body
-            
-            
+                    digests[projId]['messages'].append(self._formatMemberMessage(message[0]))
+
+        return digests
+
+    def _formatMemberMessage(self, message):
+        """
+        The idea is to have something that looks like:
+            Dan M. on 3/23/11 at 10:09 AM
+            "I think this is great, we should really do more though to organize the event on the 14th"
+        """
+        dt = message.created_datetime
+        msgDate = '%s/%s/%s at %s:%02d %s' % (dt.month, dt.day, dt.year, (dt.hour % 12), dt.minute, 'AM' if dt.hour<12 else 'PM')
+        msg_vars = { 'userName': message.first_name + ' ' + message.last_name,
+                     'msgDate' : msgDate,
+                     'msgText' : message.message
+                    }
+        resp = "%(userName)s on %(msgDate)s\n\"%(msgText)s\"" % msg_vars
+        return resp
+
     def getProjects(self, fromDate=None):
         sql = """
-        select distinct pm.project_id
-        from project_message pm
-        where pm.created_datetime > $fromDate
-        and pm.message_type='member_comment'
-        order by pm.project_id
-        """
+select
+    distinct pm.project_id
+from project_message pm
+where pm.created_datetime > $fromDate
+    and pm.message_type='member_comment'
+    order by pm.project_id
+"""
         projects = self.executeSQL(sql, params = {'fromDate':fromDate})
         return projects
 
     def sendDigestEmail(self, recipients=None, subject=None, body=None):
         # We can send the digest either via SES or SMTP, let's
         # do the quota-based detection
-        print "MailerSettings: ..."
-        print self.MailerSettings
-
         return Emailer.send(recipients,
                         subject,
                         body,
@@ -252,4 +340,16 @@ order by pu.project_id, u.created_datetime desc
 
 gamDigest = GiveAMinuteDigest(configFile="/Users/sundar/Projects/LP/gam2/branches/webpyUpgrade/config.yaml")
 # gamDigest.sendDigestEmail(recipients=["cybertoast@gmail.com"], subject="Test", body="Test")
-gamDigest.createDigest()
+digests = gamDigest.createDigests()
+for digest in digests:
+    body = "Digest for Project ID %s:\n\n" % digest
+    if digests.get(digest).get('members'):
+        body += "Recent Members:\n"
+        body += '\n\n'.join(digests.get(digest).get('members'))
+    if digests.get(digest).get('messages'):
+        body += "\n"
+        body += "Recent Messages:\n"
+        body += '\n\n'.join(digests.get(digest).get('messages'))
+
+    # self.sendDigestEmail(recipients=digests.get(digest).get('recipients'), subject=self.Config.get('email').get('digest_subject'), body=body)
+    print body
