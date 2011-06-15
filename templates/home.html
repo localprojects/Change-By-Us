@@ -210,42 +210,84 @@ Change by Us NYC
 			<h2><a href="/search#projects">Join a project</a>. Or <a href="/create">start your own project</a>.</h2>
 		</div>
 		
-		<div class="box box-leaderboard">
-			<h3>Top <strong>{{ d.template_data.leaderboard|length }} Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
-			<ol class="leaderboard">
-				{% for item in d.template_data.leaderboard %}
-				<li {% if loop.index is even %}class="every-other"{% endif %}>
-					<table>
-						<tbody>
-							<tr>
-								<td class="num">{{ item.ordinal }}</td>
-								<td class="project-header">
-									<div class='thumb'>							
-										{% if item.image_id > 0 %}
-										<a href="/project/{{ item.project_id }}"><img width="60" height="60" src="{{d.template_data.media_root}}images/{{ item.image_id % 10 }}/{{ item.image_id }}.png" alt="" class='proj'/></a>
-										{% else %}
-										<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
-										{% endif %}
-										<span class="overlay-tag"></span>
-									</div>
-									<div class='main'>
-										<h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(45) }}</a></h1>
-										<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
-									</div>
-								</td>
-								<td class="score">{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
-							</tr>
-						</tbody>
-					</table>
-				</li>
-				{% if loop.index is even %}
-				<li class="clearrow">
-				</li>
-				{% endif %}
-				{% endfor %}
-			</ol>
-			<div style="clear:both"></div>
-		</div>
+		{% if d.template_data.homepage_is_display_leaderboard %}
+			<div class="box box-leaderboard">
+				<h3>Top <strong>{{ d.template_data.leaderboard|length }} Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
+				<ol class="leaderboard">
+					{% for item in d.template_data.leaderboard %}
+					<li {% if loop.index is even %}class="every-other"{% endif %}>
+						<table>
+							<tbody>
+								<tr>
+									<td class="num">{{ item.ordinal }}</td>
+									<td class="project-header">
+										<div class='thumb'>
+											{% if item.image_id > 0 %}
+											<a href="/project/{{ item.project_id }}"><img width="60" height="60" src="{{d.template_data.media_root}}images/{{ item.image_id % 10 }}/{{ item.image_id }}.png" alt="" class='proj'/></a>
+											{% else %}
+											<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
+											{% endif %}
+											<span class="overlay-tag"></span>
+										</div>
+										<div class='main'>
+											<h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(45) }}</a></h1>
+											<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
+										</div>
+									</td>
+									<td class="score">{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					{% if loop.index is even %}
+					<li class="clearrow">
+					</li>
+					{% endif %}
+					{% endfor %}
+				</ol>
+				<div style="clear:both"></div>
+			</div>
+		{% endif %}
+		
+		
+		
+		{% if d.homepage_is_display_featured_projects %}
+			<div class="box box-leaderboard">
+				<h3>Featured <strong>Projects</strong></h3>
+				<ol class="leaderboard">
+					{% for item in d.template_data.featured_projects %}
+					<li {% if loop.index is even %}class="every-other"{% endif %}>
+						<table>
+							<tbody>
+								<tr>
+									<td class="num">{{ loop.index }}</td>
+									<td class="project-header">
+										<div class='thumb'>
+											{% if item.image_id > 0 %}
+											<a href="/project/{{ item.project_id }}"><img width="60" height="60" src="{{d.template_data.media_root}}images/{{ item.image_id % 10 }}/{{ item.image_id }}.png" alt="" class='proj'/></a>
+											{% else %}
+											<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
+											{% endif %}
+											<span class="overlay-tag"></span>
+										</div>
+										<div class='main'>
+											<h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(45) }}</a></h1>
+											<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					{% if loop.index is even %}
+					<li class="clearrow">
+					</li>
+					{% endif %}
+					{% endfor %}
+				</ol>
+				<div style="clear:both"></div>
+			</div>
+		{% endif %}
 		
 		<div class="box box-whoslistening">
 			<h1><strong>Who's listening</strong></h1>
