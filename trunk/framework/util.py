@@ -447,3 +447,29 @@ def makeUrlAbsolute(url):
         return fixed
     else:
         return url
+
+def uniqify(seq):
+    keys = {}
+    for e in seq:
+        keys[e] = 1
+    return keys.keys()
+
+def flatten(l, ltypes=(list, tuple)):
+    '''
+    Flatten a list of lists into a single list. Not as cool as ruby's flatten, but it works
+    Thanks to: http://rightfootin.blogspot.com/2006/09/more-on-python-flatten.html
+    '''
+
+    ltype = type(l)
+    l = list(l)
+    i = 0
+    while i < len(l):
+        while isinstance(l[i], ltypes):
+            if not l[i]:
+                l.pop(i)
+                i -= 1
+                break
+            else:
+                l[i:i + 1] = l[i]
+        i += 1
+    return ltype(l)

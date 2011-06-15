@@ -7,13 +7,15 @@
 import yaml
 import os, sys
 import boto
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
+# Assuming we start in the scripts folder, we need
+# to traverse up for everything in our project
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from framework.emailer import Emailer
 from lib import web
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 def uniquify(seq):
     # f3() From http://www.peterbe.com/plog/uniqifiers-benchmark
@@ -173,7 +175,7 @@ order by pm.created_datetime desc
         """
 
         if fromDate is None:
-                        raise "Cannot continue wihthout an explicit FromDate!"
+            raise "Cannot continue wihthout an explicit FromDate!"
 
         sql = """
 select 
@@ -217,11 +219,11 @@ select
     pu.project_id
 from user u
     join project__user as pu on u.user_id = pu.user_id
-    where pu.project_id in ($projectId)
+    where pu.project_id in $projects
 order by pu.project_id, u.created_datetime desc
 """
         # We have to map() because python is too stupid to deal with dynamic typecasting for
-        members = self.executeSQL(sql, params = {'projectId':','.join(map(str,projects))})
+        members = self.executeSQL(sql, params = {'projects':projects})
         projects = {}
         for member in members:
             if not projects.get(member.project_id):
@@ -250,16 +252,16 @@ order by pu.project_id, u.created_datetime desc
             if members_by_project.get(projId) is not None:
                 if project_feed[projId].get('members') is None:
                     project_feed[projId]['members'] = []
-                project_feed[projId]['members'].append(members_by_project.get(projId))
+                project_feed[projId]['members'] = members_by_project.get(projId)
             
             if messages_by_project:
                 if project_feed[projId].get('messages') is None:
                     project_feed[projId]['messages'] = []
-                project_feed[projId]['messages'].append(messages_by_project.get(projId))
+                project_feed[projId]['messages'] = messages_by_project.get(projId)
 
             if project_feed[projId].get('recipients') is None:
                 project_feed[projId]['recipients'] = []
-            project_feed[projId]['recipients'].append(recipients_by_project.get(projId))
+            project_feed[projId]['recipients'] = recipients_by_project.get(projId)
 
         return project_feed
 
@@ -288,14 +290,15 @@ order by pu.project_id, u.created_datetime desc
                 digests[projId] = {'members':[], 'messages':[], 'recipients': ""}
             
             digests[projId]['recipients'] = resp[projId].get('recipients')
+
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
                 for user in resp[projId].get('members'):
-                    username = (user[0].first_name + ' ' + user[0].last_name[1] + '.').title()
-                    digests[projId]['members'].append("<a href='%s%s'>%s</a>" % (member_profile_url, user[0].user_id, username))
+                    username = (user.first_name + ' ' + user.last_name[1] + '.').title()
+                    digests[projId]['members'].append("<a href='%s%s'>%s</a>" % (member_profile_url, user.user_id, username))
             
             if resp[projId].get('messages') is not None and len(resp[projId].get('messages')) > 0:
                 for message in resp[projId].get('messages'):
-                    digests[projId]['messages'].append(self._formatMemberMessage(message[0]))
+                    digests[projId]['messages'].append(self._formatMemberMessage(message))
 
         return digests
 
@@ -338,6 +341,10 @@ where pm.created_datetime > $fromDate
 
 # End class definition
 
+# We don't want all the debug stuff that webpy gives us
+# .. especially not the SQL statements
+web.webapi.config.debug = False
+
 gamDigest = GiveAMinuteDigest(configFile="/Users/sundar/Projects/LP/gam2/branches/webpyUpgrade/config.yaml")
 # gamDigest.sendDigestEmail(recipients=["cybertoast@gmail.com"], subject="Test", body="Test")
 digests = gamDigest.createDigests()
@@ -351,5 +358,7 @@ for digest in digests:
         body += "Recent Messages:\n"
         body += '\n\n'.join(digests.get(digest).get('messages'))
 
-    # self.sendDigestEmail(recipients=digests.get(digest).get('recipients'), subject=self.Config.get('email').get('digest_subject'), body=body)
+    body += "\n\n"
+    body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
     print body
+    gamDigest.sendDigestEmail(recipients=['cybertoast@gmail.com'], subject=gamDigest.Config.get('email').get('digest_subject'), body=body)
