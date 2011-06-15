@@ -143,6 +143,7 @@ app_page.features.push(function(app){
 							tc.jQ('#email').addClass('always-focused disabled').attr("disabled", true);
 						};
 						
+						tc.jQ('.oops').addClass('idea-details');
 					},
 					finish:function(merlin,dom){
 						merlin.options.data = tc.jQ.extend(merlin.options.data,{
