@@ -167,8 +167,7 @@ def message(id,
             message, 
             createdDatetime, 
             userId, 
-            firstName, 
-            lastName,
+            name,
             imageId, 
             ideaId = None, 
             idea = None, 
@@ -177,7 +176,7 @@ def message(id,
             projectId = None, 
             projectTitle = None):
     if (ideaId):
-        ideaObj = smallIdea(ideaId, idea, firstName, lastName, ideaSubType)
+        ideaObj = smallIdea(ideaId, idea, None, None, ideaSubType)
     else:
         ideaObj = None
          
@@ -185,7 +184,7 @@ def message(id,
     
     return dict(message_id = id,
                 message_type = type,
-                owner = smallUser(userId, firstName, lastName, imageId),
+                owner = smallUserDisplay(userId, name, imageId),
                 body = message,
                 created = str(createdDatetime),
                 idea = ideaObj,
@@ -735,6 +734,7 @@ def getProjectsByUser(db, userId, limit = 100):
                         o.user_id as owner_user_id,
                         o.first_name as owner_first_name,
                         o.last_name as owner_last_name,
+                        o.full_display_name as owner_full_display_name,
                         o.image_id as owner_image_id, 
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
                 from project p
@@ -751,7 +751,7 @@ def getProjectsByUser(db, userId, limit = 100):
                             description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
-                            owner = smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                            owner = smallUserDisplay(item.owner_user_id, item.owner_full_display_name, item.owner_image_id),
                             num_members = item.num_members))
     except Exception, e:
         log.info("*** couldn't get projects")
@@ -797,6 +797,7 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                         o.user_id as owner_user_id,
                         o.first_name as owner_first_name,
                         o.last_name as owner_last_name,
+                        o.full_display_name as owner_full_display_name,
                         o.image_id as owner_image_id, 
                     (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
                     from project p
@@ -817,7 +818,7 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                             description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
-                            owner = smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
+                            owner = smallUserDisplay(item.owner_user_id, item.owner_full_display_name, item.owner_image_id),
                             num_members = item.num_members))
     except Exception, e:
         log.info("*** couldn't get project search data")
@@ -836,6 +837,7 @@ def getLeaderboardProjects(db, limit = 10, offset = 0):
                       u.first_name as owner_first_name,
                       u.last_name as owner_last_name,
                       u.user_id as owner_user_id,
+                      u.full_display_name as owner_full_display_name,
                       (select count(*) from project_goal pg where pg.project_id = p.project_id and pg.is_accomplished = 1 and pg.is_active)
                         as goal_count,
                       (select count(*) from project__user pu where pu.project_id = p.project_id)
@@ -1014,6 +1016,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     u.user_id,
                     u.first_name,
                     u.last_name,
+                    u.full_display_name,
                     u.image_id,
                     i.idea_id,
                     i.description as idea_description,
@@ -1034,8 +1037,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                                     item.message, 
                                     item.created_datetime, 
                                     item.user_id, 
-                                    item.first_name, 
-                                    item.last_name, 
+                                    item.full_display_name, 
                                     item.image_id,
                                     item.idea_id, 
                                     item.idea_description, 

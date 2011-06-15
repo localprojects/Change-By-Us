@@ -19,10 +19,12 @@ class User():
             self.phone = self.data.phone
             self.firstName = self.data.first_name
             self.lastName = self.data.last_name
+            self.fullDisplayName = self.data.full_display_name
             self.imageId = self.data.image_id
             self.locationId = self.data.location_id
             self.location = self.data.location_name
             self.description = self.data.description
+            self.affiliation = self.data.affiliation
             self.emailNotification = self.data.email_notification
             self.isAdmin = bool(self.data.is_admin)
             self.isModerator = bool(self.data.is_moderator)
@@ -83,10 +85,12 @@ select u.user_key
       ,u.phone
       ,u.first_name
       ,u.last_name
+      ,u.full_display_name
       ,u.image_id
       ,u.location_id
       ,l.name as location_name
       ,u.description
+      ,u.affiliation
       ,u.email_notification
       ,coalesce(u.last_account_page_access_datetime, u.created_datetime) as last_account_page_access_datetime
       ,if(ug1.user_group_id, 1, 0) as is_admin
@@ -129,7 +133,7 @@ where u.user_id = $id and u.is_active = 1"""
         # check if email already in user
         if not (findUserByEmail(self.db, self.email)):
             return False
-    
+            
         try:
             self.db.update('user', where = 'user_id = $userId', 
                             first_name = first,
@@ -137,6 +141,7 @@ where u.user_id = $id and u.is_active = 1"""
                             email = email,
                             image_id = imageId,
                             location_id = locationId,
+                            full_display_name = formatUserDisplayName(first, last, self.affiliation, (self.isAdmin or self.isLeader)),
                             vars = {'userId':self.id})
             
             return True
@@ -386,8 +391,46 @@ where u.user_id = $id and u.is_active = 1"""
             
         return num
                     
+def formatUserDisplayName(first, last, affiliation=None, isAdmin=False):
+    name = ""
+
+    if (isAdmin):
+        if (affiliation):
+            if (not first and not last):
+                name = affiliaton
+            else:
+                name = "%s %s, %s" % (first, last, affiliation)
+        else:
+            name = "%s %s" % (first, last)
+    else:
+        name = "%s %s." % (first, last[0])
         
-def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
+    return name
+    
+def updateUserDisplayName(db, userId):
+    try:
+        sql = """update user u
+left join user__user_group g1 on g1.user_id = u.user_id and g1.user_group_id = 1
+left join user__user_group g3 on g3.user_id = u.user_id and g3.user_group_id = 3
+set full_display_name = if (coalesce(g1.user_group_id, g3.user_group_id) is not null,
+                  if (u.affiliation is not null,
+                    if (u.first_name is not null and u.last_name is not null,
+                      concat(u.first_name, ' ', u.last_name, ', ', u.affiliation),
+                      u.affiliation),
+                    concat(u.first_name, ' ', u.last_name)),
+                  concat(u.first_name, ' ', substring(u.last_name, 1, 1), '.'))
+                  where u.user_id = $id"""
+                  
+        db.query(sql, {'id':userId})
+        
+        return True
+    except Exception, e:
+        log.info("*** couldn't update full display name")
+        log.error(e)
+        
+        return False
+        
+def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None, affiliation = None, isAdmin = False):
     userId = None
     key = util.random_string(10)
     encrypted_password, salt = makePassword(password)
@@ -399,7 +442,9 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
                                     salt=salt, 
                                     phone=phone, 
                                     first_name=firstName, 
-                                    last_name=lastName, 
+                                    last_name=lastName,
+                                    full_display_name = formatUserDisplayName(firstName, lastName),
+                                    affiliation=affiliation, 
                                     image_id=imageId, 
                                     location_id=locationId,
                                     created_datetime=None)
@@ -458,6 +503,8 @@ def setUserGroup(db, userId, userGroupId):
     try:
         db.delete('user__user_group', where = "user_id = $userId", vars = {'userId':userId})
         db.insert('user__user_group', user_id = userId, user_group_id = userGroupId)
+        
+        updateUserDisplayName(db, userId)
     except Exception, e:
         log.info("*** problem setting user id %s to group %s" % (userId, userGroupId))
         log.error(e)
