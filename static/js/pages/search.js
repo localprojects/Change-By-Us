@@ -109,6 +109,29 @@ app_page.features.push(function(app){
 						
 						e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 						
+						
+						single_page = false;
+						switch(name){
+							case 'project':
+							case 'resource':
+								if(e.data.carousel.data.current_page.find('td').length < e.data.carousel.data.n_to_fetch){
+									single_page = true;
+								}
+								break;
+							case 'idea':
+								if(e.data.carousel.data.current_page.find('li').length < e.data.carousel.data.n_to_fetch){
+									single_page = true;
+								}
+								break;
+						}
+						if(single_page){
+							e.data.carousel.data.current_page.next().remove();
+							if(e.data.carousel.carousel.getItems().length == 1){
+								//uncomment to hide pagniation controls.
+								//e.data.carousel.get_element().parent().parent().find('.pagination-controls.'+name).hide();
+							}
+						}
+						
 					} else {
 						e.data.carousel.data.current_page.addClass('loaded');
 						tc.jQ.ajax({
