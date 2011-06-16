@@ -407,7 +407,7 @@
 								temp = "<tr>";
 							}
 							if (resource.image_id > 0) {
-								tempImgPath = '/images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
+								tempImgPath = app_page.media_root + 'images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}
