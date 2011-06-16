@@ -639,7 +639,10 @@ def getFeaturedProjects(db, limit = 6):
                     o.first_name as owner_first_name,
                     o.last_name as owner_last_name,
                     o.full_display_name as owner_full_display_name,
-                    o.image_id as owner_image_id
+                    o.image_id as owner_image_id,
+                    (select count(npu.user_id) from project__user npu 
+                        inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
+                        where npu.project_id = p.project_id)  as num_members 
                 from project p 
                 inner join featured_project fp on fp.project_id = p.project_id
                 inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
