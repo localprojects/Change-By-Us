@@ -22,7 +22,11 @@ if(app_page.data.contact_modal){
 							next_step:'contact-message-submit',
 							inputs:{
 								message:{
-									selector:'textarea.contact-user-text'
+									selector:'textarea.contact-user-text',
+									counter:{
+										selector:'.charlimit',
+										limit:200
+									}
 								}
 							},
 							init: function(merlin, dom) {
