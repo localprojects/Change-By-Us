@@ -135,7 +135,7 @@ def directMessageUser(db, toUserId, toName, toEmail, fromUserId, fromName, messa
     subject = "Change By Us message from %s" % fromName
     link = "%suseraccount/%s" % (Config.get('default_host'), fromUserId)
     body = Emailer.render('email/direct_message',
-                        {'message':message, 'link':link},
+                        {'name':fromName, 'message':message, 'link':link},
                         suffix = 'txt')
 
     try:
