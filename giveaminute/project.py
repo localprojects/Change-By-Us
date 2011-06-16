@@ -577,6 +577,9 @@ def setLinkIsActive(db, linkId, b):
     
 def featureProject(db, projectId, ordinal = None):
     try:
+        homepage = Config.get('homepage')
+        numFeatured = homepage['num_featured_projects']
+    
         # if no ordinal submitted, find first gap
         if (ordinal < 1):
             sql = """select ordinal + 1 as first_gap from featured_project fp1
@@ -585,12 +588,12 @@ def featureProject(db, projectId, ordinal = None):
                     order by ordinal limit 1"""
             data = list(db.query(sql))
         
-            if (len(data) > 0 and data[0].first_gap < 6):
+            if (len(data) > 0 and data[0].first_gap <= numFeatured):
                 ordinal = data[0].first_gap
             else:
                 ordinal = 1
             
-        if (ordinal > 5):
+        if (ordinal > numFeatured):
             log.error("*** couldn't feature project id %s, too many featured projects")
             return False
         else:
