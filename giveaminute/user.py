@@ -398,7 +398,7 @@ def formatUserDisplayName(first, last, affiliation=None, isAdmin=False):
     if (isAdmin):
         if (affiliation):
             if (not first and not last):
-                name = affiliaton
+                name = affiliation
             else:
                 name = "%s %s, %s" % (first, last, affiliation)
         else:
@@ -444,7 +444,7 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
                                     phone=phone, 
                                     first_name=firstName, 
                                     last_name=lastName,
-                                    full_display_name = formatUserDisplayName(firstName, lastName),
+                                    full_display_name = formatUserDisplayName(firstName, lastName, affiliation, isAdmin),
                                     affiliation=affiliation, 
                                     image_id=imageId, 
                                     location_id=locationId,
@@ -546,7 +546,7 @@ def authenticateUser(db, email, password):
         return None
 
 def authGetUser(db, email, password):
-    sql = "select user_id, first_name, last_name, image_id, email, password, salt from user where email = $email and is_active = 1"
+    sql = "select user_id, first_name, last_name, full_display_name, image_id, email, password, salt from user where email = $email and is_active = 1"
     data = db.query(sql, {'email':email})
     
     if (len(data) > 0):
@@ -555,7 +555,7 @@ def authGetUser(db, email, password):
     
         if (hashed_password[0] == user.password):
             log.info("*** User authenticated")
-            return mProject.smallUser(user.user_id, user.first_name, user.last_name, user.image_id)
+            return mProject.smallUserDisplay(user.user_id, user.full_display_name, user.image_id)
         else:
             log.warning("*** User not authenticated for email = %s" % email)
             return None
@@ -618,7 +618,7 @@ def getAdminUsers(db, limit = 10, offset = 0):
 
     try:
         sql = """select distinct 
-                    u.user_id, u.email, u.first_name, u.last_name
+                    u.user_id, u.email, u.first_name, u.last_name, u.full_display_name
                     ,if(ug1.user_group_id, 1, 0) as is_admin
                     ,if(ug2.user_group_id, 1, 0) as is_moderator
                     ,if(ug3.user_group_id, 1, 0) as is_leader
