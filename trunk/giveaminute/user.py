@@ -481,6 +481,9 @@ def createUserFromAuthGuid(db, authGuid):
 def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
     encrypted_password, salt = makePassword(password)
     
+    if (findUserByEmail(db, email)):
+        return False
+    
     try:
         db.insert('unauthenticated_user', auth_guid=authGuid,
                                     email=email, 
@@ -577,7 +580,7 @@ def makePassword(password, salt = None):
     return [hashed_password, salt]   
     
 def findUserByEmail(db, email):
-    sql = "select user_id from user where email = $email and is_active = 1 limit 1"
+    sql = "select user_id from user where email = $email limit 1"
     data = list(db.query(sql, vars = locals()))
     
     if len(data) > 0:
@@ -586,7 +589,7 @@ def findUserByEmail(db, email):
         return None
     
 def findUserByPhone(db, phone):
-    sql = "select user_id from user where phone = $phone and is_active = 1 limit 1"
+    sql = "select user_id from user where phone = $phone limit 1"
     data = list(db.query(sql, vars = locals()))
     
     if len(data) > 0:
