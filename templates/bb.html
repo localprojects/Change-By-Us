@@ -167,7 +167,7 @@
 			
 			
 				<div class="step about">
-					<h1>Change by Us NYC <span class="unbold">is a new website created by Local Projects and run by the City of New York. It’s a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live. We’re kicking things off by asking how we can make our city greener. Get started today.</span></h1>
+					<h1>Change by Us NYC <span class="unbold">is a new website created by Local Projects and run by the City of New York. It’s a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live. We’re kicking things off by asking how we can make our city greener. <a href="#" class="get-started">Get started today.</a></span></h1>
 				</div><!--end step-->
 			
 			</div><!--end .continent-->
@@ -625,6 +625,10 @@
 								selector: ".step.about",
 								init: function(merlin, dom) {
 									window.scroll(0, 0);
+									dom.find(".get-started").unbind("click").bind("click", function(e) {
+										e.preventDefault();
+										merlin.show_step("start");
+									});
 								}
 							}
 						}
