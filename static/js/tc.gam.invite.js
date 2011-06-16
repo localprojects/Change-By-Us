@@ -9,6 +9,7 @@ tc.gam.ideas_invite = function(app,elements) {
 		init:function(modal,event_target,callback){
 			var modal_merlin;
 			modal_merlin = new tc.merlin(app,{
+				use_hashchange: false,
 				name:'ideas_invite',
 				dom:modal.options.element.find('.invite-user'),
 				next_button: tc.jQ('a.submit'),
@@ -32,7 +33,8 @@ tc.gam.ideas_invite = function(app,elements) {
 							
 							if(dom.find('.project-radio').length == 1){
 								dom.find('.project-radio').first().attr('checked',true);
-								window.location.hash = 'ideas_invite,invite-message-info';
+								merlin.show_step("invite-message-info");
+								return;
 							}
 							
 							name = tc.jQ(event_target).attr("href").split(",")[2];
@@ -75,7 +77,8 @@ tc.gam.ideas_invite = function(app,elements) {
 							var name;
 							
 							if(!merlin.options.data.project_id){
-								window.location.hash = 'ideas_invite,invite-message-project-info'
+								merlin.show_step("invite-message-project-info");
+								return;
 							}
 							
 							name = tc.jQ(event_target).attr("href").split(",")[2];
@@ -105,7 +108,7 @@ tc.gam.ideas_invite = function(app,elements) {
 								dataType:"text",
 								success: function(data, ts, xhr) {
 									if (data == "False") {
-										window.location.hash = "ideas_invite,invite-message-error";
+										merlin.show_step("invite-message-error");
 										return false;
 									}
 									tc.jQ(event_target).addClass("disabled").text("Invited").unbind("click").bind("click", function(e) {
