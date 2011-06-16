@@ -112,10 +112,9 @@ limit 1"""
     def getEndorsements(self):
         endorsements = []
         
-        sql = """select u.user_id, u.first_name, u.last_name, u.image_id, pl.title, pl.organization 
+        sql = """select u.user_id, u.full_display_name, u.image_id 
                     from project_endorsement pe
                     inner join user u on pe.user_id = u.user_id  
-                    left join project_leader pl on pl.user_id = u.user_id
                     where pe.project_id = $id"""
                 
         try:
@@ -123,7 +122,7 @@ limit 1"""
             
             if len(data) > 0:
                 for item in data:
-                    endorsements.append(endorsementUser(item.user_id, item.first_name, item.last_name, item.image_id, item.title, item.organization))
+                    endorsements.append(smallUserDisplay(item.user_id, item.full_display_name, item.image_id))
         except Exception, e:
             log.info("*** couldn't get project endorsements")
             log.error(e)                  
