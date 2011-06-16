@@ -39,7 +39,8 @@ class Emailer():
             msg.attach(MIMEText(text, 'plain'))
             msg.attach(MIMEText(html, 'html'))
         else:
-            msg = MIMEText(text, 'plain')
+            # msg = MIMEText(text, 'plain')
+            msg = text
 
         if attachment:
             tmpmsg = msg

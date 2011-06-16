@@ -240,14 +240,17 @@ select
     u.email,
     u.email_notification,
     u.created_datetime,
-    pu.project_id
+    pu.project_id,
+    pu.is_project_admin
 from user u
     join project__user as pu on u.user_id = pu.user_id
-    where pu.project_id in $projects
+where pu.project_id in $projects
+    and (u.email_notification = $digestNotifyFlag or pu.is_project_admin = 1)
+
 order by pu.project_id, u.created_datetime desc
 """
         # We have to map() because python is too stupid to deal with dynamic typecasting for
-        members = self.executeSQL(sql, params = {'projects':projects})
+        members = self.executeSQL(sql, params = {'projects':projects, 'digestNotifyFlag':'digest'})
         projects = {}
         for member in members:
             if not projects.get(member.project_id):
@@ -374,8 +377,8 @@ where pm.message_type='member_comment'
 
             recipients = digests.get(digest).get('recipients')
 
-            if self.Config.get('dev') == 'Yes':
-                recipients = self.Config.get('email').get('digest_email_recipients').split(',')
+            if self.Config.get('dev'):
+                recipients = self.Config.get('email').get('digest_debug_recipients').split(',')
 
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
 
@@ -397,7 +400,7 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
 
     parser = OptionParser()
     parser.add_option("-c", "--configFile", help="Configuration Yaml file", default="config.yaml")
-    parser.add_option("-d", "--dateFrom", help="Date to use as last digest point")
+    parser.add_option("-d", "--dateFrom", help="Date to use as last digest point, in mysql compatible format")
 
     (opts, args) = parser.parse_args()
 
