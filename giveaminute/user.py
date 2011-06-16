@@ -525,7 +525,7 @@ def setUserOncallStatus(db, userId, status):
         return False
     
 def authenticateUser(db, email, password):
-    sql = "select user_id, email, password, salt from user where email = $email"
+    sql = "select user_id, email, password, salt from user where email = $email and is_active = 1"
     data = db.query(sql, {'email':email})
     
     if (len(data) > 0):
@@ -543,7 +543,7 @@ def authenticateUser(db, email, password):
         return None
 
 def authGetUser(db, email, password):
-    sql = "select user_id, first_name, last_name, image_id, email, password, salt from user where email = $email"
+    sql = "select user_id, first_name, last_name, image_id, email, password, salt from user where email = $email and is_active = 1"
     data = db.query(sql, {'email':email})
     
     if (len(data) > 0):
