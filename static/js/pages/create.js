@@ -68,7 +68,7 @@
 					prev_step:null,
 					next_step:'location',
 					title:'Turn ideas into solutions.',
-					sub_title:'<strong>' + (app.app_page.data.user ? app.app_page.data.user : 'Hey') + ', </strong> let\'s get started. The first step is to create a project.',
+					sub_title:'<strong>' + (app.app_page.data.user ? app.app_page.data.user.f_name : 'Hey') + ', </strong> let\'s get started. The first step is to create a project.',
 					use_for_history:true,
 					step_data:{
 						timer:null
