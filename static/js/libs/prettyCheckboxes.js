@@ -41,10 +41,10 @@
 			$input.addClass('hiddenCheckbox').addClass('has-prettycheckbox');
 			
 			// Associate the click event
-			$label.unbind('click').bind('click', {input:$input}, function(e,d){
+			$label.unbind('click fake-click').bind('click fake-click', {input:$input}, function(e,d){
 				var $label;
 				$label = $(this);
-				//e.data.input.triggerHandler('click');
+
 				if(e.data.input.is(':checkbox')){
 					$label.toggleClass('checked');
 					if(e.data.input.attr('checked') == true){
@@ -74,8 +74,6 @@
 					e.data.input.trigger('change');
 				}
 				
-				// fixes IE bug (see #1500)
-				//e.preventDefault();
 			});
 			
 			$('input#' + $label.attr('for')).unbind('keypress').bind('keypress', {label:$label}, function(e){
