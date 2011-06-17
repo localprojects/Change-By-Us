@@ -25,6 +25,8 @@ Python packages:
     # and install from pip
     boto    # necessary for AWS / SES / S3
 
+    python-dateutil # necessary for digest_emaile.py
+
 Mysql setup for the first time:
     mysql -u root -p
     > create database gam2; grant all on gam2.* to gam@localhost identified by 'gam';
