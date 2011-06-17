@@ -110,8 +110,12 @@
 							}
 						},
 						init:function(merlin,dom){
-							merlin.current_step.inputs.title.dom.val('Title');//.removeClass('has-been-focused').removeClass('has-attempted-submit');
-							merlin.current_step.inputs.url.dom.val('URL');//.removeClass('has-been-focused').removeClass('has-attempted-submit');
+							merlin.current_step.inputs.title.dom.removeClass('has-been-focused').removeClass('has-attempted-submit').val('').triggerHandler('keyup');
+							merlin.current_step.inputs.url.dom.removeClass('has-been-focused').removeClass('has-attempted-submit').val('').triggerHandler('keyup');
+							
+							merlin.current_step.inputs.title.dom.val('Title');
+							merlin.current_step.inputs.url.dom.val('URL');
+							
 						},
 						finish:function(merlin,dom){
 							merlin.options.data = tc.jQ.extend(merlin.options.data,{
