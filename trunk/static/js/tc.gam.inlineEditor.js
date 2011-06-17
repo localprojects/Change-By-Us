@@ -48,6 +48,7 @@ tc.inlineEditor.prototype = {
 	},
 	edit: function() {
 		var field;
+		tc.util.log("edit");
 		if (this.state === "edit") { return; }
 		
 		this.content.html("<textarea class='data serif'>"+ (this.data || "") + "</textarea>");

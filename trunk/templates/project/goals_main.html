@@ -269,6 +269,15 @@
 			}
 		};
 		
+		function init_carousel() {
+			if (me.carousel) {
+				me.carousel.destroy();
+			}
+			me.carousel = new tc.carousel({
+				element: me.dom.find(".carousel")
+			});
+		}
+		
 		function setup_events() {
 			tc.util.log("project.goals_main.setup_events");
 			me.dom.find('a.close').unbind('click').bind('click', { project:project, me:me }, me.handlers.remove_goal);
@@ -330,19 +339,25 @@
 		
 		this.handle_goals = function(data){
 			var i, list, temphtml, n_goals;
-			if(!data.length){
+			
+			list = this.dom.find('ul.items');
+			
+			if (data.length === 0) {
 				this.elements.state_not_empty.hide();
 				this.elements.state_empty.show();
+				this.dom.find(".counter").text("0");
+				list.empty();
+				init_carousel();
 				return;
-			} else {
-				this.elements.state_empty.hide();
-				this.elements.state_not_empty.show();
 			}
+			
+			this.elements.state_empty.hide();
+			this.elements.state_not_empty.show();
 			this.dom.find('.counter').text(data.length);
-			list = this.dom.find('ul.items');
+			
 			n_goals = list.children().length;
 			if (!this.carousel.is_rendered()) {
-				
+
 				for(i in data){
 					if(data[i].active){
 						list.append(this.generate_goal(data[i]));
@@ -355,7 +370,7 @@
 				}
 				this.carousel.render();
 				
-			} else {
+			} else {				
 				this.carousel.carousel.getItems().remove();
 				for(i in data){
 					if(data[i].active){
@@ -377,11 +392,8 @@
 			setup_events();
 		};
 		
-		this.carousel = new tc.carousel({
-			element: this.dom.find(".carousel")
-		});
 		
-		
+		init_carousel();
 		setup_events();
 		
 		if (this.carousel.carousel) {
@@ -393,7 +405,8 @@
 				var has_items;
 				has_items = me.carousel.has_items();
 				if (has_items) {
-					me.dom.find('.goals-empty').hide().siblings('.goals-display').show();
+					me.elements.state_empty.hide();
+					me.elements.state_not_empty.show();
 				}
 				widget.show(propagate);
 				if (has_items && !me.carousel.is_rendered()) {

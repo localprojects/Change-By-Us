@@ -29,9 +29,19 @@ tc.carousel.prototype.init = function(options) {
 	}
 };
 
+tc.carousel.prototype.destroy = function() {
+	this.options.element.find(this.options.scrollPaneSelector).removeData("scrollable");
+	if (this.next_btn) {
+		this.next_btn.unbind("click");
+	}
+	if (this.prev_btn) {
+		this.prev_btn.unbind("click");
+	}	
+};
+
 tc.carousel.prototype.render = function() {
 	var me, scrollpane, w, h;
-	tc.util.log("tc.carousel.render");
+	tc.util.log("tc.carousel.render", "warn");
 	if (this.rendered === true) { 
 		tc.util.log("carousel already rendered!!!", "warn");
 		return;
