@@ -340,9 +340,9 @@ Change by Us NYC - CMS Content
 	
 	<div class="template-content modal-content confirm-delete content-delete">
 		<div class="step">
-			<h2><strong>Delete</strong> this <span class='item-type-name'></span>?</h2>
+			<h2><strong>Delete</strong> this <span class='item-type-name'>&nbsp;</span>?</h2>
 			<div>
-				<p>You are about to delete this <span class='item-type-name'></span> from the system permanently! <br/>Are you sure?</p>
+				<p>You are about to delete this <span class='item-type-name'>&nbsp;</span> from the system permanently! <br/>Are you sure?</p>
 			</div>
 			<div class="actions">
 				<a class="submit rounded-button" href="#">Yes, Delete <span class='item-type-name'></span></a>
@@ -653,9 +653,11 @@ Change by Us NYC - CMS Content
 						break;	
 				}
 				
+				tc.util.dump(tc.jQ('.modal-content.content-delete'));
+				
 				e.data.app.components.modal.show({
 					app:e.data.app,
-					source_element:tc.jQ('.modal-content.content-delete'),
+					source_element:tc.jQ('.modal-content.content-delete').first(),
 					init:function(modal,callback){
 						modal.options.element.find('.item-type-name').text(modal_values.item_type_name);
 						if(tc.jQ.isFunction(callback)){
@@ -790,7 +792,7 @@ Change by Us NYC - CMS Content
 								}
 								this.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
 								this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
-								this.components.resources_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
+								this.components.resources_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
 								this.components.resources_pagination.data.current_page.find('input[type=checkbox],input[type=radio]').not('.has-prettycheckbox').prettyCheckboxes();
 							}
 						});
@@ -893,7 +895,7 @@ Change by Us NYC - CMS Content
 									this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
 								}
 								this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
-								this.components.warning_pagination.data.current_page.find('a.control-delete').bind('click', {app:this}, this.components.content_functions.delete_content);
+								this.components.warning_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
 							}
 						});
 					}
