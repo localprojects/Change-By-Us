@@ -43,6 +43,10 @@
 			offset = app.app_page.data.user_activity.messages.length - 1;
 		}
 		
+		if(window.location.hash == ''){
+			window.location.hash = 'user-account,activity';
+		} 
+		
 		app.components.user_page_merlin = new tc.merlin(app,{
 			name: "user-account",
 			dom:tc.jQ('.midlands.merlin'),
