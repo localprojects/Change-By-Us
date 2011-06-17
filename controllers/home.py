@@ -51,20 +51,26 @@ class Home(Controller):
                 return self.login()
         elif (action == 'logout'):
             return self.logout()
-        elif (action == 'login_twitter'):
-            return self.login_twitter()
-        elif (action == 'login_facebook'):
-            return self.login_facebook() 
-        elif (action == 'twitter_callback'):
-            return self.tw_authenticated()
-        elif (action == 'login_twitter_create'):
-            return self.login_twitter_create()
-        elif (action == 'login_facebook_create'):
-            return self.login_facebook_create()
-        elif (action == 'disconnect_facebook'):
-            return self.disconnect_facebook()
-        elif (action == 'disconnect_twitter'):
-            return self.disconnect_twitter()
+        elif (action == 'facebook'):
+            if (param0 == 'login'):
+                return self.login_facebook() 
+            elif (param0 == 'create'):
+                return self.login_facebook_create()
+            elif (param0 == 'disconnect'):
+                return self.disconnect_facebook()
+            else:
+                return self.not_found()                    
+        elif (action == 'twitter'):
+            if (param0 == 'login'):
+                return self.login_twitter()
+            elif (param0 == 'callback'):
+                return self.tw_authenticated()
+            elif (param0 == 'create'):
+                return self.login_twitter_create()
+            elif (param0 == 'disconnect'):
+                return self.disconnect_twitter()
+            else:
+                return self.not_found()
         elif (action == 'feedback'):
             return self.submitFeedback()
         elif (action == 'beta' and param0 == 'submit'):
