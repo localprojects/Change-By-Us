@@ -492,10 +492,13 @@ app_page.features.push(function(app){
 							context:$t,
 							dataType:'text',
 							success:function(data,ts,xhr){
+								var newcount;
 								if(data == 'False'){
 									return false;
 								}
-								this.parents('.results-ideas').find('.counter.active').text((Number(this.parents('.results-ideas').find('.counter.active').text()) - 1));
+								newcount = (Number(this.parents('.results-ideas').find('.counter.active').text()) - 1);
+								this.parents('.results-ideas').find('.counter.active').text(newcount);
+								tc.jQ('.sidebar-item.ideas .counter').text(newcount);
 								this.parent().parent().parent().animate({
 									width:0
 								}, 400, 'easeOutCubic', function(e,d){
@@ -526,6 +529,9 @@ app_page.features.push(function(app){
 								context:$t,
 								dataType:'text',
 								success:function(data,ts,xhr){
+									if(data == 'False'){
+										return false;
+									}
 									location.reload(true);
 								}
 							});
@@ -552,6 +558,9 @@ app_page.features.push(function(app){
 							context:app,
 							dataType:'text',
 							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
+								}
 								location.reload(true);
 							}
 						});
