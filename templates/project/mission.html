@@ -10,20 +10,13 @@
 	</div>
 
 	<div class="bd clearfix">
-		{% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}
-			<div class="our-mission editable">
-		{% else %}
-			<div class="our-mission">
-		{% endif %}
+		<div class="our-mission">
 			<div class="sub-hd clearfix">
 				<h3>Our Mission</h3>
-				<div class="inline-edit-controls" style="display:none;">
-					<a href="#" class="ca-btn save-btn">Save</a>
-					<a href="#" class="cancel-btn">Cancel</a>
-				</div>
+				<div class="inline-edit-controls"></div>
 			</div>
 			<div class="sub-bd serif">
-				<p class='mission-text'>{{ d.template_data.project.data.info.mission }}</p>
+				<div class='mission-text editable-content'>{{ d.template_data.project.data.info.mission }}</div>
 			</div>
 		</div>
 		<div class="endorsements" style="{% if d.template_data.project.data.info.endorsements['items']|length == 0 and (d.template_data.user == False or (d.template_data.user and d.template_data.user.data.is_leader == False)) %}display:none;{% endif %}">
@@ -153,70 +146,25 @@
 		data = this.options.app.app_page.data;
 		this.data = data;
 		this.dom = dom;
-		this.editable = {% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}true{% else %}false{% endif %};
-		this.edit_mode = false;
+		this.is_editable = {% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}true{% else %}false{% endif %};
 		
-		if (this.editable) {
-			this.dom.addClass("can-edit");
-		}
 		widget = tc.gam.widget(this,project);
 		this.elements = {
 			mission: {
-				edit_controls: null,
-				textpane: null,
 				init: function(element) {
-					if (me.editable) {
-						me.elements.mission.edit_controls = element.find(".inline-edit-controls");
-						me.elements.mission.textpane = element.find(".sub-bd");
-						
-						me.elements.mission.edit_controls.children(".save-btn").bind(
-							"click",
-							{ project:project, me:me },
-							me.handlers.our_mission_save
-						);
-						me.elements.mission.edit_controls.children(".cancel-btn").bind(
-							"click",
-							{ project:project, me:me },
-							me.handlers.our_mission_cancel
-						);
-						
-						me.elements.mission.textpane.bind("click", { project:project, me:me }, me.handlers.our_mission_clicked);
-					} else {
-						
-					}
-				},
-				edit: function() {
-					me.edit_mode = true;
-					me.elements.mission.edit_controls.show();
-					me.elements.mission.textpane.html("<div class='form-pane'><div class='fields'><textarea>"+ 
-							data.project.info.mission +
-							"</textarea></div></div>");
-				},
-				display: function() {
-					me.edit_mode = false;
-					me.elements.mission.edit_controls.hide();
-					me.elements.mission.textpane.html("<p>"+ data.project.info.mission +"</p>");
-				},
-				save: function() {
-					var text;
-					text = me.elements.mission.textpane.find("textarea").val();
-					tc.jQ.ajax({
-						url: "/project/description",
-						data: {
-							project_id: me.options.app.app_page.data.project.project_id,
-							text: text
-						},
-						context: me,
-						type: "POST",
-						dataType: "text",
-						success: function(data,ts,xhr) {
-							if (data == "False") {
-								return;
+					if (me.is_editable) {
+						element.addClass("mod-inline-edit");
+						new tc.inlineEditor({
+							dom: element,
+							service: {
+								url: "/project/description",
+								param: "text",
+								post_data: {
+									project_id: me.options.app.app_page.data.project.project_id
+								}
 							}
-							this.data.project.info.mission = text;
-							this.elements.mission.display();
-						}
-					});
+						});
+					}
 				}
 			},
 			endorsements: {
@@ -281,21 +229,6 @@
 			}
 		};
 		this.handlers = {
-			our_mission_save: function(e, d) {
-				e.preventDefault();
-				e.data.me.elements.mission.save();
-			},
-			our_mission_cancel: function(e, d) {
-				e.preventDefault();
-				e.data.me.elements.mission.display();
-			},
-			our_mission_clicked: function(e, d) {
-				if (e.data.me.edit_mode) {
-					
-				} else {
-					e.data.me.elements.mission.edit();
-				}
-			},
 			add_keyword_clicked: function(e, d) {
 				e.preventDefault();
 				e.data.me.elements.keywords.add_keywords();
@@ -434,7 +367,7 @@
 		this.dom.find('a.endorse-button').unbind('click').bind('click', {project:project,me:this}, this.handlers.endorse_project);
 		this.dom.find('a.remove-endorse').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_endorse);
 		
-		this.elements.mission.init( this.dom.find(".our-mission.editable") );
+		this.elements.mission.init( this.dom.find(".our-mission") );
 		this.elements.location_map.init();
 		this.elements.keywords.init( this.dom.find(".keywords") );
 		

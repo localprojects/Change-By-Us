@@ -305,11 +305,13 @@
 		this.handle_goals = function(data){
 			var i, list, temphtml;
 			list = this.dom.find('.goals-stack');
-			list.children().remove();
-			this.dom.find('.counter').text(data.length);
-			if(!data.length){
+			list.empty();
+			
+			if (data.length === 0) {
+				this.dom.find('.counter').text("0");
 				return;
 			}
+			this.dom.find('.counter').text(data.length);
 			for(i in data){
 				if(data[i].active){
 					list.append(this.generate_markup(data[i]));
