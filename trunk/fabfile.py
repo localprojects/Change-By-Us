@@ -22,6 +22,7 @@ env.scm = "svn"
 
 # repo_path can be either a local
 env.repo_path = "http://svn.localprojects.net/gam2"
+# env.repo_path = "/Users/sundar/Projects/LP/gam2"
 # env.repo_path = "git@git.assembla.com:lp-cbu"
 
 
@@ -127,7 +128,6 @@ def setup_directories():
     Create directories necessary for deployment.
     """
     # First set up the system paths for the server/services
-    run('mkdir -p %(')
     run('mkdir -p %(app_path)s' % env)
     run('mkdir -p %(app_path)s/releases' % env)
 
@@ -168,7 +168,7 @@ def export_latest_code():
         local('cd %(tmp_path)s && tar -czf %(release)s.tgz .' % env)
 
     put('%(tmp_path)s/%(release)s.tgz' % env, '%(app_path)s/releases/' % env)
-    run('cd %(app_path)s/releases/ && tar -xvf %(release)s.tgz && rm rf %(release)s.tgz' % env)
+    run('cd %(app_path)s/releases/ && tar -xvf %(release)s.tgz && if [ -e %(release)s.tgz ];then rm rf %(release)s.tgz fi' % env)
 
     # Don't delete the local copy in case we need to debug - that will be done on the next cycle
 
@@ -233,14 +233,17 @@ def deploy():
     # require('branch', provided_by=[stable, master, branch])
     env.release = time.strftime('%Y%m%d%H%M%S')
 
-    with settings(warn_only=True):
-        maintenance_up()
+    # with settings(warn_only=True):
+    #    maintenance_up()
 
-    checkout_latest()
-    gzip_assets()
-    deploy_to_s3()
-    refresh_widgets()
-    maintenance_down()
+    export_latest_code()
+    symlink_current_release()
+
+    # checkout_latest()
+    # gzip_assets()
+    # deploy_to_s3()
+    # refresh_widgets()
+    # maintenance_down()
 
 def maintenance_up():
     """
