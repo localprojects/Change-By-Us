@@ -92,7 +92,8 @@ class CreateProject(Controller):
     
     def uploadImage(self):
         if (len(self.request('qqfile')) > 100):
-            data = self.request('qqfile')
+            log.info("*** == %s" % type(web.input()['qqfile']))
+            data = web.input()['qqfile']
         else:
             data = web.data()
         
