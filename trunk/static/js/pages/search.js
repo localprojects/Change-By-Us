@@ -232,6 +232,8 @@ app_page.features.push(function(app){
 				
 				out.find('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
 				
+				tempcell.find('tr:last').addClass('last-row');
+				
 				return out;
 			}
 		});
@@ -274,6 +276,9 @@ app_page.features.push(function(app){
 				out.find('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
 				out.find('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
 				app.components.tooltips.add_trigger(out.find('.resource-tooltip_trigger'));
+				
+				tempcell.find('tr:last').addClass('last-row');
+				
 				return out;
 			},
 			appended:function(dom){
