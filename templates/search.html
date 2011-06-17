@@ -91,7 +91,7 @@ Change by Us NYC - Search Results
 												<tbody>
 													{% for project in d.template_data.results.data.projects %}
 														{% if loop.index is odd %}
-														<tr>
+														<tr {% if loop.index == 5 %}class='last-row'{% endif %} >
 														{% endif %}
 															<td>
 																{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
@@ -187,7 +187,7 @@ Change by Us NYC - Search Results
 											<tbody>
 												{% for resource in d.template_data.results.data.resources %}
 													{% if loop.index % 3 == 1 %}
-													<tr>
+													<tr {% if loop.index == 4%}class='last-row'{% endif %} >
 													{% endif %}
 														<td {% if resource.is_official %}class="official-resource"{% endif %}>
 															{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
