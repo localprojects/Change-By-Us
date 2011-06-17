@@ -102,7 +102,7 @@ class Mailable():
                         from_address = self.MailerSettings.get('FromEmail'),
                         bcc=recipients)
 
-
+        
 class Configurable():
     def loadConfigs(self, config_file, section=None):
         if not os.path.exists(config_file):
@@ -373,17 +373,33 @@ where pm.message_type='member_comment'
                 body += '\n'.join(digests.get(digest).get('messages'))
                 body += "\n\n\n"
 
-            body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
-
             recipients = digests.get(digest).get('recipients')
 
             if self.Config.get('dev'):
+                body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
                 recipients = self.Config.get('email').get('digest_debug_recipients').split(',')
 
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
+            
+            # Finally, save the email that we sent to the database, for future reference
+            # self.saveDigestToDB(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
 
+    def saveDigestToDB(self, to=None, recipients=None, subject=None, body=None):
+        """
+        Once the email is sent we need to save the email to a table, defined by config
+        """
+        sql = """
+insert 
+into gam2.digest
+    (sender, to, recipients, subject, body, start_datetime, created_datetime)
+values
+    ($(sender)s, ${to)s, $(recipients)s, $(subject)s, $(body), $(fromDate)s, NOW(), 
+"""
+        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'sender': self.Config.get('email').get('from_email'), 
+                                                 'recipients': recipients, 'subject':subject, 'body': body})
+        
 
-# End class definition
+# /GiveAMinuteDigest class 
 
 def usage():
     print "Usage: %s -c/--configFile=<configfile> ] " % sys.argv[0]
