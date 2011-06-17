@@ -6,7 +6,7 @@
 			$(".connect-facebook").closest(".social-networking").addClass("facebook-connected");
 			$(".disconnect-facebook").click(function(event){
 				event.preventDefault();
-				$.getJSON("/disconnect_facebook", function(data){     
+				$.getJSON("/facebook/disconnect", function(data){     
 					if(data.success) {
 						$(".connect-facebook").closest(".social-networking").removeClass("facebook-connected");
 					}
@@ -23,7 +23,7 @@
 			$(".connect-twitter").closest(".social-networking").addClass("twitter-connected");
 			$(".disconnect-twitter").click(function(event){
 				event.preventDefault();
-				$.getJSON("/disconnect_twitter", function(data){
+				$.getJSON("/twitter/disconnect", function(data){
 					if(data.success) {
 						$(".connect-twitter").closest(".social-networking").removeClass("twitter-connected");
 					}
@@ -46,6 +46,7 @@
 		app.components.user_page_merlin = new tc.merlin(app,{
 			name: "user-account",
 			dom:tc.jQ('.midlands.merlin'),
+			allow_hash_override_onload:true,
 			first_step:'activity',
 			steps:{
 				'activity':{
