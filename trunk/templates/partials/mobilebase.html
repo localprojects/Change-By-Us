@@ -115,40 +115,7 @@
 				{% if d.template_data and d.template_data.locations %} 
 					window.app_page.data.locations = {{ d.template_data.locations.json }}; 
 				{% endif %}
-			
-				window.fbAsyncInit = function() {
-					window.FB.init({
-						appId: '{{d.facebook_app_id}}', 
-						status: true, 
-						cookie: true,
-						xfbml: true
-					});
-				};
-
-				(function() {
-					var e = document.createElement('script'); e.async = true;
-					e.src = document.location.protocol +
-						'//connect.facebook.net/en_US/all.js';
-					document.getElementById('fb-root').appendChild(e);
-				}());
 				
-				window.facebookConnector = {
-					connect: function () {
-						var requiredPerms = ['email','user_about_me','user_birthday','user_website','publish_stream'];
-						window.FB.login(
-							function(response) {
-								if(response.session){
-									window.location.href = "/login_facebook?uid="+response.session.uid+"&access_token="+response.session.access_token;
-								} else {
-									// if (window.app && window.app.components && window.app.components.merlin) {
-									// 									window.app.components.merlin.show_step("login-error");
-									// 								} 
-								}
-							},
-							{perms: requiredPerms.join(',')}
-						);
-					}
-				};
 			}(this));
 		</script>
 		
