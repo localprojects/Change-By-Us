@@ -1,9 +1,15 @@
 if(!tc){ var tc = {}; }
 if(!tc.gam){ tc.gam = {}; }
 
-tc.gam.ideas_invite = function(app,elements) {
+tc.gam.ideas_invite = function(app, options) {
+	
+	var o = tc.jQ.extend({
+		elements: null,
+		ref_project_id: null
+	}, options);
+
 	// Invite
-	elements.bind('click',{
+	o.elements.bind('click',{
 		app:app,
 		source_element:tc.jQ('.modal-content.invite-user'),
 		init:function(modal,event_target,callback){
@@ -13,9 +19,9 @@ tc.gam.ideas_invite = function(app,elements) {
 				name:'ideas_invite',
 				dom:modal.options.element.find('.invite-user'),
 				next_button: tc.jQ('a.submit'),
-				first_step: 'invite-message-project-info',
+				first_step: o.ref_project_id ? 'invite-message-info' : 'invite-message-project-info',
 				data:{
-					project_id: null,
+					project_id: o.ref_project_id ? o.ref_project_id : null,
 					idea_id: null,
 					message: null
 				},
@@ -76,7 +82,7 @@ tc.gam.ideas_invite = function(app,elements) {
 						init:function(merlin,dom){
 							var name;
 							
-							if(!merlin.options.data.project_id){
+							if (!merlin.options.data.project_id) {
 								merlin.show_step("invite-message-project-info");
 								return;
 							}

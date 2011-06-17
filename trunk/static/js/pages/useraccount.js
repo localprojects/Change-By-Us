@@ -239,8 +239,7 @@
 			}
 		});
 		
-		//commented out because it is breaking the page.
-		tc.gam.ideas_invite(app, tc.jQ("a.invite"));
+		tc.gam.ideas_invite(app, {elements: tc.jQ("a.invite")});
 		
 		// random note-card backgrounds
 		var ideasList = tc.jQ('.idea-cards li');

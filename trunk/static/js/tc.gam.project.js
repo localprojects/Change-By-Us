@@ -21,7 +21,6 @@ tc.gam.project = function(options){
 	this.components = {
 		infopane:new tc.gam.project_widgets.infopane(this,this.dom.find('.box.mission'),{widget:this.widget},{app:options.app}),
 		resources:new tc.gam.project_widgets.resources(this,this.dom.find('.box.resources'),{widget:this.widget},{app:options.app}),
-		related_ideas:new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.box.fresh-ideas'),{widget:this.widget},{app:options.app}),
 		related_resources:new tc.gam.project_widgets.related_resources(this,this.dom.find('.box.related-resources'),{widget:this.widget},{app:options.app}),
 		add_link:new tc.gam.project_widgets.add_link(this,this.dom.find('.box.add-link'),{widget:this.widget},{app:options.app}),
 		goals_main:new tc.gam.project_widgets.goals_main(this,this.dom.find('.box.goals-main'),{widget:this.widget},{app:options.app}),
@@ -29,6 +28,10 @@ tc.gam.project = function(options){
 		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
 		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{app:options.app})
 	};
+	
+	if (tc.gam.project_widgets.fresh_ideas) {
+		this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.box.fresh-ideas'),{widget:this.widget},{app:options.app});
+	}
 	
 	if(tc.gam.project_widgets.goals_stack){
 		this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this,this.dom.find('.box.goals-stack-holder'),{widget:this.widget},{app:options.app});
@@ -129,7 +132,9 @@ tc.gam.project = function(options){
 			}
 		},
 		idea_remove: function(e, d) {
-			e.data.project.components.related_ideas.remove_idea(d.id);
+			if (e.data.project.components.related_ideas) {
+				e.data.project.components.related_ideas.remove_idea(d.id);
+			}
 			e.data.project.components.members.remove_idea(d.id);
 		}
 	};

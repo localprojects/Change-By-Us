@@ -24,7 +24,7 @@ if(!tc){ var tc = {}; }
 	};
 	tc.util.dump = function(object){
 		if (typeof console != "undefined" && typeof console.log != "undefined") {
-			console.log(object)
+			console.log(object);
 		}
 		
 		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
