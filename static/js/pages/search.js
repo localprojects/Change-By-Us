@@ -1,6 +1,6 @@
 app_page.features.push(function(app){
 		tc.util.log('Give A Minute: Search');
-		
+
 		function changeListCat(theCat) {
 			tc.jQ('.results-box').removeClass('single');
 			tc.jQ('ul.tabs .tab-map').removeClass('active');
@@ -301,7 +301,11 @@ app_page.features.push(function(app){
 					tempcell = tc.jQ('<li></li>').append(tc.jQ('.template-content.idea-cell').html());
 					
 					if(d.results[i].owner){
-						tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
+						if (app.user && app.user.u_id === d.results[i].owner.u_id) {
+							tempcell.find('.invite').remove();
+						} else { 
+							tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
+						}
 						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
 					} else {
 						tempcell.find('cite.note-meta-hd').remove();
@@ -319,7 +323,7 @@ app_page.features.push(function(app){
 				
 				out.find('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
 				out.find('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
-				tc.gam.ideas_invite(app, out.find('a.invite'));
+				tc.gam.ideas_invite(app, {elements: out.find('a.invite')});
 				
 				return out;
 			}
@@ -374,7 +378,7 @@ app_page.features.push(function(app){
 			get_url: "/project/resource/info"
 		});
 		
-		tc.gam.ideas_invite( app, tc.jQ('a.invite'));
+		tc.gam.ideas_invite(app, {elements: tc.jQ('a.invite')});
 		
 		
 		app.components.handlers = {

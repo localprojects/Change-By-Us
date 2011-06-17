@@ -133,7 +133,9 @@
 										{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
 											<li rel="idea-{{ idea.idea_id }}">
 												<div class="note-card-public-controls">
-													<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+													{% if not(d.template_data.user and (d.template_data.user.data.u_id == idea.owner.u_id)) %}
+														<a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+													{% endif %}
 													<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
 												</div>
 												<div class="note-card">
