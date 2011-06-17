@@ -143,7 +143,7 @@ app_page.features.push(function(app){
 								n: e.data.carousel.data.n_to_fetch,
 								offset: e.data.carousel.data.offset
 							},
-							context:e.data.app,
+							context:e.data.carousel,
 							dataType:"text",
 							success: function(data, ts, xhr) {
 								var d, target_height, dom;
@@ -154,36 +154,36 @@ app_page.features.push(function(app){
 									return;
 								}
 								
-								e.data.carousel.data.current_page.removeClass('spinner-message').children().remove();
+								this.data.current_page.removeClass('spinner-message').children().remove();
 								
-								if(!d.results.length && e.data.carousel.data.offset > 0){
-									e.data.carousel.data.current_page.remove();
+								if(!d.results.length && this.data.offset > 0){
+									this.data.current_page.remove();
 									return;
 								}
 								
-								e.data.carousel.data.offset += d.results.length;
+								this.data.offset += d.results.length;
 								
-								if(d.results.length == e.data.carousel.data.n_to_fetch){
-									e.data.carousel.carousel.addItem('\
+								if(d.results.length == this.data.n_to_fetch){
+									this.carousel.addItem('\
 										<li class="project-carousel-item clearfix spinner-message">\
 											<div class="spinner-container"></div>\
 										</li>');
 								}
 								
-								dom = e.data.carousel.data.page_generator(d);
-								e.data.carousel.data.current_page.append(dom);
-								if(tc.jQ.isFunction(e.data.carousel.data.appended)){
-									e.data.carousel.data.appended(dom);
+								dom = this.data.page_generator(d);
+								this.data.current_page.append(dom);
+								if(tc.jQ.isFunction(this.data.appended)){
+									this.data.appended(dom);
 								}
 								switch(name){
 									case 'idea':
 										target_height = '625';
 										break;
 									default:
-										target_height = tc.jQ(e.data.carousel.carousel.getItems()[e.data.carousel.carousel.getIndex()]).height()+'px';
+										target_height = tc.jQ(this.carousel.getItems()[this.carousel.getIndex()]).height()+'px';
 										break;
 								}
-								e.data.carousel.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
+								this.get_element().css('height',target_height).children('.scrollable').css('height',target_height);
 							}
 						});
 					}
