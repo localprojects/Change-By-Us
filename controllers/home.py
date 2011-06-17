@@ -36,6 +36,21 @@ class Home(Controller):
             return self.showMobile(isBlackBerry = True)
         elif (action == 'login'):
             return self.showLogin() 
+        elif (action == 'nyc'):
+            self.redirect('http://nyc.changeby.us/')
+        elif (action == 'beta'):
+            return self.showBeta()
+        else:
+            return self.render(action)
+            
+    def POST(self, action=None, param0=None):
+        if (action == 'login'):
+            if (param0 == 'forgot'):
+                return self.forgotPassword()
+            else:
+                return self.login()
+        elif (action == 'logout'):
+            return self.logout()
         elif (action == 'login_twitter'):
             return self.login_twitter()
         elif (action == 'login_facebook'):
@@ -50,22 +65,6 @@ class Home(Controller):
             return self.disconnect_facebook()
         elif (action == 'disconnect_twitter'):
             return self.disconnect_twitter()
-        elif (action == 'nyc'):
-            self.redirect('http://nyc.changeby.us/')
-        elif (action == 'beta'):
-            return self.showBeta()
-        else:
-            return self.render(action)
-            
-            
-    def POST(self, action=None, param0=None):
-        if (action == 'login'):
-            if (param0 == 'forgot'):
-                return self.forgotPassword()
-            else:
-                return self.login()
-        elif (action == 'logout'):
-            return self.logout()
         elif (action == 'feedback'):
             return self.submitFeedback()
         elif (action == 'beta' and param0 == 'submit'):
