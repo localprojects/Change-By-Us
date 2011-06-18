@@ -4,12 +4,11 @@
    You could set this w/ a constant in wp-config, but then you'd have to wait till much 
    later in the process to do it. 
  */
-/*
-if (!isset($_COOKIE['cbu_key'])) {
+if (!isset($_COOKIE['cbu_key']) && $_GET['feed'] != 'cbujson') {
     header('Location: http://nyc.changeby.us/beta');
     exit;
 }
-*/
+
 
 /**
  * Front to the WordPress application. This file doesn't do anything, but loads
