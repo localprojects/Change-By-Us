@@ -310,6 +310,7 @@ order by pu.project_id, u.created_datetime desc
 
             digests[projId]['recipients'] = resp[projId].get('recipients')
             digests[projId]['title'] = resp[projId].get('title')
+            digests[projId]['link'] = "<a href='%s/project/%s'>%s</a>" % (Config.get('default_host'), projId, resp[projId].get('title'))
 
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
                 for user in resp[projId].get('members'):
@@ -363,7 +364,7 @@ where pm.message_type='member_comment'
         for digest in digests:
             subject = "%s%s\n\n" % (self.Config.get('email').get('digest_subject_prefix'), digests.get(digest).get('title'))
             body = ""
-            body += subject + "\n\n"
+            body += digests.get(digest).get('link') + "\n\n"
             if digests.get(digest).get('members'):
                 body += "Recent Members:\n\n"
                 body += '\n'.join(digests.get(digest).get('members'))
