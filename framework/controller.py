@@ -78,13 +78,20 @@ class Controller():
                        'join', 
                        'tou',
                        'logout',
-                       'login_twitter',
+                       # Twitter related paths
+                       'twitter',
+                       # 'twitter/login', 'twitter/create', 'twitter/callback', 'twitter/disconnect'
+
+                       # Facebook paths - not relevant until FB app is updated
+                       'facebook',
+                       # 'facebook/login', 'facebook/create', 'facebook/callback', 'facebook/disconnect'
+
+                       # Remove the following facebook paths once app is updated
                        'login_facebook',
-                       'twitter_callback',
-                       'login_twitter_create',
                        'login_facebook_create',
                        'disconnect_facebook',
-                       'disconnect_twitter']
+
+                       ]
             
             if (path[1] not in allowed):
                 self.redirect('/beta')
