@@ -408,7 +408,11 @@ class Home(Controller):
         feedUrl = "%s?feed=cbujson" % Config.get('blog_host')
 
         try:
-            data = json.load(urllib2.urlopen(feedUrl, timeout = 1))
+            # BUGFIX: couldn't parse json from production blog, hence the string conversion
+            # eholda 2011-06-19
+            raw = urllib2.urlopen(feedUrl, timeout = 1)
+            data = json.loads(raw.read())
+            raw.close()
         except Exception, e:
             log.info("*** couldn't get feed for news items at %s" % feedUrl)
             log.error(e)
