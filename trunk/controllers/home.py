@@ -12,6 +12,7 @@ import giveaminute.projectResource as mResource
 
 import cgi
 import oauth2 as oauth
+import urllib
 import urllib2
 import json
 import hashlib
@@ -34,22 +35,43 @@ class Home(Controller):
             return self.showMobile()
         elif (action == 'bb'):
             return self.showMobile(isBlackBerry = True)
+
+        # Main login page
+        # TODO: This should be consolidated with the twitter & facebook actions
         elif (action == 'login'):
             return self.showLogin() 
-        elif (action == 'login_twitter'):
-            return self.login_twitter()
-        elif (action == 'login_facebook'):
-            return self.login_facebook() 
-        elif (action == 'twitter_callback'):
-            return self.tw_authenticated()
-        elif (action == 'login_twitter_create'):
-            return self.login_twitter_create()
-        elif (action == 'login_facebook_create'):
-            return self.login_facebook_create()
-        elif (action == 'disconnect_facebook'):
+
+        # Twetter-related actions
+        elif action == 'twitter':
+            if param0 == 'login':
+                return self.login_twitter()
+            if param0 == 'create':
+                return self.login_twitter_create()
+            if param0 == 'callback':
+                return self.tw_authenticated()
+            if param0 == 'disconnect':
+                return self.disconnect_twitter()
+
+        # Facebook related actions
+        # todo: remove this once facebook app's canvas page is set
+        elif action == 'login_facebook':
+            return self.login_facebook()
+        elif action == 'disconnect_facebook':
             return self.disconnect_facebook()
-        elif (action == 'disconnect_twitter'):
-            return self.disconnect_twitter()
+        elif action == 'login_facebook_create':
+            return self.login_facebook_create()
+        # --- end removal block
+
+        # The "correct" facebook URLs once we change them in the app(s)
+        elif action == 'facebook':
+            if param0 == 'login':
+                return self.login_facebook()
+            if param0 == 'create':
+                return self.login_facebook_create()
+            if param0 == 'disconnect':
+                return self.disconnect_facebook()
+
+        # Miscellaneous actions
         elif (action == 'nyc'):
             self.redirect('http://nyc.changeby.us/')
         elif (action == 'beta'):
@@ -183,8 +205,15 @@ class Home(Controller):
         #    es = e.split("=")
         #    dc[es[0]] = es[1]
         
-        details = urllib2.urlopen("https://graph.facebook.com/%s?access_token=%s" % (self.request('uid'), self.request("access_token")))    
-        profile = json.loads(details.read())
+        url = "https://graph.facebook.com/%s" % self.request('uid')
+        # Facebook does not like POST requests, but when they do, we can
+        # enable the following
+        # params = {'access_token':self.request('access_token')}
+        # resp = urllib2.urlopen(url, urllib.urlencode(dict(params)))
+        resp = urllib2.urlopen("%s?access_token=%s" % (url, self.request('access_token')))
+
+        profile = json.loads(resp.read())
+        resp.close()
         
         sql = "select * from facebook_user where facebook_id = $id"
         res = list(self.db.query(sql, { 'id':profile['id'] }))
@@ -268,9 +297,7 @@ class Home(Controller):
     
         # Step 2. Store the request token in a session for later use.
         
-        
         req_token = dict(cgi.parse_qsl(content))
-        
         
         self.session.request_token = req_token
         self.session._changed = True
