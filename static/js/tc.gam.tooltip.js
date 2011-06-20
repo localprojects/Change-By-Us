@@ -15,6 +15,7 @@ tc.resource_tooltip.prototype.init = function(options) {
 		markup_source_element: null,
 		get_url: null
 	}, options);
+	this.window = tc.jQ(window);
 	this.tooltip = this.options.tooltip_element;
 	this.triggers = this.options.triggers;
 	this.triggers.bind('mouseover',{me:this},this.handlers.trigger_mouseover);
@@ -103,7 +104,8 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	tc.util.log("tc.resource_tooltip.generate_markup");
 	var markup;
 	markup = this.options.markup_source_element.clone().css('display','block').removeClass('template-content');
-	markup.append("<div class='tooltip-tail'></div>");
+	markup.prepend("<div class='tooltip-tail-top'></div>");
+	markup.append("<div class='tooltip-tail-bottom'></div>");
 	markup.find('h2').text(data.title);
 	if(data.is_official && data.is_official == true)
 	{
@@ -123,9 +125,18 @@ tc.resource_tooltip.prototype.show = function(){
 	//tc.util.log("tc.resource_tooltip.show");
 	var target_pos, me, load_content;
 	target_pos = function(self){
-		return {
-			top:self.current_trigger.offset().top - self.tooltip.height(),
-			left:self.current_trigger.offset().left + (self.current_trigger.width()/2) - (self.tooltip.width()/2)
+		if((self.current_trigger.offset().top - self.window.scrollTop()) < self.tooltip.height()){
+			return {
+				flip:true,
+				top:self.current_trigger.offset().top + self.current_trigger.height(),
+				left:self.current_trigger.offset().left + (self.current_trigger.width()/2) - (self.tooltip.width()/2)
+			};
+		} else {
+			return {
+				flip:false,
+				top:self.current_trigger.offset().top - self.tooltip.height(),
+				left:self.current_trigger.offset().left + (self.current_trigger.width()/2) - (self.tooltip.width()/2)
+			};
 		};
 	};
 	me = this;
@@ -168,6 +179,11 @@ tc.resource_tooltip.prototype.show = function(){
 };
 
 tc.resource_tooltip.prototype.move_to_target = function(target_pos,animate){
+	if(target_pos.flip){
+		this.tooltip.addClass('flipped');
+	} else {
+		this.tooltip.removeClass('flipped');
+	}
 	if(animate){
 		this.tooltip.stop().show().animate({
 			'opacity':1.0,
@@ -192,6 +208,7 @@ tc.resource_tooltip.prototype.move_to_target = function(target_pos,animate){
 
 tc.resource_tooltip.prototype.hide = function(){
 	//tc.util.log("tc.resource_tooltip.hide");
+	return;
 	var me = this;
 	this.tooltip.animate({
 		'opacity':0.0
