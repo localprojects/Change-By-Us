@@ -57,6 +57,11 @@ Change by Us NYC - Login
 			<p><img src='/static/images/loader32x32.gif' /></p>
 		</div><!--end .step-->
 		
+		<div class='step facebook-login-preprocess clearfix spinner-message ' style='display:none;'>
+			<p class="west">Connecting to Facebook...</p>
+			<img class="loading" src='/static/images/loader32x32.gif' />
+		</div><!--end step-->
+		
 		<div class="step login-failure" style="display:none;">	
 			<p>There was an error logging you in.</p>
 			<a href="#start" class="retry-login-link"><span class="sm-arrow-back light"></span>Click here to go back to the<br /><span class="spacer"></span>login screen and try again</a>
@@ -176,6 +181,15 @@ Change by Us NYC - Login
 							}
 						});
 					}
+				},
+				/* Step: facebook-login-preprocess  */
+				'facebook-login-preprocess':{
+					progress_selector:'.2',
+					selector:'.facebook-login-preprocess',
+					prev_step:'start',
+					inputs:{},
+					init:function(merlin,dom){},
+					finish:function(merlin,dom){}
 				},
 				'login-failure':{
 					selector:'.login-failure',

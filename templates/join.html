@@ -47,6 +47,11 @@ Change by Us NYC - Join
 				<p><a class='step_link' href='#user-info'>Click Here</a> <span class="italic">if you want to create a login without Facebook or Twitter</span></p>
 			</div><!--end step-->
 			
+			<div class='step facebook-login-preprocess clearfix spinner-message ' style='display:none;'>
+				<p class="west">Connecting to Facebook...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
 			<div class='step user-info clearfix' style='display:none;' >
 				<p>Change by Us NYC uses real names. <a href='/tou#names' class='real-names'>Read Why</a>.</p>
 				
@@ -86,8 +91,6 @@ Change by Us NYC - Join
 				</div>
 			</div><!--end step-->
 			
-			
-			
 			<div class='step twitter-step clearfix ' style='display:none;'>
 				<p><strong>Enter your email to get updates from Change by Us NYC projects.</strong></p>
 				
@@ -120,7 +123,6 @@ Change by Us NYC - Join
 				</div>
 				
 			</div><!--end step-->
-			
 			
 			<div class='step email-lookup clearfix spinner-message ' style='display:none;'>
 				<p class="west">Verifying account information...</p>
@@ -416,6 +418,15 @@ Change by Us NYC - Join
 						});
 						merlin.options.steps['email-lookup'].data.last_step = 'twitter-login';
 					}
+				},
+				/* Step: facebook-login-preprocess  */
+				'facebook-login-preprocess':{
+					progress_selector:'.2',
+					selector:'.facebook-login-preprocess',
+					prev_step:'start',
+					inputs:{},
+					init:function(merlin,dom){},
+					finish:function(merlin,dom){}
 				},
 				/* Step: facebook-login  */
 				'facebook-login':{
