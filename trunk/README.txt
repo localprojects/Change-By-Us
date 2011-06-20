@@ -48,4 +48,8 @@ Launch lighttpd:
     mkdir -p run    # necessary for the pid file to be stored
 
     lighttpd -D -f lighttpd.conf
+    
+AWS configuration:
+    If thumbnails are being mirrored to S3, complete the info in the aws and media sections
+    of the config file accordingly. Otherwise image uploads will be saved to the local volume only.
 
