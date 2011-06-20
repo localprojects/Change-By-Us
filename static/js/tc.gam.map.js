@@ -14,7 +14,7 @@ function initialize(app) {
 	tc.util.log('Give A Minute: Map Search Init');
 	
 	var mapOptions = {
-		zoom: 12,
+		zoom: 11,
 		center: brooklyn,
 		minZoom: 11,
 		maxZoom: 15,
