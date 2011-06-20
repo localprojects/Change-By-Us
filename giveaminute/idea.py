@@ -239,7 +239,7 @@ def getMostRecentIdeas(db, limit=100, offset=0):
         data = list(db.query(sql, {'limit':limit, 'offset':offset}))
     
         for item in data:
-            betterData.append(dict(text = str(item.text),
+            betterData.append(dict(text = item.text,
                         user_id = item.user_id,
                         f_name = str(item.f_name) if item.f_name else '',
                         l_name = str(item.l_name)[0] + '.' if item.l_name else '',
