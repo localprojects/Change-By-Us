@@ -29,7 +29,7 @@ get_header();
 							<h2><a href="<?php the_permalink(); ?>" rel="bookmark" title="Permanent Link to <?php the_title(); ?>"><?php the_title(); ?></a></h2>
 						</div>
 						<div class="bd">
-							<?php the_excerpt(); ?>
+							<?php the_content( 'Read more &raquo;' ); ?>
 						</div>
 						<div class="ft">
 							<cite class="meta">
