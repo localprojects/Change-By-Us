@@ -17,7 +17,6 @@
 	<meta name="author" content=""/>
 	<meta http-equiv="Content-Type" content="<?php bloginfo( 'html_type' ); ?>; charset=<?php bloginfo('charset'); ?>" />
 	<meta name="generator" content="WordPress" />
-	<meta name="framework" content="WP Framework" />
 	
 	<link rel="icon" href="/favicon.ico"/>
 	<link rel="shortcut icon" href="/favicon.ico"/>
