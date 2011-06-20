@@ -74,13 +74,13 @@ class Home(Controller):
             return self.directMessageUser()
         
         # Twitter and Facebook callsbacks may be POST requests just as easily as GET
+        # Twetter-related actions
+        elif action == 'twitter':
+            return self._twitter_action(action=param0)
+
+        # The "correct" facebook URLs once we change them in the app(s)
         elif action == 'facebook':
-            if param0 == 'login':
-                return self.login_facebook()
-            if param0 == 'create':
-                return self.login_facebook_create()
-            if param0 == 'disconnect':
-                return self.disconnect_facebook()
+            return self._facebook_action(action=param0)
 
         else:
             return self.not_found()
