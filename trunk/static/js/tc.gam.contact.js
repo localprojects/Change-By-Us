@@ -23,6 +23,7 @@ if(app_page.data.contact_modal){
 							inputs:{
 								message:{
 									selector:'textarea.contact-user-text',
+									validators:['min-3','max-200','required'],
 									counter:{
 										selector:'.charlimit',
 										limit:200
