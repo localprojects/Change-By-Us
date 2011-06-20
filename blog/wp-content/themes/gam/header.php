@@ -24,10 +24,20 @@
 	
 	<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
 	<link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>
-	<!--<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.reset.css" type="text/css" media="screen" charset="utf-8" />
-	<link rel="stylesheet" href="http://ec2-50-16-1-176.compute-1.amazonaws.com/static/css/tc.gam.main.css" type="text/css" media="screen" charset="utf-8"/>-->
 	<link rel="stylesheet" href="<?php bloginfo( 'stylesheet_url' ); ?>" type="text/css" media="screen, projection" />
 	<link rel="stylesheet" href="<?php echo CSS . '/print.css'; ?>" type="text/css" media="print" />
+	
+	<!--[if IE]>
+	<link rel="stylesheet" href="/static/css/ie/tc.gam.ie.css" type="text/css" media="screen" charset="utf-8"/>
+	<![endif]-->
+	
+	<!--[if lte IE 8]>
+	<link rel="stylesheet" href="/static/css/ie/tc.gam.ie8.css" type="text/css" media="screen" charset="utf-8"/>
+	<![endif]-->
+	
+	<!--[if lte IE 7]>
+	<link rel="stylesheet" href="/static/css/ie/tc.gam.ie7.css" type="text/css" media="screen" charset="utf-8"/>
+	<![endif]-->
 	
 	<link rel="alternate" type="application/rss+xml" title="<?php bloginfo( 'name' ); ?> RSS Feed" href="<?php bloginfo( 'rss2_url' ); ?>" />
 	<link rel="alternate" type="text/xml" title="RSS .92" href="<?php bloginfo( 'rss_url' ); ?>" />
