@@ -55,21 +55,8 @@ class Controller():
         self.template_data['media_root'] = Config.get('media')['root']
         
         # user
-        self.user = None
-        if hasattr(self.session, 'user_id'):
-            # todo would like to move gam-specific user attrs out of controller module
-            try:
-                self.user = mUser.User(self.db, self.session['user_id'])
-                
-                self.template_data['user'] = dict(data = self.user.getDictionary(),
-                                                json = json.dumps(self.user.getDictionary()),
-                                                is_admin = self.user.isAdmin,
-                                                is_moderator = self.user.isModerator,
-                                                is_leader = self.user.isLeader)            
-            except Exception, e:
-                log.error(e)
-                self.session.user_id = None         
-                
+        self.setUserObject()
+                        
         # beta redirect
         if (self.appMode == 'beta' and not self.user):
             path = web.ctx.path.split('/')
@@ -87,15 +74,30 @@ class Controller():
                        # 'facebook/login', 'facebook/create', 'facebook/callback', 'facebook/disconnect'
 
                        # Remove the following facebook paths once app is updated
-                       'login_facebook',
-                       'login_facebook_create',
-                       'disconnect_facebook',
+                       # 'login_facebook',
+                       # 'login_facebook_create',
+                       # 'disconnect_facebook',
 
                        ]
             
             if (path[1] not in allowed):
                 self.redirect('/beta')
   
+    def setUserObject(self):
+        self.user = None
+        if hasattr(self.session, 'user_id'):
+            # todo would like to move gam-specific user attrs out of controller module
+            try:
+                self.user = mUser.User(self.db, self.session['user_id'])
+                
+                self.template_data['user'] = dict(data = self.user.getDictionary(),
+                                                json = json.dumps(self.user.getDictionary()),
+                                                is_admin = self.user.isAdmin,
+                                                is_moderator = self.user.isModerator,
+                                                is_leader = self.user.isLeader)            
+            except Exception, e:
+                log.error(e)
+                self.session.user_id = None         
 
     def require_login(self, url="/", admin=False):
         if not self.user:
@@ -134,7 +136,10 @@ class Controller():
         return var              
         
     def render(self, template_name, template_values=None, suffix="html"):
-        if template_values is None: template_values = {}        
+        if template_values is None: template_values = {}
+        
+        # Set the user object in case it's been created since we initialized
+        self.setUserObject()
         
         config = Config.get_all()       
         config['base_url'] = Config.base_url()
@@ -227,6 +232,9 @@ class Controller():
         return web.NotFound()
         
     def redirect(self, url):
+        # Set the user object in case it's been created since we initialized
+        self.setUserObject()
+
         log.info("303: Redirecting to " + url)      
         return web.SeeOther(url)
 

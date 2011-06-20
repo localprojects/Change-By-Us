@@ -43,34 +43,12 @@ class Home(Controller):
 
         # Twetter-related actions
         elif action == 'twitter':
-            if param0 == 'login':
-                return self.login_twitter()
-            if param0 == 'create':
-                return self.login_twitter_create()
-            if param0 == 'callback':
-                return self.tw_authenticated()
-            if param0 == 'disconnect':
-                return self.disconnect_twitter()
-
-        # Facebook related actions
-        # todo: remove this once facebook app's canvas page is set
-        elif action == 'login_facebook':
-            return self.login_facebook()
-        elif action == 'disconnect_facebook':
-            return self.disconnect_facebook()
-        elif action == 'login_facebook_create':
-            return self.login_facebook_create()
-        # --- end removal block
+            return self._twitter_action(action=param0)
 
         # The "correct" facebook URLs once we change them in the app(s)
         elif action == 'facebook':
-            if param0 == 'login':
-                return self.login_facebook()
-            if param0 == 'create':
-                return self.login_facebook_create()
-            if param0 == 'disconnect':
-                return self.disconnect_facebook()
-
+            return self._facebook_action(action=param0)
+        
         # Miscellaneous actions
         elif (action == 'nyc'):
             self.redirect('http://nyc.changeby.us/')
@@ -94,9 +72,38 @@ class Home(Controller):
             return self.submitInviteRequest()
         elif (action == 'directmsg'):
             return self.directMessageUser()
+        
+        # Twitter and Facebook callsbacks may be POST requests just as easily as GET
+        elif action == 'facebook':
+            if param0 == 'login':
+                return self.login_facebook()
+            if param0 == 'create':
+                return self.login_facebook_create()
+            if param0 == 'disconnect':
+                return self.disconnect_facebook()
+
         else:
             return self.not_found()
-            
+         
+    def _twitter_action(self, action=None):   
+        if action == 'login':
+            return self.login_twitter()
+        if action == 'create':
+            return self.login_twitter_create()
+        if action == 'callback':
+            return self.tw_authenticated()
+        if action == 'disconnect':
+            return self.disconnect_twitter()
+
+    def _facebook_action(self, action=None):
+        if action == 'login':
+            return self.login_facebook()
+        if action == 'create':
+            return self.login_facebook_create()
+        if action == 'disconnect':
+            return self.disconnect_facebook()
+
+
     def showHome(self):
         locationData = mLocation.getSimpleLocationDictionary(self.db)
         allIdeasData = mIdea.getMostRecentIdeas(self.db, 75);
@@ -269,7 +276,7 @@ class Home(Controller):
         if created_user:
             return self.render('join', {'new_account_via_facebook': True, 'facebook_data': profile}) # go to TOS
         else:
-            raise web.seeother("/") # user had already signed up with us before
+            raise self.redirect('/') # user had already signed up with us before
      
     def login_facebook_create(self):
         
@@ -285,7 +292,10 @@ class Home(Controller):
         self.session.user_id = uid
         self.session.invalidate()
         
-        raise web.seeother("/")
+        # Set the user object in case it's been created since we initialized
+        self.setUserObject()
+
+        return self.redirect('/')
        
     def login_twitter(self):
         # Step 1. Get a request token from Twitter.
@@ -293,7 +303,7 @@ class Home(Controller):
         resp, content = tw_client.request(tw_settings['request_token_url'], "GET")
             
         if resp['status'] != '200':
-            raise web.seeother("/")
+            return self.redirect('/')
     
         # Step 2. Store the request token in a session for later use.
         
@@ -311,7 +321,7 @@ class Home(Controller):
         log.info("twitter login")
         log.info(s)
 
-        raise web.seeother(url)
+        return self.redirect(url)
         
     def tw_authenticated(self):
         # Step 1. Use the request token in the session to build a new client.
@@ -324,7 +334,7 @@ class Home(Controller):
         # Step 2. Request the authorized access token from Twitter.
         resp, content = client.request(tw_settings['access_token_url'], "GET")
         if resp['status'] != '200':
-            raise web.seeother("/")
+            return self.redirect('/')
     
         access_token = dict(cgi.parse_qsl(content))
         log.info(str(access_token))
