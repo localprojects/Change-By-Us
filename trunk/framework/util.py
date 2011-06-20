@@ -79,7 +79,7 @@ def validate_email(emailaddress):
     # else:
     #    return False # Email address has funny characters.
 
-    return true
+    return True
         
 def validateUSPhone(phone):
     return not (re.match("^[1-9]\d{9}$", phone) == None)
