@@ -54,15 +54,15 @@
 	
 				<ul class="navbar clearfix">
 					<li class="home nyc">
-						<a href="/"><span>Change by Us NYC</span></a>
+						<a href="http://nyc.changeby.us"><span>Change by Us NYC</span></a>
 					</li>
 					<li class="news-about">
-						<a href='http://nycblog.changeby.us'>News</a>
-						<a href='/about'>About</a>
+						<a href='/'>News</a>
+						<a href='http://nyc.changeby.us/about'>About</a>
 					</li>
 					<li class="divider"></li>
 					<li class="search">
-						<form action='/search' method='GET'>
+						<form action='http://nyc.changeby.us/search' method='GET'>
 							<input type='text' name='terms' value="" />
 							<input type='submit' value='' class='searchInput' />
 						</form>
