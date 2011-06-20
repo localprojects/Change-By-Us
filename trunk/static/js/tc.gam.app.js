@@ -24,6 +24,7 @@ tc.app.prototype.init = function(page){
 		
 	// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
 	this.finish_logout = function(e){
+		tc.util.log('tc.app.finish_logout');
 		window.location.hash = '';
 		if (window.location.pathname === "/useraccount") {
 			if (e.data.app.app_page.user) {
@@ -35,8 +36,7 @@ tc.app.prototype.init = function(page){
 	};
 	
 	tc.jQ(window).bind('hashchange',{app:this}, function(e){
-		tc.util.dump('here');
-		tc.util.dump(window.location.hash);
+		tc.util.log('hashchange.logout');
 		if(window.location.hash.substring(1,window.location.hash.length) === 'logout'){
 			tc.jQ.ajax({
 				type:'POST',
