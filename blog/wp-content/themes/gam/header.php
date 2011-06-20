@@ -51,25 +51,23 @@
 
 		<div class='atmosphere'>
 			<div class='stratosphere'>
-
+	
 				<ul class="navbar clearfix">
-					<li class="home">
-						<a href="http://nyc.changeby.us"><span>Change by Us NYC</span></a>
+					<li class="home nyc">
+						<a href="/"><span>Change by Us NYC</span></a>
 					</li>
-					<!--<li class="simplicity">
-						<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml" target="_blank"><span>NYC SimpliCity</span></a>
-					</li>-->
 					<li class="news-about">
 						<a href='http://nycblog.changeby.us'>News</a>
-						<a href='http://nyc.changeby.us/about'>About</a>
+						<a href='/about'>About</a>
 					</li>
+					<li class="divider"></li>
 					<li class="search">
-						<form action='http://nyc.changeby.us/search' method='GET'>
+						<form action='/search' method='GET'>
 							<input type='text' name='terms' value="" />
-							<input type='submit' value='Search' />
+							<input type='submit' value='' class='searchInput' />
 						</form>
 					</li>
-				</ul><!--end navbar-->
+				</ul><!--end navbar-->		
 
 			</div>
 		</div>
