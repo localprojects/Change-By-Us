@@ -70,16 +70,25 @@ def validate_email(emailaddress):
         localpart = localpart.replace(i, "")
     for i in '-_.':
         host = host.replace(i, "")
-    if localpart.isalnum() and host.isalnum():
-        return True # Email address is fine.
-    else:
-        return False # Email address has funny characters.
+
+    # SR: The following test is generally incorrect, because:
+    #   * domain can contain -, _
+    #   * local can contain ., -, _
+    # if localpart.isalnum() and host.isalnum():
+    #    return True # Email address is fine.
+    # else:
+    #    return False # Email address has funny characters.
+
+    return true
         
 def validateUSPhone(phone):
     return not (re.match("^[1-9]\d{9}$", phone) == None)
     
 #strip leading 1 and any non-numerics
 def cleanUSPhone(phone):
+    if phone is None:
+        return None
+
     phone = phone.strip()
     
     phone = re.sub("\D", "", phone)
