@@ -1,0 +1,630 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - Search Results
+{% endblock title %}
+
+
+{% block javascript_header %}
+{{ super() }}
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/static/js/gam-map-style.js"></script>
+<script type="text/javascript" src="/static/js/libs/infobox_packed.js"></script>
+<script type="text/javascript">
+	var nychoods = {{ d.template_data.locations_scored }};
+	var max_score = {{ d.template_data.max_score }};
+</script>
+<script type="text/javascript" src="/static/js/tc.gam.map.js"></script>
+<script type="text/javascript">
+	app_page.features.push(initialize);
+</script>
+{% endblock %}<!--end javascript_header-->
+
+
+
+{% block continent %}
+
+<div class='continent search-results'>
+	<div class='headlands clearfix'>
+		<ul class="tabs">
+			<li class="tab tab-map"><a href="#map">Map</a></li>
+			<li class="tab tab-list active"><a href="#all">List</a></li>
+		</ul>
+		<form class="search-results-header" action="" method="GET">
+			<label>Search results for:</label>
+			<div class="form-tier west">
+				<div class="search-terms-container">
+					<input type="text" class="search-terms always-focused" value="{% if d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}"/> 
+					<a class="clear-field" href=""></a>
+				</div>
+				<span class="in">in</span>
+				<div class="search-hood-container">
+					<input type='text' name='location-hood-enter' id='location-hood-enter' class='search-location location-group location-hood-enter always-focused' {% if d.template_data.search_location_id %}location_id="{{ d.template_data.search_location_id }}"{% endif %} value="All neighborhoods"/>
+					<a class="clear-field" href=""></a>
+					<div class="location-hood-list" style="display:none"><ul></ul></div>
+				</div>
+				<input type="submit" class="rounded-button search-submit" value="Search" />
+			</div>
+		</form>
+	</div>
+	
+	<div class='midlands merlin clearfix'>
+		
+		<!-- LIST VIEW -->
+		<div id="list-view" class="step">
+			<div class="west sidebar">
+				<a class="sidebar-item all active" href="#all"><span>All</span><span class="counter">{{ d.template_data.total_count.data.projects + d.template_data.total_count.data.ideas + d.template_data.total_count.data.resources }}</span></a>
+				<a class="sidebar-item projects" href="#projects"><span>Projects</span><span class="counter">{{ d.template_data.total_count.data.projects }}</span></a>
+				<a class="sidebar-item resources" href="#resources"><span>Resources</span><span class="counter">{{ d.template_data.total_count.data.resources }}</span></a>
+				<a class="sidebar-item ideas" href="#ideas"><span>Ideas</span><span class="counter">{{ d.template_data.total_count.data.ideas }}</span></a>
+			</div>
+			<div class="east">
+				
+				
+				<div class="box results-box results-projects clearfix {% if d.template_data.results.data.projects|length == 0 %}none-found{% endif %}">
+					<div class="hd">
+						<h2><span class="counter">{{ d.template_data.total_count.data.projects }}</span> Project{% if d.template_data.total_count.data.projects > 1 %}s{% endif %}</h2>
+						{% if d.template_data.total_count.data.projects > 6 %}
+						<span class="control see-all-control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
+						
+						<div class="pagination-controls project">
+							<span class="control">
+								<a class="prev project-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<span class="carousel-page-info">Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ (d.template_data.total_count.data.projects // 6) + 1 }}</span></span>
+								<a class="next project-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+						
+					</div>
+					<div class="bd">
+						
+						<div class="carousel project">
+							<div class="scrollable">
+								<ul class="items">
+									
+									
+										<li class='project-carousel-item clearfix loaded {% if d.template_data.results.data.projects|length == 0 %}empty{% endif %}'>
+											{% if d.template_data.results.data.projects|length > 0 %}
+											
+											<table class="projects-list doublewide clearfix">
+												<tbody>
+													{% for project in d.template_data.results.data.projects %}
+														{% if loop.index is odd %}
+														<tr {% if loop.index == 5 %}class='last-row'{% endif %} >
+														{% endif %}
+															<td>
+																{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+																<a class="close delete-project" href="#removeProject,{{ project.project_id }}"><span>Close</span></a>
+																{% endif %}
+																<div class="thumb">
+																	{% if project.image_id > -1 %}
+																	<a href="/project/{{ project.project_id }}"><img width='50' height='50' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/></a>
+																	{% else %}
+																	<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+																	{% endif %}
+																	<span class="overlay-tag"></span>
+																	<span class="member-count">{{ project.num_members }}</span>
+																</div>
+																<div class="project-info">
+																	<span class="link"><a href="/project/{{ project.project_id }}">{{ project.title|truncate(50) }}</a></span>
+																	<span class="creator"><em>Created by </em> <a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></span>
+																	<span class="description"><a href="/project/{{ project.project_id }}">{{ project.description|truncate(70) }}</a></span>
+																</div>
+															</td>
+														{% if loop.index is even %}
+														</tr>
+														{% endif %}
+													{% endfor %}
+												</tbody>
+											</table>
+											
+											{% else %}
+											
+											<div class="none-found-message clearfix">
+												<h2>There were <span class="counter">0</span> <strong>Projects</strong> found</h2>
+												{% if d.template_data and d.template_data.user %}
+												<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
+												{% endif %}
+											</div>
+											
+											{% endif %}
+										</li>
+									
+										<li class='project-carousel-item clearfix spinner-message'>
+											<div class="spinner-container"></div>
+										</li>
+									
+								</ul>
+							</div>
+						</div>
+						
+					</div>
+					<div class="ft">
+						{% if d.template_data and d.template_data.user and d.template_data.results.data.projects|length > 0 %}
+						<a class="rounded-button small fancy-caps more-link" href="/create">Start <span>a</span> Project <span class="sm-arrow-forward"></span></a>
+						{% endif %}
+						<!-- <div class="pagination-controls project">
+													<span class="control">
+														<a class="prev project-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+														<span class="carousel-page-info">Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ (d.template_data.total_count.data.projects // 6) + 1 }}</span></span>
+														<a class="next project-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+													</span>
+												</div> -->
+					</div>
+				</div><!-- end results-box -->
+				
+				
+				
+				
+				<div class="box results-box results-resources clearfix {% if d.template_data.total_count.data.resources == 0 %}none-found{% endif %}">
+					
+					<div class="hd">
+						<h2><span class="counter">{{ d.template_data.total_count.data.resources }}</span> Resource{% if d.template_data.total_count.data.resources > 1 %}s{% endif %}</h2>
+						{% if d.template_data.total_count.data.resources > 6 %}
+						<span class="see-all-control control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
+						
+						<div class="pagination-controls resource">
+							<span class="control">
+								<a class="prev resource-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<span class="carousel-page-info">Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ (d.template_data.total_count.data.resources // 6) + 1  }}</span></span>
+								<a class="next resource-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+						
+					</div>
+					
+					<div class="bd">
+						
+						<div class="carousel resource">
+							<div class="scrollable">
+								<ul class="items">
+						
+									<li class='resource-carousel-item clearfix loaded {% if d.template_data.results.data.projects|length == 0 %}empty{% endif %}'>
+										{% if d.template_data.total_count.data.resources > 0 %}
+										<table class="resources-list triplewide clearfix">
+											<tbody>
+												{% for resource in d.template_data.results.data.resources %}
+													{% if loop.index % 3 == 1 %}
+													<tr {% if loop.index == 4%}class='last-row'{% endif %} >
+													{% endif %}
+														<td {% if resource.is_official %}class="official-resource"{% endif %}>
+															{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+																<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
+															{% endif %}
+															{% if resource.image_id > -1 %}
+																<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+															{% else %}
+																<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+															{% endif %}
+															<span class="resource-name">
+																{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
+																<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+																	<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
+																</span>
+															</span>
+															<div class="added-dialog">
+																<span class="added-header">Added <em>to</em> your project<br /></span>
+																<span class="added-text">We've sent them a link to your project page.</span>
+																<!-- <span class="added-close"></span> -->
+															</div>
+														</td>
+													{% if loop.index % 3 == 0 %}
+													</tr>
+													{% endif %}
+												{% endfor %}
+											</tbody>
+										</table>
+										{% else %}
+										<div class="none-found-message clearfix">
+											<h2>There were <span class="counter">0</span> <strong>Resources</strong> found</h2>
+											<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
+										</div>
+										{% endif %}
+									</li>
+									
+									<li class='resource-carousel-item clearfix spinner-message'>
+										<div class="spinner-container"></div>
+									</li>
+									
+								</ul>
+							</div>
+						</div>
+						
+					</div>
+					
+					<div class="ft">
+						{% if d.template_data.total_count.data.resources > 0 %}
+						<a class="rounded-button small fancy-caps more-link" href="/resource">Add <span>your</span> Resource <span class="sm-arrow-forward"></span></a>
+						{% endif %}
+						<!-- <div class="pagination-controls resource">
+													<span class="control">
+														<a class="prev resource-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+														<span class="carousel-page-info">Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ (d.template_data.total_count.data.resources // 6) + 1 }}</span></span>
+														<a class="next resource-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+													</span>
+												</div> -->
+					</div>
+				
+				</div><!-- end results-box -->
+				
+				
+				
+				
+				
+				
+				<div class="box results-box results-ideas clearfix {% if d.template_data.total_count.data.ideas == 0 %}none-found{% endif %}">
+					
+					<div class="hd">
+						<h2><span class="counter active">{{ d.template_data.total_count.data.ideas }}</span> Idea{% if d.template_data.total_count.data.ideas > 1 %}s{% endif %}</h2>
+						{% if d.template_data.total_count.data.ideas > 6 %}
+						<span class="see-all-control control"><a href="#ideas">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
+						<div class="pagination-controls idea">
+							<span class="control">
+								<a class="prev idea-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<span class="carousel-page-info">Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ (d.template_data.total_count.data.ideas // 6) + 1 }}</span></span>
+								<a class="next idea-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+					</div>
+					
+					<div class="bd">
+						
+						<div class="carousel idea">
+							<div class="scrollable">
+								<ul class="items">
+									
+									<li class='idea-carousel-item clearfix loaded'>
+										{% if d.template_data.total_count.data.ideas > 0 %}
+										<ul class="ideas-list clearfix">
+											{% for idea in d.template_data.results.data.ideas %}
+												<li class="{% if loop.index % 3 == 0  %}every-third {% endif %}">
+													
+													{% if d.template_data and d.template_data.user %}
+													<div class="note-card-public-controls">
+														{% if d.template_data.user.data.projects|length > 0 and not(d.template_data.user.data.u_id == idea.owner.u_id) %}
+															<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+														{% endif %}
+														<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+													</div>
+													{% endif %}
+													<div class="note-card">
+														<div class="membrane">
+															{% if d.template_data and d.template_data.user %}
+																{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+																<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+																{% endif %}
+															{% endif %}
+															{% if idea.owner %}
+																<cite class="note-meta-hd">
+																	<strong>
+																		<a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a>
+																	</strong> said &mdash;
+																</cite>
+															{% endif %}
+															<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p>{{ idea.message|truncate(165) }}</p></blockquote>
+															<cite class="note-meta-ft">Posted <strong class="time-since">{{ idea.created }}</strong> via <strong>{{ idea.submission_type }}</strong></cite>
+														</div>
+													</div>
+												</li>
+											{% endfor %}
+										</ul>
+										{% else %}
+										<div class="none-found-message clearfix">
+											<h2>There were <span class="counter">0</span> <strong>Ideas</strong> found</h2>
+											<a class="rounded-button small fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+										</div>
+										
+										{% endif %}
+									</li>
+									
+									<li class='idea-carousel-item clearfix spinner-message'>
+										<div class="spinner-container"></div>
+									</li>
+									
+								</ul>
+							</div>
+						</div>
+					</div>
+					
+					<div class="ft">
+						{% if d.template_data.total_count.data.ideas > 0 %}
+						<a class="rounded-button small fancy-caps more-link" href="/">Add <span>an</span> Idea <span class="sm-arrow-forward"></span></a>
+						{% endif %}
+						<!-- <div class="pagination-controls idea">
+													<span class="control">
+														<a class="prev idea-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+														<span class="carousel-page-info">Page <span class='current_page_number'>1</span> of <span class='n_pages'>{{ (d.template_data.total_count.data.ideas // 6) + 1 }}</span></span>
+														<a class="next idea-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+													</span>
+												</div> -->
+					</div>
+				</div><!-- end results-box -->
+				
+				
+			</div><!--end .east -->
+		</div><!-- end #list-view-->
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<div id="map-view" class="step" style="display:none">
+			<div class="map-results clearfix">
+				<div class="box results-box results-projects">
+					<div class="hd">
+						<h2><span class="uncaps">Citywide</span> Projects <span class="counter">{{ d.template_data.results.data.projects|length }}</span></h2>
+						{% if d.template_data.results.data.projects|length > 0 %}
+						<span class="control"><a href="#projects">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
+					</div>
+					<div class="bd">
+						{% if d.template_data.results.data.projects|length > 0 %}
+						<table class="projects-list doublewide clearfix">
+							<tbody>
+								{% for project in d.template_data.results.data.projects %}
+									{% if loop.index < 3 %}
+										{% if loop.index is odd %}
+										<tr>
+										{% endif %}
+											<td>
+												{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+												<a class="close" href="#"><span>Close</span></a>
+												{% endif %}
+												<div class="thumb">
+													{% if project.image_id > -1 %}
+													<a href="/project/{{ project.project_id }}"><img width='50' height='50' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/></a>
+													{% else %}
+													<img width='50' height='50' src="/static/images/thumb_genAvatar50.png" alt="" class="proj"/>
+													{% endif %}
+													<span class="overlay-tag"></span>
+													<span class="member-count">{{ project.num_members }}</span>
+												</div>
+												<div class="project-info">
+													<span class="link"><a href="/project/{{ project.project_id }}">{{ project.title|truncate(50) }}</a></span>
+													<span class="creator"><em>Created by </em> <a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></span>
+													<span class="description"><a href="/project/{{ project.project_id }}">{{ project.description|truncate(70) }}</a></span>
+												</div>
+											</td>
+										{% if loop.index is even %}
+										</tr>
+										{% endif %}
+									{% endif %}
+								{% endfor %}
+							</tbody>
+						</table>
+						{% endif %}
+					</div>
+				</div>
+				
+				<div class="box results-box results-resources">
+					<div class="hd">
+						<h2><span class="uncaps">Citywide</span> Resources <span class="counter">{{ d.template_data.total_count.data.resources }}</span></h2>
+						{% if d.template_data.total_count.data.resources > 0 %}
+						<span class="control"><a href="#resources">See all <span class="sm-arrow-forward light"></span></a></span>
+						{% endif %}
+					</div>
+					<div class="bd">
+						{% if d.template_data.total_count.data.resources > 0 %}
+						<table class="resources-list clearfix">
+							<tbody>
+								<tr>
+									{% for resource in d.template_data.results.data.resources %}
+										{% if loop.index < 2 %}
+										<td {% if resource.is_official %}class="official-resource"{% endif %}>
+											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+												<a href="#addProject,{{ resource.link_id }}" class="add-button rounded-button small">Add</a>
+											{% endif %}
+											{% if resource.image_id > -1 %}
+											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+											{% else %}
+											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											{% endif %}
+											<span class="resource-name">
+												{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
+												<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+													<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
+												</span>
+											</span>
+											<div class="added-dialog">
+												<span class="added-header">Added <em>to</em> your project<br /></span>
+												<span class="added-text">We've sent them a link to your project page.</span>
+												<!-- <span class="added-close"></span> -->
+											</div>
+										</td>
+										{% endif %}
+									{% endfor %}
+								<tr>
+							</tbody>
+						</table>
+						{% endif %}
+					</div>
+				</div>
+			</div><!-- end map-results-->
+			
+			
+			<div class="box results-map themap">
+				<div id="map_canvas"></div>
+				<!--<iframe src="/search/map" style="width: 960px; height: 545px"></iframe>-->
+			</div>
+			
+			
+		</div><!-- end #map-view -->
+		
+		
+		
+		
+		
+	</div>
+
+	<div class='foothills'>
+
+	</div>
+
+	<div class="template-content modal-content confirm-delete remove-resource">
+		<div class="step">
+			<h2><strong>Delete</strong> this Resource?</h2>
+			<div>
+				<p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete Resource</a>
+				<a class="cancel" href="#">No, keep them.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	
+	<div class='template-content modal-content merlin add-resource'>
+			
+			<div class="step add-resource-project-info">
+				<h2>Add a <strong><span class="name">Resource</span></strong></h2>
+				<p class="no-name">Which project would you like to add this to?</p>
+				<form action='#' class="form-pane non-float checklist">
+					<div class="fields">
+						{% if d.template_data and d.template_data.user %}
+							{% if d.template_data.user.data.projects|length > 0 %}
+								{% for project in d.template_data.user.data.projects %}
+									<div class="row">
+										<input type="radio" class="project-radio" rel="#project,{{ project.project_id }}" id="invite-project-{{ project.project_id }}" name="invite-project-name" />
+										<label for="invite-project-{{ project.project_id }}">{{ project.title }}</label>
+									</div>
+								{% endfor %}
+							{% else %}
+							
+							{% endif %}
+						{% endif %}
+					</div>
+					<a class='submit rounded-button' href="#">Add</a>
+				</form>
+			</div>
+			
+			<div class='step add-resource-submit spinner-message'>
+				<p>Thanks for adding a resource to your project!</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
+			</div>
+			
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+	
+	<div class='template-content' id='organization-markup-source'>
+		<div class='tooltip-hd'>
+			<h2></h2>
+		</div>
+		<div class='tooltip-bd'>
+			<div class='info'>
+				<div class='thumb'>
+					<img width='90' alt='' src='http://placehold.it/90x90'/>
+				</div>
+				<div class='main'>
+					<p></p>
+				</div>
+			</div>
+			<dl class='details'>
+				<dt>Visit Us</dt>
+				<dd><a href=''></a></dd>
+			</dl>
+		</div>
+	</div>
+	
+	<div class="template-content modal-content confirm-delete project-delete">
+		<div class="step">
+			<h2><strong>Delete</strong> this Project?</h2>
+			<div>
+				<p>You are about to delete this project from the system permanently! <br/>Are you sure?</p>
+			</div>
+			<div class="actions">
+				<a class="submit rounded-button" href="#">Yes, Delete Project</a>
+				<a class="cancel" href="#">No, keep them.</a>
+			</div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<div class='template-content project-cell'>
+		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<a class="close delete-project" href="#removeProject,"><span>Close</span></a>
+		{% endif %}
+		
+		<div class="thumb">
+			<img width='50' height='50' src="" alt="" class="proj"/>
+			<span class="overlay-tag"></span>
+			<span class="member-count"></span>
+		</div>
+		<div class="project-info">
+			<span class="link"><a href="/project/"></a></span>
+			<span class="creator"><em>Created by </em> <a href="/useraccount/"></a></span>
+			<span class="description"><a href="/project/"></a></span>
+		</div>
+	</div>
+	
+	<div class='template-content resource-cell'>
+		{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+			<a class="add-button rounded-button small add-resource" href="#addProject,">Add</a>
+		{% endif %}
+		
+		<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+		<span class="resource-name">
+			<span class="official-resource-alt" style="display:none">Official Resource</span>
+			<span rel="#organization," class='resource-tooltip_trigger tooltip_trigger'>
+				<span><a target='_blank' href="" class='resource_link'><span>&nbsp;</span></a></span>
+			</span>
+		</span>
+		<div class="added-dialog">
+			<span class="added-header">Added <em>to</em> your project<br /></span>
+			<span class="added-text">We've sent them a link to your project page.</span>
+			<!-- <span class="added-close"></span> -->
+		</div>
+	</div>
+	
+	
+	<div class='template-content idea-cell'>
+		
+		{% if d.template_data and d.template_data.user %}
+		<div class="note-card-public-controls">
+			{% if d.template_data.user.data.projects|length > 0 %}
+				<a class="invite rounded-button small" href="#invite,,">Invite</a>
+			{% endif %}
+			<span class="flag"><a href="#flagIdea," class='flag-idea'>Flag as Inappropriate</a></span>
+		</div>
+		{% endif %}
+		<div class="note-card">
+			<div class="membrane">
+				{% if d.template_data and d.template_data.user %}
+					{% if d.template_data.user.is_admin %}
+					<a class="close remove-idea" href="#removeIdea,"><span>Close</span></a>
+					{% endif %}
+				{% endif %}
+				<cite class="note-meta-hd"><strong>
+					<a class='user-link' href="/useraccount/"></a>
+				</strong> said &mdash;</cite>
+				<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% endif %}<p class='idea-text'></p></blockquote>
+				<cite class="note-meta-ft">Posted <strong class="time-since"></strong> via <strong class='sub-type'></strong></cite>
+			</div>
+		</div>
+		
+	</div>
+	
+</div>
+
+{% endblock continent %}
+
+{% block page_js %}
+{#
+	<script type='text/javascript'>
+		//var note_source = {{ d.all_ideas.json }};
+	</script>
+#}
+	<script type="text/javascript" src='/static/js/pages/search.js'></script>
+{% endblock page_js %}

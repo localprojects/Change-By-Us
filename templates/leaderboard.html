@@ -1,0 +1,62 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - Leaderboard
+{% endblock title %}
+
+{% block continent %}
+
+<div class='continent leaderboard'>
+	<div class='headlands'>
+		<a href="/" class="back east"><span>Go Back</span></a>
+		<h1><span><strong>Top {{ d.template_data.leaderboard|length }}*</strong> Projects<br />on Change by Us</span>Leaderboard</h1>
+	</div>
+
+	<div class='midlands clearfix'>
+		<table class="leaderboard">
+			<thead>
+				<tr>
+					<th class='pos'><span>Pos</span></th>
+					<th class='project-header'><span>Project</th>
+					<th class='members'><span>Members <span class="unbold">(<span class="uncaps">x</span>5)</span></span></th>
+					<th class='goals'><span>Completed<br />Goals <span class="unbold">(<span class="uncaps">x</span>2)</span></span></th>
+					<th class='total last'><span>Total</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				
+				{% for item in d.template_data.leaderboard %}
+				<tr>
+					<td class='pos'><span>{{ item.ordinal }}</span></td>
+					<td class='project-header'>
+						<div class='thumb'>							
+							{% if item.image_id > 0 %}
+							<a href="/project/{{ item.project_id }}"><img width="60" height="60" src="{{d.template_data.media_root}}images/{{ item.image_id % 10 }}/{{ item.image_id }}.png" alt="" class='proj'/></a>
+							{% else %}
+							<img src="/static/images/thumb_genAvatar100.png" width="60" height="60" alt="" class="proj"/>
+							{% endif %}
+							<span class="overlay-tag"></span>
+						</div>
+						<div class='main'>
+							<h1><a href="/project/{{ item.project_id }}">{{ item.title }}</a></h1>
+							<cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_first_name }} {{ item.owner_last_name }}</a></cite>
+						</div>
+					</td>
+					<td class='members'>{{ item.user_count * 5 }}<span><strong>{{ item.user_count }}</strong> members</span></td>
+					<td class='goals'>{{ item.goal_count * 2 }}<span><strong>{{ item.goal_count }}</strong> goals</span></td>
+					<td class='total'>{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
+				</tr>
+				{% endfor %}
+				
+			</tbody>
+		</table>
+	</div><!--end midlands-->
+
+	<div class='foothills'>
+		<p>* The score for each project is based on a variety of other factors.</p>
+	</div>
+</div>
+
+{% endblock continent %}
+
+{% block page_js %}{% endblock page_js %}

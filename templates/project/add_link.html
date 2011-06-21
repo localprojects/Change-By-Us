@@ -1,0 +1,164 @@
+<div class="box add-link" style="display:none;">
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Add a Link
+			</span>
+		</h2>
+		<div class="actions">
+			<a href="#hide,add_link" class="back fancy-caps">
+				<span>Back <span>to</span> Project Home</span>
+			</a>
+		</div>
+	</div>
+
+	<div class="bd clearfix merlin add-link">
+		<div class='step add-link-step'>
+			<p>Link to blogs, news items, and more.</p>
+			<form action='#' class="form-pane">
+				<div class="fields">
+					<div class="row first clearfix">
+						<input name='link-title' class='link-url link-title' type="text" />
+						<span class="charlimit title">50</span>
+						<input style='display:none;' name='main_text' class='main_text' />
+					</div>
+					<div class="row second">
+						<input name='link-url' class='link-url link-href' type="text" />
+						<a href="#" class='submit rounded-button'>Add</a>
+					</div>
+				</div>
+			</form>
+			<div class='box' style='margin:50px 0 20px 0;'>Here are a few web services we recommend to support and publicize your project:</div>
+			<div class='box link-to link-to-facebook'>
+				<!--<a class='partner-link' href='http://www.facebook.com'><span>Facebook</span></a>-->
+				<p><a href='http://www.facebook.com' target='_blank'><strong>Facebook groups</strong></a><br />Tap into your social network.</p>
+			</div>
+			<div class='box link-to link-to-meetup'>
+				<p><a href='http://www.meetup.com/' target='_blank'><strong>Meetup</strong></a><br />Schedule events and meet up to work on projects.</p>
+			</div>
+			<div class='box link-to link-to-ioby'>
+				<p><a href='http://ioby.org' target='_blank'><strong>IOBY</strong></a><br />Raise money for your environmental project.</p>
+			</div>
+			<div class='box link-to link-to-kickstarter'>
+				<p><a href='http://www.kickstarter.com' target='_blank'><strong>Kickstarter</strong></a><br />Another way to raise funds to support your project.</p>
+			</div>
+		</div>
+		
+		<div class='step submit-link-step spinner-message'>
+			<p>Thank you for submitting a link!</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
+	</div>
+</div>
+
+<script>
+	if(!tc){ var tc = {}; }
+	if(!tc.gam){ tc.gam = {}; }
+	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+	
+	tc.gam.project_widgets.add_link = function(project,dom,deps,options){
+		var widget;
+		tc.util.log("project.add_link");
+		this.options = tc.jQ.extend({name:'add_link'},options);
+		this.dom = dom; 
+		widget = tc.gam.widget(this,project);
+		this.handlers = {
+			
+		};
+		
+		this.components = {
+			merlin:null
+		}
+		
+		this.build_merlin = function(){
+			if(this.components.merlin){
+				return;
+			}
+			this.components.merlin = new tc.merlin(options.app,{
+				name:'add-link',
+				dom:dom.find('.merlin.add-link'),
+				next_button:dom.find('a.submit'),
+				first_step:'link-info',
+				data:{
+					project_id:null,
+					title:null,
+					url:null,
+					main_text:""
+				},
+				steps:{
+					'link-info':{
+						selector:'.step.add-link-step',
+						next_step:'link-submit',
+						inputs:{
+							title:{
+								selector:'input.link-title',
+								validators:['min-3','max-50','required'],
+								hint:'Title',
+								counter:{
+									selector:'.charlimit.title',
+									limit:50
+								}
+							},
+							url:{
+								selector:'input.link-href',
+								validators:['min-3','max-300','required','url'],
+								hint:'URL'
+							},
+							main_text:{
+								selector:'input.main_text',
+								validators:['max-0']
+							}
+						},
+						init:function(merlin,dom){
+							merlin.current_step.inputs.title.dom.removeClass('has-been-focused').removeClass('has-attempted-submit').val('').triggerHandler('keyup');
+							merlin.current_step.inputs.url.dom.removeClass('has-been-focused').removeClass('has-attempted-submit').val('').triggerHandler('keyup');
+							
+							merlin.current_step.inputs.title.dom.val('Title');
+							merlin.current_step.inputs.url.dom.val('URL');
+							
+						},
+						finish:function(merlin,dom){
+							merlin.options.data = tc.jQ.extend(merlin.options.data,{
+								project_id:merlin.app.app_page.data.project.project_id,
+								title:merlin.current_step.inputs.title.dom.val(),
+								url:merlin.current_step.inputs.url.dom.val(),
+								main_text:merlin.current_step.inputs.main_text.dom.val()
+							});
+						}
+					},
+					'link-submit':{
+						selector:'.step.submit-link-step',
+						next_step:'goal-info',
+						init:function(merlin,dom){
+							tc.jQ.ajax({
+								type:'POST',
+								url:'/project/link/add',
+								data:merlin.options.data,
+								context:merlin,
+								dataType:'text',
+								success:function(data,ts,xhr){
+									if(data == 'False'){
+										return false;
+									}
+									project.dom.trigger('resources-refresh',{type:'link'});
+									window.location.hash = 'project-home';
+								}
+							});
+						}
+					}
+				}
+			});
+		};
+		
+		this.build_merlin();
+		
+		return {
+			show:function(propagate){
+				widget.show(propagate);
+				window.location.hash = 'add-link,link-info';
+			},
+			hide:widget.hide
+		};
+	};
+	
+</script>
