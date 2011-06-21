@@ -316,7 +316,7 @@ app_page.features.push(function(app){
 					
 					tempcell.find('.idea-text').text(d.results[i].message);
 					tempcell.find('.time-since').text(d.results[i].created);
-					tempcell.find('.sub-type').text(d.results[i].submssion_type);
+					tempcell.find('.sub-type').text(d.results[i].submission_type);
 					
 					out.append(tempcell);
 				}

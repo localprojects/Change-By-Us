@@ -85,9 +85,23 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 			if (even) { temp = "<tr>"; }
 			temp += "<td class='" + (resource.is_official ? "official-resource" : "") + "'>";
 			
-			temp += '<a href="#add,'+ resource.link_id +'" class="add-button rounded-button small">Add</a>'+
-			        '<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>{% endif %}<img src="http://placehold.it/35x35" alt="" /></span>'+
-			        '<span class="resource-name" ><span>'+
+			temp += '<a href="#add,'+ resource.link_id +'" class="add-button rounded-button small">Add</a>';
+
+			if (resource.image_id > 0) {
+				temp += '<span class="thumb">';
+				/*if (this.options.app.app_page.user.is_admin) {
+					temp += '<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>'
+				}*/
+				temp += '<img src="{{d.template_data.media_root}}images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png" width="30" height="30" alt="" /></span>'
+			} else {			
+				temp += '<span class="thumb">';
+				/*if (this.options.app.app_page.user.is_admin) {
+					temp += '<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>'
+				}*/
+				temp += '<img src="/static/images/thumb_genAvatar30.png" width="30" height="30" alt="" /></span>'
+			};
+
+			temp += '<span class="resource-name" ><span>'+
 			            '<span class="organization-name tooltip_trigger" rel="#organization,'+ resource.link_id +'">'+ 
 			                resource.title +
 			            '</span></span></span>';
