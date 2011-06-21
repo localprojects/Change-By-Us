@@ -29,6 +29,7 @@ set -x
 # To generate the config file just run s3cmd --configure
 # and you'll be prompted to fill out all the parameters
 #
+# 
 
 
 #----- CONFIGURABLES ----
@@ -39,13 +40,16 @@ s3cfgfile="$HOME/.lp-cbu.s3cfg"
 s3bucket="s3://sandbox-changebyus"
 
 # Target path on S3 to which to upload the backed-up file
-targetpath="/backups/mysql"
+s3path="/backups/mysql"
 
-#
 # GPG is disabled by default. Uncomment the next line to use it
 # use_gpg=true
-# The recipient for whom to sign the content
+
+# The recipient for whom to sign the content. Only used if use_gpg=true
 recipient="admin@changeby.us"	# change this to the correct recipient
+
+# List of tables to exclude from the dump
+exclude_tables=(user facebook_user twitter_user)
 
 #-----------
 
@@ -79,7 +83,17 @@ do_mysqldump() {
     # Run the actual command
     if [ $use_gpg ];then
         fname="$dbname.$now.gpg"
-        resp=$(mysqldump $dbname | gpg -e -r $recipient --output $fname && gzip $fname)
+        # Tables to ignore/exclude
+
+        index=0
+        exclusion=""
+        excl_size=${#exclude_tables[@]}
+        while [ "$index" -lt "$excl_size" ];do
+            exclusion="$exclusion --ignore_table=${exclude_tables[$index]}"
+            ((index++))
+        done
+
+        resp=$(mysqldump $exclusion $dbname | gpg -e -r $recipient --output $fname && gzip $fname)
     else
         fname="$dbname.$now.gz"
         resp=$(mysqldump $dbname | gzip > $fname)
@@ -90,11 +104,11 @@ do_mysqldump() {
 }
 
 upload_to_s3() {
-    echo "Uploading $fname to $s3bucket$targetpath/$fname"
-    s3cmd --config="$s3cfgfile" put "$fname" "$s3bucket$targetpath/"
+    echo "Uploading $fname to $s3bucket$s3path/$fname"
+    s3cmd --config="$s3cfgfile" put "$fname" "$s3bucket$s3path/"
 
     # ls just gets the list so that we can verify that the file was uploaded
-    # s3cmd --config="$s3cfgfile" ls "$s3bucket$targetpath/"
+    # s3cmd --config="$s3cfgfile" ls "$s3bucket$s3path/"
 }
 
 # The code ...
