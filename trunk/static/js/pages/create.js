@@ -121,8 +121,9 @@
 										clearTimeout(e.data.me.current_step.step_data.timer);
 										e.data.me.current_step.step_data.timer = null;
 									}
+									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500);
 									//DOES NOT WORK IN IE
-									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500,[e.data.me]);
+									//e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500,[e.data.me]);
 									//e.data.me.current_step.step_data.timer = setTimeout(function(){
 									//	e.data.me.current_step.fn.stopped([e.data.me]);
 									//},1000);
@@ -141,16 +142,17 @@
 									if(e.target.nodeName == 'A'){
 										e.preventDefault();
 										if(!e.data.me.current_step.inputs.keywords.dom.hasClass('has-been-focused')){
-											e.data.me.current_step.inputs.keywords.dom.val(e.target.text).addClass('has-been-focused');
+											e.data.me.current_step.inputs.keywords.dom.val(e.target.name).addClass('has-been-focused');
 										} else {
 											tempval = tc.jQ.trim(e.data.me.current_step.inputs.keywords.dom.val());
 											if(tempval.substring(tempval.length-1,tempval.length) == ','){
-												e.data.me.current_step.inputs.keywords.dom.val(tempval += ' '+e.target.text);
+												e.data.me.current_step.inputs.keywords.dom.val(tempval += ' '+e.target.name);
 											} else {
-												e.data.me.current_step.inputs.keywords.dom.val(tempval += ', '+e.target.text);
+												e.data.me.current_step.inputs.keywords.dom.val(tempval += ', '+e.target.name);
 											}
 										}
 										e.target.innerHTML = "";
+										e.target.name = '';
 									}
 								}
 							}
@@ -164,9 +166,9 @@
 						inputKeyup:function(e){
 							
 						},
-						stopped:function(pars){
+						stopped:function(){
 							var merlin;
-							merlin = pars[0];
+							merlin = app.components.merlin;
 							tc.jQ.ajax({
 								url:'/create/keywords',
 								data:{
@@ -182,7 +184,7 @@
 									if(data.suggested_keywords.length){
 										for(i in data.suggested_keywords){
 											if(existingtags.indexOf(data.suggested_keywords[i]) == -1){
-												temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+												temphtml += "<span><a href='#' name='"+data.suggested_keywords[i]+"'>"+data.suggested_keywords[i]+"</a></span>";
 											}
 										}
 									}
