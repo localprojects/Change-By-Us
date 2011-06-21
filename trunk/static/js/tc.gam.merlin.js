@@ -233,7 +233,13 @@ tc.merlin.prototype.show_step = function(step,force){
 	if(this.current_step && !force){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
 		
+		tc.util.dump(step);
+		tc.util.dump(this.current_step.step_name);
+		
 		if(step == this.current_step.step_name){
+			if(!this.current_step.dom.filter(':visible').length){
+				this.current_step.dom.show();
+			}
 			return;
 		}
 		if(this.current_step){
@@ -367,7 +373,7 @@ tc.merlin.prototype.set_address = function(hash) {
 
 tc.merlin.prototype.validate = function(on_submit){
 	tc.util.log('tc.merlin.validate1');
-	var i, valid, temp_valid, j;
+	var i, valid, temp_valid;
 	if(!this.current_step.inputs){
 		return true;
 	}

@@ -196,7 +196,7 @@
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
-								merlin.dom.find('img.proj').attr('src',app.app_page.data.media_root+'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.dom.find('img.proj').attr('src',app.app_page.media_root+'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image = d.responseJSON.thumbnail_id;
 							}
 						});
@@ -308,7 +308,7 @@
 								temp = "<tr>";
 							}
 							if (project.image_id > 0) {
-								tempImgPath = app.app_page.data.media_root + 'images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
+								tempImgPath = app.app_page.media_root + 'images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}
@@ -407,7 +407,7 @@
 								temp = "<tr>";
 							}
 							if (resource.image_id > 0) {
-								tempImgPath = app_page.media_root + 'images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
+								tempImgPath = app.app_page.media_root + 'images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}

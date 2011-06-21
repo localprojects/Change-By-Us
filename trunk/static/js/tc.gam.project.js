@@ -48,6 +48,7 @@ tc.gam.project = function(options){
 			}
 			e.data.project.components.goals_add.hide(false);
 			e.data.project.components.add_link.hide(false);
+			e.data.project.components.related_resources.hide(false);
 		} else {
 			this.components.goals_main.show(false);
 			this.components.conversation.show(false);

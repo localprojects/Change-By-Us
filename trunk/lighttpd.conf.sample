@@ -6,6 +6,7 @@ var.docroot = "/Users/sundar/Projects/LP/gam2.svn/trunk"
 var.errorlog = "/Users/sundar/Projects/LP/gam2.svn/trunk/logs/main.log"
 var.accesslog =  "/Users/sundar/Projects/LP/gam2.svn/trunk/logs/access.log"
 var.binpath  = "/Users/sundar/Projects/LP/gam2.svn/trunk/main.py"
+var.cachedir = "/Users/sundar/Projects/LP/gam2.svn/trunk/run/cache"
 
 server.modules = (
     "mod_rewrite",
@@ -13,7 +14,8 @@ server.modules = (
     "mod_access",
     "mod_fastcgi",
     "mod_accesslog",
-    "mod_auth"
+    "mod_auth",
+    "mod_compress"
     )
                     
 server.port                = 8080
@@ -24,6 +26,11 @@ server.document-root       = var.docroot
 server.errorlog            = var.errorlog 
 accesslog.filename         = var.accesslog
 index-file.names = ("index.php", "index.html", "index.htm", "default.htm")
+
+#enable static file compression
+compress.allowed-encodings = ("bzip2", "gzip", "deflate")
+compress.cache-dir = var.cachedir
+compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
 
 # Enable the following line for OSX. Otherwise leave it disabled.
 # server.event-handler = "freebsd-kqueue" # needed on OS X

@@ -12,6 +12,10 @@ tc.app.prototype.init = function(page){
 	_me = this;
 	this.app_page = page;
 	
+	tc.jQ.ajaxSetup({
+		cache:false
+	});
+	
 	if(page.features){
 		for(i in page.features){
 			if(tc.jQ.isFunction(page.features[i])){
