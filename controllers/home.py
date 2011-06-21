@@ -105,15 +105,15 @@ class Home(Controller):
 
 
     def showHome(self):
+        homepage = Config.get('homepage')
+        
         locationData = mLocation.getSimpleLocationDictionary(self.db)
-        allIdeasData = mIdea.getMostRecentIdeas(self.db, 75);
+        allIdeasData = mIdea.getMostRecentIdeas(self.db, homepage['num_recent_ideas']);
 
         locations = dict(data = locationData, json = json.dumps(locationData))
         allIdeas = dict(data = allIdeasData, json = json.dumps(allIdeasData))
         
         news = self.getNewsItems()
-        
-        homepage = Config.get('homepage')
         
         if (bool(homepage['is_display_leaderboard'])):
             leaderboardProjects = mProject.getLeaderboardProjects(self.db, 6)
