@@ -308,6 +308,7 @@ app_page.features.push(function(app){
 						}
 						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
 					} else {
+						tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id);
 						tempcell.find('cite.note-meta-hd').remove();
 						tempcell.find('blockquote').prepend('<span class="topright-spacer"></span>');
 					}
