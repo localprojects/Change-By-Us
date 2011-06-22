@@ -243,6 +243,7 @@
 			}
 		});
 		
+		tc.gam.add_resource(app, {elements: tc.jQ("a.add-resource")});
 		tc.gam.ideas_invite(app, {elements: tc.jQ("a.invite")});
 		
 		// random note-card backgrounds
