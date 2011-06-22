@@ -82,12 +82,11 @@ Change by Us NYC - Join
 				<div class="east">
 					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info' value='1' />
 					<label class="tos-user-info-label" for='tos-user-info'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms of Use</a></label>
-					{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
-					<div class="row invite-row">
+					
+					<div class="row invite-row" {% if d.template_data.app_mode != 'beta' %}style='display:none;'{% endif %}>
 						<label for='invite-code'>Invite code</label>
 						<input value='' type='text' name='invite-code' id='invite-code' class='invite-code' tabindex='4'/>
 					</div>
-					{% endif %}
 				</div>
 			</div><!--end step-->
 			
@@ -235,7 +234,7 @@ Change by Us NYC - Join
 
 {% block page_js %}
 <script type='text/javascript'>
-	app_page.data.app_mode = d.template_data.app_mode;
+	app_page.data.app_mode = '{{d.template_data.app_mode}}';
 	
 	app_page.data.first_join_step = 'start';
 	app_page.data.sms_next_step = 'email-authentication';

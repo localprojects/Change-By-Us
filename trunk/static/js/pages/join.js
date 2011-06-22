@@ -87,7 +87,12 @@ app_page.features.push(function(app){
 					},
 					invite:{
 						selector:'input.invite-code',
-						validators:['max-10','min-10','required'],
+						validators:function(merlin,dom,current_step){
+							if(merlin.app.app_page.data.app_mode == 'beta'){
+								return tc.validate(dom,['max-10','min-10','required']);
+							}
+							return tc.validate(dom,['max-10','min-10']);
+						},
 						hint:''
 					}
 				},
