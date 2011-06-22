@@ -107,12 +107,12 @@ tc.resource_tooltip.prototype.generate_markup = function(data){
 	markup.prepend("<div class='tooltip-tail-top'></div>");
 	markup.append("<div class='tooltip-tail-bottom'></div>");
 	markup.find('h2').text(data.title);
-	if(data.is_official && data.is_official == true)
-	{
+	
+	if(data.is_official && data.is_official === 1){
 		markup.find('.tooltip-hd').after('<div class="tooltip-md"><span>Official Resource</span></div>');
 	}
 	if (data.image_id > 1) {
-		markup.find('img').attr('src',app.app_page.media_root + 'images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
+		markup.find('img').attr('src',media_root + 'images/'+(data.image_id % 10)+'/'+data.image_id+'.png');
 	} else {
 		markup.find('img').attr('src','/static/images/thumb_genAvatar100.png');
 	}
