@@ -380,7 +380,7 @@ app_page.features.push(function(app){
 								tempitem.find('a.control-ok').attr('href','#ok-resource,'+d[i].project_resource_id);
 								tempitem.find('a.control-delete').attr('href','#remove-resource,'+d[i].project_resource_id);
 								if(d[i].image_id != -1 && d[i].image_id != 'null' && d[i].image_id){
-									tempitem.find('div.west').prepend('<img src='+this.app_page.media_root+'"images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
+									tempitem.find('div.west').prepend('<img src="'+this.app_page.media_root+'images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
 								}
 								tempitem.find('div.west').append('<input type="checkbox" name="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" class="mark-official-checkbox" id="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" />');
 								tempitem.find('div.west').append('<label for="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'">Official</label>');
