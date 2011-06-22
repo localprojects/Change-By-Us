@@ -99,7 +99,7 @@ app_page.features.push(function(app){
 						dom:modal.options.element.find('.introduce-yourself'),
 						first_step:'introduce-message-step',
 						data:{
-							project_id:this.options.app.app_page.data.project.project_id,
+							project_id:app.app_page.data.project.project_id,
 							message:null
 						},
 						use_hashchange:false,
