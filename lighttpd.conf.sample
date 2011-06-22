@@ -1,11 +1,13 @@
 # lighttpd configuration file
 #
 # Variables:
-var.pidfile = "/Users/sundar/Projects/LP/gam2.svn/trunk/run/lighttpd.pid"
-var.docroot = "/Users/sundar/Projects/LP/gam2.svn/trunk"
-var.errorlog = "/Users/sundar/Projects/LP/gam2.svn/trunk/logs/main.log"
-var.accesslog =  "/Users/sundar/Projects/LP/gam2.svn/trunk/logs/access.log"
-var.binpath  = "/Users/sundar/Projects/LP/gam2.svn/trunk/main.py"
+var.username = "<your_username>"
+var.groupname = "<your_group>" # On Mac OSX, this is usually staff
+var.pidfile = "./run/lighttpd.pid"
+var.docroot = "./"
+var.errorlog = "./logs/main.log"
+var.accesslog =  "./logs/access.log"
+var.binpath  = "./main.py"
 
 server.modules = (
     "mod_rewrite",
@@ -18,8 +20,8 @@ server.modules = (
                     
 server.port                = 8080
 server.pid-file            = var.pidfile
-server.username            = "sundar"
-server.groupname           = "staff"
+server.username            = var.username
+server.groupname           = var.groupname
 server.document-root       = var.docroot 
 server.errorlog            = var.errorlog 
 accesslog.filename         = var.accesslog
