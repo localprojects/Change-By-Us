@@ -471,6 +471,7 @@ def createUserFromAuthGuid(db, authGuid):
                                         phone = userData.phone, 
                                         first_name = userData.first_name, 
                                         last_name = userData.last_name, 
+                                        full_display_name = formatUserDisplayName(firstName, lastName),
                                         created_datetime = None)
     except Exception, e:
         log.info("*** problem creating user from auth guid %s" % authGuid)
