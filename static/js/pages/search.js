@@ -382,85 +382,6 @@ app_page.features.push(function(app){
 		
 		
 		app.components.handlers = {
-			add_resource_data:{
-				app:app,
-				source_element:tc.jQ('.modal-content.add-resource'),
-				init:function(modal,event_target,callback){
-					var modal_merlin;
-					modal_merlin = new tc.merlin(app,{
-						name:'add-resource',
-						dom:modal.options.element.find('.add-resource'),
-						next_button: tc.jQ('a.submit'),
-						first_step: 'add-resource-project-info',
-						data:{
-							project_id: null,
-							project_resource_id: null
-						},
-						steps:{
-							'add-resource-project-info':{
-								selector:'.add-resource-project-info',
-								next_step:'add-resource-submit',
-								inputs:{
-									project_radios:{
-										selector:'.project-radio',
-										vallidators:['required']
-									}
-								},
-								init: function(merlin, dom) {
-									var name;
-								
-									dom.find('input[type=checkbox],input[type=radio]').prettyCheckboxes();
-								
-									if(dom.find('.project-radio').length == 1){
-										dom.find('.project-radio').first().attr('checked',true);
-										//window.location.hash = 'add-resource,add-resource-submit';
-									}
-							
-								},
-								finish: function(merlin, dom) {
-									if(merlin.current_step.inputs.project_radios.dom.filter(":checked").length){
-										merlin.options.data = tc.jQ.extend(merlin.options.data, {
-											project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
-											project_resource_id: event_target.hash.split(',')[1]
-										});
-									}
-								}
-							},
-							'add-resource-submit':{
-								selector:'.add-resource-submit',
-								init: function(merlin, dom) {
-								
-								
-									tc.jQ.ajax({
-										type:"POST",
-										url:"/project/resource/add",
-										data:merlin.options.data,
-										context:merlin,
-										dataType:"text",
-										success: function(data, ts, xhr) {
-											//if (data == "False") {
-											//	return false;
-											//}
-											//tc.jQ(event_target).addClass("disabled").text("Added");
-											tc.jQ(event_target).parents('td').addClass('added');
-											tc.timer(1000, function() {
-												modal.hide();
-											});
-										}
-									});
-								}
-							}
-						}
-					});
-					if(tc.jQ.isFunction(callback)){
-						callback(modal);
-					}
-				}
-			},
-			add_resource_hander:function(e,d){
-				e.preventDefault();
-				e.data.app.components.modal.show(e.data, e.target);
-			},
 			flag_idea_handler:function(e){
 				e.preventDefault();
 				tc.jQ.ajax({
@@ -519,28 +440,28 @@ app_page.features.push(function(app){
 			delete_resource_handler:function(e){
 				e.preventDefault();
 				var $t;
-				$t = tc.jQ(e.target);
+				$t = tc.jQ(this);
 				e.data.app.components.modal.show({
-						app:e.data.app,
-						source_element:tc.jQ('.modal-content.remove-resource'),
-						submit:function(){
-							tc.jQ.ajax({
-								type:'POST',
-								url:'/admin/resource/delete',
-								data:{
-									resource_id: e.target.hash.split(',')[1]
-								},
-								context:$t,
-								dataType:'text',
-								success:function(data,ts,xhr){
-									if(data == 'False'){
-										return false;
-									}
-									location.reload(true);
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.remove-resource'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/resource/delete',
+							data:{
+								resource_id: $t.attr("href").split(',')[1]
+							},
+							context:$t,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
 								}
-							});
-						}
-					});
+								window.location.reload(true);
+							}
+						});
+					}
+				});
 			},
 			delete_project_handler:function(e,d){
 				var t;
@@ -573,11 +494,11 @@ app_page.features.push(function(app){
 			}
 		};
 		
-		tc.jQ('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
 		tc.jQ('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
 		tc.jQ('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
 		tc.jQ('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
 		tc.jQ('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
+		tc.gam.add_resource(app, {elements: tc.jQ("a.add-resource")});
 		
 		// turn location field autocomplete off
 		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');

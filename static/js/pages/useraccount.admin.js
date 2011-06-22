@@ -33,4 +33,32 @@
 			});
 		});
 		
+		tc.jQ('a.delete-resource').bind('click', {app:app}, function(e, d) {
+			e.preventDefault();
+			var $t;
+			$t = tc.jQ(this);
+			e.data.app.components.modal.show({
+				app:e.data.app,
+				source_element:tc.jQ('.modal-content.remove-resource'),
+				submit:function(){
+					tc.jQ.ajax({
+						type:'POST',
+						url:'/admin/resource/delete',
+						data:{
+							resource_id: $t.attr("href").split(',')[1]
+						},
+						context:$t,
+						dataType:'text',
+						success:function(data,ts,xhr){
+							if(data == 'False'){
+								return false;
+							}
+							window.location.reload(true);
+						}
+					});
+				}
+			});
+		});
+		
+		
 	});

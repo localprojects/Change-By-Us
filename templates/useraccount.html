@@ -74,7 +74,7 @@ Change by Us NYC - User Account
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
+						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.resources|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
 							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
@@ -216,12 +216,12 @@ Change by Us NYC - User Account
 										{% endif %}
 											<td {% if resource.is_official %}class="official-resource"{% endif %}>
 												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-													<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
+													<a class="add-button rounded-button small add-resource" href="#addResource,{{ resource.project_resource_id }}">Add</a>
 												{% endif %}
 												{% if resource.image_id > 0 %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
 												{% else %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 												{% endif %}
 												<span class="resource-name">
 													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
@@ -629,6 +629,20 @@ Change by Us NYC - User Account
 				<div class="actions">
 					<a class="submit rounded-button" href="#">Yes, Delete User and Projects</a>
 					<a class="cancel" href="#">No, keep them.</a>
+				</div>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+		
+		<div class="template-content modal-content confirm-delete remove-resource">
+			<div class="step">
+				<h2><strong>Delete</strong> this Resource?</h2>
+				<div>
+					<p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete Resource</a>
+					<a class="cancel" href="#">No, keep it.</a>
 				</div>
 			</div>
 			<a class='close' href="#"><span>close</span></a>
