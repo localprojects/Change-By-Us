@@ -385,13 +385,19 @@ tc.merlin.prototype.validate = function(on_submit){
 		}
 		if(on_submit){
 			this.current_step.inputs[i].dom.addClass('has-been-focused has-attempted-submit');
+			if(this.current_step.inputs[i].hint && (this.current_step.inputs[i].dom.val() == this.current_step.inputs[i].hint)){
+				this.current_step.inputs[i].dom.val('');
+			}
 		}
 		if(tc.jQ.isFunction(this.current_step.inputs[i].validators)){
 			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].dom,this.current_step);
 		} else {
 			temp_valid = tc.validate(this.current_step.inputs[i].dom,this.current_step.inputs[i].validators);
 		}
+		
+		
 		if(!temp_valid.valid){
+			tc.util.dump(temp_valid);
 			valid = false;
 			if(this.current_step.inputs[i].counter && this.current_step.inputs[i].dom.hasClass('has-been-focused')){
 				this.current_step.inputs[i].counter.dom.addClass('invalid').removeClass('valid');
