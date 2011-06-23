@@ -160,6 +160,7 @@ app_page.features.push(function(app){
 			},
 			/* Step: facebook-login-preprocess  */
 			'facebook-login-preprocess':{
+				supress_hash:true,
 				progress_selector:'.2',
 				selector:'.facebook-login-preprocess',
 				prev_step:'start',
@@ -187,6 +188,7 @@ app_page.features.push(function(app){
 			},
 			/* Step: email-lookup  */
 			'email-lookup':{
+				supress_hash:true,
 				progress_selector:null,
 				selector:'.email-lookup',
 				prev_step:'user-info',
@@ -210,12 +212,12 @@ app_page.features.push(function(app){
 									merlin.options.error_indicator.html('<span>Oops! We found someone with that name and email address in our system. <a href="/login#forgot-password" class="oops-forgot">Forgot your password?</a></span>').show();
 								}
 								if(this.current_step.data.last_step){
-									window.location.hash = this.current_step.data.last_step;
+									this.show_step(this.current_step.data.last_step);
 									return;
 								}
-								window.location.hash = 'user-info';
+								this.show_step('user-info');
 							} else {
-								window.location.hash = 'sms-lookup';
+								this.show_step('sms-lookup');
 							}
 						}
 					});
@@ -309,7 +311,8 @@ app_page.features.push(function(app){
 									}
 								}
 								e.data.me.options.data.sms_phone = e.data.me.current_step.inputs.phone_1.dom.val()+e.data.me.current_step.inputs.phone_2.dom.val()+e.data.me.current_step.inputs.phone_3.dom.val();
-								window.location.hash = 'sms-process';
+								//window.location.hash = 'sms-process';
+								e.data.me.show_step('sms-process');
 							}
 						}
 					},
@@ -321,6 +324,7 @@ app_page.features.push(function(app){
 			},
 			/* Step: sms-process  */
 			'sms-process':{
+				supress_hash:true,
 				progress_selector:'.3',
 				selector:'.sms-process',
 				prev_step:'sms-lookup',
@@ -333,12 +337,15 @@ app_page.features.push(function(app){
 						dataType:'json',
 						success:function(data,ts,xhr){
 							if(data.sms_number_already_used){
-								window.location.hash = 'sms-already-used';
+								//window.location.hash = 'sms-already-used';
+								this.show_step('sms-already-used');
 							}else if(data.n_ideas){
 								this.options.steps['sms-results'].data = data;
-								window.location.hash = 'sms-results';
+								//window.location.hash = 'sms-results';
+								this.show_step('sms-results');
 							} else {
-								window.location.hash = 'sms-no-results';
+								//window.location.hash = 'sms-no-results';
+								this.show_step('sms-no-results');
 							}
 						}
 					});
@@ -380,10 +387,12 @@ app_page.features.push(function(app){
 					merlin.options.data.sms_phone = '-1';
 				}
 			},
-			/* Step: email-authentication  */
-			'email-authentication':{
+			
+			/* Step: email-authentication-process  */
+			'email-authentication-process':{
+				supress_hash:true,
 				progress_selector:'.3, .2',
-				selector:'.email-authentication',
+				selector:'.email-authentication-process',
 				prev_step:null,
 				next_step:null,
 				init:function(merlin,dom){
@@ -396,11 +405,32 @@ app_page.features.push(function(app){
 						dataType:'text',
 						success:function(data,ts,xhr){
 							if(data == 'False' || data == 'None'){
-								window.location.hash = 'error';
+								this.show_step('email-authentication-email-send-error');
 								return;
 							}
+							this.show_step('email-authentication-email-send-success');
 						}
 					});
+				}
+			},
+			/* Step: email-authentication-email-send-success  */
+			'email-authentication-email-send-success':{
+				progress_selector:'.3, .2',
+				selector:'.email-authentication-email-send-success',
+				prev_step:null,
+				next_step:null,
+				init:function(merlin,dom){
+					
+				}
+			},
+			/* Step: email-authentication-email-send-error  */
+			'email-authentication-email-send-error':{
+				progress_selector:'.3, .2',
+				selector:'.email-authentication-email-send-error',
+				prev_step:null,
+				next_step:null,
+				init:function(merlin,dom){
+					
 				}
 			},
 			/* Step: email-authentication-confirm  */
@@ -441,7 +471,8 @@ app_page.features.push(function(app){
 						dataType:'text',
 						success:function(data,ts,xhr){
 							if(data == 'False' || data == 'None'){
-								window.location.hash = 'error';
+								//window.location.hash = 'error';
+								this.show_step('error');
 								return;
 							}
 							if(merlin.app.app_page.data.redir_from){

@@ -259,6 +259,7 @@
 					}
 				},
 				'check-projects-process':{
+					supress_hash:true,
 					title:'Let&rsquo;s check for similar projects.',
 					sub_title:'Starting something new is great, but there<br />may already be a project you\'d like to join. <br />Take a look at these others.',
 					progress_selector:'.3',
@@ -276,14 +277,17 @@
 								try{
 									d = tc.jQ.parseJSON(data);
 								}catch(e){
-									window.location.hash = 'check-nosimilar';
+									//window.location.hash = 'check-nosimilar';
+									this.show_step('check-nosimilar');
 									return;
 								}
 								if(d.projects.length){
 									this.options.steps['check-projects'].step_data = d;
-									window.location.hash = 'check-projects';
+									//window.location.hash = 'check-projects';
+									this.show_step('check-projects');
 								} else {
-									window.location.hash = 'check-nosimilar';
+									//window.location.hash = 'check-nosimilar';
+									this.show_step('check-nosimilar');
 								}
 							}
 						});
@@ -349,6 +353,7 @@
 				},
 				'add-resource-process':{
 					title:'Add a resource.',
+					supress_hash:true,
 					sub_title:'When you add a resource, we\'ll send them a link <br />to your project page. If they\'re able to help, they\'ll <br />send you a message.',
 					progress_selector:'.4',
 					selector:'.step.add-resource-process',
@@ -365,14 +370,17 @@
 								try{
 									d = tc.jQ.parseJSON(data);
 								}catch(e){
-									window.location.hash = 'add-noresources';
+									//window.location.hash = 'add-noresources';
+									this.show_step('add-noresources');
 									return;
 								}
 								if(d.resources.length){
 									this.options.steps['add'].step_data = d;
-									window.location.hash = 'add';
+									//window.location.hash = 'add';
+									this.show_step('add');
 								} else {
-									window.location.hash = 'add-noresources';
+									//window.location.hash = 'add-noresources';
+									this.show_step('add-noresources');
 								}
 							}
 						});
