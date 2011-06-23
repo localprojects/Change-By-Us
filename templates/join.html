@@ -189,10 +189,19 @@ Change by Us NYC - Join
 				<p>is already associated with an account.</p>
 			</div><!--end step-->
 			
-			<div class='step email-authentication clearfix' style='display:none;'>
+			<div class='step email-authentication-process clearfix spinner-message' style='display:none;'>
+				<p class="west">Sending Email validation message...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
+			<div class='step email-authentication-email-send-success clearfix' style='display:none;'>
 				<p>Thanks! You're almost there.</p>
 				<p>We sent an email to <strong class='email'>&nbsp;</strong>&nbsp;in order to verify your account.</p>
 				<p>Click on the link provided in the e-mail address to complete your registration.</p>
+			</div><!--end step-->
+			
+			<div class='step email-authentication-email-send-error clearfix' style='display:none;'>
+				<p class="west">There was a problem authenticating your email.</p>
 			</div><!--end step-->
 				
 			<div class='step email-authentication-success clearfix' style='display:none;'>
@@ -241,7 +250,7 @@ Change by Us NYC - Join
 	app_page.data.app_mode = '{{d.template_data.app_mode}}';
 	
 	app_page.data.first_join_step = 'start';
-	app_page.data.sms_next_step = 'email-authentication';
+	app_page.data.sms_next_step = 'email-authentication-process';
 	app_page.data.account_create_url = '/join';
 	
 	{% if d.new_account_via_twitter %}
