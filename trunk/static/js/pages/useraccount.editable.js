@@ -199,7 +199,7 @@
 			
 			
 		
-		tc.jQ('.addphoto a').bind('click',{
+		tc.jQ('a.change-profile-image').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.upload-image'),
 			init:function(modal,callback){

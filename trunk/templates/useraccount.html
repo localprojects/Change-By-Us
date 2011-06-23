@@ -27,15 +27,15 @@ Change by Us NYC - User Account
 					<div class='box box-thumb'>
 						<div class="leader-tag"><span>City Leader</span></div>
 						<div class="thumb">
+							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+								<a class="change-image change-profile-image" href="#">
+									<span>Change Photo</span>
+								</a>
+							{% endif %}
 							{% if d.template_data.user_activity.data.user.image_id > 0 %}
 								<img width='90' src='{{d.template_data.media_root}}images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
 							{% else %}
 								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
-							{% endif %}
-							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-								<div class="addphoto" style="display:none">
-									<a href="#">Change Photo</a>
-								</div>
 							{% endif %}
 						</div>
 					</div>
