@@ -239,6 +239,7 @@ app_page.features.push(function(app){
 		name:'add-admin',
 		dom:tc.jQ('.add-admin-merlin'),
 		next_button:tc.jQ('a.admin-merlin-next-step'),
+		first_step:'main',
 		data:{
 			f_name:null,
 			l_name:null,
@@ -331,7 +332,7 @@ app_page.features.push(function(app){
 								this.show_step('error');
 								return;
 							}
-							location.reload(true);
+							window.location.reload(true);
 						}
 					});
 				}
