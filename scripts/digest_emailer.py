@@ -2,9 +2,12 @@
 # Get a list of posts for the day
 # Send to the recipient list for this group
 # TODO:
-#   * Add digest to database
-#   * Document all the functions
+#    * Document all the functions
+#    * Encapsulate everything that changes the database in transactions
+#    * Deal with orphaned tasks
 # 
+# Pre-requisites:
+# insert into
 
 import yaml
 import os, sys
@@ -127,7 +130,87 @@ class Configurable():
             return conf.get(section)
         else:
             return conf
+
+class Taskable():
+    """
+    Ensure that this is either called from a WebpyDBConnectable or has connection parameters sent in
+    """
+    TaskName = None
      
+    def getAvailableTasks(self, taskName=None, limit=5):
+        """
+        Get the limit number of tasks from the tasks table, but only tasks that were not updated today
+        """
+        sql = """
+select *
+from tasks
+where task_name = $task_name
+    and (status is NULL or status = 'A' or status = '')
+    and updated_datetime < $threshold_datetime
+order by updated_datetime DESC
+limit 0, $limit
+"""
+        params = {'task_name': taskName, 'threshold_datetime' : datetime.utcnow().strftime("%Y-%m-%d"), 'limit':limit}
+        try:
+            tasks = self.executeSQL(sql, params)
+            return tasks
+        except Exception, e:
+            raise
+            return False
+
+    def getMyTasks(self):
+        sql = """
+select *
+from tasks
+where owner_id = $myid
+    and status='P'
+order by updated_datetime DESC
+"""
+        try:
+            myTasks = self.executeSQL(sql, {'myid':self.MyID})
+            return myTasks
+        except Exception, e:
+            raise
+            return False
+
+    def reserveTask(self, taskId=None):
+        sql="""
+update tasks
+set owner_id=$myid, status=$status, updated_datetime=NOW()
+where task_id=$taskid
+    and (status is NULL or status = 'A' or status = '')
+"""
+        params = {'myid':self.MyID, 'status': 'P', 'taskid': taskId, 'myid':self.MyID}
+        try:
+            result = self.executeSQL(sql, params)
+            if result != 1:
+                # We want exactly one record updated
+                return False
+            return True
+        except:
+            return False
+
+    def releaseTask(self, taskId):
+        sql="""
+update tasks set owner_id=NULL, status=$status, updated_datetime=NOW()
+where task_id=$taskid
+"""
+        params = {'status': 'A', 'taskid': taskId}
+        try:
+            result = self.executeSQL(sql, params)
+            if result > 1:
+                # Danger Will Robinson!!!
+                raise "Something horrible happened and we updated more than one row in releaseTask!"
+            elif result == 0:
+                # This is an odd condition - how could we ever have this happen?
+                return False
+
+            return True
+        except:
+            return False
+
+
+
 class WebpyDBConnectable():
     """
     Provide database connections stuff
@@ -146,18 +229,34 @@ class WebpyDBConnectable():
     def executeSQL(self, sql, params):
         return self.DBHandle.query(sql, params)
 
-class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable, Loggable):
-    Config = None
+class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable, Loggable, Taskable):
+    Config = None       # Config object that stores all configs (duh)
     FromDate = None     # Start Date that queries should use for created_datetime filter
     ToDate = None       # End Date that queries should use for create_datetime filter
+    EmailOnly = False   # Only email the found digests from the DB, don't create them
+    AddOnly = False     # Only add digests to the database, don't email them
+    Digests = None      # Digests object for all the digests to be sent
+    MyID    = None
 
     def __init__(self, configFile=None):
         # Connect to the mysql database based on the params from Config.yaml
         self.Config = self.loadConfigs(config_file=configFile)
         self.configureLogger()
         dbParams = self.Config.get('database')
-        self.setupMailer(settings=self.Config.get('email'))
+        if not self.AddOnly:
+            # We don't need email functionality if we're only adding tasks
+            self.setupMailer(settings=self.Config.get('email'))
+
         self.connectDB(dbParams)
+
+        self.MyID = os.environ.get('EC2_INSTANCE_ID')
+        if self.MyID is None or self.MyID == '':
+            import socket
+            self.MyID = socket.gethostname()
+
+        if self.MyID is None or self.MyID == '':
+            raise "Need a host name and we don't have one"
+
 
     # def __del__(self):
     #     self.disconnectDB()
@@ -197,18 +296,23 @@ order by pm.created_datetime desc
         # Should we be ordering/grouping by something other than the creationtime?
 
         # cursor = self.DBHandle.cursor()
-        comments = self.executeSQL(sql, {'id':int(projectId), 'fromDate':self.FromDate, 'toDate': self.ToDate, 'filterBy':filterBy})
-        groups = {}
-        for comment in comments:
-            if not groups.get(comment.project_id):
-                groups[comment.project_id] = []
-            groups[int(comment.project_id)].append(comment)
+        try:
+            comments = self.executeSQL(sql, {'id':int(projectId), 'fromDate':self.FromDate, 'toDate': self.ToDate, 'filterBy':filterBy})
+            groups = {}
+            for comment in comments:
+                if not groups.get(comment.project_id):
+                    groups[comment.project_id] = []
+                groups[int(comment.project_id)].append(comment)
+
+            if len(groups.keys()) == 0:
+                return False
+
+            return groups
         
-        if len(groups.keys()) == 0:
+        except Exception, e:
+            raise
             return False
 
-        return groups
- 
     def getRecentMembers(self):
         """
         from: datetime of last digest
@@ -228,14 +332,19 @@ join project__user as pu on u.user_id = pu.user_id
 where u.created_datetime between $fromDate and $toDate
 order by pu.project_id, u.created_datetime desc
 """
-        members = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate':self.ToDate})
-        projects = {}
-        for member in members:
-            if not projects.get(member.project_id):
-                projects[member.project_id] = []
-            projects[int(member.project_id)].append(member)
+        params = {'fromDate':self.FromDate, 'toDate':self.ToDate}
+        try:
+            members = self.executeSQL(sql, params)
+            projects = {}
+            for member in members:
+                if not projects.get(member.project_id):
+                    projects[member.project_id] = []
+                projects[int(member.project_id)].append(member)
 
-        return projects
+            return projects
+        except Exception, e:
+            raise
+            return False
 
     def getProjectNotificationRecipients(self, projects=[]):
         """
@@ -259,18 +368,23 @@ from user u
     join project__user as pu on u.user_id = pu.user_id
 where pu.project_id in $projects
     and (u.email_notification = $digestNotifyFlag or pu.is_project_admin = 1)
-
 order by pu.project_id, u.created_datetime desc
 """
+        if projects == []:
+            projects = [0]  # Set a default value for the "in" statement to work
         # We have to map() because python is too stupid to deal with dynamic typecasting for
-        members = self.executeSQL(sql, params = {'projects':projects, 'digestNotifyFlag':'digest'})
-        projects = {}
-        for member in members:
-            if not projects.get(member.project_id):
-                projects[member.project_id] = []
-            projects[int(member.project_id)].append(member.email)
+        try:
+            members = self.executeSQL(sql, params = {'projects':projects, 'digestNotifyFlag':'digest'})
+            projects = {}
+            for member in members:
+                if not projects.get(member.project_id):
+                    projects[member.project_id] = []
+                projects[int(member.project_id)].append(member.email)
 
-        return projects
+            return projects
+        except Exception, e:
+            raise
+            return False
 
     def getDataToCreateDigest(self):
         members_by_project = self.getRecentMembers()
@@ -297,12 +411,7 @@ order by pu.project_id, u.created_datetime desc
         return project_feed
 
 
-        # Create the message
-        # for group in groups:
-        #    pass
-            # Create the digest()
-
-    def createDigests(self):
+    def createDigests(self, store_to_db=True):
         resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
         member_profile_url = "%s/member/#" % base_url
@@ -331,7 +440,25 @@ order by pu.project_id, u.created_datetime desc
                 for message in resp[projId].get('messages'):
                     digests[projId]['messages'].append(self._formatMemberMessage(message))
 
-        return digests
+        # Store the formatted body
+        for digest in digests:
+            currentDigest = digests.get(digest)
+            currentDigest['subject'] = "%s%s\n\n" % (self.Config.get('email').get('digest').get('digest_subject_prefix'), currentDigest.get('title'))
+            body = ""
+            body += currentDigest.get('link') + "\n\n"
+            if currentDigest.get('members'):
+                body += "Recent Members:\n\n"
+                body += '\n'.join(currentDigest.get('members'))
+                body += "\n\n\n"
+            if currentDigest.get('messages'):
+                body += "Recent Messages:\n\n"
+                body += '\n'.join(currentDigest.get('messages'))
+                body += "\n\n\n"
+            currentDigest['body'] = body
+
+        # Store it for later consumption
+        self.Digests = digests
+        return True
 
     def _formatMemberMessage(self, message):
         """
@@ -363,52 +490,125 @@ where pm.message_type='member_comment'
         # Create a dummy list of project_id's to keep SQL happy in case we don't have any projects
         if len(projects) == 0:
             projects = [0]
-        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate': self.ToDate, 'projects': projects})
-        for project in results:
-            projectInfo[int(project.project_id)] = project
-        return projectInfo
+        try:
+            results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate': self.ToDate, 'projects': projects})
+            for project in results:
+                projectInfo[int(project.project_id)] = project
+            return projectInfo
+        except Exception, e:
+            return False
 
+    def sendDigests(self):
+        """
+        Email out all the digests that we find, based on what's in self.Digests
+        self.Digests should be an array of all the digests that need to be sent out
+        """
+        for digest in self.Digests:
+            currentDigest = None
+            if type(digest) == dict:
+                currentDigest = self.Digests.get(digest)
+            elif digest.__class__.__name__ == 'Storage':
+                currentDigest = digest
+            subject = currentDigest.get('subject')
+            body = currentDigest.get('body')
 
-    def createAndSendDigests(self):
-        digests = self.createDigests()
-        for digest in digests:
-            subject = "%s%s\n\n" % (self.Config.get('email').get('digest').get('digest_subject_prefix'), digests.get(digest).get('title'))
-            body = ""
-            body += digests.get(digest).get('link') + "\n\n"
-            if digests.get(digest).get('members'):
-                body += "Recent Members:\n\n"
-                body += '\n'.join(digests.get(digest).get('members'))
-                body += "\n\n\n"
-            if digests.get(digest).get('messages'):
-                body += "Recent Messages:\n\n"
-                body += '\n'.join(digests.get(digest).get('messages'))
-                body += "\n\n\n"
-
-            recipients = digests.get(digest).get('recipients')
+            recipients = currentDigest.get('recipients')
 
             if self.Config.get('dev'):
-                body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
+                body += "Recipients are " + ','.join(currentDigest.get('recipients')) + "\n\n"
                 recipients = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
 
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
             
+            if (digest.get('digest_id')):
+                # Means that we've been called from a database record
+                # could also have done digest.__class__.__name__ == 'Storage'
+                self.setDigestAsSent(digest.digest_id)
+
             # Finally, save the email that we sent to the database, for future reference
             # self.saveDigestToDB(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
 
-    def saveDigestToDB(self, to=None, recipients=None, subject=None, body=None):
+    def storeDigestsToDB(self):
         """
         Once the email is sent we need to save the email to a table, defined by config
         """
         sql = """
 insert 
-into gam2.digest
-    (sender, to, recipients, subject, body, start_datetime, end_datetime, created_datetime)
+into digests
+    (sender, send_to, recipients, subject, body, start_datetime, end_datetime, updated_datetime, status, worker_id)
 values
-    ($(sender)s, ${to)s, $(recipients)s, $(subject)s, $(body), $(fromDate)s, $(toDate)s, NOW(), 
+    ($sender, $send_to, $recipients, $subject, $body, $fromDate, $toDate, NOW(), $status, $myid)
 """
-        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate':self.ToDate, 
-                                                 'sender': self.Config.get('email').get('from_email'), 
-                                                 'recipients': recipients, 'subject':subject, 'body': body})
+        for digest in self.Digests:
+            currentDigest = self.Digests.get(digest)
+            status = ''     # We have not sent this email out yet
+            try:
+                results = self.executeSQL(sql,
+                                      params = {'sender': self.Config.get('email').get('from_email'),
+                                                'send_to': self.Config.get('email').get('from_email'),
+                                                'recipients': ','.join(currentDigest.get('recipients')),
+                                                'subject': currentDigest.get('subject'),
+                                                'body': currentDigest.get('body'),
+                                                'fromDate':self.FromDate, 'toDate':self.ToDate,
+                                                'status': status, 'myid': self.MyID}
+                                    )
+            except Exception, e:
+                raise
+
+    def getDigestsToSendFromDB(self):
+        """ Get all the digest records in the database that have not been sent """
+
+        sql = """
+select *
+from digests
+where status is NULL or status = ''
+"""
+        params = {}
+        try:
+            digests = self.executeSQL(sql, params)
+            # Set the current object's digest
+            self.Digests = digests
+            return True
+        except Exception, e:
+            raise
+            return False
+
+    def setDigestAsSent(self, digest_id=None):
+        sql = """
+update digests
+set status = 'C', sent_datetime = NOW()
+where digest_id = $digest_id
+"""
+        params = {'digest_id':digest_id}
+        try:
+            result = self.executeSQL(sql, params)
+            return True
+        except Exception, e:
+            raise
+            return False
+
+    def getLastDigestSent(self):
+        """ Get the timestamp of the last digest sent """
+        # We only care about the very last record that
+        sql = """
+select digest_id, start_datetime, end_datetime, status, worker_id
+from digests
+where (status is NULL or status = 'A' or status = '')
+order by end_datetime DESC
+limit 0,1
+"""
+        try:
+            rows = self.executeSQL(sql)
+            if len(rows) == 0:
+                # There is no existing digest so create one for the last 48 hours
+                self.createDigest(initial=True)
+            else:
+                # Take over this job
+                self.processDigest(digestId=rows[0].digest_id)
+            return True
+        except Exception, e:
+            raise
+            return False
 
 # /GiveAMinuteDigest class 
 
@@ -426,26 +626,50 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
     """
 
     parser = OptionParser()
-    parser.add_option("-c", "--configFile", help="Configuration Yaml file", default="config.yaml")
-    parser.add_option("-f", "--dateFrom", help="Date to use as start-point for digest generation, in mysql-compatible format")
-    parser.add_option("-t", "--dateTo", help="Date to use as end-point for digest generation, in mysql-compatible format")
+    parser.add_option("-c", "--config_file", help="Configuration Yaml file", default="config.yaml")
+    parser.add_option("-f", "--from_date", help="Date to use as start-point for digest generation, in mysql-compatible format")
+    parser.add_option("-t", "--to_date", help="Date to use as end-point for digest generation, in mysql-compatible format")
+    parser.add_option("-e", "--email_only", help="Only Email (send) digests from the DB. Don't create/generate them", action="store_true", default=False)
+    parser.add_option("-a", "--add_only", help="Only Add (generate) digests and put into DB. Don't email anything", action="store_true", default=False)
 
     (opts, args) = parser.parse_args()
 
     # Ensure that mandatory options exist
-    if not (opts.configFile):
+    if not (opts.config_file):
         parser.print_help()
         exit(-1)
-    if not opts.dateFrom:
-        print "Warning: using the default start-date as 1 day ago. It's recommended that you pass in -f (--dateFrom)"
 
-    gamDigest = GiveAMinuteDigest(opts.configFile)
+    gamDigest = GiveAMinuteDigest(opts.config_file)
     # gamDigest.FromDate = datetime.strptime(opts.dateFrom, '%Y/%m/%d %H:%M:%S')
-    gamDigest.FromDate = opts.dateFrom
-    gamDigest.ToDate = opts.dateTo
 
-    gamDigest.createAndSendDigests()
+    # Irrespective of whether dates were provided, let's pass them in. We'll process the None case in the code
+    gamDigest.FromDate = opts.from_date
+    gamDigest.ToDate = opts.to_date
+    gamDigest.EmailOnly = opts.email_only
+    gamDigest.AddOnly = opts.add_only
 
+    # Do the actual work -- keep in mind that the AddOnly and EmailOnly options
+    # define whether the task does anything (it might return immediately)
+    if not gamDigest.EmailOnly:
+        taskName='Generate Digests'
+        tasks = gamDigest.getAvailableTasks(taskName=taskName, limit=5)
+        for task in tasks:  # really there should only be one task with this name!
+            if not gamDigest.reserveTask(int(task.task_id)):
+                raise Exception("cannot reserve a task slot. Can't continue")
+            # Ok, we're good to create a digest since nobody else is doing it
+            gamDigest.createDigests()
+            gamDigest.storeDigestsToDB()
+            gamDigest.releaseTask(int(task.task_id))
+
+    if not gamDigest.AddOnly:
+        taskName = "Email Digests"
+        tasks = gamDigest.getAvailableTasks(taskName=taskName, limit=5)
+        for task in tasks:
+            if not gamDigest.reserveTask(int(task.task_id)):
+                raise Exception("cannot reserve a task slot for %s. Can't continue" % taskName)
+            gamDigest.getDigestsToSendFromDB()
+            gamDigest.sendDigests()
+            gamDigest.releaseTask(int(task.task_id))
 
 if __name__ == "__main__":
 

@@ -1462,7 +1462,7 @@ class _EmailMessage:
             self.prepare_message()
             message_text = self.message.as_string()
         else:
-            message_text = self.raw_message.as_string()
+            message_text = message.as_string()
 
         if webapi.config.get('smtp_server'):
             server = webapi.config.get('smtp_server')
