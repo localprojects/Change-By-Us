@@ -237,8 +237,10 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		return markup;
 	}
 	
-	
-	if(this.options.app.app_page.project_user.is_member || this.options.app.app_page.project_user.is_project_admin || (this.options.app.app_page.user && this.options.app.app_page.user == 'is_leader')){
+	if( (this.options.app.app_page.project_user.is_member) || 
+			(this.options.app.app_page.project_user.is_project_admin) || 
+			(this.options.app.app_page.user && this.options.app.app_page.user.is_admin) ||
+			(this.options.app.app_page.user && this.options.app.app_page.user.is_leader)){
 		
 			this.build_merlin = function(){
 			tc.util.log('conversation.build_merlin')
@@ -267,6 +269,9 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 								hint:'',
 								handlers:{
 									focus:function(e,d){
+										
+										tc.util.dump(tc.validator_utils.is_empty(tc.jQ(this).val()));
+										
 										if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
 											e.data.me.dom.find(".conversation-input label").hide();
 										}
@@ -332,11 +337,15 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		};
 		
 		this.build_merlin();
+		this.components.merlin.show_step('message');
 		
 	}
 	
 	return { 
-		show: widget.show,
+		show: function(){
+			me.components.merlin.show_step('message');
+			widget.show();
+		},
 		hide: widget.hide
 	};
 };
