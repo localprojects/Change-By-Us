@@ -338,7 +338,7 @@ tc.merlin.prototype.show_step = function(step,force){
 		}
 	}
 	
-	if (this.options.use_hashchange) {
+	if (this.options.use_hashchange && !this.current_step.supress_hash) {
 		if(this.options.name){
 			window.location.hash = this.options.name+','+step;
 		} else {
@@ -469,15 +469,18 @@ tc.merlin.prototype.handlers = {
 			return;
 		}
 		if(e.data.me.current_step && e.data.me.current_step.next_step){
-			if (e.data.me.options.use_hashchange) {
-				if(e.data.me.options.name){
-					window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
-				} else {
-					window.location.hash = e.data.me.current_step.next_step;
-				}
-			} else {
-				e.data.me.show_step( e.data.me.current_step.next_step );
-			}
+			
+			e.data.me.show_step( e.data.me.current_step.next_step );
+			
+			//if (e.data.me.options.use_hashchange) {
+			//	if(e.data.me.options.name){
+			//		window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
+			//	} else {
+			//		window.location.hash = e.data.me.current_step.next_step;
+			//	}
+			//} else {
+			//	e.data.me.show_step( e.data.me.current_step.next_step );
+			//}
 		}
 	},
 	focus:function(e,d){
