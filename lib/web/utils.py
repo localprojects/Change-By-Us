@@ -1366,7 +1366,12 @@ def sendmail(from_address, to_address, subject, message, headers=None, **kw):
         else:
             raise ValueError, "Invalid attachment: %s" % repr(a)
 
-    mail.send()
+    # SR: Yes, this is some hackish-ass shit. But we'll hopefully resolve
+    # the underlying issue soon.
+    if kw['use_msg_directly']:
+        mail.send(message)
+    else:
+        mail.send()
 
 class _EmailMessage:
     def __init__(self, from_address, to_address, subject, message, headers=None, **kw):
@@ -1404,7 +1409,7 @@ class _EmailMessage:
         self.message.add_header("MIME-Version", "1.0")
         self.message.set_payload(message, 'utf-8')
         self.multipart = False
-
+        
     def new_message(self):
         from email.Message import Message
         return Message()
@@ -1444,15 +1449,21 @@ class _EmailMessage:
 
         self.headers = {}
 
-    def send(self):
+    def send(self, message=None):
         try:
             import webapi
         except ImportError:
             webapi = Storage(config=Storage())
 
-        self.prepare_message()
-        message_text = self.message.as_string()
-    
+        # SR: This is a hack'ish solution to deal with webpy's irritating way
+        # of dealing with emails :( So the raw_message is what's passed from
+        # the caller.
+        if message is None:
+            self.prepare_message()
+            message_text = self.message.as_string()
+        else:
+            message_text = self.raw_message.as_string()
+
         if webapi.config.get('smtp_server'):
             server = webapi.config.get('smtp_server')
             port = webapi.config.get('smtp_port', 0)
@@ -1477,6 +1488,7 @@ class _EmailMessage:
 
             smtpserver.sendmail(self.from_address, self.recipients, message_text)
             smtpserver.quit()
+            
         elif webapi.config.get('email_engine') == 'aws':
             import boto.ses
             c = boto.ses.SESConnection(
