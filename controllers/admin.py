@@ -432,7 +432,7 @@ class Admin(Controller):
         userId = self.request('user_id')
         userGroupId = self.request('role')
         
-        return mUser.setUserGroup(self.db, userId, userGroupId)
+        return mUser.assignUserToGroup(self.db, userId, userGroupId)
         
     def setUserOncall(self):
         userId = self.request('user_id')
@@ -446,7 +446,6 @@ class Admin(Controller):
         email = self.request('email')
         password = self.request('password')    
         userGroupId = util.try_f(int, self.request('role'))
-        title = self.request('title')
         affiliation = self.request('affiliation')
         
         if (util.strNullOrEmpty(email)or not util.validate_email(email)): 
@@ -464,7 +463,7 @@ class Admin(Controller):
             # do we want to attach ideas to cms users?
             mIdea.attachIdeasByEmail(self.db, email)
 
-            mUser.assignUserToGroup(self.db, userId, userGroupId, title)
+            mUser.assignUserToGroup(self.db, userId, userGroupId)
 
             return userId
             

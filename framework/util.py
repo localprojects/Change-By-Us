@@ -442,6 +442,13 @@ def check_bad_words(data):
     
 def strNullOrEmpty(s):
     return not s or len(s.strip()) == 0
+    
+def getBit(i, index):
+    return ((i & (1 << index)) != 0)
+
+def setBit(i, index):
+    mask = 1 << index
+    return(i | mask)
 
 def makeUrlAbsolute(url):
     scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)

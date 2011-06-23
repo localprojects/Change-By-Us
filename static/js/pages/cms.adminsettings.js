@@ -255,18 +255,18 @@ app_page.features.push(function(app){
 				inputs:{
 					f_name:{
 						selector:'input.f_name',
-						validators_new: function(merlin,dom,current_step){
+						validators: function(merlin,dom,current_step){
 							if(current_step.inputs.organization.dom.val().length){
 								return tc.validate(dom,['min-3','max-64']);
 							} else {
 								return tc.validate(dom,['min-3','max-64','required']);
 							}
 						},
-						validators:['min-3','max-64','required']
+						validators_old:['min-3','max-64','required']
 					},
 					l_name:{
 						selector:'input.l_name',
-						validators_new: function(merlin,dom,current_step){
+						validators: function(merlin,dom,current_step){
 							if(current_step.inputs.organization.dom.val().length){
 								return tc.validate(dom,['min-3','max-64']);
 							} else {
@@ -274,7 +274,7 @@ app_page.features.push(function(app){
 							}
 							
 						},
-						validators:['min-3','max-64','required']
+						validators_old:['min-3','max-64','required']
 					},
 					email:{
 						selector:'input.email',
