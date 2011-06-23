@@ -379,7 +379,7 @@ Change by Us NYC - Search Results
 										{% endif %}
 											<td>
 												{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-												<a class="close" href="#"><span>Close</span></a>
+												<a class="close delete-project" href="#removeProject,{{ project.project_id }}"><span>Close</span></a>
 												{% endif %}
 												<div class="thumb">
 													{% if project.image_id > -1 %}
@@ -423,12 +423,12 @@ Change by Us NYC - Search Results
 										{% if loop.index < 2 %}
 										<td {% if resource.is_official %}class="official-resource"{% endif %}>
 											{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-												<a href="#addResource,{{ resource.link_id }}" class="add-button rounded-button small">Add</a>
+												<a href="#addResource,{{ resource.link_id }}" class="add-resource add-button rounded-button small">Add</a>
 											{% endif %}
 											{% if resource.image_id > -1 %}
-											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
 											{% else %}
-											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+											<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.link_id }}"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 											{% endif %}
 											<span class="resource-name">
 												{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
