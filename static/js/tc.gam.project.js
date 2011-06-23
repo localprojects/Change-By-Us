@@ -28,7 +28,7 @@ tc.gam.project = function(options){
 		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
 		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{app:options.app})
 	};
-	
+		
 	if (tc.gam.project_widgets.fresh_ideas) {
 		this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.box.fresh-ideas'),{widget:this.widget},{app:options.app});
 	}

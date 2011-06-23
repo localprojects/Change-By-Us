@@ -89,13 +89,13 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 
 			if (resource.image_id > 0) {
 				temp += '<span class="thumb">';
-				if (me.options.app.app_page.user.is_admin) {
+				if (me.options.app.app_page.user && me.options.app.app_page.user.is_admin) {
 					temp += '<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>'
 				}
 				temp += '<img src="{{d.template_data.media_root}}images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png" width="30" height="30" alt="" /></span>'
 			} else {			
 				temp += '<span class="thumb">';
-				if (me.options.app.app_page.user.is_admin) {
+				if (me.options.app.app_page.user && me.options.app.app_page.user.is_admin) {
 					temp += '<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>'
 				}
 				temp += '<img src="/static/images/thumb_genAvatar30.png" width="30" height="30" alt="" /></span>'
