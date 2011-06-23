@@ -147,12 +147,6 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 		temphtml.attr('rel',data.goal_id+','+data.active).css('width','512px');
 		temphtml.find('a.close').attr('href','#removeGoal,'+data.goal_id);
 		
-		
-		tc.util.dump('----');
-		tc.util.dump(data.text);
-		tc.util.dump(data.active);
-		tc.util.dump(temphtml);
-		tc.util.dump(temphtml.find('.make-this-active'));
 		if(data.active == true){
 			temphtml.find('.make-this-active').remove();
 		} else {
@@ -222,7 +216,10 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 			for(i in data){
 				list.append(this.generate_goal(data[i]));
 			}
-			this.carousel.render();
+			
+			// passing explicit dimensions to the carousel to work around an IE 7 bug
+			// (ticket #1750)
+			this.carousel.render(512, 232);
 			
 		} else {
 			this.carousel.carousel.getItems().remove();
