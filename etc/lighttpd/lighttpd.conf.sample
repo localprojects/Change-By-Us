@@ -1,0 +1,143 @@
+#
+# lighttpd configuration file
+#
+# This file is interpolated with the fabric script. Any changes (addition of variables)
+# should be reflected in the rcfile.sample within the project
+#
+
+#
+# Variables:
+#
+var.pidfile = "%(app_path)s/run/lighttpd.pid"
+var.docroot = "%(app_path)s"
+var.errorlog = "%(log_path)s/error.log"
+var.accesslog =  "%(log_path)s/access.log"
+var.binpath  = "%(app_path)s/main.py"
+var.cachedir = "%(app_path)s/run/cache"
+var.serverport = %(webserver_port)s
+var.user = "%(webserver_user)s"
+var.groupname = "%(webserver_group)s"
+
+server.modules = (
+    "mod_rewrite",
+    "mod_alias",
+    "mod_access",
+    "mod_fastcgi",
+    "mod_accesslog",
+    "mod_auth",
+    "mod_compress"
+    )
+
+server.port                = var.serverport
+server.pid-file            = var.pidfile
+server.username            = var.user
+server.groupname           = var.groupname
+server.document-root       = var.docroot
+server.errorlog            = var.errorlog
+accesslog.filename         = var.accesslog
+index-file.names = ("index.php", "index.html", "index.htm", "default.htm")
+
+#enable static file compression
+compress.allowed-encodings = ("bzip2", "gzip", "deflate")
+compress.cache-dir = var.cachedir
+compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
+
+# Enable the following line for OSX. Otherwise leave it disabled.
+# server.event-handler = "freebsd-kqueue" # needed on OS X
+
+static-file.exclude-extensions = (".php", ".pl", ".fcgi", ".py")
+url.access-deny = ("~", ".inc", ".log", ".yaml", ".conf")
+
+fastcgi.server = ("/main.py" =>
+                    ((  "socket" => "/tmp/fastcgi.socket",
+                        "bin-path" => var.binpath,
+                        "max-procs" => 1,
+                        "bin-environment" => (
+                            "REAL_SCRIPT_NAME" => ""
+                        ),
+                        "check-local" => "disable"
+                    ))
+                )
+
+# mod auth stuff, uncomment for auth
+#auth.debug = 2
+#auth.backend = "htpasswd"
+#auth.backend.htpasswd.userfile = "/Users/sundar/Projects/LP/gam2.svn/trunk/.lighttpd.htpasswd"
+#auth.require = ("/" => ("method" => "basic",
+#                        "realm" => "Password protected area",
+#                        "require" => "valid-user"))
+
+$HTTP["url"] =~ "\.pdf$" {
+    server.range-requests = "disable"
+}
+
+url.rewrite-once = (
+    "^/images/(.*)" => "/data/giveaminute/images/$1",
+    "^/crossdomain.xml$" => "/static/util/crossdomain.xml",
+    "^/robots.txt$" => "/static/util/robots.txt",
+    "^/favicon.ico$" => "/static/util/favicon.ico",
+    "^/css/(.*)$" => "/static/css/$1",
+    "^/img/(.*)$" => "/static/img/$1",
+    "^/js/(.*)$" => "/static/js/$1",
+    "^/swf/(.*)$" => "/static/swf/$1",
+    "^/static/(.*)$" => "/static/$1",
+    "^/xml/(.*)$" => "/static/xml/$1",
+    "^/(.*)$" => "/main.py/$1"
+    )
+
+mimetype.assign             = (
+  ".pdf"          =>      "application/pdf",
+  ".sig"          =>      "application/pgp-signature",
+  ".spl"          =>      "application/futuresplash",
+  ".class"        =>      "application/octet-stream",
+  ".ps"           =>      "application/postscript",
+  ".torrent"      =>      "application/x-bittorrent",
+  ".dvi"          =>      "application/x-dvi",
+  ".gz"           =>      "application/x-gzip",
+  ".pac"          =>      "application/x-ns-proxy-autoconfig",
+  ".swf"          =>      "application/x-shockwave-flash",
+  ".tar.gz"       =>      "application/x-tgz",
+  ".tgz"          =>      "application/x-tgz",
+  ".tar"          =>      "application/x-tar",
+  ".zip"          =>      "application/zip",
+  ".mp3"          =>      "audio/mpeg",
+  ".m3u"          =>      "audio/x-mpegurl",
+  ".wma"          =>      "audio/x-ms-wma",
+  ".wax"          =>      "audio/x-ms-wax",
+  ".ogg"          =>      "application/ogg",
+  ".wav"          =>      "audio/x-wav",
+  ".gif"          =>      "image/gif",
+  ".jar"          =>      "application/x-java-archive",
+  ".jpg"          =>      "image/jpeg",
+  ".jpeg"         =>      "image/jpeg",
+  ".png"          =>      "image/png",
+  ".xbm"          =>      "image/x-xbitmap",
+  ".xpm"          =>      "image/x-xpixmap",
+  ".xwd"          =>      "image/x-xwindowdump",
+  ".css"          =>      "text/css",
+  ".html"         =>      "text/html",
+  ".htm"          =>      "text/html",
+  ".js"           =>      "text/javascript",
+  ".asc"          =>      "text/plain",
+  ".c"            =>      "text/plain",
+  ".cpp"          =>      "text/plain",
+  ".log"          =>      "text/plain",
+  ".conf"         =>      "text/plain",
+  ".text"         =>      "text/plain",
+  ".txt"          =>      "text/plain",
+  ".dtd"          =>      "text/xml",
+  ".xml"          =>      "text/xml",
+  ".mpeg"         =>      "video/mpeg",
+  ".mpg"          =>      "video/mpeg",
+  ".mov"          =>      "video/quicktime",
+  ".qt"           =>      "video/quicktime",
+  ".avi"          =>      "video/x-msvideo",
+  ".asf"          =>      "video/x-ms-asf",
+  ".asx"          =>      "video/x-ms-asf",
+  ".wmv"          =>      "video/x-ms-wmv",
+  ".bz2"          =>      "application/x-bzip",
+  ".tbz"          =>      "application/x-bzip-compressed-tar",
+  ".tar.bz2"      =>      "application/x-bzip-compressed-tar",
+  # default mime type
+  ""              =>      "application/octet-stream",
+ )

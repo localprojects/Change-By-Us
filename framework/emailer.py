@@ -64,6 +64,8 @@ class Emailer():
         msg['To'] = ", ".join(addresses)
 
         try:
+            # The use_msg_directly parameter should be set to True if we're adding message headers. This is the case
+            # with MIMEText() usage. If we send text directly (ie without MIMEText()) then use_msg_directly should be False
             webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment, use_msg_directly=True, **kwargs)
 
         except Exception, e:
