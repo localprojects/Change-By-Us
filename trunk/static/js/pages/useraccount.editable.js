@@ -207,12 +207,28 @@
 					element: modal.options.element.find('.file-uploader').get(0),
 					action: '/create/photo',
 					onComplete: function(id, fileName, responseJSON){
-						
-						tc.jQ(document).trigger('create-image-uploaded',{
-							id:id,
-							fileName:fileName,
-							responseJSON:responseJSON
-						});
+						modal.hide();
+						if (responseJSON.thumbnail_id) {
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/edit",
+								data: {
+									f_name: app.app_page.user.f_name,
+									l_name: app.app_page.user.l_name,
+									email: app.app_page.user.email,
+									image_id: responseJSON.thumbnail_id,
+									location_id: app.app_page.user.location_id || null
+								},
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										return false;
+									}
+
+									tc.jQ(".user-account-nav img.avatar").attr('src',app.app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');	
+								}
+							});
+						}
 						
 						return true;
 					}
