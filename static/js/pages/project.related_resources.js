@@ -11,6 +11,7 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 	data = this.options.app.app_page.data;
 	widget = tc.gam.widget(this,project);
 	this.elements = {
+		window: tc.jQ(window),
 		resource_counter: this.dom.find(".counter"),
 		resources_table: this.dom.find("table.resources-list"),
 		empty_box: this.dom.find(".empty-state-box")
@@ -171,7 +172,13 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 	get();
 	
 	return {
-		show:widget.show,
+		show:function(){
+			widget.show();
+			if((me.dom.offset().top - me.elements.window.scrollTop()) < 0){
+				//me.elements.window.scrollTop(me.dom.offset());
+				me.elements.window.scrollTop(0);
+			}
+		},
 		hide:widget.hide
 	};
 };

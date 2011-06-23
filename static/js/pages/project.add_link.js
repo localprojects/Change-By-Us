@@ -14,6 +14,10 @@ tc.gam.project_widgets.add_link = function(project,dom,deps,options){
 		
 	};
 	
+	this.elements = {
+		window: tc.jQ(window)
+	};
+	
 	this.components = {
 		merlin:null
 	}
@@ -106,6 +110,11 @@ tc.gam.project_widgets.add_link = function(project,dom,deps,options){
 			widget.show(propagate);
 			if(me.components.merlin){
 				me.components.merlin.show_step('link-info');
+			}
+			
+			if((me.dom.offset().top - me.elements.window.scrollTop()) < 0){
+				//me.elements.window.scrollTop(me.dom.offset());
+				me.elements.window.scrollTop(0);
 			}
 		},
 		hide:widget.hide
