@@ -32,16 +32,24 @@ LOG_LEVELS = {
 class Loggable():
     def configureLogger(self):
         conf = self.Config
-        if 'log_file' in conf and 'log_level' in conf:
-            if not os.path.exists((os.path.split(conf.get('log_file'))[0])):
-                print("Created folder for logfile %s" % conf['log_file'])
-                os.makedirs((os.path.split(conf['log_file'])[0]))
+        logFile = None
+        logLevel = None
+        try:
+            logFile = conf.get('email').get('digest').get('log_file')
+            logLevel = conf.get('email').get('digest').get('log_level')
+        except Exception, e:
+            pass
+        
+        if logFile and logLevel:
+            if not os.path.exists((os.path.split(logFile)[0])):
+                print("Created folder for logfile %s" % logFile)
+                os.makedirs((os.path.split(logFile)[0]))
         else:
             return
 
-        print "Logging to file %s" % conf.get('log_file')
-        logging.basicConfig(filename=conf.get('log_file'),
-                            level=LOG_LEVELS.get(conf['log_level']),
+        print "Logging to file %s" % logFile
+        logging.basicConfig(filename=logFile,
+                            level=LOG_LEVELS.get(logLevel),
                             format='[%(asctime)s] %(levelname)s: %(message)s',
                             filemode='a')
         logging.info('Started logging')
@@ -94,10 +102,14 @@ class Mailable():
         web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
         web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
 
+    def htmlify(self, body):
+        return "<html><head></head><body>%s</body></html>" % body 
+    
     def sendEmail(self, to=None, recipients=None, subject=None, body=None):
-        return Emailer.send(to,
-                        subject,
-                        body,
+        return Emailer.send(addresses=to,
+                        subject=subject,
+                        text=body,
+                        html=self.htmlify(body),
                         from_name = self.MailerSettings.get('FromName'),
                         from_address = self.MailerSettings.get('FromEmail'),
                         bcc=recipients)
@@ -136,7 +148,8 @@ class WebpyDBConnectable():
 
 class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable, Loggable):
     Config = None
-    FromDate = None     # date that queries should use for created_datetime > filter
+    FromDate = None     # Start Date that queries should use for created_datetime filter
+    ToDate = None       # End Date that queries should use for create_datetime filter
 
     def __init__(self, configFile=None):
         # Connect to the mysql database based on the params from Config.yaml
@@ -177,14 +190,14 @@ inner join user u on u.user_id = pm.user_id
 left join idea i on i.idea_id = pm.idea_id
 where pm.project_id = $id and pm.is_active = 1
     and ($filterBy is null or pm.message_type = $filterBy)
-    and pm.created_datetime > $fromDate
+    and pm.created_datetime between $fromDate and $toDate
 order by pm.created_datetime desc
 """
         # TODO:
         # Should we be ordering/grouping by something other than the creationtime?
 
         # cursor = self.DBHandle.cursor()
-        comments = self.executeSQL(sql, {'id':int(projectId), 'fromDate':self.FromDate, 'filterBy':filterBy})
+        comments = self.executeSQL(sql, {'id':int(projectId), 'fromDate':self.FromDate, 'toDate': self.ToDate, 'filterBy':filterBy})
         groups = {}
         for comment in comments:
             if not groups.get(comment.project_id):
@@ -212,10 +225,10 @@ select
     pu.project_id
 from user u 
 join project__user as pu on u.user_id = pu.user_id
-where u.created_datetime >= $fromDate
+where u.created_datetime between $fromDate and $toDate
 order by pu.project_id, u.created_datetime desc
 """
-        members = self.executeSQL(sql, params = {'fromDate':self.FromDate})
+        members = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate':self.ToDate})
         projects = {}
         for member in members:
             if not projects.get(member.project_id):
@@ -290,9 +303,6 @@ order by pu.project_id, u.created_datetime desc
             # Create the digest()
 
     def createDigests(self):
-        if not self.FromDate:
-            self.FromDate = datetime.now() + relativedelta(days=-31)
-        
         resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
         member_profile_url = "%s/member/#" % base_url
@@ -310,7 +320,7 @@ order by pu.project_id, u.created_datetime desc
 
             digests[projId]['recipients'] = resp[projId].get('recipients')
             digests[projId]['title'] = resp[projId].get('title')
-            digests[projId]['link'] = "<a href='%s/project/%s'>%s</a>" % (Config.get('default_host'), projId, resp[projId].get('title'))
+            digests[projId]['link'] = "<a href='%s/project/%s'>%s</a>" % (self.Config.get('default_host'), projId, resp[projId].get('title'))
 
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
                 for user in resp[projId].get('members'):
@@ -346,23 +356,23 @@ select distinct
 from project_message pm
     join project p on pm.project_id = p.project_id
 where pm.message_type='member_comment'
-    and (pm.created_datetime > $fromDate or pm.project_id in $projects)
+    and (pm.created_datetime between $fromDate and $toDate or pm.project_id in $projects)
     order by pm.project_id
 """
         projectInfo = {}
-        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'projects': projects})
+        # Create a dummy list of project_id's to keep SQL happy in case we don't have any projects
+        if len(projects) == 0:
+            projects = [0]
+        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate': self.ToDate, 'projects': projects})
         for project in results:
             projectInfo[int(project.project_id)] = project
         return projectInfo
 
 
     def createAndSendDigests(self):
-        if not self.FromDate:
-            self.FromDate = datetime.now() + relativedelta(days=-31)
-
         digests = self.createDigests()
         for digest in digests:
-            subject = "%s%s\n\n" % (self.Config.get('email').get('digest_subject_prefix'), digests.get(digest).get('title'))
+            subject = "%s%s\n\n" % (self.Config.get('email').get('digest').get('digest_subject_prefix'), digests.get(digest).get('title'))
             body = ""
             body += digests.get(digest).get('link') + "\n\n"
             if digests.get(digest).get('members'):
@@ -378,7 +388,7 @@ where pm.message_type='member_comment'
 
             if self.Config.get('dev'):
                 body += "Recipients are " + ','.join(digests.get(digest).get('recipients')) + "\n\n"
-                recipients = self.Config.get('email').get('digest_debug_recipients').split(',')
+                recipients = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
 
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
             
@@ -392,13 +402,13 @@ where pm.message_type='member_comment'
         sql = """
 insert 
 into gam2.digest
-    (sender, to, recipients, subject, body, start_datetime, created_datetime)
+    (sender, to, recipients, subject, body, start_datetime, end_datetime, created_datetime)
 values
-    ($(sender)s, ${to)s, $(recipients)s, $(subject)s, $(body), $(fromDate)s, NOW(), 
+    ($(sender)s, ${to)s, $(recipients)s, $(subject)s, $(body), $(fromDate)s, $(toDate)s, NOW(), 
 """
-        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'sender': self.Config.get('email').get('from_email'), 
+        results = self.executeSQL(sql, params = {'fromDate':self.FromDate, 'toDate':self.ToDate, 
+                                                 'sender': self.Config.get('email').get('from_email'), 
                                                  'recipients': recipients, 'subject':subject, 'body': body})
-        
 
 # /GiveAMinuteDigest class 
 
@@ -417,7 +427,8 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
 
     parser = OptionParser()
     parser.add_option("-c", "--configFile", help="Configuration Yaml file", default="config.yaml")
-    parser.add_option("-d", "--dateFrom", help="Date to use as last digest point, in mysql compatible format")
+    parser.add_option("-f", "--dateFrom", help="Date to use as start-point for digest generation, in mysql-compatible format")
+    parser.add_option("-t", "--dateTo", help="Date to use as end-point for digest generation, in mysql-compatible format")
 
     (opts, args) = parser.parse_args()
 
@@ -426,12 +437,12 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
         parser.print_help()
         exit(-1)
     if not opts.dateFrom:
-        print "Warning: using the default start-date as 1 day ago. It's recommended that you pass in -d (--dateFrom)"
+        print "Warning: using the default start-date as 1 day ago. It's recommended that you pass in -f (--dateFrom)"
 
     gamDigest = GiveAMinuteDigest(opts.configFile)
-    if opts.dateFrom:
-        # gamDigest.FromDate = datetime.strptime(opts.dateFrom, '%Y/%m/%d %H:%M:%S')
-        gamDigest.FromDate = opts.dateFrom
+    # gamDigest.FromDate = datetime.strptime(opts.dateFrom, '%Y/%m/%d %H:%M:%S')
+    gamDigest.FromDate = opts.dateFrom
+    gamDigest.ToDate = opts.dateTo
 
     gamDigest.createAndSendDigests()
 
