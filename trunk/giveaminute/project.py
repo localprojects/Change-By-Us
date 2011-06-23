@@ -12,7 +12,6 @@ class Project():
         self.data = self.populateProjectData()
         
     def populateProjectData(self):
-        # TODO: remove left joins on user and location (once DB is tight)
         sql = """
 select p.project_id 
     ,p.title
@@ -34,9 +33,10 @@ select p.project_id
     ,u.user_id as owner_user_id
     ,u.first_name as owner_first_name
     ,u.last_name as owner_last_name
-    ,u.full_display_name as owner_full_display_name
     ,u.email as owner_email
     ,u.image_id as owner_image_id
+    ,u.affiliation as owner_affiliation
+    ,u.group_membership_bitmask as owner_group_membership_bitmask
 from project p
 inner join location l on l.location_id = p.location_id
 inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
@@ -70,7 +70,12 @@ limit 1"""
                     editable = True,
                     info = dict(title = self.data.title,
                                 image_id = self.data.image_id,
-                                owner = smallUserDisplay(self.data.owner_user_id, self.data.owner_full_display_name, self.data.owner_image_id),
+                                owner = smallUserDisplay(self.data.owner_user_id, 
+                                                         userNameDisplay(self.data.owner_first_name, 
+                                                                         self.data.owner_last_name, 
+                                                                         self.data.owner_affiliation, 
+                                                                         isFullLastName(self.data.owner_group_membership_bitmask)),
+                                                         self.data.owner_image_id),
                                 mission = self.data.description,
                                 keywords = (self.data.keywords.split() if self.data.keywords else []),
                                 endorsements = dict(items = endorsements),
@@ -94,7 +99,7 @@ limit 1"""
     def getMembers(self):
         members = []
         
-        sql = """select u.user_id, u.first_name, u.last_name, u.image_id from user u
+        sql = """select u.user_id, u.first_name, u.last_name, u.affiliation, u.group_membership_bitmask, u.image_id from user u
                 inner join project__user pu on pu.user_id = u.user_id and pu.project_id = $id"""
                 
         try:
@@ -102,7 +107,12 @@ limit 1"""
             
             if len(data) > 0:
                 for item in data:
-                    members.append(smallUser(item.user_id, item.first_name, item.last_name, item.image_id))
+                    members.append(smallUserDisplay(item.user_id, 
+                                                    userNameDisplay(item.first_name, 
+                                                                         item.last_name, 
+                                                                         item.affiliation, 
+                                                                         isFullLastName(item.group_membership_bitmask)), 
+                                                    item.image_id))
         except Exception, e:
             log.info("*** couldn't get project members")
             log.error(e)                  
@@ -112,7 +122,7 @@ limit 1"""
     def getEndorsements(self):
         endorsements = []
         
-        sql = """select u.user_id, u.full_display_name, u.image_id 
+        sql = """select u.user_id, u.first_name, u.last_name, u.affiliation, u.group_membership_bitmask, u.image_id 
                     from project_endorsement pe
                     inner join user u on pe.user_id = u.user_id  
                     where pe.project_id = $id"""
@@ -122,7 +132,12 @@ limit 1"""
             
             if len(data) > 0:
                 for item in data:
-                    endorsements.append(smallUserDisplay(item.user_id, item.full_display_name, item.image_id))
+                    endorsements.append(smallUserDisplay(item.user_id, 
+                                                         userNameDisplay(item.first_name, 
+                                                                         item.last_name, 
+                                                                         item.affiliation, 
+                                                                         isFullLastName(item.group_membership_bitmask)), 
+                                                        item.image_id))
         except Exception, e:
             log.info("*** couldn't get project endorsements")
             log.error(e)                  
@@ -153,6 +168,11 @@ limit 1"""
         return getMessages(self.db, self.id, 10, 0)
 
 ## FORMATTING FUNCTIONS
+# TODO: move these into their own module
+def isFullLastName(bitmask):
+    # is admin or lead
+    return (util.getBit(bitmask, 1) or util.getBit(bitmask, 3))
+
 def smallProject(id, title, description, imageId, numMembers, ownerUserId, ownerFirstName, ownerLastName, ownerImageId):
     return dict(project_id = id,
                 title = title,
@@ -207,8 +227,25 @@ def smallUserDisplay(id, fullDisplayName, image = None):
         return None
     
   
-def userName(first, last):
-    return "%s %s." % (first, last[0]) 
+def userName(first, last, isFullLast = False):
+    if (isFullLast):
+        return "%s %s" % (first, last)
+    else:
+        return "%s %s." % (first, last[0])
+    
+def userNameDisplay(first, last, affiliation = None, isFullLast = False):
+    name = None
+    
+    if (first and last):
+        name = userName(first, last, isFullLast)
+    
+    if (affiliation):
+        if (name):
+            name = "%s, %s" % (name, affiliation)
+        else:
+            name = affiliation
+            
+    return name
                 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
     return dict(idea_id = ideaId,
@@ -237,13 +274,13 @@ def idea(id, description, userId, firstName, lastName, createdDatetime, submissi
                 created = str(createdDatetime),
                 submission_type = submissionType)
                 
-def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, firstName, lastName, imageId, createdDatetime):
+def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, displayName, imageId, createdDatetime):
     return dict(goal_id = id,
                 text = description,
                 active = isFeatured,
                 accomplished = isAccomplished,
                 timeframe = "%s %s" % (str(time_n), time_unit),
-                owner = smallUser(userId, firstName, lastName, imageId),
+                owner = smallUserDisplay(userId, displayName, imageId),
                 created_datetime = str(createdDatetime))
                 
 ## END FORMATTING FUNCTIONS
@@ -641,7 +678,8 @@ def getFeaturedProjects(db, limit = 6):
                     o.user_id as owner_user_id,
                     o.first_name as owner_first_name,
                     o.last_name as owner_last_name,
-                    o.full_display_name as owner_full_display_name,
+                    o.affiliation as owner_affiliation,
+                    o.group_membership_bitmask as owner_group_membership_bitmask,
                     o.image_id as owner_image_id,
                     (select count(npu.user_id) from project__user npu 
                         inner join user nu on nu.user_id = npu.user_id and nu.is_active = 1
@@ -673,7 +711,8 @@ def getFeaturedProjectsWithStats(db):
                     o.user_id as owner_user_id,
                     o.first_name as owner_first_name,
                     o.last_name as owner_last_name,
-                    o.full_display_name as owner_full_display_name,
+                    o.affiliation as owner_affiliation,
+                    o.group_membership_bitmask as owner_group_membership_bitmask,
                     o.image_id as owner_image_id, 
                     fp.updated_datetime as featured_datetime,
                     (select count(npu.user_id) from project__user npu 
@@ -739,7 +778,8 @@ def getProjectsByUser(db, userId, limit = 100):
                         o.user_id as owner_user_id,
                         o.first_name as owner_first_name,
                         o.last_name as owner_last_name,
-                        o.full_display_name as owner_full_display_name,
+                        o.affiliation as owner_affiliation,
+                        o.group_membership_bitmask as owner_group_membership_bitmask,
                         o.image_id as owner_image_id, 
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
                 from project p
@@ -756,7 +796,12 @@ def getProjectsByUser(db, userId, limit = 100):
                             description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
-                            owner = smallUserDisplay(item.owner_user_id, item.owner_full_display_name, item.owner_image_id),
+                            owner = smallUserDisplay(item.owner_user_id, 
+                                                     userNameDisplay(item.owner_first_name, 
+                                                                     item.owner_last_name, 
+                                                                     item.owner_affiliation, 
+                                                                     isFullLastName(item.owner_group_membership_bitmask)), 
+                                                     item.owner_image_id),
                             num_members = item.num_members))
     except Exception, e:
         log.info("*** couldn't get projects")
@@ -802,7 +847,8 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                         o.user_id as owner_user_id,
                         o.first_name as owner_first_name,
                         o.last_name as owner_last_name,
-                        o.full_display_name as owner_full_display_name,
+                        o.affiliation as owner_affiliation,
+                        o.group_membership_bitmask as owner_group_membership_bitmask,
                         o.image_id as owner_image_id, 
                     (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
                     from project p
@@ -823,7 +869,12 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                             description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
-                            owner = smallUserDisplay(item.owner_user_id, item.owner_full_display_name, item.owner_image_id),
+                            owner = smallUserDisplay(item.owner_user_id, 
+                                                     userNameDisplay(item.owner_first_name, 
+                                                                     item.owner_last_name, 
+                                                                     item.owner_affiliation, 
+                                                                     isFullLastName(item.owner_group_membership_bitmask)),
+                                                     item.owner_image_id),
                             num_members = item.num_members))
     except Exception, e:
         log.info("*** couldn't get project search data")
@@ -842,7 +893,8 @@ def getLeaderboardProjects(db, limit = 10, offset = 0):
                       u.first_name as owner_first_name,
                       u.last_name as owner_last_name,
                       u.user_id as owner_user_id,
-                      u.full_display_name as owner_full_display_name,
+                      u.affiliation as owner_affiliation,
+                      u.group_membership_bitmask as owner_group_membership_bitmask,
                       (select count(*) from project_goal pg where pg.project_id = p.project_id and pg.is_accomplished = 1 and pg.is_active)
                         as goal_count,
                       (select count(*) from project__user pu where pu.project_id = p.project_id)
@@ -978,7 +1030,7 @@ def getGoals(db, projectId):
     goals = []
     
     sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
-                  u.user_id, u.first_name, u.last_name, u.image_id, g.created_datetime
+                  u.user_id, u.first_name, u.last_name, u.affiliation, u.group_membership_bitmask, u.image_id, g.created_datetime
             from project_goal g
             inner join user u on u.user_id = g.user_id 
             inner join project__user pu on pu.user_id = g.user_id and pu.project_id = g.project_id
@@ -996,8 +1048,7 @@ def getGoals(db, projectId):
                                   item.time_frame_numeric,
                                   item.time_frame_unit,
                                   item.user_id, 
-                                  item.first_name, 
-                                  item.last_name,
+                                  userNameDisplay(item.first_name, item.last_name, item.affiliation, isFullLastName(item.group_membership_bitmask)),
                                   item.image_id,
                                   item.created_datetime))
     except Exception, e:
@@ -1021,7 +1072,8 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     u.user_id,
                     u.first_name,
                     u.last_name,
-                    u.full_display_name,
+                    u.affiliation,
+                    u.group_membership_bitmask,
                     u.image_id,
                     i.idea_id,
                     i.description as idea_description,
@@ -1042,7 +1094,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                                     item.message, 
                                     item.created_datetime, 
                                     item.user_id, 
-                                    item.full_display_name, 
+                                    userNameDisplay(item.first_name, item.last_name, item.affiliation, isFullLastName(item.group_membership_bitmask)), 
                                     item.image_id,
                                     item.idea_id, 
                                     item.idea_description, 

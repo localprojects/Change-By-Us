@@ -19,16 +19,16 @@ class User():
             self.phone = self.data.phone
             self.firstName = self.data.first_name
             self.lastName = self.data.last_name
-            self.fullDisplayName = self.data.full_display_name
             self.imageId = self.data.image_id
             self.locationId = self.data.location_id
             self.location = self.data.location_name
             self.description = self.data.description
             self.affiliation = self.data.affiliation
+            self.groupMembershipBitmask = self.data.group_membership_bitmask
             self.emailNotification = self.data.email_notification
-            self.isAdmin = bool(self.data.is_admin)
-            self.isModerator = bool(self.data.is_moderator)
-            self.isLeader = bool(self.data.is_leader)
+            self.isAdmin = isAdminBitmask(self.data.group_membership_bitmask)
+            self.isModerator = isModeratorBitmask(self.data.group_membership_bitmask)
+            self.isLeader = isLeaderBitmask(self.data.group_membership_bitmask)
             self.numNewMessages = self.getNumNewMessages()
     
     def isProjectAdmin(self, projectId):
@@ -67,6 +67,7 @@ class User():
         data = dict(u_id = self.id,
                     f_name = self.firstName,
                     l_name = self.lastName,
+                    affiliation = self.affiliation,
                     email = self.email,
                     mobile = self.phone,
                     email_notification = self.emailNotification,
@@ -85,24 +86,18 @@ select u.user_key
       ,u.phone
       ,u.first_name
       ,u.last_name
-      ,u.full_display_name
       ,u.image_id
       ,u.location_id
       ,l.name as location_name
       ,u.description
       ,u.affiliation
+      ,u.group_membership_bitmask
       ,u.email_notification
       ,coalesce(u.last_account_page_access_datetime, u.created_datetime) as last_account_page_access_datetime
-      ,if(ug1.user_group_id, 1, 0) as is_admin
-      ,if(ug2.user_group_id, 1, 0) as is_moderator
-      ,if(ug3.user_group_id, 1, 0) as is_leader
       ,pl.title
       ,pl.organization
 from user u 
 left join location l on l.location_id = u.location_id
-left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id = 1
-left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
-left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
 left join project_leader pl on pl.user_id = u.user_id
 where u.user_id = $id and u.is_active = 1"""
         
@@ -141,8 +136,7 @@ where u.user_id = $id and u.is_active = 1"""
                             email = email,
                             image_id = imageId,
                             location_id = locationId,
-                            full_display_name = formatUserDisplayName(first, last, self.affiliation, (self.isAdmin or self.isLeader)),
-                            vars = {'userId':self.id})
+                                vars = {'userId':self.id})
             
             return True
         except Exception, e:
@@ -255,7 +249,12 @@ where u.user_id = $id and u.is_active = 1"""
         return data         
         
     def getActivityDictionary(self):
-        user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)
+        user = mProject.smallUserDisplay(self.id, 
+                                         mProject.userNameDisplay(self.firstName, 
+                                                                  self.lastName, 
+                                                                  self.affiliation,
+                                                                  mProject.isFullLastName(self.groupMembershipBitmask)),
+                                         self.imageId)        
         user['location_id'] = self.locationId
         user['location'] = self.location
         user['description'] = self.description
@@ -315,7 +314,8 @@ where u.user_id = $id and u.is_active = 1"""
                         mu.user_id,
                         mu.first_name,
                         mu.last_name,
-                        mu.full_display_name,
+                        mu.affiliation,
+                        mu.group_membership_bitmask,
                         mu.image_id,
                         i.idea_id,
                         i.description as idea_description,
@@ -338,7 +338,8 @@ where u.user_id = $id and u.is_active = 1"""
                         iu.user_id,
                         iu.first_name,
                         iu.last_name,
-                        iu.full_display_name,
+                        iu.affiliation,
+                        iu.group_membership_bitmask,
                         iu.image_id,
                         i.idea_id,
                         i.description as idea_description,
@@ -358,7 +359,10 @@ where u.user_id = $id and u.is_active = 1"""
                                         item.message, 
                                         item.created_datetime, 
                                         item.user_id, 
-                                        item.full_display_name, 
+                                        mProject.userNameDisplay(item.first_name,
+                                                                 item.last_name,
+                                                                 item.affiliation,
+                                                                 mProject.isFullLastName(item.group_membership_bitmask)), 
                                         item.image_id,
                                         item.idea_id, 
                                         item.idea_description, 
@@ -391,45 +395,6 @@ where u.user_id = $id and u.is_active = 1"""
             log.error(e)
             
         return num
-                    
-def formatUserDisplayName(first, last, affiliation=None, isAdmin=False):
-    name = ""
-
-    if (isAdmin):
-        if (affiliation):
-            if (not first and not last):
-                name = affiliation
-            else:
-                name = "%s %s, %s" % (first, last, affiliation)
-        else:
-            name = "%s %s" % (first, last)
-    else:
-        name = "%s %s." % (first, last[0])
-        
-    return name
-    
-def updateUserDisplayName(db, userId):
-    try:
-        sql = """update user u
-left join user__user_group g1 on g1.user_id = u.user_id and g1.user_group_id = 1
-left join user__user_group g3 on g3.user_id = u.user_id and g3.user_group_id = 3
-set full_display_name = if (coalesce(g1.user_group_id, g3.user_group_id) is not null,
-                  if (u.affiliation is not null,
-                    if (u.first_name is not null and u.last_name is not null,
-                      concat(u.first_name, ' ', u.last_name, ', ', u.affiliation),
-                      u.affiliation),
-                    concat(u.first_name, ' ', u.last_name)),
-                  concat(u.first_name, ' ', substring(u.last_name, 1, 1), '.'))
-                  where u.user_id = $id"""
-                  
-        db.query(sql, {'id':userId})
-        
-        return True
-    except Exception, e:
-        log.info("*** couldn't update full display name")
-        log.error(e)
-        
-        return False
         
 def createUser(db, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None, affiliation = None, isAdmin = False):
     userId = None
@@ -444,7 +409,6 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
                                     phone=phone, 
                                     first_name=firstName, 
                                     last_name=lastName,
-                                    full_display_name = formatUserDisplayName(firstName, lastName, affiliation, isAdmin),
                                     affiliation=affiliation, 
                                     image_id=imageId, 
                                     location_id=locationId,
@@ -471,7 +435,6 @@ def createUserFromAuthGuid(db, authGuid):
                                         phone = userData.phone, 
                                         first_name = userData.first_name, 
                                         last_name = userData.last_name, 
-                                        full_display_name = formatUserDisplayName(firstName, lastName),
                                         created_datetime = None)
     except Exception, e:
         log.info("*** problem creating user from auth guid %s" % authGuid)
@@ -502,23 +465,6 @@ def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, l
         
     return userId
         
-def setUserGroup(db, userId, userGroupId):
-    t = db.transaction()
-    
-    try:
-        db.delete('user__user_group', where = "user_id = $userId", vars = {'userId':userId})
-        db.insert('user__user_group', user_id = userId, user_group_id = userGroupId)
-        
-        updateUserDisplayName(db, userId)
-    except Exception, e:
-        log.info("*** problem setting user id %s to group %s" % (userId, userGroupId))
-        log.error(e)
-        t.rollback()
-        return False
-    else:
-        t.commit()
-        return True
-        
 def setUserOncallStatus(db, userId, status):
     try:
         db.update('user', where = "user_id = $userId", is_oncall = status, vars = {'userId':userId})
@@ -547,7 +493,7 @@ def authenticateUser(db, email, password):
         return None
 
 def authGetUser(db, email, password):
-    sql = "select user_id, first_name, last_name, full_display_name, image_id, email, password, salt from user where email = $email and is_active = 1"
+    sql = "select user_id, first_name, last_name, affiliation, group_membership_bitmask, image_id, email, password, salt from user where email = $email and is_active = 1"
     data = db.query(sql, {'email':email})
     
     if (len(data) > 0):
@@ -556,7 +502,12 @@ def authGetUser(db, email, password):
     
         if (hashed_password[0] == user.password):
             log.info("*** User authenticated")
-            return mProject.smallUserDisplay(user.user_id, user.full_display_name, user.image_id)
+            return mProject.smallUserDisplay(user.user_id, 
+                                             mProject.userNameDisplay(user.first_name, 
+                                                                      user.last_name, 
+                                                                      user.affiliation, 
+                                                                      mProject.isFullLastName(user.group_membership_bitmask)), 
+                                             user.image_id)
         else:
             log.warning("*** User not authenticated for email = %s" % email)
             return None
@@ -598,15 +549,11 @@ def findUserByPhone(db, phone):
     else:
         return None  
     
-def assignUserToGroup(db, userId, userGroupId, title = None, organization = None):
+def assignUserToGroup(db, userId, userGroupId):
     try:
-        db.insert('user__user_group', user_id = userId, 
-                                      user_group_id = userGroupId)
-                    
-        if (userGroupId == 3):
-            db.insert('project_leader', user_id = userId,
-                                        title = title,
-                                        organization = organization)
+        db.update('user', where = "user_id = $id",
+                          group_membership_bitmask = util.setBit(1, int(userGroupId)),
+                          vars = {'id' : userId})
                                       
         return True
     except Exception, e:
@@ -615,27 +562,52 @@ def assignUserToGroup(db, userId, userGroupId, title = None, organization = None
         return False
     
 def getAdminUsers(db, limit = 10, offset = 0):
-    data = []
+    betterData = []
 
     try:
         sql = """select distinct 
-                    u.user_id, u.email, u.first_name, u.last_name, u.full_display_name
-                    ,if(ug1.user_group_id, 1, 0) as is_admin
-                    ,if(ug2.user_group_id, 1, 0) as is_moderator
-                    ,if(ug3.user_group_id, 1, 0) as is_leader
+                    u.user_id
+                    ,u.email
+                    ,u.first_name
+                    ,u.last_name
+                    ,u.affiliation
+                    ,u.group_membership_bitmask
                     ,u.is_oncall
                 from user u 
-                left join user__user_group ug1 on ug1.user_id = u.user_id and ug1.user_group_id = 1
-                left join user__user_group ug2 on ug2.user_id = u.user_id and ug2.user_group_id = 2
-                left join user__user_group ug3 on ug3.user_id = u.user_id and ug3.user_group_id = 3
                 where u.is_active = 1 
-                   and (ug1.user_group_id is not null or ug2.user_group_id is not null or ug3.user_group_id is not null)
+                   and u.group_membership_bitmask > 1
                 order by u.last_name
                 limit $limit offset $offset"""
         data = list(db.query(sql, {'limit':limit, 'offset':offset}))
+        
+        for item in data:
+            betterData.append({'user_id' : item.user_id,
+                               'email' : item.email,
+                               'first_name' : item.first_name,
+                               'last_name' : item.last_name,
+                               'affiliation' : item.affiliation,
+                               'group_membership_bitmask' : item.group_membership_bitmask,
+                               'full_display_name' : mProject.userNameDisplay(item.first_name,
+                                                                              item.last_name,
+                                                                              item.affiliation,
+                                                                              mProject.isFullLastName(item.group_membership_bitmask)),
+                               'is_admin' : isAdminBitmask(item.group_membership_bitmask),
+                               'is_moderator' : isModeratorBitmask(item.group_membership_bitmask),
+                               'is_leader' : isLeaderBitmask(item.group_membership_bitmask),
+                               'is_oncall' : item.is_oncall})
     except Exception, e:
         log.info("*** couldn't get admin users")
         log.error(e)
         
-    return data
+    return betterData
+    
+def isAdminBitmask(bitmask):
+    return util.getBit(bitmask, 1)
+
+def isModeratorBitmask(bitmask):
+    return util.getBit(bitmask, 2)
+
+def isLeaderBitmask(bitmask):
+    return util.getBit(bitmask, 3)
+
   

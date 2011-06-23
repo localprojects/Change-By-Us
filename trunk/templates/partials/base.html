@@ -86,7 +86,13 @@
 							<div class="join"><a href='/join'>Join</a></div>
 							<div class='login'><a href='/login'>Login</a></div>
 							<div class='username'>
-								<a href='/useraccount'><span class="unbold">Hi, </span>{% if d.template_data and d.template_data.user %}{{ d.template_data['user'].data.f_name }}{% endif %}!</a>
+								<a href='/useraccount'><span class="unbold">Hi, </span>{%- if d.template_data and d.template_data.user -%}
+								                                                            {%- if d.template_data.user.data.f_name -%}
+								                                                                {{ d.template_data.user.data.f_name }}
+								                                                            {%- elif d.template_data.user.data.affiliation -%}
+								                                                                {{ d.template_data.user.data.affiliation }}
+								                                                            {%- endif -%}
+								                                                       {%- endif -%}!</a>
 								<div class="dropdown no-js">
 									<div class="membrane">
 										<a href="/useraccount">Account</a>

@@ -207,7 +207,10 @@ class Project(Controller):
                                                     projectId, 
                                                     project.data.title, 
                                                     self.user.id, 
-                                                    mProject.userName(self.user.firstName, self.user.lastName))):
+                                                    mProject.userNameDisplay(self.user.firstName, 
+                                                                             self.user.lastName,
+                                                                             self.user.affiliation,
+                                                                             mProject.isFullLastName(self.user.groupMembershipBitmask)))):
                     log.error("*** couldn't email admin on user_id = %s joining project %s" % (self.user.id, projectId))
                 
                 if (not mProject.addMessage(self.db, 

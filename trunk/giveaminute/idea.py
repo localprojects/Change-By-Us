@@ -127,6 +127,7 @@ def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = 
                       ,u.user_id
                       ,u.first_name
                       ,u.last_name
+                      ,u.affiliation
                       ,u.image_id
                 from idea i
                 left join user u on u.user_id = i.user_id
@@ -147,7 +148,7 @@ def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = 
                 # repeating smallUser method from giveaminute.project to avoid circular reference
                 owner = dict(u_id = item.user_id,
                             image_id = item.image_id,
-                            name = "%s %s." % (item.first_name, item.last_name[0]))
+                            name = ideaName(item.first_name, item.last_name, item.affiliation))
 
             betterData.append(dict(idea_id = item.idea_id,
                             message = item.description,
@@ -228,7 +229,7 @@ def getMostRecentIdeas(db, limit=100, offset=0):
     data = []
     betterData = []
     
-    sql = """select i.idea_id, i.description as text, u.user_id, u.first_name as f_name, u.last_name as l_name, i.submission_type as submitted_by 
+    sql = """select i.idea_id, i.description as text, u.user_id, u.first_name, u.last_name, u.affiliation, i.submission_type as submitted_by 
             from idea i
             left join user u on u.user_id = i.user_id and u.is_active = 1
             where i.is_active = 1
@@ -241,8 +242,7 @@ def getMostRecentIdeas(db, limit=100, offset=0):
         for item in data:
             betterData.append(dict(text = item.text,
                         user_id = item.user_id,
-                        f_name = str(item.f_name) if item.f_name else '',
-                        l_name = str(item.l_name)[0] + '.' if item.l_name else '',
+                        name = ideaName(item.first_name, item.last_name, item.affiliation),
                         submitted_by =  str(item.submitted_by)))   
     
     except Exception, e:
@@ -250,3 +250,14 @@ def getMostRecentIdeas(db, limit=100, offset=0):
         log.error(e)    
         
     return betterData
+    
+# TODO put this with the rest of the formatting functions
+def ideaName(first, last, affiliation = None):
+    if (first and last):
+        # TODO should use general username formatter
+        #return userName(first, last, False)
+        return "%s %s." % (first, last[0])
+    elif (affiliation):
+        return affiliation
+    else:
+        return None
