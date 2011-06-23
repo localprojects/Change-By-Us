@@ -163,21 +163,7 @@ class Admin(Controller):
         
         
     def showContent(self):
-        featuredProjects = []
-        
-        data = mProject.getFeaturedProjectsWithStats(self.db)
-        
-        for item in data:
-            featuredProjects.append(dict(project_id = item.project_id,
-                                        title = item.title,
-                                        description = item.description,
-                                        image_id = item.image_id,
-                                        num_members = item.num_members,
-                                        owner = mProject.smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
-                                        num_ideas = item.num_ideas,
-                                        num_resources = item.num_project_resources,
-                                        num_endorsements = item.num_endorsements,
-                                        featured_datetime = str(item.featured_datetime)))
+        featuredProjects = mProject.getFeaturedProjectsDictionary(self.db)
         
         self.template_data['featured_projects'] = dict(data = featuredProjects, json = json.dumps(featuredProjects))
     

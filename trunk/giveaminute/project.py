@@ -666,7 +666,7 @@ def unfeatureProject(db, projectId):
              
   
 def getFeaturedProjects(db, limit = 6):
-    data = []
+    betterData = []
     
     try:
         sql = """select 
@@ -692,14 +692,28 @@ def getFeaturedProjects(db, limit = 6):
                 order by fp.ordinal
                 limit $limit"""
         data = list(db.query(sql, {'limit':limit}))
+        
+        for item in data:
+            betterData.append({'project_id' : item.project_id,
+                                'title' : item.title,    
+                                'description' : item.description,
+                                'image_id' : item.image_id,
+                                'location_id' : item.location_id,
+                                'owner_user_id' : item.owner_user_id,
+                                'owner_full_display_name' : userNameDisplay(item.owner_first_name,
+                                                                      item.owner_last_name,
+                                                                      item.owner_affiliation,
+                                                                      isFullLastName(item.owner_group_membership_bitmask)),
+                                'owner_image_id' : item.owner_image_id,
+                                'num_members' : item.num_members})
     except Exception, e:
         log.info("*** couldn't get featured projects")
         log.error(e)
         
-    return data    
+    return betterData    
     
-def getFeaturedProjectsWithStats(db):
-    data = []
+def getFeaturedProjectsDictionary(db):
+    betterData = []
     
     try:
         sql = """select 
@@ -733,11 +747,32 @@ def getFeaturedProjectsWithStats(db):
                 where p.is_active = 1
                 order by fp.ordinal"""
         data = list(db.query(sql))
+        
+        for item in data:
+            betterData.append({'project_id' : item.project_id,
+                                'title' : item.title,    
+                                'description' : item.description,
+                                'image_id' : item.image_id,
+                                'location_id' : item.location_id,
+                                'owner' : smallUserDisplay(item.owner_user_id,
+                                                           userNameDisplay(item.owner_first_name,
+                                                                           item.owner_last_name,
+                                                                           item.owner_affiliation,
+                                                                           isFullLastName(item.owner_group_membership_bitmask)),
+                                                           item.owner_image_id),
+                                'featured_datetime' : str(item.featured_datetime),
+                                'owner_image_id' : item.owner_image_id,
+                                'num_members' : item.num_members,
+                                'num_ideas' : item.num_ideas,
+                                'num_project_resources' : item.num_project_resources,
+                                'num_endorsements' : item.num_endorsements})     
+                                
+            log.info("*** better proj stats = %s" % betterData)   
     except Exception, e:
         log.info("*** couldn't get featured projects with stats")
         log.error(e)
         
-    return data        
+    return betterData        
         
 # find projects by location id
 def getProjectsByLocation(db, locationId, limit = 100):
