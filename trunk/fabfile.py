@@ -9,35 +9,136 @@ Credits: This fabfile created from a combination of :
     * https://gist.github.com/1011863
     * http://morethanseven.net/2009/07/27/fabric-django-git-apache-mod_wsgi-virtualenv-and-p.html
     * https://gist.github.com/156623
+
+Stage-specific interpolation is easy:
+   open(lighttpd.conf.stage, 'r').read() % vars[stage]
+
+
+------------------------------
+INSTRUCTIONS:
+------------------------------
+This fabfile requires a set of parameters to be set in an rcfile, for fabric to load.
+
+
+CAVEATS AND NOTES:
+    * Do NOT user short if[] syntax, meaning [ -e "foobar.txt' ] && {do_something}. Go for explicit if [ -e "foobar.txt" ];then do_something; fi
+      The short syntax does not return the correct value for success, and this causes scripts to fail
+    * ROLES (and other decorators) MUST be on the parent function. Running a child function through a decorator just won't work due to some
+      fabric stupidity!
+
+TODO:
+    * Need ROLES for multiple hosts per stage. Remember that a Role is a machine in an Environment
+    * Copy interpolated configs into /etc/
+    * symlink /config.yaml to interpolated config after deleting it from /current - but this *might* be a bad idea for changes to config?
+    * We should be able to do the following:
+        fab --config=rcfile.sundar sundar_dev create_config_yaml
+
+------------------------------
+COOKBOOK:
+------------------------------
+    Create new configuration file:
+        fab --config=rcfile.name dev create_config_yaml
+
+    Create stage-specific lighttpd.conf file into the etc/ folder
+        fab --config=rcfile.name dev create_lighttpd_conf
+
+    Setup a set of web servers
+        fab --config=rcfile.dev dev setup
+
+    Create a new bundle and deploy
+        fab --config=rcfile.name dev bundle_code deploy
+
+    Create a new bundle and deploy at a different time
+        fab --config=rcfile.name dev bundle_code
+        Save the release bundle name (see the ATTENTION line in the output)
+        fab --config=rcfile.name dev deploy
+
+
 """
 
-env.project_name = 'gam2'
-env.database_password = '$(db_password)'
-env.site_media_prefix = "site_media"
-env.admin_media_prefix = "admin_media"
-env.newsapps_media_prefix = "na_media"
-env.local_base_path = os.path.expanduser("~/Projects/LP")
+# PATHS
+env.application = 'gam2'
 
+# Repository Information
 env.scm = "svn"
+env.repository = "http://svn.localprojects.net/gam2"
+# env.repository = "/Users/sundar/Projects/LP/gam2"
+# env.repository = "git@git.assembla.com:lp-cbu"
 
-# repo_path can be either a local
-env.repo_path = "http://svn.localprojects.net/gam2"
-# env.repo_path = "/Users/sundar/Projects/LP/gam2"
-# env.repo_path = "git@git.assembla.com:lp-cbu"
+# Define ROLES
+env.roledefs = {
+   'web': ['dev-nyc.changeby.us'],
+   'dns': ['ns1', 'ns2']
+}
 
-
+# Webserver Configuration
 env.webserver = "lighttpd"
 
-# env.env_path = '%(path)s/env' % env
+env.venv_path = '%(path)s/.virtualenv' % env
 
-# env.repo_path = '%(path)s/repository' % env
-# env.apache_config_path = '%(base_path)s/sites/apache/%(project_name)s' % env
+# env.repository = '%(path)s/repository' % env
+# env.apache_config_path = '%(deploy_to)s/sites/apache/%(application)s' % env
+env.vars = {}
 
 env.python = 'python2.6'
 
-"""
-Environments
-"""
+#----- Samples and examples -----
+# This section provides some test code for understanding how Fabric works
+@roles('web')
+def test():
+    print "Testing the rcfile"
+    # print env.email.keys()
+    get_version()
+
+def get_version():
+    env.user = 'sraman'
+    env.key_filename = [os.path.expanduser("~/.ssh/work/work.id_dsa")]
+    run('uname -a')
+
+#----- /samples -----
+
+
+#----- Decorator(s) -----
+def common_config(func):
+    """
+    Common are the environment variables that need to be evaluated after the others are loaded
+    due to dependencies. There has to be a way to inherist this stuff though!!!
+    """
+    def wrapper():
+        # execute the caller to load that set of configurations
+        func()
+
+        # Now load all the configurations that were dependent on the caller's var-space
+        if env.get('deploy_to') is None:
+            env.deploy_to = '/home/%(user)s' % env # The base path should always be the logged-in user
+
+        # System paths are under app_path, so provide the relative paths that we need
+        # for system services (like lighttpd, apache, etc.)
+        # Thes COULD be specific for each environment/stage, but it's best to have them common
+        env.system_paths = ['var/log', 'etc/%(webserver)s' % env, 'run', 'releases', 'shared']
+
+        # The scratch/work space for putting temporary stuff while we deploy from local dev
+        env.tmp_path = "/tmp/%(application)s/releases" % env
+        env.app_path = '%(deploy_to)s/sites/%(application)s' % env
+        env.current_path = "%(app_path)s/current" % env
+        env.shared_path = "%(app_path)s/shared" % env
+
+        # Configuration Template Files and config files
+        env.etc_path = '%(app_path)s/etc' % env
+        env.log_path = '%(app_path)s/var/log' % env
+        env.local_etc_path = '%(local_path)s/etc' % env
+
+        env.config_template = '%(local_etc_path)s/config.yaml.sample' % env
+        env.config_file = '%(local_path)s/config.yaml' % env     # There's no reason for this to be configurable, but whatever
+
+        # Each webservec can have its own set of configurations
+        # Eg. apache, lighttpd, etc.
+        env.webserver_template = '%(local_etc_path)s/%(webserver)s/%(webserver)s.conf.sample' % env
+        env.webserver_file = '%(local_etc_path)s/%(webserver)s/%(webserver)s.conf' % env
+
+    return wrapper
+
+#----- /decorator(s) -----
 
 def demo():
     """
@@ -48,8 +149,8 @@ def demo():
     env.user = 'giveaminute'
     env.s3_bucket = 'demo-nyc.changeby.us'
 
-    # Common stuff to all environments
-    common()
+    env.branch = 'release'
+    env.rcfile = 'rcfile.%s' % env.settings
 
 def dev():
     """
@@ -57,26 +158,72 @@ def dev():
     """
     env.settings = 'dev'
     env.hosts = ['dev-nyc.changeby.us']
-    env.user = 'sraman'
-    env.key_filename = [os.path.expanduser("~/.ssh/work/work.id_dsa")]
+    env.user = 'giveaminute'
     env.s3_bucket = 'sandbox.changeby.us'
 
     # WHich branch do we want to deploy? Keep in mind that this is environment specific
     env.branch = "trunk"
 
-    common()
-
-def common():
+@common_config
+def sundar_dev():
     """
-    Common are the environment variables that need to be evaluated after the others are loaded
-    due to dependencies. There has to be a way to inherist this stuff though!!!
+    Work on dev environment
     """
-    env.base_path = '/home/%(user)s' % env # The base path should always be the logged-in user
-    env.app_path = '%(base_path)s/sites/%(project_name)s' % env
-    # The scratch/work space for putting temporary stuff while we deploy from local dev
-    env.tmp_path = "/tmp/%(project_name)s/releases" % env
-    env.app_path = '%(base_path)s/sites/%(project_name)s' % env
+    env.settings = 'dev'
+    env.hosts = ['dev-nyc.changeby.us']
+    env.user = 'sraman'
+    env.groupname = "staff"
+    env.key_filename = [os.path.expanduser("~/.ssh/work/work.id_dsa")]
+    env.s3_bucket = 'sandbox.changeby.us'
+    env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
 
+    # WHich branch do we want to deploy? Keep in mind that this is environment specific
+    env.branch = "trunk"
+
+def dump_env():
+    for key in env.keys():
+        print "%s => %s" % (key, env.get(key))
+
+#------------------------------------------------
+# Create Configuration files from rcfile
+#------------------------------------------------
+def create_config_yaml():
+    if not os.path.exists(env.rcfile):
+        raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
+
+    if not os.path.exists(env.config_template):
+        raise Exception("Unable to find configuration template file (%s) to create config from" % env.config_template)
+    infile = open(env.config_template, 'r')
+    outfile = open(env.config_file, 'w')
+    outfile.write(infile.read() % env)
+    outfile.close()
+    infile.close()
+
+def upload_config_yaml():
+    " Upload the interpolated config.yaml to the target servers"
+    put(env.config_file, env.shared_path)
+
+def create_webserver_conf():
+    if not os.path.exists(env.webserver_template):
+        raise Exception("Unable to find configuration template file (%(webserver_template)s) to create config from" % env)
+    infile = open(env.webserver_template, 'r')
+    outfile = open(env.webserver_file, 'w')
+    outfile.write(infile.read() % env)
+    outfile.close()
+    infile.close()
+
+def upload_webserver_conf():
+    put(env.webserver_file, "%(etc_path)s/%(webserver)s" % env)
+
+@roles('web')
+def deploy_configurations():
+    create_config_yaml()
+    upload_config_yaml()
+
+    create_webserver_conf()
+    upload_webserver_conf()
+
+#---- /create-config-files ----------------------
 
 
 """
@@ -101,11 +248,21 @@ def branch(branch_name):
     env.branch = branch_name
 
 """
-Commands - setup
+SETUP AND INITIALIZATION TASKS
 """
-def setup():
+@roles('web')
+def setup_system():
+    """ Set up a new system """
+#    setup_virtualenv()
+#    install_lighttpd_conf()
+#    install_requirements()
+
+    pass
+
+@roles('web')
+def setup_application():
     """
-    Setup a fresh virtualenv, install everything we need, and fire up the database.
+    Set up the application path and all the application specific things
 
     Does NOT perform the functions of deploy().
     """
@@ -113,14 +270,13 @@ def setup():
     # require('branch', provided_by=[stable, master, branch])
 
     setup_directories()
-#    setup_virtualenv()
+    deploy_configurations()
+
 #    clone_repo()
 #    checkout_latest()
 #    destroy_database()
 #    create_database()
 #    load_data()
-#    install_requirements()
-#    install_apache_conf()
 #    deploy_requirements_to_s3()
 
 def setup_directories():
@@ -129,96 +285,106 @@ def setup_directories():
     """
     # First set up the system paths for the server/services
     run('mkdir -p %(app_path)s' % env)
-    run('mkdir -p %(app_path)s/releases' % env)
 
+    #----
     # Server paths (for web/other servers)
-    run('mkdir -p %(app_path)s/var/log' % env)
-    run('mkdir -p %(app_path)s/etc' % env)
-
-    # sudo('chgrp -R www-data %(log_path)s; chmod -R g+w %(log_path)s;' % env)
-    # run('ln -s %(log_path)s %(path)s/logs' % env)
+    #----
+    for path in env.system_paths:
+        env.temp_var = path
+        run('mkdir -p %(app_path)s/%(temp_var)s' % env)
+        # Change ownership of paths
+        # sudo('chgrp -R www-data %(app_path)s/%(temp_var)s; chmod -R g+w %(app_path)s/%(temp_var)s;' % env)
 
 def setup_virtualenv():
     """
     Setup a fresh virtualenv.
     """
-    run('virtualenv -p %(python)s --no-site-packages %(env_path)s;' % env)
-    run('source %(env_path)s/bin/activate; easy_install -U setuptools; easy_install pip;' % env)
+    run('virtualenv -p %(python)s --no-site-packages %(venv_path)s;' % env)
+    run('source %(venv_path)s/bin/activate; easy_install -U setuptools; easy_install pip;' % env)
 
 """
 SCM and Code related functions
 """
-def export_latest_code():
+def bundle_code():
     # Set the timestamp for the release here, and it'll be available to the environment
+    env.release = time.strftime('%Y%m%d%H%M%S')
 
     local('rm -rf %(tmp_path)s' % env)
 
     if env.scm == 'git':
         "Create an archive from the current Git master branch and upload it"
-        local('git clone --depth 0 %(repo_path)s %(tmp_path)s')
+        local('git clone --depth 0 %(repository)s %(tmp_path)s')
         local('cd %(tmp_path)s && git pull origin && git co %(branch)s' % env)
         local('git remote show origin > REVISION.txt')
-        local('git archive --format=tar %(branch)s | gzip > %(tmp_path)s/%(release)s.tgz' % env)
+        local('git archive --format=tar %(branch)s > %(tmp_path)s/%(release)s.tar' % env)
     elif env.scm == "git-svn":
         # Get repo information and store it to REVISION.txt
-        local('cd %(repo_path)s && git svn info > %(tmp_path)s/REVISION.txt' % env)
+        local('cd %(repository)s && git svn info > %(tmp_path)s/REVISION.txt' % env)
     elif env.scm == 'svn':
-        local('svn export %(repo_path)s/%(branch)s %(tmp_path)s' % env)
-        local('svn info %(repo_path)s/%(branch)s > %(tmp_path)s/REVISION.txt' % env)
-        local('cd %(tmp_path)s && tar -czf %(release)s.tgz .' % env)
+        local('svn export %(repository)s/%(branch)s %(tmp_path)s' % env)
+        local('svn info %(repository)s/%(branch)s > %(tmp_path)s/REVISION.txt' % env)
+        local('cd %(tmp_path)s && tar -cf %(release)s.tar .' % env)
 
-    put('%(tmp_path)s/%(release)s.tgz' % env, '%(app_path)s/releases/' % env)
-    run('cd %(app_path)s/releases/ && tar -xvf %(release)s.tgz && if [ -e %(release)s.tgz ];then rm rf %(release)s.tgz fi' % env)
+    local('cd %(tmp_path)s && gzip %(release)s.tar %(release)s.tgz' % env)
 
+    print "Bundled code is at %(tmp_path)s/%(release)s.tgz"
+    print "----- ATTENTION -----"
+    print "If you plan to run the deployer at a later time, execute this first .."
+    print "    echo 'release = %(release)s' >> %(rcfile)s" % env
+    print "----- ATTENTION -----"
     # Don't delete the local copy in case we need to debug - that will be done on the next cycle
 
-def upload_code():
-    pass
+def upload_and_explode_code_bundle():
+    "Upload the local tarball of latest code to the target host"
+    put('%(tmp_path)s/%(release)s.tgz' % env, '%(app_path)s/releases/' % env)
+    run('cd %(app_path)s/releases/ && mkdir -p %(release)s && tar -xvf %(release)s.tgz -C %(release)s && if [ -e %(release)s.tgz ];then rm -rf %(release)s.tgz; fi' % env)
 
 def symlink_current_release():
-    "Symlink our current release"
+    "Symlink our current release, and also symlink config.yaml to the shared config"
     require('release', provided_by=[deploy, setup])
-    run('cd $(path); rm releases/previous; mv releases/current releases/previous;', fail='ignore')
-    run('cd $(path); ln -s $(release) releases/current')
+    run('if [ -e %(app_path)s/previous ];then rm %(app_path)s/previous; fi; if [ -e %(app_path)s/current ];then mv %(app_path)s/current %(app_path)s/previous; fi' % env)
+    # Link the shared config file into the current configuration
+    run('ln -s %(app_path)s/shared/config.yaml %(app_path)s/releases/%(release)s')
+    run('ln -s %(app_path)s/releases/%(release)s %(app_path)s/current' % env)
 
 def clone_repo():
     """
     Do initial clone of the git repository.
     """
-    run('git clone git@tribune.unfuddle.com:tribune/%(project_name)s.git %(repo_path)s' % env)
+    run('git clone git@tribune.unfuddle.com:tribune/%(application)s.git %(repository)s' % env)
 
 def checkout_latest():
     """
     Pull the latest code on the specified branch.
     """
-    run('cd %(repo_path)s; git checkout %(branch)s; git pull origin %(branch)s' % env)
+    run('cd %(repository)s; git checkout %(branch)s; git pull origin %(branch)s' % env)
 
 def install_requirements():
     """
     Install the required packages using pip.
     """
-    run('source %(env_path)s/bin/activate; pip install -E %(env_path)s -r %(repo_path)s/requirements.txt' % env)
+    run('source %(venv_path)s/bin/activate; pip install -E %(venv_path)s -r %(repository)s/requirements.txt' % env)
 
 def install_apache_conf():
     """
     Install the apache site config file.
     """
-    sudo('cp %(repo_path)s/%(project_name)s/configs/%(settings)s/%(project_name)s %(apache_config_path)s' % env)
+    sudo('cp %(repository)s/%(application)s/configs/%(settings)s/%(application)s %(apache_config_path)s' % env)
 
 def install_lighttpd_conf():
     """
     Install the lighttpd config file
     """
-    sudo('cp %(repo_path)s/%(project_name)s/configs/%(settings)s/%(project_name)s %(apache_config_path)s' % env)
+    sudo('cp %(repository)s/%(application)s/etc/%(settings)s/%(application)s %(apache_config_path)s' % env)
 
 def deploy_assets_to_s3():
     """
-    Deploy the latest newsapps and admin media to s3.
+    Deploy the latest assets and JS to S3 bucket
     """
-    run('s3cmd del --recursive s3://%(s3_bucket)s/%(project_name)s/%(admin_media_prefix)s/' % env)
-    run('s3cmd -P --guess-mime-type sync %(env_path)s/src/django/django/contrib/admin/media/ s3://%(s3_bucket)s/%(project_name)s/%(site_media_prefix)s/' % env)
-    run('s3cmd del --recursive s3://%(s3_bucket)s/%(project_name)s/%(newsapps_media_prefix)s/' % env)
-    run('s3cmd -P --guess-mime-type sync %(env_path)s/src/newsapps/newsapps/na_media/ s3://%(s3_bucket)s/%(project_name)s/%(newsapps_media_prefix)s/' % env)
+#    run('s3cmd del --recursive s3://%(s3_bucket)s/%(application)s/%(admin_media_prefix)s/' % env)
+#    run('s3cmd -P --guess-mime-type sync %(venv_path)s/src/django/django/contrib/admin/media/ s3://%(s3_bucket)s/%(application)s/%(site_media_prefix)s/' % env)
+#    run('s3cmd del --recursive s3://%(s3_bucket)s/%(application)s/%(newsapps_media_prefix)s/' % env)
+#    run('s3cmd -P --guess-mime-type sync %(venv_path)s/src/newsapps/newsapps/na_media/ s3://%(s3_bucket)s/%(application)s/%(newsapps_media_prefix)s/' % env)
 
 """
 Commands - deployment
@@ -231,13 +397,17 @@ def deploy():
     """
     # require('settings', provided_by=[production, staging])
     # require('branch', provided_by=[stable, master, branch])
-    env.release = time.strftime('%Y%m%d%H%M%S')
 
     # with settings(warn_only=True):
     #    maintenance_up()
 
     export_latest_code()
+    upload_and_explode_code_bundle()
+    maintenance_up()
+    stop_webserver()
     symlink_current_release()
+    maintenance_down()
+    start_webserver()
 
     # checkout_latest()
     # gzip_assets()
@@ -249,28 +419,29 @@ def maintenance_up():
     """
     Install the Apache maintenance configuration.
     """
-    sudo('cp %(repo_path)s/%(project_name)s/configs/%(settings)s/%(project_name)s_maintenance %(apache_config_path)s' % env)
-    reboot()
+    pass
+    # sudo('cp %(repository)s/%(application)s/configs/%(settings)s/%(application)s_maintenance %(apache_config_path)s' % env)
+    # reboot()
 
 def gzip_assets():
     """
     GZips every file in the assets directory and places the new file
     in the gzip directory with the same filename.
     """
-    run('cd %(repo_path)s; python gzip_assets.py' % env)
+    run('cd %(repository)s; python gzip_assets.py' % env)
 
 def deploy_to_s3():
     """
     Deploy the latest project site media to S3.
     """
-    env.gzip_path = '%(path)s/repository/%(project_name)s/gzip/assets/' % env
-    run(('s3cmd -P --add-header=Content-encoding:gzip --guess-mime-type --rexclude-from=%(path)s/repository/s3exclude sync %(gzip_path)s s3://%(s3_bucket)s/%(project_name)s/%(site_media_prefix)s/') % env)
+    env.gzip_path = '%(path)s/repository/%(application)s/gzip/assets/' % env
+    run(('s3cmd -P --add-header=Content-encoding:gzip --guess-mime-type --rexclude-from=%(path)s/repository/s3exclude sync %(gzip_path)s s3://%(s3_bucket)s/%(application)s/%(site_media_prefix)s/') % env)
 
 def refresh_widgets():
     """
     Redeploy the widgets to S3.
     """
-    run('source %(env_path)s/bin/activate; cd %(repo_path)s; ./manage refreshwidgets' % env)
+    run('source %(venv_path)s/bin/activate; cd %(repository)s; ./manage refreshwidgets' % env)
 
 def reboot():
     """
@@ -311,7 +482,7 @@ def git_reset(commit_id):
     Reset the git repository to an arbitrary commit hash or tag.
     """
     env.commit_id = commit_id
-    run("cd %(repo_path)s; git reset --hard %(commit_id)s" % env)
+    run("cd %(repository)s; git reset --hard %(commit_id)s" % env)
 
 """
 Commands - data
@@ -334,8 +505,8 @@ def create_database():
     """
     Creates the user and database for this project.
     """
-    run('echo "CREATE USER %(project_name)s WITH PASSWORD \'%(database_password)s\';" | psql postgres' % env)
-    run('createdb -O %(project_name)s %(project_name)s -T template_postgis' % env)
+    run('echo "CREATE USER %(application)s WITH PASSWORD \'%(database_password)s\';" | psql postgres' % env)
+    run('createdb -O %(application)s %(application)s -T template_postgis' % env)
 
 def destroy_database():
     """
@@ -344,15 +515,15 @@ def destroy_database():
     Will not cause the fab to fail if they do not exist.
     """
     with settings(warn_only=True):
-        run('dropdb %(project_name)s' % env)
-        run('dropuser %(project_name)s' % env)
+        run('dropdb %(application)s' % env)
+        run('dropuser %(application)s' % env)
 
 def load_data():
     """
     Loads data from the repository into PostgreSQL.
     """
-    run('psql -q %(project_name)s < %(path)s/repository/data/psql/dump.sql' % env)
-    run('psql -q %(project_name)s < %(path)s/repository/data/psql/finish_init.sql' % env)
+    run('psql -q %(application)s < %(path)s/repository/data/psql/dump.sql' % env)
+    run('psql -q %(application)s < %(path)s/repository/data/psql/finish_init.sql' % env)
 
 def pgpool_down():
     """
@@ -370,13 +541,13 @@ def pgpool_up():
 WebServer related commands
 """
 def lighttpd_stop():
-    run('sudo /etc/init.d/%(webserver)s stop' % env)
+    sudo('/etc/init.d/%(webserver)s stop' % env)
 
 def lighttpd_start():
-    run('sudo /etc/init.d/%(webserver)s start' % env)
+    sudo('/etc/init.d/%(webserver)s start' % env)
 
 def lighttpd_restart():
-    run('sudo /etc/init.d/%(webserver)s restart' % env)
+    sudo('/etc/init.d/%(webserver)s restart' % env)
 
 """
 Commands - miscellaneous
@@ -404,11 +575,11 @@ def shiva_the_destroyer():
     with settings(warn_only=True):
         run('rm -Rf %(path)s' % env)
         run('rm -Rf %(log_path)s' % env)
-        run('dropdb %(project_name)s' % env)
-        run('dropuser %(project_name)s' % env)
+        run('dropdb %(application)s' % env)
+        run('dropuser %(application)s' % env)
         sudo('rm %(apache_config_path)s' % env)
         reboot()
-        run('s3cmd del --recursive s3://%(s3_bucket)s/%(project_name)s' % env)
+        run('s3cmd del --recursive s3://%(s3_bucket)s/%(application)s' % env)
 
 
 # EC2 bundling, scaling and other such tasks
@@ -433,4 +604,4 @@ def _execute_psql(query):
     Executes a PostgreSQL command using the command line interface.
     """
     env.query = query
-    run(('cd %(path)s/repository; psql -q %(project_name)s -c "%(query)s"') % env)
+    run(('cd %(path)s/repository; psql -q %(application)s -c "%(query)s"') % env)

@@ -155,7 +155,7 @@ limit 0, $limit
             tasks = self.executeSQL(sql, params)
             return tasks
         except Exception, e:
-            raise
+            logging.error(e)
             return False
 
     def getMyTasks(self):
@@ -170,7 +170,7 @@ order by updated_datetime DESC
             myTasks = self.executeSQL(sql, {'myid':self.MyID})
             return myTasks
         except Exception, e:
-            raise
+            logging.error(e)
             return False
 
     def reserveTask(self, taskId=None):
@@ -200,7 +200,7 @@ where task_id=$taskid
             result = self.executeSQL(sql, params)
             if result > 1:
                 # Danger Will Robinson!!!
-                raise "Something horrible happened and we updated more than one row in releaseTask!"
+                logging.error("Something horrible happened and we updated more than one row in releaseTask!")
             elif result == 0:
                 # This is an odd condition - how could we ever have this happen?
                 return False
@@ -255,7 +255,7 @@ class GiveAMinuteDigest(Configurable, WebpyDBConnectable, Mailable, Loggable, Ta
             self.MyID = socket.gethostname()
 
         if self.MyID is None or self.MyID == '':
-            raise "Need a host name and we don't have one"
+            logging.error("Need an identifier for this host and we don't have one")
 
 
     # def __del__(self):
@@ -310,7 +310,7 @@ order by pm.created_datetime desc
             return groups
         
         except Exception, e:
-            raise
+            logging.error(e)
             return False
 
     def getRecentMembers(self):
@@ -343,7 +343,7 @@ order by pu.project_id, u.created_datetime desc
 
             return projects
         except Exception, e:
-            raise
+            logging.error(e)
             return False
 
     def getProjectNotificationRecipients(self, projects=[]):
@@ -383,7 +383,7 @@ order by pu.project_id, u.created_datetime desc
 
             return projects
         except Exception, e:
-            raise
+            logging.error(e)
             return False
 
     def getDataToCreateDigest(self):
@@ -411,7 +411,21 @@ order by pu.project_id, u.created_datetime desc
         return project_feed
 
 
-    def createDigests(self, store_to_db=True):
+    def createDigests(self, store_to_db=True, mark=None):
+        """ Create the digests based on FromDate and ToDate """
+        if self.FromDate is None or self.ToDate is None:
+            if mark is None:
+                logging.error("Cannot proceed since there's no time range to get the digests for!")
+                return False
+            else:
+                # Set the date range to yesterday
+                # TODO: This really should be a lot more configurable!
+                td = datetime.date(mark)
+                fd = td + relativedelta(days=-1)
+                self.FromDate = fd
+                self.ToDate = td
+                logging.info('Getting digests for date range: %s to %s' % (fd, td))
+
         resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
         member_profile_url = "%s/member/#" % base_url
@@ -525,9 +539,6 @@ where pm.message_type='member_comment'
                 # could also have done digest.__class__.__name__ == 'Storage'
                 self.setDigestAsSent(digest.digest_id)
 
-            # Finally, save the email that we sent to the database, for future reference
-            # self.saveDigestToDB(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
-
     def storeDigestsToDB(self):
         """
         Once the email is sent we need to save the email to a table, defined by config
@@ -640,7 +651,6 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
         exit(-1)
 
     gamDigest = GiveAMinuteDigest(opts.config_file)
-    # gamDigest.FromDate = datetime.strptime(opts.dateFrom, '%Y/%m/%d %H:%M:%S')
 
     # Irrespective of whether dates were provided, let's pass them in. We'll process the None case in the code
     gamDigest.FromDate = opts.from_date
@@ -650,6 +660,7 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
 
     # Do the actual work -- keep in mind that the AddOnly and EmailOnly options
     # define whether the task does anything (it might return immediately)
+    # TODO: Make these into decorated functions!
     if not gamDigest.EmailOnly:
         taskName='Generate Digests'
         tasks = gamDigest.getAvailableTasks(taskName=taskName, limit=5)
@@ -657,7 +668,7 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
             if not gamDigest.reserveTask(int(task.task_id)):
                 raise Exception("cannot reserve a task slot. Can't continue")
             # Ok, we're good to create a digest since nobody else is doing it
-            gamDigest.createDigests()
+            gamDigest.createDigests(mark=task.updated_datetime)
             gamDigest.storeDigestsToDB()
             gamDigest.releaseTask(int(task.task_id))
 
