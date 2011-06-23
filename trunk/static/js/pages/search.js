@@ -321,6 +321,8 @@ app_page.features.push(function(app){
 					tempcell.find('.time-since').text(d.results[i].created);
 					tempcell.find('.sub-type').text(d.results[i].submission_type);
 					
+					tempcell.find('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
+					
 					out.append(tempcell);
 				}
 				
@@ -507,9 +509,6 @@ app_page.features.push(function(app){
 		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
 		
 		// random note-card backgrounds
-		var ideasList = tc.jQ('.ideas-list li');
-		for (i=0; i < ideasList.length; i++) {
-			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-		}
+		tc.randomNoteCardBg(tc.jQ('.ideas-list'));
 		
 	});

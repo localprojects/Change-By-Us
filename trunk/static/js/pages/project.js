@@ -194,10 +194,7 @@ app_page.features.push(function(app){
 		});
 		
 		// random note-card backgrounds
-		var ideasList = tc.jQ('.ideas-invite .items li');
-		for (i=0; i < ideasList.length; i++) {
-			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-		};
+		tc.randomNoteCardBg(tc.jQ('.ideas-invite .items'));
 		
 		// add 'official resource' tags to resources
 		tc.addOfficialResourceTags(tc.jQ('.box.resources .organizations table.resources-list'));
