@@ -125,6 +125,13 @@ tc.truncate = function(str, len, suffix) {
 	return str;
 };
 
+tc.randomNoteCardBg = function(ideasList) {
+	var ideas = ideasList.children('li');
+	for (i=0; i < ideas.length; i++) {
+		ideas.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
+	}
+};
+
 
 /* Browser Detection Stuff */
 var ua = tc.jQ.browser;

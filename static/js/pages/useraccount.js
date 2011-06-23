@@ -243,10 +243,7 @@
 		tc.gam.ideas_invite(app, {elements: tc.jQ("a.invite")});
 		
 		// random note-card backgrounds
-		var ideasList = tc.jQ('.idea-cards li');
-		for (i=0; i < ideasList.length; i++) {
-			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-		}
+		tc.randomNoteCardBg(tc.jQ('.idea-cards'));
 		
 	});
 	
