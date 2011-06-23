@@ -57,7 +57,6 @@
 					selector:'.activity-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".activity").addClass("active");
-						tc.jQ('.addphoto').hide();
 						
 						dom.find('a.remove-idea').unbind("click").bind('click', {app:app}, function(e){
 							e.preventDefault();
@@ -105,7 +104,6 @@
 					has_run_init: false,
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
-						tc.jQ('.addphoto').hide();
 						
 						if (!merlin.current_step.has_run_init) {
 							(function() {
@@ -229,7 +227,6 @@
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
 						window.location.hash = "account-info,edit-account-details";
-						tc.jQ('.addphoto').show();
 					}
 				},
 				'resources':{
@@ -237,7 +234,6 @@
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".resources").addClass("active");
 						window.location.hash = "resources-info";
-						tc.jQ('.addphoto').hide();
 					}
 				}
 			}
