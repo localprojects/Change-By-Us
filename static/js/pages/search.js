@@ -163,6 +163,7 @@ app_page.features.push(function(app){
 								
 								this.data.offset += d.results.length;
 								
+								
 								if(d.results.length == this.data.n_to_fetch){
 									this.carousel.addItem('\
 										<li class="project-carousel-item clearfix spinner-message">\
@@ -171,6 +172,7 @@ app_page.features.push(function(app){
 								}
 								
 								dom = this.data.page_generator(d);
+								
 								this.data.current_page.append(dom);
 								if(tc.jQ.isFunction(this.data.appended)){
 									this.data.appended(dom);
@@ -205,15 +207,15 @@ app_page.features.push(function(app){
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
 				
-				out = tc.jQ('<table class="projects-list doublewide clearfix">\
+				out = tc.jQ('<table style="width:763px;" width="763px" class="projects-list doublewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
 				for(i = 0; i < d.results.length; i++){
 					if(i%2==0){
-						temprow = tc.jQ('<tr></tr>');
+						temprow = tc.jQ('<tr style="width:763px;" width="763px"></tr>');
 					}
-					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.project-cell').html());
+					tempcell = tc.jQ('<td style="width:361px;" width="361px"></td>').append(tc.jQ('.template-content.project-cell').html());
 					tempcell.find('.delete-project').attr('href','#removeProject,'+d.results[i].project_id);
 					if(d.results[i].image_id > -1){
 						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+d.results[i].image_id%10+'/'+d.results[i].image_id+'.png');
@@ -247,15 +249,15 @@ app_page.features.push(function(app){
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
-				out = tc.jQ('<table class="resources-list triplewide clearfix">\
+				out = tc.jQ('<table style="width:763px;" width="763px" class="resources-list triplewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
 				for(i = 0; i < d.results.length; i++){
 					if(i%3==0){
-						temprow = tc.jQ('<tr></tr>');
+						temprow = tc.jQ('<tr style="width:763px;" width="763px"></tr>');
 					}
-					tempcell = tc.jQ('<td class="' + (d.results[i].is_official ? "official-resource" : "") + '"></td>').append(tc.jQ('.template-content.resource-cell').html());
+					tempcell = tc.jQ('<td  style="width:227px;" width="227px" class="' + (d.results[i].is_official ? "official-resource" : "") + '"></td>').append(tc.jQ('.template-content.resource-cell').html());
 					tempcell.find('.add-button').attr('href','#addProject,'+d.results[i].link_id);
 					if(d.results[i].image_id){
 						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
