@@ -215,7 +215,7 @@ app_page.features.push(function(app){
 					}
 					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.project-cell').html());
 					tempcell.find('.delete-project').attr('href','#removeProject,'+d.results[i].project_id);
-					if(d.results[i].image_id){
+					if(d.results[i].image_id > -1){
 						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+d.results[i].image_id%10+'/'+d.results[i].image_id+'.png');
 					} else {
 						tempcell.find('img').attr('src','/static/images/thumb_genAvatar50.png');
