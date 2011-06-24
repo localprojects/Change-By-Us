@@ -163,6 +163,10 @@ if (navigator.appVersion.indexOf("Win")!=-1) {
 	os = 'windows';
 } else if (navigator.appVersion.indexOf("Mac")!=-1) {
 	os = 'mac'
-};	
+};
+
+if (navigator.userAgent.match(/iPad/i) != null) {
+	os = 'ipad';
+}
 
 tc.jQ('body').addClass(os);
