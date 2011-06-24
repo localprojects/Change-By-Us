@@ -320,14 +320,14 @@
 							}
 							temp += "<td>";
 							temp += '<div class="thumb">'+
-										'<a href="/project/'+project.project_id+'"><img width="50" height="50" src="'+tempImgPath+'" alt="" class="proj"/></a>'+
+										'<a href="/project/'+project.project_id+'" target="_blank"><img width="50" height="50" src="'+tempImgPath+'" alt="" class="proj" /></a>'+
 										'<span class="overlay-tag"></span>'+
 										'<span class="member-count">'+project.num_members+'</span>'+
 									'</div>'+
 									'<div class="project-info">'+
-										'<span class="link"><a href="/project/'+project.project_id+'">'+tc.truncate(project.title,50)+'</a></span>'+
-										'<span class="creator"><em>Created by </em> <a href="/useraccount/'+project.owner_user_id+'">'+project.owner_first_name+' '+project.owner_last_name+'</a></span>'+
-										'<span class="description"><a href="/project/'+project.project_id+'">'+tc.truncate(project.description,65)+'</a></span>'+
+										'<span class="link"><a href="/project/'+project.project_id+'" target="_blank">'+tc.truncate(project.title,50)+'</a></span>'+
+										'<span class="creator"><em>Created by </em> <a href="/useraccount/'+project.owner.u_id+'" target="_blank">'+project.owner.name+'</a></span>'+
+										'<span class="description"><a href="/project/'+project.project_id+'" target="_blank">'+tc.truncate(project.description,65)+'</a></span>'+
 									'</div>';
 							temp += "</td>";
 							if (position == 2) { temp += "</tr>"; }
@@ -335,8 +335,7 @@
 						});
 						tbody += "</tbody>";
 						tbody = tc.jQ(tbody);
-						
-						
+												
 						tc.util.dump('table');
 						tc.util.dump(dom.find('table.projects-list'));
 						dom.find('table.projects-list').children().remove();
