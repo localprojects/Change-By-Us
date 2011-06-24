@@ -142,6 +142,27 @@ tc.gam.project = function(options){
 			e.data.project.components.members.remove_idea(d.id);
 		}
 	};
+	
+	this.update_goals = function() {
+		tc.jQ.ajax({
+			type: 'GET',
+			url: '/project/goals',
+			data: {
+				project_id: me.data.project_id
+			},
+			context: me,
+			dataType:'text',
+			success:function(data,ts,xhr){
+				var d;
+				try{
+					d = tc.jQ.parseJSON(data);
+				}catch(e){
+					return;
+				}
+				this.dom.trigger("goals-refresh", [d]);
+			}
+		});
+	};
 
 	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
 	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);

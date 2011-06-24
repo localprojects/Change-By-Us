@@ -6,11 +6,15 @@ tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
 	var widget, me;
 	tc.util.log("project.goals_add");
 	this.options = tc.jQ.extend({name:'goals_add'},options);
+	this.project = project;
 	this.dom = dom;
 	widget = tc.gam.widget(this,project);
 	me = this;
 	this.handlers = {
-		
+		goals_refresh: function(e, d) {
+			tc.util.dump('goals_add.goals-refresh');
+			e.data.me.handle_goals(d);
+		}
 	};
 	
 	this.components = {
@@ -84,7 +88,7 @@ tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
 								if(data == 'False'){
 									return false;
 								}
-								project.dom.trigger('goals-refresh');
+								project.update_goals();
 								//window.location.hash = 'goals_add,goal-info';
 								window.location.hash = 'project-home';
 							}
@@ -96,6 +100,12 @@ tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
 	};
 	
 	this.build_merlin();
+	
+	project.dom.unbind('goals-refresh', this.handlers.goals_refresh).bind('goals-refresh',{me:this},this.handlers.goals_refresh);
+	
+	this.handle_goals = function(data) {
+		this.dom.find('.counter').text(data.length);
+	};
 	
 	return {
 		show:function(propagate){
