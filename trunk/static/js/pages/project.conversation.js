@@ -44,8 +44,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		}
 		
 		//add the idea card if idea is present
-		if(d.idea){
-			$main.append('<div class="note-card">\
+		if(d.idea){	
+			out.find('blockquote.serif').before('<div class="note-card">\
 				<cite class="note-meta-hd"></cite>\
 				<blockquote>\
 					<p>'+d.idea.text+'</p>\
@@ -54,14 +54,11 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			</div>');
 		}
 		
-		//add message body, text dependent on message type
-		$main.append('<blockquote class="serif">\
-			<p>'+(d.message_type == 'join' ? d.idea.text : d.body)+'</p>\
-		</blockquote>');
-		
+		//add message body, text dependent on message type		
+		out.find('blockquote.serif p').text((d.message_type == 'join' ? d.idea.text : d.body));
 		out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
 		out.attr('id','message-'+d.message_id);
-		out.find('.meta-ft').text(d.created);
+		out.find('.meta-ft').text(d.created).time_since();;
 		out.find('a.close').attr('href','#remove,'+d.message_id);
 		return out;
 	};
