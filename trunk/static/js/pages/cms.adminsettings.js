@@ -173,8 +173,7 @@ app_page.features.push(function(app){
 													<tbody>\
 														<tr>\
 															<td class="spinner-message clearfix">\
-																<p class="west">Saving Blacklist...</p>\
-																<img class="loading" src="/static/images/loader32x32.gif" />\
+																<p class="west">Loading...</p>\
 															</td>\
 														</tr>\
 													</tbody>\
@@ -191,18 +190,21 @@ app_page.features.push(function(app){
 											temprow.find('input.radio-moderator').attr('id','user-role-'+d[i].user_id+'-radio-moderator').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+2+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-moderator');
 											temprow.find('input.radio-admin').attr('id','user-role-'+d[i].user_id+'-radio-admin').attr('name','user-role-'+d[i].user_id+'-radio').attr('rel','setRole,'+1+','+d[i].user_id).siblings('label').attr('for','user-role-'+d[i].user_id+'-radio-admin');
 											temprow.find('input.checkbox-oncall').attr('id','user-oncall-'+d[i].user_id+'-check').attr('name','user-oncall-'+d[i].user_id+'-check').attr('rel','setOncall,'+d[i].user_id).siblings('label').attr('for','user-oncall-'+d[i].user_id+'-check');
+											
 											if(d[i].is_leader){
-												temprow.find('input.radio-leader').attr('checked',true);
+												temprow.find('input.radio-leader').attr('checked',true).get(0).defaultChecked = true;
 											}
 											if(d[i].is_moderator){
-												temprow.find('input.radio-moderator').attr('checked',true);
+												temprow.find('input.radio-moderator').attr('checked',true).get(0).defaultChecked = true;
 											}
 											if(d[i].is_admin){
-												temprow.find('input.radio-admin').attr('checked',true);
+												temprow.find('input.radio-admin').attr('checked',true).get(0).defaultChecked = true;
 											}
 											if(d[i].is_oncall){
-												temprow.find('input.checkbox-oncall').attr('checked',true);
+												temprow.find('input.checkbox-oncall').attr('checked',true).get(0).defaultChecked = true;
 											}
+											
+											
 											temprow.find('a.delete').attr('href','#delete,'+d[i].user_id);
 											temptbody.append(temprow);
 											this.current_step.runtime_data.offset++;
