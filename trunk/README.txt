@@ -53,3 +53,12 @@ AWS configuration:
     If thumbnails are being mirrored to S3, complete the info in the aws and media sections
     of the config file accordingly. Otherwise image uploads will be saved to the local volume only.
 
+-------------------------------------------------
+Troubleshooting and Debugging Notes
+-------------------------------------------------
+Error:
+  On server startup:
+  boto.exception.NoAuthHandlerFound: No handler was ready to authenticate. 1 handlers were checked. ['HmacAuthV3Handler'] Check your credentials
+Solution:
+  This is invariably due to an AWS configuration issue. Either the key or the secret are wrong, or
+  incorrectly configured in the config file.
