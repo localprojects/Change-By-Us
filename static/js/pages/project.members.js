@@ -104,25 +104,6 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
 						});
 					}
 				},
-				'email-invite-message':{
-					selector:'.step.email-invite-message',
-					next_step:'email-invite-submit',
-					inputs:{
-						email_message:{
-							selector:'.email-message',
-							validators:['min-3','max-200','required'],
-							hint:'Add a message'
-						}
-					},
-					init:function(merlin,dom){
-						merlin.current_step.inputs.email_message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
-					},
-					finish:function(merlin,dom){
-						merlin.options.data = tc.jQ.extend(merlin.options.data,{
-							message:merlin.current_step.inputs.email_message.dom.val()
-						});
-					}
-				},
 				'email-invite-submit':{
 					selector:'.step.email-invite-submit',
 					next_step:'email-invite-info',
@@ -136,12 +117,12 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
 							success:function(data,ts,xhr){
 								var _merlin = this;
 								if(data == 'False'){
-									//window.location.hash = 'email_invite,email-invite-error';
 									this.show_step('email-invite-error');
 									return false;
 								}
 								tc.timer(1000,function(){
-									//window.location.hash = 'email_invite,email-invite-info';
+									merlin.options.steps['email-invite-info'].inputs.email_list.dom.val('');
+									merlin.options.steps['email-invite-info'].inputs.email_message.dom.val('');
 									_merlin.show_step('email-invite-info');
 								});
 							}
