@@ -518,7 +518,14 @@ class Admin(Controller):
             log.error("*** attempted to approve resource w/o id")
             return False
         else:
-            return mProjectResource.approveProjectResource(self.db, projectResourceId, isOfficial)
+            if mProjectResource.approveProjectResource(self.db, projectResourceId, isOfficial):
+                resource = mProjectResource.ProjectResource(self.db, projectResourceId)
+            
+                mMessaging.emailResourceApproval(resource.data.contact_email, resource.data.title)
+                return True
+            else:
+                return False
+                
            
     def updateBlacklist(self):
         blacklist = self.request('blacklist')

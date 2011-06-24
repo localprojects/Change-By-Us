@@ -89,6 +89,25 @@ def emailResourceNotification(email, projectId, title, description, resourceName
 #         log.info("*** couldn't send resource notification email")
 #         log.error(e)
 #         return False
+      
+# email resource owner on approval
+def emailResourceApproval(email, title):
+    emailAccount = Config.get('email')
+    subject = "Your resource has been approved"
+    body = Emailer.render('email/resource_approval',
+                        {'link':Config.get('default_host'),
+                        'title':title},
+                        suffix = 'txt')
+    try:
+        return Emailer.send(email, 
+                            subject, 
+                            body,
+                            from_name = emailAccount['from_name'],
+                            from_address = emailAccount['from_email'])  
+    except Exception, e:
+        log.info("*** couldn't send resource approval email")
+        log.error(e)
+        return False
         
 # email deleted users
 def emailAccountDeactivation(email):
