@@ -28,13 +28,12 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 					project_id: e.data.me.options.app.app_page.data.project.project_id,
 					goal_id: goal_id
 				},
-				context:e.data.me,
 				dataType:'text',
 				success:function(data,ts,xhr){
 					if(data == 'False'){
 						return false;
 					}
-					this.project.dom.trigger('goals-refresh');
+					project.update_goals();
 				}
 			});
 		},
@@ -55,13 +54,12 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 					project_id: e.data.me.options.app.app_page.data.project.project_id,
 					goal_id: goal_id
 				},
-				context:e.data.me,
 				dataType:'text',
 				success:function(data,ts,xhr){
 					if(data == 'False'){
 						return false;
 					}
-					this.project.dom.trigger('goals-refresh');
+					project.update_goals();
 				}
 			});
 		},
@@ -79,38 +77,20 @@ tc.gam.project_widgets.goals_main = function(project,dom,deps,options){
 							project_id:e.data.project.project_id,
 							goal_id:e.target.href.split(',')[1]
 						},
-						context:this,
 						dataType:'text',
 						success:function(data,ts,xhr){
 							if(data == 'False'){
 								return false;
 							}
-							project.dom.trigger('goals-refresh');
+							project.update_goals();
 						}
 					});
 				}
 			});
 		},
-		goals_refresh:function(e){
+		goals_refresh:function(e, d){
 			tc.util.dump('goals_main.goals-refresh');
-			tc.jQ.ajax({
-				type:'GET',
-				url:'/project/goals',
-				data:{
-					project_id:e.data.me.project.data.project_id
-				},
-				context:e.data.me,
-				dataType:'text',
-				success:function(data,ts,xhr){
-					var d;
-					try{
-						d = tc.jQ.parseJSON(data);
-					}catch(e){
-						return;
-					}
-					this.handle_goals(d);
-				}
-			});
+			e.data.me.handle_goals(d);
 		}
 	};
 	
