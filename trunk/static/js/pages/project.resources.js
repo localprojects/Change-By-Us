@@ -80,7 +80,7 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 						}
 						temptd = tc.jQ('<td></td>').append(tc.jQ('.template-content.link-table-cell').clone().children());
 						if(d.links[i].image_id){
-							temptd.find('img').attr('src','{{d.template_data.media_root}}images/'+(d.links[i].image_id%10)+'/'+d.links[i].image_id+'.png');
+							temptd.find('img').attr('src',media_root+'images/'+(d.links[i].image_id%10)+'/'+d.links[i].image_id+'.png');
 						}
 						temptd.find('a.close').attr('href','#removeLink,'+d.links[i].link_id);
 						temptd.find('.link-link').attr('href',d.links[i].url).children('span').text(d.links[i].title);
@@ -104,7 +104,7 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 						temptd = tc.jQ('<td></td>').append(tc.jQ('.template-content.organization-table-cell').clone().children());
 						temptd.attr('title',d.resources[i].title);
 						if(d.resources[i].image_id){
-							temptd.find('img').attr('src','{{d.template_data.media_root}}images/'+(d.resources[i].image_id%10)+'/'+d.resources[i].image_id+'.png');
+							temptd.find('img').attr('src',media_root+'images/'+(d.resources[i].image_id%10)+'/'+d.resources[i].image_id+'.png');
 						}
 						temptd.find('a.close').attr('href','#removeResource,'+d.resources[i].organization);
 						temptd.find('.tooltip_trigger')
