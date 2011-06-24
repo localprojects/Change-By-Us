@@ -471,19 +471,9 @@ class Project(Controller):
         return self.json(mProject.getMessages(self.db, projectId, limit, offset, filterBy))        
         
     def getFeaturedProjects(self):
-        projects = []
-        data = mProject.getFeaturedProjects(self.db)
-        
-        for item in data:
-            projects.append(mProject.smallProject(item.project_id, 
-                                            item.title, 
-                                            item.description, 
-                                            item.image_id, 
-                                            item.num_members,
-                                            item.owner_user_id, 
-                                            item.owner_first_name, 
-                                            item.owner_last_name, 
-                                            item.owner_image_id))
+        # overkill to get the full dictionary, but it's a small admin-only call
+        projects = mProject.getFeaturedProjectsDictionary(self.db)
+
         return self.json(projects)
             
         
