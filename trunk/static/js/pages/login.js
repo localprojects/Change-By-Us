@@ -110,6 +110,9 @@ app_page.features.push(function(app){
 								return;
 							}
 							window.location.hash = "forgot-password-finished";
+						},
+						error: function(xhr, ts, err) {
+							window.location.hash = "forgot-password-error";
 						}
 					});
 				}
