@@ -81,6 +81,7 @@ env.venv_path = '%(path)s/.virtualenv' % env
 env.vars = {}
 
 env.python = 'python2.6'
+env.sudo_as = 'ubuntu'  # the user to run sudo() as, since this account probably has higher rights
 
 #----- Samples and examples -----
 # This section provides some test code for understanding how Fabric works
@@ -140,6 +141,16 @@ def common_config(func):
 
 #----- /decorator(s) -----
 
+#----- Utility Functions -----
+def sudo_as(cmd):
+    temp_user = env.user
+    env.user = env.sudo_as
+    sudo(cmd)
+    env.user = temp_user
+     
+#----- /utility funcs -----
+
+@common_config
 def demo():
     """
     Work on demo environment
@@ -152,6 +163,7 @@ def demo():
     env.branch = 'release'
     env.rcfile = 'rcfile.%s' % env.settings
 
+@common_config
 def dev():
     """
     Work on dev environment
@@ -163,6 +175,9 @@ def dev():
 
     # WHich branch do we want to deploy? Keep in mind that this is environment specific
     env.branch = "trunk"
+    
+    # Todo: This should be changed to be for different users!!!
+    env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
 
 @common_config
 def sundar_dev():
@@ -172,7 +187,6 @@ def sundar_dev():
     env.settings = 'dev'
     env.hosts = ['dev-nyc.changeby.us']
     env.user = 'sraman'
-    env.groupname = "staff"
     env.key_filename = [os.path.expanduser("~/.ssh/work/work.id_dsa")]
     env.s3_bucket = 'sandbox.changeby.us'
     env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
@@ -325,9 +339,9 @@ def bundle_code():
         local('svn info %(repository)s/%(branch)s > %(tmp_path)s/REVISION.txt' % env)
         local('cd %(tmp_path)s && tar -cf %(release)s.tar .' % env)
 
-    local('cd %(tmp_path)s && gzip %(release)s.tar %(release)s.tgz' % env)
+    local('cd %(tmp_path)s && gzip %(release)s.tar' % env)
 
-    print "Bundled code is at %(tmp_path)s/%(release)s.tgz"
+    print "Bundled code is at %(tmp_path)s/%(release)s.tar.gz"
     print "----- ATTENTION -----"
     print "If you plan to run the deployer at a later time, execute this first .."
     print "    echo 'release = %(release)s' >> %(rcfile)s" % env
@@ -336,15 +350,15 @@ def bundle_code():
 
 def upload_and_explode_code_bundle():
     "Upload the local tarball of latest code to the target host"
-    put('%(tmp_path)s/%(release)s.tgz' % env, '%(app_path)s/releases/' % env)
-    run('cd %(app_path)s/releases/ && mkdir -p %(release)s && tar -xvf %(release)s.tgz -C %(release)s && if [ -e %(release)s.tgz ];then rm -rf %(release)s.tgz; fi' % env)
+    put('%(tmp_path)s/%(release)s.tar.gz' % env, '%(app_path)s/releases/' % env)
+    run('cd %(app_path)s/releases/ && mkdir -p %(release)s && tar -xvf %(release)s.tar.gz -C %(release)s && if [ -e %(release)s.tar.gz ];then rm -rf %(release)s.tar.gz; fi' % env)
 
 def symlink_current_release():
     "Symlink our current release, and also symlink config.yaml to the shared config"
-    require('release', provided_by=[deploy, setup])
+    require('release', provided_by=[deploy, setup_application])
     run('if [ -e %(app_path)s/previous ];then rm %(app_path)s/previous; fi; if [ -e %(app_path)s/current ];then mv %(app_path)s/current %(app_path)s/previous; fi' % env)
     # Link the shared config file into the current configuration
-    run('ln -s %(app_path)s/shared/config.yaml %(app_path)s/releases/%(release)s')
+    run('rm -f %(app_path)s/releases/%(release)s/config.yaml; ln -s %(app_path)s/shared/config.yaml %(app_path)s/releases/%(release)s/' % env)
     run('ln -s %(app_path)s/releases/%(release)s %(app_path)s/current' % env)
 
 def clone_repo():
@@ -389,6 +403,7 @@ def deploy_assets_to_s3():
 """
 Commands - deployment
 """
+@roles('web')
 def deploy():
     """
     Deploy the latest version of the site to the server and restart Apache2.
@@ -401,12 +416,11 @@ def deploy():
     # with settings(warn_only=True):
     #    maintenance_up()
 
-    export_latest_code()
     upload_and_explode_code_bundle()
-    maintenance_up()
+    # maintenance_up()
     stop_webserver()
     symlink_current_release()
-    maintenance_down()
+    # maintenance_down()
     start_webserver()
 
     # checkout_latest()
@@ -539,15 +553,17 @@ def pgpool_up():
 
 """
 WebServer related commands
+For now this works with modified lighttpd init.d scripts. It does NOT 
+work with other servers yet. 
 """
-def lighttpd_stop():
-    sudo('/etc/init.d/%(webserver)s stop' % env)
+def stop_webserver():
+    sudo_as('/etc/init.d/%(webserver)s stop %(app_path)s' % env)
 
-def lighttpd_start():
-    sudo('/etc/init.d/%(webserver)s start' % env)
+def start_webserver():
+    sudo_as('/etc/init.d/%(webserver)s start %(app_path)s' % env)
 
-def lighttpd_restart():
-    sudo('/etc/init.d/%(webserver)s restart' % env)
+def restart_webserver():
+    sudo_as('/etc/init.d/%(webserver)s restart %(app_path)s' % env)
 
 """
 Commands - miscellaneous
