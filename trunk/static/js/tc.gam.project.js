@@ -46,6 +46,9 @@ tc.gam.project = function(options){
 			if (tc.gam.project_widgets.goals_stack) {
 				e.data.project.components.goals_stack.hide(false);
 			}
+			if(tc.gam.project_widgets.members){
+				e.data.project.components.members.hide(false);
+			}
 			e.data.project.components.goals_add.hide(false);
 			e.data.project.components.add_link.hide(false);
 			e.data.project.components.related_resources.hide(false);
