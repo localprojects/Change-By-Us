@@ -53,7 +53,9 @@ COOKBOOK:
         Save the release bundle name (see the ATTENTION line in the output)
         fab --config=rcfile.name dev deploy
 
-
+    # Webserver related tasks
+    Start / stop / restart the webserver
+        fab --config=rcfile.environment environment stop_webserver
 """
 
 # PATHS
