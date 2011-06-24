@@ -9,10 +9,10 @@
 # Variables:
 #
 var.pidfile = "%(app_path)s/run/lighttpd.pid"
-var.docroot = "%(app_path)s"
+var.docroot = "%(app_path)s/current"
 var.errorlog = "%(log_path)s/error.log"
 var.accesslog =  "%(log_path)s/access.log"
-var.binpath  = "%(app_path)s/main.py"
+var.binpath  = "%(app_path)s/current/main.py"
 var.cachedir = "%(app_path)s/run/cache"
 var.serverport = %(webserver_port)s
 var.user = "%(webserver_user)s"
@@ -49,7 +49,7 @@ static-file.exclude-extensions = (".php", ".pl", ".fcgi", ".py")
 url.access-deny = ("~", ".inc", ".log", ".yaml", ".conf")
 
 fastcgi.server = ("/main.py" =>
-                    ((  "socket" => "/tmp/fastcgi.socket",
+                    ((  "socket" => "/tmp/fastcgi.socket-%(webserver_port)s",
                         "bin-path" => var.binpath,
                         "max-procs" => 1,
                         "bin-environment" => (

@@ -1,13 +1,20 @@
+#------------------------------------------------------------------------------
 #
 # Get a list of posts for the day
 # Send to the recipient list for this group
+#
 # TODO:
 #    * Document all the functions
 #    * Encapsulate everything that changes the database in transactions
 #    * Deal with orphaned tasks
-# 
+#    *
 # Pre-requisites:
-# insert into
+#     Run the tasks_data.sql script to load the seed data for the
+#     digest cron to run
+#     Enable the etc/cron.daily/daily_digest on the appropriate user
+#     and test it
+#
+#------------------------------------------------------------------------------
 
 import yaml
 import os, sys
