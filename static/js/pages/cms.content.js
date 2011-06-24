@@ -415,7 +415,7 @@ app_page.features.push(function(app){
 							
 							tempitem.find('div.mission').append("<div class='box half'><h4>Physical Address</h4><span class='serif'><p>"+d[i].physical_address+"<br /><strong>"+d[i].location_name+"</strong></p></span></div>");
 							
-							tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords+"</p></span></div>");
+							tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords.replace(/,/g,', ')+"</p></span></div>");
 							this.components.resources_pagination.data.offset++;
 							this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
 						}
