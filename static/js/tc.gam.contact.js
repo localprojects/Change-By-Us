@@ -16,6 +16,7 @@ if(app_page.data.contact_modal){
 						to_user_id:null,
 						message: null
 					},
+					use_hashchange:false,
 					steps:{
 						'contact-message':{
 							selector:'.contact-message',
@@ -52,22 +53,24 @@ if(app_page.data.contact_modal){
 									dataType:"text",
 									success: function(data, ts, xhr) {
 										if (data == "False") {
-											window.location.hash = 'contact_message,contact-message-error';
+											this.show_step('contact-message-error');
+											return;
 										}
-										tc.timer(1500, function() {
-											modal.hide();
-										});
+										this.show_step('contact-message-success');
 									},
 									error: function(jqXHR, textStatus, errorThrown){
-										window.location.hash = 'contact_message,contact-message-error';
+										this.show_step('contact-message-error');
 									}
 								});
 							}
 						},
 						'contact-message-success':{
-							selector:'.invite-message-success',
+							selector:'.contact-message-success',
 							init: function(merlin, dom) {
 								dom.find('.to_u_name').text(app.app_page.data.contact_modal.to_u_name);
+								tc.timer(1500, function() {
+									modal.hide();
+								});
 							}
 						},
 						"contact-message-error": {
