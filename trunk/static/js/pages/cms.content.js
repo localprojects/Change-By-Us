@@ -271,7 +271,6 @@ app_page.features.push(function(app){
 					break;	
 			}
 			
-			tc.util.dump(tc.jQ('.modal-content.content-delete'));
 			
 			e.data.app.components.modal.show({
 				app:e.data.app,
@@ -452,7 +451,9 @@ app_page.features.push(function(app){
 			current_page:null,
 			n_to_fetch: 10,
 			offset:0,
-			temp_item_source:tc.jQ('.template-content.item-box-warning-list')
+			temp_item_source:tc.jQ('.template-content.item-box-warning-list'),
+			next_button: tc.jQ('.warning-carousel-next'),
+			prev_button: tc.jQ('.warning-carousel-prev'),
 		};
 		
 		app.components.warning_pagination.setContentType = function(content_type){
@@ -462,16 +463,20 @@ app_page.features.push(function(app){
 			this.carousel.seekTo(0,0);
 		};
 		
-		if(app.components.warning_pagination){
-			app.components.warning_pagination.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
+		
+			
+			function carouselSeekHandler(e,d){
 				e.data.app.components.warning_pagination.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
-				if(!e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
+				
+				if(e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
+					handlePaginationControls();
+				} else {
 					e.data.app.components.warning_pagination.data.current_page.addClass('loaded');
 					tc.jQ.ajax({
 						type:"GET",
 						url:"/admin/"+e.data.app.components.warning_pagination.data.current_section+"/getflagged",
 						data:{
-							n_messages: e.data.app.components.warning_pagination.data.n_to_fetch,
+							n_limit: (e.data.app.components.warning_pagination.data.n_to_fetch+1),
 							offset: e.data.app.components.warning_pagination.data.offset
 						},
 						context:e.data.app,
@@ -485,20 +490,41 @@ app_page.features.push(function(app){
 								return;
 							}
 							this.components.warning_pagination.data.current_page.children('ul').children().remove();
+							
+							tc.util.dump(d.length);
+							tc.util.dump((this.components.warning_pagination.data.n_to_fetch+1));
+							
+							
 							if(!d.length && this.components.warning_pagination.data.offset > 0){
+								//no items, and we are on page > 0
+								
 								this.components.warning_pagination.data.current_page.remove();
-								return;
-							} else if(!d.length){
+								//we should probably go back to the previous page.
+							} else if(!d.length && this.components.warning_pagination.data.offset == 0){
+								//no items, and we are on page 0
+								
 								this.components.warning_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
-							}
-							if(d.length == this.components.warning_pagination.data.n_to_fetch){
+							} else if(d.length == (this.components.warning_pagination.data.n_to_fetch+1)) {
+								//full of items, and more. we DO have another page.
+								
+								//lets pop off the extra one.
+								d.pop();
+								
 								this.components.warning_pagination.carousel.addItem('\
 									<li class="flagged-content-carousel-item clearfix spinner-message">\
 										<ul class="items warning-list-stack">\
 											<li><p>Loading...</p></li>\
 										</ul>\
 									</li>');
+							} else if(d.length < (this.components.warning_pagination.data.n_to_fetch+1)){
+								//full of items, and NO more. we DON'T have another page.
+								
+								this.components.warning_pagination.data.next_button.hide();
+								
 							}
+							
+							handlePaginationControls();
+							
 							for(i in d){
 								tempitem = this.components.warning_pagination.data.temp_item_source.clone().removeClass('template-content');
 								if(d[i].owner_first_name && d[i].owner_last_name){
@@ -512,12 +538,38 @@ app_page.features.push(function(app){
 								this.components.warning_pagination.data.offset++;
 								this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
 							}
+							
 							this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
 							this.components.warning_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
 						}
 					});
 				}
-			});
+			}
+			
+			function handlePaginationControls(){
+				if(app.components.warning_pagination.carousel.getIndex() == 0){
+					//on first page, remove previous button.
+					tc.util.dump('No Previous');
+					app.components.warning_pagination.data.prev_button.hide();
+				} else {
+					tc.util.dump('Yes Previous');
+					app.components.warning_pagination.data.prev_button.show();
+				}
+				
+				if(app.components.warning_pagination.carousel.getIndex() == (app.components.warning_pagination.carousel.getItems().length - 1)) {
+					//not on first page, lets show the previous button.
+					tc.util.dump('No Next');
+					app.components.warning_pagination.data.next_button.hide();
+				} else {
+					tc.util.dump('Yes Next');
+					app.components.warning_pagination.data.next_button.show();
+				}
+			}
+			
+		if(app.components.warning_pagination){
+			app.components.warning_pagination.carousel.getRoot()
+				.unbind('onSeek', {app:app}, carouselSeekHandler)
+				.bind('onSeek', {app:app}, carouselSeekHandler);
 		}
 		
 		app.components.warning_pagination.carousel.begin();
