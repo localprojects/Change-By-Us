@@ -329,104 +329,143 @@ app_page.features.push(function(app){
 			current_page:null,
 			n_to_fetch: 10,
 			offset:0,
-			temp_item_source:tc.jQ('.template-content.resource-box')
+			temp_item_source:tc.jQ('.template-content.resource-box'),
+			next_button: tc.jQ('.resources-carousel-next'),
+			prev_button: tc.jQ('.resources-carousel-prev')
 		};
 		
 		
-		if(app.components.resources_pagination){
-			app.components.resources_pagination.carousel.getRoot().unbind('onSeek').bind('onSeek', {app:app}, function(e,d){
-				e.data.app.components.resources_pagination.data.current_page = e.data.app.components.resources_pagination.carousel.getItems().eq(e.data.app.components.resources_pagination.carousel.getIndex());
-				if(!e.data.app.components.resources_pagination.data.current_page.hasClass('loaded')){
-					e.data.app.components.resources_pagination.data.current_page.addClass('loaded');
-					tc.jQ.ajax({
-						type:"GET",
-						url:"/admin/resource/getunreviewed",
-						data:{
-							n_messages: e.data.app.components.resources_pagination.data.n_to_fetch,
-							offset: e.data.app.components.resources_pagination.data.offset
-						},
-						context:e.data.app,
-						dataType:"text",
-						success: function(data, ts, xhr) {
-							var d, temptbody, tempitem, itemsheight;
-							try {
-								d = tc.jQ.parseJSON(data);
-							} catch(e) {current_step
-								tc.util.log("/admin/resource/getunreviewed: json parsing error", "warn");
-								return;
-							}
-							this.components.resources_pagination.data.current_page.children('ul').addClass('pending-resources-stack').children().remove();
-							if(!d.length && this.components.resources_pagination.data.offset > 0){
-								this.components.resources_pagination.data.current_page.remove();
-								return;
-							} else if(!d.length){
-								this.components.resources_pagination.data.current_page.children('ul').append('<li><p>No Pending Resources.</p></li>');
-							}
-							if(d.length == this.components.resources_pagination.data.n_to_fetch){
-								this.components.resources_pagination.carousel.addItem('\
-									<li class="flagged-content-carousel-item clearfix spinner-message">\
-										<ul class="items warning-list-stack">\
-											<li><p>Loading...</p></li>\
-										</ul>\
-									</li>');
-							}
-							itemsheight = 0;
-							for(i in d){
-								tempitem = this.components.resources_pagination.data.temp_item_source.clone().removeClass('template-content').show();
-								tempitem.find('h3.resource-name').text(d[i].title);
-								tempitem.find('a.resource-link').attr('href',d[i].url).text(d[i].url);
-								tempitem.find('p.description').text(d[i].description);
-								tempitem.find('a.control-ok').attr('href','#ok-resource,'+d[i].project_resource_id);
-								tempitem.find('a.control-delete').attr('href','#remove-resource,'+d[i].project_resource_id);
-								if(d[i].image_id != -1 && d[i].image_id != 'null' && d[i].image_id){
-									tempitem.find('div.west').prepend('<img src="'+this.app_page.media_root+'images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
-								}
-								tempitem.find('div.west').append('<input type="checkbox" name="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" class="mark-official-checkbox" id="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" />');
-								tempitem.find('div.west').append('<label for="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'">Official</label>');
-								
-								if(d[i].contact_name && d[i].contact_name.length) {  
-									tempitem.find('div.west').append('<p><strong>Name:</strong> '+d[i].contact_name+'</p>');
-								}
-								if(d[i].twitter_url && d[i].twitter_url.length){
-									tempitem.find('div.west').append('<p><a href="'+d[i].twitter_url+'" target="_blank">Twitter</a></p>');
-								}
-								if(d[i].facebook_url && d[i].facebook_url.length){
-									tempitem.find('div.west').append('<p><a href="'+d[i].facebook_url+'" target="_blank">Facebook</a></p>');
-								}
-								if(d[i].url && d[i].url.length){
-									tempitem.find('div.mission').append('<h4>URL</h4>');
-									tempitem.find('div.mission').append("<span class='serif'><p><a href='"+d[i].url+"' target='_blank'>"+tc.truncate(d[i].url,24)+"</a></p></span>");
-								}
-								tempitem.find('div.mission').append('<h4>Email</h4>');
-								tempitem.find('div.mission').append("<span class='serif'><p><a href='mailto:"+d[i].contact_email+"'>"+tc.truncate(d[i].contact_email, 24)+"</a></p></span>");
-								
-								tempitem.find('div.mission').append("<div class='box half'><h4>Physical Address</h4><span class='serif'><p>"+d[i].physical_address+"<br /><strong>"+d[i].location_name+"</strong></p></span></div>");
-								
-								tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords+"</p></span></div>");
-								this.components.resources_pagination.data.offset++;
-								this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
-								itemsheight += (tempitem.height() + 30);
-							}
-							this.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
-							this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
-							this.components.resources_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
-							this.components.resources_pagination.data.current_page.find('input[type=checkbox],input[type=radio]').not('.has-prettycheckbox').prettyCheckboxes();
+		function resourceCarouselSeekHandler(e,d){
+			e.data.app.components.resources_pagination.data.current_page = e.data.app.components.resources_pagination.carousel.getItems().eq(e.data.app.components.resources_pagination.carousel.getIndex());
+			if(e.data.app.components.resources_pagination.data.current_page.hasClass('loaded')){
+				resourceCarouselResizePage();
+				handleResourcePaginationControls();
+			} else {
+				e.data.app.components.resources_pagination.data.current_page.addClass('loaded');
+				tc.jQ.ajax({
+					type:"GET",
+					url:"/admin/resource/getunreviewed",
+					data:{
+						n_limit: (e.data.app.components.resources_pagination.data.n_to_fetch + 1),
+						offset: e.data.app.components.resources_pagination.data.offset
+					},
+					context:e.data.app,
+					dataType:"text",
+					success: function(data, ts, xhr) {
+						var d, temptbody, tempitem;
+						try {
+							d = tc.jQ.parseJSON(data);
+						} catch(e) {current_step
+							tc.util.log("/admin/resource/getunreviewed: json parsing error", "warn");
+							return;
 						}
-					});
-				} else {
-					var itemsheight;
-					itemsheight = 0;
-					e.data.app.components.resources_pagination.data.current_page.find('li').each(function(i,j){
-						itemsheight += (tc.jQ(j).height() + 30);
-					});
-					e.data.app.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
-				}
+						this.components.resources_pagination.data.current_page.children('ul').addClass('pending-resources-stack').children().remove();
+						
+						
+						if(!d.length && this.components.resources_pagination.data.offset > 0){
+							//no items, and we are on page > 0
+							this.components.resources_pagination.data.current_page.remove();
+						} else if(!d.length && this.components.resources_pagination.data.offset == 0){
+							//no items, and we are on page 0
+							this.components.resources_pagination.data.current_page.children('ul').append('<li><p>No Pending Resources.</p></li>');
+						} else if(d.length == (this.components.resources_pagination.data.n_to_fetch+1)) {
+							//full of items, and more. we DO have another page.
+							
+							//lets pop off the extra one.
+							d.pop();
+							
+							this.components.resources_pagination.carousel.addItem('\
+								<li class="flagged-content-carousel-item clearfix spinner-message">\
+									<ul class="items warning-list-stack">\
+										<li><p>Loading...</p></li>\
+									</ul>\
+								</li>');
+						}
+						
+						handleResourcePaginationControls();
+						
+						for(i in d){
+							tempitem = this.components.resources_pagination.data.temp_item_source.clone().removeClass('template-content').show();
+							tempitem.find('h3.resource-name').text(d[i].title);
+							tempitem.find('a.resource-link').attr('href',d[i].url).text(d[i].url);
+							tempitem.find('p.description').text(d[i].description);
+							tempitem.find('a.control-ok').attr('href','#ok-resource,'+d[i].project_resource_id);
+							tempitem.find('a.control-delete').attr('href','#remove-resource,'+d[i].project_resource_id);
+							if(d[i].image_id != -1 && d[i].image_id != 'null' && d[i].image_id){
+								tempitem.find('div.west').prepend('<img src="'+this.app_page.media_root+'images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
+							}
+							tempitem.find('div.west').append('<input type="checkbox" name="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" class="mark-official-checkbox" id="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" />');
+							tempitem.find('div.west').append('<label for="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'">Official</label>');
+							
+							if(d[i].contact_name && d[i].contact_name.length) {  
+								tempitem.find('div.west').append('<p><strong>Name:</strong> '+d[i].contact_name+'</p>');
+							}
+							if(d[i].twitter_url && d[i].twitter_url.length){
+								tempitem.find('div.west').append('<p><a href="'+d[i].twitter_url+'" target="_blank">Twitter</a></p>');
+							}
+							if(d[i].facebook_url && d[i].facebook_url.length){
+								tempitem.find('div.west').append('<p><a href="'+d[i].facebook_url+'" target="_blank">Facebook</a></p>');
+							}
+							if(d[i].url && d[i].url.length){
+								tempitem.find('div.mission').append('<h4>URL</h4>');
+								tempitem.find('div.mission').append("<span class='serif'><p><a href='"+d[i].url+"' target='_blank'>"+tc.truncate(d[i].url,24)+"</a></p></span>");
+							}
+							tempitem.find('div.mission').append('<h4>Email</h4>');
+							tempitem.find('div.mission').append("<span class='serif'><p><a href='mailto:"+d[i].contact_email+"'>"+tc.truncate(d[i].contact_email, 24)+"</a></p></span>");
+							
+							tempitem.find('div.mission').append("<div class='box half'><h4>Physical Address</h4><span class='serif'><p>"+d[i].physical_address+"<br /><strong>"+d[i].location_name+"</strong></p></span></div>");
+							
+							tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords+"</p></span></div>");
+							this.components.resources_pagination.data.offset++;
+							this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
+						}
+						
+						resourceCarouselResizePage();
+						
+						this.components.resources_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
+						this.components.resources_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
+						this.components.resources_pagination.data.current_page.find('input[type=checkbox],input[type=radio]').not('.has-prettycheckbox').prettyCheckboxes();
+					}
+				});
+			}
+		}
+		
+		function resourceCarouselResizePage(){
+			var itemsheight;
+			itemsheight = 0;
+			app.components.resources_pagination.data.current_page.find('li').each(function(i,j){
+				itemsheight += (tc.jQ(j).height() + 30);
 			});
 			
+			app.components.resources_pagination.data.current_page.parent().parent().css('height',(itemsheight+200)+'px');
+		}
+		
+		function handleResourcePaginationControls(){
+			if(app.components.resources_pagination.carousel.getIndex() == 0){
+				//on first page, remove previous button.
+				app.components.resources_pagination.data.prev_button.hide();
+			} else {
+				app.components.resources_pagination.data.prev_button.show();
+			}
+			
+			if(app.components.resources_pagination.carousel.getIndex() == (app.components.resources_pagination.carousel.getItems().length - 1)) {
+				//not on first page, lets show the previous button.
+				app.components.resources_pagination.data.next_button.hide();
+			} else {
+				app.components.resources_pagination.data.next_button.show();
+			}
+		}
+		
+		if(app.components.resources_pagination){
+			app.components.resources_pagination.carousel.getRoot()
+				.unbind('onSeek', {app:app}, resourceCarouselSeekHandler)
+				.bind('onSeek', {app:app}, resourceCarouselSeekHandler);
 			app.components.resources_pagination.carousel.seekTo(0,0);
 		}
-					
+		
 	}
+		
+		
 		
 	function build_warning_carousel(app){
 		var data, fn;
@@ -453,7 +492,7 @@ app_page.features.push(function(app){
 			offset:0,
 			temp_item_source:tc.jQ('.template-content.item-box-warning-list'),
 			next_button: tc.jQ('.warning-carousel-next'),
-			prev_button: tc.jQ('.warning-carousel-prev'),
+			prev_button: tc.jQ('.warning-carousel-prev')
 		};
 		
 		app.components.warning_pagination.setContentType = function(content_type){
@@ -463,113 +502,98 @@ app_page.features.push(function(app){
 			this.carousel.seekTo(0,0);
 		};
 		
-		
+		function warningCarouselSeekHandler(e,d){
+			e.data.app.components.warning_pagination.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
 			
-			function carouselSeekHandler(e,d){
-				e.data.app.components.warning_pagination.data.current_page = e.data.app.components.warning_pagination.carousel.getItems().eq(e.data.app.components.warning_pagination.carousel.getIndex());
-				
-				if(e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
-					handlePaginationControls();
-				} else {
-					e.data.app.components.warning_pagination.data.current_page.addClass('loaded');
-					tc.jQ.ajax({
-						type:"GET",
-						url:"/admin/"+e.data.app.components.warning_pagination.data.current_section+"/getflagged",
-						data:{
-							n_limit: (e.data.app.components.warning_pagination.data.n_to_fetch+1),
-							offset: e.data.app.components.warning_pagination.data.offset
-						},
-						context:e.data.app,
-						dataType:"text",
-						success: function(data, ts, xhr) {
-							var d, temptbody, tempitem;
-							try {
-								d = tc.jQ.parseJSON(data);
-							} catch(e) {current_step
-								tc.util.log("/admin/all/getflagged: json parsing error", "warn");
-								return;
-							}
-							this.components.warning_pagination.data.current_page.children('ul').children().remove();
-							
-							tc.util.dump(d.length);
-							tc.util.dump((this.components.warning_pagination.data.n_to_fetch+1));
-							
-							
-							if(!d.length && this.components.warning_pagination.data.offset > 0){
-								//no items, and we are on page > 0
-								
-								this.components.warning_pagination.data.current_page.remove();
-								//we should probably go back to the previous page.
-							} else if(!d.length && this.components.warning_pagination.data.offset == 0){
-								//no items, and we are on page 0
-								
-								this.components.warning_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
-							} else if(d.length == (this.components.warning_pagination.data.n_to_fetch+1)) {
-								//full of items, and more. we DO have another page.
-								
-								//lets pop off the extra one.
-								d.pop();
-								
-								this.components.warning_pagination.carousel.addItem('\
-									<li class="flagged-content-carousel-item clearfix spinner-message">\
-										<ul class="items warning-list-stack">\
-											<li><p>Loading...</p></li>\
-										</ul>\
-									</li>');
-							} else if(d.length < (this.components.warning_pagination.data.n_to_fetch+1)){
-								//full of items, and NO more. we DON'T have another page.
-								
-								this.components.warning_pagination.data.next_button.hide();
-								
-							}
-							
-							handlePaginationControls();
-							
-							for(i in d){
-								tempitem = this.components.warning_pagination.data.temp_item_source.clone().removeClass('template-content');
-								if(d[i].owner_first_name && d[i].owner_last_name){
-									tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
-								}
-								tempitem.find('span.title').text(d[i].project_title);
-								tempitem.find('span.time').text(d[i].item_created_datetime);
-								tempitem.find('p.description').text(d[i].item_description);
-								tempitem.find('a.control-ok').attr('href','#ok-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
-								tempitem.find('a.control-delete').attr('href','#remove-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
-								this.components.warning_pagination.data.offset++;
-								this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
-							}
-							
-							this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
-							this.components.warning_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
+			if(e.data.app.components.warning_pagination.data.current_page.hasClass('loaded')){
+				handleWarningPaginationControls();
+			} else {
+				e.data.app.components.warning_pagination.data.current_page.addClass('loaded');
+				tc.jQ.ajax({
+					type:"GET",
+					url:"/admin/"+e.data.app.components.warning_pagination.data.current_section+"/getflagged",
+					data:{
+						n_limit: (e.data.app.components.warning_pagination.data.n_to_fetch+1),
+						offset: e.data.app.components.warning_pagination.data.offset
+					},
+					context:e.data.app,
+					dataType:"text",
+					success: function(data, ts, xhr) {
+						var d, temptbody, tempitem;
+						try {
+							d = tc.jQ.parseJSON(data);
+						} catch(e) {current_step
+							tc.util.log("/admin/all/getflagged: json parsing error", "warn");
+							return;
 						}
-					});
-				}
+						this.components.warning_pagination.data.current_page.children('ul').children().remove();
+						
+						if(!d.length && this.components.warning_pagination.data.offset > 0){
+							//no items, and we are on page > 0
+							
+							this.components.warning_pagination.data.current_page.remove();
+							//we should probably go back to the previous page.
+						} else if(!d.length && this.components.warning_pagination.data.offset == 0){
+							//no items, and we are on page 0
+							
+							this.components.warning_pagination.data.current_page.children('ul').append('<li><p>No Flagged Content.</p></li>');
+						} else if(d.length == (this.components.warning_pagination.data.n_to_fetch+1)) {
+							//full of items, and more. we DO have another page.
+							
+							//lets pop off the extra one.
+							d.pop();
+							
+							this.components.warning_pagination.carousel.addItem('\
+								<li class="flagged-content-carousel-item clearfix spinner-message">\
+									<ul class="items warning-list-stack">\
+										<li><p>Loading...</p></li>\
+									</ul>\
+								</li>');
+						}
+						
+						handleWarningPaginationControls();
+						
+						for(i in d){
+							tempitem = this.components.warning_pagination.data.temp_item_source.clone().removeClass('template-content');
+							if(d[i].owner_first_name && d[i].owner_last_name){
+								tempitem.find('span.name').text(d[i].owner_first_name + ' ' + d[i].owner_last_name);
+							}
+							tempitem.find('span.title').text(d[i].project_title);
+							tempitem.find('span.time').text(d[i].item_created_datetime);
+							tempitem.find('p.description').text(d[i].item_description);
+							tempitem.find('a.control-ok').attr('href','#ok-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
+							tempitem.find('a.control-delete').attr('href','#remove-'+this.components.warning_pagination.data.current_section+','+d[i].item_id);
+							this.components.warning_pagination.data.offset++;
+							this.components.warning_pagination.data.current_page.children('ul').append(tempitem);
+						}
+						
+						this.components.warning_pagination.data.current_page.find('a.control-ok').bind('click', {app:this}, this.components.content_functions.mark_content_ok);
+						this.components.warning_pagination.data.current_page.find('a.control-delete').unbind('click').bind('click', {app:this}, this.components.content_functions.delete_content);
+					}
+				});
+			}
+		}
+		
+		function handleWarningPaginationControls(){
+			if(app.components.warning_pagination.carousel.getIndex() == 0){
+				//on first page, remove previous button.
+				app.components.warning_pagination.data.prev_button.hide();
+			} else {
+				app.components.warning_pagination.data.prev_button.show();
 			}
 			
-			function handlePaginationControls(){
-				if(app.components.warning_pagination.carousel.getIndex() == 0){
-					//on first page, remove previous button.
-					tc.util.dump('No Previous');
-					app.components.warning_pagination.data.prev_button.hide();
-				} else {
-					tc.util.dump('Yes Previous');
-					app.components.warning_pagination.data.prev_button.show();
-				}
-				
-				if(app.components.warning_pagination.carousel.getIndex() == (app.components.warning_pagination.carousel.getItems().length - 1)) {
-					//not on first page, lets show the previous button.
-					tc.util.dump('No Next');
-					app.components.warning_pagination.data.next_button.hide();
-				} else {
-					tc.util.dump('Yes Next');
-					app.components.warning_pagination.data.next_button.show();
-				}
+			if(app.components.warning_pagination.carousel.getIndex() == (app.components.warning_pagination.carousel.getItems().length - 1)) {
+				//not on first page, lets show the previous button.
+				app.components.warning_pagination.data.next_button.hide();
+			} else {
+				app.components.warning_pagination.data.next_button.show();
 			}
+		}
 			
 		if(app.components.warning_pagination){
 			app.components.warning_pagination.carousel.getRoot()
-				.unbind('onSeek', {app:app}, carouselSeekHandler)
-				.bind('onSeek', {app:app}, carouselSeekHandler);
+				.unbind('onSeek', {app:app}, warningCarouselSeekHandler)
+				.bind('onSeek', {app:app}, warningCarouselSeekHandler);
 		}
 		
 		app.components.warning_pagination.carousel.begin();
