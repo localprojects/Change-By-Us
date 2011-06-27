@@ -223,9 +223,9 @@ app_page.features.push(function(app){
 						tempcell.find('img').attr('src','/static/images/thumb_genAvatar50.png');
 					}
 					tempcell.find('.member-count').text(d.results[i].num_members);
-					tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].title);
+					tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text( tc.truncate(d.results[i].title, 50, "...") );
 					tempcell.find('.creator').children('a').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
-					tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].description);
+					tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text( tc.truncate(d.results[i].description, 70, "...") );
 					temprow.append(tempcell);
 					if(i%2==1){
 						out.children('tbody').append(temprow);
@@ -310,7 +310,7 @@ app_page.features.push(function(app){
 						} else { 
 							tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
 						}
-						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(tc.truncate(d.results[i].owner.name, 18, "..."));
 					} else {
 						tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id);
 						tempcell.find('cite.note-meta-hd').remove();
@@ -319,7 +319,7 @@ app_page.features.push(function(app){
 					tempcell.find('.flag-idea').attr('href','#flagIdea,'+d.results[i].idea_id);
 					tempcell.find('.remove-idea').attr('href','#removeIdea,'+d.results[i].idea_id);
 					
-					tempcell.find('.idea-text').text(d.results[i].message);
+					tempcell.find('.idea-text').text( tc.truncate(d.results[i].message, 165, "...") );
 					tempcell.find('.time-since').text(d.results[i].created);
 					tempcell.find('.sub-type').text(d.results[i].submission_type);
 					
