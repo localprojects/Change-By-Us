@@ -275,7 +275,9 @@ app_page.features.push(function(app){
 					}
 				}
 				
-				out.find('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
+				//out.find('a.add-button').bind('click', app.components.handlers.add_resource_data, app.components.handlers.add_resource_hander);
+				tc.gam.add_resource(app, {elements: out.find("a.add-resource")});
+				
 				out.find('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
 				app.components.tooltips.add_trigger(out.find('.resource-tooltip_trigger'));
 				
