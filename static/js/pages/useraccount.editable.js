@@ -326,7 +326,7 @@
 			});
 			
 			//url
-			new tc.inlineLinkEditor({
+			new tc.inlineEditor({
 				dom: $r.find(".box.res-url"),
 				service: {
 					url: "/resource/edit/url",
@@ -337,7 +337,7 @@
 			});
 			
 			//email
-			new tc.inlineLinkEditor({
+			new tc.inlineEditor({
 				dom: $r.find(".box.res-email"),
 				service: {
 					url: "/resource/edit/contactemail",
