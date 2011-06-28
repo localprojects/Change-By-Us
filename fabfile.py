@@ -275,7 +275,7 @@ def _interpolate_templates():
                 
     return interpolated_files
 
-def _upload_cron_files(files):
+def _upload_interpolated_files(files):
     """ Uploads cron files after interpolation 
     
     Expects to have interpolation run initially, so this function should 
@@ -284,13 +284,33 @@ def _upload_cron_files(files):
     for filename in files:
         print "filename to search for is %s" % filename
         if not re.search('.tmpl$', filename):
-            put(filename, "%(etc_path)s/" % env)
+            # TODO: This is a bit sketchy to do hard-coded 'etc' check, but 
+            # we can't split on the entire path either!
+            # Get the relative path to the interpolated etc file with 
+            env.temp = filename.split('etc')[1]
+            if re.match('/cron', env.temp):
+                base = [x for x in env.temp.split('/') if x is not None and x != '']
+                temp_path = list(base)
+                temp_path.insert(0, env.etc_path)
+                remote_path = os.path.join(*temp_path[:-1])
+                remote_file = os.path.join(*temp_path) 
+                run('mkdir -p %s' % remote_path)
+                put(filename, remote_file) 
+                
+                # Symlink the cron job to the correct place
+                temp_path = list(base)
+                temp_path.insert(0, '/etc')
+                abs_etc_path = os.path.join(*temp_path[:-1])    # assuming the last index is the file
+                abs_etc_file = os.path.join(*temp_path)
+                # We want the target path to exist, but not the target file
+                sudo_as('if [ -d %s ];then if [ ! -e %s ];then sudo ln -s %s %s; else echo "Target file already exists! Will not overwrite"; fi; else echo "Target path is incorrect"; fi' % (abs_etc_path, abs_etc_file, remote_file, abs_etc_file))
+            
 
 @roles('web')
 def deploy_cron():
     """ Interpolate and upload cron-related files """
     
-    _upload_cron_files(_interpolate_templates())
+    _upload_interpolated_files(_interpolate_templates())
 
 #----- /CRON related tasks -----
 
