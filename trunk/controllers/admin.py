@@ -376,14 +376,14 @@ class Admin(Controller):
     def getSiteFeedbackCSV(self):
         csv = []
         
-        csv.append('"ID","NAME","EMAIL","COMMENT","TIMESTAMP"')
+        csv.append('"ID","NAME","EMAIL","COMMENT","TYPE","TIMESTAMP"')
         
         try:
-            sql = "select site_feedback_id, submitter_name, submitter_email, comment, created_datetime from site_feedback order by site_feedback_id"
+            sql = "select site_feedback_id, submitter_name, submitter_email, comment, feedback_type, created_datetime from site_feedback order by site_feedback_id"
             data = list(self.db.query(sql))
         
             for item in data:
-                csv.append('"%s","%s","%s","%s","%s"' % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, str(item.created_datetime))) 
+                csv.append('"%s","%s","%s","%s","%s","%s"' % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, item.feedback_type, str(item.created_datetime))) 
         except Exception, e:
             log.info("*** there was a problem getting site feedback")
             log.error(e)

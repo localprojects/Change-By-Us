@@ -460,11 +460,17 @@ class Home(Controller):
         name = self.request('name')
         email = self.request('email')
         comment = self.request('text')
+        t = self.request('type')
+        
+        if (t == 'feature'): feedbackType = 'feature'
+        elif (t == 'bugs'): feedbackType = 'bug'
+        else: feedbackType = 'general'
         
         try:
             self.db.insert('site_feedback', submitter_name = name,
                                             submitter_email = email,
                                             comment = comment,
+                                            feedback_type = feedbackType,
                                             created_datetime = None)
                                             
             return True
