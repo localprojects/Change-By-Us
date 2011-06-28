@@ -45,7 +45,9 @@
 		
 		if(window.location.hash == ''){
 			window.location.hash = 'user-account,activity';
-		} 
+		} else if(window.location.hash == '#user-account,password'){
+			window.location.hash = 'user-account,account';
+		}
 		
 		app.components.user_page_merlin = new tc.merlin(app,{
 			name: "user-account",
@@ -226,7 +228,22 @@
 					selector:'.account-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
-						window.location.hash = "account-info,edit-account-details";
+						if(merlin.app.components.account_merlin){
+							merlin.app.components.account_merlin.show_step('edit-account-details');
+						}
+					}
+				},
+				'password':{
+					selector:'.password-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
+						if(merlin.app.components.change_pass_merlin){
+							merlin.app.components.change_pass_merlin.show_step('edit-password-details');
+						}
+						if(merlin.app.components.account_merlin){
+							merlin.app.components.account_merlin.show_step('edit-account-details');
+						}
+						
 					}
 				},
 				'resources':{
