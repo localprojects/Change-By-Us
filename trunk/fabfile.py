@@ -1,6 +1,7 @@
 from fabric.api import *
 import os
 import time
+import re
 
 """
 Base configuration
@@ -17,22 +18,21 @@ Stage-specific interpolation is easy:
 ------------------------------
 INSTRUCTIONS:
 ------------------------------
-This fabfile requires a set of parameters to be set in an rcfile, for fabric to load.
+This fabfile requires a set of parameters to be set in an rcfile, for fabric to load. 
 
+Install fabric:
+    pip install fabric
 
 CAVEATS AND NOTES:
-    * Do NOT user short if[] syntax, meaning [ -e "foobar.txt' ] && {do_something}. Go for explicit if [ -e "foobar.txt" ];then do_something; fi
+    * Do NOT user short if[] syntax, meaning [ -e "foobar.txt' ] && {do_something}, in fabric scripts.
+      Go for explicit if [ -e "foobar.txt" ];then do_something; fi
       The short syntax does not return the correct value for success, and this causes scripts to fail
-    * ROLES (and other decorators) MUST be on the parent function. Running a child function through a decorator just won't work due to some
-      fabric stupidity!
+    * ROLES (and other decorators) MUST be on the parent function. 
+      Running a child function through a decorator just won't work due to some fabric stupidity!
 
 TODO:
-    * Need ROLES for multiple hosts per stage. Remember that a Role is a machine in an Environment
-    * Copy interpolated configs into /etc/
-    * symlink /config.yaml to interpolated config after deleting it from /current - but this *might* be a bad idea for changes to config?
-    * We should be able to do the following:
-        fab --config=rcfile.sundar sundar_dev create_config_yaml
-
+    * Configuration of cron and system-level tasks via fabric deployment 
+    
 ------------------------------
 COOKBOOK:
 ------------------------------
@@ -42,6 +42,9 @@ COOKBOOK:
     Create stage-specific lighttpd.conf file into the etc/ folder
         fab --config=rcfile.name dev create_lighttpd_conf
 
+    Create (via interpolation) and upload configurations to remote host(s): 
+        fab --config=rcfile.dev dev deploy_configurations
+        
     Setup a set of web servers
         fab --config=rcfile.dev dev setup
 
@@ -56,6 +59,10 @@ COOKBOOK:
     # Webserver related tasks
     Start / stop / restart the webserver
         fab --config=rcfile.environment environment stop_webserver
+    
+    # Deploy cron tasks
+        fab --config=rcfile.dev dev deploy_cron 
+        
 """
 
 # PATHS
@@ -241,6 +248,51 @@ def deploy_configurations():
 
 #---- /create-config-files ----------------------
 
+#----- CRON related tasks -----    
+
+def _interpolate_templates():
+    """ Translate the cron file template into a "real" cron file.
+    
+    Should never be called directly, since the purpose of this function is
+    to perform the first step of cron-file deployment
+    """
+    if not os.path.exists(env.rcfile):
+        raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
+
+    interpolated_files = []
+    # Get a list of all template files in /etc/ that we needt o interpolate
+    for root, dirs, files in os.walk(env.local_etc_path):
+        for name in files:       
+            infilename = os.path.join(root, name)
+            if re.search('.tmpl$', infilename):
+                outfilename = os.path.splitext(infilename)[0]
+                infile = open(infilename, 'r')
+                outfile = open(outfilename, 'w')
+                outfile.write(infile.read() % env)
+                outfile.close()
+                infile.close()
+                interpolated_files.append(outfilename)
+                
+    return interpolated_files
+
+def _upload_cron_files(files):
+    """ Uploads cron files after interpolation 
+    
+    Expects to have interpolation run initially, so this function should 
+    not be called directly.
+    """
+    for filename in files:
+        print "filename to search for is %s" % filename
+        if not re.search('.tmpl$', filename):
+            put(filename, "%(etc_path)s/" % env)
+
+@roles('web')
+def deploy_cron():
+    """ Interpolate and upload cron-related files """
+    
+    _upload_cron_files(_interpolate_templates())
+
+#----- /CRON related tasks -----
 
 """
 Branches
