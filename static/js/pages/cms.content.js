@@ -195,6 +195,12 @@ app_page.features.push(function(app){
 			
 			data.is_official = tc.jQ(e.target).parents('.item-box').find('input.mark-official-checkbox').attr('checked');
 			
+			if(!data.is_official){
+				data.is_official = 0;
+			} else {
+				data.is_official = 1;
+			}
+			
 			tc.jQ.ajax({
 				type:"POST",
 				url:"/admin/"+type+"/approve",
