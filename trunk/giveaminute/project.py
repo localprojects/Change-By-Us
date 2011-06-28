@@ -1232,7 +1232,10 @@ def inviteByIdea(db, projectId, ideaId, message, inviterUser):
                     return True
             else:
                 return mMessaging.emailInvite(idea.data.email, 
-                                              userName(inviterUser.firstName, inviterUser.lastName), 
+                                              userNameDisplay(inviterUser.firstName, 
+                                                              inviterUser.lastName,
+                                                              inviterUser.affiliation,
+                                                              isFullLastName(inviterUser.groupMembershipBitmask)),
                                               projectId,
                                               project.data.title,
                                               project.data.description)
@@ -1251,7 +1254,10 @@ def inviteByEmail(db, projectId, emails, message, inviterUser):
         for email in emails:
             if (createInviteRecord(db, projectId, message, inviterUser.id, None, email)):
                if (not mMessaging.emailInvite(email, 
-                                          userName(inviterUser.firstName, inviterUser.lastName), 
+                                          userNameDisplay(inviterUser.firstName, 
+                                                              inviterUser.lastName,
+                                                              inviterUser.affiliation,
+                                                              isFullLastName(inviterUser.groupMembershipBitmask)),
                                           projectId,
                                           project.data.title,
                                           project.data.description)):

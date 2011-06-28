@@ -200,7 +200,7 @@ class Project(Controller):
                     log.error("*** couldn't add invited idea to project for user %s on joining project %s" % (self.user.id, projectId))
                 
                 # add a message to the queue about the join
-                message = 'New Member! Your group now has %s total!' % project.data.num_members
+                message = 'New Member! Your project now has %s total!' % project.data.num_members
                 
                 # email admin
                 if (not mMessaging.emailProjectJoin(project.data.owner_email, 
