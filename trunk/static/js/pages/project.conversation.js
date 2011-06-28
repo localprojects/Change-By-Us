@@ -48,14 +48,14 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			out.find('blockquote.serif').before('<div class="note-card">\
 				<cite class="note-meta-hd"></cite>\
 				<blockquote>\
-					<p>'+d.idea.text+'</p>\
+					<p class="message-test">&nbsp;</p>\
 				</blockquote>\
 				<cite class="note-meta-ft"></cite>\
 			</div>');
 		}
 		
 		//add message body, text dependent on message type		
-		out.find('blockquote.serif p').text((d.message_type == 'join' ? d.idea.text : d.body));
+		out.find('blockquote.serif p').html(this.handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
 		out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
 		out.attr('id','message-'+d.message_id);
 		out.find('.meta-ft').text(d.created).time_since();;
@@ -86,6 +86,16 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			e.data.me.elements.message_stack.prepend(message);
 			e.data.me.dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_comment);
 			message.slideDown(500);
+		},
+		construct_links:function(text){
+			var exp;
+			exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+	  	return text.replace(exp,"<a href='$1'>$1</a>"); 
+		},
+		handle_message_body:function(i,j){
+			var message, exp;
+			message = tc.jQ(j);
+	  	message.html(me.handlers.construct_links(message.text())); 
 		},
 		change_message_filter:function(e,d){
 			
@@ -168,6 +178,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 						this.elements.message_stack.append(this.generate_message(d[i]));
 					}
 					this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
+					this.dom.find('.message-text').each(this.handlers.handle_message_body);
 				}
 			});
 			
@@ -219,7 +230,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		markup.attr('id','message-'+data.message_id);
 		//markup.find('img').attr('src','/images/'++'/'++'.png')
 		markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
-		markup.find('p.message-body').text(data.message);
+		markup.find('p.message-body').html(me.handlers.construct_links(data.message));
 		
 		
 		if(me.options.app.app_page.user){
@@ -233,6 +244,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		
 		return markup;
 	}
+	
+	this.dom.find('.message-text').each(this.handlers.handle_message_body);
 	
 	if( (this.options.app.app_page.project_user.is_member) || 
 			(this.options.app.app_page.project_user.is_project_admin) || 
