@@ -5,7 +5,7 @@
 		
 		app.components.account_merlin = new tc.merlin(app,{
 			name: "account-info",
-			dom:tc.jQ(".account-view.merlin"),
+			dom: tc.jQ(".account-view.merlin"),
 			first_step: "edit-account-details",
 			data: {
 				f_name: app.app_page.user.f_name,
@@ -14,6 +14,7 @@
 				image_id: app.app_page.user.image_id || null,
 				location_id: app.app_page.user.location_id || null
 			},
+			use_hashchange:false,
 			steps: {
 				"edit-account-details":{
 					selector: ".step.edit-account-details",
@@ -48,7 +49,8 @@
 							if(e.data.dom.hasClass('invalid')){
 								return;
 							}
-							window.location.hash = 'account-info,submit-account-details';
+							merlin.show_step('submit-account-details');
+							//window.location.hash = 'account-info,submit-account-details';
 						});
 						
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
@@ -94,7 +96,8 @@
 							dataType:"text",
 							success: function(data, ts, xhr) {
 								if (data == "False") {
-									window.location.hash = "account-info,account-details-error";
+									this.show_step('account-details-error');
+									//window.location.hash = "account-info,account-details-error";
 									return false;
 								}
 								
@@ -129,12 +132,16 @@
 			name: "change-password",
 			dom: tc.jQ(".password-info.merlin"),
 			next_button: tc.jQ(".password-save-button"),
-			first_step: "edit-password-details",
+			first_step: "hidden",
 			data: {
 				old_password: null,
 				new_password: null
 			},
+			use_hashchange:false,
 			steps: {
+				"hidden":{
+					selector:".step.hidden"
+				},
 				"edit-password-details":{
 					selector:".step.edit-password-details",
 					next_step:"submit-password-details",
@@ -169,12 +176,16 @@
 							context:merlin,
 							dataType:"text",
 							success: function(data, ts, xhr) {
+								var me;
+								me = this;
 								if (data == "False") {
-									window.location.hash = "change-password,password-details-error";
+									this.show_step('password-details-error');
+									//window.location.hash = "change-password,password-details-error";
 									return false;
 								}
 								tc.timer(2000, function() {
-									window.location.hash = "change-password,password-details-submitted";
+									me.show_step('password-details-submitted');
+									//window.location.hash = "change-password,password-details-submitted";
 								});
 							}
 						});
