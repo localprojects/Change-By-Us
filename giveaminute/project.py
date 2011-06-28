@@ -766,8 +766,6 @@ def getFeaturedProjectsDictionary(db):
                                 'num_ideas' : item.num_ideas,
                                 'num_project_resources' : item.num_project_resources,
                                 'num_endorsements' : item.num_endorsements})     
-                                
-            log.info("*** better proj stats = %s" % betterData)   
     except Exception, e:
         log.info("*** couldn't get featured projects with stats")
         log.error(e)
