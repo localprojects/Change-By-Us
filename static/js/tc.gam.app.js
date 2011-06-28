@@ -138,6 +138,7 @@ var ua = tc.jQ.browser;
 var os;
 var isMsie8orBelow = false;
 var isMsie7orBelow = false;
+var isiPad = false;
 
 if( ua && ua.msie && ua.version < 9 ) {
 	isMsie8orBelow = true;
@@ -167,6 +168,7 @@ if (navigator.appVersion.indexOf("Win")!=-1) {
 
 if (navigator.userAgent.match(/iPad/i) != null) {
 	os = 'ipad';
+	isiPad = true;
 }
 
 tc.jQ('body').addClass(os);
