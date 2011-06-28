@@ -2,7 +2,11 @@
 Module to hold basic home Selenium tests.
 """
 from selenium import selenium
-import unittest, time, re, os, subprocess
+import unittest, time, re, os, sys, subprocess
+
+sys.path.append("../..")
+sys.path.append("../../framework")
+import main
 
 def rel_to_abs(path):
     """
@@ -19,8 +23,14 @@ class test_home(unittest.TestCase):
     
     def setUp(self):
         self.verificationErrors = []
+        
+        # Database
+        
+        # Start application
         config = rel_to_abs("../../lighttpd.conf")
         self.server_proc = subprocess.Popen(["lighttpd -D -f %s" % config], shell = True)
+        
+        # Start selenium
         self.selenium = selenium("localhost", 4443, "*chrome", "http://localhost:8080/")
         self.selenium.start()
     
