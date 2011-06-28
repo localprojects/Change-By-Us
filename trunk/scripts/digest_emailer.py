@@ -429,8 +429,8 @@ order by pu.project_id, u.created_datetime desc
                 # TODO: This really should be a lot more configurable!
                 td = datetime.date(mark)
                 fd = td + relativedelta(days=-1)
-                self.FromDate = fd
-                self.ToDate = td
+                self.FromDate = str(fd)
+                self.ToDate = str(td)
                 logging.info('Getting digests for date range: %s to %s' % (fd, td))
 
         resp = self.getDataToCreateDigest()
