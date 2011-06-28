@@ -4,10 +4,6 @@ Module to hold basic home Selenium tests.
 from selenium import selenium
 import unittest, time, re, os, sys, subprocess
 
-sys.path.append("../..")
-sys.path.append("../../framework")
-import main
-
 def rel_to_abs(path):
     """
     Function to take relative path and make absolute
