@@ -512,7 +512,7 @@ class Admin(Controller):
             
     def approveProjectResource(self):
         projectResourceId = self.request('resource_id')
-        isOfficial = bool(self.request('is_official'))
+        isOfficial = bool(int(self.request('is_official')))
 
         if (not projectResourceId):
             log.error("*** attempted to approve resource w/o id")
