@@ -420,8 +420,10 @@ app_page.features.push(function(app){
 							tempitem.find('div.mission').append("<span class='serif'><p><a href='mailto:"+d[i].contact_email+"'>"+tc.truncate(d[i].contact_email, 24)+"</a></p></span>");
 							
 							tempitem.find('div.mission').append("<div class='box half'><h4>Physical Address</h4><span class='serif'><p>"+d[i].physical_address+"<br /><strong>"+d[i].location_name+"</strong></p></span></div>");
+							if(d[i].keywords){
+								tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords.replace(/,/g,', ')+"</p></span></div>");
+							}
 							
-							tempitem.find('div.mission').append("<div class='box half'><h4>Keywords</h4><span class='serif'><p>"+d[i].keywords.replace(/,/g,', ')+"</p></span></div>");
 							this.components.resources_pagination.data.offset++;
 							this.components.resources_pagination.data.current_page.children('ul').append(tempitem);
 						}
