@@ -20,9 +20,7 @@ class test_home(unittest.TestCase):
     def setUp(self):
         self.verificationErrors = []
         config = rel_to_abs("../../lighttpd.conf")
-        
-        # self.server_proc = subprocess.Popen(["lighttpd", "-D", "-f %s" % config])
-        
+        self.server_proc = subprocess.Popen(["lighttpd -D -f %s" % config], shell = True)
         self.selenium = selenium("localhost", 4443, "*chrome", "http://localhost:8080/")
         self.selenium.start()
     
@@ -39,8 +37,7 @@ class test_home(unittest.TestCase):
     def tearDown(self):
         self.selenium.stop()
         self.assertEqual([], self.verificationErrors)
-        
-        # self.server_proc.kill()
+        self.server_proc.kill()
         
 
 if __name__ == "__main__":
