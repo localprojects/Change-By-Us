@@ -415,7 +415,7 @@ def endorse(db, projectId, userId):
 
         return True
     else:
-        log.info("*** user already in project")
+        log.info("*** user already endorsed project")
         return False
  
 def removeEndorsement(db, projectId, userId):
