@@ -92,5 +92,8 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.list_to_str(["a", "b", "c"]), "a b c")
         self.assertEqual(util.list_to_str([1, 2, 3]), "1 2 3")
         
+    def test_wordcount(self):
+        self.assertEqual(util.wordcount("one 2 3 four"), 4)
+        
 if __name__ == "__main__":
     unittest.main()
