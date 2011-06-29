@@ -140,7 +140,7 @@ app_page.features.push(function(app){
 							data:{ 
 								location_id: e.data.carousel.data.location_input.attr('location_id'),
 								terms: e.data.carousel.data.terms_input.val(),
-								n: e.data.carousel.data.n_to_fetch,
+								n: (e.data.carousel.data.n_to_fetch + 1),
 								offset: e.data.carousel.data.offset
 							},
 							context:e.data.carousel,
@@ -154,29 +154,34 @@ app_page.features.push(function(app){
 									return;
 								}
 								
-								this.data.current_page.removeClass('spinner-message').children().remove();
-								
 								if(!d.results.length && this.data.offset > 0){
+									//no items, and we are on page > 0
 									this.data.current_page.remove();
-									return;
-								}
-								
-								this.data.offset += d.results.length;
-								
-								
-								if(d.results.length == this.data.n_to_fetch){
+								} else if(!d.results.length && this.data.offset == 0){
+									//no items, and we are on page 0
+									this.data.current_page.children('ul').append('<li><p>No Results.</p></li>');
+								} else if(d.results.length == (this.data.n_to_fetch + 1)) {
+									//full of items, and more. we DO have another page.
+							
+									//lets pop off the extra one.
+									d.results.pop();
+							
 									this.carousel.addItem('\
 										<li class="project-carousel-item clearfix spinner-message">\
 											<div class="spinner-container"></div>\
 										</li>');
 								}
 								
-								dom = this.data.page_generator(d);
 								
+								this.data.current_page.removeClass('spinner-message').children().remove();
+								this.data.offset += d.results.length;
+								dom = this.data.page_generator(d);
 								this.data.current_page.append(dom);
+								
 								if(tc.jQ.isFunction(this.data.appended)){
 									this.data.appended(dom);
 								}
+								
 								switch(name){
 									case 'idea':
 										target_height = '625';
