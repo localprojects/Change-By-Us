@@ -108,7 +108,7 @@ class Admin(Controller):
                 return self.not_found()
         elif (action == 'project'):
             if (param0 == 'delete'):
-                return self.deleteItem('project', self.request('project_id'))
+                return self.deleteProject()
             elif (param0 == 'approve'):
                 return self.approveItem('project', self.request('project_id'))
             elif (param0 == 'feature'):
@@ -168,6 +168,16 @@ class Admin(Controller):
         self.template_data['featured_projects'] = dict(data = featuredProjects, json = json.dumps(featuredProjects))
     
         return self.render('cms_content')
+    
+    def deleteProject(self):
+        projectId = self.request('project_id')
+        
+        isDeleted = self.deleteItem('project', projectId)
+        
+        if (isDeleted):
+            self.db.delete('featured_project', where="project_id = $id", vars = {'id':projectId})
+            
+        return isDeleted
         
     def featureProject(self):
         featuredProjectId = self.request('project_id')
