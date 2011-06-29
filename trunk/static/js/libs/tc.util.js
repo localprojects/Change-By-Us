@@ -11,6 +11,7 @@ if(!tc){ var tc = {}; }
 (function(tc) {
 	tc.util = {};
 	tc.util.log = function(message,level){
+		if(app_page && app_page.prevent_logging){ return; }
 		if (typeof console != "undefined" && typeof console.log != "undefined") {
 			if(!level){
 				console.info(message);
@@ -23,6 +24,7 @@ if(!tc){ var tc = {}; }
 		}
 	};
 	tc.util.dump = function(object){
+		if(app_page && app_page.prevent_logging){ return; }
 		if (typeof console != "undefined" && typeof console.log != "undefined") {
 			console.log(object);
 		}
