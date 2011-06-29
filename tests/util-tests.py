@@ -53,6 +53,17 @@ class UtilTests (unittest.TestCase):
         self.assertNotEqual(type(numList[0]), str, "Returned a str string from num list.")
         self.assertEqual(type(util.safestr(numList)[0]), str, "Did not return a str string from num list.")
 
+    def test_validate_email(self):
+        self.assertTrue(util.validate_email("i@u.nu"))
+        self.assertTrue(util.validate_email("jake@lp.com"))
+        self.assertTrue(util.validate_email("jake@lplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplplp.com"))
+        self.assertFalse(util.validate_email("i@o.u"))
+        self.assertFalse(util.validate_email("jake@lp."))
+        self.assertFalse(util.validate_email("i@.in"))
+        self.assertFalse(util.validate_email("@lp.com"))
+        self.assertFalse(util.validate_email("@."))
+        self.assertFalse(util.validate_email("."))
+        self.assertFalse(util.validate_email("@"))
 
 if __name__ == "__main__":
     unittest.main()

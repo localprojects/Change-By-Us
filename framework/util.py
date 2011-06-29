@@ -96,6 +96,10 @@ def validate_email(emailaddress):
     #if not a country code and not in the domain list
     if len(toplevel) != 2 and toplevel not in domains:
         return False # Not a domain name.
+      
+    #is there a username?
+    if len(localpart) == 0:
+        return False
 
     #Why is this even here? It doesn't do anything without the test below.
     for i in '-_.%.':
