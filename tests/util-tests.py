@@ -43,15 +43,18 @@ class UtilTests (unittest.TestCase):
         strList = ["a", "b", "c"]
         numList = [1, 2, 3]
         
-        self.assertEqual(type(util.safestr(uni)), str, "Did not return a str string from uni.")
-        self.assertEqual(type(util.safestr(base)), str, "Did not return a str string from base.")
-        self.assertEqual(type(util.safestr(hasUni)), str, "Did not return a str string from hasUni.")
-        self.assertEqual(type(util.safestr(noUni)), str, "Did not return a str string from noUni.")
-        self.assertEqual(type(util.safestr(strList)[0]), str, "Did not return a str string from str list.")
-        self.assertNotEqual(type(uniList[0]), str, "Returned a str string from uni list.")
-        self.assertEqual(type(util.safestr(uniList)[0]), str, "Did not return a str string from uni list.")
-        self.assertNotEqual(type(numList[0]), str, "Returned a str string from num list.")
-        self.assertEqual(type(util.safestr(numList)[0]), str, "Did not return a str string from num list.")
+        self.assertEqual(type(util.safestr(uni)), str)
+        self.assertEqual(type(util.safestr(base)), str)
+        self.assertEqual(type(util.safestr(hasUni)), str)
+        self.assertEqual(type(util.safestr(noUni)), str)
+        self.assertEqual(type(util.safestr(iter(strList)).next()), str)
+        self.assertNotEqual(type(uniList[0]), str)
+        self.assertEqual(type(util.safestr(iter(uniList)).next()), str)
+        self.assertNotEqual(type(numList[0]), str)
+        self.assertEqual(type(util.safestr(iter(numList)).next()), str)
+        self.assertEqual(list(util.safestr(iter(numList))), ["1", "2", "3"])
+        self.assertEqual(util.safestr(numList), "[1, 2, 3]")
+
 
     def test_validate_email(self):
         self.assertTrue(util.validate_email("i@u.nu"))
@@ -80,7 +83,6 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.cleanUSPhone("(213) 456-7890"), "2134567890")
         self.assertEqual(util.cleanUSPhone("213-456-7890"), "2134567890")
         self.assertEqual(util.cleanUSPhone("123-456-7890"), None)
-
-
+        
 if __name__ == "__main__":
     unittest.main()
