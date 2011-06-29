@@ -9,6 +9,11 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.try_f(int, "foo"), None, "Did not get None as expected.")
         self.assertEqual(util.try_f(str, 10, "ten"), "10", "Did not convert int to string.")
 
+    def test_dictsort(self):
+        dl = [{"id":"c"}, {"id":"a"}, {"id":"b"}]
+        #sdl = util.dictsort(dl, "id")
+        #self.assertEqual(sdl[0].id, "a", "First dict in list did not have id 'a'")
+    
     def test_safeuni(self):
         class HasUnicode(object):
             def __unicode__(self):
