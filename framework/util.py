@@ -25,7 +25,6 @@ def safeuni(s):
     """
     Tries to convert an object to a unicode string, handling common edge cases.
     """
-    
     #if unicode
     if isinstance(s, unicode):
         return s
@@ -33,7 +32,7 @@ def safeuni(s):
     #if not a string
     if not isinstance(s, basestring):
         #if can be converted to unicode, then go for it
-        if hasattr(obj, '__unicode__'): #WTH is obj???
+        if hasattr(s, '__unicode__'):
             return unicode(s)
         else:
             return str(s).decode('utf-8')
@@ -65,11 +64,11 @@ def safestr(s):
         return s
     
     #if an iterater, then try to convert everything to a string
-    if hasattr(obj, 'next') and hasattr(obj, '__iter__'): # iterator # What is obj??
+    if hasattr(s, 'next') and hasattr(s, '__iter__'): # iterator # What is obj??
         import itertools
-        return itertools.imap(safestr, obj)
+        return itertools.imap(safestr, s)
     else:
-        return str(obj)
+        return str(s)
 
 def validate_email(emailaddress):
     """
@@ -426,7 +425,7 @@ def normalize(num, min, max):
     
 def confirm_pid(run_folder):
     """
-    
+    TBD
     """
     import sys, os, signal, __main__    
     name = prefix('.', os.path.basename(__main__.__file__))
