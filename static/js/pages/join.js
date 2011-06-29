@@ -478,7 +478,7 @@ app_page.features.push(function(app){
 							if(merlin.app.app_page.data.redir_from){
 								window.location = merlin.app.app_page.data.redir_from;
 							} else {
-								window.location = '/useraccount';
+								window.location = '/useraccount#user-account,account';
 							}
 						}
 					});
