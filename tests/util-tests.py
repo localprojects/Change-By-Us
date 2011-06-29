@@ -25,5 +25,29 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.safeuni(hasUni), "unicode here", "Did not return the expected string from hasUni.")
         self.assertEqual(type(util.safeuni(noUni)), unicode, "Did not return a unicode string from noUni.")
 
+    def test_safestr(self):
+        class HasUnicode(object):
+            def __unicode__(self):
+                return u"unicode here"
+        
+        uni = u"unicode"
+        base = "basestring"
+        hasUni = HasUnicode()
+        noUni = 5
+        uniList = [u"z", u"y"]
+        strList = ["a", "b", "c"]
+        numList = [1, 2, 3]
+        
+        self.assertEqual(type(util.safestr(uni)), str, "Did not return a str string from uni.")
+        self.assertEqual(type(util.safestr(base)), str, "Did not return a str string from base.")
+        self.assertEqual(type(util.safestr(hasUni)), str, "Did not return a str string from hasUni.")
+        self.assertEqual(type(util.safestr(noUni)), str, "Did not return a str string from noUni.")
+        self.assertEqual(type(util.safestr(strList)[0]), str, "Did not return a str string from str list.")
+        self.assertNotEqual(type(uniList[0]), str, "Returned a str string from uni list.")
+        self.assertEqual(type(util.safestr(uniList)[0]), str, "Did not return a str string from uni list.")
+        self.assertNotEqual(type(numList[0]), str, "Returned a str string from num list.")
+        self.assertEqual(type(util.safestr(numList)[0]), str, "Did not return a str string from num list.")
+
+
 if __name__ == "__main__":
     unittest.main()
