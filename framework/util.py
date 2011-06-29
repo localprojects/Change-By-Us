@@ -121,10 +121,10 @@ def validate_email(emailaddress):
 def validateUSPhone(phone):
     """
     Validates that the given string is a valid US phone number, a number
-    that start with a non-zero followed by 9 digits.
-    ie. "2124800479"
+    that starts with 2-9 followed by 9 digits. ie. "2124800479"
+    http://en.wikipedia.org/wiki/North_American_Numbering_Plan
     """
-    return not (re.match("^[1-9]\d{9}$", phone) == None)
+    return not (re.match("^[2-9]\d{9}$", phone) == None)
     
 def cleanUSPhone(phone):
     """

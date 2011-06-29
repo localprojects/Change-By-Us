@@ -65,5 +65,14 @@ class UtilTests (unittest.TestCase):
         self.assertFalse(util.validate_email("."))
         self.assertFalse(util.validate_email("@"))
 
+    def test_validateUSPhone(self):
+        self.assertTrue(util.validateUSPhone("2134567890"))
+        self.assertFalse(util.validateUSPhone("hello"))
+        self.assertFalse(util.validateUSPhone("1234567890"))
+        self.assertFalse(util.validateUSPhone("0213456789"))
+        self.assertFalse(util.validateUSPhone("21345678900000000"))
+        self.assertFalse(util.validateUSPhone("(213) 456-7890"))
+        self.assertFalse(util.validateUSPhone("213-456-7890"))
+
 if __name__ == "__main__":
     unittest.main()
