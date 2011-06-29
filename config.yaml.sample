@@ -14,6 +14,8 @@
 #--------------------------------------------------------------------
 # Explanation of these values is needed.
 #
+# app_mode -- If 'beta', the site will be in private beta mode.  Set
+#             to anything else to get out of beta mode.
 #--------------------------------------------------------------------
 dev: Yes
 app_mode: beta
@@ -61,7 +63,7 @@ database:
     dbn: mysql
     db: '<DB_NAME>'
     user: '<DB_USER>'
-    password: '<DB_PASS'
+    password: '<DB_PASS>'
     host: '<DB_HOST>'
 
 memcache:
@@ -114,10 +116,10 @@ email:
   
     # Amazon SES
     # TODO: merge this with the AWS root config
-    aws_ses:
-        # TODO: add the quota limit
-        access_key_id: '<ACCESS_KEY>'
-        secret_access_key: '<SECRET_KEY>'
+    # TODO: add the quota limit
+    # aws_ses:
+    #    access_key_id: '<ACCESS_KEY>'
+    #    secret_access_key: '<SECRET_KEY>'
       
 
 # Services
@@ -145,3 +147,17 @@ aws:
     access_key_id: '<ACCESS_KEY>'
     secret_access_key: '<SECRET_KEY>'
     bucket: '<BUCKET_NAME>'
+    
+
+# Test settings
+#--------------------------------------------------------------------
+# Settings for test environment.  The database should be a different
+# for testing.
+#
+#--------------------------------------------------------------------
+database_test:
+    dbn: mysql
+    db: '<DB_NAME>'
+    user: '<DB_USER>'
+    password: '<DB_PASS'
+    host: '<DB_HOST>'
