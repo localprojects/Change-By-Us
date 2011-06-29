@@ -285,7 +285,7 @@ app_page.features.push(function(app){
 					},
 					password:{
 						selector:'input.password',
-						validators:['password-20','required']
+						validators:['password-35','required']
 					},
 					organization:{
 						selector:'input.organization',

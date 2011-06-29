@@ -152,7 +152,7 @@
 						},
 						new_password: {
 							selector: ".new-password",
-							validators:["password-20", "required"]
+							validators:["password-35", "required"]
 						},
 						confirm_new_password: {
 							selector: ".confirm-new-password",
