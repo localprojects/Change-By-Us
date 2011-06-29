@@ -224,7 +224,7 @@ where u.user_id = $id and u.is_active = 1"""
         return data    
         
     def getEndorsedProjects(self):
-        data = []
+        betterData = []
         
         try:
             sql = """select p.project_id, 
@@ -235,18 +235,35 @@ where u.user_id = $id and u.is_active = 1"""
                         o.user_id as owner_user_id,
                         o.first_name as owner_first_name,
                         o.last_name as owner_last_name,
+                        o.affiliation as owner_affiliation,
+                        o.group_membership_bitmask as owner_group_membership_bitmask,
                         o.image_id as owner_image_id, 
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members 
                 from project p
                 inner join project_endorsement pe on pe.project_id = p.project_id and pe.user_id = $id
-                inner join user o on o.user_id = $id
+                inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin = 1
+                inner join user o on o.user_id = pu.user_id
                  where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
+            
+            for item in data:
+                betterData.append(dict(project_id = item.project_id,
+                                        title = item.title,
+                                        description = item.description,
+                                        image_id = item.image_id,
+                                        location_id = item.location_id,
+                                        owner = mProject.smallUserDisplay(item.owner_user_id, 
+                                                                          mProject.userNameDisplay(item.owner_first_name, 
+                                                                                                   item.owner_last_name, 
+                                                                                                   item.owner_affiliation, 
+                                                                                                   mProject.isFullLastName(item.owner_group_membership_bitmask)), 
+                                                                 item.owner_image_id),
+                                        num_members = item.num_members))
         except Exception,e:
             log.info("*** couldn't get user endorsed projects")
             log.error(e)
             
-        return data         
+        return betterData         
         
     def getActivityDictionary(self):
         user = mProject.smallUserDisplay(self.id, 
@@ -258,6 +275,7 @@ where u.user_id = $id and u.is_active = 1"""
         user['location_id'] = self.locationId
         user['location'] = self.location
         user['description'] = self.description
+        user['is_leader'] = self.isLeader
     
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
