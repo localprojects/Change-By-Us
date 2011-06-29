@@ -13,10 +13,11 @@
 	
 	<title><?php semantic_title(); ?></title>
 	
-	<meta name="description" content=""/>
-	<meta name="author" content=""/>
+	<meta name="description" content="Change by Us NYC is a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live." />
+	<meta name="author" content="Type/Code LLC."/>
 	<meta http-equiv="Content-Type" content="<?php bloginfo( 'html_type' ); ?>; charset=<?php bloginfo('charset'); ?>" />
 	<meta name="generator" content="WordPress" />
+	<meta name="viewport" content="width=1020" />
 	
 	<link rel="icon" href="/favicon.ico"/>
 	<link rel="shortcut icon" href="/favicon.ico"/>
