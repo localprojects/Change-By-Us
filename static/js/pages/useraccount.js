@@ -196,19 +196,19 @@
 												}
 												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
 												template.find(".project a").attr('href','/project/' + message.project_id).text(message.project_title);
-												template.find(".excerpt p").text(message.body);
+												template.find(".excerpt p").html(message.body);
 												template.find(".time-since").text(message.created).time_since();
 												break;
 											case "join":
 												template = tc.jQ(".template-content.message-item.join-notification").clone().removeClass("template-content");
-												template.find(".title").text(message.body);
+												template.find(".title").html(message.body);
 												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
 												template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
 												template.find(".time-since").text(message.created).time_since();
 												break;
 											case "invite":
 												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
-												template.find(".title").text(message.body);
+												template.find(".title").html(message.body);
 												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
 												break;
 											default:
