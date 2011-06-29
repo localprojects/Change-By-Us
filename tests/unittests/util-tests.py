@@ -108,5 +108,10 @@ class UtilTests (unittest.TestCase):
     def test_singlespace(self):
         self.assertEqual(util.singlespace("  a very   spacey sentence    "), " a very spacey sentence ")
 
+    def test_remove_linebreaks(self):
+        s = """ a  spacey   
+        sentence   on many lines  """
+        self.assertEqual(util.singlespace(s), " a spacey sentence on many lines ")
+
 if __name__ == "__main__":
     unittest.main()
