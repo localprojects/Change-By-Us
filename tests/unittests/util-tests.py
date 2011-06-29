@@ -95,5 +95,11 @@ class UtilTests (unittest.TestCase):
     def test_wordcount(self):
         self.assertEqual(util.wordcount("one 2 3 four"), 4)
         
+    def test_filesizeformat(self):
+        self.assertEqual(util.filesizeformat(0), "0 bytes")
+        self.assertEqual(util.filesizeformat(1), "1 byte")
+        self.assertEqual(util.filesizeformat(1024), "1.0 KB")
+        self.assertEqual(util.filesizeformat(1048576), "1.0 MB")
+        
 if __name__ == "__main__":
     unittest.main()
