@@ -74,5 +74,13 @@ class UtilTests (unittest.TestCase):
         self.assertFalse(util.validateUSPhone("(213) 456-7890"))
         self.assertFalse(util.validateUSPhone("213-456-7890"))
 
+    def test_cleanUSPhone(self):
+        self.assertEqual(util.cleanUSPhone("2134567890"), "2134567890")
+        self.assertEqual(util.cleanUSPhone("hel2134567890lo"), "2134567890")
+        self.assertEqual(util.cleanUSPhone("(213) 456-7890"), "2134567890")
+        self.assertEqual(util.cleanUSPhone("213-456-7890"), "2134567890")
+        self.assertEqual(util.cleanUSPhone("123-456-7890"), None)
+
+
 if __name__ == "__main__":
     unittest.main()
