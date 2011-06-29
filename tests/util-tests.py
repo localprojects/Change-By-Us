@@ -83,6 +83,10 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.cleanUSPhone("(213) 456-7890"), "2134567890")
         self.assertEqual(util.cleanUSPhone("213-456-7890"), "2134567890")
         self.assertEqual(util.cleanUSPhone("123-456-7890"), None)
+
+    def test_list_to_str(self):
+        self.assertEqual(util.list_to_str(["a", "b", "c"]), "a b c")
+        self.assertEqual(util.list_to_str([1, 2, 3]), "1 2 3")
         
 if __name__ == "__main__":
     unittest.main()

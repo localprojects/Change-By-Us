@@ -64,7 +64,7 @@ def safestr(s):
         return s
     
     #if an iterater, then try to convert everything to a string
-    if hasattr(s, 'next') and hasattr(s, '__iter__'): # iterator # What is obj??
+    if hasattr(s, 'next') and hasattr(s, '__iter__'): # iterator
         import itertools
         return itertools.imap(safestr, s)
     else:
@@ -148,7 +148,6 @@ def parse_tags(tagstring):
     """
     Parses out a list of tags from the given delimited tag string.
     """
-    
     #extract everything in quotes
     quotes = re.findall(r'".*?"', tagstring)
     for q in quotes:
@@ -170,10 +169,7 @@ def list_to_str(tags):
     """
     Convert a list of tags into a delimited string.
     """
-    tagstring = ""
-    for tag in tags:
-        tagstring += safestr(tag) + ' '
-    return tagstring
+    return " ".join(safestr(iter(tags)))
     
 def wordcount(s):
     """
