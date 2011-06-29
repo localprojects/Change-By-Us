@@ -3,30 +3,41 @@ import re, base64, string, urlparse
 from framework.log import log
 
 def try_f(f, data, default=None):
+    """
+    Try to convert data to a new type using the f function. If the conversion
+    fails, then return default.
+    """
     try:
         return f(data)
     except Exception, e:
         return default
 
-def dictsort(value, arg):
+def dictsort(dict_list, sort_by_me):
     """
-        Takes a list of dicts, returns that list sorted by the property given in
-        the argument.
-
+    Takes a list of dicts and returns that list sorted by the property given in
+    the sort_by_me argument.
     """
-    decorated = [(resolve_variable('var.' + arg, {'var' : item}), item) for item in value]
+    decorated = [(resolve_variable('var.' + sort_by_me, {'var' : item}), item) for item in dict_list]
     decorated.sort()
     return [item[1] for item in decorated]
 
 def safeuni(s):
+    """
+    Tries to convert an object to a unicode string, handling common edge cases.
+    """
+    #if unicode
     if isinstance(s, unicode):
         return s
+        
+    #if not a string
     if not isinstance(s, basestring):
-        if hasattr(obj, '__unicode__'):
+        #if can be converted to unicode, then go for it
+        if hasattr(s, '__unicode__'):
             return unicode(s)
         else:
             return str(s).decode('utf-8')
     try:
+        #assume a utf-8 string, then try to convert it
         s = unicode(s, errors='strict', encoding='utf-8')   # unicode() is expecting a utf-8 bytestring (unicode itself is not utf-8 or anything else)
     except UnicodeDecodeError, e:
         log.warning(e)
@@ -34,8 +45,16 @@ def safeuni(s):
     return s
 
 def safestr(s):
+    """
+    Tries to convert an object to a string, handling common edge cases. Also
+    supports iterators by converting all items to strings.
+    """
+    
+    #return if this is a string already
     if isinstance(s, str):
         return s
+        
+    #if a unicode string, try to encode as utf-8
     if isinstance(s, unicode):
         try:
             s = s.encode('utf-8')   
@@ -43,28 +62,46 @@ def safestr(s):
             log.error(e)
             return ""
         return s
-    if hasattr(obj, 'next') and hasattr(obj, '__iter__'): # iterator
+    
+    #if an iterater, then try to convert everything to a string
+    if hasattr(s, 'next') and hasattr(s, '__iter__'): # iterator
         import itertools
-        return itertools.imap(safestr, obj)
+        return itertools.imap(safestr, s)
     else:
-        return str(obj)
+        return str(s)
 
 def validate_email(emailaddress):
+    """
+    Validate that the given string is an email address. Returns True when
+    valid, False when invalid.
+    """
+    
     domains = ["aero", "asia", "biz", "cat", "com", "coop", \
         "edu", "gov", "info", "int", "jobs", "mil", "mobi", "museum", \
         "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
         "in", "us", "il", "de", "it", "fr"
         ]
+    
+    #validate length
     if len(emailaddress) < 6:
         # TODO: SR: Why? i@u.nu is valid!
         return False # Address too short.
+    
     try:
         localpart, domainname = emailaddress.rsplit('@', 1)
         host, toplevel = domainname.rsplit('.', 1)
     except ValueError:
         return False # Address does not have enough parts.
+    
+    #if not a country code and not in the domain list
     if len(toplevel) != 2 and toplevel not in domains:
         return False # Not a domain name.
+      
+    #is there a username?
+    if len(localpart) == 0:
+        return False
+
+    #Why is this even here? It doesn't do anything without the test below.
     for i in '-_.%.':
         # Keep in mind that google allows +: my+name@gmail.com
         localpart = localpart.replace(i, "")
@@ -82,10 +119,18 @@ def validate_email(emailaddress):
     return True
         
 def validateUSPhone(phone):
-    return not (re.match("^[1-9]\d{9}$", phone) == None)
+    """
+    Validates that the given string is a valid US phone number, a number
+    that starts with 2-9 followed by 9 digits. ie. "2124800479"
+    http://en.wikipedia.org/wiki/North_American_Numbering_Plan
+    """
+    return not (re.match("^[2-9]\d{9}$", phone) == None)
     
-#strip leading 1 and any non-numerics
 def cleanUSPhone(phone):
+    """
+    Clean up US phone numbers by stripping the leading 1 and any non-numerics.
+    """
+    
     if phone is None:
         return None
 
@@ -100,11 +145,16 @@ def cleanUSPhone(phone):
         return None
                 
 def parse_tags(tagstring):
+    """
+    Parses out a list of tags from the given delimited tag string.
+    """
+    #extract everything in quotes
     quotes = re.findall(r'".*?"', tagstring)
     for q in quotes:
         repaired = q.replace(',', '@@') # protect commas
         repaired = repaired.replace(' ', '$$') # protect spaces     
         tagstring = tagstring.replace(q, repaired)          
+
     tagstring = tagstring.replace(',',' ')      
     tags = tagstring.split(' ')     
     for tag in tags[:]:
@@ -116,19 +166,21 @@ def parse_tags(tagstring):
     return tags
 
 def list_to_str(tags):
-    tagstring = ""
-    for tag in tags:
-        tagstring += safestr(tag) + ' '
-    return tagstring
+    """
+    Convert a list of tags into a delimited string.
+    """
+    return " ".join(safestr(iter(tags)))
     
 def wordcount(s):
+    """
+    Counts all of the words in a string.
+    """
     return len(s.split())
         
 def filesizeformat(bytes):
     """
-        Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
-        bytes, etc).
-
+    Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
+    bytes, etc).
     """
     try:
         bytes = float(bytes)
@@ -141,21 +193,36 @@ def filesizeformat(bytes):
     if bytes < 1024 * 1024 * 1024:
         return "%.1f MB" % (bytes / (1024 * 1024))
     return "%.1f GB" % (bytes / (1024 * 1024 * 1024))
-            
+
 def strip_html(s):
+    """
+    Remove anything between <angle brackets>.
+    """
     p = re.compile(r'<.*?>')
     return p.sub('', s) 
     
-def singlespace(s): 
+def singlespace(s):
+    """
+    Replace all groups of white space with a single space.
+    """
     p = re.compile(r'\s+')
     return p.sub(' ', s)    
     
 def remove_linebreaks(s):
+    """
+    Collapse the given string into a single line, and replace all groups
+    of white space with a single space.
+    """
     s = s.splitlines()
     s = ' '.join(s)
     return singlespace(s).strip()
     
 def depunctuate(s, exclude=None, replacement=''):
+    """
+    Strips out all of the punctuation of the given string, excluding any punctuation
+    included in the exclude argument list. Punctuation is replaced by a blank string
+    or the given replacement argument.
+    """
     import string
     p = string.punctuation
     if exclude:
@@ -165,18 +232,33 @@ def depunctuate(s, exclude=None, replacement=''):
     return regex.sub(replacement, s) 
 
 def nl2br(s):
+    """
+    Convert all newlines (\n) to <br /> tags.
+    """
     return '<br />\n'.join(s.split('\n'))       
 
 def br2nl(s):
+    """
+    Convert all <br /> tags to newlines (\n).
+    """
     return '\n'.join(s.split('<br />'))     
     
 def prefix(delim, s):
+    """
+    Get the prefix of the given string, split on the given delimiter.
+    """
     return s.split(delim)[0]
     
 def suffix(delim, s):
+    """
+    Get the suffix of the given string, split on the given delimiter.
+    """
     return s.split(delim)[-1]
         
 def urlencode(s):
+    """
+    Encode the url, using urllib.
+    """
     if s is None: return ""
     if isinstance(s, unicode):
         s = s.encode('utf-8')   
@@ -184,6 +266,10 @@ def urlencode(s):
     return urllib.quote(s)
         
 def add_leading_slash(s):
+    """
+    Prefix the given string with a leading forward slash if it does not
+    already exist.
+    """
     if not s:
         return None
     if s[0] is not '/':
@@ -192,27 +278,36 @@ def add_leading_slash(s):
     
 def titlecase(value):
     """
-        Converts a string into titlecase
-
+    Converts a string into titlecase.
     """
-    return re.sub("([a-z])'([A-Z])", lambda m: m.group(0).lower(), value.title())   
-    
+    return re.sub("([a-z])'([A-Z])", lambda m: m.group(0).lower(), value.title())
+
+
 def location_cap(location):
+    """
+    Appropriately set the caplitalization of the the location.
+    ie. forT collins, co, usa becomes Fort Collins, CO, USA
+    """
     if not location:
         return None
+    
+    #Split on comma - Fort Collins, CO, USA
     tokens = location.split(',')
-    for token in tokens:    
+    for token in tokens:
+        #Split on spaces so we can case every word
+        #If the word len > 2 (ie, not a state prefix) and not USA
+            #Titlecase the string
+        #Else uppercase the string
         t = [i.title() if len(i) > 2 and i.upper() != "USA" else i.upper() for i in token.split(' ')]
         tokens[tokens.index(token)] = ' '.join(t)   
     return ','.join(tokens)
 
 def pluralize(value, arg='s'):
     """
-        Returns a plural suffix if the value is not 1, for '1 vote' vs. '2 votes'
-        By default, 's' is used as a suffix; if an argument is provided, that string
-        is used instead. If the provided argument contains a comma, the text before
-        the comma is used for the singular case.
-
+    Returns a plural suffix if the value is not 1, for '1 vote' vs. '2 votes'
+    By default, 's' is used as a suffix; if an argument is provided, that string
+    is used instead. If the provided argument contains a comma, the text before
+    the comma is used for the singular case.
     """
     if not ',' in arg:
         arg = ',' + arg
@@ -235,19 +330,24 @@ def pluralize(value, arg='s'):
 
 def slugify(value):
     """
-        Converts to lowercase, removes non-alpha chars and converts spaces to hyphens
-        
+    Converts to lowercase, removes non-alpha chars and converts spaces to hyphens.
     """
     value = re.sub('[^\w\s-]', '', value).strip().lower()
     return re.sub('[-\s]+', '-', value)
 
 def short_decimal(value):
+    """
+    Floors the float value to two decimal places.
+    """
     value = float(value) * 100.0
     value = int(value)
     value = float(value) / 100.0
     return value
     
 def zeropad(value):
+    """
+    Zero pad the given single digit number.
+    """
     value = int(value)
     if value < 10:
         return "0" + str(value)
@@ -255,15 +355,26 @@ def zeropad(value):
         return str(value)
         
 def random_string(length):
+    """
+    Returns a random string, including upper and lower case characters and digits, 
+    of the specified length.
+    """
     import random
     return ''.join(random.sample("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", length))
     
 def obfuscate(id, length=12):
+    """
+    Appends alpha characters to the given integer id until it is the specified
+    character length (defaults to 12), then base 64 encodes the string and returns it.
+    """
     id = str(id)
     padding = "".join(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"[(i + int(id)) % 52] for i in range(length - len(id))])
     return base64.b64encode(id + padding)
     
 def deobfuscate(token):
+    """
+    Base 64 decodes the given string and returns the leading digits of the decoded string.
+    """
     try:
         token = base64.b64decode(token)
     except Exception, e:
@@ -276,6 +387,9 @@ def deobfuscate(token):
     return "".join(numbers)
             
 def format_time(seconds):
+    """
+    Converts the given seconds into a human readable string.
+    """
     minutes = seconds // 60
     seconds = seconds - (minutes * 60)        
     hours = minutes // 60
@@ -297,13 +411,22 @@ def format_time(seconds):
     return time
     
 def good_decimal(num):
+    """
+    Rounds a number to the nearest two decimal places.
+    """
     from decimal import Decimal
     return str(Decimal(str(num)).quantize(Decimal('.01')))    
         
 def normalize(num, min, max):
+    """
+    Normalize the given num argument for the given max and min.
+    """
     return (float(num) - float(min)) / (float(max) - float(min))
     
 def confirm_pid(run_folder):
+    """
+    TBD
+    """
     import sys, os, signal, __main__    
     name = prefix('.', os.path.basename(__main__.__file__))
     log.info("Attempting to launch daemon %s..." % name)
@@ -338,7 +461,6 @@ def get_flash_upload(web):
         FileReference has silly boundary problems that create bad timeout errors
         As standard multipart form data is present, this also works fine with standard HTML forms
         http://www.mail-archive.com/webpy@googlegroups.com/msg04505.html
-
     """
     import os
     tmpfile = os.tmpfile()
@@ -362,7 +484,6 @@ def get_post_data(web):
     """
         Get either web.input['file'] (HTML multipart form) or web.data() (octet upload)
         This is useful when a controller needs to accept data from both an HTML and a Flash post (URLLoader, not FileReference)
-    
     """
     try:
         data = web.input()['file']
@@ -377,7 +498,6 @@ def get_fake_session(controller):
     """
         Get the session manually (like from a request variable) instead of a cookie.
         Flash cant consistently get cookie data.
-
     """
     import os, base64, pickle
     session_id = controller.request('session_id')
@@ -398,7 +518,6 @@ def get_fake_session(controller):
 def save_fake_session(data):
     """
         Save the session manually from a dict
-    
     """
     import os, base64, pickle   
     try: 

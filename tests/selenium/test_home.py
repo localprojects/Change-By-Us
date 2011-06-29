@@ -27,7 +27,7 @@ class test_home(unittest.TestCase):
         self.server_proc = subprocess.Popen(["lighttpd -D -f %s" % config], shell = True)
         
         # Start selenium
-        self.selenium = selenium("localhost", 4443, "*chrome", "http://localhost:8080/")
+        self.selenium = selenium("localhost", 4443, "*firefox", "http://localhost:8080/")
         self.selenium.start()
     
     def test_test_home(self):
