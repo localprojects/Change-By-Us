@@ -105,5 +105,8 @@ class UtilTests (unittest.TestCase):
         html = "I'm not <script src='steal_ssn.js' /> not injecting scripts."
         self.assertEqual(util.strip_html(html), "I'm not  not injecting scripts.")
 
+    def test_singlespace(self):
+        self.assertEqual(util.singlespace("  a very   spacey sentence    "), " a very spacey sentence ")
+
 if __name__ == "__main__":
     unittest.main()
