@@ -10,9 +10,10 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.try_f(str, 10, "ten"), "10", "Did not convert int to string.")
 
     def test_dictsort(self):
+        #NOTE: dictsort needs to be fixed.
+        pass
         dl = [{"id":"c"}, {"id":"a"}, {"id":"b"}]
         #sdl = util.dictsort(dl, "id")
-        #self.assertEqual(sdl[0].id, "a", "First dict in list did not have id 'a'")
 
     def test_safeuni(self):
         class HasUnicode(object):
@@ -142,6 +143,14 @@ class UtilTests (unittest.TestCase):
     def test_add_leading_slash(self):
         self.assertEqual(util.add_leading_slash("foo"), "/foo")
         self.assertEqual(util.add_leading_slash("/foo"), "/foo")
+
+    def test_titlecase(self):
+        #NOTE: Expected output for titlecase is unclear and the
+        #method appears not to be used.
+        pass
+
+    def test_location_cap(self):
+        self.assertEqual(util.location_cap("forT collins, co, usa"), "Fort Collins, CO, USA")
 
 if __name__ == "__main__":
     unittest.main()
