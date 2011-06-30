@@ -197,5 +197,8 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.good_decimal(10.0), "10.00")
         self.assertEqual(util.good_decimal(100), "100.00")
 
+    def test_normalize(self):
+        self.assertEqual(util.normalize(10, 5, 15), 0.5)
+
 if __name__ == "__main__":
     unittest.main()
