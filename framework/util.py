@@ -28,7 +28,7 @@ def safeuni(s):
     #if unicode
     if isinstance(s, unicode):
         return s
-        
+
     #if not a string
     if not isinstance(s, basestring):
         #if can be converted to unicode, then go for it
@@ -49,20 +49,20 @@ def safestr(s):
     Tries to convert an object to a string, handling common edge cases. Also
     supports iterators by converting all items to strings.
     """
-    
+
     #return if this is a string already
     if isinstance(s, str):
         return s
-        
+
     #if a unicode string, try to encode as utf-8
     if isinstance(s, unicode):
         try:
-            s = s.encode('utf-8')   
+            s = s.encode('utf-8')
         except UnicodeEncodeError, e:
             log.error(e)
             return ""
         return s
-    
+
     #if an iterater, then try to convert everything to a string
     if hasattr(s, 'next') and hasattr(s, '__iter__'): # iterator
         import itertools
@@ -75,28 +75,28 @@ def validate_email(emailaddress):
     Validate that the given string is an email address. Returns True when
     valid, False when invalid.
     """
-    
+
     domains = ["aero", "asia", "biz", "cat", "com", "coop", \
         "edu", "gov", "info", "int", "jobs", "mil", "mobi", "museum", \
         "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
         "in", "us", "il", "de", "it", "fr"
         ]
-    
+
     #validate length
     if len(emailaddress) < 6:
         # TODO: SR: Why? i@u.nu is valid!
         return False # Address too short.
-    
+
     try:
         localpart, domainname = emailaddress.rsplit('@', 1)
         host, toplevel = domainname.rsplit('.', 1)
     except ValueError:
         return False # Address does not have enough parts.
-    
+
     #if not a country code and not in the domain list
     if len(toplevel) != 2 and toplevel not in domains:
         return False # Not a domain name.
-      
+
     #is there a username?
     if len(localpart) == 0:
         return False
@@ -117,7 +117,7 @@ def validate_email(emailaddress):
     #    return False # Email address has funny characters.
 
     return True
-        
+
 def validateUSPhone(phone):
     """
     Validates that the given string is a valid US phone number, a number
@@ -125,25 +125,25 @@ def validateUSPhone(phone):
     http://en.wikipedia.org/wiki/North_American_Numbering_Plan
     """
     return not (re.match("^[2-9]\d{9}$", phone) == None)
-    
+
 def cleanUSPhone(phone):
     """
     Clean up US phone numbers by stripping the leading 1 and any non-numerics.
     """
-    
+
     if phone is None:
         return None
 
     phone = phone.strip()
-    
+
     phone = re.sub("\D", "", phone)
     phone = re.sub("^1", "", phone)
-    
+
     if (validateUSPhone(phone)):
         return phone
     else:
         return None
-                
+
 def parse_tags(tagstring):
     """
     Parses out a list of tags from the given delimited tag string.
@@ -152,17 +152,17 @@ def parse_tags(tagstring):
     quotes = re.findall(r'".*?"', tagstring)
     for q in quotes:
         repaired = q.replace(',', '@@') # protect commas
-        repaired = repaired.replace(' ', '$$') # protect spaces     
-        tagstring = tagstring.replace(q, repaired)          
+        repaired = repaired.replace(' ', '$$') # protect spaces
+        tagstring = tagstring.replace(q, repaired)
 
-    tagstring = tagstring.replace(',',' ')      
-    tags = tagstring.split(' ')     
+    tagstring = tagstring.replace(',',' ')
+    tags = tagstring.split(' ')
     for tag in tags[:]:
         if len(tag.strip()) == 0:
             tags.remove(tag)
             continue
         t = tag.replace('@@', ',')
-        tags[tags.index(tag)] = t.replace('$$', ' ')                
+        tags[tags.index(tag)] = t.replace('$$', ' ')
     return tags
 
 def list_to_str(tags):
@@ -170,13 +170,13 @@ def list_to_str(tags):
     Convert a list of tags into a delimited string.
     """
     return " ".join(safestr(iter(tags)))
-    
+
 def wordcount(s):
     """
     Counts all of the words in a string.
     """
     return len(s.split())
-        
+
 def filesizeformat(bytes):
     """
     Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
@@ -199,15 +199,15 @@ def strip_html(s):
     Remove anything between <angle brackets>.
     """
     p = re.compile(r'<.*?>')
-    return p.sub('', s) 
-    
+    return p.sub('', s)
+
 def singlespace(s):
     """
     Replace all groups of white space with a single space.
     """
     p = re.compile(r'\s+')
-    return p.sub(' ', s)    
-    
+    return p.sub(' ', s)
+
 def remove_linebreaks(s):
     """
     Collapse the given string into a single line, and replace all groups
@@ -216,7 +216,7 @@ def remove_linebreaks(s):
     s = s.splitlines()
     s = ' '.join(s)
     return singlespace(s).strip()
-    
+
 def depunctuate(s, exclude=None, replacement=''):
     """
     Strips out all of the punctuation of the given string, excluding any punctuation
@@ -227,44 +227,44 @@ def depunctuate(s, exclude=None, replacement=''):
     p = string.punctuation
     if exclude:
         for c in exclude:
-            p = p.replace(c, '')    
+            p = p.replace(c, '')
     regex = re.compile('[%s]' % re.escape(p))
-    return regex.sub(replacement, s) 
+    return regex.sub(replacement, s)
 
 def nl2br(s):
     """
     Convert all newlines (\n) to <br /> tags.
     """
-    return '<br />\n'.join(s.split('\n'))       
+    return '<br />\n'.join(s.split('\n'))
 
 def br2nl(s):
     """
     Convert all <br /> tags to newlines (\n).
     """
-    return '\n'.join(s.split('<br />'))     
-    
+    return '\n'.join(s.split('<br />'))
+
 def prefix(delim, s):
     """
     Get the prefix of the given string, split on the given delimiter.
     """
     return s.split(delim)[0]
-    
+
 def suffix(delim, s):
     """
     Get the suffix of the given string, split on the given delimiter.
     """
     return s.split(delim)[-1]
-        
+
 def urlencode(s):
     """
     Encode the url, using urllib.
     """
     if s is None: return ""
     if isinstance(s, unicode):
-        s = s.encode('utf-8')   
-    import urllib    
+        s = s.encode('utf-8')
+    import urllib
     return urllib.quote(s)
-        
+
 def add_leading_slash(s):
     """
     Prefix the given string with a leading forward slash if it does not
@@ -275,7 +275,7 @@ def add_leading_slash(s):
     if s[0] is not '/':
         s = '/' + s
     return s
-    
+
 def titlecase(value):
     """
     Converts a string into titlecase.
@@ -290,7 +290,7 @@ def location_cap(location):
     """
     if not location:
         return None
-    
+
     #Split on comma - Fort Collins, CO, USA
     tokens = location.split(',')
     for token in tokens:
@@ -299,7 +299,7 @@ def location_cap(location):
             #Titlecase the string
         #Else uppercase the string
         t = [i.title() if len(i) > 2 and i.upper() != "USA" else i.upper() for i in token.split(' ')]
-        tokens[tokens.index(token)] = ' '.join(t)   
+        tokens[tokens.index(token)] = ' '.join(t)
     return ','.join(tokens)
 
 def pluralize(value, arg='s'):
@@ -343,7 +343,7 @@ def short_decimal(value):
     value = int(value)
     value = float(value) / 100.0
     return value
-    
+
 def zeropad(value):
     """
     Zero pad the given single digit number.
@@ -353,15 +353,15 @@ def zeropad(value):
         return "0" + str(value)
     else:
         return str(value)
-        
+
 def random_string(length):
     """
-    Returns a random string, including upper and lower case characters and digits, 
+    Returns a random string, including upper and lower case characters and digits,
     of the specified length.
     """
     import random
     return ''.join(random.sample("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", length))
-    
+
 def obfuscate(id, length=12):
     """
     Appends alpha characters to the given integer id until it is the specified
@@ -370,7 +370,7 @@ def obfuscate(id, length=12):
     id = str(id)
     padding = "".join(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"[(i + int(id)) % 52] for i in range(length - len(id))])
     return base64.b64encode(id + padding)
-    
+
 def deobfuscate(token):
     """
     Base 64 decodes the given string and returns the leading digits of the decoded string.
@@ -385,18 +385,18 @@ def deobfuscate(token):
         if token[i].isdigit():
             numbers.append(token[i])
     return "".join(numbers)
-            
+
 def format_time(seconds):
     """
     Converts the given seconds into a human readable string.
     """
     minutes = seconds // 60
-    seconds = seconds - (minutes * 60)        
+    seconds = seconds - (minutes * 60)
     hours = minutes // 60
-    minutes = minutes - (hours * 60)        
+    minutes = minutes - (hours * 60)
     days = hours // 24
-    hours = hours - (days * 24)     
-    
+    hours = hours - (days * 24)
+
     time = []
     if days:
         time.append("%s:" % days)
@@ -407,27 +407,27 @@ def format_time(seconds):
     if seconds or minutes or hours or days:
         time.append("%s" % zeropad(seconds))
     time = "".join(time)
-               
+
     return time
-    
+
 def good_decimal(num):
     """
     Rounds a number to the nearest two decimal places.
     """
     from decimal import Decimal
-    return str(Decimal(str(num)).quantize(Decimal('.01')))    
-        
+    return str(Decimal(str(num)).quantize(Decimal('.01')))
+
 def normalize(num, min, max):
     """
     Normalize the given num argument for the given max and min.
     """
     return (float(num) - float(min)) / (float(max) - float(min))
-    
+
 def confirm_pid(run_folder):
     """
     TBD
     """
-    import sys, os, signal, __main__    
+    import sys, os, signal, __main__
     name = prefix('.', os.path.basename(__main__.__file__))
     log.info("Attempting to launch daemon %s..." % name)
     pid = str(os.getpid())
@@ -445,16 +445,16 @@ def confirm_pid(run_folder):
                 exit()
         else:
             log.info("--> killed process %s" % old_pid)
-        try:        
-            os.unlink(pidfile)        
+        try:
+            os.unlink(pidfile)
         except OSError, e:
             log.error("--> could not remove pidfile, %s" % pidfile)
             exit()
-    open(pidfile, 'w').write(pid)    
+    open(pidfile, 'w').write(pid)
     log.info("--> launched with pid %s" % pid)
-    
+
 """ web.py specific """
-    
+
 def get_flash_upload(web):
     """
         Reformat data coming in from Flash FileReference
@@ -479,7 +479,7 @@ def get_flash_upload(web):
     input = web.input()
     tmpfile.close()
     return input
-    
+
 def get_post_data(web):
     """
         Get either web.input['file'] (HTML multipart form) or web.data() (octet upload)
@@ -493,7 +493,7 @@ def get_post_data(web):
         except Error, e2:
             log.error("--> bad post data web.input[%s] web.data[%s]" %s (e1, e2))
     return data
-    
+
 def get_fake_session(controller):
     """
         Get the session manually (like from a request variable) instead of a cookie.
@@ -505,25 +505,25 @@ def get_fake_session(controller):
     if not os.path.exists(path):
         log.warning("--> get_fake_session: key path (%s) doesnt exist" % path)
         return {}
-    try:    
+    try:
         raw = open(path).read()	
         pickled = base64.decodestring(raw)
         fake_session = pickle.loads(pickled)
     except Exception, e:
         log.error("--> get_fake_session error: %s" % e)
         return {}
-    log.info("FAKE SESSION: %s" % fake_session)        
+    log.info("FAKE SESSION: %s" % fake_session)
     return fake_session
-    
+
 def save_fake_session(data):
     """
         Save the session manually from a dict
     """
-    import os, base64, pickle   
-    try: 
-        path = "sessions/%s" % data['session_id']    
+    import os, base64, pickle
+    try:
+        path = "sessions/%s" % data['session_id']
         pickled = pickle.dumps(data)
-        raw = base64.encodestring(pickled)    
+        raw = base64.encodestring(pickled)
     except Exception, e:
         log.error("--> save_fake_session formatting error: %s" % e)
         return
@@ -532,7 +532,7 @@ def save_fake_session(data):
         try:
             log.info("--> saving fake session")
             f.write(raw)
-        finally: 
+        finally:
             f.close()
     except IOError:
         pass
@@ -545,7 +545,7 @@ def check_bad_words(data):
     badwords = "anal anus arse ballsack balls bitch blowjob boner boob bugger butt buttplug clit clitoris cock coon cunt dick dildo dyke fag fellate fellatio felch felching fuck fucker fucken fucking fudgepacker homo jizz knobend labia muff nigger penis piss poop prick pube pussy scrotum slut smegma spunk tit turd twat vagina wank whore kike shit nigga sex ass"
     bw = string.split(badwords, " ")
     mods = ['', 's', 'es']
-    
+
     for w in bw:
         for mod in mods:
             w = w + mod
@@ -558,7 +558,7 @@ def check_bad_words(data):
             if " "+w+" " in data:
                 return True
     return False
-    
+
 def strNullOrEmpty(s):
     return not s or len(s.strip()) == 0
 
