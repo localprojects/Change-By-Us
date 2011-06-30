@@ -183,7 +183,12 @@ class UtilTests (unittest.TestCase):
     def test_deobfuscate(self):
         self.assertEqual(util.deobfuscate("MTAwd3h5ekFCQ0RF"), "100")
 
-    
+    def test_format_time(self):
+        self.assertEqual(util.format_time(5), "05")
+        self.assertEqual(util.format_time(30), "30")
+        self.assertEqual(util.format_time(90), "01:30")
+        self.assertEqual(util.format_time(3690), "01:01:30")
+        self.assertEqual(util.format_time(90090), "1:01:01:30")
 
 if __name__ == "__main__":
     unittest.main()
