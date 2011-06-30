@@ -257,7 +257,7 @@ def suffix(delim, s):
 
 def urlencode(s):
     """
-    Encode the url, using urllib.
+    Quotes the path section of the URL, using urllib.
     """
     if s is None: return ""
     if isinstance(s, unicode):

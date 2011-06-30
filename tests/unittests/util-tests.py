@@ -136,5 +136,8 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.suffix(".", "foo.bar"), "bar")
         self.assertEqual(util.suffix(".", "foobar"), "foobar")
 
+    def test_urlencode(self):
+        self.assertEqual(util.urlencode("/~test/"), "/%7Etest/")
+
 if __name__ == "__main__":
     unittest.main()
