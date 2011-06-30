@@ -190,5 +190,12 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.format_time(3690), "01:01:30")
         self.assertEqual(util.format_time(90090), "1:01:01:30")
 
+    def test_good_decimal(self):
+        self.assertEqual(util.good_decimal(1.123), "1.12")
+        self.assertEqual(util.good_decimal(1.129), "1.13")
+        self.assertEqual(util.good_decimal(1), "1.00")
+        self.assertEqual(util.good_decimal(10.0), "10.00")
+        self.assertEqual(util.good_decimal(100), "100.00")
+
 if __name__ == "__main__":
     unittest.main()
