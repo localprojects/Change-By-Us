@@ -230,5 +230,9 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(a, ["a", "b", "c"])
         self.assertEqual(n, [1, 2, 3])
 
+    def test_flatten(self):
+        l = [[1, 2], ["a", "b"], [(3,), (4,)]]
+        self.assertEqual(util.flatten(l), [1, 2, "a", "b", 3, 4])
+
 if __name__ == "__main__":
     unittest.main()
