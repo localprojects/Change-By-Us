@@ -132,5 +132,9 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.prefix(".", "foo.bar"), "foo")
         self.assertEqual(util.prefix(".", "foobar"), "foobar")
 
+    def test_suffix(self):
+        self.assertEqual(util.suffix(".", "foo.bar"), "bar")
+        self.assertEqual(util.suffix(".", "foobar"), "foobar")
+
 if __name__ == "__main__":
     unittest.main()
