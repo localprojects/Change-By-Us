@@ -200,5 +200,27 @@ class UtilTests (unittest.TestCase):
     def test_normalize(self):
         self.assertEqual(util.normalize(10, 5, 15), 0.5)
 
+    def test_confirm_pid(self):
+        #NOTE: Not sure how this function works or how to test
+        pass
+
+    #NOTE: Skipping web.py specific tests for now
+
+    def test_check_bad_words(self):
+        self.assertTrue(util.check_bad_words("get some soccer balls"))
+        self.assertTrue(util.check_bad_words("balls get some soccer"))
+        self.assertTrue(util.check_bad_words("get some balls soccer"))
+        self.assertFalse(util.check_bad_words("get some soccer balls!")) #questionable
+        self.assertFalse(util.check_bad_words("!balls get some soccer")) #questionable
+        self.assertFalse(util.check_bad_words("get some soccerballs"))
+        self.assertFalse(util.check_bad_words("hello world"))
+
+    def test_strNullOrEmpty(self):
+        self.assertFalse(util.strNullOrEmpty("hello world"))
+        self.assertTrue(util.strNullOrEmpty(""))
+        self.assertTrue(util.strNullOrEmpty(None))
+        self.assertTrue(util.strNullOrEmpty("    "))
+        
+
 if __name__ == "__main__":
     unittest.main()

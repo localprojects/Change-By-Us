@@ -560,6 +560,9 @@ def check_bad_words(data):
     return False
 
 def strNullOrEmpty(s):
+    """
+    Is the None, empty, or only stripable white space?
+    """
     return not s or len(s.strip()) == 0
 
 def makeUrlAbsolute(url):
