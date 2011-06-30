@@ -127,6 +127,10 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.br2nl("many <br />lines"), "many \nlines")
         self.assertEqual(util.br2nl("many <br/>lines"), "many \nlines")
         self.assertEqual(util.br2nl("many <br>lines"), "many \nlines")
-        
+
+    def test_prefix(self):
+        self.assertEqual(util.prefix(".", "foo.bar"), "foo")
+        self.assertEqual(util.prefix(".", "foobar"), "foobar")
+
 if __name__ == "__main__":
     unittest.main()
