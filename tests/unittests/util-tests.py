@@ -113,5 +113,11 @@ class UtilTests (unittest.TestCase):
         sentence   on many lines  """
         self.assertEqual(util.singlespace(s), " a spacey sentence on many lines ")
 
+    def test_depunctuate(self):
+        s = "no, ...punctua.tion allowed?!"
+        self.assertEqual(util.depunctuate(s), "no punctuation allowed")
+        self.assertEqual(util.depunctuate(s, "!"), "no punctuation allowed!")
+        self.assertEqual(util.depunctuate(s, "?", " "), "no     punctua tion allowed? ")
+
 if __name__ == "__main__":
     unittest.main()
