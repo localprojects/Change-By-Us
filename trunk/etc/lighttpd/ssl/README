@@ -1,0 +1,40 @@
+BACKGROUND AND SETUP
+-------------------------------------------------
+The following steps were followed in creating the wildcard SSL certificates for *.changeby.us:
+
+  * Purchase wildcard SSL from GoDaddy (6/29/1011)
+  * Create and install SSL certs:
+
+      openssl genrsa -des3 -out changeby.us.key 2048
+      openssl req -new -key changeby.us.key -out changeby.us.csr
+      # ...
+      # Get certificate bundle from Godaddy: changeby.us.zip
+      # unzip changeby.us.zip
+      # ...
+      cat changeby.us.key changeby.us.crt > changeby.us.pem
+      chmod 600 changeby.us.pem
+      cp -i changeby.us.pem changeby.us.crt > /home/giveaminute/etc/lighttpd/ssl/
+      # Change permissions of all the files to be the same as the lighttpd user-context
+      chown -R giveaminute:developers /home/giveaminute/etc/lighttpd/ssl
+
+
+INSTRUCTIONS
+-------------------------------------------------
+Copy the SSL certificate files into the appropriate location that lighttpd's
+configuration looks for it. The paths are defined in lighttpd.conf by:
+  ssl.pemfile = "etc/lighttpd/ssl/changeby.us.pem"
+  ssl.ca-file = "etc/lighttpd/ssl/changeby.us.crt"
+
+See the lighttpd.conf.sample file for a full example of setting up SSL.
+The .pem and .crt files are owned by the sysadmins and are NOT committed to SCM.
+
+Once the SSL configuration is set in lighttpd.conf, restart the server.
+Note that these certificates are wildcard, and therefore work for ALL subdomains
+of changeby.us.
+
+
+REFERENCES
+-------------------------------------------------
+  * http://www.cyberciti.biz/tips/how-to-install-ssl-lighttpd-https-configuration.html
+  * http://community.godaddy.com/help/article/5346
+  * http://matthodan.blogspot.com/2010/06/how-to-setup-heroku-godaddy-standa.html
