@@ -57,6 +57,10 @@ class Controller():
         # user
         self.setUserObject()
                         
+        # NOTE: Seems like beta stuff should be taken care of in a routes spec
+        #       or in something that is run before the routes are set (some sort
+        #       of ... "middleware").  Certainly not in the base controller
+        #       constructor. - MP
         # beta redirect
         if (self.appMode == 'beta' and not self.user):
             path = web.ctx.path.split('/')
