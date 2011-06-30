@@ -177,5 +177,13 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(len(util.random_string(12)), 12)
         self.assertEqual(len(re.findall("^[A-Za-z0-9]{12}$", util.random_string(12))), 1)
 
+    def test_obfuscate(self):
+        self.assertEqual(util.obfuscate(100), "MTAwd3h5ekFCQ0RF")
+
+    def test_deobfuscate(self):
+        self.assertEqual(util.deobfuscate("MTAwd3h5ekFCQ0RF"), "100")
+
+    
+
 if __name__ == "__main__":
     unittest.main()
