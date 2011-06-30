@@ -220,7 +220,15 @@ class UtilTests (unittest.TestCase):
         self.assertTrue(util.strNullOrEmpty(""))
         self.assertTrue(util.strNullOrEmpty(None))
         self.assertTrue(util.strNullOrEmpty("    "))
-        
+
+    def test_uniqify(self):
+        a = util.uniqify(["a", "b", "c", "b"])
+        n = util.uniqify([1, 2, 2, 3])
+        a.sort()
+        n.sort()
+
+        self.assertEqual(a, ["a", "b", "c"])
+        self.assertEqual(n, [1, 2, 3])
 
 if __name__ == "__main__":
     unittest.main()
