@@ -1,4 +1,4 @@
-import unittest, sys, os
+import unittest, sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 import framework.util as util
 
@@ -10,9 +10,10 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.try_f(str, 10, "ten"), "10", "Did not convert int to string.")
 
     def test_dictsort(self):
+        #NOTE: dictsort needs to be fixed.
+        pass
         dl = [{"id":"c"}, {"id":"a"}, {"id":"b"}]
         #sdl = util.dictsort(dl, "id")
-        #self.assertEqual(sdl[0].id, "a", "First dict in list did not have id 'a'")
 
     def test_safeuni(self):
         class HasUnicode(object):
@@ -135,6 +136,103 @@ class UtilTests (unittest.TestCase):
     def test_suffix(self):
         self.assertEqual(util.suffix(".", "foo.bar"), "bar")
         self.assertEqual(util.suffix(".", "foobar"), "foobar")
+
+    def test_urlencode(self):
+        self.assertEqual(util.urlencode("/~test/"), "/%7Etest/")
+
+    def test_add_leading_slash(self):
+        self.assertEqual(util.add_leading_slash("foo"), "/foo")
+        self.assertEqual(util.add_leading_slash("/foo"), "/foo")
+
+    def test_titlecase(self):
+        #NOTE: Expected output for titlecase is unclear and the
+        #method appears not to be used.
+        pass
+
+    def test_location_cap(self):
+        self.assertEqual(util.location_cap("forT collins, co, usa"), "Fort Collins, CO, USA")
+
+    def test_pluralize(self):
+        self.assertEqual(util.pluralize("1"), "")
+        self.assertEqual(util.pluralize(2), "s")
+        self.assertEqual(util.pluralize("2","y,ies"), "ies")
+        self.assertEqual(util.pluralize(1,"y,ies"), "y")
+
+    def test_slugify(self):
+        self.assertEqual(util.slugify("SLUG me! "), "slug-me")
+
+    def test_short_decimal(self):
+        self.assertEqual(util.short_decimal(1.123), 1.12)
+        self.assertEqual(util.short_decimal(1.129), 1.12)
+        self.assertEqual(util.short_decimal(1), 1.00)
+        self.assertEqual(util.short_decimal(10.0), 10.00)
+        self.assertEqual(util.short_decimal(100), 100.00)
+
+    def test_zeropad(self):
+        self.assertEqual(util.zeropad(5), "05")
+        self.assertEqual(util.zeropad(10), "10")
+        self.assertEqual(util.zeropad(100), "100")
+
+    def test_random_string(self):
+        self.assertEqual(len(util.random_string(12)), 12)
+        self.assertEqual(len(re.findall("^[A-Za-z0-9]{12}$", util.random_string(12))), 1)
+
+    def test_obfuscate(self):
+        self.assertEqual(util.obfuscate(100), "MTAwd3h5ekFCQ0RF")
+
+    def test_deobfuscate(self):
+        self.assertEqual(util.deobfuscate("MTAwd3h5ekFCQ0RF"), "100")
+
+    def test_format_time(self):
+        self.assertEqual(util.format_time(5), "05")
+        self.assertEqual(util.format_time(30), "30")
+        self.assertEqual(util.format_time(90), "01:30")
+        self.assertEqual(util.format_time(3690), "01:01:30")
+        self.assertEqual(util.format_time(90090), "1:01:01:30")
+
+    def test_good_decimal(self):
+        self.assertEqual(util.good_decimal(1.123), "1.12")
+        self.assertEqual(util.good_decimal(1.129), "1.13")
+        self.assertEqual(util.good_decimal(1), "1.00")
+        self.assertEqual(util.good_decimal(10.0), "10.00")
+        self.assertEqual(util.good_decimal(100), "100.00")
+
+    def test_normalize(self):
+        self.assertEqual(util.normalize(10, 5, 15), 0.5)
+
+    def test_confirm_pid(self):
+        #NOTE: Not sure how this function works or how to test
+        pass
+
+    #NOTE: Skipping web.py specific tests for now
+
+    def test_check_bad_words(self):
+        self.assertTrue(util.check_bad_words("get some soccer balls"))
+        self.assertTrue(util.check_bad_words("balls get some soccer"))
+        self.assertTrue(util.check_bad_words("get some balls soccer"))
+        self.assertFalse(util.check_bad_words("get some soccer balls!")) #questionable
+        self.assertFalse(util.check_bad_words("!balls get some soccer")) #questionable
+        self.assertFalse(util.check_bad_words("get some soccerballs"))
+        self.assertFalse(util.check_bad_words("hello world"))
+
+    def test_strNullOrEmpty(self):
+        self.assertFalse(util.strNullOrEmpty("hello world"))
+        self.assertTrue(util.strNullOrEmpty(""))
+        self.assertTrue(util.strNullOrEmpty(None))
+        self.assertTrue(util.strNullOrEmpty("    "))
+
+    def test_uniqify(self):
+        a = util.uniqify(["a", "b", "c", "b"])
+        n = util.uniqify([1, 2, 2, 3])
+        a.sort()
+        n.sort()
+
+        self.assertEqual(a, ["a", "b", "c"])
+        self.assertEqual(n, [1, 2, 3])
+
+    def test_flatten(self):
+        l = [[1, 2], ["a", "b"], [(3,), (4,)]]
+        self.assertEqual(util.flatten(l), [1, 2, "a", "b", 3, 4])
 
 if __name__ == "__main__":
     unittest.main()

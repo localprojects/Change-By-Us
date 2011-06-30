@@ -257,7 +257,7 @@ def suffix(delim, s):
 
 def urlencode(s):
     """
-    Encode the url, using urllib.
+    Quotes the path section of the URL, using urllib.
     """
     if s is None: return ""
     if isinstance(s, unicode):
@@ -560,9 +560,15 @@ def check_bad_words(data):
     return False
 
 def strNullOrEmpty(s):
+    """
+    Is the None, empty, or only stripable white space?
+    """
     return not s or len(s.strip()) == 0
 
 def makeUrlAbsolute(url):
+    """
+    NOTE: The use case is unclear to me.
+    """
     scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
 
     if not scheme:
@@ -577,6 +583,9 @@ def makeUrlAbsolute(url):
         return url
 
 def uniqify(seq):
+    """
+    Make a list unique.
+    """
     keys = {}
     for e in seq:
         keys[e] = 1
