@@ -579,6 +579,9 @@ class Admin(Controller):
                 resource = mProjectResource.ProjectResource(self.db, projectResourceId)
             
                 mMessaging.emailResourceApproval(resource.data.contact_email, resource.data.title)
+                
+                if (resource.data.owner_email):
+                    mMessaging.emailResourceApproval(resource.data.owner_email, resource.data.title)
                 return True
             else:
                 return False
