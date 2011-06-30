@@ -199,6 +199,7 @@ where u.user_id = $id and u.is_active = 1"""
             sql = """select p.project_id, p.title, pu.is_project_admin 
                     from project p
                     inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id
+                    inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1
                     where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
         except Exception,e:
