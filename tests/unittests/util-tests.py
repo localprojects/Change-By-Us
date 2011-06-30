@@ -152,5 +152,11 @@ class UtilTests (unittest.TestCase):
     def test_location_cap(self):
         self.assertEqual(util.location_cap("forT collins, co, usa"), "Fort Collins, CO, USA")
 
+    def test_pluralize(self):
+        self.assertEqual(util.pluralize("1"), "")
+        self.assertEqual(util.pluralize(2), "s")
+        self.assertEqual(util.pluralize("2","y,ies"), "ies")
+        self.assertEqual(util.pluralize(1,"y,ies"), "y")
+
 if __name__ == "__main__":
     unittest.main()
