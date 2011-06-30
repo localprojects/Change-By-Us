@@ -12,7 +12,6 @@ tc.app.prototype.init = function(page){
 	_me = this;
 	this.app_page = page;
 	
-	//TODO not hardcode this
 	if (page.data.info_addr) {
     	$('.nospam.infomail').html(makeEmailLink(page.data.info_addr.name, page.data.info_addr.domain));
 	}
