@@ -4,7 +4,10 @@ from framework.log import log
 from framework.controller import *
 
 def badwords(db, text):
-
+    """
+    TODO: This function does not handle empty values in the kill_words
+    and warn_words columns.
+    """
     try:
         badwords = db.query("SELECT * FROM badwords where id = 1 LIMIT 1")[0]
         kill_words = badwords['kill_words']
