@@ -1,4 +1,4 @@
-import unittest, sys, os
+import unittest, sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 import framework.util as util
 
@@ -172,6 +172,10 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.zeropad(5), "05")
         self.assertEqual(util.zeropad(10), "10")
         self.assertEqual(util.zeropad(100), "100")
+
+    def test_random_string(self):
+        self.assertEqual(len(util.random_string(12)), 12)
+        self.assertEqual(len(re.findall("^[A-Za-z0-9]{12}$", util.random_string(12))), 1)
 
 if __name__ == "__main__":
     unittest.main()
