@@ -31,11 +31,18 @@ CAVEATS AND NOTES:
       Running a child function through a decorator just won't work due to some fabric stupidity!
 
 TODO:
-    * Configuration of cron and system-level tasks via fabric deployment 
+    * Configure virtualenv with virtualenvwrapper for every host
+
     
 ------------------------------
 COOKBOOK:
 ------------------------------
+    A quick way to get the initial system setup
+        fab --config=rcfile.demo demo setup_application deploy_configurations bundle_code deploy
+
+    Setup a set of web servers
+        fab --config=rcfile.dev dev setup_application
+
     Create new configuration file:
         fab --config=rcfile.name dev create_config_yaml
 
@@ -45,9 +52,6 @@ COOKBOOK:
     Create (via interpolation) and upload configurations to remote host(s): 
         fab --config=rcfile.dev dev deploy_configurations
         
-    Setup a set of web servers
-        fab --config=rcfile.dev dev setup
-
     Create a new bundle and deploy
         fab --config=rcfile.name dev bundle_code deploy
 
@@ -65,8 +69,15 @@ COOKBOOK:
         
 """
 
+# We need to make the hosts into a list
+env.hosts = env.hosts.split(',')
+
 # PATHS
 env.application = 'gam2'
+
+# Todo: This should be changed to be configurable
+env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
+
 
 # Repository Information
 env.scm = "svn"
@@ -76,8 +87,8 @@ env.repository = "http://svn.localprojects.net/gam2"
 
 # Define ROLES
 env.roledefs = {
-   'web': ['dev-nyc.changeby.us'],
-   'dns': ['ns1', 'ns2']
+   'web': env.hosts,
+   # 'dns': ['ns1', 'ns2']
 }
 
 # Webserver Configuration
@@ -89,20 +100,18 @@ env.venv_path = '%(path)s/.virtualenv' % env
 # env.apache_config_path = '%(deploy_to)s/sites/apache/%(application)s' % env
 env.vars = {}
 
-#----- Samples and examples -----
+#----- Test Code -----
 # This section provides some test code for understanding how Fabric works
 @roles('web')
 def test():
     print "Testing the rcfile"
     # print env.email.keys()
-    get_version()
+    # get_version()
+    for item in env.keys():
+        print "%s => %s" % (item, env.get(item))
 
-def get_version():
-    env.user = 'sraman'
-    env.key_filename = [os.path.expanduser("~/.ssh/work/work.id_dsa")]
-    run('uname -a')
 
-#----- /samples -----
+#----- /test -----
 
 
 #----- Decorator(s) -----
@@ -112,6 +121,9 @@ def common_config(func):
     due to dependencies. There has to be a way to inherist this stuff though!!!
     """
     def wrapper():
+        if env.rcfile is None:
+            env.rcfile = 'rcfile.%s' % env.settings
+
         # execute the caller to load that set of configurations
         func()
 
@@ -161,8 +173,7 @@ def demo():
     """
     Work on demo environment
     """
-    if env.rcfile is None:
-        env.rcfile = 'rcfile.%s' % env.settings
+    pass
 
 @common_config
 def dev():
@@ -172,15 +183,13 @@ def dev():
     if env.rcfile is None:
         env.rcfile = 'rcfile.%s' % env.settings
 
-    # Todo: This should be changed to be configurable
-    env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
-
 @common_config
 def sundar_dev():
     """
     Work on dev environment
     """
     env.settings = 'dev'
+
     env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
 
 
