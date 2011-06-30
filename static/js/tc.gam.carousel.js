@@ -39,16 +39,16 @@ tc.carousel.prototype.destroy = function() {
 	}	
 };
 
-tc.carousel.prototype.render = function() {
+tc.carousel.prototype.render = function(width, height) {
 	var me, scrollpane, w, h;
-	tc.util.log("tc.carousel.render", "warn");
+	tc.util.log("tc.carousel.render");
 	if (this.rendered === true) { 
 		tc.util.log("carousel already rendered!!!", "warn");
 		return;
 	}
 	me = this;
-	w = this.options.element.width();
-	h = 0;
+	w = width || this.options.element.width();
+	h = height || 0;
 	this.options.element.width(w);
 	scrollpane = this.options.element.find(this.options.scrollPaneSelector);
 	scrollpane.children(this.options.scrollable.items).children("li").each(function() {

@@ -5,7 +5,7 @@
 		
 		app.components.account_merlin = new tc.merlin(app,{
 			name: "account-info",
-			dom:tc.jQ(".account-view.merlin"),
+			dom: tc.jQ(".account-view.merlin"),
 			first_step: "edit-account-details",
 			data: {
 				f_name: app.app_page.user.f_name,
@@ -14,6 +14,7 @@
 				image_id: app.app_page.user.image_id || null,
 				location_id: app.app_page.user.location_id || null
 			},
+			use_hashchange:false,
 			steps: {
 				"edit-account-details":{
 					selector: ".step.edit-account-details",
@@ -48,14 +49,15 @@
 							if(e.data.dom.hasClass('invalid')){
 								return;
 							}
-							window.location.hash = 'account-info,submit-account-details';
+							merlin.show_step('submit-account-details');
+							//window.location.hash = 'account-info,submit-account-details';
 						});
 						
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
-								merlin.dom.find('.user-pic img').attr('src',app_page.media_root + 'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
-								tc.jQ(".user-account-nav img.avatar").attr('src',app_page.media_root + 'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.dom.find('.user-pic img').attr('src',app.app_page.media_root + 'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								tc.jQ(".user-account-nav img.avatar").attr('src',app.app_page.media_root + 'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image_id = d.responseJSON.thumbnail_id;
 							}
 						});
@@ -94,7 +96,8 @@
 							dataType:"text",
 							success: function(data, ts, xhr) {
 								if (data == "False") {
-									window.location.hash = "account-info,account-details-error";
+									this.show_step('account-details-error');
+									//window.location.hash = "account-info,account-details-error";
 									return false;
 								}
 								
@@ -129,12 +132,16 @@
 			name: "change-password",
 			dom: tc.jQ(".password-info.merlin"),
 			next_button: tc.jQ(".password-save-button"),
-			first_step: "edit-password-details",
+			first_step: "hidden",
 			data: {
 				old_password: null,
 				new_password: null
 			},
+			use_hashchange:false,
 			steps: {
+				"hidden":{
+					selector:".step.hidden"
+				},
 				"edit-password-details":{
 					selector:".step.edit-password-details",
 					next_step:"submit-password-details",
@@ -145,7 +152,7 @@
 						},
 						new_password: {
 							selector: ".new-password",
-							validators:["password-20", "required"]
+							validators:["password-35", "required"]
 						},
 						confirm_new_password: {
 							selector: ".confirm-new-password",
@@ -169,12 +176,16 @@
 							context:merlin,
 							dataType:"text",
 							success: function(data, ts, xhr) {
+								var me;
+								me = this;
 								if (data == "False") {
-									window.location.hash = "change-password,password-details-error";
+									this.show_step('password-details-error');
+									//window.location.hash = "change-password,password-details-error";
 									return false;
 								}
 								tc.timer(2000, function() {
-									window.location.hash = "change-password,password-details-submitted";
+									me.show_step('password-details-submitted');
+									//window.location.hash = "change-password,password-details-submitted";
 								});
 							}
 						});
@@ -199,7 +210,7 @@
 			
 			
 		
-		tc.jQ('.addphoto a').bind('click',{
+		tc.jQ('a.change-profile-image').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.upload-image'),
 			init:function(modal,callback){
@@ -207,12 +218,28 @@
 					element: modal.options.element.find('.file-uploader').get(0),
 					action: '/create/photo',
 					onComplete: function(id, fileName, responseJSON){
-						
-						tc.jQ(document).trigger('create-image-uploaded',{
-							id:id,
-							fileName:fileName,
-							responseJSON:responseJSON
-						});
+						modal.hide();
+						if (responseJSON.thumbnail_id) {
+							tc.jQ.ajax({
+								type:"POST",
+								url:"/useraccount/edit",
+								data: {
+									f_name: app.app_page.user.f_name,
+									l_name: app.app_page.user.l_name,
+									email: app.app_page.user.email,
+									image_id: responseJSON.thumbnail_id,
+									location_id: app.app_page.user.location_id || null
+								},
+								dataType:"text",
+								success: function(data, ts, xhr) {
+									if (data == "False") {
+										return false;
+									}
+
+									tc.jQ(".user-account-nav img.avatar").attr('src',app.app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');	
+								}
+							});
+						}
 						
 						return true;
 					}
@@ -271,7 +298,7 @@
 											//TODO handle error?
 											return false;
 										}
-										$r.find(".thumb img").attr('src', app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');
+										$r.find(".thumb img").attr('src', app.app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');
 									}
 								});
 							}
@@ -310,7 +337,7 @@
 			});
 			
 			//url
-			new tc.inlineLinkEditor({
+			new tc.inlineEditor({
 				dom: $r.find(".box.res-url"),
 				service: {
 					url: "/resource/edit/url",
@@ -321,7 +348,7 @@
 			});
 			
 			//email
-			new tc.inlineLinkEditor({
+			new tc.inlineEditor({
 				dom: $r.find(".box.res-email"),
 				service: {
 					url: "/resource/edit/contactemail",

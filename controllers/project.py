@@ -200,14 +200,17 @@ class Project(Controller):
                     log.error("*** couldn't add invited idea to project for user %s on joining project %s" % (self.user.id, projectId))
                 
                 # add a message to the queue about the join
-                message = 'New Member! Your group now has %s total!' % project.data.num_members
+                message = 'New Member! Your project now has %s total!' % project.data.num_members
                 
                 # email admin
                 if (not mMessaging.emailProjectJoin(project.data.owner_email, 
                                                     projectId, 
                                                     project.data.title, 
                                                     self.user.id, 
-                                                    mProject.userName(self.user.firstName, self.user.lastName))):
+                                                    mProject.userNameDisplay(self.user.firstName, 
+                                                                             self.user.lastName,
+                                                                             self.user.affiliation,
+                                                                             mProject.isFullLastName(self.user.groupMembershipBitmask)))):
                     log.error("*** couldn't email admin on user_id = %s joining project %s" % (self.user.id, projectId))
                 
                 if (not mProject.addMessage(self.db, 
@@ -468,19 +471,9 @@ class Project(Controller):
         return self.json(mProject.getMessages(self.db, projectId, limit, offset, filterBy))        
         
     def getFeaturedProjects(self):
-        projects = []
-        data = mProject.getFeaturedProjects(self.db)
-        
-        for item in data:
-            projects.append(mProject.smallProject(item.project_id, 
-                                            item.title, 
-                                            item.description, 
-                                            item.image_id, 
-                                            item.num_members,
-                                            item.owner_user_id, 
-                                            item.owner_first_name, 
-                                            item.owner_last_name, 
-                                            item.owner_image_id))
+        # overkill to get the full dictionary, but it's a small admin-only call
+        projects = mProject.getFeaturedProjectsDictionary(self.db)
+
         return self.json(projects)
             
         

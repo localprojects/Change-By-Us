@@ -20,9 +20,12 @@ class Admin(Controller):
             return self.getAdminUsers()
         elif (action == 'all'):
             if (param0 == 'getflagged'):
-                # TODO: eholda
-                # this is temporary until we decide how aggregate view will work
-                return self.getFlaggedIdeas()
+                if (param1 == 'counts'):
+                    return self.getFlaggedItemCounts()
+                else:
+                    # TODO: eholda
+                    # this is temporary until we decide how aggregate view will work
+                    return self.getFlaggedIdeas()
             else:
                 return self.not_found()
         elif (action == 'project'):
@@ -108,7 +111,7 @@ class Admin(Controller):
                 return self.not_found()
         elif (action == 'project'):
             if (param0 == 'delete'):
-                return self.deleteItem('project', self.request('project_id'))
+                return self.deleteProject()
             elif (param0 == 'approve'):
                 return self.approveItem('project', self.request('project_id'))
             elif (param0 == 'feature'):
@@ -163,25 +166,21 @@ class Admin(Controller):
         
         
     def showContent(self):
-        featuredProjects = []
-        
-        data = mProject.getFeaturedProjectsWithStats(self.db)
-        
-        for item in data:
-            featuredProjects.append(dict(project_id = item.project_id,
-                                        title = item.title,
-                                        description = item.description,
-                                        image_id = item.image_id,
-                                        num_members = item.num_members,
-                                        owner = mProject.smallUser(item.owner_user_id, item.owner_first_name, item.owner_last_name, item.owner_image_id),
-                                        num_ideas = item.num_ideas,
-                                        num_resources = item.num_project_resources,
-                                        num_endorsements = item.num_endorsements,
-                                        featured_datetime = str(item.featured_datetime)))
+        featuredProjects = mProject.getFeaturedProjectsDictionary(self.db)
         
         self.template_data['featured_projects'] = dict(data = featuredProjects, json = json.dumps(featuredProjects))
     
         return self.render('cms_content')
+    
+    def deleteProject(self):
+        projectId = self.request('project_id')
+        
+        isDeleted = self.deleteItem('project', projectId)
+        
+        if (isDeleted):
+            self.db.delete('featured_project', where="project_id = $id", vars = {'id':projectId})
+            
+        return isDeleted
         
     def featureProject(self):
         featuredProjectId = self.request('project_id')
@@ -315,6 +314,50 @@ class Admin(Controller):
             
         return self.json(data)
         
+    def getFlaggedItemCounts(self):
+        obj = None
+    
+        sql = """select 'projects' as flagged_item,
+                          count(p.project_id) as num
+                  from project p
+                  where p.is_active = 1 and p.num_flags > 0
+                  union
+                  select 'ideas' as flagged_item,
+                         count(i.idea_id) as num
+                  from idea i
+                  where i.is_active = 1 and i.num_flags > 0
+                  union
+                  select 'messages' as flagged_item,
+                         count(pm.project_message_id) as num
+                  from project_message pm
+                  inner join project p on pm.project_id = p.project_id
+                  inner join user u on u.user_id = pm.user_id
+                  where pm.is_active = 1 and pm.num_flags > 0
+                  union
+                  select 'goals' as flagged_item,
+                         count(pg.project_goal_id) as num
+                  from project_goal pg
+                  inner join project p on pg.project_id = p.project_id
+                  inner join user u on u.user_id = pg.user_id
+                  where pg.is_active = 1 and pg.num_flags > 0
+                  union
+                  select 'links' as flagged_item,
+                         count(pl.project_link_id) as num
+                  from project_link pl
+                  inner join project p on pl.project_id = p.project_id
+                  where pl.is_active = 1 and pl.num_flags > 0"""
+                  
+        try:
+            data = list(self.db.query(sql))
+            
+            obj = dict(flagged_items = dict((item.flagged_item, item.num) for item in data))
+        except Exception, e:
+            log.info("*** couldn't get flagged item counts")
+            log.error(e)
+        
+        return self.json(obj)
+
+        
     def getUnreviewedResources(self):
         limit = util.try_f(int, self.request('n_limit'), 10)
         offset = util.try_f(int, self.request('offset'), 0)
@@ -390,14 +433,14 @@ class Admin(Controller):
     def getSiteFeedbackCSV(self):
         csv = []
         
-        csv.append('"ID","NAME","EMAIL","COMMENT","TIMESTAMP"')
+        csv.append('"ID","NAME","EMAIL","COMMENT","TYPE","TIMESTAMP"')
         
         try:
-            sql = "select site_feedback_id, submitter_name, submitter_email, comment, created_datetime from site_feedback order by site_feedback_id"
+            sql = "select site_feedback_id, submitter_name, submitter_email, comment, feedback_type, created_datetime from site_feedback order by site_feedback_id"
             data = list(self.db.query(sql))
         
             for item in data:
-                csv.append('"%s","%s","%s","%s","%s"' % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, str(item.created_datetime))) 
+                csv.append('"%s","%s","%s","%s","%s","%s"' % (item.site_feedback_id, item.submitter_name, item.submitter_email, item.comment, item.feedback_type, str(item.created_datetime))) 
         except Exception, e:
             log.info("*** there was a problem getting site feedback")
             log.error(e)
@@ -432,7 +475,7 @@ class Admin(Controller):
         userId = self.request('user_id')
         userGroupId = self.request('role')
         
-        return mUser.setUserGroup(self.db, userId, userGroupId)
+        return mUser.assignUserToGroup(self.db, userId, userGroupId)
         
     def setUserOncall(self):
         userId = self.request('user_id')
@@ -446,7 +489,6 @@ class Admin(Controller):
         email = self.request('email')
         password = self.request('password')    
         userGroupId = util.try_f(int, self.request('role'))
-        title = self.request('title')
         affiliation = self.request('affiliation')
         
         if (util.strNullOrEmpty(email)or not util.validate_email(email)): 
@@ -464,7 +506,7 @@ class Admin(Controller):
             # do we want to attach ideas to cms users?
             mIdea.attachIdeasByEmail(self.db, email)
 
-            mUser.assignUserToGroup(self.db, userId, userGroupId, title)
+            mUser.assignUserToGroup(self.db, userId, userGroupId)
 
             return userId
             
@@ -527,13 +569,23 @@ class Admin(Controller):
             
     def approveProjectResource(self):
         projectResourceId = self.request('resource_id')
-        isOfficial = bool(self.request('is_official'))
+        isOfficial = bool(int(self.request('is_official')))
 
         if (not projectResourceId):
             log.error("*** attempted to approve resource w/o id")
             return False
         else:
-            return mProjectResource.approveProjectResource(self.db, projectResourceId, isOfficial)
+            if mProjectResource.approveProjectResource(self.db, projectResourceId, isOfficial):
+                resource = mProjectResource.ProjectResource(self.db, projectResourceId)
+            
+                mMessaging.emailResourceApproval(resource.data.contact_email, resource.data.title)
+                
+                if (resource.data.owner_email):
+                    mMessaging.emailResourceApproval(resource.data.owner_email, resource.data.title)
+                return True
+            else:
+                return False
+                
            
     def updateBlacklist(self):
         blacklist = self.request('blacklist')

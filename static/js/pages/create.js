@@ -121,8 +121,9 @@
 										clearTimeout(e.data.me.current_step.step_data.timer);
 										e.data.me.current_step.step_data.timer = null;
 									}
+									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500);
 									//DOES NOT WORK IN IE
-									e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500,[e.data.me]);
+									//e.data.me.current_step.step_data.timer = setTimeout(e.data.me.current_step.fn.stopped,500,[e.data.me]);
 									//e.data.me.current_step.step_data.timer = setTimeout(function(){
 									//	e.data.me.current_step.fn.stopped([e.data.me]);
 									//},1000);
@@ -141,16 +142,17 @@
 									if(e.target.nodeName == 'A'){
 										e.preventDefault();
 										if(!e.data.me.current_step.inputs.keywords.dom.hasClass('has-been-focused')){
-											e.data.me.current_step.inputs.keywords.dom.val(e.target.text).addClass('has-been-focused');
+											e.data.me.current_step.inputs.keywords.dom.val(e.target.name).addClass('has-been-focused');
 										} else {
 											tempval = tc.jQ.trim(e.data.me.current_step.inputs.keywords.dom.val());
 											if(tempval.substring(tempval.length-1,tempval.length) == ','){
-												e.data.me.current_step.inputs.keywords.dom.val(tempval += ' '+e.target.text);
+												e.data.me.current_step.inputs.keywords.dom.val(tempval += ' '+e.target.name);
 											} else {
-												e.data.me.current_step.inputs.keywords.dom.val(tempval += ', '+e.target.text);
+												e.data.me.current_step.inputs.keywords.dom.val(tempval += ', '+e.target.name);
 											}
 										}
 										e.target.innerHTML = "";
+										e.target.name = '';
 									}
 								}
 							}
@@ -164,9 +166,9 @@
 						inputKeyup:function(e){
 							
 						},
-						stopped:function(pars){
+						stopped:function(){
 							var merlin;
-							merlin = pars[0];
+							merlin = app.components.merlin;
 							tc.jQ.ajax({
 								url:'/create/keywords',
 								data:{
@@ -182,7 +184,7 @@
 									if(data.suggested_keywords.length){
 										for(i in data.suggested_keywords){
 											if(existingtags.indexOf(data.suggested_keywords[i]) == -1){
-												temphtml += "<span><a href='#'>"+data.suggested_keywords[i]+"</a></span>";
+												temphtml += "<span><a href='#' name='"+data.suggested_keywords[i]+"'>"+data.suggested_keywords[i]+"</a></span>";
 											}
 										}
 									}
@@ -196,7 +198,7 @@
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
-								merlin.dom.find('img.proj').attr('src',app.app_page.data.media_root+'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
+								merlin.dom.find('img.proj').attr('src',app.app_page.media_root+'images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
 								merlin.options.data.image = d.responseJSON.thumbnail_id;
 							}
 						});
@@ -257,6 +259,7 @@
 					}
 				},
 				'check-projects-process':{
+					supress_hash:true,
 					title:'Let&rsquo;s check for similar projects.',
 					sub_title:'Starting something new is great, but there<br />may already be a project you\'d like to join. <br />Take a look at these others.',
 					progress_selector:'.3',
@@ -274,14 +277,17 @@
 								try{
 									d = tc.jQ.parseJSON(data);
 								}catch(e){
-									window.location.hash = 'check-nosimilar';
+									//window.location.hash = 'check-nosimilar';
+									this.show_step('check-nosimilar');
 									return;
 								}
 								if(d.projects.length){
 									this.options.steps['check-projects'].step_data = d;
-									window.location.hash = 'check-projects';
+									//window.location.hash = 'check-projects';
+									this.show_step('check-projects');
 								} else {
-									window.location.hash = 'check-nosimilar';
+									//window.location.hash = 'check-nosimilar';
+									this.show_step('check-nosimilar');
 								}
 							}
 						});
@@ -308,20 +314,20 @@
 								temp = "<tr>";
 							}
 							if (project.image_id > 0) {
-								tempImgPath = app.app_page.data.media_root + 'images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
+								tempImgPath = app.app_page.media_root + 'images/'+(project.image_id % 10)+'/'+project.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}
 							temp += "<td>";
 							temp += '<div class="thumb">'+
-										'<a href="/project/'+project.project_id+'"><img width="50" height="50" src="'+tempImgPath+'" alt="" class="proj"/></a>'+
+										'<a href="/project/'+project.project_id+'" target="_blank"><img width="50" height="50" src="'+tempImgPath+'" alt="" class="proj" /></a>'+
 										'<span class="overlay-tag"></span>'+
 										'<span class="member-count">'+project.num_members+'</span>'+
 									'</div>'+
 									'<div class="project-info">'+
-										'<span class="link"><a href="/project/'+project.project_id+'">'+tc.truncate(project.title,50)+'</a></span>'+
-										'<span class="creator"><em>Created by </em> <a href="/useraccount/'+project.owner_user_id+'">'+project.owner_first_name+' '+project.owner_last_name+'</a></span>'+
-										'<span class="description"><a href="/project/'+project.project_id+'">'+tc.truncate(project.description,65)+'</a></span>'+
+										'<span class="link"><a href="/project/'+project.project_id+'" target="_blank">'+tc.truncate(project.title,50)+'</a></span>'+
+										'<span class="creator"><em>Created by </em> <a href="/useraccount/'+project.owner.u_id+'" target="_blank">'+project.owner.name+'</a></span>'+
+										'<span class="description"><a href="/project/'+project.project_id+'" target="_blank">'+tc.truncate(project.description,65)+'</a></span>'+
 									'</div>';
 							temp += "</td>";
 							if (position == 2) { temp += "</tr>"; }
@@ -329,8 +335,7 @@
 						});
 						tbody += "</tbody>";
 						tbody = tc.jQ(tbody);
-						
-						
+												
 						tc.util.dump('table');
 						tc.util.dump(dom.find('table.projects-list'));
 						dom.find('table.projects-list').children().remove();
@@ -347,6 +352,7 @@
 				},
 				'add-resource-process':{
 					title:'Add a resource.',
+					supress_hash:true,
 					sub_title:'When you add a resource, we\'ll send them a link <br />to your project page. If they\'re able to help, they\'ll <br />send you a message.',
 					progress_selector:'.4',
 					selector:'.step.add-resource-process',
@@ -363,14 +369,17 @@
 								try{
 									d = tc.jQ.parseJSON(data);
 								}catch(e){
-									window.location.hash = 'add-noresources';
+									//window.location.hash = 'add-noresources';
+									this.show_step('add-noresources');
 									return;
 								}
 								if(d.resources.length){
 									this.options.steps['add'].step_data = d;
-									window.location.hash = 'add';
+									//window.location.hash = 'add';
+									this.show_step('add');
 								} else {
-									window.location.hash = 'add-noresources';
+									//window.location.hash = 'add-noresources';
+									this.show_step('add-noresources');
 								}
 							}
 						});
@@ -407,7 +416,7 @@
 								temp = "<tr>";
 							}
 							if (resource.image_id > 0) {
-								tempImgPath = app_page.media_root + 'images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
+								tempImgPath = app.app_page.media_root + 'images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png'
 							} else {
 								tempImgPath = '/static/images/thumb_genAvatar50.png'
 							}

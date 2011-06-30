@@ -45,7 +45,9 @@
 		
 		if(window.location.hash == ''){
 			window.location.hash = 'user-account,activity';
-		} 
+		} else if(window.location.hash == '#user-account,password'){
+			window.location.hash = 'user-account,account';
+		}
 		
 		app.components.user_page_merlin = new tc.merlin(app,{
 			name: "user-account",
@@ -57,7 +59,6 @@
 					selector:'.activity-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".activity").addClass("active");
-						tc.jQ('.addphoto').hide();
 						
 						dom.find('a.remove-idea').unbind("click").bind('click', {app:app}, function(e){
 							e.preventDefault();
@@ -105,7 +106,6 @@
 					has_run_init: false,
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
-						tc.jQ('.addphoto').hide();
 						
 						if (!merlin.current_step.has_run_init) {
 							(function() {
@@ -190,25 +190,25 @@
 											case "member_comment":
 												template = tc.jQ(".template-content.message-item.member-comment").clone().removeClass("template-content");
 												if (message.owner.image_id) {
-													template.find(".thumb img").attr("src", app_page.media_root + "images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
+													template.find(".thumb img").attr("src", app.app_page.media_root + "images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
 												} else {
 													template.find(".thumb img").attr("src", "/static/images/thumb_genAvatar50.png").attr("alt", message.owner.name);
 												}
 												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
 												template.find(".project a").attr('href','/project/' + message.project_id).text(message.project_title);
-												template.find(".excerpt p").text(message.body);
+												template.find(".excerpt p").html(message.body);
 												template.find(".time-since").text(message.created).time_since();
 												break;
 											case "join":
 												template = tc.jQ(".template-content.message-item.join-notification").clone().removeClass("template-content");
-												template.find(".title").text(message.body);
+												template.find(".title").html(message.body);
 												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
 												template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
 												template.find(".time-since").text(message.created).time_since();
 												break;
 											case "invite":
 												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
-												template.find(".title").text(message.body);
+												template.find(".title").html(message.body);
 												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
 												break;
 											default:
@@ -228,8 +228,22 @@
 					selector:'.account-view',
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
-						window.location.hash = "account-info,edit-account-details";
-						tc.jQ('.addphoto').show();
+						if(merlin.app.components.account_merlin){
+							merlin.app.components.account_merlin.show_step('edit-account-details');
+						}
+					}
+				},
+				'password':{
+					selector:'.password-view',
+					init:function(merlin,dom){
+						tc.jQ('ul.tabs li').removeClass('active').filter(".account").addClass("active");
+						if(merlin.app.components.change_pass_merlin){
+							merlin.app.components.change_pass_merlin.show_step('edit-password-details');
+						}
+						if(merlin.app.components.account_merlin){
+							merlin.app.components.account_merlin.show_step('edit-account-details');
+						}
+						
 					}
 				},
 				'resources':{
@@ -237,19 +251,16 @@
 					init:function(merlin,dom){
 						tc.jQ('ul.tabs li').removeClass('active').filter(".resources").addClass("active");
 						window.location.hash = "resources-info";
-						tc.jQ('.addphoto').hide();
 					}
 				}
 			}
 		});
 		
+		tc.gam.add_resource(app, {elements: tc.jQ("a.add-resource")});
 		tc.gam.ideas_invite(app, {elements: tc.jQ("a.invite")});
 		
 		// random note-card backgrounds
-		var ideasList = tc.jQ('.idea-cards li');
-		for (i=0; i < ideasList.length; i++) {
-			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-		}
+		tc.randomNoteCardBg(tc.jQ('.idea-cards'));
 		
 	});
 	
