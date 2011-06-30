@@ -167,7 +167,11 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.short_decimal(1), 1.00)
         self.assertEqual(util.short_decimal(10.0), 10.00)
         self.assertEqual(util.short_decimal(100), 100.00)
-        
+
+    def test_zeropad(self):
+        self.assertEqual(util.zeropad(5), "05")
+        self.assertEqual(util.zeropad(10), "10")
+        self.assertEqual(util.zeropad(100), "100")
 
 if __name__ == "__main__":
     unittest.main()
