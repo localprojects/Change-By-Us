@@ -158,5 +158,8 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.pluralize("2","y,ies"), "ies")
         self.assertEqual(util.pluralize(1,"y,ies"), "y")
 
+    def test_slugify(self):
+        self.assertEqual(util.slugify("SLUG me! "), "slug-me")
+
 if __name__ == "__main__":
     unittest.main()
