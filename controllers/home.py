@@ -23,11 +23,28 @@ tw_consumer = oauth.Consumer(tw_settings['consumer_key'], tw_settings['consumer_
 tw_client = oauth.Client(tw_consumer)
 
 class Home(Controller):
+    """
+    GET and POST handlers for the homepage route.
+    """
+    
     def GET(self, action=None, param0=None):
+        """
+        Keyword arguments:
+        action -- The version of the homepage to show.  Valid values include:
+                  `'home'`, `'leaderboard'`, `'mobile'`, `'bb'`, `'login'`,
+                  `'twitter'`, `'facebook'`, `'nyc'`, `'beta'`.
+        param0 -- An additional parameter required for certain actions.  The
+                  `'twitter'` and `'facebook'` actions require an additional
+                  parameter.
+        """
+        
         project_user = dict(is_member = True,
                               is_project_admin = True)
         self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
-                                          
+        
+        # NOTE: Why are the actions here?  Seems like this is a way of creating
+        #       additional route specifications.  Doesn't seem like something
+        #       the controller should be handling. - MP
         if (not action or action == 'home'):
             return self.showHome()
         elif (action == 'leaderboard'):
