@@ -14,6 +14,55 @@
 # To create a
 #
 
+#------------------------------------------------
+# COMMON TARGET SETTINGS
+# These are necessary for every deployment target
+#------------------------------------------------
+env.python = 'python2.6'
+# the user to run sudo() as, since this account probably has higher rights
+env.sudo_as = 'ubuntu'
+
+# env.settings defines the environment that we're in. Usually this is the extension
+# eg. demo, dev, prod, live, etc.
+env.settings = 'demo'
+
+# Hosts that this environment deploys to. Keep in mind that
+# this is different from ROLES
+env.hosts = ['demo-nyc.changeby.us']
+
+# The user under whose context the system runs.
+# See also the webserver_user option
+env.user = 'giveaminute'
+
+# Connection to remote hosts should be via key-pair, rather than password
+env.key_filename = "/Users/sundar/.ssh/work/work.id_dsa"
+env.s3_bucket = 'sandbox.changeby.us'
+
+# The s3 bucket that this target uses for storing/retrieving content
+env.s3_bucket = 'demo-nyc.changeby.us'
+
+# Branch is unused for now (in svn mode). It will be used for git
+env.branch = 'release'
+
+# WHich branch do we want to deploy? Keep in mind that this is environment specific
+env.branch = "trunk"
+
+#-----------/common -----------------------------
+
+#------------------------------------------------
+# LIGHTTPD Configurations
+#------------------------------------------------
+webserver_port = 8080
+webserver_user = sraman
+webserver_group = developers
+
+#---- /lighttpd configuration -------------------
+
+
+#------------------------------------------------
+# CHANGE-BY-US APPLICATION Configurations
+#------------------------------------------------
+
 appmode = not-beta
 dev = Yes
 app_env = dev
@@ -33,7 +82,7 @@ email_from_noreplies_email = noreplies@nyc.changeby.us
 digest_log_file = /Users/sundar/Desktop/cbu.log
 digest_log_level = debug
 
-email_smtp_username = 'changebyusnyc@gmail.com'
+email_smtp_username = 'noreplies@nycmail.changeby.us'
 email_smtp_password = XXXXXXXXXX
 
 # Homepage and leaderboard configurations
@@ -70,9 +119,3 @@ twitter_consumer_secret = XXXXXXXXXX
 media_root = XXXXXXXXXX
 
 
-#--------------------------------
-# LIGHTTPD Configurations
-#-------------------------------
-webserver_port = 8080
-webserver_user = sraman
-webserver_group = developers
