@@ -119,5 +119,14 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.depunctuate(s, "!"), "no punctuation allowed!")
         self.assertEqual(util.depunctuate(s, "?", " "), "no     punctua tion allowed? ")
 
+    def test_nl2br(self):
+        s = "many \nlines"
+        self.assertEqual(util.nl2br(s), "many <br />\nlines")
+
+    def test_br2nl(self):
+        self.assertEqual(util.br2nl("many <br />lines"), "many \nlines")
+        self.assertEqual(util.br2nl("many <br/>lines"), "many \nlines")
+        self.assertEqual(util.br2nl("many <br>lines"), "many \nlines")
+        
 if __name__ == "__main__":
     unittest.main()

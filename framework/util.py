@@ -241,7 +241,7 @@ def br2nl(s):
     """
     Convert all <br /> tags to newlines (\n).
     """
-    return '\n'.join(s.split('<br />'))
+    return '\n'.join(re.split('<br ?\/?>', s))
 
 def prefix(delim, s):
     """
