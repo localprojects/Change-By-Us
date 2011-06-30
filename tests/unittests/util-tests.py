@@ -139,5 +139,9 @@ class UtilTests (unittest.TestCase):
     def test_urlencode(self):
         self.assertEqual(util.urlencode("/~test/"), "/%7Etest/")
 
+    def test_add_leading_slash(self):
+        self.assertEqual(util.add_leading_slash("foo"), "/foo")
+        self.assertEqual(util.add_leading_slash("/foo"), "/foo")
+
 if __name__ == "__main__":
     unittest.main()
