@@ -161,5 +161,13 @@ class UtilTests (unittest.TestCase):
     def test_slugify(self):
         self.assertEqual(util.slugify("SLUG me! "), "slug-me")
 
+    def test_short_decimal(self):
+        self.assertEqual(util.short_decimal(1.123), 1.12)
+        self.assertEqual(util.short_decimal(1.129), 1.12)
+        self.assertEqual(util.short_decimal(1), 1.00)
+        self.assertEqual(util.short_decimal(10.0), 10.00)
+        self.assertEqual(util.short_decimal(100), 100.00)
+        
+
 if __name__ == "__main__":
     unittest.main()
