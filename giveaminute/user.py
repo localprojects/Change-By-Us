@@ -289,10 +289,16 @@ where u.user_id = $id and u.is_active = 1"""
         
     # data for other users accessing a user's profile/account page
     def getProfileActivityDictionary(self):
-        user = mProject.smallUser(self.id, self.firstName, self.lastName, self.imageId)
+        user = mProject.smallUserDisplay(self.id, 
+                                         mProject.userNameDisplay(self.firstName, 
+                                                                  self.lastName, 
+                                                                  self.affiliation,
+                                                                  mProject.isFullLastName(self.groupMembershipBitmask)),
+                                         self.imageId)
         user['location_id'] = self.locationId
         user['location'] = self.location
         user['description'] = self.description
+        user['is_leader'] = self.isLeader
     
         data = dict(projects = self.getProjects(),
                     ideas = self.getIdeas(),
