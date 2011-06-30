@@ -13,17 +13,17 @@ class UtilTests (unittest.TestCase):
         dl = [{"id":"c"}, {"id":"a"}, {"id":"b"}]
         #sdl = util.dictsort(dl, "id")
         #self.assertEqual(sdl[0].id, "a", "First dict in list did not have id 'a'")
-    
+
     def test_safeuni(self):
         class HasUnicode(object):
             def __unicode__(self):
                 return u"unicode here"
-        
+
         uni = u"unicode"
         base = "basestring"
         hasUni = HasUnicode()
         noUni = 5
-        
+
         self.assertEqual(type(util.safeuni(uni)), unicode, "Did not return a unicode string from uni.")
         self.assertEqual(type(util.safeuni(base)), unicode, "Did not return a unicode string from base.")
         self.assertEqual(type(util.safeuni(hasUni)), unicode, "Did not return a unicode string from hasUni.")
@@ -34,7 +34,7 @@ class UtilTests (unittest.TestCase):
         class HasUnicode(object):
             def __unicode__(self):
                 return u"unicode here"
-        
+
         uni = u"unicode"
         base = "basestring"
         hasUni = HasUnicode()
@@ -42,7 +42,7 @@ class UtilTests (unittest.TestCase):
         uniList = [u"z", u"y"]
         strList = ["a", "b", "c"]
         numList = [1, 2, 3]
-        
+
         self.assertEqual(type(util.safestr(uni)), str)
         self.assertEqual(type(util.safestr(base)), str)
         self.assertEqual(type(util.safestr(hasUni)), str)
@@ -91,6 +91,33 @@ class UtilTests (unittest.TestCase):
     def test_list_to_str(self):
         self.assertEqual(util.list_to_str(["a", "b", "c"]), "a b c")
         self.assertEqual(util.list_to_str([1, 2, 3]), "1 2 3")
-        
+
+    def test_wordcount(self):
+        self.assertEqual(util.wordcount("one 2 3 four"), 4)
+
+    def test_filesizeformat(self):
+        self.assertEqual(util.filesizeformat(0), "0 bytes")
+        self.assertEqual(util.filesizeformat(1), "1 byte")
+        self.assertEqual(util.filesizeformat(1024), "1.0 KB")
+        self.assertEqual(util.filesizeformat(1048576), "1.0 MB")
+
+    def test_strip_html(self):
+        html = "I'm not <script src='steal_ssn.js' /> not injecting scripts."
+        self.assertEqual(util.strip_html(html), "I'm not  not injecting scripts.")
+
+    def test_singlespace(self):
+        self.assertEqual(util.singlespace("  a very   spacey sentence    "), " a very spacey sentence ")
+
+    def test_remove_linebreaks(self):
+        s = """ a  spacey   
+        sentence   on many lines  """
+        self.assertEqual(util.singlespace(s), " a spacey sentence on many lines ")
+
+    def test_depunctuate(self):
+        s = "no, ...punctua.tion allowed?!"
+        self.assertEqual(util.depunctuate(s), "no punctuation allowed")
+        self.assertEqual(util.depunctuate(s, "!"), "no punctuation allowed!")
+        self.assertEqual(util.depunctuate(s, "?", " "), "no     punctua tion allowed? ")
+
 if __name__ == "__main__":
     unittest.main()

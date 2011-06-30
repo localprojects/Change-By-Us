@@ -101,7 +101,7 @@ def validate_email(emailaddress):
     if len(localpart) == 0:
         return False
 
-    #Why is this even here? It doesn't do anything without the test below.
+    #NOTE: Why is this here? It doesn't do anything without the test below.
     for i in '-_.%.':
         # Keep in mind that google allows +: my+name@gmail.com
         localpart = localpart.replace(i, "")
