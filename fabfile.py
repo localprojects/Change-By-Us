@@ -89,9 +89,6 @@ env.venv_path = '%(path)s/.virtualenv' % env
 # env.apache_config_path = '%(deploy_to)s/sites/apache/%(application)s' % env
 env.vars = {}
 
-env.python = 'python2.6'
-env.sudo_as = 'ubuntu'  # the user to run sudo() as, since this account probably has higher rights
-
 #----- Samples and examples -----
 # This section provides some test code for understanding how Fabric works
 @roles('web')
@@ -164,28 +161,18 @@ def demo():
     """
     Work on demo environment
     """
-    env.settings = 'demo'
-    env.hosts = ['demo-nyc.changeby.us']
-    env.user = 'giveaminute'
-    env.s3_bucket = 'demo-nyc.changeby.us'
-
-    env.branch = 'release'
-    env.rcfile = 'rcfile.%s' % env.settings
+    if env.rcfile is None:
+        env.rcfile = 'rcfile.%s' % env.settings
 
 @common_config
 def dev():
     """
     Work on dev environment
     """
-    env.settings = 'dev'
-    env.hosts = ['dev-nyc.changeby.us']
-    env.user = 'giveaminute'
-    env.s3_bucket = 'sandbox.changeby.us'
+    if env.rcfile is None:
+        env.rcfile = 'rcfile.%s' % env.settings
 
-    # WHich branch do we want to deploy? Keep in mind that this is environment specific
-    env.branch = "trunk"
-    
-    # Todo: This should be changed to be for different users!!!
+    # Todo: This should be changed to be configurable
     env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
 
 @common_config
@@ -194,14 +181,8 @@ def sundar_dev():
     Work on dev environment
     """
     env.settings = 'dev'
-    env.hosts = ['dev-nyc.changeby.us']
-    env.user = 'sraman'
-    env.key_filename = [os.path.expanduser("~/.ssh/work/work.id_dsa")]
-    env.s3_bucket = 'sandbox.changeby.us'
     env.local_path = os.path.expanduser("~/Projects/LP/%(application)s/trunk" % env)
 
-    # WHich branch do we want to deploy? Keep in mind that this is environment specific
-    env.branch = "trunk"
 
 def dump_env():
     for key in env.keys():
