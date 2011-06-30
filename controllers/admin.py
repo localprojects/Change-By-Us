@@ -20,9 +20,12 @@ class Admin(Controller):
             return self.getAdminUsers()
         elif (action == 'all'):
             if (param0 == 'getflagged'):
-                # TODO: eholda
-                # this is temporary until we decide how aggregate view will work
-                return self.getFlaggedIdeas()
+                if (param1 == 'counts'):
+                    return self.getFlaggedItemCounts()
+                else:
+                    # TODO: eholda
+                    # this is temporary until we decide how aggregate view will work
+                    return self.getFlaggedIdeas()
             else:
                 return self.not_found()
         elif (action == 'project'):
@@ -310,6 +313,50 @@ class Admin(Controller):
             log.error(e)
             
         return self.json(data)
+        
+    def getFlaggedItemCounts(self):
+        obj = None
+    
+        sql = """select 'projects' as flagged_item,
+                          count(p.project_id) as num
+                  from project p
+                  where p.is_active = 1 and p.num_flags > 0
+                  union
+                  select 'ideas' as flagged_item,
+                         count(i.idea_id) as num
+                  from idea i
+                  where i.is_active = 1 and i.num_flags > 0
+                  union
+                  select 'messages' as flagged_item,
+                         count(pm.project_message_id) as num
+                  from project_message pm
+                  inner join project p on pm.project_id = p.project_id
+                  inner join user u on u.user_id = pm.user_id
+                  where pm.is_active = 1 and pm.num_flags > 0
+                  union
+                  select 'goals' as flagged_item,
+                         count(pg.project_goal_id) as num
+                  from project_goal pg
+                  inner join project p on pg.project_id = p.project_id
+                  inner join user u on u.user_id = pg.user_id
+                  where pg.is_active = 1 and pg.num_flags > 0
+                  union
+                  select 'links' as flagged_item,
+                         count(pl.project_link_id) as num
+                  from project_link pl
+                  inner join project p on pl.project_id = p.project_id
+                  where pl.is_active = 1 and pl.num_flags > 0"""
+                  
+        try:
+            data = list(self.db.query(sql))
+            
+            obj = dict(flagged_items = dict((item.flagged_item, item.num) for item in data))
+        except Exception, e:
+            log.info("*** couldn't get flagged item counts")
+            log.error(e)
+        
+        return self.json(obj)
+
         
     def getUnreviewedResources(self):
         limit = util.try_f(int, self.request('n_limit'), 10)
