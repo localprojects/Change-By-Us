@@ -135,7 +135,7 @@ def searchIdeas(db, terms, locationId, limit=1000, offset=0, excludeProjectId = 
                 i.is_active = 1 
                 and ($locationId is null or i.location_id = $locationId)
                 and ($match = '' or match(i.description) against ($match in boolean mode))
-                and ($projectId is null or i.idea_id not in (select pi.idea_id from project__idea pi where pi.project_id = $projectId))
+                and ($projectId is null or i.user_id not in (select pu.user_id from project__user pu where pu.project_id = $projectId))
                 order by i.created_datetime desc
                 limit $limit offset $offset"""  
 
