@@ -31,9 +31,7 @@
 												<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
 											{% endif %}
 											<cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
-											<blockquote>
-												<p>{{ idea.message }}</p>
-											</blockquote>
+											<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p>{{ idea.message|truncate(175) }}</p></blockquote>
 											<cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
 										</div>
 									</div>
