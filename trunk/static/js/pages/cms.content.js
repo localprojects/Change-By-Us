@@ -50,6 +50,7 @@ app_page.features.push(function(app){
 				selector:'#warning-list',
 				init:function(merlin,dom){
 					tc.jQ('.headlands .tabs li.warning-list').addClass('active').siblings().removeClass('active');
+					populate_content_counts();
 					build_warning_carousel(merlin.app);
 					window.location.hash = 'warning-content,ideas';
 				}
@@ -212,6 +213,7 @@ app_page.features.push(function(app){
 						return;
 					}
 					tc.jQ(this.target).parents('.item-box').addClass('approved').slideUp();
+					populate_content_counts();
 					if(type == 'resource'){
 						this.data.app.components.resources_pagination.data.offset--;
 					} else {
@@ -299,6 +301,7 @@ app_page.features.push(function(app){
 								return;
 							}
 							tc.jQ(this.target).parents('.item-box').addClass('deleted').slideUp();
+							populate_content_counts();
 							if(type == 'resource'){
 								this.data.app.components.resources_pagination.data.offset--;
 							} else {
@@ -311,6 +314,38 @@ app_page.features.push(function(app){
 			
 		}
 	};
+	
+	function populate_content_counts(){
+		tc.jQ.ajax({
+			type:"GET",
+			url:"/admin/all/getflagged/counts",
+			context:this,
+			dataType:"json",
+			success: function(data, ts, xhr) {
+				if(data == 'False'){
+					return;
+				}
+				if(data.flagged_items){
+					if(data.flagged_items.goals || data.flagged_items.goals === 0){
+						tc.jQ('.sidebar-item.project-goals span.count').text(data.flagged_items.goals);
+					}
+					if(data.flagged_items.ideas || data.flagged_items.ideas === 0){
+						tc.jQ('.sidebar-item.ideas span.count').text(data.flagged_items.ideas);
+					}
+					if(data.flagged_items.links || data.flagged_items.links === 0){
+						tc.jQ('.sidebar-item.links span.count').text(data.flagged_items.links);
+					}
+					if(data.flagged_items.messages || data.flagged_items.messages === 0){
+						tc.jQ('.sidebar-item.project-posts span.count').text(data.flagged_items.messages);
+					}
+					if(data.flagged_items.projects || data.flagged_items.projects === 0){
+						tc.jQ('.sidebar-item.projects span.count').text(data.flagged_items.projects);
+					}
+					
+				}
+			}
+		});
+	}
 	
 	
 	function build_resources_carousel(app){
