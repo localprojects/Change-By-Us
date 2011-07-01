@@ -212,7 +212,7 @@ app_page.features.push(function(app){
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
 				
-				out = tc.jQ('<table style="" class="projects-list doublewide clearfix">\
+				out = tc.jQ('<table style="' + ( isMsie8orBelow ? 'width:763px;' : '' ) + '" class="projects-list doublewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
@@ -254,7 +254,7 @@ app_page.features.push(function(app){
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
-				out = tc.jQ('<table style="" class="resources-list triplewide clearfix">\
+				out = tc.jQ('<table style="' + ( isMsie8orBelow ? 'width:763px;' : '' ) + '" class="resources-list triplewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
