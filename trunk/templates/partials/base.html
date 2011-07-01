@@ -416,6 +416,10 @@
 				{% if d.template_data and d.template_data.redir_from %} app_page.data.redir_from = "{{ d.template_data.redir_from }}"; {% endif %}
 				{% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
 				
+				if (app_page.data.info_addr) {
+					$('.nospam.infomail').html(tc.makeEmailLink(app_page.data.info_addr.name, app_page.data.info_addr.domain));
+				}
+				
 				tc.util.log(':::: APP_PAGE ::::');
 				tc.util.dump(app_page);
 				
