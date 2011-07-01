@@ -12,10 +12,6 @@ tc.app.prototype.init = function(page){
 	_me = this;
 	this.app_page = page;
 	
-	if (page.data.info_addr) {
-    	$('.nospam.infomail').html(makeEmailLink(page.data.info_addr.name, page.data.info_addr.domain));
-	}
-	
 	tc.jQ.ajaxSetup({
 		cache:false
 	});
@@ -136,7 +132,7 @@ tc.randomNoteCardBg = function(ideasList) {
 	}
 };
 
-makeEmailLink = function(name, domain) {
+tc.makeEmailLink = function(name, domain) {
     addr = name + '@' + domain;
     s = '<a href="mailto:' + addr + '">' + addr + '</a>';
     return s;
