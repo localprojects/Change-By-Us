@@ -32,19 +32,3 @@ def badwords(db, text):
         return 1
 
     return 0
-
-
-def badtags(text):
-
-    text = util.depunctuate(text, replacement=" ")
-    tags = text.split()
-
-    f = open(os.path.dirname(__file__) + "/../assets/bad_tags.txt")
-    badtags = []
-    for line in f:
-        if line[0] == "#":
-            continue
-        badtags.append(line.strip().lower())
-    tags = [tag for tag in tags if tag.lower() not in badtags]
-    return tags
-
