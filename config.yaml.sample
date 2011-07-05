@@ -8,22 +8,22 @@
 #   * diff, opendiff, diffmerge, windiff are your friends
 #
 #--------------------------------------------------------------------
-dev: Yes
+dev: %(dev)s
 
-app_mode: not-beta
-app_env: dev
+app_mode: %(appmode)s
+app_env: %(app_env)s
 
 instance: ChangeByUs-dev
 
-default_host: http://localhost:8080/
-blog_host: http://dev-nycblog.changeby.us/
+default_host: %(default_host)s
+blog_host: %(blog_host)s
 
 database:
     dbn: mysql
-    db: gam2
-    user: gam
-    password: 'gam'
-    host: 127.0.0.1
+    db: %(database_db)s
+    user: %(database_user)s
+    password: %(database_password)s
+    host: %(database_host)s
 
 memcache:
     address: 0.0.0.0
@@ -32,78 +32,80 @@ memcache:
 beanstalk:
     address: 0.0.0.0
     port: 11238
-    
+
 homepage:
-    is_display_leaderboard: False
-    is_display_featured_projects: True
-    num_featured_projects: 6
-    num_recent_ideas: 125    
-    
+    is_display_leaderboard: %(homepage_is_display_leaderboard)s
+    is_display_featured_projects: %(homepage_is_display_featured_projects)s
+    num_featured_projects: %(homepage_num_featured_projects)s
+    num_recent_ideas: %(homepage_num_recent_ideas)s
+
 email:
   # Common configuration
 
   # This needs to be an email address that has been validated by SES
   # run ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -l
-  # and 
+  # and
   # ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -v newaddr@localprojects.net
-  from_email: nyc@changeby.us
+  from_email: %(from_email)s
   from_name: 'Change by Us NYC'
-  
+
    # address for non-responsive messaging, such as person-to-person emails
-  from_noreplies_email: noreplies@nyc.changeby.us
+  from_noreplies_email: %(email_from_noreplies_email)s
   from_noreplies_name: 'Change by Us NYC (do not reply)'
-  
-  log_file: ~/cbu.log
-  log_level: debug
 
-  # Digest email prefix is for the Digest email subject line
-  digest_subject_prefix: 'Change By Us Digest: '
-  # The email to which we should send digest messages during test/dev testing
-  # so that we don't spam live users.
-  # Used by the digest_emailer.py script, if 'dev' == Yes | True
-  digest_debug_recipients: sundar@localprojects.net
+  digest:
+    # Log settings for digest_emailer.py
+    log_file: %(digest_log_file)s
+    log_level: %(digest_log_level)s
 
-  # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if 
+    # Digest email prefix is for the Digest email subject line
+    digest_subject_prefix: 'Change By Us Digest: '
+    # The email to which we should send digest messages during test/dev testing
+    # so that we don't spam live users.
+    # Used by the digest_emailer.py script, if 'dev' == Yes | True
+    digest_debug_recipients: sundar@localprojects.net
+
+  # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if
   # the aws send quota is close then we switch over to SMTP. This is handled in code
-   
-  # SMTP specific configuration. 
+
+  # SMTP specific configuration.
   smtp:
     host: smtp.gmail.com
     port: 587
-    username: 'changebyusnyc@gmail.com'
-    password: 'XXXXXXXX'
+    username: %(email_smtp_username)s
+    password: %(email_smtp_password)s
     # Generally TLS is necessary for gmail. So set it here
     starttls: True
-  
+
   # Amazon SES
   # TODO: merge this with the AWS root config
   aws_ses:
      # TODO: add the quota limit
-     access_key_id: XXXXXXXXXX
-     secret_access_key: XXXXXXXXXX
-    
+     access_key_id: %(aws_access_key_id)s
+     secret_access_key: %(aws_secret_access_key)s
+
 twilio:
-    sid: AC2f8000ed6b6560de2f1f6b6bf962280a
-    token: XXXXXXX
-    api: 2010-04-01
-    phone: "6463928258"
-    
+    sid: %(twilio_sid)s
+    token: %(twilio_token)s
+    api: %(twilio_api)s
+    phone: %(twilio_phone)s
+
 facebook:
-    app_id: '204545712900061'
+    app_id: %(facebook_app_id)s
     #app_id: '177033235680785'
 
 twitter:
-    consumer_key: '7z7vETOzJPXZLicXieelfQ'
-    consumer_secret: 'kaIzFN21IxUPewEcgervVMefjBqMM5PwKu0bw7LKcU'
+    consumer_key: %(twitter_consumer_key)s
+    consumer_secret: %(twitter_consumer_secret)s
     request_token_url: 'http://twitter.com/oauth/request_token'
     access_token_url: 'http://twitter.com/oauth/access_token'
     authenticate_url: 'http://twitter.com/oauth/authenticate'
-    
+
 aws:
-    access_key_id: xxx
-    secret_access_key: xxx
-    bucket: eholda-nyc-changebyus
-    
+    access_key_id: %(aws_access_key_id)s
+    secret_access_key: %(aws_secret_access_key)s
+    bucket: %(s3_bucket)s
+
 media:
     isS3mirror: True
-    root: http://s3.amazonaws.com/demo-nyc-changebyus/data/giveaminute/   
+    root: %(media_root)s
