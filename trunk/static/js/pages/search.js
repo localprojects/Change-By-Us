@@ -268,6 +268,7 @@ app_page.features.push(function(app){
 						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
 					}
 					tempcell.find('.resource-tooltip_trigger').attr('rel','#organization,'+d.results[i].link_id);
+					tempcell.find('.delete-resource').attr('href','#removeResource,'+d.results[i].link_id);
 					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,25,'...'));
 					
 					if (d.results[i].is_official == 1) {
