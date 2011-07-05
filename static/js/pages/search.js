@@ -10,6 +10,23 @@ app_page.features.push(function(app){
 			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
 			tc.jQ('.results-'+theCat).addClass('single').find('.carousel').trigger('make-single');
 			tc.jQ('.results-box').not('.single').find('.carousel').trigger('make-multiple');
+			switch(theCat){
+				case 'resources':
+					if(app.components['resource_carousel']){
+						app.components['resource_carousel'].carousel.seekTo(0);
+					}
+					break;
+				case 'projects':
+					if(app.components['project_carousel']){
+						app.components['project_carousel'].carousel.seekTo(0);
+					}
+					break;
+				case 'ideas':
+					if(app.components['idea_carousel']){
+						app.components['idea_carousel'].carousel.seekTo(0);
+					}
+					break;
+			}
 		};
 		
 		tc.jQ('.search-terms-container a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
