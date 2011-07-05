@@ -9,6 +9,8 @@
 #    * Deal with orphaned tasks
 #    *
 # Pre-requisites:
+#     sudo apt-get install python-dateutil (OSX already has python-dateutil it seems)
+#
 #     Run the tasks_data.sql script to load the seed data for the
 #     digest cron to run
 #     Enable the etc/cron.daily/daily_digest on the appropriate user
@@ -163,7 +165,7 @@ limit 0, $limit
             return tasks
         except Exception, e:
             logging.error(e)
-            return False
+            return []
 
     def getMyTasks(self):
         sql = """
