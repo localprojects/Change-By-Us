@@ -40,7 +40,7 @@
 		
 		offset = 0;
 		if(app.app_page.data.user_activity && app.app_page.data.user_activity.messages){
-			offset = app.app_page.data.user_activity.messages.length - 1;
+			offset = app.app_page.data.user_activity.messages.length;
 		}
 		
 		if(window.location.hash == ''){
@@ -171,7 +171,7 @@
 								context:merlin,
 								dataType:"text",
 								success: function(data, ts, xhr) {
-									var d, dom_stack;
+									var me = this, d, dom_stack;
 									$t.parent().removeClass("loading");
 									try {
 										d = tc.jQ.parseJSON(data);
@@ -180,7 +180,7 @@
 										return;
 									}
 									if (!d.length) {
-										$t.hide();
+										$t.parent().hide();
 										return;
 									}
 									dom_stack = e.data.dom.find("ol.message-stack");
@@ -206,6 +206,13 @@
 												template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
 												template.find(".time-since").text(message.created).time_since();
 												break;
+											case "goal_achieved":
+												template = tc.jQ(".template-content.message-item.goal-achieved-notification").clone().removeClass("template-content");
+												template.find(".title").html(message.body);
+												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
+												template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
+												template.find(".time-since").text(message.created).time_since();
+												break;
 											case "invite":
 												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
 												template.find(".title").html(message.body);
@@ -217,8 +224,8 @@
 										if (template) {
 											dom_stack.append(template);
 										}
+										me.current_step.current_offset += 1;
 									});
-									this.current_step.current_offset += d.length;
 								}
 							});
 						});
