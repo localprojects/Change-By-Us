@@ -310,6 +310,18 @@ Change by Us NYC - User Account
 							<div class="bd">
 								<ol class="message-stack">
 									
+									{% macro notification_message(message, className='') -%}
+										<li class="message-item user-notification {{ className }}">
+											<!--<a class="close" href="#"><span>Close</span></a>-->
+											<span class="title">{{ message.body }}</span>
+											<div class="meta meta-top">
+												<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
+												<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}#show,members" class="serif">{{ message.project_title }}</a></cite>
+												<cite class="time-since">{{ message.created }}</cite>
+											</div>
+										</li>
+									{%- endmacro %}
+									
 									{% for message in d.template_data.user_activity.data.messages %}
 										{% if message.message_type == "member_comment" %}
 										
@@ -337,16 +349,8 @@ Change by Us NYC - User Account
 											</li>
 											
 										{% elif message.message_type == "join" %}
-											
-											<li class="message-item user-notification join-notification">
-												<!--<a class="close" href="#"><span>Close</span></a>-->
-												<span class="title">{{ message.body }}</span>
-												<div class="meta meta-top">
-													<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
-													<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}#show,members" class="serif">{{ message.project_title }}</a></cite>
-													<cite class="time-since">{{ message.created }}</cite>
-												</div>
-											</li>
+										
+											{{ notification_message(message, 'join-notification') }}
 											
 										{% elif message.message_type == "invite" %}
 										
@@ -360,16 +364,11 @@ Change by Us NYC - User Account
 											
 										{% elif message.message_type == "goal_achieved" %}
 										
-												<li class="message-item user-notification goal-achieved-notification">
-													<!--<a class="close" href="#"><span>Close</span></a>-->
-													<span class="title">{{ message.body }}</span>
-													<div class="meta meta-top">
-														<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
-														<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}#show,members" class="serif">{{ message.project_title }}</a></cite>
-														<cite class="time-since">{{ message.created }}</cite>
-													</div>
-												</li>
+											{{ notification_message(message, 'goal-achieved-notification') }}
+									
+										{% elif message.message_type == "endorsement" %}
 										
+											{{ notification_message(message, 'endorsement-notification') }}
 											
 										{% endif %}
 									{% endfor %}
@@ -573,7 +572,7 @@ Change by Us NYC - User Account
 
 	</div>
 	
-	<li class="template-content message-item member-comment">
+	<div class="template-content message-item member-comment">
 		<!--<a class="close" href="#"><span>Close</span></a>-->
 		<div class="thumb">
 			<img width='50' src=" " alt=" " class="avatar"/>
@@ -590,35 +589,31 @@ Change by Us NYC - User Account
 				<cite class="time-since"></cite>
 			</div>
 		</div>
-	</li>
+	</div>
 	
-	<li class="template-content message-item user-notification join-notification">
-		<!--<a class="close" href="#"><span>Close</span></a>-->
-		<span class="title"></span>
-		<div class="meta meta-top">
-			<cite class="sender"></cite>
-			<cite class="project"><em>from</em> <a class="serif"></a></cite>
-			<cite class="time-since"></cite>
+	{% macro notification_message_template(message_type='') -%}
+		<div class="template-content message-item user-notification {{ message_type }}">
+			<!--<a class="close" href="#"><span>Close</span></a>-->
+			<span class="title"></span>
+			<div class="meta meta-top">
+				<cite class="sender"></cite>
+				<cite class="project"><em>from</em> <a class="serif"></a></cite>
+				<cite class="time-since"></cite>
+			</div>
 		</div>
-	</li>
+	{%- endmacro %}
 	
-	<li class="template-content message-item user-notification goal-achieved-notification">
-		<!--<a class="close" href="#"><span>Close</span></a>-->
-		<span class="title"></span>
-		<div class="meta meta-top">
-			<cite class="sender"></cite>
-			<cite class="project"><em>from</em> <a class="serif"></a></cite>
-			<cite class="time-since"></cite>
-		</div>
-	</li>
+	{{ notification_message_template('join-notification') }}
+	{{ notification_message_template('goal-achieved-notification') }}
+	{{ notification_message_template('endorsement-notification') }}
 	
-	<li class="template-content message-item user-notification invite-notification">
+	<div class="template-content message-item user-notification invite-notification">
 		<!--<a class="close" href="#"><span>Close</span></a>-->
 		<span class="title"></span>
 		<div class="controls">
 			<a href="">Click to see project</a>
 		</div>
-	</li>
+	</div>
 	
 	<div class='template-content modal-content upload-image'>
 		<div class='step'>
