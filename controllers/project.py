@@ -126,7 +126,7 @@ class Project(Controller):
             for item in msgs:
                 item['created'] = datetime.datetime.strptime(item['created'], '%Y-%m-%d %H:%M:%S').strftime('%a, %d %b %Y %H:%M:%S EST')
         
-            return self.render('project/conversation_rss', suffix='xml.rss')
+            return self.render('project/conversation_rss', suffix='xml.rss', content_type = 'application/rss+xml')
         else:
             return self.not_found()
         
