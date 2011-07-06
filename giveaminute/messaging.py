@@ -6,12 +6,12 @@ from framework.config import *
 ## EMAIL FUNCTIONS
 
 # send email to invited users
-def emailInvite(email, inviterName, projectId, title, description):
+def emailInvite(email, inviterName, projectId, title, description, message = None):
     emailAccount = Config.get('email')
     subject = "You've been invited by %s to join a project" % inviterName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
     body = Emailer.render('email/project_invite', 
-                          {'inviter':inviterName, 'title':title, 'description':description, 'link': link}, 
+                          {'inviter':inviterName, 'title':title, 'description':description, 'link': link, 'message':message}, 
                           suffix = 'txt')     
     try:
         return Emailer.send(email, 
