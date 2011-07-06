@@ -148,6 +148,15 @@ var isiPad = false;
 if( ua && ua.msie && ua.version < 9 ) {
 	isMsie8orBelow = true;
 	
+	(function() {
+		var originalTitle = document.title.split("#")[0];
+		document.attachEvent("onpropertychange", function(e) {
+			if (e.propertyName === "title" && document.title !== originalTitle) {
+				document.title = originalTitle;
+			}
+		});
+	}());
+	
 	if( ua.version < 8 ) {
 		tc.jQ('body').addClass('ie7');
 		isMsie7orBelow = true
