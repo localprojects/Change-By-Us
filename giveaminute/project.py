@@ -853,7 +853,7 @@ def searchProjectsCount(db, terms, locationId):
                     where
                     p.is_active = 1 
                     and ($locationId is null or p.location_id = $locationId)
-                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))"""
+                    and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))"""
                     
         data = list(db.query(sql, {'match':match, 'locationId':locationId}))
         
@@ -891,7 +891,7 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                     where
                     p.is_active = 1 
                     and ($locationId is null or p.location_id = $locationId)
-                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))
+                    and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))
                     order by p.created_datetime desc
                     limit $limit offset $offset"""
                     
