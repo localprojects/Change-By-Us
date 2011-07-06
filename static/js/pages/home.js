@@ -458,6 +458,14 @@ app_page.features.push(function(app){
 					}
 				}
 			});
+			
+			// for ipads, show the idea input field when touching the large notecard or hand.
+			if (isiPad == true) {
+				tc.jQ(".note-card-pane, .hand").click(function () {
+					bigNoteCardContentArea.hide();
+					bigNoteCardIdeaInputContainer.show();
+				});
+			}
 		};
 		
 		arrangeNotes();
