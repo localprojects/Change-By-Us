@@ -1236,7 +1236,8 @@ def inviteByIdea(db, projectId, ideaId, message, inviterUser):
                                                               isFullLastName(inviterUser.groupMembershipBitmask)),
                                               projectId,
                                               project.data.title,
-                                              project.data.description)
+                                              project.data.description,
+                                              message)
         except Exception, e:
             log.info("*** couldn't get send invite")
             log.error(e) 
@@ -1258,7 +1259,8 @@ def inviteByEmail(db, projectId, emails, message, inviterUser):
                                                               isFullLastName(inviterUser.groupMembershipBitmask)),
                                           projectId,
                                           project.data.title,
-                                          project.data.description)):
+                                          project.data.description,
+                                          message)):
                     log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          
             else:
                 log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          
