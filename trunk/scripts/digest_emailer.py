@@ -535,7 +535,7 @@ where pm.message_type='member_comment'
             subject = currentDigest.get('subject')
             body = currentDigest.get('body')
 
-            recipients = currentDigest.get('recipients')
+            recipients = currentDigest.get('recipients').split(',')
 
             if self.Config.get('dev'):
                 body += "Recipients are " + ','.join(currentDigest.get('recipients')) + "\n\n"
@@ -599,7 +599,7 @@ update digests
 set status = 'C', sent_datetime = NOW()
 where digest_id = $digest_id
 """
-        params = {'digest_id':digest_id}
+        params = {'digest_id':int(digest_id)}
         try:
             result = self.executeSQL(sql, params)
             return True
