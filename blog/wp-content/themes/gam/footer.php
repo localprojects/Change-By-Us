@@ -16,17 +16,18 @@
 		
 		
 		<div class='seafloor'>
+			<div class='box logos clearfix'>
+				<a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml' target='_blank' class="simplicity"><img src='/static/images/footer-nycsimplicity2.png' alt='Local Projects' /></a>
+				<a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
+				<a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
+				<a href='http://www.nyc.gov/html/planyc2030/html/home/home.shtml' target='_blank'><img src='/static/images/footer-planyc.png' alt='PLANYC' /></a>
+				<span class="supported fancy-caps">Supported <span>by</span></span>
+				<a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
+				<a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>	
+				<a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>	
+			</div>
+			
 			<div class='west'>
-				<div class='box logos clearfix'>
-					<a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml' target='_blank' class="simplicity"><img src='/static/images/footer-nycsimplicity2.png' alt='Local Projects' /></a>
-					<a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
-					<a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
-					<a href='http://www.nyc.gov/html/planyc2030/html/home/home.shtml' target='_blank'><img src='/static/images/footer-planyc.png' alt='PLANYC' /></a>
-					<span class="supported fancy-caps">Supported <span>by</span></span>
-					<a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
-					<a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
-					
-				</div>
 				<div class="box">
 					<ul class="sitemap">
 						<li><a href='http://nyc.changeby.us/about'>About Change by Us NYC</a></li>
@@ -52,7 +53,7 @@
 				</div>
 				<div class='box'>
 					<p class="fancy-caps">Content <span>and</span> NYC Logo</p>
-					<p>&copy; 2011 <strong>Mayor's Fund to Advance the City of New York</strong><br />All rights reserved.</p>
+					<p>&copy; 2011 <strong>Mayor's Fund to <br />Advance the City of New York</strong><br />All rights reserved.</p>
 				</div>
 			</div>
 		</div><!-- end seafloor-->
