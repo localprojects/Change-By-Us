@@ -25,7 +25,7 @@ set -x
 # 	password=gam
 # 	
 #	The one-liner for this is:
-#	echo -e "[client]\nuser=$dbuser\npassword='$dbpasswd'\n"
+#	echo -e "[client]\nuser=$dbuser\npassword='$dbpasswd'\n" >> $HOME/.mycnf && chmod 600 $HOME/.my.cnf
 #
 # 2. IF GPG is necessary, then gpg with associated key
 #	Setting up GPG uses the standard process (see https://help.ubuntu.com/community/GnuPrivacyGuardHowto)
