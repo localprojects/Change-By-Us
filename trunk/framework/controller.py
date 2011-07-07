@@ -154,6 +154,8 @@ class Controller():
         #add template data object
         if self.template_data: template_values['template_data'] = self.template_data 
         
+        template_values['full_url'] = web.ctx.home + web.ctx.fullpath
+        
         if hasattr(self.session, 'flash') and self.session.flash is not None:
             template_values['flash'] = self.session.flash
             log.info('showing flash message: "' + self.session.flash + '"')
