@@ -13,14 +13,16 @@
 		<meta name="viewport" content="width=1020" />
 		
 		<meta property="og:site_name" content="Change by Us NYC"/>
-		<meta property="og:title" content="Change by Us NYC"/>
+		{% block og_title %}
+			<meta property="og:title" content="Change by Us NYC"/>
+		{% endblock %}
 		<meta property="og:type" content="government"/>
 		<meta property="og:url" content="{% if d.full_url %}{{ d.full_url }}{% else %}{{ d.default_host }}{% endif %}"/>
 		<meta property="og:image" content="{{ d.default_host }}static/images/fb-share100x100.png"/>
-		<meta property="og:site_name" content="Change by Us NYC"/>
 		<meta property="fb:app_id" content="{{ d.facebook_app_id }}"/>
-		<meta property="og:description" content="Change by Us NYC is a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live."/>
-		
+		{% block og_description %}
+			<meta property="og:description" content="Change by Us NYC is a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live."/>
+		{% endblock %}
 		
 		<link rel="icon" href="/static/images/favicon.ico"/>
 		<link rel="shortcut icon" href="/static/images/favicon.ico"/>
