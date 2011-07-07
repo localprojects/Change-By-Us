@@ -290,7 +290,7 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
 
     try:
         # censor behavior
-        numFlags = censor.badwords(db, title + " " + description)
+        numFlags = censor.badwords(db, ' '.join([title, description, keywords]))
         isActive = 0 if numFlags == 2 else 1
 
         projectId = db.insert('project', title = title,
@@ -387,7 +387,6 @@ def updateProjectDescription(db, projectId, description):
     try:
         # censor behavior
         numFlags = censor.badwords(db, description)
-        isActive = 0 if numFlags == 2 else 1
     
         if (numFlags == 2):
             return False
@@ -505,6 +504,12 @@ def removeUserFromAllProjects(db, userId):
         
 def addKeywords(db, projectId, newKeywords):
     try:
+       # censor behavior
+        numFlags = censor.badwords(db, ' '.join(newKeywords))
+        
+        if (numFlags == 2):
+            return False
+       
         sqlGet = "select keywords from project where project_id = $projectId"
         data = list(db.query(sqlGet, {'projectId':projectId}))
         
@@ -520,7 +525,8 @@ def addKeywords(db, projectId, newKeywords):
             if (len(addKeywords) > 0):
                 keywords = ' '.join(keywords + addKeywords)
         
-                db.update('project', where = "project_id = $projectId", keywords = keywords, vars = {'projectId':projectId})
+                sql = "update project set keywords = $keywords, num_flags = num_flags + $flags where project_id = $projectId"
+                db.query(sql, {'projectId':projectId, 'keywords':keywords, 'flags':numFlags})
                     
             # return true whether keyword exists or not
             return True
