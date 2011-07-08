@@ -1,8 +1,10 @@
 import giveaminute.idea as mIdea
 import giveaminute.keywords as mKeywords
 import giveaminute.project as mProject
+import giveaminute.messaging as mMessaging
 import framework.util as util
 from framework.controller import *
+from framework.config import *
 
 class Idea(Controller):
     def GET(self, action = None, id = None):
@@ -35,7 +37,12 @@ class Idea(Controller):
         
         ideaId = mIdea.createIdea(self.db, description, locationId, 'web', userId, email)
         
-        return ideaId if ideaId else False 
+        if (ideaId):
+            mMessaging.emailIdeaConfirmation(email, Config.get('email').get('from_address'), locationId)
+
+            return ideaId
+        else:
+            return False
         
     def flagIdea(self):
         ideaId = self.request('idea_id')
