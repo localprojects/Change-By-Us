@@ -192,6 +192,32 @@ def emailUnauthenticatedUser(email, authGuid):
         log.info("*** couldn't send authenticate user email")
         log.error(e)
         return False
+        
+# email upon idea submission
+def emailIdeaConfirmation(email, responseEmail, locationId):
+    emailAccount = Config.get('email')
+    host = Config.get('default_host')
+    subject = "Thanks for submitting an idea to Change by Us!"
+    searchLink = "%ssearch?location_id=%s" % (host, locationId)
+    createLink = "%screate" % host
+    
+    body = Emailer.render('email/idea_confirmation',
+                        {'search_link':searchLink,
+                         'create_link':createLink,
+                         'response_email':emailAccount['from_email']},
+                        suffix = 'txt')
+                        
+    try:
+        return Emailer.send(email, 
+                            subject, 
+                            body,
+                            from_name = emailAccount['from_name'],
+                            from_address = emailAccount['from_email'])  
+    except Exception, e:
+        log.info("*** couldn't send authenticate user email")
+        log.error(e)
+        return False
+ 
 
 ### SMS FUNCTIONS
         
