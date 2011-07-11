@@ -85,7 +85,7 @@ app_page.features.push(function(app){
 				inputs:{
 					email:{
 						selector:'input.email',
-						validators:['min-3','max-32','required'],
+						validators:['min-3','max-100','required'],
 						hint:''
 					}
 				},
