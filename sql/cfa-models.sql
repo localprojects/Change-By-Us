@@ -249,6 +249,7 @@ CREATE TABLE IF NOT EXISTS `project` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_datetime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `organization` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   FULLTEXT KEY `title` (`title`,`description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
