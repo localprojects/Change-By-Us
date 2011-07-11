@@ -13,7 +13,8 @@ tc.inlineEditor.prototype = {
 				post_data:  {}
 			}*/,
 			empty_text: "Click here to edit.",
-			validators: null
+			validators: null,
+			charlimit: null
 		}, options);
 
 		if (typeof this.options.dom === "string") {
@@ -41,13 +42,21 @@ tc.inlineEditor.prototype = {
 				e.data.me.edit();
 			}
 		});
+		
+		if (this.options.charlimit) {
+			if (!(tc.jQ.isArray(this.options.validators))) {
+				this.options.validators = [];
+			}
+			this.options.validators.push("max-"+ this.options.charlimit);
+		}
+		
 
 		this.data = tc.jQ.trim( this.content.text() );
 
 		this.display();
 	},
 	edit: function() {
-		var field;
+		var field, limit_indicator;
 		tc.util.log("edit");
 		if (this.state === "edit") { return; }
 		
@@ -57,6 +66,15 @@ tc.inlineEditor.prototype = {
 		field.bind("keypress", {me: this, field: field}, function(e) {
 			e.data.me.validate(e.data.field);
 		});
+		
+		if (this.options.charlimit) {
+			limit_indicator = tc.jQ("<span class='charlimit'></span>");
+			limit_indicator.text( (this.data ? this.data.length : "0")+ "/" + this.options.charlimit );
+			this.content.append(limit_indicator);
+			field.bind("keyup", {me: this, field: field, dom: limit_indicator, limit: this.options.charlimit }, function(e) {
+				e.data.dom.text( e.data.field.val().length + "/" + e.data.limit );
+			});
+		}
 		
 		this.controls.show();
 		this.dom.addClass("state-editing").removeClass("state-display");
@@ -140,15 +158,6 @@ tc.inlineEditor.prototype = {
 		this.content.text(this.data);
 	}
 };
-
-tc.inlineLinkEditor = function(options) {
-	this.init(options);
-};
-tc.inlineLinkEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
-	_renderDisplayContent: function() {
-		this.content.html("<a href='"+ this.data + "'>"+ this.data + "</a>");
-	}
-});
 
 tc.inlineLocationEditor = function(options) {
 	this.init(options);

@@ -29,7 +29,8 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 							post_data: {
 								project_id: me.options.app.app_page.data.project.project_id
 							}
-						}
+						},
+						charlimit: 200
 					});
 				}
 			}
