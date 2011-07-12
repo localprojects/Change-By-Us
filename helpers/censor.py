@@ -18,7 +18,7 @@ def badwords(db, text):
     2 on kill words, 1 on warning words, otherwise 0.
     """
     try:
-        badwords = db.query("SELECT * FROM badwords where id = 1 LIMIT 1")[0]
+        badwords = db.query("SELECT * FROM badwords LIMIT 1")[0]
         kill_words = badwords['kill_words'] or ""
         warn_words = badwords['warn_words'] or ""
     except Exception, e:
