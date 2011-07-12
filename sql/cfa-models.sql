@@ -3,17 +3,11 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 21, 2011 at 03:38 PM
+-- Generation Time: Jul 12, 2011 at 02:38 PM
 -- Server version: 5.1.44
 -- PHP Version: 5.3.2
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
 
 --
 -- Database: `cbu`
@@ -32,12 +26,7 @@ CREATE TABLE IF NOT EXISTS `badwords` (
   `warn_words` text,
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `badwords`
---
-
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -53,11 +42,6 @@ CREATE TABLE IF NOT EXISTS `beta_invite_code` (
   PRIMARY KEY (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `beta_invite_code`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -72,11 +56,6 @@ CREATE TABLE IF NOT EXISTS `beta_invite_request` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`beta_invite_request_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `beta_invite_request`
---
-
 
 -- --------------------------------------------------------
 
@@ -94,11 +73,6 @@ CREATE TABLE IF NOT EXISTS `direct_message` (
   PRIMARY KEY (`direct_message_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
---
--- Dumping data for table `direct_message`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -113,11 +87,6 @@ CREATE TABLE IF NOT EXISTS `facebook_user` (
   UNIQUE KEY `facebook_id` (`facebook_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `facebook_user`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -131,11 +100,6 @@ CREATE TABLE IF NOT EXISTS `featured_project` (
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`ordinal`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `featured_project`
---
-
 
 -- --------------------------------------------------------
 
@@ -159,12 +123,7 @@ CREATE TABLE IF NOT EXISTS `idea` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`idea_id`),
   FULLTEXT KEY `description` (`description`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `idea`
---
-
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -183,11 +142,6 @@ CREATE TABLE IF NOT EXISTS `images` (
   KEY `mirrored` (`mirrored`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
---
--- Dumping data for table `images`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -200,11 +154,6 @@ CREATE TABLE IF NOT EXISTS `keyword` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`keyword`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `keyword`
---
-
 
 -- --------------------------------------------------------
 
@@ -224,11 +173,6 @@ CREATE TABLE IF NOT EXISTS `location` (
   `state` char(2) DEFAULT NULL,
   PRIMARY KEY (`location_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `location`
---
-
 
 -- --------------------------------------------------------
 
@@ -252,12 +196,7 @@ CREATE TABLE IF NOT EXISTS `project` (
   `organization` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   FULLTEXT KEY `title` (`title`,`description`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `project`
---
-
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -272,11 +211,6 @@ CREATE TABLE IF NOT EXISTS `project_endorsement` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `project_endorsement`
---
-
 
 -- --------------------------------------------------------
 
@@ -300,11 +234,6 @@ CREATE TABLE IF NOT EXISTS `project_goal` (
   PRIMARY KEY (`project_goal_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
---
--- Dumping data for table `project_goal`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -325,11 +254,6 @@ CREATE TABLE IF NOT EXISTS `project_invite` (
   PRIMARY KEY (`project_invite_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
---
--- Dumping data for table `project_invite`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -344,11 +268,6 @@ CREATE TABLE IF NOT EXISTS `project_leader` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `project_leader`
---
-
 
 -- --------------------------------------------------------
 
@@ -368,11 +287,6 @@ CREATE TABLE IF NOT EXISTS `project_link` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_link_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `project_link`
---
-
 
 -- --------------------------------------------------------
 
@@ -394,11 +308,6 @@ CREATE TABLE IF NOT EXISTS `project_message` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_message_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `project_message`
---
-
 
 -- --------------------------------------------------------
 
@@ -430,11 +339,6 @@ CREATE TABLE IF NOT EXISTS `project_resource` (
   FULLTEXT KEY `title` (`title`,`description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
---
--- Dumping data for table `project_resource`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -448,11 +352,6 @@ CREATE TABLE IF NOT EXISTS `project__idea` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`idea_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `project__idea`
---
-
 
 -- --------------------------------------------------------
 
@@ -468,11 +367,6 @@ CREATE TABLE IF NOT EXISTS `project__project_resource` (
   PRIMARY KEY (`project_id`,`project_resource_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `project__project_resource`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -487,11 +381,6 @@ CREATE TABLE IF NOT EXISTS `project__user` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `project__user`
---
-
 
 -- --------------------------------------------------------
 
@@ -513,11 +402,6 @@ CREATE TABLE IF NOT EXISTS `site_feedback` (
   PRIMARY KEY (`site_feedback_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
---
--- Dumping data for table `site_feedback`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -531,10 +415,22 @@ CREATE TABLE IF NOT EXISTS `sms_stopped_phone` (
   PRIMARY KEY (`phone`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `sms_stopped_phone`
+-- Table structure for table `tasks`
 --
 
+DROP TABLE IF EXISTS `tasks`;
+CREATE TABLE IF NOT EXISTS `tasks` (
+  `task_id` int(11) NOT NULL AUTO_INCREMENT,
+  `task_name` varchar(255) DEFAULT NULL,
+  `status` char(1) DEFAULT NULL,
+  `owner_id` varchar(255) DEFAULT NULL,
+  `frequency` varchar(20) DEFAULT NULL,
+  `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`task_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
 
 -- --------------------------------------------------------
 
@@ -550,11 +446,6 @@ CREATE TABLE IF NOT EXISTS `twitter_user` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `twitter_id` (`twitter_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `twitter_user`
---
-
 
 -- --------------------------------------------------------
 
@@ -574,11 +465,6 @@ CREATE TABLE IF NOT EXISTS `unauthenticated_user` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`auth_guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `unauthenticated_user`
---
-
 
 -- --------------------------------------------------------
 
@@ -610,12 +496,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `phone` (`phone`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
---
--- Dumping data for table `user`
---
-
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -633,11 +514,6 @@ CREATE TABLE IF NOT EXISTS `user_group` (
   PRIMARY KEY (`user_group_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `user_group`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -652,11 +528,6 @@ CREATE TABLE IF NOT EXISTS `user__user_group` (
   PRIMARY KEY (`user_id`,`user_group_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `user__user_group`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -670,8 +541,3 @@ CREATE TABLE IF NOT EXISTS `web_session` (
   `data` text,
   UNIQUE KEY `session_id` (`session_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `web_session`
---
-
