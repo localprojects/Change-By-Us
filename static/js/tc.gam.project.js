@@ -28,7 +28,7 @@ tc.gam.project = function(options){
 		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
 		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{app:options.app})
 	};
-	
+		
 	if (tc.gam.project_widgets.fresh_ideas) {
 		this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.box.fresh-ideas'),{widget:this.widget},{app:options.app});
 	}
@@ -46,8 +46,12 @@ tc.gam.project = function(options){
 			if (tc.gam.project_widgets.goals_stack) {
 				e.data.project.components.goals_stack.hide(false);
 			}
+			if(tc.gam.project_widgets.members){
+				e.data.project.components.members.hide(false);
+			}
 			e.data.project.components.goals_add.hide(false);
 			e.data.project.components.add_link.hide(false);
+			e.data.project.components.related_resources.hide(false);
 		} else {
 			this.components.goals_main.show(false);
 			this.components.conversation.show(false);
@@ -137,6 +141,27 @@ tc.gam.project = function(options){
 			}
 			e.data.project.components.members.remove_idea(d.id);
 		}
+	};
+	
+	this.update_goals = function() {
+		tc.jQ.ajax({
+			type: 'GET',
+			url: '/project/goals',
+			data: {
+				project_id: me.data.project_id
+			},
+			context: me,
+			dataType:'text',
+			success:function(data,ts,xhr){
+				var d;
+				try{
+					d = tc.jQ.parseJSON(data);
+				}catch(e){
+					return;
+				}
+				this.dom.trigger("goals-refresh", [d]);
+			}
+		});
 	};
 
 	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);

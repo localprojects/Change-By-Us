@@ -1,0 +1,26 @@
+<div class='template-content modal-content merlin add-resource'>
+	<div class="step add-resource-project-info">
+		<h2>Add a <strong><span class="name">Resource</span></strong></h2>
+		<p class="no-name">Which project would you like to add this to?</p>
+		<form action='#' class="form-pane non-float checklist">
+			<div class="fields">
+				{% if d.template_data.user.data.projects|length > 0 %}
+					{% for project in d.template_data.user.data.projects %}
+						<div class="row">
+							<input type="radio" class="project-radio" rel="#project,{{ project.project_id }}" id="invite-project-{{ project.project_id }}" name="invite-project-name" />
+							<label for="invite-project-{{ project.project_id }}">{{ project.title }}</label>
+						</div>
+					{% endfor %}
+				{% endif %}
+			</div>
+			<a class='submit rounded-button' href="#">Add</a>
+		</form>
+	</div>
+
+	<div class='step add-resource-submit spinner-message'>
+		<p>Thanks for adding a resource to your project!</p>
+		<p><img src='/static/images/loader32x32.gif' /></p>
+	</div>
+
+	<a class='close' href="#"><span>close</span></a>
+</div>

@@ -1,8 +1,16 @@
 <div class='box goals-add' style='display:none;'>
-	<div class="actions">
-		<a href="#hide,goals_add" class="back fancy-caps">
-			<span>Back <span>to</span> Project Home</span>
-		</a>
+	<div class="hd clearfix">
+		<h2>
+			<span>
+				Goals 
+				<span class="counter">{{ d.template_data.project.data.info.goals['items']|length }}</span>
+			</span>
+		</h2>
+		<div class="actions">
+			<a class="back fancy-caps" href="#project-home">
+				<span>Back <span>to</span> Project Home</span>
+			</a>
+		</div>
 	</div>
 	
 	<div class="merlin add-goal form-pane">
@@ -45,8 +53,8 @@
 			</div>
 		</div>
 		
-		<div class='step finish spinner-message' style='display:none;'>
-			<p>Thank you for submitting an idea!</p>
+		<div class='step finish spinner-message clearfix' style='display:none;'>
+			<p>Thank you for submitting a goal!</p>
 			<p><img src='/static/images/loader32x32.gif' /></p>
 		</div>
 	</div>
@@ -57,122 +65,4 @@
 	<a class='close' href="#"><span>close</span></a>
 </div>
 
-<script>
-	if(!tc){ var tc = {}; }
-	if(!tc.gam){ tc.gam = {}; }
-	if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
-	
-	tc.gam.project_widgets.goals_add = function(project,dom,deps,options){
-		var widget, me;
-		tc.util.log("project.goals_add");
-		this.options = tc.jQ.extend({name:'goals_add'},options);
-		this.dom = dom;
-		widget = tc.gam.widget(this,project);
-		me = this;
-		this.handlers = {
-			
-		};
-		
-		this.components = {
-			merlin:null
-		};
-		
-		this.build_merlin = function(){
-			//if(!options.app.app_page.user){
-			//	options.app.components.modal.show({
-			//		source_element:tc.jQ('.modal-content.add-goal-no-user'),
-			//		init:function(modal,callback){
-			//			if(tc.jQ.isFunction(callback)){
-			//				callback(modal);
-			//			}
-			//		}
-			//	});
-			//	return false;
-			//}
-			if(this.components.merlin){
-				return;
-			}
-			this.components.merlin = new tc.merlin(options.app,{
-				name:'goals_add',
-				dom:dom.find('.merlin.add-goal'),
-				next_button:dom.find('a.ca-btn'),
-				//first_step:null,//'goal-info',
-				data:{
-					project_id:null,
-					text:null,
-					timeframe_n:null,
-					timeframe_unit:null,
-					user_id:null
-				},
-				steps:{
-					'goal-info':{
-						selector:'.step.info',
-						next_step:'goal-submit',
-						inputs:{
-							message:{
-								selector:'textarea.message',
-								validators:['min-3','max-140','required'],
-								hint:''
-							},
-							duration:{
-								selector:'select.duration',
-								validators:['selected'],
-								hint:''
-							},
-							point_person:{
-								selector:'select.point_person',
-								validators:['selected'],
-								hint:''
-							}
-						},
-						init:function(merlin,dom){
-							merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
-							merlin.current_step.inputs.duration.dom.val('-1').removeClass('has-been-focused').removeClass('has-attempted-submit');
-							merlin.current_step.inputs.point_person.dom.val('-1').removeClass('has-been-focused').removeClass('has-attempted-submit');
-						},
-						finish:function(merlin,dom){
-							merlin.options.data = tc.jQ.extend(merlin.options.data,{
-								project_id:merlin.app.app_page.data.project.project_id,
-								text:merlin.current_step.inputs.message.dom.val(),
-								timeframe_n:merlin.current_step.inputs.duration.dom.text().split(',')[0],
-								timeframe_unit:merlin.current_step.inputs.duration.dom.text().split(',')[1],
-								user_id:merlin.current_step.inputs.point_person.dom.text()
-							});
-						}
-					},
-					'goal-submit':{
-						selector:'.step.finish',
-						next_step:'goal-info',
-						init:function(merlin,dom){
-							tc.jQ.ajax({
-								type:'POST',
-								url:'/project/goal/add',
-								data:merlin.options.data,
-								context:merlin,
-								dataType:'text',
-								success:function(data,ts,xhr){
-									if(data == 'False'){
-										return false;
-									}
-									project.dom.trigger('goals-refresh');
-									//window.location.hash = 'goals_add,goal-info';
-									window.location.hash = 'project-home';
-								}
-							});
-						}
-					}
-				}
-			});
-		};
-		
-		this.build_merlin();
-		
-		return {
-			show:function(propagate){
-				widget.show(propagate);
-				window.location.hash = 'goals_add,goal-info';
-			},
-			hide:widget.hide
-		};
-	};
-</script>
+<script type='text/javascript' src="/static/js/pages/project.goal_add.js"></script>

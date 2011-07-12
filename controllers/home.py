@@ -1,5 +1,4 @@
 from framework.controller import *
-from framework.config import Config
 import giveaminute.location as mLocation
 import giveaminute.user as mUser
 import giveaminute.project as mProject
@@ -23,28 +22,11 @@ tw_consumer = oauth.Consumer(tw_settings['consumer_key'], tw_settings['consumer_
 tw_client = oauth.Client(tw_consumer)
 
 class Home(Controller):
-    """
-    GET and POST handlers for the homepage route.
-    """
-    
     def GET(self, action=None, param0=None):
-        """
-        Keyword arguments:
-        action -- The version of the homepage to show.  Valid values include:
-                  `'home'`, `'leaderboard'`, `'mobile'`, `'bb'`, `'login'`,
-                  `'twitter'`, `'facebook'`, `'nyc'`, `'beta'`.
-        param0 -- An additional parameter required for certain actions.  The
-                  `'twitter'` and `'facebook'` actions require an additional
-                  parameter.
-        """
-        
         project_user = dict(is_member = True,
                               is_project_admin = True)
         self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
-        
-        # NOTE: Why are the actions here?  Seems like this is a way of creating
-        #       additional route specifications.  Doesn't seem like something
-        #       the controller should be handling. - MP
+                                          
         if (not action or action == 'home'):
             return self.showHome()
         elif (action == 'leaderboard'):
@@ -478,11 +460,17 @@ class Home(Controller):
         name = self.request('name')
         email = self.request('email')
         comment = self.request('text')
+        t = self.request('type')
+        
+        if (t == 'feature'): feedbackType = 'feature'
+        elif (t == 'bugs'): feedbackType = 'bug'
+        else: feedbackType = 'general'
         
         try:
             self.db.insert('site_feedback', submitter_name = name,
                                             submitter_email = email,
                                             comment = comment,
+                                            feedback_type = feedbackType,
                                             created_datetime = None)
                                             
             return True

@@ -1,8 +1,10 @@
 import smtplib, os
 import helpers.custom_filters as custom_filters
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
+
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+
 from email import Encoders
 from lib.web.contrib.template import render_jinja
 from lib.jinja2.exceptions import TemplateNotFound
@@ -35,12 +37,13 @@ class Emailer():
             addresses = [r.strip() for r in addresses.split(',')]
 
         if html:
-            msg = MIMEMultipart('alternative')
-            msg.attach(MIMEText(text, 'plain'))
-            msg.attach(MIMEText(html, 'html'))
+            # SR: Theres' a problem with gmail and multi-part messages. So may as well just send html
+            # msg = MIMEMultipart('alternative')
+            # msg.attach(MIMEText(html, 'html'))
+            # msg.attach(MIMEText(text, 'plain'))
+            msg = MIMEText(html, 'html')
         else:
-            # msg = MIMEText(text, 'plain')
-            msg = text
+            msg = MIMEText(text, 'plain')
 
         if attachment:
             tmpmsg = msg
@@ -55,10 +58,15 @@ class Emailer():
             msg.attach(part)
 
         sender = from_name + "<" + from_address + ">"
+        
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = ", ".join(addresses)
 
-        # account = Config.get('email').get('smtp')
         try:
-            webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment, **kwargs)
+            # The use_msg_directly parameter should be set to True if we're adding message headers. This is the case
+            # with MIMEText() usage. If we send text directly (ie without MIMEText()) then use_msg_directly should be False
+            webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment, use_msg_directly=True, **kwargs)
 
         except Exception, e:
             log.error("Could not send email (%s)" % e)
@@ -74,4 +82,4 @@ class Emailer():
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')      
         renderer._lookup.filters.update(custom_filters.filters)
         return (renderer[template_name + "." + suffix](template_values)).encode('utf-8')
-        
+    

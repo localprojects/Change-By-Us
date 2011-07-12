@@ -8,8 +8,22 @@ class ProjectResource():
         self.data = self.populateResourceData()
         
     def populateResourceData(self):
-        sql = """select project_resource_id, title, description, url, contact_name, contact_email, image_id, location_id, is_official
-                from project_resource where project_resource_id = $id;"""
+        sql = """select pr.project_resource_id, 
+                        pr.title, 
+                        pr.description, 
+                        pr.url, 
+                        pr.contact_name, 
+                        pr.contact_email, 
+                        pr.image_id, 
+                        pr.location_id, 
+                        pr.is_official,
+                        o.user_id as owner_user_id,
+                        o.first_name as owner_first_name,
+                        o.last_name as owner_last_name,
+                        o.email as owner_email
+                from project_resource pr 
+                left join user o on o.user_id = pr.contact_user_id
+                where pr.project_resource_id = $id;"""
         
         try:
             data = list(self.db.query(sql, {'id':self.id}))
