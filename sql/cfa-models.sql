@@ -487,6 +487,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `location_id` int(11) DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   `affiliation` varchar(100) DEFAULT NULL,
+  `group_membership_bitmask` tinyint(1) NOT NULL DEFAULT 1,
   `is_oncall` tinyint(1) NOT NULL DEFAULT '0',
   `email_notification` enum('none','digest') NOT NULL DEFAULT 'digest',
   `last_account_page_access_datetime` timestamp NULL DEFAULT NULL,
