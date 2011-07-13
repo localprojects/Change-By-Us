@@ -9,12 +9,10 @@ tc.gam = tc.gam || {};
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 /**
- * Add file widget
+ * Add file widget for projects
  */
 tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
     var me = this;
-
-    tc.util.log("project.add_file");
 
     // Set options and properties (??)
     this.options = tc.jQ.extend({name:'add_file'}, options);
@@ -25,12 +23,11 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
     this.elements = { window: tc.jQ(window) };
     this.components = { merlin: null }
 
-    // Build Merlin (??)
+    // Build Merlin component (??)
     this.build_merlin = function() {
         if (this.components.merlin) {
             return;
         }
-console.log('merlinning');
         this.components.merlin = new tc.merlin(options.app, {
             name: 'add-file',
             dom: dom.find('.merlin.add-file'),
