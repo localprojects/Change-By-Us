@@ -580,7 +580,7 @@ class Admin(Controller):
             
                 mMessaging.emailResourceApproval(resource.data.contact_email, resource.data.title)
                 
-                if (resource.data.owner_email):
+                if (resource.data.owner_email and resource.data.owner_email != resource.data.contact_email):
                     mMessaging.emailResourceApproval(resource.data.owner_email, resource.data.title)
                 return True
             else:
