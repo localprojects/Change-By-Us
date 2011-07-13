@@ -12,21 +12,25 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
  * Add file widget
  */
 tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
-    var widget = tc.gam.widget(this, project);;
     var me = this;
 
-    // Set options and properties
+    tc.util.log("project.add_file");
+
+    // Set options and properties (??)
     this.options = tc.jQ.extend({name:'add_file'}, options);
     this.dom = dom;
+    var widget = tc.gam.widget(this, project);
+    
     this.handlers = {};
     this.elements = { window: tc.jQ(window) };
     this.components = { merlin: null }
-    
+
     // Build Merlin (??)
     this.build_merlin = function() {
         if (this.components.merlin) {
             return;
         }
+console.log('merlinning');
         this.components.merlin = new tc.merlin(options.app, {
             name: 'add-file',
             dom: dom.find('.merlin.add-file'),
@@ -53,11 +57,13 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
                                 limit: 50
                             }
                         },
+                        /*
                         file: {
                             selector: 'input.file-attach',
                             validators: ['required'],
                             hint: 'Browse for file to upload'
                         }
+                        */
                     },
                     init: function(merlin, dom) {
                         merlin.current_step.inputs.title.dom
@@ -65,21 +71,23 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
                             .removeClass('has-attempted-submit')
                             .val('')
                             .triggerHandler('keyup');
+                        /*
                         merlin.current_step.inputs.file.dom
                             .removeClass('has-been-focused')
                             .removeClass('has-attempted-submit')
                             .val('')
                             .triggerHandler('keyup');
+                        */
                         
                         merlin.current_step.inputs.title.dom.val('Title');
-                        merlin.current_step.inputs.file.dom.val('File');
+                        //merlin.current_step.inputs.file.dom.val('File');
                         
                     },
                     finish: function(merlin, dom) {
                         merlin.options.data = tc.jQ.extend(merlin.options.data, {
                             project_id: merlin.app.app_page.data.project.project_id,
                             title: merlin.current_step.inputs.title.dom.val(),
-                            file: merlin.current_step.inputs.file.dom.val()
+                            //file: merlin.current_step.inputs.file.dom.val()
                         });
                     }
                 },
@@ -109,8 +117,8 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
     
     // Call the build step (??)
     this.build_merlin();
-    
-    // Return values
+
+    // Return object
     return {
         show: function(propagate) {
             widget.show(propagate);
