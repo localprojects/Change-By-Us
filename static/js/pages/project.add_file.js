@@ -46,14 +46,14 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
                     inputs: {
                         title: {
                             selector:'input.file-title',
-                            validators:['min-3', 'max-50', 'required'],
+                            validators: ['min-3', 'max-50', 'required'],
                             hint: 'File title',
                             counter:{
                                 selector: '.charlimit.title',
                                 limit: 50
                             }
                         },
-                        file:{
+                        file: {
                             selector: 'input.file-attach',
                             validators: ['required'],
                             hint: 'Browse for file to upload'
@@ -65,7 +65,7 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
                             .removeClass('has-attempted-submit')
                             .val('')
                             .triggerHandler('keyup');
-                        merlin.current_step.inputs.url.dom
+                        merlin.current_step.inputs.file.dom
                             .removeClass('has-been-focused')
                             .removeClass('has-attempted-submit')
                             .val('')

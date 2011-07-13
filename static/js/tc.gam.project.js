@@ -101,7 +101,7 @@ tc.gam.project = function(options){
 					e.data.project.components.related_resources.hide(false);
 					break;
 					
-				case 'add_link':
+				case 'add_file':
 					e.data.project.components.goals_main.hide(false);
 					if (tc.gam.project_widgets.goals_stack) {
 						e.data.project.components.goals_stack.hide(false);
