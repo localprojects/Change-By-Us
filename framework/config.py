@@ -75,7 +75,11 @@ class Config():
 
         """
         try:
-            return self.get('dev')
+            dev = self.get('dev')
+            if isinstance(dev, bool):
+                return dev
+            else:
+                return False
         except KeyError, e:
             return False
         

@@ -32,11 +32,23 @@ class ConfigTest (TestCase):
     
     def test_dev(self):
         """
-        Test `dev` method
+        Test `dev` method with various manually values
         
         """
         dev = Config.dev()
         self.assertIsInstance(dev, bool)
+        
+        Config.data['dev'] = 'True'
+        dev = Config.dev()
+        self.assertFalse(dev)
+        
+        Config.data['dev'] = True
+        dev = Config.dev()
+        self.assertTrue(dev)
+        
+        Config.data['dev'] = 'Yes'
+        dev = Config.dev()
+        self.assertFalse(dev)
     
     def test_manualSetConfig(self):
         """
