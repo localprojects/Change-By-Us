@@ -28,9 +28,11 @@ class Info():
                 if ip is None:
                     ip = "No IP Address"
             except (AttributeError, NameError):
-                ip = "X.X.X.X"            
+                ip = "X.X.X.X"
+                     
             ip = "%s%s" % (ip, ''.join(' ' for i in range(15 - len(ip))))
             return ip
+            
         return self.__dict__.get(name, "?")
         
     def __iter__(self):
