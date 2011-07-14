@@ -103,6 +103,9 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 						}
 						temptd = tc.jQ('<td></td>').append(tc.jQ('.template-content.organization-table-cell').clone().children());
 						temptd.attr('title',d.resources[i].title);
+						if(d.resources[i].is_official == true){
+							temptd.find('.official-resource-alt').css('display','block');
+						}
 						if(d.resources[i].image_id){
 							temptd.find('img').attr('src',media_root+'images/'+(d.resources[i].image_id%10)+'/'+d.resources[i].image_id+'.png');
 						}
@@ -121,7 +124,6 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 				default:
 					return;
 			}
-			tc.addOfficialResourceTags(e.data.me.elements.organizations_table);
 		},
 		remove_resource:function(e){
 			e.preventDefault();

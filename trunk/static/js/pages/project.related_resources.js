@@ -102,7 +102,7 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 				temp += '<img src="/static/images/thumb_genAvatar30.png" width="30" height="30" alt="" /></span>'
 			};
 
-			temp += '<span class="resource-name" ><span>'+
+			temp += '<span class="resource-name" >' + (resource.is_official ? "<span class='official-resource-alt'>Official Resource</span>" : "") + '<span>'+
 			            '<span class="organization-name tooltip_trigger" rel="#organization,'+ resource.link_id +'">'+ 
 			                resource.title +
 			            '</span></span></span>';
@@ -159,8 +159,6 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 				}
 			});
 		});
-		
-		tc.addOfficialResourceTags(tc.jQ('.related-resources .resources-list'));
 	}
 	
 	function no_resources() {
