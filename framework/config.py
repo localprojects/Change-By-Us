@@ -27,8 +27,8 @@ class Config():
             c = open(os.path.dirname(__file__) + "/../config.yaml")
         except Exception:
             c = open(os.path.dirname(__file__) + "/config.yaml")
-            
-        self.data = yaml.load(c)            
+
+        self.data = yaml.load(c)           
     
     @classmethod
     def get(self, key):
