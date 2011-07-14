@@ -610,3 +610,10 @@ def flatten(l, ltypes=(list, tuple)):
                 l[i:i + 1] = l[i]
         i += 1
     return ltype(l)
+    
+def getBit(i, index):
+    return ((i & (1 << index)) != 0)
+
+def setBit(i, index):
+    mask = 1 << index
+    return(i | mask)

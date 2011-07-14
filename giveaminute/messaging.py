@@ -11,7 +11,7 @@ def emailInvite(email, inviterName, projectId, title, description):
     subject = "You've been invited by %s to join a project" % inviterName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
     body = Emailer.render('email/project_invite', 
-                          {'subject':subject, 'title':title, 'description':description, 'link': link}, 
+                          {'inviter':inviterName, 'title':title, 'description':description, 'link': link}, 
                           suffix = 'txt')     
     try:
         return Emailer.send(email, 
@@ -28,7 +28,7 @@ def emailInvite(email, inviterName, projectId, title, description):
 def emailProjectJoin(email, projectId, title, userId, userName):
     emailAccount = Config.get('email')
     defaultUrl = Config.get('default_host')
-    subject = "A new member %s has joined your group %s" % (userName, title)
+    subject = "A new member %s has joined your project %s" % (userName, title)
     userLink = "%suseraccount/%s" % (defaultUrl, str(userId))
     memberLink = "%sproject/%s#show,members" % (defaultUrl, str(projectId))
     body = Emailer.render('email/project_join',
@@ -89,6 +89,25 @@ def emailResourceNotification(email, projectId, title, description, resourceName
 #         log.info("*** couldn't send resource notification email")
 #         log.error(e)
 #         return False
+      
+# email resource owner on approval
+def emailResourceApproval(email, title):
+    emailAccount = Config.get('email')
+    subject = "Your resource has been approved"
+    body = Emailer.render('email/resource_approval',
+                        {'link':Config.get('default_host'),
+                        'title':title},
+                        suffix = 'txt')
+    try:
+        return Emailer.send(email, 
+                            subject, 
+                            body,
+                            from_name = emailAccount['from_name'],
+                            from_address = emailAccount['from_email'])  
+    except Exception, e:
+        log.info("*** couldn't send resource approval email")
+        log.error(e)
+        return False
         
 # email deleted users
 def emailAccountDeactivation(email):

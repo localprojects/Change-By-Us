@@ -12,6 +12,14 @@ tc.app.prototype.init = function(page){
 	_me = this;
 	this.app_page = page;
 	
+	if (page.data.info_addr) {
+    	$('.nospam.infomail').html(makeEmailLink(page.data.info_addr.name, page.data.info_addr.domain));
+	}
+	
+	tc.jQ.ajaxSetup({
+		cache:false
+	});
+	
 	if(page.features){
 		for(i in page.features){
 			if(tc.jQ.isFunction(page.features[i])){
@@ -121,12 +129,25 @@ tc.truncate = function(str, len, suffix) {
 	return str;
 };
 
+tc.randomNoteCardBg = function(ideasList) {
+	var ideas = ideasList.children('li');
+	for (i=0; i < ideas.length; i++) {
+		ideas.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
+	}
+};
+
+makeEmailLink = function(name, domain) {
+    addr = name + '@' + domain;
+    s = '<a href="mailto:' + addr + '">' + addr + '</a>';
+    return s;
+}
 
 /* Browser Detection Stuff */
 var ua = tc.jQ.browser;
 var os;
 var isMsie8orBelow = false;
 var isMsie7orBelow = false;
+var isiPad = false;
 
 if( ua && ua.msie && ua.version < 9 ) {
 	isMsie8orBelow = true;
@@ -152,6 +173,11 @@ if (navigator.appVersion.indexOf("Win")!=-1) {
 	os = 'windows';
 } else if (navigator.appVersion.indexOf("Mac")!=-1) {
 	os = 'mac'
-};	
+};
+
+if (navigator.userAgent.match(/iPad/i) != null) {
+	os = 'ipad';
+	isiPad = true;
+}
 
 tc.jQ('body').addClass(os);

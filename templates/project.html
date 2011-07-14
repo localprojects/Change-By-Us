@@ -59,7 +59,7 @@ Change by Us NYC - Project
 			{% endif %}
 		</div>
 		<div class="main">
-			<h1><a href='#project-home'>{{ d.template_data.project.data.info.title }}</a></h1>
+			<h1><a href='/project/{{ d.template_data.project.data.project_id }}'>{{ d.template_data.project.data.info.title }}</a></h1>
 			<cite class="meta">
 				<span class="fancy-caps">Created <span>by</span></span> <strong><a href='/useraccount/{{ d.template_data.project.data.info.owner.u_id }}'>{{ d.template_data.project.data.info.owner.name }}</a></strong>
 			</cite>
@@ -93,6 +93,7 @@ Change by Us NYC - Project
 			{% endif %}
 			{% include 'project/related_resources.html' %}
 			{% include 'project/add_link.html' %}
+			{% include 'project/add_file.html' %}
 			{% include 'project/goals_main.html' %}
 			{% include 'project/goals_add.html' %}
 			{% include 'project/goals_stack.html' %}
@@ -161,7 +162,7 @@ Change by Us NYC - Project
 				<div class="replace-prompt">
 					Do you want to replace
 					<select class="replace-project-options"></select>
-					with <span class="serif project-name"></span>
+					with <span class="serif project-name">&nbsp;</span>
 					in the Featured Projects section on the homepage?
 				</div>
 				<div class="actions yesno">
@@ -233,403 +234,34 @@ Change by Us NYC - Project
 
 
 {% block page_js %}
-<script>
-	{% if d.template_data and d.template_data.project %}
-		app_page.data.project = {{ d.template_data.project.json }};
-	{% else %}
-		app_page.data.project = null;
-	{% endif %}
-
-	tc.util.log('Give A Minute: Project');
-	
-	tc.util.log(' ');
-	tc.util.log('PROJECT DATA!!!');
-	tc.util.dump(app_page.data.project);
-	tc.util.log("PROJECT USER");
-	tc.util.dump(app_page.project_user);
-	tc.util.log(' ');
-	
-	{% if d.template_data.project.data.info.owner %}
-		app_page.data.contact_modal = {
-			to_u_name: '{{ d.template_data.project.data.info.owner.name }}',
-			to_u_id: {{ d.template_data.project.data.info.owner.u_id }}
-		};
-	{% endif %}
-		
-</script>
-<script type="text/javascript" src="/static/js/tc.gam.contact.js"></script>
-
-<script type='text/javascript' >
-
-	app_page.features.push(function(app){
-		app.components.project = new tc.gam.project({
-			app:app,
-			data:app_page.data.project,
-			project_user:app_page.project_user,
-			dom:tc.jQ('.continent.project')
-		});
-		
-		tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded', {app:app, project:app.components.project}, function(e, d){
-			e.data.app.components.modal.hide();
-			if(d.responseJSON.thumbnail_id){
-				tc.jQ.ajax({
-					type:'POST',
-					url:'/project/photo',
-					data:{
-						project_id:e.data.project.data.project_id,
-						image_id:d.responseJSON.thumbnail_id
-					},
-					dataType:'text',
-					success:function(data,ts,xhr){
-						tc.jQ('img.proj').attr('src','{{d.template_data.media_root}}images/'+(d.responseJSON.thumbnail_id % 10)+'/'+d.responseJSON.thumbnail_id+'.png');
-					}
-				});
-			}
-		});
-		
-		tc.jQ('a.change-image').bind('click',{
-			app:app,
-			source_element:tc.jQ('.modal-content.upload-image'),
-			init:function(modal,callback){
-				var uploader = new qq.FileUploader({
-					element: modal.options.element.find('.file-uploader').get(0),
-					action: '/create/photo',
-					onComplete: function(id, fileName, responseJSON){
-						
-						tc.jQ(document).trigger('create-image-uploaded',{
-							id:id,
-							fileName:fileName,
-							responseJSON:responseJSON
-						});
-						
-						return true;
-					}
-				});
-				if(tc.jQ.isFunction(callback)){
-					callback(modal);
-				}
-			}
-		},function(e,d){
-			e.preventDefault();
-			e.data.app.components.modal.show(e.data);
-		});
-		
-		// Join
-		tc.jQ('a.join-project').bind('click',{
-			app:app,
-			no_user:{
-				source_element:tc.jQ('.modal-content.join-no-user'),
-				init:function(modal,event_target,callback){
-					
-					if(tc.jQ.isFunction(callback)){
-						callback(modal);
-					}
-				}
-			},
-			user:{
-				source_element:tc.jQ('.modal-content.introduce-yourself'),
-				init:function(modal,event_target,callback){
-					var modal_merlin;
-					modal_merlin = new tc.merlin(app,{
-						dom:modal.options.element.find('.introduce-yourself'),
-						first_step:'introduce-message-step',
-						data:{
-							project_id:app.app_page.data.project.project_id,
-							message:null
-						},
-						steps:{
-							'introduce-message-step':{
-								selector:'.introduce-message-step',
-								inputs:{
-									message:{
-										selector:'textarea.introduce-message',
-										validators:['max-200']
-									}
-								},
-								init:function(merlin,dom){
-									merlin.dom.mouseenter(function(){
-										merlin.current_step.inputs.message.dom.focus();
-									});
-									dom.find('.submit').bind('click',{merlin:merlin,dom:dom},function(e,d){
-										e.preventDefault();
-										if(dom.hasClass('invalid')){
-											return;
-										}
-										window.location.hash = 'finish';
-									});
-								},
-								finish:function(merlin,dom){
-									merlin.options.data.message = merlin.current_step.inputs.message.dom.val();
-								}
-							},
-							'finish':{
-								selector:'.finish',
-								init:function(merlin,dom){
-									tc.jQ.ajax({
-										type:'POST',
-										url:'/project/join',
-										data:merlin.options.data,
-										context:merlin,
-										dataType:'text',
-										success:function(data,ts,xhr){
-											window.location.reload(true);
-										}
-									});
-								}
-							}
-						}
-					});
-					if(tc.jQ.isFunction(callback)){
-						callback(modal);
-					}
-				}
-			}
-		},function(e,d){
-			if(!e.data.app.app_page.user){
-				e.data.app.components.modal.show(e.data.no_user, e.target);
-			} else {
-				e.data.app.components.modal.show(e.data.user, e.target);
-			}
-		});
-		
-		// Leave project
-		tc.jQ("a.leave-project").bind("click", {app:app}, function(e, d) {
-			var t;
-			t = tc.jQ(this);
-			e.preventDefault();
-			e.data.app.components.modal.show({
-				app: app,
-				source_element: tc.jQ(".modal-content.leave-project"),
-				submit: function(modal, callback) {
-					tc.jQ.ajax({
-						type: "POST",
-						url: "/project/leave",
-						data: {
-							project_id: t.attr("href").split(",")[1]
-						},
-						context: app,
-						dataType: "text",
-						success: function(data, ts, xhr) {
-							if (data == "False") {
-								return false;
-							}
-							//t.replaceWith("You have left <span class='uncaps'>this</span> project");
-							window.location.reload(true);
-						}
-					});
-				}
-			});
-		});
-		
-		tc.gam.ideas_invite(app, {
-			elements: tc.jQ('a.invite'),
-			ref_project_id: app.components.project.data.project_id
-		});
-		
-		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-			// Feature this project
-			tc.jQ(".adminbar > .feature a").bind("click", {
-					app: app,
-					source_element: tc.jQ(".modal-content.feature-project-dialog"),
-					init: function(modal, event_target, callback) {
-						var modal_merlin;
-						modal_merlin = new tc.merlin(app, {
-							name: "feature_project",
-							dom: modal.options.element.find(".feature-project-dialog"),
-							next_button: modal.options.element.find(".actions .submit"),
-							first_step: "feature-this-project",
-							data: {
-								project_id: app.app_page.data.project.project_id,
-								replace_project_id: null
-							},
-							has_done_GET: false,
-							already_featured_projects: null,
-							max_featured_projects: 6,
-							need_to_replace: false,
-							steps: {
-								"feature-this-project": {
-									selector: ".feature-this-project",
-									next_step: "feature-this-project-submit",
-									init: function(merlin, dom) {
-										dom.find(".project-name").text(app.app_page.data.project.info.title);
-										if (!merlin.options.has_done_GET) {
-											tc.jQ.ajax({
-												type:"GET",
-												url:"/project/featured",
-												context:merlin,
-												dataType:"text",
-												success: function(data, ts, xhr) {
-													var d;
-													try {
-														d = tc.jQ.parseJSON(data);
-													} catch(e) {
-														tc.util.log("/project/featured: json parsing error", "warn");
-														return;
-													}
-													
-													this.options.already_featured_projects = d;
-													if (d.length >= this.options.max_featured_projects) {
-														this.options.need_to_replace = true;
-														(function() {
-															var select;
-															select = dom.find(".replace-prompt select");
-															tc.jQ.each(d, function(i, fp) {
-																var option;
-																option = tc.jQ("<option value='"+ fp.project_id +"'>"+
-																	fp.title +"</option>");
-																select.append(option);
-															});
-															/*select.jqDropDown({ 
-																direction: 'down',
-																placeholder: '.replace-project-options'
-															});*/
-														}());
-													} else {
-														dom.find(".replace-prompt").remove();
-													}
-												}
-											});
-											merlin.options.has_done_GET = true;
-										}
-									},
-									finish: function(merlin, dom) {
-										if (merlin.options.need_to_replace) {
-											merlin.options.data.replace_project_id = 
-												dom.find(".replace-prompt select option:selected").attr("value");
-										} else {
-											delete merlin.options.data.replace_project_id;
-										}
-									}
-								},
-								"feature-this-project-submit": {
-									selector: ".feature-this-project-submit",
-									init: function(merlin, dom) {
-										tc.jQ.ajax({
-											type:"POST",
-											url:"/admin/project/feature",
-											data: merlin.options.data,
-											context:merlin,
-											dataType:"text",
-											success: function(data, ts, xhr) {
-												if (data == "False") {
-													window.location.hash = "feature_project,feature-this-project-error";
-													return false;
-												}
-												tc.jQ(event_target).html("Featured Project!").parent().addClass("state-disabled");
-												tc.timer(1000, function() {
-													modal.hide();
-												});
-											}
-										});
-									}
-								},
-								"feature-this-project-error": {
-									selector: ".feature-this-project-error",
-									init: function(merlin, dom) {
-										tc.timer(1000, function() {
-											modal.hide();
-										});
-									}
-								}
-							}
-						});
-						if (tc.jQ.isFunction(callback)) {
-							callback(modal);
-						}
-					}
-				},
-				function(e,d){
-					var t;
-					e.preventDefault();
-					t = e.target;
-					if (t.nodeName == 'SPAN'){
-						t = t.parentNode;
-					}
-					if (tc.jQ(t.parentNode).hasClass("state-disabled")) {
-						return;
-					}
-					e.data.app.components.modal.show(e.data, t);
-				}
-			);
-			
-			// Delete project
-			tc.jQ('a.delete-project').bind('click',{app:app},function(e,d){
-				var t;
-				e.preventDefault();
-				t = e.target;
-				if(t.nodeName == 'SPAN'){
-					t = t.parentNode;
-				}
-				e.data.app.components.modal.show({
-					app:app,
-					source_element:tc.jQ('.modal-content.project-delete'),
-					submit:function(modal,callback){
-						tc.jQ.ajax({
-							type:'POST',
-							url:'/admin/project/delete',
-							data:{
-								project_id:t.hash.split(',')[1]
-							},
-							context:app,
-							dataType:'text',
-							success:function(data,ts,xhr){
-								if(this.app_page.data.redir_from){
-									window.location = this.app_page.data.redir_from;
-								} else {
-									window.location = '/';
-								}
-							}
-						});
-					}
-				});
-			});
+	<script>
+		{% if d.template_data and d.template_data.project %}
+			app_page.data.project = {{ d.template_data.project.json }};
+		{% else %}
+			app_page.data.project = null;
 		{% endif %}
-		
-		// random note-card backgrounds
-		var ideasList = tc.jQ('.ideas-invite .items li');
-		for (i=0; i < ideasList.length; i++) {
-			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-		};
-		
-		// add 'official resource' tags to resources
-		tc.addOfficialResourceTags(tc.jQ('.box.resources .organizations table.resources-list'));
-		
-	});
-</script>
-
-
-
-<script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
-<script type="text/javascript">	
-	tc.jQ(function() {  
-		tc.jQ("select.duration").jqDropDown({ 
-			direction: 'down',
-			effect: 'fade',
-			effectSpeed: 150,
-			placeholder: '.duration'
-		});
-		tc.jQ("select.point_person").jqDropDown({ 
-			direction: 'down',
-			effect: 'fade',
-			effectSpeed: 150,
-			placeholder: '.point_person'
-		});
-		tc.jQ("select.message_filter_select").show().jqDropDown({ 
-			direction: 'down',
-			effect: 'fade',
-			effectSpeed: 150,
-			placeholder: '.message_filter_select'
-		});
-		
-	});
-</script>
-
-<!--[if lte IE 8]>
-	<script type="text/javascript">
-		$('.headlands .thumb').hover(
-			function () { tc.jQ('.change-image').addClass('hover'); },
-			function () { tc.jQ('.change-image').removeClass('hover'); }
-		);
+	
+		{% if d.template_data.project.data.info.owner %}
+			app_page.data.contact_modal = {
+				to_u_name: '{{ d.template_data.project.data.info.owner.name }}',
+				to_u_id: {{ d.template_data.project.data.info.owner.u_id }}
+			};
+		{% endif %}
 	</script>
-<![endif]-->
+
+	<script type="text/javascript" src="/static/js/tc.gam.contact.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
+	<script type='text/javascript' src="/static/js/pages/project.js"></script>
+	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<script type='text/javascript' src="/static/js/pages/project.admin.js"></script>
+	{% endif %}
+
+	<!--[if lte IE 8]>
+		<script type="text/javascript">
+			$('.headlands .thumb').hover(
+				function () { tc.jQ('.change-image').addClass('hover'); },
+				function () { tc.jQ('.change-image').removeClass('hover'); }
+			);
+		</script>
+	<![endif]-->
 {% endblock page_js %}

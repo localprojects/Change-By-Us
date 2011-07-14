@@ -16,7 +16,7 @@ class IdeaTests (unittest.TestCase):
         self.idea_id = mIdea.createIdea(self.db, "my great idea!", self.nyc_loc_id, self.submission_type, self.user_id, self.email, self.phone)
 
     def test_get_db(self):
-        self.assertIsNotNone(self.db)
+        self.assertTrue(hasattr(Controller, 'get_db'))
 
     def test_idea_id(self):
         self.assertIsNotNone(self.idea_id)

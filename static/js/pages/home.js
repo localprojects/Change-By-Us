@@ -251,7 +251,7 @@ app_page.features.push(function(app){
 								if (i == 2) { break; }
 								temphtml = tc.jQ('.template-content.project-item').clone().removeClass('template-content');
 								if (data[i].image_id > -1){
-									temphtml.find('img').attr('src',app_page.media_root + 'images/'+(data[i].image_id % 10)+'/'+data[i].image_id+'.png');
+									temphtml.find('img').attr('src',app.app_page.media_root + 'images/'+(data[i].image_id % 10)+'/'+data[i].image_id+'.png');
 								} else {
 									temphtml.find('img').attr('src','/static/images/thumb_genAvatar50.png');
 								}

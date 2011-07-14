@@ -233,7 +233,13 @@ tc.merlin.prototype.show_step = function(step,force){
 	if(this.current_step && !force){
 		//this.current_step.dom.find('input, textarea').unbind('keyup change');
 		
+		tc.util.dump(step);
+		tc.util.dump(this.current_step.step_name);
+		
 		if(step == this.current_step.step_name){
+			if(!this.current_step.dom.filter(':visible').length){
+				this.current_step.dom.show();
+			}
 			return;
 		}
 		if(this.current_step){
@@ -332,7 +338,7 @@ tc.merlin.prototype.show_step = function(step,force){
 		}
 	}
 	
-	if (this.options.use_hashchange) {
+	if (this.options.use_hashchange && !this.current_step.supress_hash) {
 		if(this.options.name){
 			window.location.hash = this.options.name+','+step;
 		} else {
@@ -367,7 +373,7 @@ tc.merlin.prototype.set_address = function(hash) {
 
 tc.merlin.prototype.validate = function(on_submit){
 	tc.util.log('tc.merlin.validate1');
-	var i, valid, temp_valid, j;
+	var i, valid, temp_valid;
 	if(!this.current_step.inputs){
 		return true;
 	}
@@ -379,13 +385,19 @@ tc.merlin.prototype.validate = function(on_submit){
 		}
 		if(on_submit){
 			this.current_step.inputs[i].dom.addClass('has-been-focused has-attempted-submit');
+			if(this.current_step.inputs[i].hint && (this.current_step.inputs[i].dom.val() == this.current_step.inputs[i].hint)){
+				this.current_step.inputs[i].dom.val('');
+			}
 		}
 		if(tc.jQ.isFunction(this.current_step.inputs[i].validators)){
 			temp_valid = this.current_step.inputs[i].validators(this,this.current_step.inputs[i].dom,this.current_step);
 		} else {
 			temp_valid = tc.validate(this.current_step.inputs[i].dom,this.current_step.inputs[i].validators);
 		}
+		
+		
 		if(!temp_valid.valid){
+			tc.util.dump(temp_valid);
 			valid = false;
 			if(this.current_step.inputs[i].counter && this.current_step.inputs[i].dom.hasClass('has-been-focused')){
 				this.current_step.inputs[i].counter.dom.addClass('invalid').removeClass('valid');
@@ -457,15 +469,18 @@ tc.merlin.prototype.handlers = {
 			return;
 		}
 		if(e.data.me.current_step && e.data.me.current_step.next_step){
-			if (e.data.me.options.use_hashchange) {
-				if(e.data.me.options.name){
-					window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
-				} else {
-					window.location.hash = e.data.me.current_step.next_step;
-				}
-			} else {
-				e.data.me.show_step( e.data.me.current_step.next_step );
-			}
+			
+			e.data.me.show_step( e.data.me.current_step.next_step );
+			
+			//if (e.data.me.options.use_hashchange) {
+			//	if(e.data.me.options.name){
+			//		window.location.hash = e.data.me.options.name+','+e.data.me.current_step.next_step;
+			//	} else {
+			//		window.location.hash = e.data.me.current_step.next_step;
+			//	}
+			//} else {
+			//	e.data.me.show_step( e.data.me.current_step.next_step );
+			//}
 		}
 	},
 	focus:function(e,d){

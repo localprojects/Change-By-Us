@@ -5,6 +5,7 @@ import giveaminute.location as mLocation
 import framework.util as util
 from framework.controller import *
 from framework.image_server import *
+from framework.file_server import FileServer
 from PIL import Image
 import lib.web
 import json
@@ -28,6 +29,12 @@ class CreateProject(Controller):
             imageId = self.uploadImage()
         
             return self.json(dict(thumbnail_id = imageId, success = (imageId != None) ))
+            
+        elif (action == 'file'):
+            # Requires a parameter qqfile
+            fileId = self.uploadFile()
+            return self.json(dict(file_id = fileId, success = (fileId != None)))
+            
         else:
             return self.newProject()  
         
@@ -100,5 +107,18 @@ class CreateProject(Controller):
         imageId = ImageServer.add(self.db, data, 'giveaminute', [100, 100])
         
         return imageId
+                        
+    def uploadFile(self):
+        """
+        """
+        if (len(self.request('qqfile')) > 100):
+            log.info("*** == %s" % type(web.input()['qqfile']))
+            data = web.input()['qqfile']
+        else:
+            data = web.data()
+        
+        fileId = FileServer.add(self.db, data, 'giveaminute', [100, 100])
+        
+        return fileId
                         
     

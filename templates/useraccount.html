@@ -20,22 +20,22 @@ Change by Us NYC - User Account
 	<!--<div class='headlands'>
 	</div>-->
 	
-	<div class='midlands merlin clearfix {% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}is-leader{% endif %}'>
+	<div class='midlands merlin clearfix {% if d.template_data and d.template_data.user_activity.data.user.is_leader == true %}is-leader{% endif %}'>
 		<div class="west">
 			<div class="box user-account-nav">
 				<div class="hd clearfix">
 					<div class='box box-thumb'>
 						<div class="leader-tag"><span>City Leader</span></div>
 						<div class="thumb">
+							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+								<a class="change-image change-profile-image" href="#">
+									<span>Change Photo</span>
+								</a>
+							{% endif %}
 							{% if d.template_data.user_activity.data.user.image_id > 0 %}
 								<img width='90' src='{{d.template_data.media_root}}images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
 							{% else %}
 								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
-							{% endif %}
-							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-								<div class="addphoto" style="display:none">
-									<a href="#">Change Photo</a>
-								</div>
 							{% endif %}
 						</div>
 					</div>
@@ -68,16 +68,15 @@ Change by Us NYC - User Account
 							
 							{% endif %}
 							
-							<!--{%- if d.template_data.user_profile_email -%}<div class="user-email">(<a href="mailto:{{d.template_data.user_profile_email}}">email</a>)</div>{%- endif -%}-->
 						</div>
 					</div>
 				</div>
 				<div class="bd">
 					<ul class="tabs">
-						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
+						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.resources|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
 						
 						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user_activity.data.messages|length }}</span></a></li>
+							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user.data.num_new_messages }}</span></a></li>
 							<li class="account"><a href="#user-account,account">Account</a></li>
 							{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
 							<li class="resources"><a href="#user-account,resources">Resources</a></li>
@@ -216,12 +215,12 @@ Change by Us NYC - User Account
 										{% endif %}
 											<td {% if resource.is_official %}class="official-resource"{% endif %}>
 												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-													<a class="add-button rounded-button small add-resource" href="#addProject,{{ resource.link_id }}">Add</a>
+													<a class="add-button rounded-button small add-resource" href="#addResource,{{ resource.project_resource_id }}">Add</a>
 												{% endif %}
 												{% if resource.image_id > 0 %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
 												{% else %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close" href="#"><span>Close</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
 												{% endif %}
 												<span class="resource-name">
 													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
@@ -277,7 +276,7 @@ Change by Us NYC - User Account
 									</div>
 									<div class="main">
 										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
-										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner_user_id }}">{{ project.owner_first_name }} {{ project.owner_last_name|truncate(1,true,'.') }}</a></strong></cite>
+										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
 										<div class="sub-ft">
 											{% if d.template_data and d.template_data.app_mode != 'beta' %}
 												<div class="twitter">
@@ -386,7 +385,7 @@ Change by Us NYC - User Account
 						</div>
 					</div><!-- end messages-view -->
 				
-					<div class="account-view step merlin">
+					<div class="account-view password-view step merlin">
 						
 						<div class="box user-account">
 							<div class="hd">
@@ -417,12 +416,13 @@ Change by Us NYC - User Account
 										</div>
 										<div class="">
 											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
-											<a href="#change-password,edit-password-details" class="change-password">Change Password</a>
+											<a href="#user-account,password" class="change-password">Change Password</a>
 										</div>
 										
 										<div style="clear:both"></div>
 										
 										<div class="password-info merlin">
+											<div class="step hidden"></div>
 											<div class="step edit-password-details">
 												<div class="row">
 													<label>Old Password</label>
@@ -439,7 +439,7 @@ Change by Us NYC - User Account
 												</div>
 												<div class="controls">
 													<input class="rounded-button password-save-button" type="submit" value="Save"/>
-													<a href="#account-info,edit-account-details" class="cancel">Cancel</a>
+													<a href="#user-account,account" class="cancel">Cancel</a>
 												</div>
 											</div>
 											<div class="step submit-password-details">
@@ -528,7 +528,7 @@ Change by Us NYC - User Account
 											<div class='box res-email mod-inline-edit'>
 												<span class='section-title'>Email</span>
 												<div class="inline-edit-controls"></div>
-												<p class="editable-content"><a href=''>{{ resource.contact_email }}</a></p>
+												<p class="editable-content">{{ resource.contact_email }}</p>
 											</div>
 											<div class='box res-addr mod-inline-edit box-half'>
 												<span class='section-title'>Physical Address</span>
@@ -537,7 +537,7 @@ Change by Us NYC - User Account
 											</div>
 											<div class='box mod-inline-edit res-keywords box-half'>
 												<span class='section-title'>Keywords</span>
-												<p class="editable-content">{{ resource.keywords }}</p>
+												<p class="editable-content">{{ resource.keywords|replace(',',', ') }}</p>
 												<div class="inline-edit-controls"></div>
 											</div>
 										</div>
@@ -633,6 +633,20 @@ Change by Us NYC - User Account
 			</div>
 			<a class='close' href="#"><span>close</span></a>
 		</div>
+		
+		<div class="template-content modal-content confirm-delete remove-resource">
+			<div class="step">
+				<h2><strong>Delete</strong> this Resource?</h2>
+				<div>
+					<p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete Resource</a>
+					<a class="cancel" href="#">No, keep it.</a>
+				</div>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
 	{% endif %}
 	
 </div>
@@ -673,6 +687,14 @@ Change by Us NYC - User Account
 		<script type="text/javascript" src='/static/js/pages/useraccount.editable.js'></script>
 	{% endif %}
 	
+	<!--[if lte IE 8]>
+		<script type="text/javascript">
+			$('.midlands .thumb').hover(
+				function () { tc.jQ('.change-image').addClass('hover'); },
+				function () { tc.jQ('.change-image').removeClass('hover'); }
+			);
+		</script>
+	<![endif]-->
 	
 
 {% endblock page_js %}

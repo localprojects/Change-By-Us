@@ -72,10 +72,10 @@ Change by Us NYC
 									{% for idea in d.template_data.all_ideas.data %}
 										<div class="small-note">
 											<div class="wrap">
-												<div class="note-meta-hd" {% if not idea.f_name %}style="display:none"{% endif %}>
-													<strong>{% if idea.f_name %}<a href="/useraccount/{{ idea.user_id }}">{{ idea.f_name ~ " " ~ idea.l_name }}</a>{% endif %}</strong> <em>said</em> &mdash;
+												<div class="note-meta-hd" {% if not idea.name %}style="display:none"{% endif %}>
+													<strong>{% if idea.name %}{{ idea.name }}{% endif %}</strong> <em>said</em> &mdash;
 												</div>
-												<blockquote><p>{{ idea.text|truncate(175) }}</p></blockquote>
+												<blockquote><p>{{ idea.text|truncate(140) }}</p></blockquote>
 											</div>
 										</div>
 									{% endfor %}
@@ -290,7 +290,7 @@ Change by Us NYC
 		{% endif %}
 		
 		<div class="box box-whoslistening">
-			<h1><strong>Who's listening</strong></h1>
+			<h1><strong>Who's listening?</strong></h1>
 			<h2>A network of leaders from across the city is ready to read <a href="/search#ideas">ideas</a>, follow <a href="/search#projects">projects</a>, and connect online.</h2>
 			<ul class="clearfix">
 				<li>
@@ -353,13 +353,13 @@ Change by Us NYC
 	
 	<li class='template-content project-item'>
 		<div class="thumb">
-			<img src="http://placehold.it/50x50" alt="" class="proj"/>
+			<img alt="" class="proj"/>
 			<span class="overlay-tag"></span>
 			<span class="member-count">58</span>
 		</div>
 		<div class="project-info">
 			<div class="endorser-thumb clearfix" style='display:none;'>
-				<img src="http://placehold.it/30x30" alt="" class="endorser-photo" />
+				<img alt="" class="endorser-photo" />
 				<span class="overlay-tag"></span>
 			</div>
 			<span class="link"><a href="/project">Plant a Million Trees</a></span>
@@ -376,7 +376,6 @@ Change by Us NYC
 		{% if d.template_data.user %}
 			app_page.data.user = {{ d.template_data.user.json }};
 		{% endif %}
-		
 	</script>
 	<script type="text/javascript" src='/static/js/pages/home.js'></script>
 {% endblock page_js %}

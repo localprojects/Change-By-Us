@@ -140,7 +140,7 @@ app_page.features.push(function(app){
 							data:{ 
 								location_id: e.data.carousel.data.location_input.attr('location_id'),
 								terms: e.data.carousel.data.terms_input.val(),
-								n: e.data.carousel.data.n_to_fetch,
+								n: (e.data.carousel.data.n_to_fetch + 1),
 								offset: e.data.carousel.data.offset
 							},
 							context:e.data.carousel,
@@ -154,27 +154,34 @@ app_page.features.push(function(app){
 									return;
 								}
 								
-								this.data.current_page.removeClass('spinner-message').children().remove();
-								
 								if(!d.results.length && this.data.offset > 0){
+									//no items, and we are on page > 0
 									this.data.current_page.remove();
-									return;
-								}
-								
-								this.data.offset += d.results.length;
-								
-								if(d.results.length == this.data.n_to_fetch){
+								} else if(!d.results.length && this.data.offset == 0){
+									//no items, and we are on page 0
+									this.data.current_page.children('ul').append('<li><p>No Results.</p></li>');
+								} else if(d.results.length == (this.data.n_to_fetch + 1)) {
+									//full of items, and more. we DO have another page.
+							
+									//lets pop off the extra one.
+									d.results.pop();
+							
 									this.carousel.addItem('\
 										<li class="project-carousel-item clearfix spinner-message">\
 											<div class="spinner-container"></div>\
 										</li>');
 								}
 								
+								
+								this.data.current_page.removeClass('spinner-message').children().remove();
+								this.data.offset += d.results.length;
 								dom = this.data.page_generator(d);
 								this.data.current_page.append(dom);
+								
 								if(tc.jQ.isFunction(this.data.appended)){
 									this.data.appended(dom);
 								}
+								
 								switch(name){
 									case 'idea':
 										target_height = '625';
@@ -205,25 +212,25 @@ app_page.features.push(function(app){
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
 				
-				out = tc.jQ('<table class="projects-list doublewide clearfix">\
+				out = tc.jQ('<table style="" class="projects-list doublewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
 				for(i = 0; i < d.results.length; i++){
 					if(i%2==0){
-						temprow = tc.jQ('<tr></tr>');
+						temprow = tc.jQ('<tr style="width:763px;"></tr>');
 					}
-					tempcell = tc.jQ('<td></td>').append(tc.jQ('.template-content.project-cell').html());
+					tempcell = tc.jQ('<td style="width:361px;"></td>').append(tc.jQ('.template-content.project-cell').html());
 					tempcell.find('.delete-project').attr('href','#removeProject,'+d.results[i].project_id);
-					if(d.results[i].image_id){
-						tempcell.find('img').attr('src',app_page.media_root + 'images/'+d.results[i].image_id%10+'/'+d.results[i].image_id+'.png');
+					if(d.results[i].image_id > -1){
+						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+d.results[i].image_id%10+'/'+d.results[i].image_id+'.png');
 					} else {
 						tempcell.find('img').attr('src','/static/images/thumb_genAvatar50.png');
 					}
 					tempcell.find('.member-count').text(d.results[i].num_members);
-					tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].title);
+					tempcell.find('.link').children('a').attr('href','/project/'+d.results[i].project_id).text( tc.truncate(d.results[i].title, 50, "...") );
 					tempcell.find('.creator').children('a').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
-					tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text(d.results[i].description);
+					tempcell.find('.description').children('a').attr('href','/project/'+d.results[i].project_id).text( tc.truncate(d.results[i].description, 70, "...") );
 					temprow.append(tempcell);
 					if(i%2==1){
 						out.children('tbody').append(temprow);
@@ -247,18 +254,18 @@ app_page.features.push(function(app){
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
-				out = tc.jQ('<table class="resources-list triplewide clearfix">\
+				out = tc.jQ('<table style="" class="resources-list triplewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
 				for(i = 0; i < d.results.length; i++){
 					if(i%3==0){
-						temprow = tc.jQ('<tr></tr>');
+						temprow = tc.jQ('<tr style="width:763px;" ></tr>');
 					}
-					tempcell = tc.jQ('<td class="' + (d.results[i].is_official ? "official-resource" : "") + '"></td>').append(tc.jQ('.template-content.resource-cell').html());
+					tempcell = tc.jQ('<td  style="width:227px;" class="' + (d.results[i].is_official ? "official-resource" : "") + '"></td>').append(tc.jQ('.template-content.resource-cell').html());
 					tempcell.find('.add-button').attr('href','#addProject,'+d.results[i].link_id);
 					if(d.results[i].image_id){
-						tempcell.find('img').attr('src',app_page.media_root + 'images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
+						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
 					}
 					tempcell.find('.resource-tooltip_trigger').attr('rel','#organization,'+d.results[i].link_id);
 					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,25,'...'));
@@ -273,7 +280,9 @@ app_page.features.push(function(app){
 					}
 				}
 				
-				out.find('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
+				//out.find('a.add-button').bind('click', app.components.handlers.add_resource_data, app.components.handlers.add_resource_hander);
+				tc.gam.add_resource(app, {elements: out.find("a.add-resource")});
+				
 				out.find('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
 				app.components.tooltips.add_trigger(out.find('.resource-tooltip_trigger'));
 				
@@ -304,19 +313,22 @@ app_page.features.push(function(app){
 						if (app.user && app.user.u_id === d.results[i].owner.u_id) {
 							tempcell.find('.invite').remove();
 						} else { 
-							tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.u_id);
+							tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id+','+d.results[i].owner.name);
 						}
-						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(d.results[i].owner.name);
+						tempcell.find('.user-link').attr('href','/useraccount/'+d.results[i].owner.u_id).text(tc.truncate(d.results[i].owner.name, 18, "..."));
 					} else {
+						tempcell.find('.invite').attr('href','#invite,'+d.results[i].idea_id);	
 						tempcell.find('cite.note-meta-hd').remove();
 						tempcell.find('blockquote').prepend('<span class="topright-spacer"></span>');
 					}
 					tempcell.find('.flag-idea').attr('href','#flagIdea,'+d.results[i].idea_id);
 					tempcell.find('.remove-idea').attr('href','#removeIdea,'+d.results[i].idea_id);
 					
-					tempcell.find('.idea-text').text(d.results[i].message);
+					tempcell.find('.idea-text').text( tc.truncate(d.results[i].message, 165, "...") );
 					tempcell.find('.time-since').text(d.results[i].created);
-					tempcell.find('.sub-type').text(d.results[i].submssion_type);
+					tempcell.find('.sub-type').text(d.results[i].submission_type);
+					
+					tempcell.find('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
 					
 					out.append(tempcell);
 				}
@@ -382,85 +394,6 @@ app_page.features.push(function(app){
 		
 		
 		app.components.handlers = {
-			add_resource_data:{
-				app:app,
-				source_element:tc.jQ('.modal-content.add-resource'),
-				init:function(modal,event_target,callback){
-					var modal_merlin;
-					modal_merlin = new tc.merlin(app,{
-						name:'add-resource',
-						dom:modal.options.element.find('.add-resource'),
-						next_button: tc.jQ('a.submit'),
-						first_step: 'add-resource-project-info',
-						data:{
-							project_id: null,
-							project_resource_id: null
-						},
-						steps:{
-							'add-resource-project-info':{
-								selector:'.add-resource-project-info',
-								next_step:'add-resource-submit',
-								inputs:{
-									project_radios:{
-										selector:'.project-radio',
-										vallidators:['required']
-									}
-								},
-								init: function(merlin, dom) {
-									var name;
-								
-									dom.find('input[type=checkbox],input[type=radio]').prettyCheckboxes();
-								
-									if(dom.find('.project-radio').length == 1){
-										dom.find('.project-radio').first().attr('checked',true);
-										//window.location.hash = 'add-resource,add-resource-submit';
-									}
-							
-								},
-								finish: function(merlin, dom) {
-									if(merlin.current_step.inputs.project_radios.dom.filter(":checked").length){
-										merlin.options.data = tc.jQ.extend(merlin.options.data, {
-											project_id: merlin.current_step.inputs.project_radios.dom.filter(":checked").attr("rel").split(",")[1],
-											project_resource_id: event_target.hash.split(',')[1]
-										});
-									}
-								}
-							},
-							'add-resource-submit':{
-								selector:'.add-resource-submit',
-								init: function(merlin, dom) {
-								
-								
-									tc.jQ.ajax({
-										type:"POST",
-										url:"/project/resource/add",
-										data:merlin.options.data,
-										context:merlin,
-										dataType:"text",
-										success: function(data, ts, xhr) {
-											//if (data == "False") {
-											//	return false;
-											//}
-											//tc.jQ(event_target).addClass("disabled").text("Added");
-											tc.jQ(event_target).parents('td').addClass('added');
-											tc.timer(1000, function() {
-												modal.hide();
-											});
-										}
-									});
-								}
-							}
-						}
-					});
-					if(tc.jQ.isFunction(callback)){
-						callback(modal);
-					}
-				}
-			},
-			add_resource_hander:function(e,d){
-				e.preventDefault();
-				e.data.app.components.modal.show(e.data, e.target);
-			},
 			flag_idea_handler:function(e){
 				e.preventDefault();
 				tc.jQ.ajax({
@@ -519,28 +452,28 @@ app_page.features.push(function(app){
 			delete_resource_handler:function(e){
 				e.preventDefault();
 				var $t;
-				$t = tc.jQ(e.target);
+				$t = tc.jQ(this);
 				e.data.app.components.modal.show({
-						app:e.data.app,
-						source_element:tc.jQ('.modal-content.remove-resource'),
-						submit:function(){
-							tc.jQ.ajax({
-								type:'POST',
-								url:'/admin/resource/delete',
-								data:{
-									resource_id: e.target.hash.split(',')[1]
-								},
-								context:$t,
-								dataType:'text',
-								success:function(data,ts,xhr){
-									if(data == 'False'){
-										return false;
-									}
-									location.reload(true);
+					app:e.data.app,
+					source_element:tc.jQ('.modal-content.remove-resource'),
+					submit:function(){
+						tc.jQ.ajax({
+							type:'POST',
+							url:'/admin/resource/delete',
+							data:{
+								resource_id: $t.attr("href").split(',')[1]
+							},
+							context:$t,
+							dataType:'text',
+							success:function(data,ts,xhr){
+								if(data == 'False'){
+									return false;
 								}
-							});
-						}
-					});
+								window.location.reload(true);
+							}
+						});
+					}
+				});
 			},
 			delete_project_handler:function(e,d){
 				var t;
@@ -573,19 +506,16 @@ app_page.features.push(function(app){
 			}
 		};
 		
-		tc.jQ('a.add-resource').bind('click',app.components.handlers.add_resource_data,app.components.handlers.add_resource_hander);
 		tc.jQ('a.flag-idea').bind('click', {app:app}, app.components.handlers.flag_idea_handler);
 		tc.jQ('a.remove-idea').bind('click', {app:app}, app.components.handlers.remove_idea_handler);
 		tc.jQ('a.delete-resource').bind('click', {app:app}, app.components.handlers.delete_resource_handler);
 		tc.jQ('a.delete-project').bind('click',{app:app},app.components.handlers.delete_project_handler);
+		tc.gam.add_resource(app, {elements: tc.jQ("a.add-resource")});
 		
 		// turn location field autocomplete off
 		tc.jQ('#location-hood-enter').attr('autocomplete', 'off');
 		
 		// random note-card backgrounds
-		var ideasList = tc.jQ('.ideas-list li');
-		for (i=0; i < ideasList.length; i++) {
-			ideasList.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-		}
+		tc.randomNoteCardBg(tc.jQ('.ideas-list'));
 		
 	});

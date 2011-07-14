@@ -30,8 +30,9 @@ var.groupname = "<YOUR_GROUP>"
 var.pidfile = "./run/lighttpd.pid"
 var.docroot = "./"
 var.errorlog = "./logs/main.log"
-var.accesslog =  "./logs/access.log"
+var.accesslog = "./logs/access.log"
 var.binpath  = "./main.py"
+var.cachedir = "./run/cache"
 
 
 # Mac specific even handling
@@ -101,6 +102,16 @@ fastcgi.server = ("/main.py" =>
 #      "realm" => "Password protected area",
 #      "require" => "valid-user")
 # )
+
+
+# File Compression
+#--------------------------------------------------------------------
+# Enable file compression
+#
+#--------------------------------------------------------------------
+compress.allowed-encodings = ("bzip2", "gzip", "deflate")
+compress.cache-dir = var.cachedir
+compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
 
 
 # File handling
