@@ -11,6 +11,8 @@ class Info():
         if name == 'ip':
             try:
                 ip = web.ctx.ip
+                if ip is None:
+                    ip = "No IP Address"
             except (AttributeError, NameError):
                 ip = "X.X.X.X"            
             ip = "%s%s" % (ip, ''.join(' ' for i in range(15 - len(ip))))
