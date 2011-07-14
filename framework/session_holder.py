@@ -10,7 +10,7 @@ class SessionHolder():
     """
     
     session = None
-    """ Persistent session property """
+    """ Persistent session property. """
     
     @classmethod
     def set(cls, _session):
