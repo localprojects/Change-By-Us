@@ -5,12 +5,18 @@ from framework.log import log
 from framework.controller import *
 from PIL import Image, ImageOps
 
-class FileServer(Controller):
+class FileServer(object):
+    """
+    A generic FileServer.  
+    """
     
 #    @classmethod
     def add(self, db, data, app, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
         """
-        
+        Add a file to the fileserver.  If either adding the database record for 
+        the file or saving the file fails, then add will return None, and no
+        modification will be made.  Otherwise, the ID of the record in the 
+        database will be returned.
         """
         # Create a new record for the file
         log.info("FileServer.add")
@@ -33,7 +39,7 @@ class FileServer(Controller):
         """
         Insert a new record for a file into the given database.
         
-        Attributes:
+        Arguments:
         db -- A web.py database (`web.db`) object
         app -- The name of the app (`str`)
         """
