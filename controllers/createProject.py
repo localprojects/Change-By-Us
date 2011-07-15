@@ -111,13 +111,18 @@ class CreateProject(Controller):
     def uploadFile(self):
         """
         """
+        # Get file from the request
         if (len(self.request('qqfile')) > 100):
             log.info("*** == %s" % type(web.input()['qqfile']))
             data = web.input()['qqfile']
         else:
             data = web.data()
         
-        fileId = FileServer.add(self.db, data, 'giveaminute', [100, 100])
+        # Get a file server wrapper
+        fs = FileServer()
+        
+        # Upload the file to the server
+        fileId = fs.add(self.db, data, 'giveaminute', [100, 100])
         
         return fileId
                         

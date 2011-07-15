@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest2 import TestCase
 from paste.fixture import TestApp
 from lib import web
 

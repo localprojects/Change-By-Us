@@ -7,59 +7,67 @@ from PIL import Image, ImageOps
 
 class FileServer(Controller):
     
-    @classmethod
-    def add(cls, db, data, app, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
+#    @classmethod
+    def add(self, db, data, app, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
+        """
+        
+        """
+        # Create a new record for the file
         log.info("FileServer.add")
+        id = self._addDbRecord(db, app) 
+        
+        if id is None:
+            return None
+        
+        # Save the file to the system
+        success = self._saveFile(id, data)
+        
+        if not success:
+            self._removeDbRecord(id)
+            return None
+        
+        # Return the id of the file
+        return id
+    
+    def _addDbRecord(self, db, app):
+        """
+        Insert a new record for a file into the given database.
+        
+        Attributes:
+        db -- A web.py database (`web.db`) object
+        app -- The name of the app (`str`)
+        """
+        
         try:
             id = db.insert('files', app=app)
         except Exception, e:
             log.error(e)
             return None
-        path = cls.path(app, id)        
-        try:            
-            f = open(path, "wb")
-            f.write(data)        
-            f.close()
-            image = Image.open(path)
-        except Exception, e:
-            log.error(e)
-            try:
-                db.query("DELETE FROM images WHERE id=$id", {'id': id})
-                os.remove(path)
-            except Exception, e:
-                log.error(e)
-            log.warning("--> removed id %s" % id)
-            return None
-#        if image.format != "PNG":
-#            log.info("--> converting %s to PNG" % image.format)
-#        if max_size and (image.size[0] > max_size[0] or image.size[1] > max_size[1]):
-#            image = ImageServer.cropToBox(image)
-#            image = image.resize(max_size)
-#        
-#        if grayscale:
-#            image = ImageOps.grayscale(image)                
-#        if thumb_max_size:    
-#            thumbImage = ImageServer.resizeToFit(image, thumb_max_size)
-#            thumbPath = ''.join([path[:-4], "_thumb.png"]) 
-#        try:
-#            image.save(path, "PNG")  
-#            if thumb_max_size:
-#                thumbImage.save(thumbPath, "PNG")
-#        except Exception, e:
-#            log.error(e)
-#            return None
-#        log.info("--> saved %s" % path)  
-#        
-#        log.info("*** config = %s, mirror = %s" % (Config.get('media')['isS3mirror'] , mirror))
-#        
-#        if (Config.get('media')['isS3mirror'] and mirror):
-#            try:
-#                result = S3Uploader.upload(path, path)
-#                log.info(result)
-#            except Exception, e:
-#                log.error(e)  
         
         return id
+    
+    def _saveFile(self, fileid, data):
+        """
+        Save the data into a file.  Return True is file successfully saved,
+        otherwise False.
+        
+        Override this method to save files in other places.
+        
+        Attributes:
+        fileid -- The id from the database record that corresponds to this file
+        data -- The data (string of bytes) contained in the file
+        """
+        
+        log.info("*** config = %s, mirror = %s" % (Config.get('media')['isS3mirror'] , mirror))
+        if (Config.get('media')['isS3mirror'] and mirror):
+            try:
+                result = S3Uploader.upload(path, path)
+                log.info(result)
+            except Exception, e:
+                log.error(e)
+                return False
+        
+        return True
         
     #
 #    @classmethod
