@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-# lighttpd configuration file
-#
-# Variables:
-var.pidfile = "/Users/sundar/Projects/LP/gam2.svn/trunk/run/lighttpd.pid"
-var.docroot = "/Users/sundar/Projects/LP/gam2.svn/trunk"
-var.errorlog = "/Users/sundar/Projects/LP/gam2.svn/trunk/logs/main.log"
-var.accesslog =  "/Users/sundar/Projects/LP/gam2.svn/trunk/logs/access.log"
-var.binpath  = "/Users/sundar/Projects/LP/gam2.svn/trunk/main.py"
-var.cachedir = "/Users/sundar/Projects/LP/gam2.svn/trunk/run/cache"
-
-=======
 #--------------------------------------------------------------------
 #
 # This is a sample configuration file for the Lighttpd server for
@@ -74,29 +62,12 @@ accesslog.filename         = var.accesslog
 # Modules needed for server
 #
 #--------------------------------------------------------------------
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 server.modules = (
     "mod_rewrite",
     "mod_alias",
     "mod_access",
     "mod_fastcgi",
     "mod_accesslog",
-<<<<<<< HEAD
-    "mod_auth",
-    "mod_compress"
-    )
-                    
-server.port                = 8080
-server.pid-file            = var.pidfile
-server.username            = "sundar"
-server.groupname           = "staff"
-server.document-root       = var.docroot 
-server.errorlog            = var.errorlog 
-accesslog.filename         = var.accesslog
-index-file.names = ("index.php", "index.html", "index.htm", "default.htm")
-
-#enable static file compression
-=======
     "mod_auth"
     )
 
@@ -138,38 +109,10 @@ fastcgi.server = ("/main.py" =>
 # Enable file compression
 #
 #--------------------------------------------------------------------
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 compress.allowed-encodings = ("bzip2", "gzip", "deflate")
 compress.cache-dir = var.cachedir
 compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
 
-<<<<<<< HEAD
-# Enable the following line for OSX. Otherwise leave it disabled.
-# server.event-handler = "freebsd-kqueue" # needed on OS X
-
-static-file.exclude-extensions = (".php", ".pl", ".fcgi", ".py")
-url.access-deny = ("~", ".inc", ".log", ".yaml", ".conf")
-
-fastcgi.server = ("/main.py" =>
-                    ((  "socket" => "/tmp/fastcgi.socket",
-                        "bin-path" => var.binpath,
-                        "max-procs" => 1,
-                        "bin-environment" => (
-                            "REAL_SCRIPT_NAME" => ""
-                        ),
-                        "check-local" => "disable"
-                    ))
-                )
-
-# mod auth stuff, uncomment for auth
-#auth.debug = 2
-#auth.backend = "htpasswd"
-#auth.backend.htpasswd.userfile = "/Users/sundar/Projects/LP/gam2.svn/trunk/.lighttpd.htpasswd"
-#auth.require = ("/" => ("method" => "basic",
-#                        "realm" => "Password protected area",
-#                        "require" => "valid-user"))
-
-=======
 
 # File handling
 #--------------------------------------------------------------------
@@ -180,7 +123,6 @@ index-file.names = ("index.php", "index.html", "index.htm", "default.htm")
 static-file.exclude-extensions = (".php", ".pl", ".fcgi", ".py")
 url.access-deny = ("~", ".inc", ".log", ".yaml", ".conf")
 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 $HTTP["url"] =~ "\.pdf$" {
     server.range-requests = "disable"
 }
@@ -199,11 +141,7 @@ url.rewrite-once = (
     "^/(.*)$" => "/main.py/$1"
     )
 
-<<<<<<< HEAD
-mimetype.assign             = (
-=======
 mimetype.assign = (
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
   ".pdf"          =>      "application/pdf",
   ".sig"          =>      "application/pgp-signature",
   ".spl"          =>      "application/futuresplash",
@@ -258,8 +196,4 @@ mimetype.assign = (
   ".tar.bz2"      =>      "application/x-bzip-compressed-tar",
   # default mime type
   ""              =>      "application/octet-stream",
-<<<<<<< HEAD
- )
-=======
 )
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b

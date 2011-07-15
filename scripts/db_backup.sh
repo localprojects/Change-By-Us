@@ -2,13 +2,9 @@
 
 set -x
 
-<<<<<<< HEAD
 #------------------------------------------------------------------------------
 # Overview
 #-----------------------------
-=======
-# Overview
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 # 
 # The purpose if this script is to:
 #  * mysqldump a defined database
@@ -19,7 +15,6 @@ set -x
 #-----------------------------
 # Pre-Requisites:
 #-----------------------------
-<<<<<<< HEAD
 # 1. MYSQL configuration file
 # 	For automatic connection to mysql, it's necessary that the
 #	my.cnf file be populated with the appropriate username and password.
@@ -51,26 +46,6 @@ set -x
 #	But this will require that a git repo be set up for the backups
 #
 #------------------------------------------------------------------------------
-=======
-# 1. ~/.my.cnf
-# Ensure that ~/.my.cnf exists. It should have this format:
-# 
-# [client]
-# user=gam
-# password=gam
-# 
-# 2. gpg with associated key
-# 
-# 3. S3 sync
-# Ensure that s3cmd is installed, and configured
-#     apt-get install s3cmd
-# Ensure that s3cmd —config=~/s3.cfg can be loaded
-# To generate the config file just run s3cmd --configure
-# and you'll be prompted to fill out all the parameters
-#
-# 
-
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
 #----- CONFIGURABLES ----
 # The s3cmd configuration file. See example.s3cfg
@@ -88,11 +63,8 @@ s3path="/backups/mysql"
 # The recipient for whom to sign the content. Only used if use_gpg=true
 recipient="admin@changeby.us"	# change this to the correct recipient
 
-<<<<<<< HEAD
 # Database related configurations
 
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 # List of tables to exclude from the dump
 exclude_tables=(user facebook_user twitter_user)
 
