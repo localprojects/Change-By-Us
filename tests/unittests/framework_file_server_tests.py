@@ -13,7 +13,6 @@ class BaseFileServerTests (TestCase):
         fs.saveFile = Mock()
         
         db = main.sessionDB()
-#        db.insert = Mock(side
         id = fs.add(db, "This is file data", "myapp")
         
         self.assertEqual(fs.addDbRecord.call_count, 1)
@@ -57,17 +56,22 @@ class BaseFileServerTests (TestCase):
         self.assertIn("DELETE FROM files", db.query.call_args[0][0])
     
 class S3FileServerTests (TestCase):
+    """
+    Tests that actually interact with the S3 server should go in 
+    integrationtests/framework_file_server_tests.py
     
+    """
     def test_S3UploaderIsCalledWithCorrectParameters(self):
         file_server.S3Uploader.upload = Mock()
         
         fs = file_server.S3FileServer()
         fs.getLocalPath = Mock(return_value="local/path/to/file7")
         fs.getS3Path = Mock(return_value="path/to/file7/on/s3")
+        fs.saveTemporaryLocalFile = Mock(return_value=True)
         
         success = fs.saveFile(7, "This is file data")
         
-        self.assertTrue(success)
+        self.assertTrue(success, "File save was not successful")
         self.assertEqual(file_server.S3Uploader.upload.call_count, 1)
         self.assertEqual(file_server.S3Uploader.upload.call_args[0], 
             ("local/path/to/file7", "path/to/file7/on/s3"))
@@ -83,3 +87,4 @@ class S3FileServerTests (TestCase):
         
         path = fs.getS3Path(7)
         self.assertEqual(path, "data/files/7")
+

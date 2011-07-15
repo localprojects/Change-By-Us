@@ -1,10 +1,11 @@
 import cStringIO
+import traceback
 import framework.util as util
 from framework.s3uploader import S3Uploader
 from framework.log import log
 from framework.controller import Controller
-from PIL import Image, ImageOps
 from framework.config import Config
+from PIL import Image, ImageOps
 
 class FileServer(object):
     """
@@ -56,6 +57,7 @@ class FileServer(object):
     def removeDbRecord(self, db, id):
         try:
             db.query("DELETE FROM files WHERE id=$id", {'id': id})
+            log.warning("--> removed id %s" % id)
             return True
         except Exception, e:
             log.error(e)
@@ -79,7 +81,16 @@ class FileServer(object):
 
 
 class S3FileServer(FileServer):
+    """
+    In order to use this FileServer, make sure that you have the aws section
+    filled out in your conf.yaml file:
     
+    aws:
+        access_key_id: '<ACCESS_KEY>'
+        secret_access_key: '<SECRET_KEY>'
+        bucket: '<BUCKET_NAME>'
+    
+    """
     def getConfigVar(self, var_name):
         return Config.get(var_name)
     
@@ -88,12 +99,32 @@ class S3FileServer(FileServer):
         Get the path to the file given by the fileid on the local file system.
         This is used only to temporarily save the file before uploading it to
         the S3 server.
+        
         """
         return "data/files/%s" % fileid
     
     def getS3Path(self, fileid):
-        """Get the path to the file given by the fileid on the S3 server."""
+        """
+        Get the path to the file given by the fileid on the S3 server.
+        
+        """
         return "data/files/%s" % fileid
+    
+    def saveTemporaryLocalFile(self, path, data):
+        """
+        Save the file on the local file system.
+        This is used only to temporarily save the file before uploading it to
+        the S3 server.
+        
+        """
+        try:
+            with open(path, "wb") as f:
+                f.write(data)
+        except Exception, e:
+            log.error(e)
+            return False
+        
+        return True
 
     def saveFile(self, fileid, data, mirror=True, **kwargs):
         """
@@ -103,19 +134,23 @@ class S3FileServer(FileServer):
         Attributes:
         fileid -- The id from the database record that corresponds to this file
         data -- The data (string of bytes) contained in the file
-        """
         
+        """
         localpath = self.getLocalPath(fileid)
-        s3path = self.getS3Path(fileid)
+        localsaved = self.saveTemporaryLocalFile(localpath, data)
+        if not localsaved:
+            return False
         
         isS3mirror = self.getConfigVar('media')['isS3mirror']
+        s3path = self.getS3Path(fileid)
         log.info("*** config = %s, mirror = %s" % (isS3mirror, mirror))
         if (isS3mirror and mirror):
             try:
                 result = S3Uploader.upload(localpath, s3path)
                 log.info(result)
             except Exception, e:
-                log.error(e)
+                tb = traceback.format_exc()
+                log.error(tb)
                 return False
         
         return True
