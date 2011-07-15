@@ -458,6 +458,7 @@ app_page.features.push(function(app){
 					}
 				}
 			});
+<<<<<<< HEAD
 			
 			// for ipads, show the idea input field when touching the large notecard or hand.
 			if (isiPad == true) {
@@ -466,6 +467,8 @@ app_page.features.push(function(app){
 					bigNoteCardIdeaInputContainer.show();
 				});
 			}
+=======
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		};
 		
 		arrangeNotes();

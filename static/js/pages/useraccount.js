@@ -40,7 +40,11 @@
 		
 		offset = 0;
 		if(app.app_page.data.user_activity && app.app_page.data.user_activity.messages){
+<<<<<<< HEAD
 			offset = app.app_page.data.user_activity.messages.length;
+=======
+			offset = app.app_page.data.user_activity.messages.length - 1;
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		}
 		
 		if(window.location.hash == ''){
@@ -105,6 +109,7 @@
 					n_to_fetch:5,
 					has_run_init: false,
 					init:function(merlin,dom){
+<<<<<<< HEAD
 						
 						function generate_notification(message, templateClass) {
 							var template;
@@ -118,6 +123,8 @@
 							return template;
 						}
 						
+=======
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
 						
 						if (!merlin.current_step.has_run_init) {
@@ -184,6 +191,7 @@
 								context:merlin,
 								dataType:"text",
 								success: function(data, ts, xhr) {
+<<<<<<< HEAD
 									var me = this, d, dom_stack;
 									$t.parent().removeClass("loading");
 									
@@ -201,11 +209,30 @@
 									
 									dom_stack = e.data.dom.find("ol.message-stack");
 									
+=======
+									var d, dom_stack;
+									$t.parent().removeClass("loading");
+									try {
+										d = tc.jQ.parseJSON(data);
+									} catch(e) {
+										tc.util.log("/useraccount/messages: json parsing error", "warn");
+										return;
+									}
+									if (!d.length) {
+										$t.hide();
+										return;
+									}
+									dom_stack = e.data.dom.find("ol.message-stack");
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 									tc.jQ.each(d, function(i, message) {
 										var template;
 										switch (message.message_type) {
 											case "member_comment":
+<<<<<<< HEAD
 												template = tc.jQ("<li class='message-item member-comment'></li>").append( tc.jQ(".template-content.message-item.member-comment").children().clone() );
+=======
+												template = tc.jQ(".template-content.message-item.member-comment").clone().removeClass("template-content");
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 												if (message.owner.image_id) {
 													template.find(".thumb img").attr("src", app.app_page.media_root + "images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
 												} else {
@@ -216,6 +243,7 @@
 												template.find(".excerpt p").html(message.body);
 												template.find(".time-since").text(message.created).time_since();
 												break;
+<<<<<<< HEAD
 												
 											case "join":
 												template = generate_notification(message, "join-notification");
@@ -235,16 +263,36 @@
 												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
 												break;
 												
+=======
+											case "join":
+												template = tc.jQ(".template-content.message-item.join-notification").clone().removeClass("template-content");
+												template.find(".title").html(message.body);
+												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
+												template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
+												template.find(".time-since").text(message.created).time_since();
+												break;
+											case "invite":
+												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
+												template.find(".title").html(message.body);
+												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
+												break;
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 											default:
 												break;
 										}
 										if (template) {
 											dom_stack.append(template);
+<<<<<<< HEAD
 											me.current_step.current_offset += 1;
 										} else {
 											tc.util.log("no template for message", "warn");
 										}
 									});
+=======
+										}
+									});
+									this.current_step.current_offset += d.length;
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 								}
 							});
 						});

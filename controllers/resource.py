@@ -99,7 +99,11 @@ class Resource(Controller):
         if (imageId):
             return mProjectResource.updateProjectResourceImage(self.db, resourceId, imageId)
         else:
+<<<<<<< HEAD
             log.error("*** resource edit attempt without image id, resource id %s" % resourceId)
+=======
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return False
         
     def updateResourceLocation(self):
@@ -114,7 +118,11 @@ class Resource(Controller):
         if (locationId):
             return mProjectResource.updateProjectResourceLocation(self.db, resourceId, locationId)
         else:
+<<<<<<< HEAD
             log.error("*** resource edit attempt without location id, resource id %s" % resourceId)
+=======
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return False
         
     def updateResourceDescription(self):
@@ -129,7 +137,11 @@ class Resource(Controller):
         if (description):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'description', description)
         else:
+<<<<<<< HEAD
             log.error("*** resource edit attempt without description, resource id %s" % resourceId)
+=======
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return False
         
     def updateResourceUrl(self):
@@ -144,7 +156,11 @@ class Resource(Controller):
         if (url):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'url', util.makeUrlAbsolute(url))
         else:
+<<<<<<< HEAD
             log.error("*** resource edit attempt without url, resource id %s" % resourceId)
+=======
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return False
                 
     def updateResourceContactEmail(self):
@@ -154,12 +170,20 @@ class Resource(Controller):
             log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
+<<<<<<< HEAD
         email = self.request('contactemail')
+=======
+        email = self.request('email')
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         
         if (email):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'contact_email', email)
         else:
+<<<<<<< HEAD
             log.error("*** resource edit attempt without email, resource id %s" % resourceId)
+=======
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return False
         
     def updateResourceAddress(self):
@@ -174,7 +198,11 @@ class Resource(Controller):
         if (address):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'physical_address', address)
         else:
+<<<<<<< HEAD
             log.error("*** resource edit attempt without address, resource id %s" % resourceId)
+=======
+            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return False
     
     def updateResourceKeywords(self):

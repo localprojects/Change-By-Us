@@ -358,10 +358,14 @@ where u.user_id = $id and u.is_active = 1"""
                         p.title,
                         null as project_message_id,
                         'invite' as message_type,
+<<<<<<< HEAD
                         concat('You''ve been invited to the ', 
                                 ucase(p.title), 
                                 ' project!', 
                                 coalesce(concat('<br/><br/>"', inv.message, '"'), '')) as message,
+=======
+                        concat('You''ve been invited to the ', ucase(p.title), ' project!<br/><br/>"', inv.message, '"') as message,
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                         inv.created_datetime as created_datetime,
                         iu.user_id,
                         iu.first_name,

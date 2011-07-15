@@ -13,8 +13,12 @@ tc.inlineEditor.prototype = {
 				post_data:  {}
 			}*/,
 			empty_text: "Click here to edit.",
+<<<<<<< HEAD
 			validators: null,
 			charlimit: null
+=======
+			validators: null
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		}, options);
 
 		if (typeof this.options.dom === "string") {
@@ -42,6 +46,7 @@ tc.inlineEditor.prototype = {
 				e.data.me.edit();
 			}
 		});
+<<<<<<< HEAD
 		
 		if (this.options.charlimit) {
 			if (!(tc.jQ.isArray(this.options.validators))) {
@@ -50,13 +55,19 @@ tc.inlineEditor.prototype = {
 			this.options.validators.push("max-"+ this.options.charlimit);
 		}
 		
+=======
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
 		this.data = tc.jQ.trim( this.content.text() );
 
 		this.display();
 	},
 	edit: function() {
+<<<<<<< HEAD
 		var field, limit_indicator;
+=======
+		var field;
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		tc.util.log("edit");
 		if (this.state === "edit") { return; }
 		
@@ -67,6 +78,7 @@ tc.inlineEditor.prototype = {
 			e.data.me.validate(e.data.field);
 		});
 		
+<<<<<<< HEAD
 		if (this.options.charlimit) {
 			limit_indicator = tc.jQ("<span class='charlimit'></span>");
 			limit_indicator.text( (this.data ? this.data.length : "0")+ "/" + this.options.charlimit );
@@ -76,6 +88,8 @@ tc.inlineEditor.prototype = {
 			});
 		}
 		
+=======
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		this.controls.show();
 		this.dom.addClass("state-editing").removeClass("state-display");
 		this.state = "edit";
@@ -159,6 +173,18 @@ tc.inlineEditor.prototype = {
 	}
 };
 
+<<<<<<< HEAD
+=======
+tc.inlineLinkEditor = function(options) {
+	this.init(options);
+};
+tc.inlineLinkEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, {
+	_renderDisplayContent: function() {
+		this.content.html("<a href='"+ this.data + "'>"+ this.data + "</a>");
+	}
+});
+
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 tc.inlineLocationEditor = function(options) {
 	this.init(options);
 	this.locationDropdown = null;

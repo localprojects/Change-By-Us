@@ -51,7 +51,21 @@ def createIdea(db, description, locationId, submissionType, userId=None, email=N
         return None
         
     return ideaId
+<<<<<<< HEAD
     
+=======
+
+def deleteIdea(db, ideaId):
+    try:
+        sql = """delete from idea where idea.idea_id = $id"""
+        db.query(sql, {'id':ideaId})
+        return True;
+    except Exception, e:
+        log.info("*** problem deleting id with id %s" % str(ideaId))
+        log.error(e)
+        return False
+
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def attachIdeasByEmail(db, email):
     try:
         sql = """
@@ -260,4 +274,8 @@ def ideaName(first, last, affiliation = None):
     elif (affiliation):
         return affiliation
     else:
+<<<<<<< HEAD
         return None
+=======
+        return None
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b

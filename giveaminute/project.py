@@ -290,7 +290,11 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
 
     try:
         # censor behavior
+<<<<<<< HEAD
         numFlags = censor.badwords(db, ' '.join([title, description, keywords]))
+=======
+        numFlags = censor.badwords(db, title + " " + description)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         isActive = 0 if numFlags == 2 else 1
 
         projectId = db.insert('project', title = title,
@@ -387,6 +391,10 @@ def updateProjectDescription(db, projectId, description):
     try:
         # censor behavior
         numFlags = censor.badwords(db, description)
+<<<<<<< HEAD
+=======
+        isActive = 0 if numFlags == 2 else 1
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     
         if (numFlags == 2):
             return False
@@ -504,12 +512,15 @@ def removeUserFromAllProjects(db, userId):
         
 def addKeywords(db, projectId, newKeywords):
     try:
+<<<<<<< HEAD
        # censor behavior
         numFlags = censor.badwords(db, ' '.join(newKeywords))
         
         if (numFlags == 2):
             return False
        
+=======
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         sqlGet = "select keywords from project where project_id = $projectId"
         data = list(db.query(sqlGet, {'projectId':projectId}))
         
@@ -525,8 +536,12 @@ def addKeywords(db, projectId, newKeywords):
             if (len(addKeywords) > 0):
                 keywords = ' '.join(keywords + addKeywords)
         
+<<<<<<< HEAD
                 sql = "update project set keywords = $keywords, num_flags = num_flags + $flags where project_id = $projectId"
                 db.query(sql, {'projectId':projectId, 'keywords':keywords, 'flags':numFlags})
+=======
+                db.update('project', where = "project_id = $projectId", keywords = keywords, vars = {'projectId':projectId})
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                     
             # return true whether keyword exists or not
             return True
@@ -859,7 +874,11 @@ def searchProjectsCount(db, terms, locationId):
                     where
                     p.is_active = 1 
                     and ($locationId is null or p.location_id = $locationId)
+<<<<<<< HEAD
                     and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))"""
+=======
+                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))"""
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                     
         data = list(db.query(sql, {'match':match, 'locationId':locationId}))
         
@@ -897,7 +916,11 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                     where
                     p.is_active = 1 
                     and ($locationId is null or p.location_id = $locationId)
+<<<<<<< HEAD
                     and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))
+=======
+                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                     order by p.created_datetime desc
                     limit $limit offset $offset"""
                     
@@ -1242,8 +1265,12 @@ def inviteByIdea(db, projectId, ideaId, message, inviterUser):
                                                               isFullLastName(inviterUser.groupMembershipBitmask)),
                                               projectId,
                                               project.data.title,
+<<<<<<< HEAD
                                               project.data.description,
                                               message)
+=======
+                                              project.data.description)
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         except Exception, e:
             log.info("*** couldn't get send invite")
             log.error(e) 
@@ -1265,8 +1292,12 @@ def inviteByEmail(db, projectId, emails, message, inviterUser):
                                                               isFullLastName(inviterUser.groupMembershipBitmask)),
                                           projectId,
                                           project.data.title,
+<<<<<<< HEAD
                                           project.data.description,
                                           message)):
+=======
+                                          project.data.description)):
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                     log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          
             else:
                 log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          

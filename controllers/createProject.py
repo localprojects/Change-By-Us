@@ -5,6 +5,10 @@ import giveaminute.location as mLocation
 import framework.util as util
 from framework.controller import *
 from framework.image_server import *
+<<<<<<< HEAD
+=======
+from framework.file_server import FileServer
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 from PIL import Image
 import lib.web
 import json
@@ -28,6 +32,15 @@ class CreateProject(Controller):
             imageId = self.uploadImage()
         
             return self.json(dict(thumbnail_id = imageId, success = (imageId != None) ))
+<<<<<<< HEAD
+=======
+            
+        elif (action == 'file'):
+            # Requires a parameter qqfile
+            fileId = self.uploadFile()
+            return self.json(dict(file_id = fileId, success = (fileId != None)))
+            
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         else:
             return self.newProject()  
         
@@ -101,4 +114,26 @@ class CreateProject(Controller):
         
         return imageId
                         
+<<<<<<< HEAD
     
+=======
+    def uploadFile(self):
+        """
+        """
+        # Get file from the request
+        if (len(self.request('qqfile')) > 100):
+            log.info("*** == %s" % type(web.input()['qqfile']))
+            data = web.input()['qqfile']
+        else:
+            data = web.data()
+        
+        # Get a file server wrapper
+        fs = FileServer()
+        
+        # Upload the file to the server
+        fileId = fs.add(self.db, data, 'giveaminute', [100, 100])
+        
+        return fileId
+                        
+    
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b

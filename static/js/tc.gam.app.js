@@ -12,6 +12,13 @@ tc.app.prototype.init = function(page){
 	_me = this;
 	this.app_page = page;
 	
+<<<<<<< HEAD
+=======
+	if (page.data.info_addr) {
+    	$('.nospam.infomail').html(makeEmailLink(page.data.info_addr.name, page.data.info_addr.domain));
+	}
+	
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 	tc.jQ.ajaxSetup({
 		cache:false
 	});
@@ -132,7 +139,11 @@ tc.randomNoteCardBg = function(ideasList) {
 	}
 };
 
+<<<<<<< HEAD
 tc.makeEmailLink = function(name, domain) {
+=======
+makeEmailLink = function(name, domain) {
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     addr = name + '@' + domain;
     s = '<a href="mailto:' + addr + '">' + addr + '</a>';
     return s;
@@ -148,6 +159,7 @@ var isiPad = false;
 if( ua && ua.msie && ua.version < 9 ) {
 	isMsie8orBelow = true;
 	
+<<<<<<< HEAD
 	(function() {
 		var originalTitle = document.title.split("#")[0];
 		document.attachEvent("onpropertychange", function(e) {
@@ -157,6 +169,8 @@ if( ua && ua.msie && ua.version < 9 ) {
 		});
 	}());
 	
+=======
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 	if( ua.version < 8 ) {
 		tc.jQ('body').addClass('ie7');
 		isMsie7orBelow = true

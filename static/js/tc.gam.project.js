@@ -19,10 +19,18 @@ tc.gam.project = function(options){
 	hash_onload = window.location.hash;
 	
 	this.components = {
+<<<<<<< HEAD
 		infopane:new tc.gam.project_widgets.infopane(this,this.dom.find('.box.mission'),{widget:this.widget},{app:options.app}),
 		resources:new tc.gam.project_widgets.resources(this,this.dom.find('.box.resources'),{widget:this.widget},{app:options.app}),
 		related_resources:new tc.gam.project_widgets.related_resources(this,this.dom.find('.box.related-resources'),{widget:this.widget},{app:options.app}),
 		add_link:new tc.gam.project_widgets.add_link(this,this.dom.find('.box.add-link'),{widget:this.widget},{app:options.app}),
+=======
+		infopane: new tc.gam.project_widgets.infopane(this,this.dom.find('.box.mission'),{widget:this.widget},{app:options.app}),
+		resources:new tc.gam.project_widgets.resources(this,this.dom.find('.box.resources'),{widget:this.widget},{app:options.app}),
+		related_resources:new tc.gam.project_widgets.related_resources(this,this.dom.find('.box.related-resources'),{widget:this.widget},{app:options.app}),
+		add_link:new tc.gam.project_widgets.add_link(this,this.dom.find('.box.add-link'),{widget:this.widget},{app:options.app}),
+		add_file:new tc.gam.project_widgets.add_file(this,this.dom.find('.box.add-file'),{widget:this.widget},{app:options.app}),
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		goals_main:new tc.gam.project_widgets.goals_main(this,this.dom.find('.box.goals-main'),{widget:this.widget},{app:options.app}),
 		goals_add:new tc.gam.project_widgets.goals_add(this,this.dom.find('.box.goals-add'),{widget:this.widget},{app:options.app}),
 		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
@@ -51,6 +59,10 @@ tc.gam.project = function(options){
 			}
 			e.data.project.components.goals_add.hide(false);
 			e.data.project.components.add_link.hide(false);
+<<<<<<< HEAD
+=======
+			e.data.project.components.add_file.hide(false);
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 			e.data.project.components.related_resources.hide(false);
 		} else {
 			this.components.goals_main.show(false);
@@ -70,6 +82,10 @@ tc.gam.project = function(options){
 					e.data.project.components.goals_add.hide(false);
 					e.data.project.components.conversation.hide(false);
 					e.data.project.components.add_link.hide(false);
+<<<<<<< HEAD
+=======
+					e.data.project.components.add_file.hide(false);
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 					break;
 				case 'goals_add':
 					e.data.project.components.goals_main.hide(false);
@@ -86,6 +102,10 @@ tc.gam.project = function(options){
 					e.data.project.components.members.hide(false);
 					e.data.project.components.conversation.hide(false);
 					e.data.project.components.add_link.hide(false);
+<<<<<<< HEAD
+=======
+					e.data.project.components.add_file.hide(false);
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 					break;
 				case 'add_link':
 					e.data.project.components.goals_main.hide(false);
@@ -96,6 +116,19 @@ tc.gam.project = function(options){
 					e.data.project.components.conversation.hide(false);
 					e.data.project.components.related_resources.hide(false);
 					break;
+<<<<<<< HEAD
+=======
+					
+				case 'add_file':
+					e.data.project.components.goals_main.hide(false);
+					if (tc.gam.project_widgets.goals_stack) {
+						e.data.project.components.goals_stack.hide(false);
+					}
+					e.data.project.components.members.hide(false);
+					e.data.project.components.conversation.hide(false);
+					e.data.project.components.related_resources.hide(false);
+					break;
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 			}
 		},
 		widget_hide:function(e,d){
@@ -106,6 +139,10 @@ tc.gam.project = function(options){
 				case 'goals_stack':
 				case 'related_resources':
 				case 'add_link':
+<<<<<<< HEAD
+=======
+				case 'add_file':
+>>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 					go_home(e);
 					break;
 			}
