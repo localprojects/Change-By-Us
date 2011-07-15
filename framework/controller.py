@@ -135,11 +135,8 @@ class Controller():
         
         return var              
         
-<<<<<<< HEAD
+
     def render(self, template_name, template_values=None, suffix="html", content_type = "text/html"):
-=======
-    def render(self, template_name, template_values=None, suffix="html"):
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         if template_values is None: template_values = {}
         
         # Set the user object in case it's been created since we initialized
@@ -158,39 +155,29 @@ class Controller():
         #add template data object
         if self.template_data: template_values['template_data'] = self.template_data 
         
-<<<<<<< HEAD
         template_values['full_url'] = web.ctx.home + web.ctx.fullpath
-        
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+
         if hasattr(self.session, 'flash') and self.session.flash is not None:
             template_values['flash'] = self.session.flash
             log.info('showing flash message: "' + self.session.flash + '"')
             self.session.flash = None
             self.session.invalidate()
         template_values['session_id'] = self.session.session_id    
-        
-<<<<<<< HEAD
-=======
+
         # debug debug gubed
         log.info("*** session  = %s" % self.session)
         
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         keys = self.session.keys()
         for key in keys:
             template_values[key] = self.session[key]
         template_values['template_name'] = template_name
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')
         renderer._lookup.filters.update(custom_filters.filters)
-<<<<<<< HEAD
+
         web.header("Content-Type", content_type)
         #log.info("TEMPLATE %s: %s" % (template_name, template_values))
         log.info("200: %s (%s)" % (content_type, template_name))
-=======
-        web.header("Content-Type", "text/html")
-        #log.info("TEMPLATE %s: %s" % (template_name, template_values))
-        log.info("200: text/html (%s)" % template_name)
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+        
         return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
 
     def json(self, data):

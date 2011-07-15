@@ -67,12 +67,9 @@ COOKBOOK:
     # Deploy cron tasks
         fab --config=rcfile.dev dev deploy_cron 
         
-<<<<<<< HEAD
     # Set up and deploy the database backup script(s) 
         fab --config=rcfile.dev dev setup_db_backup
         
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 """
 
 # We need to make the hosts into a list
@@ -431,12 +428,9 @@ def symlink_current_release():
     run('rm -f %(app_path)s/releases/%(release)s/config.yaml; ln -s %(app_path)s/shared/config.yaml %(app_path)s/releases/%(release)s/' % env)
     run('ln -s %(app_path)s/releases/%(release)s %(app_path)s/current' % env)
 
-<<<<<<< HEAD
 """
 Initial setup tasks for Git and virtualenv
 """
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def clone_repo():
     """
     Do initial clone of the git repository.
@@ -467,13 +461,10 @@ def install_lighttpd_conf():
     """
     sudo('cp %(repository)s/%(application)s/etc/%(settings)s/%(application)s %(apache_config_path)s' % env)
 
-<<<<<<< HEAD
 
 """
 Deployment Related Tasks
 """
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def deploy_assets_to_s3():
     """
     Deploy the latest assets and JS to S3 bucket
@@ -482,15 +473,8 @@ def deploy_assets_to_s3():
 #    run('s3cmd -P --guess-mime-type sync %(venv_path)s/src/django/django/contrib/admin/media/ s3://%(s3_bucket)s/%(application)s/%(site_media_prefix)s/' % env)
 #    run('s3cmd del --recursive s3://%(s3_bucket)s/%(application)s/%(newsapps_media_prefix)s/' % env)
 #    run('s3cmd -P --guess-mime-type sync %(venv_path)s/src/newsapps/newsapps/na_media/ s3://%(s3_bucket)s/%(application)s/%(newsapps_media_prefix)s/' % env)
-<<<<<<< HEAD
     pass
 
-=======
-
-"""
-Commands - deployment
-"""
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 @roles('web')
 def deploy():
     """
@@ -519,7 +503,6 @@ def deploy():
 
 def maintenance_up():
     """
-<<<<<<< HEAD
     Execute maintenance configuration.
     """
     # sudo('cp %(repository)s/%(application)s/configs/%(settings)s/%(application)s_maintenance %(apache_config_path)s' % env)
@@ -555,58 +538,10 @@ def rollback(commit_id):
     """
     Rolls back to specified git/svn commit hash or tag or timestamp.
     Deployments should be to timestamp-commitTag
-=======
-    Install the Apache maintenance configuration.
-    """
-    pass
-    # sudo('cp %(repository)s/%(application)s/configs/%(settings)s/%(application)s_maintenance %(apache_config_path)s' % env)
-    # reboot()
-
-def gzip_assets():
-    """
-    GZips every file in the assets directory and places the new file
-    in the gzip directory with the same filename.
-    """
-    run('cd %(repository)s; python gzip_assets.py' % env)
-
-def deploy_to_s3():
-    """
-    Deploy the latest project site media to S3.
-    """
-    env.gzip_path = '%(path)s/repository/%(application)s/gzip/assets/' % env
-    run(('s3cmd -P --add-header=Content-encoding:gzip --guess-mime-type --rexclude-from=%(path)s/repository/s3exclude sync %(gzip_path)s s3://%(s3_bucket)s/%(application)s/%(site_media_prefix)s/') % env)
-
-def refresh_widgets():
-    """
-    Redeploy the widgets to S3.
-    """
-    run('source %(venv_path)s/bin/activate; cd %(repository)s; ./manage refreshwidgets' % env)
-
-def reboot():
-    """
-    Restart the Apache2 server.
-    """
-    sudo('/mnt/apps/bin/restart-all-apache.sh')
-
-def maintenance_down():
-    """
-    Reinstall the normal site configuration.
-    """
-    install_apache_conf()
-    reboot()
-
-"""
-Commands - rollback
-"""
-def rollback(commit_id):
-    """
-    Rolls back to specified git commit hash or tag.
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
     There is NO guarantee we have committed a valid dataset for an arbitrary
     commit hash.
     """
-<<<<<<< HEAD
 #    require('settings', provided_by=[production, staging])
 #    require('branch', provided_by=[master, branch])
 #
@@ -634,51 +569,18 @@ def create_mycnf():
     # env.temp = env.database_password
     run('echo "[client]\nuser=%(database_user)s\npassword=%(temp)s\n" > $HOME/.my.cnf && chmod 600 $HOME/.my.cnf' % env)
     
-=======
-    require('settings', provided_by=[production, staging])
-    require('branch', provided_by=[stable, master, branch])
-
-    maintenance_up()
-    checkout_latest()
-    git_reset(commit_id)
-    gzip_assets()
-    deploy_to_s3()
-    refresh_widgets()
-    maintenance_down()
-
-def git_reset(commit_id):
-    """
-    Reset the git repository to an arbitrary commit hash or tag.
-    """
-    env.commit_id = commit_id
-    run("cd %(repository)s; git reset --hard %(commit_id)s" % env)
-
-"""
-Commands - data
-"""
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def load_new_data():
     """
     Erase the current database and load new data from the SQL dump file.
     """
     require('settings', provided_by=[production, staging])
 
-<<<<<<< HEAD
 #    maintenance_up()
 #    destroy_database()
 #    create_database()
 #    load_data()
 #    maintenance_down()
     pass
-=======
-    maintenance_up()
-    pgpool_down()
-    destroy_database()
-    create_database()
-    load_data()
-    pgpool_up()
-    maintenance_down()
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
 def create_database():
     """
@@ -716,22 +618,6 @@ def pgpool_up():
     """
     sudo('/etc/init.d/pgpool start')
 
-<<<<<<< HEAD
-=======
-"""
-WebServer related commands
-For now this works with modified lighttpd init.d scripts. It does NOT 
-work with other servers yet. 
-"""
-def stop_webserver():
-    sudo_as('/etc/init.d/%(webserver)s stop %(app_path)s' % env)
-
-def start_webserver():
-    sudo_as('/etc/init.d/%(webserver)s start %(app_path)s' % env)
-
-def restart_webserver():
-    sudo_as('/etc/init.d/%(webserver)s restart %(app_path)s' % env)
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
 """
 Commands - miscellaneous

@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import os, yaml
-from os import environ
-
-class Config():
-
-    data = None
-
-    @classmethod
-    def load(cls):
-=======
 """
 Module to handle config values.  Config is defined at config.yaml.
 
@@ -34,21 +23,10 @@ class Config():
         directory or one directory above it.
         
         """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         try:
             c = open(os.path.dirname(__file__) + "/../config.yaml")
         except Exception:
             c = open(os.path.dirname(__file__) + "/config.yaml")
-<<<<<<< HEAD
-        cls.data = yaml.load(c)            
-    
-    @classmethod
-    def get(cls, key):
-        if cls.data is None:
-            cls.load()
-        try:
-            d = cls.data[key]
-=======
 
         self.data = yaml.load(c)           
     
@@ -69,23 +47,11 @@ class Config():
             
         try:
             d = self.data[key]
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return d
         except KeyError:
             raise KeyError
 
     @classmethod
-<<<<<<< HEAD
-    def get_all(cls):
-        if cls.data is None:
-            cls.load()
-        return cls.data
-
-    @classmethod
-    def dev(cls):
-        try:
-            return cls.get('dev')
-=======
     def get_all(self):
         """
         Get all values
@@ -114,14 +80,10 @@ class Config():
                 return dev
             else:
                 return False
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         except KeyError, e:
             return False
         
     @classmethod
-<<<<<<< HEAD
-    def base_url(cls):
-=======
     def base_url(self):
         """
         Determine base URL from WebPy application values.
@@ -132,15 +94,11 @@ class Config():
         @returns: Calculated base URL or None if lib from web is not available.
         
         """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         try:
             from lib import web
         except ImportError:
             return None
-<<<<<<< HEAD
-=======
-            
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+
         try:
             return "http://%s%s" % (web.ctx.environ['HTTP_HOST'], os.path.dirname(web.ctx.environ['SCRIPT_NAME']))
         except (KeyError, AttributeError):
