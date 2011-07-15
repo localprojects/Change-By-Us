@@ -4,6 +4,7 @@ from framework.s3uploader import S3Uploader
 from framework.log import log
 from framework.controller import Controller
 from PIL import Image, ImageOps
+from framework.config import Config
 
 class FileServer(object):
     """
@@ -16,6 +17,7 @@ class FileServer(object):
         the file or saving the file fails, then add will return None, and no
         modification will be made.  Otherwise, the ID of the record in the 
         database will be returned.
+        
         """
         # Create a new record for the file
         log.info("FileServer.add")
@@ -41,8 +43,8 @@ class FileServer(object):
         Arguments:
         db -- A web.py database (`web.db`) object
         app -- The name of the app (`str`)
-        """
         
+        """
         try:
             id = db.insert('files', app=app)
         except Exception, e:
@@ -69,6 +71,7 @@ class FileServer(object):
         Attributes:
         fileid -- The id from the database record that corresponds to this file
         data -- The data (string of bytes) contained in the file
+        
         """
         raise NotImplementedError(("You must override the implementaion of "
                                    "saveFile for your file server.  For "
@@ -79,6 +82,18 @@ class S3FileServer(FileServer):
     
     def getConfigVar(self, var_name):
         return Config.get(var_name)
+    
+    def getLocalPath(self, fileid):
+        """
+        Get the path to the file given by the fileid on the local file system.
+        This is used only to temporarily save the file before uploading it to
+        the S3 server.
+        """
+        return "data/files/%s" % fileid
+    
+    def getS3Path(self, fileid):
+        """Get the path to the file given by the fileid on the S3 server."""
+        return "data/files/%s" % fileid
 
     def saveFile(self, fileid, data, mirror=True, **kwargs):
         """
@@ -90,11 +105,14 @@ class S3FileServer(FileServer):
         data -- The data (string of bytes) contained in the file
         """
         
+        localpath = self.getLocalPath(fileid)
+        s3path = self.getS3Path(fileid)
+        
         isS3mirror = self.getConfigVar('media')['isS3mirror']
         log.info("*** config = %s, mirror = %s" % (isS3mirror, mirror))
         if (isS3mirror and mirror):
             try:
-                result = S3Uploader.upload(path, path)
+                result = S3Uploader.upload(localpath, s3path)
                 log.info(result)
             except Exception, e:
                 log.error(e)

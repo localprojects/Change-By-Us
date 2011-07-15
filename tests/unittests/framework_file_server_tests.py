@@ -57,5 +57,29 @@ class BaseFileServerTests (TestCase):
         self.assertIn("DELETE FROM files", db.query.call_args[0][0])
     
 class S3FileServerTests (TestCase):
-    pass
-#    def test_
+    
+    def test_S3UploaderIsCalledWithCorrectParameters(self):
+        file_server.S3Uploader.upload = Mock()
+        
+        fs = file_server.S3FileServer()
+        fs.getLocalPath = Mock(return_value="local/path/to/file7")
+        fs.getS3Path = Mock(return_value="path/to/file7/on/s3")
+        
+        success = fs.saveFile(7, "This is file data")
+        
+        self.assertTrue(success)
+        self.assertEqual(file_server.S3Uploader.upload.call_count, 1)
+        self.assertEqual(file_server.S3Uploader.upload.call_args[0], 
+            ("local/path/to/file7", "path/to/file7/on/s3"))
+        
+    def test_LocalPathDeterminedBasedOnId(self):
+        fs = file_server.S3FileServer()
+        
+        path = fs.getLocalPath(7)
+        self.assertEqual(path, "data/files/7")
+    
+    def test_S3PathDeterminedBasedOnId(self):
+        fs = file_server.S3FileServer()
+        
+        path = fs.getS3Path(7)
+        self.assertEqual(path, "data/files/7")
