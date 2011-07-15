@@ -6,11 +6,7 @@ from framework.config import *
 ## EMAIL FUNCTIONS
 
 # send email to invited users
-<<<<<<< HEAD
 def emailInvite(email, inviterName, projectId, title, description, message = None):
-=======
-def emailInvite(email, inviterName, projectId, title, description):
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     emailAccount = Config.get('email')
     subject = "You've been invited by %s to join a project" % inviterName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
