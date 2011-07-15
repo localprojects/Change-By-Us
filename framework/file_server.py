@@ -10,7 +10,6 @@ class FileServer(object):
     A generic FileServer.  
     """
     
-#    @classmethod
     def add(self, db, data, app, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
         """
         Add a file to the fileserver.  If either adding the database record for 
@@ -20,16 +19,16 @@ class FileServer(object):
         """
         # Create a new record for the file
         log.info("FileServer.add")
-        id = self.addDbRecord(db, app) 
+        id = self.addDbRecord(db, app)
         
         if id is None:
             return None
         
         # Save the file to the system
-        success = self.saveFile(id, data)
+        success = self.saveFile(id, data, max_size=max_size, mirror=mirror)
         
         if not success:
-            self.removeDbRecord(id)
+            self.removeDbRecord(db, id)
             return None
         
         # Return the id of the file
@@ -52,10 +51,15 @@ class FileServer(object):
         
         return id
     
-    def get_config_var(self, var_name):
-        return Config.get(var_name)
-
-    def saveFile(self, fileid, data):
+    def removeDbRecord(self, db, id):
+        try:
+            db.query("DELETE FROM files WHERE id=$id", {'id': id})
+            return True
+        except Exception, e:
+            log.error(e)
+            return False
+    
+    def saveFile(self, fileid, data, **kwargs):
         """
         Save the data into a file.  Return True is file successfully saved,
         otherwise False.
@@ -73,20 +77,22 @@ class FileServer(object):
 
 class S3FileServer(FileServer):
     
-    def saveFile(self, fileid, data):
+    def get_config_var(self, var_name):
+        return Config.get(var_name)
+
+    def saveFile(self, fileid, data, mirror=True, **kwargs):
         """
         Save the data into a file.  Return True is file successfully saved,
         otherwise False.
-        
-        Override this method to save files in other places.
         
         Attributes:
         fileid -- The id from the database record that corresponds to this file
         data -- The data (string of bytes) contained in the file
         """
         
-        log.info("*** config = %s, mirror = %s" % (Config.get('media')['isS3mirror'] , mirror))
-        if (self.get_config_var('media')['isS3mirror'] and mirror):
+        isS3mirror = self.get_config_var('media')['isS3mirror']
+        log.info("*** config = %s, mirror = %s" % (isS3mirror, mirror))
+        if (isS3mirror and mirror):
             try:
                 result = S3Uploader.upload(path, path)
                 log.info(result)

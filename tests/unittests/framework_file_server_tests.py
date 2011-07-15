@@ -38,7 +38,24 @@ class BaseFileServerTests (TestCase):
     def test_DefaultFileServerAddRaisesNotImplentedError(self):
         fs = file_server.FileServer()
         
-        db = main.db = main.sessionDB()
+        db = main.sessionDB()
         db.insert = Mock(return_value=1)
         
         self.assertRaises(NotImplementedError, fs.add, db, "This is file data", "myapp")
+    
+    def test_DbRecordShouldBeRemovedIfFileSaveIsUnsuccessful(self):
+        fs = file_server.FileServer()
+        fs.addDbRecord = Mock(return_value=7)
+        fs.saveFile = Mock(return_value=False)
+        
+        db = main.sessionDB()
+        db.query = Mock()
+        
+        fs.add(db, "This is file data", "myapp")
+        
+        self.assertEqual(db.query.call_count, 1)
+        self.assertIn("DELETE FROM files", db.query.call_args[0][0])
+    
+class S3FileServerTests (TestCase):
+    pass
+#    def test_
