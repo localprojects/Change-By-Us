@@ -66,10 +66,6 @@ function initialize(app) {
 
 	var myOptions = {
 		content: boxText,
-<<<<<<< HEAD
-=======
-		disableAutoPan: false,
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 		maxWidth: 0,
 		pixelOffset: new google.maps.Size(-5, -92),
 		zIndex: null,
@@ -78,11 +74,7 @@ function initialize(app) {
 		isHidden: false,
 		pane: "floatPane",
 		enableEventPropagation: false,
-<<<<<<< HEAD
 		disableAutoPan: false
-=======
-		disableAutoPan: true
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 	};
 	
 	ib = new InfoBox(myOptions);

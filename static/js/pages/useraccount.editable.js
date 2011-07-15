@@ -333,12 +333,8 @@
 					url: "/resource/edit/description",
 					param: "description",
 					post_data: post_data
-<<<<<<< HEAD
 				},
 				charlimit: 400
-=======
-				}
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 			});
 			
 			//url
