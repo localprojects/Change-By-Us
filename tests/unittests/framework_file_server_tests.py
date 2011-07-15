@@ -13,9 +13,20 @@ class BaseFileServerTests (TestCase):
         fs._saveFile = Mock()
         
         db = main.sessionDB()
+#        db.insert = Mock(side
         id = fs.add(db, "This is file data", "myapp")
         
         self.assertEqual(fs._addDbRecord.call_count, 1)
         self.assertFalse(fs._saveFile.called)
         self.assertIsNone(id)
-
+    
+    def test_AddShouldCallInsertOnDatabase(self):
+        fs = file_server.FileServer()
+        
+        db = main.sessionDB()
+        db.insert = Mock(return_value=None)
+        
+        fs.add(db, "This is file data", "myapp")
+        
+        self.assertEqual(db.insert.call_count, 1)
+        
