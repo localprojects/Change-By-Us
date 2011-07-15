@@ -1,8 +1,8 @@
 import cStringIO
 import framework.util as util
-from framework.s3uploader import *
+from framework.s3uploader import S3Uploader
 from framework.log import log
-from framework.controller import *
+from framework.controller import Controller
 from PIL import Image, ImageOps
 
 class FileServer(object):
@@ -77,7 +77,7 @@ class FileServer(object):
 
 class S3FileServer(FileServer):
     
-    def get_config_var(self, var_name):
+    def getConfigVar(self, var_name):
         return Config.get(var_name)
 
     def saveFile(self, fileid, data, mirror=True, **kwargs):
@@ -90,7 +90,7 @@ class S3FileServer(FileServer):
         data -- The data (string of bytes) contained in the file
         """
         
-        isS3mirror = self.get_config_var('media')['isS3mirror']
+        isS3mirror = self.getConfigVar('media')['isS3mirror']
         log.info("*** config = %s, mirror = %s" % (isS3mirror, mirror))
         if (isS3mirror and mirror):
             try:
