@@ -92,11 +92,21 @@ class render_jinja:
     def __getattr__(self, name):
         # Assuming all templates end with .html
         path = name + '.html'
-        t = self._lookup.get_template(path)
+        try:
+            t = self._lookup.get_template(path)
+        except:
+            path = '404.html'
+            t = self._lookup.get_template(path)
+            
         return t.render
         
     def __getitem__(self, name):    # bh added
-        t = self._lookup.get_template(name)
+        try:
+            t = self._lookup.get_template(name)
+        except:
+            path = '404.html'
+            t = self._lookup.get_template(name)
+            
         return t.render
 
 class render_mako:
