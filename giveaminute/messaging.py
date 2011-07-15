@@ -15,11 +15,7 @@ def emailInvite(email, inviterName, projectId, title, description):
     subject = "You've been invited by %s to join a project" % inviterName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
     body = Emailer.render('email/project_invite', 
-<<<<<<< HEAD
                           {'inviter':inviterName, 'title':title, 'description':description, 'link': link, 'message':message}, 
-=======
-                          {'inviter':inviterName, 'title':title, 'description':description, 'link': link}, 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                           suffix = 'txt')     
     try:
         return Emailer.send(email, 
@@ -75,21 +71,17 @@ def emailProjectEndorsement(email, title, leaderName):
 
 # email resource contacts on resource add        
 def emailResourceNotification(email, projectId, title, description, resourceName):
-<<<<<<< HEAD
     # if dev, don't email resources
     if (Config.get('dev')):
         return True
 
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     emailAccount = Config.get('email')
     subject = "A project on Changeby.us has added %s as a resource" % resourceName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
     body = Emailer.render('email/resource_notification',
                         {'title':title, 'description':description, 'resource_name':resourceName, 'link':link},
                         suffix = 'txt')
-<<<<<<< HEAD
-    
+
     try:
         return Emailer.send(email, 
                             subject, 
@@ -100,24 +92,11 @@ def emailResourceNotification(email, projectId, title, description, resourceName
         log.info("*** couldn't send resource notification email")
         log.error(e)
         return False
-=======
 
     ### WE DON'T WANT TO SEND THESE YET
     log.info("*** pretend we sent a notification email to %s" % email)
     log.info("*** body = %s" % body)
     return True
-    
-#     try:
-#         return Emailer.send(email, 
-#                             subject, 
-#                             body,
-#                             from_name = emailAccount['from_name'],
-#                             from_address = emailAccount['username'])  
-#     except Exception, e:
-#         log.info("*** couldn't send resource notification email")
-#         log.error(e)
-#         return False
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
       
 # email resource owner on approval
 def emailResourceApproval(email, title):
@@ -222,7 +201,7 @@ def emailUnauthenticatedUser(email, authGuid):
         log.info("*** couldn't send authenticate user email")
         log.error(e)
         return False
-<<<<<<< HEAD
+
         
 # email upon idea submission
 def emailIdeaConfirmation(email, responseEmail, locationId):
@@ -248,9 +227,6 @@ def emailIdeaConfirmation(email, responseEmail, locationId):
         log.info("*** couldn't send authenticate user email")
         log.error(e)
         return False
- 
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
 ### SMS FUNCTIONS
         
@@ -302,7 +278,3 @@ def sendSMSInvite(db, phone, projectId):
         log.error(e)
         return False    
     
-    
-    
-    
-

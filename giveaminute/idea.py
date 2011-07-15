@@ -51,9 +51,7 @@ def createIdea(db, description, locationId, submissionType, userId=None, email=N
         return None
         
     return ideaId
-<<<<<<< HEAD
-    
-=======
+
 
 def deleteIdea(db, ideaId):
     try:
@@ -65,7 +63,7 @@ def deleteIdea(db, ideaId):
         log.error(e)
         return False
 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+
 def attachIdeasByEmail(db, email):
     try:
         sql = """
@@ -274,8 +272,4 @@ def ideaName(first, last, affiliation = None):
     elif (affiliation):
         return affiliation
     else:
-<<<<<<< HEAD
         return None
-=======
-        return None
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b

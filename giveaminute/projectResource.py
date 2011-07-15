@@ -57,11 +57,7 @@ def searchProjectResourcesCount(db, terms, locationId):
                     where
                     is_active = 1 and is_hidden = 0
                     and ($locationId is null or location_id = $locationId)
-<<<<<<< HEAD
                     and ($match = '' or match(title, keywords, description) against ($match in boolean mode))"""
-=======
-                    and ($match = '' or match(title, description) against ($match in boolean mode))"""
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 
         data = list(db.query(sql, {'match':match, 'locationId':locationId}))
         
@@ -83,11 +79,7 @@ def searchProjectResources(db, terms, locationId, limit=1000, offset=0):
                     where
                     is_active = 1 and is_hidden = 0
                     and ($locationId is null or location_id = $locationId)
-<<<<<<< HEAD
                     and ($match = '' or match(title, keywords, description) against ($match in boolean mode))
-=======
-                    and ($match = '' or match(title, description) against ($match in boolean mode))
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
                     order by created_datetime desc
                     limit $limit offset $offset"""
 
