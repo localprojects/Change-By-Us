@@ -20,22 +20,22 @@ class FileServer(object):
         """
         # Create a new record for the file
         log.info("FileServer.add")
-        id = self._addDbRecord(db, app) 
+        id = self.addDbRecord(db, app) 
         
         if id is None:
             return None
         
         # Save the file to the system
-        success = self._saveFile(id, data)
+        success = self.saveFile(id, data)
         
         if not success:
-            self._removeDbRecord(id)
+            self.removeDbRecord(id)
             return None
         
         # Return the id of the file
         return id
     
-    def _addDbRecord(self, db, app):
+    def addDbRecord(self, db, app):
         """
         Insert a new record for a file into the given database.
         
@@ -52,7 +52,28 @@ class FileServer(object):
         
         return id
     
-    def _saveFile(self, fileid, data):
+    def get_config_var(self, var_name):
+        return Config.get(var_name)
+
+    def saveFile(self, fileid, data):
+        """
+        Save the data into a file.  Return True is file successfully saved,
+        otherwise False.
+        
+        Override this method to save files in other places.
+        
+        Attributes:
+        fileid -- The id from the database record that corresponds to this file
+        data -- The data (string of bytes) contained in the file
+        """
+        raise NotImplementedError(("You must override the implementaion of "
+                                   "saveFile for your file server.  For "
+                                   "example, check out the S3FileServer."))
+
+
+class S3FileServer(FileServer):
+    
+    def saveFile(self, fileid, data):
         """
         Save the data into a file.  Return True is file successfully saved,
         otherwise False.
@@ -65,7 +86,7 @@ class FileServer(object):
         """
         
         log.info("*** config = %s, mirror = %s" % (Config.get('media')['isS3mirror'] , mirror))
-        if (Config.get('media')['isS3mirror'] and mirror):
+        if (self.get_config_var('media')['isS3mirror'] and mirror):
             try:
                 result = S3Uploader.upload(path, path)
                 log.info(result)

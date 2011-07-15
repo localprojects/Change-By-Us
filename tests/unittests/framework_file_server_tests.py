@@ -9,18 +9,23 @@ class BaseFileServerTests (TestCase):
 
     def test_AddShouldReturnNoneIfDbInsertionFails(self):
         fs = file_server.FileServer()
-        fs._addDbRecord = Mock(return_value=None)
-        fs._saveFile = Mock()
+        fs.addDbRecord = Mock(return_value=None)
+        fs.saveFile = Mock()
         
         db = main.sessionDB()
 #        db.insert = Mock(side
         id = fs.add(db, "This is file data", "myapp")
         
-        self.assertEqual(fs._addDbRecord.call_count, 1)
-        self.assertFalse(fs._saveFile.called)
+        self.assertEqual(fs.addDbRecord.call_count, 1)
+        self.assertFalse(fs.saveFile.called)
         self.assertIsNone(id)
     
     def test_AddShouldCallInsertOnDatabase(self):
+        """db.insert should be called with fs.add is called.
+        
+        Assumes that this should be true every time.  If this assumption becomes
+        false, the test will have to be changed.
+        """
         fs = file_server.FileServer()
         
         db = main.sessionDB()
@@ -29,4 +34,11 @@ class BaseFileServerTests (TestCase):
         fs.add(db, "This is file data", "myapp")
         
         self.assertEqual(db.insert.call_count, 1)
+    
+    def test_DefaultFileServerAddRaisesNotImplentedError(self):
+        fs = file_server.FileServer()
         
+        db = main.db = main.sessionDB()
+        db.insert = Mock(return_value=1)
+        
+        self.assertRaises(NotImplementedError, fs.add, db, "This is file data", "myapp")
