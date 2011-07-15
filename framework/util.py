@@ -3,44 +3,25 @@ import re, base64, string, urlparse
 from framework.log import log
 
 def try_f(f, data, default=None):
-<<<<<<< HEAD
-=======
     """
     Try to convert data to a new type using the f function. If the conversion
     fails, then return default.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     try:
         return f(data)
     except Exception, e:
         return default
 
-<<<<<<< HEAD
-def dictsort(value, arg):
-    """
-        Takes a list of dicts, returns that list sorted by the property given in
-        the argument.
-
-    """
-    decorated = [(resolve_variable('var.' + arg, {'var' : item}), item) for item in value]
-=======
 def dictsort(dict_list, sort_by_me):
     """
     Takes a list of dicts and returns that list sorted by the property given in
     the sort_by_me argument.
     """
     decorated = [(resolve_variable('var.' + sort_by_me, {'var' : item}), item) for item in dict_list]
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     decorated.sort()
     return [item[1] for item in decorated]
 
 def safeuni(s):
-<<<<<<< HEAD
-    if isinstance(s, unicode):
-        return s
-    if not isinstance(s, basestring):
-        if hasattr(obj, '__unicode__'):
-=======
     """
     Tries to convert an object to a unicode string, handling common edge cases.
     """
@@ -52,29 +33,20 @@ def safeuni(s):
     if not isinstance(s, basestring):
         #if can be converted to unicode, then go for it
         if hasattr(s, '__unicode__'):
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             return unicode(s)
         else:
             return str(s).decode('utf-8')
     try:
-<<<<<<< HEAD
-=======
-        #assume a utf-8 string, then try to convert it
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
-        s = unicode(s, errors='strict', encoding='utf-8')   # unicode() is expecting a utf-8 bytestring (unicode itself is not utf-8 or anything else)
+        # assume a utf-8 string, then try to convert it
+        # unicode() is expecting a utf-8 bytestring (unicode itself is not utf-8 or anything else)
+        s = unicode(s, errors='strict', encoding='utf-8')
     except UnicodeDecodeError, e:
         log.warning(e)
-        s = unicode(s, errors='ignore', encoding='utf-8')   # dump anything that doesnt make sense in utf-8
+        # dump anything that doesnt make sense in utf-8
+        s = unicode(s, errors='ignore', encoding='utf-8')
     return s
 
 def safestr(s):
-<<<<<<< HEAD
-    if isinstance(s, str):
-        return s
-    if isinstance(s, unicode):
-        try:
-            s = s.encode('utf-8')   
-=======
     """
     Tries to convert an object to a string, handling common edge cases. Also
     supports iterators by converting all items to strings.
@@ -88,20 +60,10 @@ def safestr(s):
     if isinstance(s, unicode):
         try:
             s = s.encode('utf-8')
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         except UnicodeEncodeError, e:
             log.error(e)
             return ""
         return s
-<<<<<<< HEAD
-    if hasattr(obj, 'next') and hasattr(obj, '__iter__'): # iterator
-        import itertools
-        return itertools.imap(safestr, obj)
-    else:
-        return str(obj)
-
-def validate_email(emailaddress):
-=======
 
     #if an iterater, then try to convert everything to a string
     if hasattr(s, 'next') and hasattr(s, '__iter__'): # iterator
@@ -115,34 +77,22 @@ def validate_email(emailaddress):
     Validate that the given string is an email address. Returns True when
     valid, False when invalid.
     """
-
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     domains = ["aero", "asia", "biz", "cat", "com", "coop", \
         "edu", "gov", "info", "int", "jobs", "mil", "mobi", "museum", \
         "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
         "in", "us", "il", "de", "it", "fr"
         ]
-<<<<<<< HEAD
-    if len(emailaddress) < 6:
-        # TODO: SR: Why? i@u.nu is valid!
-        return False # Address too short.
-=======
 
     #validate length
     if len(emailaddress) < 6:
         # TODO: SR: Why? i@u.nu is valid!
         return False # Address too short.
 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     try:
         localpart, domainname = emailaddress.rsplit('@', 1)
         host, toplevel = domainname.rsplit('.', 1)
     except ValueError:
         return False # Address does not have enough parts.
-<<<<<<< HEAD
-    if len(toplevel) != 2 and toplevel not in domains:
-        return False # Not a domain name.
-=======
 
     #if not a country code and not in the domain list
     if len(toplevel) != 2 and toplevel not in domains:
@@ -153,7 +103,6 @@ def validate_email(emailaddress):
         return False
 
     #NOTE: Why is this here? It doesn't do anything without the test below.
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     for i in '-_.%.':
         # Keep in mind that google allows +: my+name@gmail.com
         localpart = localpart.replace(i, "")
@@ -169,14 +118,6 @@ def validate_email(emailaddress):
     #    return False # Email address has funny characters.
 
     return True
-<<<<<<< HEAD
-        
-def validateUSPhone(phone):
-    return not (re.match("^[1-9]\d{9}$", phone) == None)
-    
-#strip leading 1 and any non-numerics
-def cleanUSPhone(phone):
-=======
 
 def validateUSPhone(phone):
     """
@@ -190,38 +131,17 @@ def cleanUSPhone(phone):
     """
     Clean up US phone numbers by stripping the leading 1 and any non-numerics.
     """
-
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     if phone is None:
         return None
 
     phone = phone.strip()
-<<<<<<< HEAD
-    
-    phone = re.sub("\D", "", phone)
-    phone = re.sub("^1", "", phone)
-    
-=======
-
     phone = re.sub("\D", "", phone)
     phone = re.sub("^1", "", phone)
 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     if (validateUSPhone(phone)):
         return phone
     else:
         return None
-<<<<<<< HEAD
-                
-def parse_tags(tagstring):
-    quotes = re.findall(r'".*?"', tagstring)
-    for q in quotes:
-        repaired = q.replace(',', '@@') # protect commas
-        repaired = repaired.replace(' ', '$$') # protect spaces     
-        tagstring = tagstring.replace(q, repaired)          
-    tagstring = tagstring.replace(',',' ')      
-    tags = tagstring.split(' ')     
-=======
 
 def parse_tags(tagstring):
     """
@@ -236,31 +156,12 @@ def parse_tags(tagstring):
 
     tagstring = tagstring.replace(',',' ')
     tags = tagstring.split(' ')
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+
     for tag in tags[:]:
         if len(tag.strip()) == 0:
             tags.remove(tag)
             continue
         t = tag.replace('@@', ',')
-<<<<<<< HEAD
-        tags[tags.index(tag)] = t.replace('$$', ' ')                
-    return tags
-
-def list_to_str(tags):
-    tagstring = ""
-    for tag in tags:
-        tagstring += safestr(tag) + ' '
-    return tagstring
-    
-def wordcount(s):
-    return len(s.split())
-        
-def filesizeformat(bytes):
-    """
-        Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
-        bytes, etc).
-
-=======
         tags[tags.index(tag)] = t.replace('$$', ' ')
     return tags
 
@@ -280,7 +181,6 @@ def filesizeformat(bytes):
     """
     Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
     bytes, etc).
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     """
     try:
         bytes = float(bytes)
@@ -293,23 +193,6 @@ def filesizeformat(bytes):
     if bytes < 1024 * 1024 * 1024:
         return "%.1f MB" % (bytes / (1024 * 1024))
     return "%.1f GB" % (bytes / (1024 * 1024 * 1024))
-<<<<<<< HEAD
-            
-def strip_html(s):
-    p = re.compile(r'<.*?>')
-    return p.sub('', s) 
-    
-def singlespace(s): 
-    p = re.compile(r'\s+')
-    return p.sub(' ', s)    
-    
-def remove_linebreaks(s):
-    s = s.splitlines()
-    s = ' '.join(s)
-    return singlespace(s).strip()
-    
-def depunctuate(s, exclude=None, replacement=''):
-=======
 
 def strip_html(s):
     """
@@ -340,37 +223,10 @@ def depunctuate(s, exclude=None, replacement=''):
     included in the exclude argument list. Punctuation is replaced by a blank string
     or the given replacement argument.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     import string
     p = string.punctuation
     if exclude:
         for c in exclude:
-<<<<<<< HEAD
-            p = p.replace(c, '')    
-    regex = re.compile('[%s]' % re.escape(p))
-    return regex.sub(replacement, s) 
-
-def nl2br(s):
-    return '<br />\n'.join(s.split('\n'))       
-
-def br2nl(s):
-    return '\n'.join(s.split('<br />'))     
-    
-def prefix(delim, s):
-    return s.split(delim)[0]
-    
-def suffix(delim, s):
-    return s.split(delim)[-1]
-        
-def urlencode(s):
-    if s is None: return ""
-    if isinstance(s, unicode):
-        s = s.encode('utf-8')   
-    import urllib    
-    return urllib.quote(s)
-        
-def add_leading_slash(s):
-=======
             p = p.replace(c, '')
     regex = re.compile('[%s]' % re.escape(p))
     return regex.sub(replacement, s)
@@ -414,29 +270,11 @@ def add_leading_slash(s):
     Prefix the given string with a leading forward slash if it does not
     already exist.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     if not s:
         return None
     if s[0] is not '/':
         s = '/' + s
     return s
-<<<<<<< HEAD
-    
-def titlecase(value):
-    """
-        Converts a string into titlecase
-
-    """
-    return re.sub("([a-z])'([A-Z])", lambda m: m.group(0).lower(), value.title())   
-    
-def location_cap(location):
-    if not location:
-        return None
-    tokens = location.split(',')
-    for token in tokens:    
-        t = [i.title() if len(i) > 2 and i.upper() != "USA" else i.upper() for i in token.split(' ')]
-        tokens[tokens.index(token)] = ' '.join(t)   
-=======
 
 def titlecase(value):
     """
@@ -462,23 +300,14 @@ def location_cap(location):
         #Else uppercase the string
         t = [i.title() if len(i) > 2 and i.upper() != "USA" else i.upper() for i in token.split(' ')]
         tokens[tokens.index(token)] = ' '.join(t)
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     return ','.join(tokens)
 
 def pluralize(value, arg='s'):
     """
-<<<<<<< HEAD
-        Returns a plural suffix if the value is not 1, for '1 vote' vs. '2 votes'
-        By default, 's' is used as a suffix; if an argument is provided, that string
-        is used instead. If the provided argument contains a comma, the text before
-        the comma is used for the singular case.
-
-=======
     Returns a plural suffix if the value is not 1, for '1 vote' vs. '2 votes'
     By default, 's' is used as a suffix; if an argument is provided, that string
     is used instead. If the provided argument contains a comma, the text before
     the comma is used for the singular case.
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     """
     if not ',' in arg:
         arg = ',' + arg
@@ -501,55 +330,29 @@ def pluralize(value, arg='s'):
 
 def slugify(value):
     """
-<<<<<<< HEAD
-        Converts to lowercase, removes non-alpha chars and converts spaces to hyphens
-        
-=======
     Converts to lowercase, removes non-alpha chars and converts spaces to hyphens.
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     """
     value = re.sub('[^\w\s-]', '', value).strip().lower()
     return re.sub('[-\s]+', '-', value)
 
 def short_decimal(value):
-<<<<<<< HEAD
-=======
     """
     Floors the float value to two decimal places.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     value = float(value) * 100.0
     value = int(value)
     value = float(value) / 100.0
     return value
-<<<<<<< HEAD
-    
-def zeropad(value):
-=======
 
 def zeropad(value):
     """
     Zero pad the given single digit number.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     value = int(value)
     if value < 10:
         return "0" + str(value)
     else:
         return str(value)
-<<<<<<< HEAD
-        
-def random_string(length):
-    import random
-    return ''.join(random.sample("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", length))
-    
-def obfuscate(id, length=12):
-    id = str(id)
-    padding = "".join(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"[(i + int(id)) % 52] for i in range(length - len(id))])
-    return base64.b64encode(id + padding)
-    
-def deobfuscate(token):
-=======
 
 def random_string(length):
     """
@@ -572,7 +375,6 @@ def deobfuscate(token):
     """
     Base 64 decodes the given string and returns the leading digits of the decoded string.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     try:
         token = base64.b64decode(token)
     except Exception, e:
@@ -583,17 +385,6 @@ def deobfuscate(token):
         if token[i].isdigit():
             numbers.append(token[i])
     return "".join(numbers)
-<<<<<<< HEAD
-            
-def format_time(seconds):
-    minutes = seconds // 60
-    seconds = seconds - (minutes * 60)        
-    hours = minutes // 60
-    minutes = minutes - (hours * 60)        
-    days = hours // 24
-    hours = hours - (days * 24)     
-    
-=======
 
 def format_time(seconds):
     """
@@ -605,8 +396,6 @@ def format_time(seconds):
     minutes = minutes - (hours * 60)
     days = hours // 24
     hours = hours - (days * 24)
-
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     time = []
     if days:
         time.append("%s:" % days)
@@ -617,20 +406,6 @@ def format_time(seconds):
     if seconds or minutes or hours or days:
         time.append("%s" % zeropad(seconds))
     time = "".join(time)
-<<<<<<< HEAD
-               
-    return time
-    
-def good_decimal(num):
-    from decimal import Decimal
-    return str(Decimal(str(num)).quantize(Decimal('.01')))    
-        
-def normalize(num, min, max):
-    return (float(num) - float(min)) / (float(max) - float(min))
-    
-def confirm_pid(run_folder):
-    import sys, os, signal, __main__    
-=======
 
     return time
 
@@ -652,7 +427,6 @@ def confirm_pid(run_folder):
     TBD
     """
     import sys, os, signal, __main__
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     name = prefix('.', os.path.basename(__main__.__file__))
     log.info("Attempting to launch daemon %s..." % name)
     pid = str(os.getpid())
@@ -670,18 +444,7 @@ def confirm_pid(run_folder):
                 exit()
         else:
             log.info("--> killed process %s" % old_pid)
-<<<<<<< HEAD
-        try:        
-            os.unlink(pidfile)        
-        except OSError, e:
-            log.error("--> could not remove pidfile, %s" % pidfile)
-            exit()
-    open(pidfile, 'w').write(pid)    
-    log.info("--> launched with pid %s" % pid)
-    
-""" web.py specific """
-    
-=======
+
         try:
             os.unlink(pidfile)
         except OSError, e:
@@ -691,18 +454,12 @@ def confirm_pid(run_folder):
     log.info("--> launched with pid %s" % pid)
 
 """ web.py specific """
-
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def get_flash_upload(web):
     """
-        Reformat data coming in from Flash FileReference
-        FileReference has silly boundary problems that create bad timeout errors
-        As standard multipart form data is present, this also works fine with standard HTML forms
-        http://www.mail-archive.com/webpy@googlegroups.com/msg04505.html
-<<<<<<< HEAD
-
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+    Reformat data coming in from Flash FileReference
+    FileReference has silly boundary problems that create bad timeout errors
+    As standard multipart form data is present, this also works fine with standard HTML forms
+    http://www.mail-archive.com/webpy@googlegroups.com/msg04505.html
     """
     import os
     tmpfile = os.tmpfile()
@@ -721,19 +478,11 @@ def get_flash_upload(web):
     input = web.input()
     tmpfile.close()
     return input
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def get_post_data(web):
     """
-        Get either web.input['file'] (HTML multipart form) or web.data() (octet upload)
-        This is useful when a controller needs to accept data from both an HTML and a Flash post (URLLoader, not FileReference)
-<<<<<<< HEAD
-    
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+    Get either web.input['file'] (HTML multipart form) or web.data() (octet upload)
+    This is useful when a controller needs to accept data from both an HTML and a Flash post (URLLoader, not FileReference)
     """
     try:
         data = web.input()['file']
@@ -743,19 +492,11 @@ def get_post_data(web):
         except Error, e2:
             log.error("--> bad post data web.input[%s] web.data[%s]" %s (e1, e2))
     return data
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
 def get_fake_session(controller):
     """
-        Get the session manually (like from a request variable) instead of a cookie.
-        Flash cant consistently get cookie data.
-<<<<<<< HEAD
-
-=======
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
+    Get the session manually (like from a request variable) instead of a cookie.
+    Flash cant consistently get cookie data.
     """
     import os, base64, pickle
     session_id = controller.request('session_id')
@@ -763,32 +504,14 @@ def get_fake_session(controller):
     if not os.path.exists(path):
         log.warning("--> get_fake_session: key path (%s) doesnt exist" % path)
         return {}
-<<<<<<< HEAD
-    try:    
-=======
     try:
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
         raw = open(path).read()	
         pickled = base64.decodestring(raw)
         fake_session = pickle.loads(pickled)
     except Exception, e:
         log.error("--> get_fake_session error: %s" % e)
         return {}
-<<<<<<< HEAD
-    log.info("FAKE SESSION: %s" % fake_session)        
-    return fake_session
-    
-def save_fake_session(data):
-    """
-        Save the session manually from a dict
-    
-    """
-    import os, base64, pickle   
-    try: 
-        path = "sessions/%s" % data['session_id']    
-        pickled = pickle.dumps(data)
-        raw = base64.encodestring(pickled)    
-=======
+
     log.info("FAKE SESSION: %s" % fake_session)
     return fake_session
 
@@ -801,7 +524,6 @@ def save_fake_session(data):
         path = "sessions/%s" % data['session_id']
         pickled = pickle.dumps(data)
         raw = base64.encodestring(pickled)
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     except Exception, e:
         log.error("--> save_fake_session formatting error: %s" % e)
         return
@@ -810,11 +532,7 @@ def save_fake_session(data):
         try:
             log.info("--> saving fake session")
             f.write(raw)
-<<<<<<< HEAD
-        finally: 
-=======
         finally:
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
             f.close()
     except IOError:
         pass
@@ -827,11 +545,6 @@ def check_bad_words(data):
     badwords = "anal anus arse ballsack balls bitch blowjob boner boob bugger butt buttplug clit clitoris cock coon cunt dick dildo dyke fag fellate fellatio felch felching fuck fucker fucken fucking fudgepacker homo jizz knobend labia muff nigger penis piss poop prick pube pussy scrotum slut smegma spunk tit turd twat vagina wank whore kike shit nigga sex ass"
     bw = string.split(badwords, " ")
     mods = ['', 's', 'es']
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     for w in bw:
         for mod in mods:
             w = w + mod
@@ -844,20 +557,6 @@ def check_bad_words(data):
             if " "+w+" " in data:
                 return True
     return False
-<<<<<<< HEAD
-    
-def strNullOrEmpty(s):
-    return not s or len(s.strip()) == 0
-    
-def getBit(i, index):
-    return ((i & (1 << index)) != 0)
-
-def setBit(i, index):
-    mask = 1 << index
-    return(i | mask)
-
-def makeUrlAbsolute(url):
-=======
 
 def strNullOrEmpty(s):
     """
@@ -869,7 +568,6 @@ def makeUrlAbsolute(url):
     """
     NOTE: The use case is unclear to me.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
 
     if not scheme:
@@ -884,12 +582,9 @@ def makeUrlAbsolute(url):
         return url
 
 def uniqify(seq):
-<<<<<<< HEAD
-=======
     """
     Make a list unique.
     """
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
     keys = {}
     for e in seq:
         keys[e] = 1
@@ -914,8 +609,6 @@ def flatten(l, ltypes=(list, tuple)):
                 l[i:i + 1] = l[i]
         i += 1
     return ltype(l)
-<<<<<<< HEAD
-=======
     
 def getBit(i, index):
     return ((i & (1 << index)) != 0)
@@ -923,4 +616,3 @@ def getBit(i, index):
 def setBit(i, index):
     mask = 1 << index
     return(i | mask)
->>>>>>> 91209450f14da99bae2edfc57c224cd0bd4e8f0b
