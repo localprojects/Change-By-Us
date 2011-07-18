@@ -176,7 +176,8 @@ def demo():
     """
     Work on demo environment
     """
-    pass
+    if env.rcfile is None:
+        env.rcfile = 'rcfile.%s' % env.settings
 
 @common_config
 def dev():
