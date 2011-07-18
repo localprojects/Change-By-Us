@@ -110,6 +110,9 @@ class CreateProject(Controller):
                         
     def uploadFile(self):
         """
+        Handler for the /create/file endpoint. Looks for the variable named
+        qqfile from the request and saves it to a file on the server.
+        
         """
         # Get file from the request
         if (len(self.request('qqfile')) > 100):
