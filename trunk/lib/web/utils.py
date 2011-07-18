@@ -1388,7 +1388,7 @@ class _EmailMessage:
         to_address = listify(to_address)
         cc = listify(kw.get('cc', []))
         bcc = listify(kw.get('bcc', []))
-        recipients = to_address + cc + bcc
+        recipients = to_address #  + cc + bcc
 
         import email.Utils
         self.from_address = email.Utils.parseaddr(from_address)[1]
@@ -1402,6 +1402,8 @@ class _EmailMessage:
 
         if cc:
             self.headers['Cc'] = ", ".join(cc)
+        if bcc:
+            self.headers['Bcc'] = ", ".join(bcc)
     
         self.message = self.new_message()
         self.message.add_header("Content-Transfer-Encoding", "7bit")

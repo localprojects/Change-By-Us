@@ -94,17 +94,24 @@ class render_jinja:
         path = name + '.html'
         try:
             t = self._lookup.get_template(path)
-        except:
+        except TemplateNotFound:
             path = '404.html'
             t = self._lookup.get_template(path)
+        except Exception, e:
+        #    # TODO: Need to implement a 500.html template, but for now nothing
+        #    path = '500.html'
+            t = self._lookup.get_template(name)
             
         return t.render
         
     def __getitem__(self, name):    # bh added
         try:
             t = self._lookup.get_template(name)
-        except:
+        except TemplateNotFound:
             path = '404.html'
+            t = self._lookup.get_template(name)
+        except:
+            path = '500.html'
             t = self._lookup.get_template(name)
             
         return t.render
