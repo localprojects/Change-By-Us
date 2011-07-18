@@ -9,7 +9,8 @@ from PIL import Image, ImageOps
 
 class FileServer(object):
     """
-    A generic FileServer.  
+    A generic FileServer.
+    
     """
     
     def add(self, db, data, app, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
@@ -37,6 +38,7 @@ class FileServer(object):
         # Return the id of the file
         return id
     
+    
     def addDbRecord(self, db, app):
         """
         Insert a new record for a file into the given database.
@@ -54,6 +56,7 @@ class FileServer(object):
         
         return id
     
+    
     def removeDbRecord(self, db, id):
         try:
             db.query("DELETE FROM files WHERE id=$id", {'id': id})
@@ -62,6 +65,7 @@ class FileServer(object):
         except Exception, e:
             log.error(e)
             return False
+    
     
     def saveFile(self, fileid, data, **kwargs):
         """
@@ -94,6 +98,7 @@ class S3FileServer(FileServer):
     def getConfigVar(self, var_name):
         return Config.get(var_name)
     
+    
     def getLocalPath(self, fileid):
         """
         Get the path to the file given by the fileid on the local file system.
@@ -103,12 +108,14 @@ class S3FileServer(FileServer):
         """
         return "data/files/%s" % fileid
     
+    
     def getS3Path(self, fileid):
         """
         Get the path to the file given by the fileid on the S3 server.
         
         """
         return "data/files/%s" % fileid
+    
     
     def saveTemporaryLocalFile(self, path, data):
         """
@@ -125,7 +132,8 @@ class S3FileServer(FileServer):
             return False
         
         return True
-
+    
+    
     def saveFile(self, fileid, data, mirror=True, **kwargs):
         """
         Save the data into a file.  Return True is file successfully saved,
