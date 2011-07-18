@@ -37,11 +37,13 @@ def safeuni(s):
         else:
             return str(s).decode('utf-8')
     try:
-        #assume a utf-8 string, then try to convert it
-        s = unicode(s, errors='strict', encoding='utf-8')   # unicode() is expecting a utf-8 bytestring (unicode itself is not utf-8 or anything else)
+        # assume a utf-8 string, then try to convert it
+        # unicode() is expecting a utf-8 bytestring (unicode itself is not utf-8 or anything else)
+        s = unicode(s, errors='strict', encoding='utf-8')
     except UnicodeDecodeError, e:
         log.warning(e)
-        s = unicode(s, errors='ignore', encoding='utf-8')   # dump anything that doesnt make sense in utf-8
+        # dump anything that doesnt make sense in utf-8
+        s = unicode(s, errors='ignore', encoding='utf-8')
     return s
 
 def safestr(s):
@@ -75,7 +77,6 @@ def validate_email(emailaddress):
     Validate that the given string is an email address. Returns True when
     valid, False when invalid.
     """
-
     domains = ["aero", "asia", "biz", "cat", "com", "coop", \
         "edu", "gov", "info", "int", "jobs", "mil", "mobi", "museum", \
         "name", "net", "org", "pro", "tel", "travel", "fm", "ly", "uk", \
@@ -130,12 +131,10 @@ def cleanUSPhone(phone):
     """
     Clean up US phone numbers by stripping the leading 1 and any non-numerics.
     """
-
     if phone is None:
         return None
 
     phone = phone.strip()
-
     phone = re.sub("\D", "", phone)
     phone = re.sub("^1", "", phone)
 
@@ -157,6 +156,7 @@ def parse_tags(tagstring):
 
     tagstring = tagstring.replace(',',' ')
     tags = tagstring.split(' ')
+
     for tag in tags[:]:
         if len(tag.strip()) == 0:
             tags.remove(tag)
@@ -396,7 +396,6 @@ def format_time(seconds):
     minutes = minutes - (hours * 60)
     days = hours // 24
     hours = hours - (days * 24)
-
     time = []
     if days:
         time.append("%s:" % days)
@@ -445,6 +444,7 @@ def confirm_pid(run_folder):
                 exit()
         else:
             log.info("--> killed process %s" % old_pid)
+
         try:
             os.unlink(pidfile)
         except OSError, e:
@@ -454,13 +454,12 @@ def confirm_pid(run_folder):
     log.info("--> launched with pid %s" % pid)
 
 """ web.py specific """
-
 def get_flash_upload(web):
     """
-        Reformat data coming in from Flash FileReference
-        FileReference has silly boundary problems that create bad timeout errors
-        As standard multipart form data is present, this also works fine with standard HTML forms
-        http://www.mail-archive.com/webpy@googlegroups.com/msg04505.html
+    Reformat data coming in from Flash FileReference
+    FileReference has silly boundary problems that create bad timeout errors
+    As standard multipart form data is present, this also works fine with standard HTML forms
+    http://www.mail-archive.com/webpy@googlegroups.com/msg04505.html
     """
     import os
     tmpfile = os.tmpfile()
@@ -482,8 +481,8 @@ def get_flash_upload(web):
 
 def get_post_data(web):
     """
-        Get either web.input['file'] (HTML multipart form) or web.data() (octet upload)
-        This is useful when a controller needs to accept data from both an HTML and a Flash post (URLLoader, not FileReference)
+    Get either web.input['file'] (HTML multipart form) or web.data() (octet upload)
+    This is useful when a controller needs to accept data from both an HTML and a Flash post (URLLoader, not FileReference)
     """
     try:
         data = web.input()['file']
@@ -496,8 +495,8 @@ def get_post_data(web):
 
 def get_fake_session(controller):
     """
-        Get the session manually (like from a request variable) instead of a cookie.
-        Flash cant consistently get cookie data.
+    Get the session manually (like from a request variable) instead of a cookie.
+    Flash cant consistently get cookie data.
     """
     import os, base64, pickle
     session_id = controller.request('session_id')
@@ -512,6 +511,7 @@ def get_fake_session(controller):
     except Exception, e:
         log.error("--> get_fake_session error: %s" % e)
         return {}
+
     log.info("FAKE SESSION: %s" % fake_session)
     return fake_session
 
@@ -545,7 +545,6 @@ def check_bad_words(data):
     badwords = "anal anus arse ballsack balls bitch blowjob boner boob bugger butt buttplug clit clitoris cock coon cunt dick dildo dyke fag fellate fellatio felch felching fuck fucker fucken fucking fudgepacker homo jizz knobend labia muff nigger penis piss poop prick pube pussy scrotum slut smegma spunk tit turd twat vagina wank whore kike shit nigga sex ass"
     bw = string.split(badwords, " ")
     mods = ['', 's', 'es']
-
     for w in bw:
         for mod in mods:
             w = w + mod

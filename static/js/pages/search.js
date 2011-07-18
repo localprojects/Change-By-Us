@@ -10,6 +10,23 @@ app_page.features.push(function(app){
 			tc.jQ('#list-view').removeClass('all projects resources ideas').addClass(theCat);
 			tc.jQ('.results-'+theCat).addClass('single').find('.carousel').trigger('make-single');
 			tc.jQ('.results-box').not('.single').find('.carousel').trigger('make-multiple');
+			switch(theCat){
+				case 'resources':
+					if(app.components['resource_carousel']){
+						app.components['resource_carousel'].carousel.seekTo(0);
+					}
+					break;
+				case 'projects':
+					if(app.components['project_carousel']){
+						app.components['project_carousel'].carousel.seekTo(0);
+					}
+					break;
+				case 'ideas':
+					if(app.components['idea_carousel']){
+						app.components['idea_carousel'].carousel.seekTo(0);
+					}
+					break;
+			}
 		};
 		
 		tc.jQ('.search-terms-container a.clear-field').bind('click',{input:tc.jQ('input.search-terms')},function(e){
@@ -212,7 +229,7 @@ app_page.features.push(function(app){
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
 				
-				out = tc.jQ('<table style="" class="projects-list doublewide clearfix">\
+				out = tc.jQ('<table style="' + ( isMsie8orBelow ? 'width:763px;' : '' ) + '" class="projects-list doublewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
@@ -254,7 +271,7 @@ app_page.features.push(function(app){
 			terms_input:tc.jQ('input.search-terms'),
 			page_generator:function(d){
 				var out, i, temprow, tempcell;
-				out = tc.jQ('<table style="" class="resources-list triplewide clearfix">\
+				out = tc.jQ('<table style="' + ( isMsie8orBelow ? 'width:763px;' : '' ) + '" class="resources-list triplewide clearfix">\
 					<tbody></tbody>\
 				</table>');
 				
@@ -268,6 +285,7 @@ app_page.features.push(function(app){
 						tempcell.find('img').attr('src',app.app_page.media_root + 'images/'+(d.results[i].image_id%10)+'/'+d.results[i].image_id+'.png')
 					}
 					tempcell.find('.resource-tooltip_trigger').attr('rel','#organization,'+d.results[i].link_id);
+					tempcell.find('.delete-resource').attr('href','#removeResource,'+d.results[i].link_id);
 					tempcell.find('a.resource_link').attr('href',d.results[i].url).children('span').text(tc.truncate(d.results[i].title,25,'...'));
 					
 					if (d.results[i].is_official == 1) {

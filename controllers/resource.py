@@ -99,7 +99,8 @@ class Resource(Controller):
         if (imageId):
             return mProjectResource.updateProjectResourceImage(self.db, resourceId, imageId)
         else:
-            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+
+            log.error("*** resource edit attempt without image id, resource id %s" % resourceId)
             return False
         
     def updateResourceLocation(self):
@@ -114,7 +115,7 @@ class Resource(Controller):
         if (locationId):
             return mProjectResource.updateProjectResourceLocation(self.db, resourceId, locationId)
         else:
-            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+            log.error("*** resource edit attempt without location id, resource id %s" % resourceId)
             return False
         
     def updateResourceDescription(self):
@@ -129,7 +130,7 @@ class Resource(Controller):
         if (description):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'description', description)
         else:
-            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+            log.error("*** resource edit attempt without description, resource id %s" % resourceId)
             return False
         
     def updateResourceUrl(self):
@@ -144,7 +145,7 @@ class Resource(Controller):
         if (url):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'url', util.makeUrlAbsolute(url))
         else:
-            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+            log.error("*** resource edit attempt without url, resource id %s" % resourceId)
             return False
                 
     def updateResourceContactEmail(self):
@@ -154,12 +155,12 @@ class Resource(Controller):
             log.error("*** resource edit attempt without ownership, resource id %s" % resourceId)
             return False
 
-        email = self.request('email')
+        email = self.request('contactemail')
         
         if (email):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'contact_email', email)
         else:
-            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+            log.error("*** resource edit attempt without email, resource id %s" % resourceId)
             return False
         
     def updateResourceAddress(self):
@@ -174,7 +175,7 @@ class Resource(Controller):
         if (address):
             return mProjectResource.updateProjectResourceTextData(self.db, resourceId, 'physical_address', address)
         else:
-            log.error("*** resource edit attempt without content, resource id %s" % resourceId)
+            log.error("*** resource edit attempt without address, resource id %s" % resourceId)
             return False
     
     def updateResourceKeywords(self):

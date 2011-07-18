@@ -40,7 +40,7 @@
 		
 		offset = 0;
 		if(app.app_page.data.user_activity && app.app_page.data.user_activity.messages){
-			offset = app.app_page.data.user_activity.messages.length - 1;
+			offset = app.app_page.data.user_activity.messages.length;
 		}
 		
 		if(window.location.hash == ''){
@@ -105,6 +105,19 @@
 					n_to_fetch:5,
 					has_run_init: false,
 					init:function(merlin,dom){
+						
+						function generate_notification(message, templateClass) {
+							var template;
+							
+							template = tc.jQ("<li class='message-item user-notification "+ templateClass +" '></li>").append( tc.jQ(".template-content.message-item."+ templateClass).children().clone() );
+							template.find(".title").html(message.body);
+							template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
+							template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
+							template.find(".time-since").text(message.created).time_since();
+							
+							return template;
+						}
+						
 						tc.jQ('ul.tabs li').removeClass('active').filter(".messages").addClass("active");
 						
 						if (!merlin.current_step.has_run_init) {
@@ -171,24 +184,28 @@
 								context:merlin,
 								dataType:"text",
 								success: function(data, ts, xhr) {
-									var d, dom_stack;
+									var me = this, d, dom_stack;
 									$t.parent().removeClass("loading");
+									
 									try {
 										d = tc.jQ.parseJSON(data);
-									} catch(e) {
+									} catch(err) {
 										tc.util.log("/useraccount/messages: json parsing error", "warn");
 										return;
 									}
+									
 									if (!d.length) {
-										$t.hide();
+										$t.parent().hide();
 										return;
 									}
+									
 									dom_stack = e.data.dom.find("ol.message-stack");
+									
 									tc.jQ.each(d, function(i, message) {
 										var template;
 										switch (message.message_type) {
 											case "member_comment":
-												template = tc.jQ(".template-content.message-item.member-comment").clone().removeClass("template-content");
+												template = tc.jQ("<li class='message-item member-comment'></li>").append( tc.jQ(".template-content.message-item.member-comment").children().clone() );
 												if (message.owner.image_id) {
 													template.find(".thumb img").attr("src", app.app_page.media_root + "images/"+ message.owner.image_id % 10 +"/"+ message.owner.image_id +".png").attr("alt", message.owner.name);
 												} else {
@@ -199,26 +216,35 @@
 												template.find(".excerpt p").html(message.body);
 												template.find(".time-since").text(message.created).time_since();
 												break;
+												
 											case "join":
-												template = tc.jQ(".template-content.message-item.join-notification").clone().removeClass("template-content");
-												template.find(".title").html(message.body);
-												template.find(".sender").html("<a href='/useraccount/"+ message.owner.u_id +"'>"+ message.owner.name+ "</a>");
-												template.find(".project a").attr('href','/project/' + message.project_id + '#show,members').text(message.project_title);
-												template.find(".time-since").text(message.created).time_since();
+												template = generate_notification(message, "join-notification");
 												break;
+												
+											case "goal_achieved":
+												template = generate_notification(message, "goal-achieved-notification");
+												break;
+											
+											case "endorsement":
+												template = generate_notification(message, "endorsement-notification");
+												break;
+												
 											case "invite":
-												template = tc.jQ(".template-content.message-item.user-notification").clone().removeClass("template-content");
+												template = tc.jQ("<li class='message-item user-notification invite-notification'></li>").append( tc.jQ(".template-content.message-item.invite-notification").children().clone() );
 												template.find(".title").html(message.body);
 												template.find(".controls > a").attr("href", ("/project/"+ message.project_id + ""));
 												break;
+												
 											default:
 												break;
 										}
 										if (template) {
 											dom_stack.append(template);
+											me.current_step.current_offset += 1;
+										} else {
+											tc.util.log("no template for message", "warn");
 										}
 									});
-									this.current_step.current_offset += d.length;
 								}
 							});
 						});

@@ -2,6 +2,7 @@ import os
 import framework.util as util
 from framework.log import log
 
+
 def has_words(text, words_list):
     """
     Returns True if the given text contains and words in the given word list,

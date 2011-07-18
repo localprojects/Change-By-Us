@@ -69,6 +69,7 @@ class Emailer():
 
         # Handle attachments.
         if attachment:
+            log.info("--> adding attachment")
             tmpmsg = msg
             msg = MIMEMultipart()
             msg.attach(tmpmsg)
@@ -110,6 +111,6 @@ class Emailer():
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')      
         renderer._lookup.filters.update(custom_filters.filters)
         
-        log.info("Email template %s: %s" % (template_name, template_values)) 
+        log.info("Email template %s: %s" % (template_name, template_values))
         return (renderer[template_name + "." + suffix](template_values)).encode('utf-8')
     

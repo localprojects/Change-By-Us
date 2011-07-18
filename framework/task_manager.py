@@ -138,7 +138,7 @@ class Task():
                 self.func(self.args)
             else:
                 log.info("--> (not callable)")
-                
+
             return True
         except Exception, e:
             log.error("Task: %s" % e)

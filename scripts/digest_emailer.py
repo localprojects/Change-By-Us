@@ -9,6 +9,8 @@
 #    * Deal with orphaned tasks
 #    *
 # Pre-requisites:
+#     sudo apt-get install python-dateutil (OSX already has python-dateutil it seems)
+#
 #     Run the tasks_data.sql script to load the seed data for the
 #     digest cron to run
 #     Enable the etc/cron.daily/daily_digest on the appropriate user
@@ -163,7 +165,7 @@ limit 0, $limit
             return tasks
         except Exception, e:
             logging.error(e)
-            return False
+            return []
 
     def getMyTasks(self):
         sql = """
@@ -533,7 +535,7 @@ where pm.message_type='member_comment'
             subject = currentDigest.get('subject')
             body = currentDigest.get('body')
 
-            recipients = currentDigest.get('recipients')
+            recipients = currentDigest.get('recipients').split(',')
 
             if self.Config.get('dev'):
                 body += "Recipients are " + ','.join(currentDigest.get('recipients')) + "\n\n"
@@ -597,7 +599,7 @@ update digests
 set status = 'C', sent_datetime = NOW()
 where digest_id = $digest_id
 """
-        params = {'digest_id':digest_id}
+        params = {'digest_id':int(digest_id)}
         try:
             result = self.executeSQL(sql, params)
             return True

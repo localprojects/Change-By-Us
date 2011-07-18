@@ -13,9 +13,21 @@ select l.location_id
     ,l.name
     ,l.lat
     ,l.lon
-    ,(select count(*) from project p where p.location_id = l.location_id) as num_projects
-    ,(select count(*) from idea i where i.location_id = l.location_id) as num_ideas
-    ,(select count(*) from project_resource r where r.location_id = l.location_id) as num_project_resources
+    ,(select count(*) as count
+            from project p
+            inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+            where
+            p.is_active = 1 
+            and p.location_id = l.location_id) as num_projects
+    ,(select count(*) as count
+            from idea i
+            where
+            i.is_active = 1
+            and i.location_id = l.location_id) as num_ideas
+    ,(select count(*) as count
+            from project_resource r
+            where
+            r.is_active = 1 and r.is_hidden = 0 and r.location_id = l.location_id) as num_project_resources
 from location l where l.location_id > 0""";
         data = list(db.query(sql))
     except Exception, e:

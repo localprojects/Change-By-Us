@@ -133,9 +133,7 @@
 																<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name }}</a></strong> said &mdash;
 															</cite>
 														{% endif %}
-														<blockquote>
-															<p>{{ idea.message }}</p>
-														</blockquote>
+														<blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p>{{ idea.message|truncate(175) }}</p></blockquote>
 														<cite class="note-meta-ft">
 															Posted <strong><span class="time-since">{{ idea.created }}</span></strong>
 														</cite>

@@ -29,12 +29,10 @@ class CreateProject(Controller):
             imageId = self.uploadImage()
         
             return self.json(dict(thumbnail_id = imageId, success = (imageId != None) ))
-            
         elif (action == 'file'):
             # Requires a parameter qqfile
             fileId = self.uploadFile()
             return self.json(dict(file_id = fileId, success = (fileId != None)))
-            
         else:
             return self.newProject()  
         
@@ -107,7 +105,7 @@ class CreateProject(Controller):
         imageId = ImageServer.add(self.db, data, 'giveaminute', [100, 100])
         
         return imageId
-                        
+        
     def uploadFile(self):
         """
         Handler for the /create/file endpoint. Looks for the variable named
@@ -128,5 +126,3 @@ class CreateProject(Controller):
         fileId = fs.add(self.db, data, 'giveaminute', [100, 100])
         
         return fileId
-                        
-    

@@ -98,7 +98,7 @@ class Config():
             from lib import web
         except ImportError:
             return None
-            
+
         try:
             return "http://%s%s" % (web.ctx.environ['HTTP_HOST'], os.path.dirname(web.ctx.environ['SCRIPT_NAME']))
         except (KeyError, AttributeError):

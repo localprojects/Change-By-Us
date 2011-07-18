@@ -290,7 +290,8 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
 
     try:
         # censor behavior
-        numFlags = censor.badwords(db, title + " " + description)
+        numFlags = censor.badwords(db, ' '.join([title, description, keywords]))
+
         isActive = 0 if numFlags == 2 else 1
 
         projectId = db.insert('project', title = title,
@@ -505,6 +506,12 @@ def removeUserFromAllProjects(db, userId):
         
 def addKeywords(db, projectId, newKeywords):
     try:
+       # censor behavior
+        numFlags = censor.badwords(db, ' '.join(newKeywords))
+        
+        if (numFlags == 2):
+            return False
+       
         sqlGet = "select keywords from project where project_id = $projectId"
         data = list(db.query(sqlGet, {'projectId':projectId}))
         
@@ -519,8 +526,8 @@ def addKeywords(db, projectId, newKeywords):
                     
             if (len(addKeywords) > 0):
                 keywords = ' '.join(keywords + addKeywords)
-        
-                db.update('project', where = "project_id = $projectId", keywords = keywords, vars = {'projectId':projectId})
+                sql = "update project set keywords = $keywords, num_flags = num_flags + $flags where project_id = $projectId"
+                db.query(sql, {'projectId':projectId, 'keywords':keywords, 'flags':numFlags})
                     
             # return true whether keyword exists or not
             return True
@@ -853,7 +860,7 @@ def searchProjectsCount(db, terms, locationId):
                     where
                     p.is_active = 1 
                     and ($locationId is null or p.location_id = $locationId)
-                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))"""
+                    and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))"""
                     
         data = list(db.query(sql, {'match':match, 'locationId':locationId}))
         
@@ -891,7 +898,7 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                     where
                     p.is_active = 1 
                     and ($locationId is null or p.location_id = $locationId)
-                    and ($match = '' or match(p.title, p.description) against ($match in boolean mode))
+                    and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))
                     order by p.created_datetime desc
                     limit $limit offset $offset"""
                     
@@ -1236,7 +1243,8 @@ def inviteByIdea(db, projectId, ideaId, message, inviterUser):
                                                               isFullLastName(inviterUser.groupMembershipBitmask)),
                                               projectId,
                                               project.data.title,
-                                              project.data.description)
+                                              project.data.description,
+                                              message)
         except Exception, e:
             log.info("*** couldn't get send invite")
             log.error(e) 
@@ -1258,7 +1266,8 @@ def inviteByEmail(db, projectId, emails, message, inviterUser):
                                                               isFullLastName(inviterUser.groupMembershipBitmask)),
                                           projectId,
                                           project.data.title,
-                                          project.data.description)):
+                                          project.data.description,
+                                          message)):
                     log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          
             else:
                 log.warning("*** failed to create invite record for %s on project %" % (email, projectId))          

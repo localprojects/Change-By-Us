@@ -2,7 +2,9 @@
 
 set -x
 
+#------------------------------------------------------------------------------
 # Overview
+#-----------------------------
 # 
 # The purpose if this script is to:
 #  * mysqldump a defined database
@@ -13,24 +15,37 @@ set -x
 #-----------------------------
 # Pre-Requisites:
 #-----------------------------
-# 1. ~/.my.cnf
-# Ensure that ~/.my.cnf exists. It should have this format:
+# 1. MYSQL configuration file
+# 	For automatic connection to mysql, it's necessary that the
+#	my.cnf file be populated with the appropriate username and password.
+#	So, create $HOME/.my.cnf with the following content:
 # 
-# [client]
-# user=gam
-# password=gam
-# 
-# 2. gpg with associated key
+# 	[client]
+# 	user=gam
+# 	password=gam
+# 	
+#	The one-liner for this is:
+#	echo -e "[client]\nuser=$dbuser\npassword='$dbpasswd'\n" >> $HOME/.mycnf && chmod 600 $HOME/.my.cnf
+#
+# 2. IF GPG is necessary, then gpg with associated key
+#	Setting up GPG uses the standard process (see https://help.ubuntu.com/community/GnuPrivacyGuardHowto)
 # 
 # 3. S3 sync
-# Ensure that s3cmd is installed, and configured
+# 	Ensure that s3cmd is installed, and configured
 #     apt-get install s3cmd
-# Ensure that s3cmd —config=~/s3.cfg can be loaded
-# To generate the config file just run s3cmd --configure
-# and you'll be prompted to fill out all the parameters
-#
+# 	Ensure that s3cmd —config=$HOME/.lp-cbu.s3cfg can be loaded
+# 	To generate the config file just run s3cmd --configure
+# 		and you'll be prompted to fill out all the parameters
+#	A sample s3cmd file is included as example.s3cfg
 # 
-
+# 
+#-----------------------------
+# TODO
+#-----------------------------
+# * Make backup git-based so that we only back up incremental differences
+#	But this will require that a git repo be set up for the backups
+#
+#------------------------------------------------------------------------------
 
 #----- CONFIGURABLES ----
 # The s3cmd configuration file. See example.s3cfg
@@ -47,6 +62,8 @@ s3path="/backups/mysql"
 
 # The recipient for whom to sign the content. Only used if use_gpg=true
 recipient="admin@changeby.us"	# change this to the correct recipient
+
+# Database related configurations
 
 # List of tables to exclude from the dump
 exclude_tables=(user facebook_user twitter_user)
