@@ -20,4 +20,36 @@ class S3FileServerTests (TestCase):
         self.assertEqual(fs.addDbRecord.call_count, 1)
         self.assertEqual(fs.removeDbRecord.call_count, 0)
         self.assertEqual(id, 3)
+    
+    
+    def test_DbRecordIsKeptWhenSaveFileReturnsSuccess(self):
+        fs = file_server.FileServer()
+        
+        fs.saveFile = Mock(return_value=True)
+        
+        db = main.sessionDB()
+        file_id = fs.add(db, "This is file data", "myapp")
+        
+        results = db.query("SELECT * FROM files WHERE id=$fileid", 
+                           {'fileid': file_id})
+        
+        self.assertGreater(file_id, 0)
+        self.assertEqual(len(results), 1)
+        
+        db.query("DELETE FROM files WHERE id=$fileid", 
+                 {'fileid': file_id})
+    
+    
+    def test_DbRecordIsDiscardedWhenSaveFileReturnsNoSuccess(self):
+        fs = file_server.FileServer()
+        
+        fs.saveFile = Mock(return_value=False)
+        
+        db = main.sessionDB()
+        file_id = fs.add(db, "This is file data", "myapp")
+        
+        results = db.query("SELECT * FROM files WHERE id=$fileid", 
+                           {'fileid': file_id})
+        
+        self.assertEqual(len(results), 0)
 

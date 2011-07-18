@@ -13,7 +13,7 @@ class FileServer(object):
     
     """
     
-    def add(self, db, data, app, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
+    def add(self, db, data, filename, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
         """
         Add a file to the fileserver.  If either adding the database record for 
         the file or saving the file fails, then add will return None, and no
@@ -23,7 +23,7 @@ class FileServer(object):
         """
         # Create a new record for the file
         log.info("FileServer.add")
-        id = self.addDbRecord(db, app)
+        id = self.addDbRecord(db, filename)
         
         if id is None:
             return None
@@ -39,7 +39,7 @@ class FileServer(object):
         return id
     
     
-    def addDbRecord(self, db, app):
+    def addDbRecord(self, db, filename):
         """
         Insert a new record for a file into the given database.
         
@@ -49,7 +49,7 @@ class FileServer(object):
         
         """
         try:
-            id = db.insert('files', app=app)
+            id = db.insert('files', title=filename)
         except Exception, e:
             log.error(e)
             return None
