@@ -1,0 +1,326 @@
+{% extends "./partials/mobilebase.html" %}
+
+{% block continent %}
+<div class='continent mobile merlin'>
+	
+	<div class="nav">
+		<ul>
+			<li><a class="idea current" href="#">Add an Idea</a></li>
+			<li><a class='join' href="#">Join a Project</a></li>
+		</ul>
+	</div>
+	
+	<!-- steps -->
+	
+	<div class="step idea-start initial">
+		<div class="console">
+			<span class="hey"><span>Hey NYC!</span></span>
+			<span class="console-message"><span>&nbsp;</span>How can we make our city a greener, greater place to live?</span>
+		</div>
+		<div class="input">
+			<div class="row">
+				<textarea class='idea-text'></textarea>
+				<div class="char-count">200</div>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn next-step" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+			<div class="about">
+				<p class="m14 welcome-about">
+					<strong>Change by Us NYC</strong> is a place to share ideas, create projects, build teams, and make our city better.
+				</p>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step email user-details">
+		<div class="about">
+			<p class="m18"><strong>Thanks for your idea!</strong></p>
+			<p class="m18">We need a little more information.</p>
+		</div>
+		<div class="detail-input">
+			<div class="row">
+				<label for='email'>E-mail Address</label>
+				<input value='{% if d.template_data.user and d.template_data.user.data.email %}{{ d.template_data.user.data.email }}{% endif %}' type='email' name='email' class='email' tabindex='3'/>
+				<div class="email-info">
+					<p style="display: none;" class="email-error">Please enter a valid email address</p>
+				</div>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn next-step" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step location idea-location">
+		<div class="about">
+			<p class="m18"><strong>Where is your idea located?</strong></p>
+		</div>
+		<div class="location-input">
+			<div class="row">
+					<input type='radio' name='city' id='location-city' class='location-group location-city'/>
+					<label for='location-city'>It's for the whole city</label>
+			</div>
+			<div class="row">
+					<input type='radio' name='city' id='location-hood' class='location-group location-hood'/>
+					<label for='location-hood'>It's for a specific neighborhood</label>
+			</div>
+			<div class="row nomb location-hood-holder">
+				<input value='' type='text' name='neighborhood' id='neighborhood' class='location-group neighborhood location-hood-enter' tabindex='2'/>
+				<div class="location-hood-list">
+					<ul>
+						<li></li>
+					</ul>
+				</div>
+				<span class="error">Please try entering a neighborhood name, or a nearby borough.</span>
+			</div>
+			<div class="row">
+				<p><strong>Ex.</strong> East Village, Bronx, Harlem, etc.</p>
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn next-step" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step idea-processing spinner-message">
+		<p>Thank you for your idea!</p>
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step idea-error">
+		<p>There was a problem submitting your idea.</p>
+	</div><!-- end step -->
+	
+	<div class="step related-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+
+	<div class="step related-error">
+		<p>There was a problem finding related projects.</p>
+	</div><!--end step-->
+	
+	<div class="step join-list related-projects">
+		<div class="about">
+			<p class="m24"><strong>Be a part of the solution.</strong></p> 
+			<p class="m18">Join a project or <strong><a href='/'>visit the full site</a></strong> to start your own.</p>
+		</div>
+		<div class="projects">
+			<div class="row">
+				<div class="carousel-nav east">
+					<a class="prev" href="#"><span>back</span></a>
+					<a class="next" href="#"><span>next</span></a>
+				</div>
+				<p class="found-projects">
+					<span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span>
+				</p>
+			</div>
+			<div class="row carousel">
+				
+				<div class="scrollable related">
+					<ul class="projects-list clearfix items">
+						<!-- keeping an empty one here 
+						so that the carousel can be rendered initially,
+						This gets stripped out by the JS before filling the carousel
+						with items -->
+						<li><img src='/static/images/loader32x32.gif' alt='' /></li>
+					</ul>
+				</div>
+				
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step join-list featured-projects">
+		<div class="about">
+			<p class="m24"><strong>Be a part of the solution.</strong></p> 
+			<p class="m18">Join a project or <strong><a href='/'>visit the full site</a></strong> to start your own.</p>
+		</div>
+		<div class="projects">
+			<div class="row">
+				<div class="carousel-nav east">
+					<a class="prev" href="#"><span>back</span></a>
+					<a class="next" href="#"><span>next</span></a>
+				</div>
+				<p class="found-projects">
+					<span class="light">FOUND</span> <strong class='proj-count'></strong>&nbsp;<span class="proj-qualifier">projects</span>
+				</p>
+			</div>
+			<div class="row carousel">
+				<div class="scrollable featured">
+					<ul class="projects-list clearfix items">
+						<li><img src='/static/images/loader32x32.gif' alt='' /></li>
+					</ul>
+				</div>
+				
+			</div>
+			<div class="primary-action">
+				<a class="ca-btn" href="#">
+					<span>Post</span>
+				</a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class='step join-processing spinner-message'>
+		<p>Please wait while we add you to this project.</p>
+		<p><img class="loading" src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class='step join-error'>
+		<p>There was a problem adding you to the project.</p>
+	</div><!--end step-->
+	
+	<div class="step join-list joined-project">
+		<div class="joined">
+			<p class="m24">
+				<strong>Thanks, you've joined!</strong><br />
+				<a class="project-title" href="#"></a>
+			</p>
+		</div>
+		<div class="projects">
+			<div class="view-project">
+				<p>Leave the mobile site and</p>
+				<a class="submit fancy-caps" href="#">View <span>this</span> project  ></a>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class="step login-or-signup">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="row">
+			<a class="submit btn-signup" href="#">Sign Up</a>
+			<span class=" ">or</span>
+			<a class="submit btn-login" href="#">Login</a>
+			<span class=" ">to join or start a project.</span>
+		</div>
+	</div><!-- end step -->
+	
+	<div class="step login">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="detail-input">
+			<div class="row login-social">
+				<div class='social-login clearfix'>
+					<a href='#' onclick="facebookConnector.connect();" class='login-facebook west'><span>Facebook</span></a>
+					<a href='/twitter/twitter' class='login-twitter west'><span>Twitter</span></a>
+				</div>
+			</div>
+			<p class="mid-strong">LOGIN</p>
+			<div class="inputs">
+				<div class="row">
+					<label for='email'>Email Address</label>
+					<input value='' type='email' name='email' id='email' class='email' tabindex='1'/>
+				</div>
+				<div class="row">
+					<label for='password'>Password</label>
+					<input value='' type='password' name='password' id='password' class='password' tabindex='2'/>
+					<p class="light forgot-password"><a href="#">Forgot your password?</a></p>
+				</div>
+				<div class="row">
+					<p class="signup"><a href="/join">Click Here</a> to create a traditional login</p>
+					<a class="next-step submit" href="#">Submit</a>
+				</div>
+			</div>
+		</div>
+	</div><!--end step-->
+	
+	<div class='step login-processing spinner-message'>
+		<p>Thanks for logging in&hellip;</p>
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step login-error">
+		<p>There was an error logging you in.</p>
+	</div><!-- end step -->
+	
+	<div class="step forgot-password">
+		<p class="mid-strong">FORGOT YOUR PASSWORD?</p>
+		<p>We'll send you an email with instructions to reset your password.</p>
+		<div class="detail-input">
+			<div class="inputs">
+				<div class="row">
+					<label for='forgot-pw-email'>Enter your email</label>
+					<input value='' type='email' name='forgot-pw-email' id='forgot-pw-email' class='email' />
+				</div>
+				<div class="row">
+					<a class="next-step submit" href="#">Send Instructions</a>
+				</div>
+			</div>
+		</div>
+	</div><!-- end step -->
+	
+	<div class="step forgot-password-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step forgot-password-finished">
+		<p>You will receive an email with further details on retrieving your password.</p>
+	</div><!--end step-->
+	
+	<div class="step forgot-password-error">	
+		<p>There was an error finding your account. Please double check your email.</p>
+	</div><!--end step-->
+	
+	<div class="step logout-processing spinner-message">
+		<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+	</div><!--end step-->
+	
+	<div class="step signup">
+		<div class="about">
+			<p class="m24"><strong>Change by Us NYC is a place to make your city better.</strong> </p>
+			<p>Share your ideas. Build projects. Make a change.</p>
+		</div>
+		<div class="detail-input">
+			<div class="row login-social">
+				<!--<p class="m18">LOGIN</p>-->
+				<div class='social-login clearfix'>
+					<!--<label class="m24" for='social'><strong>LOGIN</strong></label>-->
+					<p class="mid-strong">SIGN UP</p>
+					<a href='#' onclick="facebookConnector.connect();" class='login-facebook west'><span>Facebook</span></a>
+					<a href='/twitter/login' class='login-twitter west'><span>Twitter</span></a>
+				</div>
+			</div>
+			<div class="row">
+				<p class="signup"><a href="/join">Click Here</a> to sign up on the full website without Facebook or Twitter</p>
+			</div>
+		</div>
+	</div><!--end step-->
+
+	<!-- templates -->
+
+	<div class="template-content project-carousel-item"><!-- to be transformed into an LI -->
+		<div class="thumb">
+			<img src="/static/images/thumb_genAvatar50.png" width="50" height="50" alt="" class="proj"/>
+			<span class="overlay-tag"></span>
+			<span class="member-count"></span>
+		</div>
+		<div class="project-info">
+			<span class="link"><a href="/project"></a></span>
+			<span class="creator"><em>Created by </em> <span class='owner'></span></span>
+			<span class="description"></span>
+		</div>
+	</div>
+
+</div><!-- end .continent -->
+{% endblock continent %}
+
+{% block page_js %}
+<script type="text/javascript" src="/static/js/pages/mobile.js"></script>
+{% endblock page_js  %}

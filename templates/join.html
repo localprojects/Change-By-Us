@@ -1,0 +1,276 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - Join
+{% endblock title %}
+
+{% block continent %}
+
+<script type="text/javascript" src='/static/js/lp.gam.facebookConnect.js'></script>
+
+<div class='continent register'>
+	<div class='headlands clearfix'>
+		<div class='west'>
+			<h1>Change by Us NYC is a place to make your city better.</h1>
+			<h3>Share your ideas. Build projects. Make a change.</h3>
+		</div>
+		<div class='east'>
+			<div class='box'>
+				<div class='box merlin-progress no-labels clearfix'>
+					<a href='#' class='indicator 1 west'><span class="num">1</span></a>
+					<a href='#' class='indicator 2 west inactive'><span class="num">2</span></a>
+					<a href='#' class='indicator 3 west inactive'><span class="num">3</span></a>
+				</div>
+				<div class='box next'>
+					<a class="ca-btn" href="#">
+						<span>Let's Do it!</span>
+					</a>
+					<div class="oops" style='display:none;'>
+						<span>&npsp;</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class='midlands'>
+		<form class='merlin' action='/register' method='POST'>
+			
+			<div class='step start clearfix' style='display:none;' >
+				<p>Create a login using <strong>Facebook</strong> or <strong>Twitter</strong></p>
+				{% if d.template_data.app_mode != 'beta' %}
+				<div class='social-login clearfix'>
+					<a class="login-facebook west" href='#' onclick="F.connect();"><span>Facebook</span></a>
+					<a class="login-twitter west" href='/twitter/login'><span>Twitter</span></a>
+				</div>
+				{% endif %}
+				<p><a class='step_link' href='#user-info'>Click Here</a> <span class="italic">if you want to create a login without Facebook or Twitter</span></p>
+			</div><!--end step-->
+			
+			<div class='step facebook-login-preprocess clearfix spinner-message ' style='display:none;'>
+				<p class="west">Connecting to Facebook...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
+			<div class='step user-info clearfix' style='display:none;' >
+				<p>Change by Us NYC uses real names. <a href='/tou#names' class='real-names'>Read Why</a>.</p>
+				
+				<div class="west">
+					<div class="row">
+						<label for='f_name'>First name</label>
+						<input value='First name' type='text' name='f_name' id='f_name' class='f_name' tabindex='1'/>
+					</div>
+					<div class="row">
+						<label for='l_name'>Last name</label>
+						<input value='Last name' type='text' name='l_name' id='l_name' class='l_name' tabindex='2'/>
+					</div>
+					<div class="row">
+						<label for='email'>Email</label>
+						<input value='' type='text' name='email' id='email' class='email' tabindex='3'/>
+					</div>
+					<div class="row row-password">
+						<label for='password'>Password</label>
+						<input value='' type='password' name='password' id='password' class='password' tabindex='4'/>
+						<span class="pass-strength"></span>
+					</div>
+					<div class="row row-error">
+						<span class="email-error" style='display:none;'>Please enter a valid email address</span>
+						<input style='display:none;' name='main_text' class='main_text' />
+					</div>
+				</div>
+				
+				<div class="east">
+					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info' value='1' />
+					<label class="tos-user-info-label" for='tos-user-info'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms of Use</a></label>
+					
+					<div class="row invite-row" {% if d.template_data.app_mode != 'beta' %}style='display:none;'{% endif %}>
+						<label for='invite-code'>Invite code</label>
+						<input value='' type='text' name='invite-code' id='invite-code' class='invite-code' tabindex='4'/>
+					</div>
+				</div>
+			</div><!--end step-->
+			
+			<div class='step twitter-step clearfix ' style='display:none;'>
+				<p><strong>Enter your email to get updates from Change by Us NYC projects.</strong></p>
+				
+				<div class="west">
+					<div class="row">
+						<label for='f_name'>First name</label>
+						<input value='First name' type='text' name='f_name' id='f_name' class='f_name' tabindex='1'/>
+					</div>
+					<div class="row">
+						<label for='l_name'>Last name</label>
+						<input value='Last name' type='text' name='l_name' id='l_name' class='l_name' tabindex='2'/>
+					</div>
+					<div class="row">
+						<label for='email'>Email</label>
+						<input value='' type='text' name='email' id='email' class='email' tabindex='3'/>
+					</div>
+					<!--<div class="row">
+						<label for='invite-code-tw'>Invite code</label>
+						<input value='' type='text' name='invite-code-tw' id='invite-code-tw' class='invite-code' tabindex='4'/>
+					</div>-->
+					<div class="row row-error">
+						<span class="email-error" style='display:none;'>Please enter a valid email address</span>
+					</div>
+				</div>
+				
+				<div class="east">
+					<input type='checkbox' name='tos-user-info-twitter' id='tos-user-info-twitter' class='tos-user-info' value='1' />
+					<label class="tos-user-info-label" for='tos-user-info-twitter'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms of Use</a></label>
+					
+				</div>
+				
+			</div><!--end step-->
+			
+			<div class='step email-lookup clearfix spinner-message ' style='display:none;'>
+				<p class="west">Verifying account information...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
+			<div class='step email-step clearfix ' style='display:none;'>
+				<!--<p><strong>Enter your email to get updates from Change by Us NYC projects.</strong></p>
+				
+				<div class="fields">
+					<input type='text' name='email-alt' id='email-alt' class='email-alt'/>
+					<div class="row row-error">
+						<span class="email-error" style='display: none'>Please enter a valid email address</span>
+					</div>
+				</div>-->
+				
+				<div class="fields">
+					<!--<div class="row">
+						<label for='invite-code-fb'>Invite code</label>
+						<input value='' type='text' name='invite-code-fb' id='invite-code-fb' class='invite-code' tabindex='4'/>
+					</div>-->
+					<div class="row west">
+						<input type='checkbox' name='tos-email' id='tos-email' class='tos-email' />
+						<label class="tos-email-label" for='tos-email'><span class="message">I accept and have read the <a href='/tou' target='_blank'>Terms of Use</a></span></label>
+					</div>
+				</div>
+				
+			</div><!--end step-->
+			
+			<div class='step sms-lookup clearfix ' style='display:none;'>
+				<div class='west'>
+					<p>Did you text your ideas to Change by Us NYC?  Enter your phone number to link them to your profile.</p>
+					<p>
+						<input type='text' name='phone_1' id='phone_1' class='phone_1'/>
+						<input type='text' name='phone_2' id='phone_2' class='phone_2'/>
+						<span class="phone-dash west">&ndash;</span>
+						<input type='text' name='phone_3' id='phone_3' class='phone_3'/>
+						<input type='button' class='submit-sms-query rounded-button' name='lookup_sms' value='Find My Ideas' />
+					</p>
+				</div>
+				<div class='east'>
+					<input type='checkbox' name='no_sms' id='no_sms' class='no_sms'/>
+					<label class="no_sms_label" for='no_sms'>I didn't text any ideas.</label>
+				</div>
+			</div><!--end step-->
+			
+			<div class='step sms-process clearfix spinner-message ' style='display:none;'>
+				<p class="west">Finding SMS submissions...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
+			<div class='step sms-results clearfix ' style='display:none;'>
+				<p><strong>We found <span class='n_ideas'>X</span> ideas from your phone number.</strong></p>
+				<p>We'll add these to your profile and any others you send from that number.</p>
+			</div><!--end step-->
+			
+			<div class='step sms-no-results clearfix ' style='display:none;'>
+				<p>We couldn't find any ideas sent from</p>
+				<p class="phone-num">(718) 222-6680</p>
+			</div><!--end step-->
+			
+			<div class='step sms-already-used clearfix ' style='display:none;'>
+				<p>The number</p>
+				<p class='phone-num'>(XXX) XXX-XXXX</p>
+				<p>is already associated with an account.</p>
+			</div><!--end step-->
+			
+			<div class='step email-authentication-process clearfix spinner-message' style='display:none;'>
+				<p class="west">Sending Email validation message...</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
+			<div class='step email-authentication-email-send-success clearfix' style='display:none;'>
+				<p>Thanks! You're almost there.</p>
+				<p>We sent an email to <strong class='email'>&nbsp;</strong>&nbsp;in order to verify your account.</p>
+				<p>Click on the link provided in the e-mail address to complete your registration.</p>
+			</div><!--end step-->
+			
+			<div class='step email-authentication-email-send-error clearfix' style='display:none;'>
+				<p class="west">There was a problem authenticating your email.</p>
+			</div><!--end step-->
+				
+			<div class='step email-authentication-success clearfix' style='display:none;'>
+				<p>Awesome! You're a member!</p>
+				<p>Thank you for verifying your e-mail address.</p>
+				<p>Please wait while we redirect you home.</p>
+			</div><!--end step-->
+			
+			<div class='step email-already-used clearfix' style='display:none;'>
+				<p class="west">An account using that email already exists on Change by Us. To recover your password, please click <a href='/login#forgot-password'>here</a>.</p>
+			</div><!--end step-->
+			
+			<div class='step email-authentication-error clearfix' style='display:none;'>
+				<p class="west">There was a problem authenticating your email.</p>
+			</div><!--end step-->
+			
+			<div class='step finish clearfix spinner-message ' style='display:none;'>
+				<p class="west">Thank you for joining.</p>
+				<img class="loading" src='/static/images/loader32x32.gif' />
+			</div><!--end step-->
+			
+			<div class='step error clearfix ' style='display:none;'>
+				<p class="west">There was a problem creating your account.</p>
+			</div><!--end step-->
+		</form>
+	</div>
+
+	<div class='foothills'>
+		<a class='back' href='#' style='display:none'><span>Back</span></a>
+	</div>
+	
+
+</div>
+<div class='template-content modal-content toc'>
+	<h2><strong>Terms of Use</strong></h2>
+	<div class="scroll-pane">
+		{% include 'partials/toc.html' %}
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+{% endblock continent %}
+
+
+{% block page_js %}
+<script type='text/javascript'>
+	app_page.data.app_mode = '{{d.template_data.app_mode}}';
+	
+	app_page.data.first_join_step = 'start';
+	app_page.data.sms_next_step = 'email-authentication-process';
+	app_page.data.account_create_url = '/join';
+	
+	{% if d.new_account_via_twitter %}
+		app_page.data.first_join_step = 'twitter-login';
+		app_page.data.sms_next_step = 'finish';
+		app_page.data.account_create_url = '/twitter/create';
+	{% elif d.new_account_via_facebook %}
+		app_page.data.first_join_step = 'facebook-login';
+		app_page.data.sms_next_step = 'finish';
+		app_page.data.account_create_url = '/facebook/create';
+	{% elif d.is_email_auth_attempt %}
+		{% if d.is_email_auth_attempt_successful %}
+			app_page.data.first_join_step = 'email-authentication-success';
+		{% else %}
+			app_page.data.first_join_step = 'email-authentication-error';
+		{% endif %}
+	{% elif d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
+		app_page.data.first_join_step = 'user-info';
+	{% endif %}
+	
+</script>
+<script type="text/javascript" src='/static/js/pages/join.js'></script>
+{% endblock page_js %}

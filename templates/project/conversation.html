@@ -1,0 +1,183 @@
+<div class="box conversation">
+	
+	{% if 
+		(d.template_data.project_user.data.is_member) or 
+		(d.template_data.project_user.data.is_project_admin) or 
+		(d.template_data and d.template_data.user and d.template_data.user.is_admin) or 
+		(d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+	
+		<!-- begin .conversation-controls -->
+		<div class="conversation-controls clearfix">
+			<a class="rss-btn" href="/project/rss/{{d.template_data.project.data.project_id}}" target="_blank"><span><abbr>RSS</abbr></span></a>
+		
+			{% if d.template_data.project.data.info.messages['total'] > 0 %}
+				
+				<div class="filters">
+					<select class='message_filter_select'>
+						<option selected='true' value='all'>All Messages</option>
+						<option value='member_comment'>Member Comments</option>
+						<option value='admin_comment'>Admin Comments</option>
+						<option value='goal_achieved'>Goal Achieved</option>
+						<option value='join'>Join</option>
+						<option value='endorsement'>Endorsement</option>
+					</select>
+				</div>
+				
+			{% endif %}
+		
+			<div class="main merlin submit-message">
+				<div class='step message clearfix'>
+					<div class="conversation-input">
+						{% if d.template_data.project.data.info.messages['total'] > 0 %}
+							<label class="fancy-caps">Join <span>the</span> Conversation</label>
+						{% else %}
+							<label class="fancy-caps">Start <span>the</span> Conversation</label>
+						{% endif %}
+						<textarea class='message-input'></textarea>
+						<p class="hint">Post your update as a comment or add links to photos and videos.</p>
+						<input style='display:none;' name='main_text' class='main_text' />
+					</div>
+					<div class="primary-action">
+						<a class="ca-btn submit-button" href="#">
+							<span>Post</span>
+						</a>
+					</div>
+				</div>
+				<div class='step submit clearfix spinner-message' style='display:none;'>
+					<p>Thank you for submitting a message!</p>
+					<p><img src='/static/images/loader32x32.gif' /></p>
+				</div>
+				
+				<div class='step submit-error clearfix' style='display:none;'>
+					<p>There was an error submitting your message!</p>
+				</div>
+			</div>
+		</div>
+		<!-- end .conversation-controls -->
+	{% endif %}
+	
+	<ol class="comment-stack">
+		{% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+			{% for message in d.template_data.project.data.info.messages['items'] %}
+				<li class=" " id='message-{{ message.message_id }}'>
+					{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+						<a class="close" href="#remove,{{ message.message_id }}"><span>Close</span></a>
+					{% endif %}
+					<div class="membrane">
+						<div class="thumb">
+							{% if message.owner.image_id %}
+								<img width='50' src='{{d.template_data.media_root}}images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
+							{% else %}
+								<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+							{% endif %}
+						</div>
+						<div class="main">
+							{% if message.message_type == 'join' %}
+								<cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> joined the project!</cite>
+							{% elif message.message_type == 'goal_achieved' %}
+							
+							{% elif message.message_type == 'endorsement' %}
+							
+							{% elif message.message_type == 'member_comment' or message.message_type == 'admin_comment' %}
+								<cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> said</cite>
+							{% endif %}
+							
+							{% if message.idea %}
+								<div class="note-card">
+									<cite class="note-meta-hd"></cite>
+									<blockquote>
+										<p>{{ message.idea.text }}</p>
+									</blockquote>
+									<cite class="note-meta-ft"></cite>
+								</div>
+							{% endif %}
+							
+							{% if message.message_type == 'join' %}
+								<blockquote class="serif">
+									<p class='message-text'>{{ message.idea.text }}</p>
+								</blockquote>
+							{% else %}
+								<blockquote class="serif">
+									<p class='message-text'>{{ message.body }}</p>
+								</blockquote>
+							{% endif %}
+							
+							<cite class="meta-ft"><span class="time-since">{{ message.created }}</span></cite>
+						</div>
+					</div>
+				</li>
+			{% endfor %}
+		{% else %}
+			{% if not d.template_data.project.data.info.messages['total'] > 0 %}
+				<li class="admin-default-message">
+					<div class="membrane">
+						<div class="thumb">
+							<img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+						</div>
+						<div class="main">
+							<cite class="meta-hd"><strong>Administrator</strong> says</cite>
+							<blockquote class="serif">
+								<p>Hey &ndash; welcome to Change by Us! I&#39;m an administrator of the site. If there is anything we can help you with, please email us at <span class="nospam infomail"></span></p>
+							</blockquote>
+						</div>
+					</div>
+				</li>
+			{% endif %}
+		{% endif %}
+	</ol>
+	
+	<div class="load-more" {% if d.template_data.project.data.info.messages['n_returned'] < 10 %} style='display:none;' {% endif %}>
+		<a href="#" class='load_more_button'><span>Older Posts</span></a>
+	</div>
+
+	<!--
+	<div class="empty-state-box big" style="{% if d.template_data.project.data.info.messages['total'] > 0 %}display:none;{% endif %}">
+		{% if d.template_data.project_user.data.is_member %}
+			<p>No one has started the conversation yet. Be the first to tell people what you think!</p>
+		{% else %}
+			<p>No one has started the conversation yet, join this project to tell people what you think!</p>
+		{% endif %}
+	</div>
+	-->
+	
+</div>
+
+<div class='template-content message-markup'>
+	{% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<a class="close" href="#"><span>Close</span></a>
+	{% endif %}
+	<div class="membrane">
+		<div class="thumb">
+			<img width='50' src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+		</div>
+		<div class="main">
+			<!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
+			<!-- <cite class="meta-hd"><strong><a></a></strong> said</cite> -->
+			<blockquote class="serif">
+				<p class='message-body'></p>
+			</blockquote>
+			<cite class="meta-ft">Just Now&hellip;</cite>
+		</div>
+	</div>
+</div>
+
+<div class='template-content modal-content add-message-no-user'>
+	<p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with Change by Us NYC in order to add a goal to this project.</p>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+<div class="template-content modal-content confirm-delete remove-message">
+	<div class="step">
+		<h2><strong>Delete</strong> this Message?</h2>
+		<div>
+			<p>This deletes the message from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete Message</a>
+			<a class="cancel" href="#">No, keep it.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+<script type='text/javascript' src="/static/js/pages/project.conversation.js"></script>

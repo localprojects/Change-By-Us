@@ -1,0 +1,274 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - Project
+{% endblock title %}
+
+
+{% block project_admin %}
+	{{ super() }}
+	
+	{% if d.template_data.project.data.info.is_featured %}
+		<li class="feature state-disabled"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Featured Project!</a></li>
+	{% else %}
+		<li class="feature"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
+	{% endif %}
+	
+	<li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps delete-project">Delete <span>this</span> project</a></li>
+{% endblock %}
+
+{% block og_title %}
+	<meta property="og:title" content="{{ d.template_data.project.data.info.title }}" />
+{% endblock %}
+
+{% block og_description %}
+	<meta property="og:description" content="{{ d.template_data.project.data.info.mission }}" />
+{% endblock %}
+
+
+{% block continent %}
+
+<div class='continent project'>
+
+	<div class='headlands clearfix project-header'>
+		<div class="green-nyc-project-tag">
+			<span>Official Project</span>
+		</div>
+		<div class="thumb">
+			{% if d.template_data.project_user.data.is_project_admin %}
+			<a class="change-image"><span>Change Photo</span></a>
+			{% endif %}
+			{% if d.template_data.project.data.info.image_id > -1 %}
+				<img width='100' src='{{d.template_data.media_root}}images/{{ d.template_data.project.data.info.image_id % 10 }}/{{ d.template_data.project.data.info.image_id }}.png' alt="" class='proj'/>
+			{% else %}
+				<img width='100' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+			{% endif %}
+			
+			<span class="overlay-tag"></span>
+		</div>
+		<div class="tools">
+			{%  if not d.template_data.project_user.data.is_member %}
+				<a class="ca-btn join-project" href="#">
+					<span>Join</span>
+				</a>
+			{%  endif %}
+			<div class="members {% if d.template_data.project.data.info.members['items']|length > 0 %}has-members{% endif %}">
+				<a href="#show,members">
+					Members <span class="counter members-counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
+				</a>
+			</div>
+			{% if d.template_data.project_user.data.is_project_admin %}
+				<span class="control"><a href="#show,members">Manage</a></span>
+			{% endif %}
+			{% if d.template_data.project_user.data.is_member %}
+				{% if not d.template_data.project_user.data.is_project_admin %}
+					<span class="control"><a class="leave-project" href="#leaveProject,{{ d.template_data.project.data.project_id }}">Leave <span class="uncaps">this</span> project</a></span>
+				{% endif %}
+			{% endif %}
+		</div>
+		<div class="main">
+			<h1><a href='/project/{{ d.template_data.project.data.project_id }}'>{{ d.template_data.project.data.info.title }}</a></h1>
+			<cite class="meta">
+				<span class="fancy-caps">Created <span>by</span></span> <strong><a href='/useraccount/{{ d.template_data.project.data.info.owner.u_id }}'>{{ d.template_data.project.data.info.owner.name }}</a></strong>
+			</cite>
+			<div class="sub-ft">
+				{% if d.template_data and not(d.template_data.app_mode == 'beta') %}
+					<div class="twitter">
+						<a href="http://twitter.com/share" class="twitter-share-button" data-url="{{ d.default_host }}project/{{ d.template_data.project.data.project_id }}" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+					</div>
+					<div class="facebook">
+						<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+						<fb:like href="{{ d.default_host }}project/{{ d.template_data.project.data.project_id }}" send="false" layout="button_count" width="40" show_faces="false"></fb:like>
+					</div>
+				{% endif %}
+				{% if d.template_data and d.template_data.user and not (d.template_data.project.data.info.owner.u_id == d.template_data['user'].data.u_id) %}
+					<a href="#" class="contact">Contact {{ d.template_data.project.data.info.owner.name }}</a>
+				{% endif %}
+			</div>
+		</div>
+	</div><!-- end .headlands -->
+ 
+	<div class='midlands clearfix'>
+		<div class="east">
+			{% if d.template_data.project_user.data.is_member %}
+				<div class="members-empty" style="{% if d.template_data.project.data.info.members['items']|length > 1 %}display:none;{% endif %}">
+					<span class="tail"></span>
+					<div class="empty-state-box big">
+						<!--<a class="close" href="#"><span>Close</span></a>-->
+						<p><a href="#show,members">Find people</a> to be your project members!</p>
+					</div>
+				</div>
+			{% endif %}
+			{% include 'project/related_resources.html' %}
+			{% include 'project/add_link.html' %}
+			{% include 'project/goals_main.html' %}
+			{% include 'project/goals_add.html' %}
+			{% include 'project/goals_stack.html' %}
+			{% include 'project/conversation.html' %}
+			{% include 'project/members.html' %}
+		</div>
+		<div class="west">
+			{% include 'project/mission.html' %}
+			{% include 'project/resources.html' %}
+			{% include 'project/fresh_ideas.html' %}
+		</div>
+	</div>
+
+	<div class='foothills'>
+
+	</div>
+
+	<div class='template-content modal-content introduce-yourself'>
+		<div class='step introduce-message-step'>
+			<form action='#'>
+				<div class='box note-card'>
+					<cite class="note-meta-hd">
+						<strong>You</strong> say &ndash;
+					</cite>
+					<textarea name='introduce-message' class='introduce-message serif'></textarea>
+				</div>
+				<div class='box'>
+					<h2><strong>Introduce</strong> yourself to the project team.</h2>
+					<!--<h3>What's your idea for this project?</h3>-->
+					<a href="#" class='submit rounded-button'>Send</a>
+				</div>
+			</form>
+			<div style="clear:both"></div>
+		</div>
+	
+		<div class='step finish'>
+			<p>Thanks for introducing yourself&hellip;</p>
+			<p><img src='/static/images/loader32x32.gif' /></p>
+		</div>
+	
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<div class='template-content modal-content join-no-user'>
+		<h2><strong>Hold your horses!</strong> Please register.</h2>
+		<p>You must <strong><a href='/join'>register</a></strong> or <strong><a href='/login'>login</a></strong> with Change by Us NYC in order to Join a project.</p>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	<div class='template-content modal-content upload-image'>
+		<div class='step'>
+			<h2><strong>Upload</strong> a photo for your project.</h2>
+			<div>
+				<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+			</div>
+			<div class="file-uploader"></div>
+		</div>
+		<a class='close' href="#"><span>close</span></a>
+	</div>
+	
+	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<!-- feature this project merlin template -->
+		<div class="template-content modal-content merlin feature-project-dialog">
+			<div class="step feature-this-project">
+				<h2><strong>Feature</strong> This Project</h2>
+				<div class="replace-prompt">
+					Do you want to replace
+					<select class="replace-project-options"></select>
+					with <span class="serif project-name">&nbsp;</span>
+					in the Featured Projects section on the homepage?
+				</div>
+				<div class="actions yesno">
+					<a class="submit rounded-button" href="#">Yes</a>
+					<a class="cancel rounded-button" href="#">Cancel</a>
+				</div>
+			</div>
+			<div class="step feature-this-project-submit">
+				<p>Featuring project&hellip;</p>
+				<p><img src='/static/images/loader32x32.gif' /></p>
+			</div>
+			<div class="step feature-this-project-error">
+				<p>Unable to Feature this project!</p>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>	
+		
+		<div class="template-content modal-content confirm-delete project-delete">
+			<div class="step">
+				<h2><strong>Delete</strong> this Project?</h2>
+				<div>
+					<p>You are about to delete this project from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete Project</a>
+					<a class="cancel" href="#">No, keep them.</a>
+				</div>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+	{% endif %}
+	
+	{% if d.template_data and d.template_data.project_user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<div class="template-content modal-content confirm-delete remove-resource">
+			<div class="step">
+				<h2><strong>Delete</strong> this Resource?</h2>
+				<div>
+					<p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
+				</div>
+				<div class="actions">
+					<a class="submit rounded-button" href="#">Yes, Delete Resource</a>
+					<a class="cancel" href="#">No, keep it.</a>
+				</div>
+			</div>
+			<a class='close' href="#"><span>close</span></a>
+		</div>
+	{% endif %}
+	
+	{% if d.template_data.project_user.data.is_member %}
+		{% if not d.template_data.project_user.data.is_project_admin %}
+			<div class="template-content modal-content confirm-delete leave-project">
+				<div class="step">
+					<h2><strong>Leave</strong> this Project?</h2>
+					<div>
+						<p>You will no longer be a member of this project!<br/>Are you sure?</p>
+					</div>
+					<div class="actions">
+						<a class="submit rounded-button" href="#">Yes, Leave Project</a>
+						<a class="cancel" href="#">No, stay.</a>
+					</div>
+				</div>
+				<a class='close' href="#"><span>close</span></a>
+			</div>
+		{% endif %}
+	{% endif %}
+
+</div><!-- end .continent.project -->
+{% endblock continent %}
+
+
+{% block page_js %}
+	<script>
+		{% if d.template_data and d.template_data.project %}
+			app_page.data.project = {{ d.template_data.project.json }};
+		{% else %}
+			app_page.data.project = null;
+		{% endif %}
+	
+		{% if d.template_data.project.data.info.owner %}
+			app_page.data.contact_modal = {
+				to_u_name: '{{ d.template_data.project.data.info.owner.name }}',
+				to_u_id: {{ d.template_data.project.data.info.owner.u_id }}
+			};
+		{% endif %}
+	</script>
+
+	<script type="text/javascript" src="/static/js/tc.gam.contact.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
+	<script type='text/javascript' src="/static/js/pages/project.js"></script>
+	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+		<script type='text/javascript' src="/static/js/pages/project.admin.js"></script>
+	{% endif %}
+
+	<!--[if lte IE 8]>
+		<script type="text/javascript">
+			$('.headlands .thumb').hover(
+				function () { tc.jQ('.change-image').addClass('hover'); },
+				function () { tc.jQ('.change-image').removeClass('hover'); }
+			);
+		</script>
+	<![endif]-->
+{% endblock page_js %}

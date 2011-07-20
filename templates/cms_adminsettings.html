@@ -1,0 +1,264 @@
+{% extends "./partials/base.html" %}
+
+{% block title %}
+Change by Us NYC - CMS Admin Settings
+{% endblock title %}
+
+{% block continent %}
+
+<div class='continent cms cms-admin-settings'>
+
+	<div class='headlands clearfix'>
+		<ul class="tabs">
+			<li class="tab administrators active"><a href="#cms-admin,admins">Administrators</a></li>
+			<li class="tab blacklist"><a href="#cms-admin,blacklists">Blacklist</a></li>
+		</ul>
+	</div><!-- end .headlands -->
+
+	<div class='midlands merlin merlin-admin-settings clearfix'>
+		<div id="administrators" class="step view">
+			<div class="west"><!-- begin .west -->
+				<div class="add-admin-merlin merlin">
+					<div class="add-admin-main step">
+						<div class="box">
+							<div class="hd">
+								<h2 class="fancy-caps">Add <span>an</span> Administrator</h2>
+							</div>
+							<div class="bd">
+								<div class="row">
+									<label>First Name</label>
+									<input class='f_name' type="text"/>
+								</div>
+								<div class="row">
+									<label>Last Name</label>
+									<input class='l_name' type="text"/>
+								</div>
+								<div class="row">
+									<label>Email</label>
+									<input class='email' type="text"/>
+								</div>
+								<div class="row">
+									<label>Password</label>
+									<input class='password' type="password"/>
+								</div>
+								<div class="row organization-row">
+									<label>Affiliation</label>
+									<input class='organization' type="text"/>
+								</div>
+								<div class="row clearfix">
+									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="city-leaders-radio" value="3" />
+									<label for="city-leaders-radio" class="white"><strong>City Leaders</strong> can endorse projects</label>
+								</div>
+								<div class="row clearfix">
+									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="administrators-radio" value="2" />
+									<label for="administrators-radio" class="white"><strong>Administrators</strong> can moderate and delete posts and delete regular accounts</label>
+								</div>
+								<div class="row clearfix">
+									<input type="radio" name="add-admin-radio" class="add-admin-radio" id="superadmin-radio" value="1"/>
+									<label for="superadmin-radio" class="white"><strong>Super Administrators</strong> can create other admins and delete posts, users, and delete other admins</label>
+								</div>
+							</div>
+							<div class="ft">
+								<a class="admin-merlin-next-step rounded-button" href="#">Add Administrator</a>
+							</div>
+						</div>
+					</div>
+					<div class="add-admin-error step ">
+						<p class="">There was an error creating the administrator.</p>
+						<br />
+						<p class=""><a href='#add-admin,main'>Back.</a></p>
+					</div>
+					<div class="add-admin-finish step spinner-message clearfix">
+						<p class="west">Adding Administrator...</p>
+						<img class="loading" src='/static/images/loader32x32.gif' />
+					</div>
+				</div>
+			</div><!-- end .west -->
+			
+			
+			<div class="east">
+				<div class="box active-admins">
+					<div class="hd">
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev admin-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<a class="next admin-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+						<h2 class="fancy-caps">Active Administrators</h2>
+					</div>
+					<div class="bd">
+						<div class="carousel admins">
+							<div class="scrollable">
+								<ul class="items">
+									<li class='loaded'>
+										<table class="active-admins-table">
+											<tbody>
+										{% if d.template_data.users['data'] > 0 %}
+											{% for user in d.template_data.users['data'] %}
+												
+												<tr id='user-{{ user.user_id }}'>
+													<th scope="row" class="active-admin-info serif">
+														<h3><a href="/useraccount/{{ user.user_id }}">{{ user.full_display_name }}</a></h3>
+														<div class="email">
+															<a href="mailto:{{ user.email }}">{{ user.email }}</a>
+														</div>
+													</th>
+													<td class="control-admin-type">
+														<form>
+															<div>
+																<input type="radio" id="user-role-{{ user.user_id }}-radio-leader" rel='setRole,3,{{ user.user_id }}' name="user-role-{{ user.user_id }}-radio" {% if user.is_leader %}checked="true"{% endif %} />
+																<label for="user-role-{{ user.user_id }}-radio-leader" class="small">City Leader</label>
+															</div>
+															<div>
+																<input type="radio" id="user-role-{{ user.user_id }}-radio-moderator" rel='setRole,2,{{ user.user_id }}' name="user-role-{{ user.user_id }}-radio" {% if user.is_moderator %}checked="true"{% endif %} />
+																<label for="user-role-{{ user.user_id }}-radio-moderator" class="small">Admin</label>
+															</div>
+															<div>
+																<input type="radio" id="user-role-{{ user.user_id }}-radio-admin" rel='setRole,1,{{ user.user_id }}' name="user-role-{{ user.user_id }}-radio" {% if user.is_admin %}checked="true"{% endif %} />
+																<label for="user-role-{{ user.user_id }}-radio-admin" class="small">Super Admin</label>
+															</div>
+														</form>
+													</td>
+													<td class="control-call-status">
+														<input type="checkbox" id="user-oncall-{{ user.user_id }}-check" rel='setOncall,{{ user.user_id }}' name='user-oncall-{{ user.user_id }}-check' {% if user.is_oncall %}checked="true"{% endif %} />
+														<label for="user-oncall-{{ user.user_id }}-check" class="white">On Call</label>
+													</td>
+													<td class="control-delete">
+														<a class='delete' href="#removeUser,{{ user.user_id }}">Delete</a>
+													</td>
+												</tr>
+												
+											{% endfor %}
+										{% endif %}
+											</tbody>
+										</table>
+									</li>
+									<li>
+										<table class="active-admins-table">
+											<tbody>
+												<tr>
+													<td><p>Loading...</p></td>
+												</tr>
+											</tbody>
+										</table>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div class="ft">
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev admin-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<a class="next admin-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div><!--end .east-->
+		</div><!--end #administrators-->
+		
+		
+		<div id="blacklist" class="step view" style="display:none">
+			<div class="description">
+				The blacklist and graylist are used to filter out inappropriate responses.
+			</div>
+			<div class="blacklist-merlin merlin">
+				<div class="blacklist-merlin-main step">
+					<div class="box graylist-box west">
+						<div class="hd">
+							<h2>Graylist</h2>
+							<p>If anything on the site matches the graylist, <br />it will be <strong>flagged for review</strong>.</p>
+						</div>
+						<div class="bd">
+							<textarea class="graylist word-set">{{ d.template_data.words.data.graylist }}</textarea>
+						</div>
+					</div>
+					<div class="box blacklist-box west">
+						<div class="hd">
+							<h2>Blacklist</h2>
+							<p>If anything on the site matches the blacklist, <br />it will be <strong>automatically hidden</strong>.</p>
+						</div>
+						<div class="bd">
+							<textarea class="blacklist word-set">{{ d.template_data.words.data.blacklist }}</textarea>
+						</div>
+					</div>
+					<div class="box actions-box west">
+						<div class="hd">
+							<h2>&nbsp;</h2>
+							<p>The last changes were saved at <span>02:45pm</span> on <span>04.12.2011</span> by <span>Jen</span></p>
+						</div>
+						<div class="bd">
+							<a class="rounded-button save-button blacklist-save-button" href="#">Save</a>
+						</div>
+					</div>
+				</div>
+				<div class="blacklist-merlin-finish step spinner-message clearfix"><!-- ADD CLASS ".step"-->
+					<p class="west">Saving Blacklist...</p>
+					<img class="loading" src='/static/images/loader32x32.gif' />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class='foothills'>
+
+	</div>
+
+	
+
+</div><!-- end .continent.cms-admin-settings -->
+
+<!-- <div class='template-content user-row'>
+	<th scope="row" class="active-admin-info serif">
+		<h3>XXXX XXXX</h3>
+		<div class="email">
+			<a href="mailto:">email</a>
+		</div>
+	</th>
+	<td class="control-admin-type">
+		<form>
+			<div>
+				<input class='loeader' type="radio" id="user-role-XX-radio-leader" name="user-role-xx-radio" />
+				<label for="user-role-xx-radio-leader" class="small">Super User</label>
+			</div>
+			<div>
+				<input type="radio" id="user-role--radio-moderator" name="user-role--radio" />
+				<label for="user-role-xx-radio-moderator" class="small">Administrator</label>
+			</div>
+			<div>
+				<input type="radio" id="user-role-xx-radio-admin" name="user-role-xx-radio" />
+				<label for="user-role-xx-radio-admin" class="small">City Leader</label>
+			</div>
+		</form>
+	</td>
+	<td class="control-call-status">
+		<input type="checkbox" id="user-oncall-x-check" name='user-oncall-xx-check' />
+		<label for="user-oncall-xx-check" class="white">On Call</label>
+	</td>
+	<td class="control-delete">
+		<a href="#">Delete</a>
+	</td>
+</div> -->
+
+<div class="template-content modal-content confirm-delete remove-user">
+	<div class="step">
+		<h2><strong>Delete</strong> this User?</h2>
+		<div>
+			<p>This deletes the User from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete User</a>
+			<a class="cancel" href="#">No, keep them.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+{% endblock continent %}
+
+
+{% block page_js %}
+	<script type='text/javascript' src="/static/js/pages/cms.adminsettings.js"></script>
+{% endblock page_js %}
