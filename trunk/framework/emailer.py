@@ -41,7 +41,8 @@ class Emailer():
             # msg = MIMEMultipart('alternative')
             # msg.attach(MIMEText(html, 'html'))
             # msg.attach(MIMEText(text, 'plain'))
-            msg = MIMEText(html, 'html')
+            # msg = MIMEText(html, 'html')
+            msg = html
         else:
             msg = MIMEText(text, 'plain')
 
@@ -59,9 +60,9 @@ class Emailer():
 
         sender = from_name + "<" + from_address + ">"
         
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = ", ".join(addresses)
+        # msg['Subject'] = subject
+        # msg['From'] = sender
+        # msg['To'] = ", ".join(addresses)
 
         try:
             # The use_msg_directly parameter should be set to True if we're adding message headers. This is the case

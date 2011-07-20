@@ -83,7 +83,7 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
 					inputs:{
 						email_list:{
 							selector:'.email-list',
-							validators:['min-3','max-200','required','csv-email'],
+							validators:['min-6','max-254','required','csv-email'],
 							hint:'Add emails separated by commas'
 						},
 						email_message:{

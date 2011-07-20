@@ -281,7 +281,7 @@ app_page.features.push(function(app){
 					},
 					email:{
 						selector:'input.email',
-						validators:['min-3','max-64','email','required']
+						validators:['min-6','max-254','email','required']
 					},
 					password:{
 						selector:'input.password',

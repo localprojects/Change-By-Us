@@ -71,7 +71,7 @@ app_page.features.push(function(app){
 					inputs:{
 						email:{
 							selector:'input.email',
-							validators:['min-3','max-200','required','email'],
+							validators:['min-6','max-254','required','email'],
 							hint: (app_page.data.user && app_page.data.user.email ? false : 'Please enter your email address'),
 							focus_first:true
 						},

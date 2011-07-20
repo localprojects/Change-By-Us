@@ -1382,13 +1382,19 @@ class _EmailMessage:
                 return [safestr(a) for a in x]
     
         subject = safestr(subject)
+        self.subject = subject
+        print "Message body: %s" % message
         message = safestr(message)
+        self.body = message
 
         from_address = safestr(from_address)
         to_address = listify(to_address)
+        self.to_address = to_address
         cc = listify(kw.get('cc', []))
+        self.cc = cc
         bcc = listify(kw.get('bcc', []))
-        recipients = to_address #  + cc + bcc
+        self.bcc = bcc
+        recipients = to_address + cc + bcc
 
         import email.Utils
         self.from_address = email.Utils.parseaddr(from_address)[1]
@@ -1402,8 +1408,6 @@ class _EmailMessage:
 
         if cc:
             self.headers['Cc'] = ", ".join(cc)
-        if bcc:
-            self.headers['Bcc'] = ", ".join(bcc)
     
         self.message = self.new_message()
         self.message.add_header("Content-Transfer-Encoding", "7bit")
@@ -1464,7 +1468,10 @@ class _EmailMessage:
             self.prepare_message()
             message_text = self.message.as_string()
         else:
-            message_text = message.as_string()
+            try:
+                message_text = message.as_string()
+            except:
+                message_text = message
 
         if webapi.config.get('smtp_server'):
             server = webapi.config.get('smtp_server')
@@ -1499,7 +1506,9 @@ class _EmailMessage:
 
             # TODO: Need to add proper exception handling or at least error reporting!
             # Use raw_email since this allows for attachments
-            c.send_raw_email(self.from_address, message_text, self.recipients)
+            # c.send_raw_email(self.from_address, message_text, self.recipients)
+            c.send_email(source=self.from_address, subject=self.subject, body=None, to_addresses=self.to_address, cc_addresses=self.cc,
+                   bcc_addresses=self.bcc, html_body=self.body);
 
         else:
             sendmail = webapi.config.get('sendmail_path', '/usr/sbin/sendmail')
