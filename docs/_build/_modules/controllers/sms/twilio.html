@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.sms.twilio &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.sms.twilio</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">helpers.sms</span> <span class="kn">as</span> <span class="nn">sms</span>
+<span class="kn">from</span> <span class="nn">framework</span> <span class="kn">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">giveaminute.user</span> <span class="kn">as</span> <span class="nn">mUser</span>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+
+<div class="viewcode-block" id="Twilio"><a class="viewcode-back" href="../../../modules/controllers.sms.html#controllers.sms.twilio.Twilio">[docs]</a><span class="k">class</span> <span class="nc">Twilio</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+    
+    <span class="c">#phone_numbers = Config.get(&#39;phone_numbers&#39;)</span>
+    <span class="c">#log.info(&quot;Twilio: phone_numbers: %s&quot; % phone_numbers)</span>
+    
+<div class="viewcode-block" id="Twilio.GET"><a class="viewcode-back" href="../../../modules/controllers.sms.html#controllers.sms.twilio.Twilio.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nop</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Twilio.POST"><a class="viewcode-back" href="../../../modules/controllers.sms.html#controllers.sms.twilio.Twilio.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;receive&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_status</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Twilio.receive"><a class="viewcode-back" href="../../../modules/controllers.sms.html#controllers.sms.twilio.Twilio.receive">[docs]</a>    <span class="k">def</span> <span class="nf">receive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># TODO: could do more w/ validation</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sms</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+            
+        <span class="n">phone</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">cleanUSPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;From&#39;</span><span class="p">))</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;Body&#39;</span><span class="p">)</span>
+        
+        <span class="n">userId</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">findUserByPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">phone</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">message</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** sms received but idea not created.  missing phone or message&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;stop&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">stopSMS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>        
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">mIdea</span><span class="o">.</span><span class="n">createIdea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;sms&#39;</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">phone</span><span class="p">)):</span>
+                    <span class="n">mMessaging</span><span class="o">.</span><span class="n">sendSMSConfirmation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+                    
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="Twilio.on_receive"><a class="viewcode-back" href="../../../modules/controllers.sms.html#controllers.sms.twilio.Twilio.on_receive">[docs]</a>    <span class="k">def</span> <span class="nf">on_receive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Twilio.on_receive: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">())</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;self.request(&#39;To&#39;): </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;To&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sms</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;Body&#39;</span><span class="p">)</span>
+        <span class="n">to</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;To&#39;</span><span class="p">))</span>
+        <span class="c"># this is evidently the most elegant way to do a reverse look-up in a dictionary</span>
+        <span class="n">to_city</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">phone_numbers</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">==</span><span class="n">to</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c">#log.info(&#39;to_city: %s&#39; % to_city)</span>
+        
+        <span class="k">if</span> <span class="n">util</span><span class="o">.</span><span class="n">check_bad_words</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Twilio: Bad word(s) in text message&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Bad word(s) in message&#39;</span><span class="p">)</span>
+        
+        <span class="n">user</span> <span class="o">=</span> <span class="n">Users</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;From&#39;</span><span class="p">),</span> <span class="n">location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;FromZip&#39;</span><span class="p">),</span> <span class="n">city_id</span><span class="o">=</span><span class="n">to_city</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">blocked</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; user is blocked!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;messages&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">sms</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">outgoing</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;stop&#39;</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;unsubscribe&#39;</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;quit&#39;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;UPDATE users SET stopped=1 WHERE id=$id&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">reply</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;stop_response&#39;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;--&gt; replying: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">reply</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">sms</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">reply</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">new</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Twilio: Submitting card to db and renderer&#39;</span><span class="p">)</span>
+                <span class="n">name_string</span> <span class="o">=</span> <span class="s">&quot;SMS from &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;FromZip&#39;</span><span class="p">))</span>
+                <span class="n">cardID</span> <span class="o">=</span> <span class="n">cards</span><span class="o">.</span><span class="n">submitCard</span><span class="p">(</span><span class="n">mId</span><span class="o">=</span><span class="n">mId</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s">&quot;SMS&quot;</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">city_id</span><span class="o">=</span><span class="n">to_city</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_string</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+                <span class="n">reply</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;initial_message&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">sms</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">reply</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c">#return self.text(&#39;User already submitted message&#39;)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;already_submitted&#39;</span><span class="p">))</span>
+                </div>
+<div class="viewcode-block" id="Twilio.on_status"><a class="viewcode-back" href="../../../modules/controllers.sms.html#controllers.sms.twilio.Twilio.on_status">[docs]</a>    <span class="k">def</span> <span class="nf">on_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Twilio.on_status </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">())</span>
+        <span class="n">smsid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;SmsSid&#39;</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;SmsStatus&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;SELECT id FROM messages WHERE smsid=$smsid&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;smsid&#39;</span><span class="p">:</span> <span class="n">smsid</span><span class="p">}))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;SELECT id FROM messages WHERE smsid=&#39;REPLY&#39;&quot;</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>                
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;UPDATE messages SET status=$status, smsid=$smsid WHERE id=$id&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">message</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s">&#39;smsid&#39;</span><span class="p">:</span> <span class="n">smsid</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s">&quot;OK&quot;</span><span class="p">)</span>
+                        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

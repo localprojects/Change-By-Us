@@ -1,0 +1,708 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.S3 &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.S3</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="c">#  This software code is made available &quot;AS IS&quot; without warranties of any</span>
+<span class="c">#  kind.  You may copy, display, modify and redistribute the software</span>
+<span class="c">#  code either by itself or as incorporated into your code; provided that</span>
+<span class="c">#  you do not remove any proprietary notices.  Your use of this software</span>
+<span class="c">#  code is at your own risk and you waive any claim against Amazon</span>
+<span class="c">#  Digital Services, Inc. or its affiliates with respect to your use of</span>
+<span class="c">#  this software code. (c) 2006-2007 Amazon Digital Services, Inc. or its</span>
+<span class="c">#  affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">hmac</span>
+<span class="kn">import</span> <span class="nn">httplib</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">hashlib</span> <span class="c"># bh: modified to avoid deprecated sha library</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">urlparse</span>
+<span class="kn">import</span> <span class="nn">xml.sax</span>
+
+<span class="n">DEFAULT_HOST</span> <span class="o">=</span> <span class="s">&#39;s3.amazonaws.com&#39;</span>
+<span class="n">PORTS_BY_SECURITY</span> <span class="o">=</span> <span class="p">{</span> <span class="bp">True</span><span class="p">:</span> <span class="mi">443</span><span class="p">,</span> <span class="bp">False</span><span class="p">:</span> <span class="mi">80</span> <span class="p">}</span>
+<span class="n">METADATA_PREFIX</span> <span class="o">=</span> <span class="s">&#39;x-amz-meta-&#39;</span>
+<span class="n">AMAZON_HEADER_PREFIX</span> <span class="o">=</span> <span class="s">&#39;x-amz-&#39;</span>
+
+<span class="c"># generates the aws canonical string for the given parameters</span>
+<div class="viewcode-block" id="canonical_string"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.canonical_string">[docs]</a><span class="k">def</span> <span class="nf">canonical_string</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">query_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">headers</span><span class="o">=</span><span class="p">{},</span> <span class="n">expires</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">interesting_headers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">header_key</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+        <span class="n">lk</span> <span class="o">=</span> <span class="n">header_key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">lk</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;content-md5&#39;</span><span class="p">,</span> <span class="s">&#39;content-type&#39;</span><span class="p">,</span> <span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">lk</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">AMAZON_HEADER_PREFIX</span><span class="p">):</span>
+            <span class="n">interesting_headers</span><span class="p">[</span><span class="n">lk</span><span class="p">]</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="n">header_key</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c"># these keys get empty strings if they don&#39;t exist</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">interesting_headers</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;content-type&#39;</span><span class="p">):</span>
+        <span class="n">interesting_headers</span><span class="p">[</span><span class="s">&#39;content-type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">interesting_headers</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;content-md5&#39;</span><span class="p">):</span>
+        <span class="n">interesting_headers</span><span class="p">[</span><span class="s">&#39;content-md5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="c"># just in case someone used this.  it&#39;s not necessary in this lib.</span>
+    <span class="k">if</span> <span class="n">interesting_headers</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;x-amz-date&#39;</span><span class="p">):</span>
+        <span class="n">interesting_headers</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="c"># if you&#39;re using expires for query string auth, then it trumps date</span>
+    <span class="c"># (and x-amz-date)</span>
+    <span class="k">if</span> <span class="n">expires</span><span class="p">:</span>
+        <span class="n">interesting_headers</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expires</span><span class="p">)</span>
+
+    <span class="n">sorted_header_keys</span> <span class="o">=</span> <span class="n">interesting_headers</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">sorted_header_keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="n">buf</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">method</span>
+    <span class="k">for</span> <span class="n">header_key</span> <span class="ow">in</span> <span class="n">sorted_header_keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">header_key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">AMAZON_HEADER_PREFIX</span><span class="p">):</span>
+            <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">header_key</span><span class="p">,</span> <span class="n">interesting_headers</span><span class="p">[</span><span class="n">header_key</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">interesting_headers</span><span class="p">[</span><span class="n">header_key</span><span class="p">]</span>
+
+    <span class="c"># append the bucket if it exists</span>
+    <span class="k">if</span> <span class="n">bucket</span> <span class="o">!=</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">bucket</span>
+
+    <span class="c"># add the key.  even if it doesn&#39;t exist, add the slash</span>
+    <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c"># handle special query string arguments</span>
+
+    <span class="k">if</span> <span class="n">query_args</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&quot;acl&quot;</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;?acl&quot;</span>
+    <span class="k">elif</span> <span class="n">query_args</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&quot;torrent&quot;</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;?torrent&quot;</span>
+    <span class="k">elif</span> <span class="n">query_args</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&quot;logging&quot;</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;?logging&quot;</span>
+    <span class="k">elif</span> <span class="n">query_args</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&quot;location&quot;</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="s">&quot;?location&quot;</span>
+
+    <span class="k">return</span> <span class="n">buf</span>
+
+<span class="c"># computes the base64&#39;ed hmac-sha hash of the canonical string and the secret</span>
+<span class="c"># access key, optionally urlencoding the result</span></div>
+<div class="viewcode-block" id="encode"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.encode">[docs]</a><span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="n">aws_secret_access_key</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">urlencode</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">b64_hmac</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodestring</span><span class="p">(</span><span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">aws_secret_access_key</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">urlencode</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">b64_hmac</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">b64_hmac</span>
+</div>
+<div class="viewcode-block" id="merge_meta"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.merge_meta">[docs]</a><span class="k">def</span> <span class="nf">merge_meta</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="n">final_headers</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">final_headers</span><span class="p">[</span><span class="n">METADATA_PREFIX</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">final_headers</span>
+
+<span class="c"># builds the query arg string</span></div>
+<div class="viewcode-block" id="query_args_hash_to_string"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.query_args_hash_to_string">[docs]</a><span class="k">def</span> <span class="nf">query_args_hash_to_string</span><span class="p">(</span><span class="n">query_args</span><span class="p">):</span>
+    <span class="n">query_string</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">query_args</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">piece</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">piece</span> <span class="o">+=</span> <span class="s">&quot;=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">piece</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s">&#39;&amp;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="CallingFormat"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.CallingFormat">[docs]</a><span class="k">class</span> <span class="nc">CallingFormat</span><span class="p">:</span>
+    <span class="n">PATH</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SUBDOMAIN</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">VANITY</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="CallingFormat.build_url_base"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.CallingFormat.build_url_base">[docs]</a>    <span class="k">def</span> <span class="nf">build_url_base</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">calling_format</span><span class="p">):</span>
+        <span class="n">url_base</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">://&#39;</span> <span class="o">%</span> <span class="n">protocol</span>
+
+        <span class="k">if</span> <span class="n">bucket</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">url_base</span> <span class="o">+=</span> <span class="n">server</span>
+        <span class="k">elif</span> <span class="n">calling_format</span> <span class="o">==</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">SUBDOMAIN</span><span class="p">:</span>
+            <span class="n">url_base</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">calling_format</span> <span class="o">==</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">VANITY</span><span class="p">:</span>
+            <span class="n">url_base</span> <span class="o">+=</span> <span class="n">bucket</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">url_base</span> <span class="o">+=</span> <span class="n">server</span>
+
+        <span class="n">url_base</span> <span class="o">+=</span> <span class="s">&quot;:</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">port</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">bucket</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">calling_format</span> <span class="o">==</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">PATH</span><span class="p">):</span>
+            <span class="n">url_base</span> <span class="o">+=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">bucket</span>
+
+        <span class="k">return</span> <span class="n">url_base</span>
+</div>
+    <span class="n">build_url_base</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">build_url_base</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Location"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.Location">[docs]</a><span class="k">class</span> <span class="nc">Location</span><span class="p">:</span>
+    <span class="n">DEFAULT</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">EU</span> <span class="o">=</span> <span class="s">&#39;EU&#39;</span>
+
+
+</div>
+<div class="viewcode-block" id="AWSAuthConnection"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection">[docs]</a><span class="k">class</span> <span class="nc">AWSAuthConnection</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aws_access_key_id</span><span class="p">,</span> <span class="n">aws_secret_access_key</span><span class="p">,</span> <span class="n">is_secure</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="n">server</span><span class="o">=</span><span class="n">DEFAULT_HOST</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">calling_format</span><span class="o">=</span><span class="n">CallingFormat</span><span class="o">.</span><span class="n">SUBDOMAIN</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span><span class="p">:</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">PORTS_BY_SECURITY</span><span class="p">[</span><span class="n">is_secure</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aws_access_key_id</span> <span class="o">=</span> <span class="n">aws_access_key_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aws_secret_access_key</span> <span class="o">=</span> <span class="n">aws_secret_access_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_secure</span> <span class="o">=</span> <span class="n">is_secure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calling_format</span> <span class="o">=</span> <span class="n">calling_format</span>
+
+<div class="viewcode-block" id="AWSAuthConnection.create_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.create_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">create_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.create_located_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.create_located_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">create_located_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">Location</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">if</span> <span class="n">location</span> <span class="o">==</span> <span class="n">Location</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="s">&quot;&lt;CreateBucketConstraint&gt;&lt;LocationConstraint&gt;&quot;</span> <span class="o">+</span> \
+                   <span class="n">location</span> <span class="o">+</span> \
+                   <span class="s">&quot;&lt;/LocationConstraint&gt;&lt;/CreateBucketConstraint&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">,</span> <span class="n">body</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.check_bucket_exists"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.check_bucket_exists">[docs]</a>    <span class="k">def</span> <span class="nf">check_bucket_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;HEAD&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="p">{})</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.list_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.list_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">list_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">ListBucketResponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.delete_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.delete_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">delete_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;DELETE&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.put"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">S3Object</span><span class="p">):</span>
+            <span class="nb">object</span> <span class="o">=</span> <span class="n">S3Object</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span>
+                    <span class="s">&#39;PUT&#39;</span><span class="p">,</span>
+                    <span class="n">bucket</span><span class="p">,</span>
+                    <span class="n">key</span><span class="p">,</span>
+                    <span class="p">{},</span>
+                    <span class="n">headers</span><span class="p">,</span>
+                    <span class="nb">object</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="nb">object</span><span class="o">.</span><span class="n">metadata</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.get"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">GetResponse</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.delete"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;DELETE&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.get_bucket_logging"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.get_bucket_logging">[docs]</a>    <span class="k">def</span> <span class="nf">get_bucket_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">GetResponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;logging&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.put_bucket_logging"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.put_bucket_logging">[docs]</a>    <span class="k">def</span> <span class="nf">put_bucket_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">logging_xml_doc</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;logging&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">,</span> <span class="n">logging_xml_doc</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.get_bucket_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.get_bucket_acl">[docs]</a>    <span class="k">def</span> <span class="nf">get_bucket_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_acl</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.get_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.get_acl">[docs]</a>    <span class="k">def</span> <span class="nf">get_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">GetResponse</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;acl&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.put_bucket_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.put_bucket_acl">[docs]</a>    <span class="k">def</span> <span class="nf">put_bucket_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">acl_xml_document</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">put_acl</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">acl_xml_document</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.put_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.put_acl">[docs]</a>    <span class="k">def</span> <span class="nf">put_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">acl_xml_document</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span>
+                    <span class="s">&#39;PUT&#39;</span><span class="p">,</span>
+                    <span class="n">bucket</span><span class="p">,</span>
+                    <span class="n">key</span><span class="p">,</span>
+                    <span class="p">{</span> <span class="s">&#39;acl&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span>
+                    <span class="n">headers</span><span class="p">,</span>
+                    <span class="n">acl_xml_document</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.list_all_my_buckets"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.list_all_my_buckets">[docs]</a>    <span class="k">def</span> <span class="nf">list_all_my_buckets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="n">ListAllMyBucketsResponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="AWSAuthConnection.get_bucket_location"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.AWSAuthConnection.get_bucket_location">[docs]</a>    <span class="k">def</span> <span class="nf">get_bucket_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LocationResponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;location&#39;</span> <span class="p">:</span> <span class="bp">None</span><span class="p">}))</span>
+
+    <span class="c"># end public methods</span>
+</div>
+    <span class="k">def</span> <span class="nf">_make_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">query_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">headers</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{}):</span>
+
+        <span class="n">server</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">bucket</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">server</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">calling_format</span> <span class="o">==</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">SUBDOMAIN</span><span class="p">:</span>
+            <span class="n">server</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">calling_format</span> <span class="o">==</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">VANITY</span><span class="p">:</span>
+            <span class="n">server</span> <span class="o">=</span> <span class="n">bucket</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">server</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">bucket</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calling_format</span> <span class="o">==</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">PATH</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">bucket</span>
+
+        <span class="c"># add the slash after the bucket regardless</span>
+        <span class="c"># the key will be appended if it is non-empty</span>
+        <span class="n">path</span> <span class="o">+=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+
+        <span class="c"># build the path_argument string</span>
+        <span class="c"># add the ? in all cases since </span>
+        <span class="c"># signature and credentials follow path args</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_args</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s">&quot;?&quot;</span> <span class="o">+</span> <span class="n">query_args_hash_to_string</span><span class="p">(</span><span class="n">query_args</span><span class="p">)</span>
+
+        <span class="n">is_secure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_secure</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">is_secure</span><span class="p">):</span>
+                <span class="n">connection</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPSConnection</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">connection</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPConnection</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+
+            <span class="n">final_headers</span> <span class="o">=</span> <span class="n">merge_meta</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">metadata</span><span class="p">);</span>
+            <span class="c"># add auth header</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_aws_auth_header</span><span class="p">(</span><span class="n">final_headers</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">query_args</span><span class="p">)</span>
+
+            <span class="n">connection</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">final_headers</span><span class="p">)</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">300</span> <span class="ow">or</span> <span class="n">resp</span><span class="o">.</span><span class="n">status</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">resp</span>
+            <span class="c"># handle redirect</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">getheader</span><span class="p">(</span><span class="s">&#39;location&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">location</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">resp</span>
+            <span class="c"># (close connection)</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">scheme</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">fragment</span> \
+                    <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s">&quot;http&quot;</span><span class="p">:</span>    <span class="n">is_secure</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s">&quot;https&quot;</span><span class="p">:</span> <span class="n">is_secure</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="n">invalidURL</span><span class="p">(</span><span class="s">&quot;Not http/https: &quot;</span> <span class="o">+</span> <span class="n">location</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">query</span><span class="p">:</span> <span class="n">path</span> <span class="o">+=</span> <span class="s">&quot;?&quot;</span> <span class="o">+</span> <span class="n">query</span>
+            <span class="c"># retry with redirect</span>
+
+    <span class="k">def</span> <span class="nf">_add_aws_auth_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">query_args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">headers</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;Date&#39;</span><span class="p">):</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s">&#39;Date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%a, </span><span class="si">%d</span><span class="s"> %b %Y </span><span class="si">%X</span><span class="s"> GMT&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">())</span>
+
+        <span class="n">c_string</span> <span class="o">=</span> <span class="n">canonical_string</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">query_args</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="s">&quot;AWS </span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aws_access_key_id</span><span class="p">,</span> <span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aws_secret_access_key</span><span class="p">,</span> <span class="n">c_string</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator">[docs]</a><span class="k">class</span> <span class="nc">QueryStringAuthGenerator</span><span class="p">:</span>
+    <span class="c"># by default, expire in 1 minute</span>
+    <span class="n">DEFAULT_EXPIRES_IN</span> <span class="o">=</span> <span class="mi">60</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aws_access_key_id</span><span class="p">,</span> <span class="n">aws_secret_access_key</span><span class="p">,</span> <span class="n">is_secure</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">server</span><span class="o">=</span><span class="n">DEFAULT_HOST</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">calling_format</span><span class="o">=</span><span class="n">CallingFormat</span><span class="o">.</span><span class="n">SUBDOMAIN</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span><span class="p">:</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">PORTS_BY_SECURITY</span><span class="p">[</span><span class="n">is_secure</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aws_access_key_id</span> <span class="o">=</span> <span class="n">aws_access_key_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aws_secret_access_key</span> <span class="o">=</span> <span class="n">aws_secret_access_key</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">is_secure</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s">&#39;https&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s">&#39;http&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_secure</span> <span class="o">=</span> <span class="n">is_secure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calling_format</span> <span class="o">=</span> <span class="n">calling_format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expires_in</span> <span class="o">=</span> <span class="n">QueryStringAuthGenerator</span><span class="o">.</span><span class="n">DEFAULT_EXPIRES_IN</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expires</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># for backwards compatibility with older versions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QueryStringAuthGenerator.set_expires_in"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.set_expires_in">[docs]</a>    <span class="k">def</span> <span class="nf">set_expires_in</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expires_in</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expires_in</span> <span class="o">=</span> <span class="n">expires_in</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expires</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.set_expires"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.set_expires">[docs]</a>    <span class="k">def</span> <span class="nf">set_expires</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expires</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expires</span> <span class="o">=</span> <span class="n">expires</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expires_in</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.create_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.create_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">create_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.list_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.list_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">list_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.delete_bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.delete_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">delete_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;DELETE&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.put"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">S3Object</span><span class="p">):</span>
+            <span class="nb">object</span> <span class="o">=</span> <span class="n">S3Object</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span>
+                <span class="s">&#39;PUT&#39;</span><span class="p">,</span>
+                <span class="n">bucket</span><span class="p">,</span>
+                <span class="n">key</span><span class="p">,</span>
+                <span class="p">{},</span>
+                <span class="n">merge_meta</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="nb">object</span><span class="o">.</span><span class="n">metadata</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.get"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.delete"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;DELETE&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.get_bucket_logging"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.get_bucket_logging">[docs]</a>    <span class="k">def</span> <span class="nf">get_bucket_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;logging&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.put_bucket_logging"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.put_bucket_logging">[docs]</a>    <span class="k">def</span> <span class="nf">put_bucket_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">logging_xml_doc</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;logging&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.get_bucket_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.get_bucket_acl">[docs]</a>    <span class="k">def</span> <span class="nf">get_bucket_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_acl</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.get_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.get_acl">[docs]</a>    <span class="k">def</span> <span class="nf">get_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;acl&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.put_bucket_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.put_bucket_acl">[docs]</a>    <span class="k">def</span> <span class="nf">put_bucket_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">acl_xml_document</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">put_acl</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">acl_xml_document</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+
+    <span class="c"># don&#39;t really care what the doc is here.</span></div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.put_acl"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.put_acl">[docs]</a>    <span class="k">def</span> <span class="nf">put_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">acl_xml_document</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;acl&#39;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.list_all_my_buckets"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.list_all_my_buckets">[docs]</a>    <span class="k">def</span> <span class="nf">list_all_my_buckets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">headers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.make_bare_url"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.make_bare_url">[docs]</a>    <span class="k">def</span> <span class="nf">make_bare_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">full_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">full_url</span><span class="p">[:</span><span class="n">full_url</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;?&#39;</span><span class="p">)]</span>
+</div>
+<div class="viewcode-block" id="QueryStringAuthGenerator.generate_url"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.QueryStringAuthGenerator.generate_url">[docs]</a>    <span class="k">def</span> <span class="nf">generate_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">query_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="n">expires</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expires_in</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">expires</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expires_in</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expires</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">expires</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__expires</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="s">&quot;Invalid expires state&quot;</span>
+
+        <span class="n">canonical_str</span> <span class="o">=</span> <span class="n">canonical_string</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">query_args</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">expires</span><span class="p">)</span>
+        <span class="n">encoded_canonical</span> <span class="o">=</span> <span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aws_secret_access_key</span><span class="p">,</span> <span class="n">canonical_str</span><span class="p">)</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="n">CallingFormat</span><span class="o">.</span><span class="n">build_url_base</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calling_format</span><span class="p">)</span>
+
+        <span class="n">url</span> <span class="o">+=</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="n">query_args</span><span class="p">[</span><span class="s">&#39;Signature&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoded_canonical</span>
+        <span class="n">query_args</span><span class="p">[</span><span class="s">&#39;Expires&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">expires</span>
+        <span class="n">query_args</span><span class="p">[</span><span class="s">&#39;AWSAccessKeyId&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aws_access_key_id</span>
+
+        <span class="n">url</span> <span class="o">+=</span> <span class="s">&quot;?</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">query_args_hash_to_string</span><span class="p">(</span><span class="n">query_args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">url</span>
+
+</div></div>
+<div class="viewcode-block" id="S3Object"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.S3Object">[docs]</a><span class="k">class</span> <span class="nc">S3Object</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+</div>
+<div class="viewcode-block" id="Owner"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.Owner">[docs]</a><span class="k">class</span> <span class="nc">Owner</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">display_name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">display_name</span>
+</div>
+<div class="viewcode-block" id="ListEntry"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListEntry">[docs]</a><span class="k">class</span> <span class="nc">ListEntry</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">last_modified</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">etag</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">storage_class</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_modified</span> <span class="o">=</span> <span class="n">last_modified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etag</span> <span class="o">=</span> <span class="n">etag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_class</span> <span class="o">=</span> <span class="n">storage_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span>
+</div>
+<div class="viewcode-block" id="CommonPrefixEntry"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.CommonPrefixEntry">[docs]</a><span class="k">class</span> <span class="nc">CommonPrefixEntry</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+</div>
+<div class="viewcode-block" id="Bucket"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.Bucket">[docs]</a><span class="k">class</span> <span class="nc">Bucket</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">creation_date</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">creation_date</span> <span class="o">=</span> <span class="n">creation_date</span>
+</div>
+<div class="viewcode-block" id="Response"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http_response</span> <span class="o">=</span> <span class="n">http_response</span>
+        <span class="c"># you have to do this read, even if you don&#39;t expect a body.</span>
+        <span class="c"># otherwise, the next request fails.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">http_response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">http_response</span><span class="o">.</span><span class="n">status</span> <span class="o">&gt;=</span> <span class="mi">300</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%03d</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">http_response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">http_response</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="ListBucketResponse"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListBucketResponse">[docs]</a><span class="k">class</span> <span class="nc">ListBucketResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">):</span>
+        <span class="n">Response</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">http_response</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">handler</span> <span class="o">=</span> <span class="n">ListBucketHandler</span><span class="p">()</span>
+            <span class="n">xml</span><span class="o">.</span><span class="n">sax</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">entries</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">common_prefixes</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">common_prefixes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">marker</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">prefix</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_truncated</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">is_truncated</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">delimiter</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_keys</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">max_keys</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">next_marker</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">next_marker</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="ListAllMyBucketsResponse"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListAllMyBucketsResponse">[docs]</a><span class="k">class</span> <span class="nc">ListAllMyBucketsResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">):</span>
+        <span class="n">Response</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">http_response</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span> 
+            <span class="n">handler</span> <span class="o">=</span> <span class="n">ListAllMyBucketsHandler</span><span class="p">()</span>
+            <span class="n">xml</span><span class="o">.</span><span class="n">sax</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">entries</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="GetResponse"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.GetResponse">[docs]</a><span class="k">class</span> <span class="nc">GetResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">):</span>
+        <span class="n">Response</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">)</span>
+        <span class="n">response_headers</span> <span class="o">=</span> <span class="n">http_response</span><span class="o">.</span><span class="n">msg</span>   <span class="c"># older pythons don&#39;t have getheaders</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_aws_metadata</span><span class="p">(</span><span class="n">response_headers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">object</span> <span class="o">=</span> <span class="n">S3Object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GetResponse.get_aws_metadata"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.GetResponse.get_aws_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_aws_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="p">):</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">hkey</span> <span class="ow">in</span> <span class="n">headers</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">hkey</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">METADATA_PREFIX</span><span class="p">):</span>
+                <span class="n">metadata</span><span class="p">[</span><span class="n">hkey</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">METADATA_PREFIX</span><span class="p">):]]</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="n">hkey</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">headers</span><span class="p">[</span><span class="n">hkey</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">metadata</span>
+</div></div>
+<div class="viewcode-block" id="LocationResponse"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.LocationResponse">[docs]</a><span class="k">class</span> <span class="nc">LocationResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">):</span>
+        <span class="n">Response</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_response</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">http_response</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span> 
+            <span class="n">handler</span> <span class="o">=</span> <span class="n">LocationHandler</span><span class="p">()</span>
+            <span class="n">xml</span><span class="o">.</span><span class="n">sax</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">location</span>
+</div>
+<div class="viewcode-block" id="ListBucketHandler"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListBucketHandler">[docs]</a><span class="k">class</span> <span class="nc">ListBucketHandler</span><span class="p">(</span><span class="n">xml</span><span class="o">.</span><span class="n">sax</span><span class="o">.</span><span class="n">ContentHandler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">common_prefixes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_common_prefix</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_truncated</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_keys</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_marker</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_echoed_prefix_set</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="ListBucketHandler.startElement"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListBucketHandler.startElement">[docs]</a>    <span class="k">def</span> <span class="nf">startElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Contents&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span> <span class="o">=</span> <span class="n">ListEntry</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Owner&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">Owner</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;CommonPrefixes&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_common_prefix</span> <span class="o">=</span> <span class="n">CommonPrefixEntry</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="ListBucketHandler.endElement"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListBucketHandler.endElement">[docs]</a>    <span class="k">def</span> <span class="nf">endElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Contents&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;CommonPrefixes&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">common_prefixes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_common_prefix</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Key&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;LastModified&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">last_modified</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;ETag&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">etag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Size&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;ID&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;DisplayName&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;StorageClass&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">storage_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Name&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Prefix&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_echoed_prefix_set</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_common_prefix</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Prefix&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_echoed_prefix_set</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Marker&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;IsTruncated&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_truncated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Delimiter&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;MaxKeys&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_keys</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;NextMarker&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">next_marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+</div>
+<div class="viewcode-block" id="ListBucketHandler.characters"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListBucketHandler.characters">[docs]</a>    <span class="k">def</span> <span class="nf">characters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span> <span class="o">+=</span> <span class="n">content</span>
+
+</div></div>
+<div class="viewcode-block" id="ListAllMyBucketsHandler"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListAllMyBucketsHandler">[docs]</a><span class="k">class</span> <span class="nc">ListAllMyBucketsHandler</span><span class="p">(</span><span class="n">xml</span><span class="o">.</span><span class="n">sax</span><span class="o">.</span><span class="n">ContentHandler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+<div class="viewcode-block" id="ListAllMyBucketsHandler.startElement"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListAllMyBucketsHandler.startElement">[docs]</a>    <span class="k">def</span> <span class="nf">startElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Bucket&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span> <span class="o">=</span> <span class="n">Bucket</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ListAllMyBucketsHandler.endElement"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListAllMyBucketsHandler.endElement">[docs]</a>    <span class="k">def</span> <span class="nf">endElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Name&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;CreationDate&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="o">.</span><span class="n">creation_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Bucket&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_entry</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ListAllMyBucketsHandler.characters"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.ListAllMyBucketsHandler.characters">[docs]</a>    <span class="k">def</span> <span class="nf">characters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_text</span> <span class="o">=</span> <span class="n">content</span>
+
+</div></div>
+<div class="viewcode-block" id="LocationHandler"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.LocationHandler">[docs]</a><span class="k">class</span> <span class="nc">LocationHandler</span><span class="p">(</span><span class="n">xml</span><span class="o">.</span><span class="n">sax</span><span class="o">.</span><span class="n">ContentHandler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;init&#39;</span>
+
+<div class="viewcode-block" id="LocationHandler.startElement"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.LocationHandler.startElement">[docs]</a>    <span class="k">def</span> <span class="nf">startElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;init&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;LocationConstraint&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;tag_location&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;bad&#39;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;bad&#39;</span>
+</div>
+<div class="viewcode-block" id="LocationHandler.endElement"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.LocationHandler.endElement">[docs]</a>    <span class="k">def</span> <span class="nf">endElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;tag_location&#39;</span> <span class="ow">and</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;LocationConstraint&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;done&#39;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;bad&#39;</span>
+</div>
+<div class="viewcode-block" id="LocationHandler.characters"><a class="viewcode-back" href="../../modules/lib.html#lib.S3.LocationHandler.characters">[docs]</a>    <span class="k">def</span> <span class="nf">characters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;tag_location&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">+=</span> <span class="n">content</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

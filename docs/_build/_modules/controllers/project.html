@@ -1,0 +1,625 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.project &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.project</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">giveaminute.project</span> <span class="kn">as</span> <span class="nn">mProject</span>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.projectResource</span> <span class="kn">as</span> <span class="nn">mProjectResource</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<div class="viewcode-block" id="Project"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project">[docs]</a><span class="k">class</span> <span class="nc">Project</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="Project.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">param0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;resource&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;info&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResourceInfo</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;resources&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;related&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRelatedResources</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResourcesAndLinks</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;goals&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getGoals</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;messages&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMessages</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;featured&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFeaturedProjects</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;small&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProject</span><span class="p">()</span>   
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;rss&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showConversationRSS</span><span class="p">(</span><span class="n">param0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showProject</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>                                        
+            </div>
+<div class="viewcode-block" id="Project.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">param0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;join&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;endorse&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeEndorsement</span><span class="p">()</span>        
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">endorse</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;link&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addLink</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeLink</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;resource&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addResource</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeResource</span><span class="p">()</span>                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;goal&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addGoal</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;active&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">featureGoal</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;accomplish&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">accomplishGoal</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeGoal</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;message&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addMessage</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeMessage</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;tag&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addKeywords</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeKeyword</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;invite&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">invite</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;leave&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaveProject</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;user&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeUser</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;photo&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateImage</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;description&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateDescription</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Project.showProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.showProject">[docs]</a>    <span class="k">def</span> <span class="nf">showProject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projectId</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">projectId</span><span class="p">):</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+                <span class="n">projDictionary</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">getFullDictionary</span><span class="p">()</span>
+            
+                <span class="n">project_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProjectUser</span><span class="p">(</span><span class="n">projectId</span><span class="p">)</span>  
+                <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;project_user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">project_user</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">project_user</span><span class="p">))</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;project&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">projDictionary</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">projDictionary</span><span class="p">)</span>
+            
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Project.showConversationRSS"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.showConversationRSS">[docs]</a>    <span class="k">def</span> <span class="nf">showConversationRSS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projectId</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">projectId</span><span class="p">):</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+            <span class="n">projDictionary</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">getFullDictionary</span><span class="p">()</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;project&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">projDictionary</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">projDictionary</span><span class="p">)</span>
+            
+            <span class="n">msgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;project&#39;</span><span class="p">][</span><span class="s">&#39;data&#39;</span><span class="p">][</span><span class="s">&#39;info&#39;</span><span class="p">][</span><span class="s">&#39;messages&#39;</span><span class="p">][</span><span class="s">&#39;items&#39;</span><span class="p">]</span>
+            
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
+                <span class="n">item</span><span class="p">[</span><span class="s">&#39;created&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;created&#39;</span><span class="p">],</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%a, </span><span class="si">%d</span><span class="s"> %b %Y %H:%M:%S EST&#39;</span><span class="p">)</span>
+        
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;project/conversation_rss&#39;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">&#39;xml.rss&#39;</span><span class="p">,</span> <span class="n">content_type</span> <span class="o">=</span> <span class="s">&#39;application/rss+xml&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Project.getProjectUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getProjectUser">[docs]</a>    <span class="k">def</span> <span class="nf">getProjectUser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projectId</span><span class="p">):</span>
+        <span class="n">projectUser</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">is_project_admin</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">is_member</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">is_invited_by_idea</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">can_endorse</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">sqlInvited</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select pi.project_id from project_invite pi</span>
+<span class="s">                              inner join idea i on i.idea_id = pi.invitee_idea_id</span>
+<span class="s">                              where pi.project_id = $projectId and i.user_id = $userId</span>
+<span class="s">                              limit 1&quot;&quot;&quot;</span>
+            <span class="n">dataInvited</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sqlInvited</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;email&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">projectId</span><span class="p">}))</span>
+                              
+            <span class="n">projectUser</span><span class="p">[</span><span class="s">&#39;is_invited_by_idea&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataInvited</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>                  
+        
+            <span class="n">sqlMember</span> <span class="o">=</span> <span class="s">&quot;select is_project_admin from project__user where user_id = $userId and project_id = $projectId limit 1&quot;</span>
+            <span class="n">dataMember</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sqlMember</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">projectId</span><span class="p">}))</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataMember</span><span class="p">)</span><span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">projectUser</span><span class="p">[</span><span class="s">&#39;is_member&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="n">dataMember</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_project_admin</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">projectUser</span><span class="p">[</span><span class="s">&#39;is_project_admin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                
+            <span class="c"># # #</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isLeader</span><span class="p">):</span>
+                <span class="n">sqlEndorse</span> <span class="o">=</span> <span class="s">&quot;select user_id from project_endorsement where project_id = $projectId and user_id = $userId limit 1&quot;</span>
+                <span class="n">dataEndorse</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sqlEndorse</span><span class="p">,</span>  <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">projectId</span><span class="p">}))</span>
+                
+                <span class="n">projectUser</span><span class="p">[</span><span class="s">&#39;can_endorse&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataEndorse</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">projectUser</span><span class="p">[</span><span class="s">&#39;can_endorse&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+                
+        <span class="k">return</span> <span class="n">projectUser</span>
+        </div>
+<div class="viewcode-block" id="Project.join"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.join">[docs]</a>    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message&#39;</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** join submitted w/o logged in user&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** join submitted w/o logged project id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">description</span><span class="p">)):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** join submitted w/o idea&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isJoined</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">isJoined</span><span class="p">):</span>
+                <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+            
+                <span class="c"># create the user&#39;s &quot;hello there&quot; idea and add to project</span>
+                <span class="n">newIdeaId</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">createIdea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> 
+                                            <span class="n">description</span><span class="p">,</span> 
+                                            <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">location_id</span><span class="p">,</span>
+                                            <span class="s">&#39;web&#39;</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+                                            
+                <span class="k">if</span> <span class="p">(</span><span class="n">newIdeaId</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">addIdeaToProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">newIdeaId</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)):</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** new idea not created for user </span><span class="si">%s</span><span class="s"> on joining project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** new idea not created for user </span><span class="si">%s</span><span class="s"> on joining project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+                
+                <span class="c"># automatically insert any ideas attached to invites for this user and this project    </span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">addInvitedIdeaToProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t add invited idea to project for user </span><span class="si">%s</span><span class="s"> on joining project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+                
+                <span class="c"># add a message to the queue about the join</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="s">&#39;New Member! Your project now has </span><span class="si">%s</span><span class="s"> total!&#39;</span> <span class="o">%</span> <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">num_members</span>
+                
+                <span class="c"># email admin</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailProjectJoin</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_email</span><span class="p">,</span> 
+                                                    <span class="n">projectId</span><span class="p">,</span> 
+                                                    <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> 
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> 
+                                                    <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> 
+                                                                             <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">lastName</span><span class="p">,</span>
+                                                                             <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                                                                             <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">groupMembershipBitmask</span><span class="p">)))):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t email admin on user_id = </span><span class="si">%s</span><span class="s"> joining project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mProject</span><span class="o">.</span><span class="n">addMessage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> 
+                                            <span class="n">projectId</span><span class="p">,</span> 
+                                            <span class="n">message</span><span class="p">,</span> 
+                                            <span class="s">&#39;join&#39;</span><span class="p">,</span> 
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> 
+                                            <span class="n">newIdeaId</span><span class="p">)):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** new message not created for user </span><span class="si">%s</span><span class="s"> on joining project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+                
+        <span class="k">return</span> <span class="n">isJoined</span>
+    </div>
+<div class="viewcode-block" id="Project.invite"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.invite">[docs]</a>    <span class="k">def</span> <span class="nf">invite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">ideaId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;idea_id&#39;</span><span class="p">)</span>
+        <span class="n">emails</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email_list&#39;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** invite w/o logged in user&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;***invite w/o project id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ideaId</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">inviteByIdea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">emails</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">inviteByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">emails</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">),</span> <span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** invite w/o idea or email&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        
+            </div>
+<div class="viewcode-block" id="Project.endorse"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.endorse">[docs]</a>    <span class="k">def</span> <span class="nf">endorse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isLeader</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** endorsement submitted w/o logged in user or with non-project leader user account&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isEndorsed</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">endorse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">isEndorsed</span><span class="p">):</span>
+                <span class="c"># TODO do we need to get the whole project here?</span>
+                <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+            
+                <span class="c"># email admin</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailProjectEndorsement</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_email</span><span class="p">,</span> 
+                                                    <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> 
+                                                    <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">lastName</span><span class="p">))):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t email admin on user_id = </span><span class="si">%s</span><span class="s"> endorsing project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+            
+                <span class="c"># add a message to the queue about the join</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="s">&#39;Congratulations! Your group has now been endorsed by </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">lastName</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mProject</span><span class="o">.</span><span class="n">addMessage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> 
+                                            <span class="n">projectId</span><span class="p">,</span> 
+                                            <span class="n">message</span><span class="p">,</span> 
+                                            <span class="s">&#39;endorsement&#39;</span><span class="p">,</span> 
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** new message not created for user </span><span class="si">%s</span><span class="s"> on endorsing project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+            
+            <span class="k">return</span> <span class="n">isEndorsed</span>
+            </div>
+<div class="viewcode-block" id="Project.removeEndorsement"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeEndorsement">[docs]</a>    <span class="k">def</span> <span class="nf">removeEndorsement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">and</span>
+            <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isLeader</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">userId</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span><span class="p">)):</span>
+            <span class="n">isRemoved</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeEndorsement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            
+            <span class="c"># if successfully removed, remove messages as well</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">isRemoved</span><span class="p">):</span>
+                <span class="n">mProject</span><span class="o">.</span><span class="n">removeEndorsementMessage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="n">isRemoved</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** attempt to remove endorsement w/o proper credentials&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+         </div>
+<div class="viewcode-block" id="Project.addLink"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.addLink">[docs]</a>    <span class="k">def</span> <span class="nf">addLink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;main_text&#39;</span><span class="p">)):</span> <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;title&#39;</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">makeUrlAbsolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectId</span> <span class="ow">or</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="ow">or</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">url</span><span class="p">)):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** link submitted w/o id, title, or url&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">addLinkToProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Project.removeLink"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeLink">[docs]</a>    <span class="k">def</span> <span class="nf">removeLink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">linkId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;link_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">linkId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** link removal submitted missing an id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>            
+        <span class="k">else</span><span class="p">:</span>        
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span> <span class="ow">and</span> 
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isModerator</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isProjectAdmin</span><span class="p">(</span><span class="n">projectId</span><span class="p">)):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** unauthorized link removal attempt by user_id = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">setLinkIsActive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">linkId</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        </div>
+<div class="viewcode-block" id="Project.addResource"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.addResource">[docs]</a>    <span class="k">def</span> <span class="nf">addResource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">projectResourceId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_resource_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectId</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">projectResourceId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource submitted missing an id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">mProject</span><span class="o">.</span><span class="n">addResourceToProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">)):</span>
+                <span class="c"># TODO do we need to get the whole project here?    </span>
+                <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">ProjectResource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailResourceNotification</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">contact_email</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">)):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t email resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">projectResourceId</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t add resource </span><span class="si">%s</span><span class="s"> to project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">projectResourceId</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Project.removeResource"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeResource">[docs]</a>    <span class="k">def</span> <span class="nf">removeResource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">projectResourceId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_resource_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectId</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">projectResourceId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource removal submitted missing an id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>            
+        <span class="k">else</span><span class="p">:</span>        
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span> <span class="ow">and</span> 
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isModerator</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isProjectAdmin</span><span class="p">(</span><span class="n">projectId</span><span class="p">)):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** unauthorized resource removal attempt by user_id = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeResourceFromProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">)</span>
+                
+        </div>
+<div class="viewcode-block" id="Project.getResourceInfo"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getResourceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">getResourceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectResourceId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_resource_id&#39;</span><span class="p">)</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">ProjectResource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">getFullDictionary</span><span class="p">())</span>
+        
+        <span class="k">return</span> <span class="n">info</span>
+        </div>
+<div class="viewcode-block" id="Project.getResourcesAndLinks"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getResourcesAndLinks">[docs]</a>    <span class="k">def</span> <span class="nf">getResourcesAndLinks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">links</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getLinks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">),</span>
+                    <span class="n">resources</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getResources</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Project.getRelatedResources"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getRelatedResources">[docs]</a>    <span class="k">def</span> <span class="nf">getRelatedResources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+        
+        <span class="n">keywords</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keywords</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">locationId</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">location_id</span>
+                
+        <span class="n">resources</span> <span class="o">=</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">searchProjectResources</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">,</span> <span class="n">locationId</span><span class="p">)</span>
+        
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">resources</span> <span class="o">=</span> <span class="n">resources</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Project.addGoal"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.addGoal">[docs]</a>    <span class="k">def</span> <span class="nf">addGoal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+        <span class="n">timeframeNumber</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;timeframe_n&#39;</span><span class="p">)</span>
+        <span class="n">timeframeUnit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;timeframe_unit&#39;</span><span class="p">)</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** goal submitted w/o logged in user&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">addGoalToProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">timeframeNumber</span><span class="p">,</span> <span class="n">timeframeUnit</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Project.featureGoal"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.featureGoal">[docs]</a>    <span class="k">def</span> <span class="nf">featureGoal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectGoalId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;goal_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectGoalId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** goal feature attempted w/o goal id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>              
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">featureProjectGoal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectGoalId</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Project.accomplishGoal"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.accomplishGoal">[docs]</a>    <span class="k">def</span> <span class="nf">accomplishGoal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectGoalId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;goal_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectGoalId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** goal accomplish attempted w/o goal id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>              
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">accomplishProjectGoal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectGoalId</span><span class="p">)</span>        
+            </div>
+<div class="viewcode-block" id="Project.removeGoal"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeGoal">[docs]</a>    <span class="k">def</span> <span class="nf">removeGoal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectGoalId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;goal_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectGoalId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** goal remove attempted w/o goal id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>              
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeProjectGoal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectGoalId</span><span class="p">)</span>                    
+            </div>
+<div class="viewcode-block" id="Project.getGoals"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getGoals">[docs]</a>    <span class="k">def</span> <span class="nf">getGoals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">mProject</span><span class="o">.</span><span class="n">getGoals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+        </div>
+<div class="viewcode-block" id="Project.addMessage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.addMessage">[docs]</a>    <span class="k">def</span> <span class="nf">addMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;main_text&#39;</span><span class="p">)):</span> <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** message add attempted w/o project id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">message</span><span class="p">)):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** message add attempted w/ no message&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">addMessage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="s">&#39;member_comment&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Project.removeMessage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeMessage">[docs]</a>    <span class="k">def</span> <span class="nf">removeMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">messageId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">messageId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** message remove attempted w/o ids&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeMessage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">messageId</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Project.getMessages"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getMessages">[docs]</a>    <span class="k">def</span> <span class="nf">getMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_messages&#39;</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;offset&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">filterBy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;filter&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">mProject</span><span class="o">.</span><span class="n">getMessages</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">filterBy</span><span class="p">))</span>        
+        </div>
+<div class="viewcode-block" id="Project.getFeaturedProjects"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getFeaturedProjects">[docs]</a>    <span class="k">def</span> <span class="nf">getFeaturedProjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># overkill to get the full dictionary, but it&#39;s a small admin-only call</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getFeaturedProjectsDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span>
+            
+        </div>
+<div class="viewcode-block" id="Project.getProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.getProject">[docs]</a>    <span class="k">def</span> <span class="nf">getProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+    
+        <span class="n">project</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">mProject</span><span class="o">.</span><span class="n">smallProject</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">num_members</span><span class="p">,</span>
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_user_id</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_first_name</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_last_name</span><span class="p">,</span> 
+                                                <span class="n">project</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_image_id</span><span class="p">))</span>
+                  </div>
+<div class="viewcode-block" id="Project.addKeywords"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.addKeywords">[docs]</a>    <span class="k">def</span> <span class="nf">addKeywords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="p">(</span><span class="n">projectId</span> <span class="ow">and</span> <span class="n">keywords</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">addKeywords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">keywords</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">))</span>        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** add keyword attempted w/o project id or keywords&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+      </div>
+<div class="viewcode-block" id="Project.removeKeyword"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeKeyword">[docs]</a>    <span class="k">def</span> <span class="nf">removeKeyword</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">keyword</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeKeyword</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span>             
+        </div>
+<div class="viewcode-block" id="Project.leaveProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.leaveProject">[docs]</a>    <span class="k">def</span> <span class="nf">leaveProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeUserFromProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Project.removeUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.removeUser">[docs]</a>    <span class="k">def</span> <span class="nf">removeUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeUserFromProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>    
+        </div>
+<div class="viewcode-block" id="Project.updateImage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.updateImage">[docs]</a>    <span class="k">def</span> <span class="nf">updateImage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">imageId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;image_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">updateProjectImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">imageId</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Project.updateDescription"><a class="viewcode-back" href="../../modules/controllers.html#controllers.project.Project.updateDescription">[docs]</a>    <span class="k">def</span> <span class="nf">updateDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">updateProjectDescription</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+            </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

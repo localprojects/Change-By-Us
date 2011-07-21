@@ -1,0 +1,732 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.user &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.user</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">giveaminute.project</span> <span class="kn">as</span> <span class="nn">mProject</span>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">userId</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">populateUserData</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">projectData</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUserProjectList</span><span class="p">()</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">userKey</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">user_key</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">email</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">phone</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">firstName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">first_name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">last_name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imageId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">image_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locationId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">location_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">location_name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">description</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">affiliation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groupMembershipBitmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">group_membership_bitmask</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">emailNotification</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">email_notification</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">isAdmin</span> <span class="o">=</span> <span class="n">isAdminBitmask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">isModerator</span> <span class="o">=</span> <span class="n">isModeratorBitmask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">isLeader</span> <span class="o">=</span> <span class="n">isLeaderBitmask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numNewMessages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNumNewMessages</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="User.isProjectAdmin"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.isProjectAdmin">[docs]</a>    <span class="k">def</span> <span class="nf">isProjectAdmin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projectId</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select is_project_admin from project__user where user_id = $userId and project_id = $projectId and is_project_admin = 1 limit 1&quot;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">projectId</span><span class="p">})</span>
+            
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user project admin status&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="User.isResourceOwner"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.isResourceOwner">[docs]</a>    <span class="k">def</span> <span class="nf">isResourceOwner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select project_resource_id from project_resource where contact_user_id = $userId and project_resource_id = $projectResourceId&quot;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;projectResourceId&#39;</span><span class="p">:</span><span class="n">projectResourceId</span><span class="p">})</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user resource ownership status&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="User.getDictionary"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getDictionary">[docs]</a>    <span class="k">def</span> <span class="nf">getDictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">projectData</span><span class="p">:</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                            <span class="n">title</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                            <span class="n">is_project_admin</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">is_project_admin</span><span class="p">))</span>
+    
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">u_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">f_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span>
+                    <span class="n">l_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastName</span><span class="p">,</span>
+                    <span class="n">affiliation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                    <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                    <span class="n">mobile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phone</span><span class="p">,</span>
+                    <span class="n">email_notification</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emailNotification</span><span class="p">,</span>
+                    <span class="n">num_new_messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numNewMessages</span><span class="p">,</span>
+                    <span class="n">projects</span> <span class="o">=</span> <span class="n">projects</span><span class="p">,</span>
+                    <span class="n">image_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">imageId</span><span class="p">)</span>
+                                        
+        <span class="k">return</span> <span class="n">data</span>
+        </div>
+<div class="viewcode-block" id="User.populateUserData"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.populateUserData">[docs]</a>    <span class="k">def</span> <span class="nf">populateUserData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">select u.user_key </span>
+<span class="s">      ,u.email</span>
+<span class="s">      ,u.password</span>
+<span class="s">      ,u.salt</span>
+<span class="s">      ,u.phone</span>
+<span class="s">      ,u.first_name</span>
+<span class="s">      ,u.last_name</span>
+<span class="s">      ,u.image_id</span>
+<span class="s">      ,u.location_id</span>
+<span class="s">      ,l.name as location_name</span>
+<span class="s">      ,u.description</span>
+<span class="s">      ,u.affiliation</span>
+<span class="s">      ,u.group_membership_bitmask</span>
+<span class="s">      ,u.email_notification</span>
+<span class="s">      ,coalesce(u.last_account_page_access_datetime, u.created_datetime) as last_account_page_access_datetime</span>
+<span class="s">      ,pl.title</span>
+<span class="s">      ,pl.organization</span>
+<span class="s">from user u </span>
+<span class="s">left join location l on l.location_id = u.location_id</span>
+<span class="s">left join project_leader pl on pl.user_id = u.user_id</span>
+<span class="s">where u.user_id = $id and u.is_active = 1&quot;&quot;&quot;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">}))[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user info user id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+            </div>
+<div class="viewcode-block" id="User.updateImage"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.updateImage">[docs]</a>    <span class="k">def</span> <span class="nf">updateImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locationId</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update user set location_id = $location_id where user_id = $id&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;location_id&#39;</span><span class="p">:</span><span class="n">locationId</span><span class="p">})</span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating user image&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="User.updateInfo"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.updateInfo">[docs]</a>    <span class="k">def</span> <span class="nf">updateInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">imageId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">locationId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="c"># check if email already in user</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">findUserByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&#39;user_id = $userId&#39;</span><span class="p">,</span> 
+                            <span class="n">first_name</span> <span class="o">=</span> <span class="n">first</span><span class="p">,</span>
+                            <span class="n">last_name</span> <span class="o">=</span> <span class="n">last</span><span class="p">,</span>
+                            <span class="n">email</span> <span class="o">=</span> <span class="n">email</span><span class="p">,</span>
+                            <span class="n">image_id</span> <span class="o">=</span> <span class="n">imageId</span><span class="p">,</span>
+                            <span class="n">location_id</span> <span class="o">=</span> <span class="n">locationId</span><span class="p">,</span>
+                                <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating user info&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="User.updateDescription"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.updateDescription">[docs]</a>    <span class="k">def</span> <span class="nf">updateDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> 
+                            <span class="n">where</span> <span class="o">=</span> <span class="s">&#39;user_id = $userId&#39;</span><span class="p">,</span> 
+                            <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="p">,</span>
+                            <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating user description&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="User.updatePassword"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.updatePassword">[docs]</a>    <span class="k">def</span> <span class="nf">updatePassword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hashedPassword</span><span class="p">,</span> <span class="n">salt</span> <span class="o">=</span> <span class="n">makePassword</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+            
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update user set password = $pw, salt = $salt where user_id = $id&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;pw&#39;</span><span class="p">:</span><span class="n">hashedPassword</span><span class="p">,</span> <span class="s">&#39;salt&#39;</span><span class="p">:</span><span class="n">salt</span><span class="p">})</span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating user&#39;s password&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span> 
+            </div>
+<div class="viewcode-block" id="User.setMessagePreferences"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.setMessagePreferences">[docs]</a>    <span class="k">def</span> <span class="nf">setMessagePreferences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pref</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update user set email_notification = $pref where user_id = $id&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;pref&#39;</span><span class="p">:</span><span class="n">pref</span><span class="p">})</span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating user message preferences&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>    
+            </div>
+<div class="viewcode-block" id="User.updateAccountPageVisit"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.updateAccountPageVisit">[docs]</a>    <span class="k">def</span> <span class="nf">updateAccountPageVisit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update user set last_account_page_access_datetime = now() where user_id = $userId&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating last_account_page_access_datetime for user id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>    
+            
+    <span class="c"># get abbreviated data for projects for which user is a member</span></div>
+<div class="viewcode-block" id="User.getUserProjectList"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getUserProjectList">[docs]</a>    <span class="k">def</span> <span class="nf">getUserProjectList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.project_id, p.title, pu.is_project_admin </span>
+<span class="s">                    from project p</span>
+<span class="s">                    inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id</span>
+<span class="s">                    inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1</span>
+<span class="s">                    where p.is_active = 1&quot;&quot;&quot;</span>
+            <span class="n">data</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="p">}))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user projects&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">data</span>    
+        </div>
+<div class="viewcode-block" id="User.getUserResources"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getUserResources">[docs]</a>    <span class="k">def</span> <span class="nf">getUserResources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select r.project_resource_id, r.title, r.description, r.location_id, l.name as location_name,</span>
+<span class="s">                            r.image_id, r.url, r.contact_email, r.physical_address, replace(r.keywords, &#39; &#39;, &#39;,&#39;) as keywords </span>
+<span class="s">                    from project_resource r</span>
+<span class="s">                    inner join location l on l.location_id = r.location_id</span>
+<span class="s">                    where r.is_active = 1 and r.is_hidden = 0 and r.contact_user_id = $id&quot;&quot;&quot;</span>
+            <span class="n">data</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="p">}))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user resources&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">data</span>    
+        </div>
+<div class="viewcode-block" id="User.getEndorsedProjects"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getEndorsedProjects">[docs]</a>    <span class="k">def</span> <span class="nf">getEndorsedProjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">betterData</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.project_id, </span>
+<span class="s">                        p.title, </span>
+<span class="s">                        p.description, </span>
+<span class="s">                        p.image_id, </span>
+<span class="s">                        p.location_id,</span>
+<span class="s">                        o.user_id as owner_user_id,</span>
+<span class="s">                        o.first_name as owner_first_name,</span>
+<span class="s">                        o.last_name as owner_last_name,</span>
+<span class="s">                        o.affiliation as owner_affiliation,</span>
+<span class="s">                        o.group_membership_bitmask as owner_group_membership_bitmask,</span>
+<span class="s">                        o.image_id as owner_image_id, </span>
+<span class="s">                    (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members </span>
+<span class="s">                from project p</span>
+<span class="s">                inner join project_endorsement pe on pe.project_id = p.project_id and pe.user_id = $id</span>
+<span class="s">                inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin = 1</span>
+<span class="s">                inner join user o on o.user_id = pu.user_id</span>
+<span class="s">                 where p.is_active = 1&quot;&quot;&quot;</span>
+            <span class="n">data</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="p">}))</span>
+            
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">betterData</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                                        <span class="n">title</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                                        <span class="n">description</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                                        <span class="n">image_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                                        <span class="n">location_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">location_id</span><span class="p">,</span>
+                                        <span class="n">owner</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">smallUserDisplay</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">owner_user_id</span><span class="p">,</span> 
+                                                                          <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">owner_first_name</span><span class="p">,</span> 
+                                                                                                   <span class="n">item</span><span class="o">.</span><span class="n">owner_last_name</span><span class="p">,</span> 
+                                                                                                   <span class="n">item</span><span class="o">.</span><span class="n">owner_affiliation</span><span class="p">,</span> 
+                                                                                                   <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">owner_group_membership_bitmask</span><span class="p">)),</span> 
+                                                                 <span class="n">item</span><span class="o">.</span><span class="n">owner_image_id</span><span class="p">),</span>
+                                        <span class="n">num_members</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">num_members</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user endorsed projects&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">betterData</span>         
+        </div>
+<div class="viewcode-block" id="User.getActivityDictionary"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getActivityDictionary">[docs]</a>    <span class="k">def</span> <span class="nf">getActivityDictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">smallUserDisplay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> 
+                                         <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> 
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">lastName</span><span class="p">,</span> 
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                                                                  <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupMembershipBitmask</span><span class="p">)),</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">imageId</span><span class="p">)</span>        
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;location_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">locationId</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;is_leader&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">isLeader</span>
+    
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">projects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProjects</span><span class="p">(),</span>
+                    <span class="n">ideas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getIdeas</span><span class="p">(),</span>
+                    <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMessages</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUserResources</span><span class="p">(),</span>
+                    <span class="n">endorsed_projects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getEndorsedProjects</span><span class="p">(),</span>
+                    <span class="n">user</span> <span class="o">=</span> <span class="n">user</span><span class="p">)</span>
+                    
+        <span class="k">return</span> <span class="n">data</span>
+        
+    <span class="c"># data for other users accessing a user&#39;s profile/account page</span></div>
+<div class="viewcode-block" id="User.getProfileActivityDictionary"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getProfileActivityDictionary">[docs]</a>    <span class="k">def</span> <span class="nf">getProfileActivityDictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">smallUserDisplay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> 
+                                         <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> 
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">lastName</span><span class="p">,</span> 
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                                                                  <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupMembershipBitmask</span><span class="p">)),</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">imageId</span><span class="p">)</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;location_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">locationId</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span>
+        <span class="n">user</span><span class="p">[</span><span class="s">&#39;is_leader&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">isLeader</span>
+    
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">projects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProjects</span><span class="p">(),</span>
+                    <span class="n">ideas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getIdeas</span><span class="p">(),</span>
+                    <span class="n">endorsed_projects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getEndorsedProjects</span><span class="p">(),</span>
+                    <span class="n">user</span> <span class="o">=</span> <span class="n">user</span><span class="p">)</span>
+                    
+        <span class="k">return</span> <span class="n">data</span>
+        </div>
+<div class="viewcode-block" id="User.getProjects"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getProjects">[docs]</a>    <span class="k">def</span> <span class="nf">getProjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getProjectsByUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="User.getIdeas"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getIdeas">[docs]</a>    <span class="k">def</span> <span class="nf">getIdeas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ideas</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">data</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">findIdeasByUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="n">ideas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mProject</span><span class="o">.</span><span class="n">idea</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">idea_id</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">submission_type</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user ideas&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> 
+            
+        <span class="k">return</span> <span class="n">ideas</span>
+        </div>
+<div class="viewcode-block" id="User.getMessages"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getMessages">[docs]</a>    <span class="k">def</span> <span class="nf">getMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select </span>
+<span class="s">                        p.project_id,</span>
+<span class="s">                        p.title,</span>
+<span class="s">                        m.project_message_id,</span>
+<span class="s">                        m.message_type,</span>
+<span class="s">                        m.message,</span>
+<span class="s">                        m.created_datetime as created_datetime,</span>
+<span class="s">                        mu.user_id,</span>
+<span class="s">                        mu.first_name,</span>
+<span class="s">                        mu.last_name,</span>
+<span class="s">                        mu.affiliation,</span>
+<span class="s">                        mu.group_membership_bitmask,</span>
+<span class="s">                        mu.image_id,</span>
+<span class="s">                        i.idea_id,</span>
+<span class="s">                        i.description as idea_description,</span>
+<span class="s">                        i.submission_type as idea_submission_type,</span>
+<span class="s">                        i.created_datetime as idea_created_datetime</span>
+<span class="s">                    from project_message m</span>
+<span class="s">                    inner join project__user pu on pu.project_id = m.project_id and pu.user_id = $userId</span>
+<span class="s">                    inner join project p on p.project_id = pu.project_id and p.is_active = 1</span>
+<span class="s">                    inner join user mu on mu.user_id = m.user_id</span>
+<span class="s">                    left join idea i on i.idea_id = m.idea_id</span>
+<span class="s">                    where m.is_active = 1</span>
+<span class="s">                        union</span>
+<span class="s">                    select </span>
+<span class="s">                        p.project_id,</span>
+<span class="s">                        p.title,</span>
+<span class="s">                        null as project_message_id,</span>
+<span class="s">                        &#39;invite&#39; as message_type,</span>
+<span class="s">                        concat(&#39;You&#39;&#39;ve been invited to the &#39;, </span>
+<span class="s">                                ucase(p.title), </span>
+<span class="s">                                &#39; project!&#39;, </span>
+<span class="s">                                coalesce(concat(&#39;&lt;br/&gt;&lt;br/&gt;&quot;&#39;, inv.message, &#39;&quot;&#39;), &#39;&#39;)) as message,</span>
+<span class="s">                        inv.created_datetime as created_datetime,</span>
+<span class="s">                        iu.user_id,</span>
+<span class="s">                        iu.first_name,</span>
+<span class="s">                        iu.last_name,</span>
+<span class="s">                        iu.affiliation,</span>
+<span class="s">                        iu.group_membership_bitmask,</span>
+<span class="s">                        iu.image_id,</span>
+<span class="s">                        i.idea_id,</span>
+<span class="s">                        i.description as idea_description,</span>
+<span class="s">                        i.submission_type as idea_submission_type,</span>
+<span class="s">                        i.created_datetime as idea_created_datetime</span>
+<span class="s">                    from project_invite inv</span>
+<span class="s">                    inner join project p on p.project_id = inv.project_id and p.is_active = 1</span>
+<span class="s">                    inner join user iu on iu.user_id = inv.inviter_user_id</span>
+<span class="s">                    inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id =$userId</span>
+<span class="s">                    order by created_datetime desc</span>
+<span class="s">                    limit $limit offset $offset&quot;&quot;&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">}))</span>  
+               
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mProject</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">project_message_id</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">message_type</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> 
+                                        <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span>
+                                                                 <span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span>
+                                                                 <span class="n">item</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                                                                 <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">)),</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                                        <span class="n">item</span><span class="o">.</span><span class="n">idea_id</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">idea_description</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">idea_submission_type</span><span class="p">,</span> 
+                                        <span class="n">item</span><span class="o">.</span><span class="n">idea_created_datetime</span><span class="p">,</span>
+                                        <span class="n">item</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                                        <span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get messages&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">messages</span>  
+        </div>
+<div class="viewcode-block" id="User.getNumNewMessages"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.User.getNumNewMessages">[docs]</a>    <span class="k">def</span> <span class="nf">getNumNewMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select </span>
+<span class="s">                        (select count(inv.project_invite_id) from project_invite inv</span>
+<span class="s">                          inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id = $userId</span>
+<span class="s">                          where inv.created_datetime &gt; $last) +</span>
+<span class="s">                        (select count(pm.project_message_id) from project_message pm</span>
+<span class="s">                          inner join project__user pu on pu.project_id = pm.project_id  and pu.user_id = $userId</span>
+<span class="s">                          where pm.is_active = 1 and pm.created_datetime &gt; $last) as total&quot;&quot;&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;last&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">last_account_page_access_datetime</span><span class="p">}))</span>
+             
+            <span class="n">num</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">total</span>             
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get number of new msgs for user id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">num</span>
+        </div></div>
+<div class="viewcode-block" id="createUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.createUser">[docs]</a><span class="k">def</span> <span class="nf">createUser</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">firstName</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">lastName</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">phone</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">imageId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">locationId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">affiliation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">isAdmin</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+    <span class="n">userId</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">random_string</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">encrypted_password</span><span class="p">,</span> <span class="n">salt</span> <span class="o">=</span> <span class="n">makePassword</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="n">user_key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                                    <span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">,</span> 
+                                    <span class="n">password</span><span class="o">=</span><span class="n">encrypted_password</span><span class="p">,</span> 
+                                    <span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span> 
+                                    <span class="n">phone</span><span class="o">=</span><span class="n">phone</span><span class="p">,</span> 
+                                    <span class="n">first_name</span><span class="o">=</span><span class="n">firstName</span><span class="p">,</span> 
+                                    <span class="n">last_name</span><span class="o">=</span><span class="n">lastName</span><span class="p">,</span>
+                                    <span class="n">affiliation</span><span class="o">=</span><span class="n">affiliation</span><span class="p">,</span> 
+                                    <span class="n">image_id</span><span class="o">=</span><span class="n">imageId</span><span class="p">,</span> 
+                                    <span class="n">location_id</span><span class="o">=</span><span class="n">locationId</span><span class="p">,</span>
+                                    <span class="n">created_datetime</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+                                    
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem creating user&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        
+    <span class="k">return</span> <span class="n">userId</span>
+</div>
+<div class="viewcode-block" id="createUserFromAuthGuid"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.createUserFromAuthGuid">[docs]</a><span class="k">def</span> <span class="nf">createUserFromAuthGuid</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">):</span>
+    <span class="n">userId</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select email, password, salt, phone, first_name, last_name from unauthenticated_user where auth_guid = $guid limit 1&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;guid&#39;</span><span class="p">:</span><span class="n">authGuid</span><span class="p">}))</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">userData</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="n">email</span> <span class="o">=</span> <span class="n">userData</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> 
+                                        <span class="n">password</span> <span class="o">=</span> <span class="n">userData</span><span class="o">.</span><span class="n">password</span><span class="p">,</span> 
+                                        <span class="n">salt</span> <span class="o">=</span> <span class="n">userData</span><span class="o">.</span><span class="n">salt</span><span class="p">,</span> 
+                                        <span class="n">phone</span> <span class="o">=</span> <span class="n">userData</span><span class="o">.</span><span class="n">phone</span><span class="p">,</span> 
+                                        <span class="n">first_name</span> <span class="o">=</span> <span class="n">userData</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> 
+                                        <span class="n">last_name</span> <span class="o">=</span> <span class="n">userData</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span> 
+                                        <span class="n">created_datetime</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem creating user from auth guid </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">authGuid</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>      
+    
+    <span class="k">return</span> <span class="n">userId</span> 
+</div>
+<div class="viewcode-block" id="createUnauthenticatedUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.createUnauthenticatedUser">[docs]</a><span class="k">def</span> <span class="nf">createUnauthenticatedUser</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">firstName</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">lastName</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">phone</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">imageId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">locationId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="n">encrypted_password</span><span class="p">,</span> <span class="n">salt</span> <span class="o">=</span> <span class="n">makePassword</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">findUserByEmail</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;unauthenticated_user&#39;</span><span class="p">,</span> <span class="n">auth_guid</span><span class="o">=</span><span class="n">authGuid</span><span class="p">,</span>
+                                    <span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">,</span> 
+                                    <span class="n">password</span><span class="o">=</span><span class="n">encrypted_password</span><span class="p">,</span> 
+                                    <span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span> 
+                                    <span class="n">phone</span><span class="o">=</span><span class="n">phone</span><span class="p">,</span> 
+                                    <span class="n">first_name</span><span class="o">=</span><span class="n">firstName</span><span class="p">,</span> 
+                                    <span class="n">last_name</span><span class="o">=</span><span class="n">lastName</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">True</span>                            
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem creating unauthenticated user record&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        <span class="k">return</span> <span class="bp">False</span>
+        
+    <span class="k">return</span> <span class="n">userId</span>
+        </div>
+<div class="viewcode-block" id="setUserOncallStatus"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.setUserOncallStatus">[docs]</a><span class="k">def</span> <span class="nf">setUserOncallStatus</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;user_id = $userId&quot;</span><span class="p">,</span> <span class="n">is_oncall</span> <span class="o">=</span> <span class="n">status</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="n">userId</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem setting oncall status to </span><span class="si">%s</span><span class="s"> for user id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">userId</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="authenticateUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.authenticateUser">[docs]</a><span class="k">def</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select user_id, email, password, salt from user where email = $email and is_active = 1&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;email&#39;</span><span class="p">:</span><span class="n">email</span><span class="p">})</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">hashed_password</span> <span class="o">=</span> <span class="n">makePassword</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">salt</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="p">(</span><span class="n">hashed_password</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** User authenticated&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** User not authenticated for email = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** No record for email= </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="authGetUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.authGetUser">[docs]</a><span class="k">def</span> <span class="nf">authGetUser</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select user_id, first_name, last_name, affiliation, group_membership_bitmask, image_id, email, password, salt from user where email = $email and is_active = 1&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;email&#39;</span><span class="p">:</span><span class="n">email</span><span class="p">})</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">hashed_password</span> <span class="o">=</span> <span class="n">makePassword</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">salt</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="p">(</span><span class="n">hashed_password</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** User authenticated&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">smallUserDisplay</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> 
+                                             <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> 
+                                                                      <span class="n">user</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span> 
+                                                                      <span class="n">user</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span> 
+                                                                      <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">)),</span> 
+                                             <span class="n">user</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** User not authenticated for email = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** No record for email= </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+        </div>
+<div class="viewcode-block" id="resetPassword"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.resetPassword">[docs]</a><span class="k">def</span> <span class="nf">resetPassword</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+    <span class="n">forgetfulUser</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+    <span class="n">newPassword</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">random_string</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">forgetfulUser</span><span class="o">.</span><span class="n">updatePassword</span><span class="p">(</span><span class="n">newPassword</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailTempPassword</span><span class="p">(</span><span class="n">forgetfulUser</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">newPassword</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>    
+        </div>
+<div class="viewcode-block" id="makePassword"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.makePassword">[docs]</a><span class="k">def</span> <span class="nf">makePassword</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">salt</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">salt</span><span class="p">):</span>
+        <span class="n">salt</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">random_string</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        
+    <span class="n">hashed_password</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">password</span> <span class="o">+</span> <span class="n">salt</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">hashed_password</span><span class="p">,</span> <span class="n">salt</span><span class="p">]</span>   
+    </div>
+<div class="viewcode-block" id="findUserByEmail"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.findUserByEmail">[docs]</a><span class="k">def</span> <span class="nf">findUserByEmail</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
+    <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select user_id from user where email = $email limit 1&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()))</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">user_id</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    </div>
+<div class="viewcode-block" id="findUserByPhone"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.findUserByPhone">[docs]</a><span class="k">def</span> <span class="nf">findUserByPhone</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">):</span>
+    <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select user_id from user where phone = $phone limit 1&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()))</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">user_id</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>  
+    </div>
+<div class="viewcode-block" id="assignUserToGroup"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.assignUserToGroup">[docs]</a><span class="k">def</span> <span class="nf">assignUserToGroup</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">userGroupId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;user_id = $id&quot;</span><span class="p">,</span>
+                          <span class="n">group_membership_bitmask</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">setBit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">userGroupId</span><span class="p">)),</span>
+                          <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span> <span class="p">:</span> <span class="n">userId</span><span class="p">})</span>
+                                      
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t assign user id </span><span class="si">%s</span><span class="s"> to group id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">userId</span><span class="p">,</span> <span class="n">userGroupId</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="getAdminUsers"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.getAdminUsers">[docs]</a><span class="k">def</span> <span class="nf">getAdminUsers</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">limit</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="n">betterData</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select distinct </span>
+<span class="s">                    u.user_id</span>
+<span class="s">                    ,u.email</span>
+<span class="s">                    ,u.first_name</span>
+<span class="s">                    ,u.last_name</span>
+<span class="s">                    ,u.affiliation</span>
+<span class="s">                    ,u.group_membership_bitmask</span>
+<span class="s">                    ,u.is_oncall</span>
+<span class="s">                from user u </span>
+<span class="s">                where u.is_active = 1 </span>
+<span class="s">                   and u.group_membership_bitmask &gt; 1</span>
+<span class="s">                order by u.last_name</span>
+<span class="s">                limit $limit offset $offset&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">}))</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">betterData</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;user_id&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                               <span class="s">&#39;email&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                               <span class="s">&#39;first_name&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span>
+                               <span class="s">&#39;last_name&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span>
+                               <span class="s">&#39;affiliation&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                               <span class="s">&#39;group_membership_bitmask&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">,</span>
+                               <span class="s">&#39;full_display_name&#39;</span> <span class="p">:</span> <span class="n">mProject</span><span class="o">.</span><span class="n">userNameDisplay</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span>
+                                                                              <span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span>
+                                                                              <span class="n">item</span><span class="o">.</span><span class="n">affiliation</span><span class="p">,</span>
+                                                                              <span class="n">mProject</span><span class="o">.</span><span class="n">isFullLastName</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">)),</span>
+                               <span class="s">&#39;is_admin&#39;</span> <span class="p">:</span> <span class="n">isAdminBitmask</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">),</span>
+                               <span class="s">&#39;is_moderator&#39;</span> <span class="p">:</span> <span class="n">isModeratorBitmask</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">),</span>
+                               <span class="s">&#39;is_leader&#39;</span> <span class="p">:</span> <span class="n">isLeaderBitmask</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">group_membership_bitmask</span><span class="p">),</span>
+                               <span class="s">&#39;is_oncall&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">is_oncall</span><span class="p">})</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get admin users&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">betterData</span>
+    </div>
+<div class="viewcode-block" id="isAdminBitmask"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.isAdminBitmask">[docs]</a><span class="k">def</span> <span class="nf">isAdminBitmask</span><span class="p">(</span><span class="n">bitmask</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">getBit</span><span class="p">(</span><span class="n">bitmask</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="isModeratorBitmask"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.isModeratorBitmask">[docs]</a><span class="k">def</span> <span class="nf">isModeratorBitmask</span><span class="p">(</span><span class="n">bitmask</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">getBit</span><span class="p">(</span><span class="n">bitmask</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="isLeaderBitmask"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.user.isLeaderBitmask">[docs]</a><span class="k">def</span> <span class="nf">isLeaderBitmask</span><span class="p">(</span><span class="n">bitmask</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">getBit</span><span class="p">(</span><span class="n">bitmask</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+  </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

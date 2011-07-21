@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.filters &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.filters</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.filters</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Tests for the jinja filters.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">Environment</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="FilterTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase">[docs]</a><span class="k">class</span> <span class="nc">FilterTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="FilterTestCase.test_capitalize"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_capitalize">[docs]</a>    <span class="k">def</span> <span class="nf">test_capitalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo bar&quot;|capitalize }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;Foo bar&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_center"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_center">[docs]</a>    <span class="k">def</span> <span class="nf">test_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo&quot;|center(9) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;   foo   &#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_default"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_default">[docs]</a>    <span class="k">def</span> <span class="nf">test_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&quot;{{ missing|default(&#39;no&#39;) }}|{{ false|default(&#39;no&#39;) }}|&quot;</span>
+            <span class="s">&quot;{{ false|default(&#39;no&#39;, true) }}|{{ given|default(&#39;no&#39;) }}&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">given</span><span class="o">=</span><span class="s">&#39;yes&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;no|False|no|yes&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_dictsort"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_dictsort">[docs]</a>    <span class="k">def</span> <span class="nf">test_dictsort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&#39;{{ foo|dictsort }}|&#39;</span>
+            <span class="s">&#39;{{ foo|dictsort(true) }}|&#39;</span>
+            <span class="s">&#39;{{ foo|dictsort(false, &quot;value&quot;) }}&#39;</span>
+        <span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&quot;aa&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&quot;AB&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="p">(</span><span class="s">&quot;[(&#39;aa&#39;, 0), (&#39;AB&#39;, 3), (&#39;b&#39;, 1), (&#39;c&#39;, 2)]|&quot;</span>
+                       <span class="s">&quot;[(&#39;AB&#39;, 3), (&#39;aa&#39;, 0), (&#39;b&#39;, 1), (&#39;c&#39;, 2)]|&quot;</span>
+                       <span class="s">&quot;[(&#39;aa&#39;, 0), (&#39;b&#39;, 1), (&#39;c&#39;, 2), (&#39;AB&#39;, 3)]&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_batch"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_batch">[docs]</a>    <span class="k">def</span> <span class="nf">test_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo|batch(3)|list }}|&quot;</span>
+                               <span class="s">&quot;{{ foo|batch(3, &#39;X&#39;)|list }}&quot;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="p">(</span><span class="s">&quot;[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]|&quot;</span>
+                       <span class="s">&quot;[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, &#39;X&#39;, &#39;X&#39;]]&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_slice"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_slice">[docs]</a>    <span class="k">def</span> <span class="nf">test_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo|slice(3)|list }}|&#39;</span>
+                               <span class="s">&#39;{{ foo|slice(3, &quot;X&quot;)|list }}&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="p">(</span><span class="s">&quot;[[0, 1, 2, 3], [4, 5, 6], [7, 8, 9]]|&quot;</span>
+                       <span class="s">&quot;[[0, 1, 2, 3], [4, 5, 6, &#39;X&#39;], [7, 8, 9, &#39;X&#39;]]&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_escape"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_escape">[docs]</a>    <span class="k">def</span> <span class="nf">test_escape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ &#39;&lt;&quot;&gt;&amp;&#39;|escape }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;&amp;#34;&amp;gt;&amp;amp;&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_striptags"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_striptags">[docs]</a>    <span class="k">def</span> <span class="nf">test_striptags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ foo|striptags }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;  &lt;p&gt;just a small   </span><span class="se">\n</span><span class="s"> &lt;a href=&quot;#&quot;&gt;&#39;</span>
+                          <span class="s">&#39;example&lt;/a&gt; link&lt;/p&gt;</span><span class="se">\n</span><span class="s">&lt;p&gt;to a webpage&lt;/p&gt; &#39;</span>
+                          <span class="s">&#39;&lt;!-- &lt;p&gt;and some commented stuff&lt;/p&gt; --&gt;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;just a small example link to a webpage&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_filesizeformat"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_filesizeformat">[docs]</a>    <span class="k">def</span> <span class="nf">test_filesizeformat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&#39;{{ 100|filesizeformat }}|&#39;</span>
+            <span class="s">&#39;{{ 1000|filesizeformat }}|&#39;</span>
+            <span class="s">&#39;{{ 1000000|filesizeformat }}|&#39;</span>
+            <span class="s">&#39;{{ 1000000000|filesizeformat }}|&#39;</span>
+            <span class="s">&#39;{{ 1000000000000|filesizeformat }}|&#39;</span>
+            <span class="s">&#39;{{ 100|filesizeformat(true) }}|&#39;</span>
+            <span class="s">&#39;{{ 1000|filesizeformat(true) }}|&#39;</span>
+            <span class="s">&#39;{{ 1000000|filesizeformat(true) }}|&#39;</span>
+            <span class="s">&#39;{{ 1000000000|filesizeformat(true) }}|&#39;</span>
+            <span class="s">&#39;{{ 1000000000000|filesizeformat(true) }}&#39;</span>
+        <span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="s">&#39;100 Bytes|0.0 kB|0.0 MB|0.0 GB|0.0 TB|100 Bytes|&#39;</span>
+            <span class="s">&#39;1000 Bytes|1.0 KiB|0.9 MiB|0.9 GiB&#39;</span>
+        <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_first"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_first">[docs]</a>    <span class="k">def</span> <span class="nf">test_first</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo|first }}&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;0&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_float"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_float">[docs]</a>    <span class="k">def</span> <span class="nf">test_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;42&quot;|float }}|&#39;</span>
+                               <span class="s">&#39;{{ &quot;ajsghasjgd&quot;|float }}|&#39;</span>
+                               <span class="s">&#39;{{ &quot;32.32&quot;|float }}&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;42.0|0.0|32.32&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_format"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_format">[docs]</a>    <span class="k">def</span> <span class="nf">test_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ &quot;</span><span class="si">%s</span><span class="s">|</span><span class="si">%s</span><span class="s">&quot;|format(&quot;a&quot;, &quot;b&quot;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;a|b&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_indent"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_indent">[docs]</a>    <span class="k">def</span> <span class="nf">test_indent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo|indent(2) }}|{{ foo|indent(2, true) }}&#39;</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;foo bar foo bar</span><span class="se">\n</span><span class="s">  foo bar foo bar|  &#39;</span>
+                       <span class="s">&#39;foo bar foo bar</span><span class="se">\n</span><span class="s">  foo bar foo bar&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_int"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_int">[docs]</a>    <span class="k">def</span> <span class="nf">test_int</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;42&quot;|int }}|{{ &quot;ajsghasjgd&quot;|int }}|&#39;</span>
+                               <span class="s">&#39;{{ &quot;32.32&quot;|int }}&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;42|0|32&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_join"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_join">[docs]</a>    <span class="k">def</span> <span class="nf">test_join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ [1, 2, 3]|join(&quot;|&quot;) }}&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;1|2|3&#39;</span>
+
+        <span class="n">env2</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env2</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ [&quot;&lt;foo&gt;&quot;, &quot;&lt;span&gt;foo&lt;/span&gt;&quot;|safe]|join }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;foo&amp;gt;&lt;span&gt;foo&lt;/span&gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_join_attribute"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_join_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">test_join_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ users|join(&#39;, &#39;, &#39;username&#39;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">users</span><span class="o">=</span><span class="nb">map</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;bar&#39;</span><span class="p">]))</span> <span class="o">==</span> <span class="s">&#39;foo, bar&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_last"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_last">[docs]</a>    <span class="k">def</span> <span class="nf">test_last</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ foo|last }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;9&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_length"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_length">[docs]</a>    <span class="k">def</span> <span class="nf">test_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ &quot;hello world&quot;|length }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;11&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_lower"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_lower">[docs]</a>    <span class="k">def</span> <span class="nf">test_lower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ &quot;FOO&quot;|lower }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;foo&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_pprint"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_pprint">[docs]</a>    <span class="k">def</span> <span class="nf">test_pprint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ data|pprint }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">pformat</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_random"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_random">[docs]</a>    <span class="k">def</span> <span class="nf">test_random</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ seq|random }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">int</span><span class="p">(</span><span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="n">seq</span><span class="p">))</span> <span class="ow">in</span> <span class="n">seq</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_reverse"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_reverse">[docs]</a>    <span class="k">def</span> <span class="nf">test_reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foobar&quot;|reverse|join }}|&#39;</span>
+                               <span class="s">&#39;{{ [1, 2, 3]|reverse|list }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;raboof|[3, 2, 1]&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_string"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_string">[docs]</a>    <span class="k">def</span> <span class="nf">test_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ obj|string }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_title"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_title">[docs]</a>    <span class="k">def</span> <span class="nf">test_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ &quot;foo bar&quot;|title }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;Foo Bar&quot;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_truncate"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_truncate">[docs]</a>    <span class="k">def</span> <span class="nf">test_truncate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&#39;{{ data|truncate(15, true, &quot;&gt;&gt;&gt;&quot;) }}|&#39;</span>
+            <span class="s">&#39;{{ data|truncate(15, false, &quot;&gt;&gt;&gt;&quot;) }}|&#39;</span>
+            <span class="s">&#39;{{ smalldata|truncate(15) }}&#39;</span>
+        <span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s">&#39;foobar baz bar&#39;</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+                          <span class="n">smalldata</span><span class="o">=</span><span class="s">&#39;foobar baz bar&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;foobar baz barf&gt;&gt;&gt;|foobar baz &gt;&gt;&gt;|foobar baz bar&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_upper"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_upper">[docs]</a>    <span class="k">def</span> <span class="nf">test_upper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo&quot;|upper }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOO&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_urlize"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_urlize">[docs]</a>    <span class="k">def</span> <span class="nf">test_urlize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo http://www.example.com/ bar&quot;|urlize }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;foo &lt;a href=&quot;http://www.example.com/&quot;&gt;&#39;</span>\
+                                <span class="s">&#39;http://www.example.com/&lt;/a&gt; bar&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_wordcount"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_wordcount">[docs]</a>    <span class="k">def</span> <span class="nf">test_wordcount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo bar baz&quot;|wordcount }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;3&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_block"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_block">[docs]</a>    <span class="k">def</span> <span class="nf">test_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">ilter lower|escape %}&lt;HEHE&gt;{</span><span class="si">% e</span><span class="s">ndfilter %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;hehe&amp;gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_chaining"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_chaining">[docs]</a>    <span class="k">def</span> <span class="nf">test_chaining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ [&#39;&lt;foo&gt;&#39;, &#39;&lt;bar&gt;&#39;]|first|upper|escape }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;FOO&amp;gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sum"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sum">[docs]</a>    <span class="k">def</span> <span class="nf">test_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ [1, 2, 3, 4, 5, 6]|sum }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;21&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sum_attributes"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sum_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">test_sum_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ values|sum(&#39;value&#39;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="mi">23</span><span class="p">},</span>
+            <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="mi">18</span><span class="p">},</span>
+        <span class="p">])</span> <span class="o">==</span> <span class="s">&#39;42&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sum_attributes_nested"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sum_attributes_nested">[docs]</a>    <span class="k">def</span> <span class="nf">test_sum_attributes_nested</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ values|sum(&#39;real.value&#39;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span><span class="s">&#39;real&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="mi">23</span><span class="p">}},</span>
+            <span class="p">{</span><span class="s">&#39;real&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
+            <span class="p">{</span><span class="s">&#39;real&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="mi">18</span><span class="p">}},</span>
+        <span class="p">])</span> <span class="o">==</span> <span class="s">&#39;42&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_abs"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_abs">[docs]</a>    <span class="k">def</span> <span class="nf">test_abs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ -1|abs }}|{{ 1|abs }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1|1&#39;</span><span class="p">,</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_round_positive"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_round_positive">[docs]</a>    <span class="k">def</span> <span class="nf">test_round_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ 2.7|round }}|{{ 2.1|round }}|&#39;</span>
+                               <span class="s">&quot;{{ 2.1234|round(3, &#39;floor&#39;) }}|&quot;</span>
+                               <span class="s">&quot;{{ 2.1|round(0, &#39;ceil&#39;) }}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;3.0|2.0|2.123|3.0&#39;</span><span class="p">,</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_round_negative"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_round_negative">[docs]</a>    <span class="k">def</span> <span class="nf">test_round_negative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ 21.3|round(-1)}}|&#39;</span>
+                               <span class="s">&quot;{{ 21.3|round(-1, &#39;ceil&#39;)}}|&quot;</span>
+                               <span class="s">&quot;{{ 21.3|round(-1, &#39;floor&#39;)}}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;20.0|30.0|20.0&#39;</span><span class="p">,</span><span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_xmlattr"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_xmlattr">[docs]</a>    <span class="k">def</span> <span class="nf">test_xmlattr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ {&#39;foo&#39;: 42, &#39;bar&#39;: 23, &#39;fish&#39;: none, &quot;</span>
+                               <span class="s">&quot;&#39;spam&#39;: missing, &#39;blub:blub&#39;: &#39;&lt;?&gt;&#39;}|xmlattr }}&quot;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="k">assert</span> <span class="s">&#39;foo=&quot;42&quot;&#39;</span> <span class="ow">in</span> <span class="n">out</span>
+        <span class="k">assert</span> <span class="s">&#39;bar=&quot;23&quot;&#39;</span> <span class="ow">in</span> <span class="n">out</span>
+        <span class="k">assert</span> <span class="s">&#39;blub:blub=&quot;&amp;lt;?&amp;gt;&quot;&#39;</span> <span class="ow">in</span> <span class="n">out</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sort1"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sort1">[docs]</a>    <span class="k">def</span> <span class="nf">test_sort1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ [2, 3, 1]|sort }}|{{ [2, 3, 1]|sort(true) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[1, 2, 3]|[3, 2, 1]&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sort2"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sort2">[docs]</a>    <span class="k">def</span> <span class="nf">test_sort2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;&quot;.join([&quot;c&quot;, &quot;A&quot;, &quot;b&quot;, &quot;D&quot;]|sort) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;AbcD&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sort3"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sort3">[docs]</a>    <span class="k">def</span> <span class="nf">test_sort3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ [&#39;foo&#39;, &#39;Bar&#39;, &#39;blah&#39;]|sort }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;[&#39;Bar&#39;, &#39;blah&#39;, &#39;foo&#39;]&quot;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_sort4"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_sort4">[docs]</a>    <span class="k">def</span> <span class="nf">test_sort4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">Magic</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ items|sort(attribute=&#39;value&#39;)|join }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="nb">map</span><span class="p">(</span><span class="n">Magic</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">==</span> <span class="s">&#39;1234&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_groupby"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_groupby">[docs]</a>    <span class="k">def</span> <span class="nf">test_groupby</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {</span><span class="si">%- f</span><span class="s">or grouper, list in [{&#39;foo&#39;: 1, &#39;bar&#39;: 2},</span>
+<span class="s">                                  {&#39;foo&#39;: 2, &#39;bar&#39;: 3},</span>
+<span class="s">                                  {&#39;foo&#39;: 1, &#39;bar&#39;: 1},</span>
+<span class="s">                                  {&#39;foo&#39;: 3, &#39;bar&#39;: 4}]|groupby(&#39;foo&#39;) -%}</span>
+<span class="s">            {{ grouper }}{</span><span class="si">% f</span><span class="s">or x in list %}: {{ x.foo }}, {{ x.bar }}{</span><span class="si">% e</span><span class="s">ndfor %}|</span>
+<span class="s">        {</span><span class="si">%- e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span>
+            <span class="s">&quot;1: 1, 2: 1, 1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;2: 2, 3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;3: 3, 4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;&quot;</span>
+        <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_groupby_multidot"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_groupby_multidot">[docs]</a>    <span class="k">def</span> <span class="nf">test_groupby_multidot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">Date</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="n">day</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">=</span> <span class="n">month</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="n">year</span>
+        <span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="o">*</span><span class="n">date</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">Date</span><span class="p">(</span><span class="o">*</span><span class="n">date</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="n">articles</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Article</span><span class="p">(</span><span class="s">&#39;aha&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1970</span><span class="p">),</span>
+            <span class="n">Article</span><span class="p">(</span><span class="s">&#39;interesting&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1970</span><span class="p">),</span>
+            <span class="n">Article</span><span class="p">(</span><span class="s">&#39;really?&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1970</span><span class="p">),</span>
+            <span class="n">Article</span><span class="p">(</span><span class="s">&#39;totally not&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1971</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {</span><span class="si">%- f</span><span class="s">or year, list in articles|groupby(&#39;date.year&#39;) -%}</span>
+<span class="s">            {{ year }}{</span><span class="si">% f</span><span class="s">or x in list %}[{{ x.title }}]{</span><span class="si">% e</span><span class="s">ndfor %}|</span>
+<span class="s">        {</span><span class="si">%- e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">articles</span><span class="o">=</span><span class="n">articles</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span>
+            <span class="s">&#39;1970[aha][interesting][really?]&#39;</span><span class="p">,</span>
+            <span class="s">&#39;1971[totally not]&#39;</span><span class="p">,</span>
+            <span class="s">&#39;&#39;</span>
+        <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_filtertag"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_filtertag">[docs]</a>    <span class="k">def</span> <span class="nf">test_filtertag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">% f</span><span class="s">ilter upper|replace(&#39;FOO&#39;, &#39;foo&#39;) %}&quot;</span>
+                               <span class="s">&quot;foobar{</span><span class="si">% e</span><span class="s">ndfilter %}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;fooBAR&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_replace"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_replace">[docs]</a>    <span class="k">def</span> <span class="nf">test_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ string|replace(&quot;o&quot;, 42) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">string</span><span class="o">=</span><span class="s">&#39;&lt;foo&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;f4242&gt;&#39;</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ string|replace(&quot;o&quot;, 42) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">string</span><span class="o">=</span><span class="s">&#39;&lt;foo&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;f4242&amp;gt;&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ string|replace(&quot;&lt;&quot;, 42) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">string</span><span class="o">=</span><span class="s">&#39;&lt;foo&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;42foo&amp;gt;&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ string|replace(&quot;o&quot;, &quot;&gt;x&lt;&quot;) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">string</span><span class="o">=</span><span class="n">Markup</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;f&amp;gt;x&amp;lt;&amp;gt;x&amp;lt;&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_forceescape"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_forceescape">[docs]</a>    <span class="k">def</span> <span class="nf">test_forceescape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ x|forceescape }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Markup</span><span class="p">(</span><span class="s">&#39;&lt;div /&gt;&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="s">u&#39;&amp;lt;div /&amp;gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="FilterTestCase.test_safe"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.FilterTestCase.test_safe">[docs]</a>    <span class="k">def</span> <span class="nf">test_safe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;&lt;div&gt;foo&lt;/div&gt;&quot;|safe }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&lt;div&gt;foo&lt;/div&gt;&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;&lt;div&gt;foo&lt;/div&gt;&quot; }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;div&amp;gt;foo&amp;lt;/div&amp;gt;&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.filters.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">FilterTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

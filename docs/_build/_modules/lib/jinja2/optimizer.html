@@ -1,0 +1,161 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.optimizer &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.optimizer</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.optimizer</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    The jinja optimizer is currently trying to constant fold a few expressions</span>
+<span class="sd">    and modify the AST in place so that it should be easier to evaluate it.</span>
+
+<span class="sd">    Because the AST does not contain all the scoping information and the</span>
+<span class="sd">    compiler has to find that out, we cannot do all the optimizations we</span>
+<span class="sd">    want.  For example loop unrolling doesn&#39;t work because unrolled loops would</span>
+<span class="sd">    have a different scoping.</span>
+
+<span class="sd">    The solution would be a second syntax tree that has the scoping rules stored.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">nodes</span>
+<span class="kn">from</span> <span class="nn">jinja2.visitor</span> <span class="kn">import</span> <span class="n">NodeTransformer</span>
+
+
+<div class="viewcode-block" id="optimize"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.optimizer.optimize">[docs]</a><span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The context hint can be used to perform an static optimization</span>
+<span class="sd">    based on the context given.&quot;&quot;&quot;</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Optimizer</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Optimizer"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.optimizer.Optimizer">[docs]</a><span class="k">class</span> <span class="nc">Optimizer</span><span class="p">(</span><span class="n">NodeTransformer</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+
+<div class="viewcode-block" id="Optimizer.visit_If"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.optimizer.Optimizer.visit_If">[docs]</a>    <span class="k">def</span> <span class="nf">visit_If</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Eliminate dead code.&quot;&quot;&quot;</span>
+        <span class="c"># do not optimize ifs that have a block inside so that it doesn&#39;t</span>
+        <span class="c"># break super().</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Block</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span><span class="o">.</span><span class="n">as_const</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Impossible</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">else_</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">body</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit_list</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="k">def</span> <span class="nf">fold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do constant folding.&quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="o">.</span><span class="n">from_untrusted</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">as_const</span><span class="p">(),</span>
+                                              <span class="n">lineno</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                                              <span class="n">environment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Impossible</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node</span>
+
+    <span class="n">visit_Add</span> <span class="o">=</span> <span class="n">visit_Sub</span> <span class="o">=</span> <span class="n">visit_Mul</span> <span class="o">=</span> <span class="n">visit_Div</span> <span class="o">=</span> <span class="n">visit_FloorDiv</span> <span class="o">=</span> \
+    <span class="n">visit_Pow</span> <span class="o">=</span> <span class="n">visit_Mod</span> <span class="o">=</span> <span class="n">visit_And</span> <span class="o">=</span> <span class="n">visit_Or</span> <span class="o">=</span> <span class="n">visit_Pos</span> <span class="o">=</span> <span class="n">visit_Neg</span> <span class="o">=</span> \
+    <span class="n">visit_Not</span> <span class="o">=</span> <span class="n">visit_Compare</span> <span class="o">=</span> <span class="n">visit_Getitem</span> <span class="o">=</span> <span class="n">visit_Getattr</span> <span class="o">=</span> <span class="n">visit_Call</span> <span class="o">=</span> \
+    <span class="n">visit_Filter</span> <span class="o">=</span> <span class="n">visit_Test</span> <span class="o">=</span> <span class="n">visit_CondExpr</span> <span class="o">=</span> <span class="n">fold</span>
+    <span class="k">del</span> <span class="n">fold</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

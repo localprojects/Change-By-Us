@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.sandbox &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.sandbox</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.sandbox</span>
+<span class="sd">    ~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Adds a sandbox layer to Jinja as it was the default behavior in the old</span>
+<span class="sd">    Jinja 1 releases.  This sandbox is slightly different from Jinja 1 as the</span>
+<span class="sd">    default behavior is easier to use.</span>
+
+<span class="sd">    The behavior can be changed by subclassing the environment.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">from</span> <span class="nn">jinja2.environment</span> <span class="kn">import</span> <span class="n">Environment</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">SecurityError</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">FunctionType</span><span class="p">,</span> <span class="n">MethodType</span><span class="p">,</span> <span class="n">TracebackType</span><span class="p">,</span> <span class="n">CodeType</span><span class="p">,</span> \
+     <span class="n">FrameType</span><span class="p">,</span> <span class="n">GeneratorType</span>
+
+
+<span class="c">#: maximum number of items a range may produce</span>
+<span class="n">MAX_RANGE</span> <span class="o">=</span> <span class="mi">100000</span>
+
+<span class="c">#: attributes of function objects that are considered unsafe.</span>
+<span class="n">UNSAFE_FUNCTION_ATTRIBUTES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;func_closure&#39;</span><span class="p">,</span> <span class="s">&#39;func_code&#39;</span><span class="p">,</span> <span class="s">&#39;func_dict&#39;</span><span class="p">,</span>
+                                  <span class="s">&#39;func_defaults&#39;</span><span class="p">,</span> <span class="s">&#39;func_globals&#39;</span><span class="p">])</span>
+
+<span class="c">#: unsafe method attributes.  function attributes are unsafe for methods too</span>
+<span class="n">UNSAFE_METHOD_ATTRIBUTES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;im_class&#39;</span><span class="p">,</span> <span class="s">&#39;im_func&#39;</span><span class="p">,</span> <span class="s">&#39;im_self&#39;</span><span class="p">])</span>
+
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="c"># make sure we don&#39;t warn in python 2.6 about stuff we don&#39;t care about</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span> <span class="s">&#39;the sets module&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                        <span class="n">module</span><span class="o">=</span><span class="s">&#39;jinja2.sandbox&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+
+<span class="n">_mutable_set_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">set</span><span class="p">,)</span>
+<span class="n">_mutable_mapping_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,)</span>
+<span class="n">_mutable_sequence_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">list</span><span class="p">,)</span>
+
+
+<span class="c"># on python 2.x we can register the user collection types</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">UserDict</span> <span class="kn">import</span> <span class="n">UserDict</span><span class="p">,</span> <span class="n">DictMixin</span>
+    <span class="kn">from</span> <span class="nn">UserList</span> <span class="kn">import</span> <span class="n">UserList</span>
+    <span class="n">_mutable_mapping_types</span> <span class="o">+=</span> <span class="p">(</span><span class="n">UserDict</span><span class="p">,</span> <span class="n">DictMixin</span><span class="p">)</span>
+    <span class="n">_mutable_set_types</span> <span class="o">+=</span> <span class="p">(</span><span class="n">UserList</span><span class="p">,)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="c"># if sets is still available, register the mutable set from there as well</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">sets</span> <span class="kn">import</span> <span class="n">Set</span>
+    <span class="n">_mutable_set_types</span> <span class="o">+=</span> <span class="p">(</span><span class="n">Set</span><span class="p">,)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="c">#: register Python 2.6 abstract base classes</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">MutableSet</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">MutableSequence</span>
+    <span class="n">_mutable_set_types</span> <span class="o">+=</span> <span class="p">(</span><span class="n">MutableSet</span><span class="p">,)</span>
+    <span class="n">_mutable_mapping_types</span> <span class="o">+=</span> <span class="p">(</span><span class="n">MutableMapping</span><span class="p">,)</span>
+    <span class="n">_mutable_sequence_types</span> <span class="o">+=</span> <span class="p">(</span><span class="n">MutableSequence</span><span class="p">,)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="n">_mutable_spec</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">_mutable_set_types</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">([</span>
+        <span class="s">&#39;add&#39;</span><span class="p">,</span> <span class="s">&#39;clear&#39;</span><span class="p">,</span> <span class="s">&#39;difference_update&#39;</span><span class="p">,</span> <span class="s">&#39;discard&#39;</span><span class="p">,</span> <span class="s">&#39;pop&#39;</span><span class="p">,</span> <span class="s">&#39;remove&#39;</span><span class="p">,</span>
+        <span class="s">&#39;symmetric_difference_update&#39;</span><span class="p">,</span> <span class="s">&#39;update&#39;</span>
+    <span class="p">])),</span>
+    <span class="p">(</span><span class="n">_mutable_mapping_types</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">([</span>
+        <span class="s">&#39;clear&#39;</span><span class="p">,</span> <span class="s">&#39;pop&#39;</span><span class="p">,</span> <span class="s">&#39;popitem&#39;</span><span class="p">,</span> <span class="s">&#39;setdefault&#39;</span><span class="p">,</span> <span class="s">&#39;update&#39;</span>
+    <span class="p">])),</span>
+    <span class="p">(</span><span class="n">_mutable_sequence_types</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">([</span>
+        <span class="s">&#39;append&#39;</span><span class="p">,</span> <span class="s">&#39;reverse&#39;</span><span class="p">,</span> <span class="s">&#39;insert&#39;</span><span class="p">,</span> <span class="s">&#39;sort&#39;</span><span class="p">,</span> <span class="s">&#39;extend&#39;</span><span class="p">,</span> <span class="s">&#39;remove&#39;</span>
+    <span class="p">])),</span>
+    <span class="p">(</span><span class="n">deque</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">([</span>
+        <span class="s">&#39;append&#39;</span><span class="p">,</span> <span class="s">&#39;appendleft&#39;</span><span class="p">,</span> <span class="s">&#39;clear&#39;</span><span class="p">,</span> <span class="s">&#39;extend&#39;</span><span class="p">,</span> <span class="s">&#39;extendleft&#39;</span><span class="p">,</span> <span class="s">&#39;pop&#39;</span><span class="p">,</span>
+        <span class="s">&#39;popleft&#39;</span><span class="p">,</span> <span class="s">&#39;remove&#39;</span><span class="p">,</span> <span class="s">&#39;rotate&#39;</span>
+    <span class="p">]))</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="safe_range"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.safe_range">[docs]</a><span class="k">def</span> <span class="nf">safe_range</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A range that can&#39;t generate ranges with a length of more than</span>
+<span class="sd">    MAX_RANGE items.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="nb">xrange</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_RANGE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">OverflowError</span><span class="p">(</span><span class="s">&#39;range too big, maximum size for range is </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span>
+                            <span class="n">MAX_RANGE</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rng</span>
+
+</div>
+<div class="viewcode-block" id="unsafe"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.unsafe">[docs]</a><span class="k">def</span> <span class="nf">unsafe</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Marks a function or method as unsafe.</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        @unsafe</span>
+<span class="sd">        def delete(self):</span>
+<span class="sd">            pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">unsafe_callable</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="is_internal_attribute"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.is_internal_attribute">[docs]</a><span class="k">def</span> <span class="nf">is_internal_attribute</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test if the attribute given is an internal python attribute.  For</span>
+<span class="sd">    example this function returns `True` for the `func_code` attribute of</span>
+<span class="sd">    python objects.  This is useful if the environment method</span>
+<span class="sd">    :meth:`~SandboxedEnvironment.is_safe_attribute` is overriden.</span>
+
+<span class="sd">    &gt;&gt;&gt; from jinja2.sandbox import is_internal_attribute</span>
+<span class="sd">    &gt;&gt;&gt; is_internal_attribute(lambda: None, &quot;func_code&quot;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_internal_attribute((lambda x:x).func_code, &#39;co_code&#39;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_internal_attribute(str, &quot;upper&quot;)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">UNSAFE_FUNCTION_ATTRIBUTES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">MethodType</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">UNSAFE_FUNCTION_ATTRIBUTES</span> <span class="ow">or</span> \
+           <span class="n">attr</span> <span class="ow">in</span> <span class="n">UNSAFE_METHOD_ATTRIBUTES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;mro&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">CodeType</span><span class="p">,</span> <span class="n">TracebackType</span><span class="p">,</span> <span class="n">FrameType</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GeneratorType</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;gi_frame&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;__&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="modifies_known_mutable"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.modifies_known_mutable">[docs]</a><span class="k">def</span> <span class="nf">modifies_known_mutable</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function checks if an attribute on a builtin mutable object</span>
+<span class="sd">    (list, dict, set or deque) would modify it if called.  It also supports</span>
+<span class="sd">    the &quot;user&quot;-versions of the objects (`sets.Set`, `UserDict.*` etc.) and</span>
+<span class="sd">    with Python 2.6 onwards the abstract base classes `MutableSet`,</span>
+<span class="sd">    `MutableMapping`, and `MutableSequence`.</span>
+
+<span class="sd">    &gt;&gt;&gt; modifies_known_mutable({}, &quot;clear&quot;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; modifies_known_mutable({}, &quot;keys&quot;)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; modifies_known_mutable([], &quot;append&quot;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; modifies_known_mutable([], &quot;index&quot;)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    If called with an unsupported object (such as unicode) `False` is</span>
+<span class="sd">    returned.</span>
+
+<span class="sd">    &gt;&gt;&gt; modifies_known_mutable(&quot;foo&quot;, &quot;upper&quot;)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">typespec</span><span class="p">,</span> <span class="n">unsafe</span> <span class="ow">in</span> <span class="n">_mutable_spec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">typespec</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">unsafe</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment">[docs]</a><span class="k">class</span> <span class="nc">SandboxedEnvironment</span><span class="p">(</span><span class="n">Environment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The sandboxed environment.  It works like the regular environment but</span>
+<span class="sd">    tells the compiler to generate sandboxed code.  Additionally subclasses of</span>
+<span class="sd">    this environment may override the methods that tell the runtime what</span>
+<span class="sd">    attributes or functions are safe to access.</span>
+
+<span class="sd">    If the template tries to access insecure code a :exc:`SecurityError` is</span>
+<span class="sd">    raised.  However also other exceptions may occour during the rendering so</span>
+<span class="sd">    the caller has to ensure that all exceptions are catched.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sandboxed</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="c">#: default callback table for the binary operators.  A copy of this is</span>
+    <span class="c">#: available on each instance of a sandboxed environment as</span>
+    <span class="c">#: :attr:`binop_table`</span>
+    <span class="n">default_binop_table</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;+&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+        <span class="s">&#39;-&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">sub</span><span class="p">,</span>
+        <span class="s">&#39;*&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span>
+        <span class="s">&#39;/&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">truediv</span><span class="p">,</span>
+        <span class="s">&#39;//&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">floordiv</span><span class="p">,</span>
+        <span class="s">&#39;**&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">pow</span><span class="p">,</span>
+        <span class="s">&#39;%&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">mod</span>
+    <span class="p">}</span>
+
+    <span class="c">#: default callback table for the unary operators.  A copy of this is</span>
+    <span class="c">#: available on each instance of a sandboxed environment as</span>
+    <span class="c">#: :attr:`unop_table`</span>
+    <span class="n">default_unop_table</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;+&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span>
+        <span class="s">&#39;-&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">neg</span>
+    <span class="p">}</span>
+
+    <span class="c">#: a set of binary operators that should be intercepted.  Each operator</span>
+    <span class="c">#: that is added to this set (empty by default) is delegated to the</span>
+    <span class="c">#: :meth:`call_binop` method that will perform the operator.  The default</span>
+    <span class="c">#: operator callback is specified by :attr:`binop_table`.</span>
+    <span class="c">#:</span>
+    <span class="c">#: The following binary operators are interceptable:</span>
+    <span class="c">#: ``//``, ``%``, ``+``, ``*``, ``-``, ``/``, and ``**``</span>
+    <span class="c">#:</span>
+    <span class="c">#: The default operation form the operator table corresponds to the</span>
+    <span class="c">#: builtin function.  Intercepted calls are always slower than the native</span>
+    <span class="c">#: operator call, so make sure only to intercept the ones you are</span>
+    <span class="c">#: interested in.</span>
+    <span class="c">#:</span>
+    <span class="c">#: .. versionadded:: 2.6</span>
+    <span class="n">intercepted_binops</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+    <span class="c">#: a set of unary operators that should be intercepted.  Each operator</span>
+    <span class="c">#: that is added to this set (empty by default) is delegated to the</span>
+    <span class="c">#: :meth:`call_unop` method that will perform the operator.  The default</span>
+    <span class="c">#: operator callback is specified by :attr:`unop_table`.</span>
+    <span class="c">#:</span>
+    <span class="c">#: The following unary operators are interceptable: ``+``, ``-``</span>
+    <span class="c">#:</span>
+    <span class="c">#: The default operation form the operator table corresponds to the</span>
+    <span class="c">#: builtin function.  Intercepted calls are always slower than the native</span>
+    <span class="c">#: operator call, so make sure only to intercept the ones you are</span>
+    <span class="c">#: interested in.</span>
+    <span class="c">#:</span>
+    <span class="c">#: .. versionadded:: 2.6</span>
+    <span class="n">intercepted_unops</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SandboxedEnvironment.intercept_unop"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.intercept_unop">[docs]</a>    <span class="k">def</span> <span class="nf">intercept_unop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called during template compilation with the name of a unary</span>
+<span class="sd">        operator to check if it should be intercepted at runtime.  If this</span>
+<span class="sd">        method returns `True`, :meth:`call_unop` is excuted for this unary</span>
+<span class="sd">        operator.  The default implementation of :meth:`call_unop` will use</span>
+<span class="sd">        the :attr:`unop_table` dictionary to perform the operator with the</span>
+<span class="sd">        same logic as the builtin one.</span>
+
+<span class="sd">        The following unary operators are interceptable: ``+`` and ``-``</span>
+
+<span class="sd">        Intercepted calls are always slower than the native operator call,</span>
+<span class="sd">        so make sure only to intercept the ones you are interested in.</span>
+
+<span class="sd">        .. versionadded:: 2.6</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Environment</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">globals</span><span class="p">[</span><span class="s">&#39;range&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">safe_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binop_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_binop_table</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unop_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_unop_table</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SandboxedEnvironment.is_safe_attribute"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.is_safe_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">is_safe_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The sandboxed environment will call this method to check if the</span>
+<span class="sd">        attribute of an object is safe to access.  Per default all attributes</span>
+<span class="sd">        starting with an underscore are considered private as well as the</span>
+<span class="sd">        special attributes of internal python objects as returned by the</span>
+<span class="sd">        :func:`is_internal_attribute` function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_internal_attribute</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.is_safe_callable"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.is_safe_callable">[docs]</a>    <span class="k">def</span> <span class="nf">is_safe_callable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if an object is safely callable.  Per default a function is</span>
+<span class="sd">        considered safe unless the `unsafe_callable` attribute exists and is</span>
+<span class="sd">        True.  Override this method to alter the behavior, but this won&#39;t</span>
+<span class="sd">        affect the `unsafe` decorator from this module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;unsafe_callable&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;alters_data&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.call_binop"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.call_binop">[docs]</a>    <span class="k">def</span> <span class="nf">call_binop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For intercepted binary operator calls (:meth:`intercepted_binops`)</span>
+<span class="sd">        this function is executed instead of the builtin operator.  This can</span>
+<span class="sd">        be used to fine tune the behavior of certain operators.</span>
+
+<span class="sd">        .. versionadded:: 2.6</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binop_table</span><span class="p">[</span><span class="n">operator</span><span class="p">](</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.call_unop"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.call_unop">[docs]</a>    <span class="k">def</span> <span class="nf">call_unop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For intercepted unary operator calls (:meth:`intercepted_unops`)</span>
+<span class="sd">        this function is executed instead of the builtin operator.  This can</span>
+<span class="sd">        be used to fine tune the behavior of certain operators.</span>
+
+<span class="sd">        .. versionadded:: 2.6</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unop_table</span><span class="p">[</span><span class="n">operator</span><span class="p">](</span><span class="n">arg</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.getitem"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.getitem">[docs]</a>    <span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subscribe an object from sandboxed code.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">attr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">argument</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_safe_attribute</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                            <span class="k">return</span> <span class="n">value</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsafe_undefined</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">argument</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">argument</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.getattr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.getattr">[docs]</a>    <span class="k">def</span> <span class="nf">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subscribe an object from sandboxed code and prefer the</span>
+<span class="sd">        attribute.  The attribute passed *must* be a bytestring.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_safe_attribute</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">value</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsafe_undefined</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attribute</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.unsafe_undefined"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.unsafe_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">unsafe_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an undefined object for unsafe attributes.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;access to attribute </span><span class="si">%r</span><span class="s"> of </span><span class="si">%r</span><span class="s"> &#39;</span>
+                              <span class="s">&#39;object is unsafe.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">attribute</span><span class="p">,</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">attribute</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">exc</span><span class="o">=</span><span class="n">SecurityError</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxedEnvironment.call"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.SandboxedEnvironment.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="n">__self</span><span class="p">,</span> <span class="n">__context</span><span class="p">,</span> <span class="n">__obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call an object from sandboxed code.&quot;&quot;&quot;</span>
+        <span class="c"># the double prefixes are to avoid double keyword argument</span>
+        <span class="c"># errors when proxying the call.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">__self</span><span class="o">.</span><span class="n">is_safe_callable</span><span class="p">(</span><span class="n">__obj</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SecurityError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> is not safely callable&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">__obj</span><span class="p">,))</span>
+        <span class="k">return</span> <span class="n">__context</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">__obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="ImmutableSandboxedEnvironment"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.ImmutableSandboxedEnvironment">[docs]</a><span class="k">class</span> <span class="nc">ImmutableSandboxedEnvironment</span><span class="p">(</span><span class="n">SandboxedEnvironment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Works exactly like the regular `SandboxedEnvironment` but does not</span>
+<span class="sd">    permit modifications on the builtin mutable objects `list`, `set`, and</span>
+<span class="sd">    `dict` by using the :func:`modifies_known_mutable` function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ImmutableSandboxedEnvironment.is_safe_attribute"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.sandbox.ImmutableSandboxedEnvironment.is_safe_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">is_safe_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">SandboxedEnvironment</span><span class="o">.</span><span class="n">is_safe_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">modifies_known_mutable</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

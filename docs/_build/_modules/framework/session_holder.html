@@ -1,0 +1,130 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.session_holder &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.session_holder</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Simple module to handle persistent sessions.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SessionHolder"><a class="viewcode-back" href="../../modules/framework.html#framework.session_holder.SessionHolder">[docs]</a><span class="k">class</span> <span class="nc">SessionHolder</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Singleton allows the session object to be passed between classes.</span>
+<span class="sd">    Putting it here means we wont lose it if webpy reloads controller classes.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot; Persistent session property. &quot;&quot;&quot;</span>
+    
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SessionHolder.set"><a class="viewcode-back" href="../../modules/framework.html#framework.session_holder.SessionHolder.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">_session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set session value.</span>
+<span class="sd">        </span>
+<span class="sd">        @type   _session: ??</span>
+<span class="sd">        @param  _session: Session data to set.</span>
+<span class="sd">        </span>
+<span class="sd">        @rtype: ??</span>
+<span class="sd">        @returns: The current session data.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">_session</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">session</span>
+        </div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SessionHolder.get_session"><a class="viewcode-back" href="../../modules/framework.html#framework.session_holder.SessionHolder.get_session">[docs]</a>    <span class="k">def</span> <span class="nf">get_session</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get current session value.</span>
+<span class="sd">        </span>
+<span class="sd">        @rtype: ??</span>
+<span class="sd">        @returns: The current session data.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">session</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

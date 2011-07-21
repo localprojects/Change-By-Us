@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.twilio &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.twilio</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright (c) 2009 Twilio, Inc.</span>
+
+<span class="sd">Permission is hereby granted, free of charge, to any person</span>
+<span class="sd">obtaining a copy of this software and associated documentation</span>
+<span class="sd">files (the &quot;Software&quot;), to deal in the Software without</span>
+<span class="sd">restriction, including without limitation the rights to use,</span>
+<span class="sd">copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
+<span class="sd">copies of the Software, and to permit persons to whom the</span>
+<span class="sd">Software is furnished to do so, subject to the following</span>
+<span class="sd">conditions:</span>
+
+<span class="sd">The above copyright notice and this permission notice shall be</span>
+<span class="sd">included in all copies or substantial portions of the Software.</span>
+
+<span class="sd">THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,</span>
+<span class="sd">EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES</span>
+<span class="sd">OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND</span>
+<span class="sd">NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT</span>
+<span class="sd">HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,</span>
+<span class="sd">WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING</span>
+<span class="sd">FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR</span>
+<span class="sd">OTHER DEALINGS IN THE SOFTWARE.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__VERSION__</span> <span class="o">=</span> <span class="s">&quot;2.0.8&quot;</span>
+
+<span class="kn">import</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">urllib2</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">hmac</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha1</span>
+<span class="kn">from</span> <span class="nn">xml.sax.saxutils</span> <span class="kn">import</span> <span class="n">escape</span><span class="p">,</span> <span class="n">quoteattr</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">google.appengine.api</span> <span class="kn">import</span> <span class="n">urlfetch</span>
+    <span class="n">APPENGINE</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">APPENGINE</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="n">_TWILIO_API_URL</span> <span class="o">=</span> <span class="s">&#39;https://api.twilio.com&#39;</span>
+
+<div class="viewcode-block" id="TwilioException"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.TwilioException">[docs]</a><span class="k">class</span> <span class="nc">TwilioException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c"># Twilio REST Helpers</span>
+<span class="c"># ===========================================================================</span>
+</div>
+<div class="viewcode-block" id="HTTPErrorProcessor"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.HTTPErrorProcessor">[docs]</a><span class="k">class</span> <span class="nc">HTTPErrorProcessor</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPErrorProcessor</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPErrorProcessor.https_response"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.HTTPErrorProcessor.https_response">[docs]</a>    <span class="k">def</span> <span class="nf">https_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="n">code</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">hdrs</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">msg</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;http&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">hdrs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+</div></div>
+<div class="viewcode-block" id="HTTPErrorAppEngine"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.HTTPErrorAppEngine">[docs]</a><span class="k">class</span> <span class="nc">HTTPErrorAppEngine</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="TwilioUrlRequest"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.TwilioUrlRequest">[docs]</a><span class="k">class</span> <span class="nc">TwilioUrlRequest</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">):</span>
+<div class="viewcode-block" id="TwilioUrlRequest.get_method"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.TwilioUrlRequest.get_method">[docs]</a>    <span class="k">def</span> <span class="nf">get_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;http_method&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_method</span>
+        <span class="k">return</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="o">.</span><span class="n">get_method</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="Account"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Account">[docs]</a><span class="k">class</span> <span class="nc">Account</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Twilio account object that provides helper functions for making</span>
+<span class="sd">    REST requests to the Twilio API.  This helper library works both in</span>
+<span class="sd">    standalone python applications using the urllib/urlib2 libraries and</span>
+<span class="sd">    inside Google App Engine applications using urlfetch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;initialize a twilio account object</span>
+<span class="sd">        </span>
+<span class="sd">        id: Twilio account SID/ID</span>
+<span class="sd">        token: Twilio account token</span>
+<span class="sd">        </span>
+<span class="sd">        returns a Twilio account object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opener</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">_build_get_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">uri</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;?&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">uri</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;&amp;&#39;</span><span class="p">:</span>
+                    <span class="n">uri</span> <span class="o">+=</span> <span class="s">&#39;&amp;&#39;</span>
+                <span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span> <span class="o">+</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span> <span class="o">+</span> <span class="s">&#39;?&#39;</span> <span class="o">+</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">uri</span>
+    
+    <span class="k">def</span> <span class="nf">_urllib2_fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c"># install error processor to handle HTTP 201 response correctly</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opener</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opener</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">build_opener</span><span class="p">(</span><span class="n">HTTPErrorProcessor</span><span class="p">)</span>
+            <span class="n">urllib2</span><span class="o">.</span><span class="n">install_opener</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opener</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;GET&#39;</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_get_uri</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="n">TwilioUrlRequest</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="n">TwilioUrlRequest</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s">&#39;DELETE&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;PUT&#39;</span><span class="p">):</span>
+                <span class="n">req</span><span class="o">.</span><span class="n">http_method</span> <span class="o">=</span> <span class="n">method</span>
+        
+        <span class="n">authstring</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodestring</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">))</span>
+        <span class="n">authstring</span> <span class="o">=</span> <span class="n">authstring</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">req</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span> <span class="s">&quot;Basic </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">authstring</span><span class="p">)</span>
+        
+        <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">_appengine_fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;GET&#39;</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_get_uri</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">httpmethod</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">urlfetch</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s">&quot;Google App Engine does not support method &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+        
+        <span class="n">authstring</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodestring</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">))</span>
+        <span class="n">authstring</span> <span class="o">=</span> <span class="n">authstring</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">urlfetch</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">params</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">httpmethod</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s">&#39;application/x-www-form-urlencoded&#39;</span><span class="p">,</span>
+                <span class="s">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s">&#39;Basic </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">authstring</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPErrorAppEngine</span><span class="p">(</span><span class="s">&quot;HTTP </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span>
+    
+<div class="viewcode-block" id="Account.request"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Account.request">[docs]</a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;sends a request and gets a response from the Twilio REST API</span>
+<span class="sd">        </span>
+<span class="sd">        path: the URL (relative to the endpoint URL, after the /v1</span>
+<span class="sd">        url: the HTTP method to use, defaults to POST</span>
+<span class="sd">        vars: for POST or PUT, a dict of data to send</span>
+<span class="sd">        </span>
+<span class="sd">        returns Twilio response in XML or raises an exception on error</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid path parameter&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;POST&#39;</span><span class="p">,</span> <span class="s">&#39;DELETE&#39;</span><span class="p">,</span> <span class="s">&#39;PUT&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s">&#39;HTTP </span><span class="si">%s</span><span class="s"> method not implemented&#39;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="n">_TWILIO_API_URL</span> <span class="o">+</span> <span class="n">path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="n">_TWILIO_API_URL</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">path</span>
+        
+        <span class="k">if</span> <span class="n">APPENGINE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appengine_fetch</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_urllib2_fetch</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+
+<span class="c"># TwiML Response Helpers</span>
+<span class="c"># ===========================================================================</span>
+</div></div>
+<div class="viewcode-block" id="Verb"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb">[docs]</a><span class="k">class</span> <span class="nc">Verb</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Twilio basic verb object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nestables</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s">&quot;sender&quot;</span><span class="p">:</span> <span class="n">k</span> <span class="o">=</span> <span class="s">&quot;from&quot;</span>
+            <span class="k">if</span> <span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">quoteattr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s">&#39; </span><span class="si">%s</span><span class="s">=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s">&#39;&gt;&#39;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">escape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbs</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+                        <span class="n">s</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\t</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">l</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s">&#39;&lt;/</span><span class="si">%s</span><span class="s">&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s">&#39;/&gt;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+    
+<div class="viewcode-block" id="Verb.append"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verb</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">nestables</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> is not nestable&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verb</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nestables</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> is not nestable inside </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="n">verb</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">verb</span>
+    </div>
+<div class="viewcode-block" id="Verb.asUrl"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.asUrl">[docs]</a>    <span class="k">def</span> <span class="nf">asUrl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addSay"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addSay">[docs]</a>    <span class="k">def</span> <span class="nf">addSay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Say</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addPlay"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addPlay">[docs]</a>    <span class="k">def</span> <span class="nf">addPlay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Play</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addPause"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addPause">[docs]</a>    <span class="k">def</span> <span class="nf">addPause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Pause</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addRedirect"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addRedirect">[docs]</a>    <span class="k">def</span> <span class="nf">addRedirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Redirect</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>   
+    </div>
+<div class="viewcode-block" id="Verb.addHangup"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addHangup">[docs]</a>    <span class="k">def</span> <span class="nf">addHangup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hangup</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> 
+    </div>
+<div class="viewcode-block" id="Verb.addGather"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addGather">[docs]</a>    <span class="k">def</span> <span class="nf">addGather</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gather</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addNumber"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addNumber">[docs]</a>    <span class="k">def</span> <span class="nf">addNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Number</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addDial"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addDial">[docs]</a>    <span class="k">def</span> <span class="nf">addDial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dial</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addRecord"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addRecord">[docs]</a>    <span class="k">def</span> <span class="nf">addRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Record</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="Verb.addConference"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addConference">[docs]</a>    <span class="k">def</span> <span class="nf">addConference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Conference</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        </div>
+<div class="viewcode-block" id="Verb.addSms"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Verb.addSms">[docs]</a>    <span class="k">def</span> <span class="nf">addSms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Sms</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+</div></div>
+<div class="viewcode-block" id="Response"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Twilio response object.</span>
+<span class="sd">    </span>
+<span class="sd">    version: Twilio API version e.g. 2008-08-01</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nestables</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Say&#39;</span><span class="p">,</span> <span class="s">&#39;Play&#39;</span><span class="p">,</span> <span class="s">&#39;Gather&#39;</span><span class="p">,</span> <span class="s">&#39;Record&#39;</span><span class="p">,</span> <span class="s">&#39;Dial&#39;</span><span class="p">,</span>
+            <span class="s">&#39;Redirect&#39;</span><span class="p">,</span> <span class="s">&#39;Pause&#39;</span><span class="p">,</span> <span class="s">&#39;Hangup&#39;</span><span class="p">,</span> <span class="s">&#39;Sms&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Say"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Say">[docs]</a><span class="k">class</span> <span class="nc">Say</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Say text</span>
+<span class="sd">    </span>
+<span class="sd">    text: text to say</span>
+<span class="sd">    voice: MAN or WOMAN</span>
+<span class="sd">    language: language to use</span>
+<span class="sd">    loop: number of times to say this text</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MAN</span> <span class="o">=</span> <span class="s">&#39;man&#39;</span>
+    <span class="n">WOMAN</span> <span class="o">=</span> <span class="s">&#39;woman&#39;</span>
+    
+    <span class="n">ENGLISH</span> <span class="o">=</span> <span class="s">&#39;en&#39;</span>
+    <span class="n">SPANISH</span> <span class="o">=</span> <span class="s">&#39;es&#39;</span>
+    <span class="n">FRENCH</span> <span class="o">=</span> <span class="s">&#39;fr&#39;</span>
+    <span class="n">GERMAN</span> <span class="o">=</span> <span class="s">&#39;de&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="n">voice</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="k">if</span> <span class="n">voice</span> <span class="ow">and</span> <span class="p">(</span><span class="n">voice</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAN</span> <span class="ow">and</span> <span class="n">voice</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WOMAN</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid Say voice parameter, must be &#39;man&#39; or &#39;woman&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">language</span> <span class="ow">and</span> <span class="p">(</span><span class="n">language</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENGLISH</span> <span class="ow">and</span> <span class="n">language</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SPANISH</span> 
+            <span class="ow">and</span> <span class="n">language</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FRENCH</span> <span class="ow">and</span> <span class="n">language</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GERMAN</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid Say language parameter, must be &quot;</span> <span class="o">+</span> \
+                <span class="s">&quot;&#39;en&#39;, &#39;es&#39;, &#39;fr&#39;, or &#39;de&#39;&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Play"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Play">[docs]</a><span class="k">class</span> <span class="nc">Play</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Play audio file at a URL</span>
+<span class="sd">    </span>
+<span class="sd">    url: url of audio file, MIME type on file must be set correctly</span>
+<span class="sd">    loop: number of time to say this text</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">url</span>
+</div>
+<div class="viewcode-block" id="Pause"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Pause">[docs]</a><span class="k">class</span> <span class="nc">Pause</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pause the call</span>
+<span class="sd">    </span>
+<span class="sd">    length: length of pause in seconds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Redirect"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Redirect">[docs]</a><span class="k">class</span> <span class="nc">Redirect</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Redirect call flow to another URL</span>
+<span class="sd">    </span>
+<span class="sd">    url: redirect url</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GET</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+    <span class="n">POST</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GET</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid method parameter, must be &#39;GET&#39; or &#39;POST&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">url</span>
+</div>
+<div class="viewcode-block" id="Hangup"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Hangup">[docs]</a><span class="k">class</span> <span class="nc">Hangup</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Hangup the call</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Gather"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Gather">[docs]</a><span class="k">class</span> <span class="nc">Gather</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gather digits from the caller&#39;s keypad</span>
+<span class="sd">    </span>
+<span class="sd">    action: URL to which the digits entered will be sent</span>
+<span class="sd">    method: submit to &#39;action&#39; url using GET or POST</span>
+<span class="sd">    numDigits: how many digits to gather before returning</span>
+<span class="sd">    timeout: wait for this many seconds before returning</span>
+<span class="sd">    finishOnKey: key that triggers the end of caller input</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GET</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+    <span class="n">POST</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numDigits</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">finishOnKey</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">numDigits</span><span class="o">=</span><span class="n">numDigits</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">finishOnKey</span><span class="o">=</span><span class="n">finishOnKey</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GET</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid method parameter, must be &#39;GET&#39; or &#39;POST&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nestables</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Say&#39;</span><span class="p">,</span> <span class="s">&#39;Play&#39;</span><span class="p">,</span> <span class="s">&#39;Pause&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Number"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Number">[docs]</a><span class="k">class</span> <span class="nc">Number</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specify phone number in a nested Dial element.</span>
+<span class="sd">    </span>
+<span class="sd">    number: phone number to dial</span>
+<span class="sd">    sendDigits: key to press after connecting to the number</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="n">sendDigits</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sendDigits</span><span class="o">=</span><span class="n">sendDigits</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">number</span>
+</div>
+<div class="viewcode-block" id="Sms"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Sms">[docs]</a><span class="k">class</span> <span class="nc">Sms</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Send a Sms Message to a phone number</span>
+<span class="sd">    </span>
+<span class="sd">    to: whom to send message to, defaults based on the direction of the call</span>
+<span class="sd">    sender: whom to send message from.</span>
+<span class="sd">    action: url to request after the message is queued</span>
+<span class="sd">    method: submit to &#39;action&#39; url using GET or POST</span>
+<span class="sd">    statusCallback: url to hit when the message is actually sent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GET</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+    <span class="n">POST</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">statusCallback</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">to</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span>
+            <span class="n">statusCallback</span><span class="o">=</span><span class="n">statusCallback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GET</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid method parameter, must be GET or POST&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">msg</span>
+</div>
+<div class="viewcode-block" id="Conference"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Conference">[docs]</a><span class="k">class</span> <span class="nc">Conference</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specify conference in a nested Dial element.</span>
+<span class="sd">    </span>
+<span class="sd">    name: friendly name of conference </span>
+<span class="sd">    muted: keep this participant muted (bool)</span>
+<span class="sd">    beep: play a beep when this participant enters/leaves (bool)</span>
+<span class="sd">    startConferenceOnEnter: start conf when this participants joins (bool)</span>
+<span class="sd">    endConferenceOnExit: end conf when this participants leaves (bool)</span>
+<span class="sd">    waitUrl: TwiML url that executes before conference starts</span>
+<span class="sd">    waitMethod: HTTP method for waitUrl GET/POST</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GET</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+    <span class="n">POST</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">muted</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">beep</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">startConferenceOnEnter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">endConferenceOnExit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">waitUrl</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">waitMethod</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">muted</span><span class="o">=</span><span class="n">muted</span><span class="p">,</span> <span class="n">beep</span><span class="o">=</span><span class="n">beep</span><span class="p">,</span>
+            <span class="n">startConferenceOnEnter</span><span class="o">=</span><span class="n">startConferenceOnEnter</span><span class="p">,</span>
+            <span class="n">endConferenceOnExit</span><span class="o">=</span><span class="n">endConferenceOnExit</span><span class="p">,</span> <span class="n">waitUrl</span><span class="o">=</span><span class="n">waitUrl</span><span class="p">,</span>
+            <span class="n">waitMethod</span><span class="o">=</span><span class="n">waitMethod</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">waitMethod</span> <span class="ow">and</span> <span class="p">(</span><span class="n">waitMethod</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GET</span> <span class="ow">and</span> <span class="n">waitMethod</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid waitMethod parameter, must be GET or POST&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Dial"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Dial">[docs]</a><span class="k">class</span> <span class="nc">Dial</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dial another phone number and connect it to this call</span>
+<span class="sd">    </span>
+<span class="sd">    action: submit the result of the dial to this URL</span>
+<span class="sd">    method: submit to &#39;action&#39; url using GET or POST</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GET</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+    <span class="n">POST</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nestables</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Number&#39;</span><span class="p">,</span> <span class="s">&#39;Conference&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">number</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">number</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">number</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Number</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">number</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GET</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid method parameter, must be GET or POST&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Record"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Record">[docs]</a><span class="k">class</span> <span class="nc">Record</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Record audio from caller</span>
+<span class="sd">    </span>
+<span class="sd">    action: submit the result of the dial to this URL</span>
+<span class="sd">    method: submit to &#39;action&#39; url using GET or POST</span>
+<span class="sd">    maxLength: maximum number of seconds to record</span>
+<span class="sd">    timeout: seconds of silence before considering the recording complete</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GET</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+    <span class="n">POST</span> <span class="o">=</span> <span class="s">&#39;POST&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxLength</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+        <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">maxLength</span><span class="o">=</span><span class="n">maxLength</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GET</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid method parameter, must be GET or POST&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Reject"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Reject">[docs]</a><span class="k">class</span> <span class="nc">Reject</span><span class="p">(</span><span class="n">Verb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reject an incoming call</span>
+<span class="sd">    </span>
+<span class="sd">    reason: message to play when rejecting a call</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">REJECTED</span> <span class="o">=</span> <span class="s">&#39;rejected&#39;</span>
+    <span class="n">BUSY</span> <span class="o">=</span> <span class="s">&#39;busy&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Verb</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reason</span> <span class="ow">and</span> <span class="p">(</span><span class="n">reason</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">REJECTED</span> <span class="ow">and</span> <span class="n">reason</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BUSY</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TwilioException</span><span class="p">(</span> \
+                <span class="s">&quot;Invalid reason parameter, must be BUSY or REJECTED&quot;</span><span class="p">)</span>
+
+<span class="c"># Twilio Utility function and Request Validation</span>
+<span class="c"># ===========================================================================</span>
+</div>
+<div class="viewcode-block" id="Utils"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Utils">[docs]</a><span class="k">class</span> <span class="nc">Utils</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;initialize a twilio utility object</span>
+<span class="sd">        </span>
+<span class="sd">        id: Twilio account SID/ID</span>
+<span class="sd">        token: Twilio account token</span>
+<span class="sd">        </span>
+<span class="sd">        returns a Twilio util object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span>
+    
+<div class="viewcode-block" id="Utils.validateRequest"><a class="viewcode-back" href="../../modules/lib.html#lib.twilio.Utils.validateRequest">[docs]</a>    <span class="k">def</span> <span class="nf">validateRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">postVars</span><span class="p">,</span> <span class="n">expectedSignature</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;validate a request from twilio</span>
+<span class="sd">        </span>
+<span class="sd">        uri: the full URI that Twilio requested on your server</span>
+<span class="sd">        postVars: post vars that Twilio sent with the request</span>
+<span class="sd">        expectedSignature: signature in HTTP X-Twilio-Signature header</span>
+<span class="sd">        </span>
+<span class="sd">        returns true if the request passes validation, false if not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c"># append the POST variables sorted by key to the uri</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">uri</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">postVars</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">postVars</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">k</span> <span class="o">+</span> <span class="n">v</span>
+        
+        <span class="c"># compute signature and compare signatures</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">encodestring</span><span class="p">(</span><span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">sha1</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span><span class="o">.</span>\
+            <span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">expectedSignature</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

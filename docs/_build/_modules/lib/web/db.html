@@ -1,0 +1,1301 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.db &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.db</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Database API</span>
+<span class="sd">(part of web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s">&quot;UnknownParamstyle&quot;</span><span class="p">,</span> <span class="s">&quot;UnknownDB&quot;</span><span class="p">,</span> <span class="s">&quot;TransactionError&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;sqllist&quot;</span><span class="p">,</span> <span class="s">&quot;sqlors&quot;</span><span class="p">,</span> <span class="s">&quot;reparam&quot;</span><span class="p">,</span> <span class="s">&quot;sqlquote&quot;</span><span class="p">,</span>
+  <span class="s">&quot;SQLQuery&quot;</span><span class="p">,</span> <span class="s">&quot;SQLParam&quot;</span><span class="p">,</span> <span class="s">&quot;sqlparam&quot;</span><span class="p">,</span>
+  <span class="s">&quot;SQLLiteral&quot;</span><span class="p">,</span> <span class="s">&quot;sqlliteral&quot;</span><span class="p">,</span>
+  <span class="s">&quot;database&quot;</span><span class="p">,</span> <span class="s">&#39;DB&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">datetime</span> <span class="o">=</span> <span class="bp">None</span>
+
+<span class="k">try</span><span class="p">:</span> <span class="nb">set</span>
+<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">sets</span> <span class="kn">import</span> <span class="n">Set</span> <span class="k">as</span> <span class="nb">set</span>
+    
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">threadeddict</span><span class="p">,</span> <span class="n">storage</span><span class="p">,</span> <span class="n">iters</span><span class="p">,</span> <span class="n">iterbetter</span><span class="p">,</span> <span class="n">safestr</span><span class="p">,</span> <span class="n">safeunicode</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c"># db module can work independent of web.py</span>
+    <span class="kn">from</span> <span class="nn">webapi</span> <span class="kn">import</span> <span class="n">debug</span><span class="p">,</span> <span class="n">config</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">storage</span><span class="p">()</span>
+
+<div class="viewcode-block" id="UnknownDB"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.UnknownDB">[docs]</a><span class="k">class</span> <span class="nc">UnknownDB</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;raised for unsupported dbms&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="k">class</span> <span class="nc">_ItplError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="ne">ValueError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;unfinished expression in </span><span class="si">%s</span><span class="s"> at char </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TransactionError"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.TransactionError">[docs]</a><span class="k">class</span> <span class="nc">TransactionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="UnknownParamstyle"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.UnknownParamstyle">[docs]</a><span class="k">class</span> <span class="nc">UnknownParamstyle</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    raised for unsupported db paramstyles</span>
+
+<span class="sd">    (currently supported: qmark, numeric, format, pyformat)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="SQLParam"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLParam">[docs]</a><span class="k">class</span> <span class="nc">SQLParam</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameter in SQLQuery.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; q = SQLQuery([&quot;SELECT * FROM test WHERE name=&quot;, SQLParam(&quot;joe&quot;)])</span>
+<span class="sd">        &gt;&gt;&gt; q</span>
+<span class="sd">        &lt;sql: &quot;SELECT * FROM test WHERE name=&#39;joe&#39;&quot;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; q.query()</span>
+<span class="sd">        &#39;SELECT * FROM test WHERE name=%s&#39;</span>
+<span class="sd">        &gt;&gt;&gt; q.values()</span>
+<span class="sd">        [&#39;joe&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;value&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        
+<div class="viewcode-block" id="SQLParam.get_marker"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLParam.get_marker">[docs]</a>    <span class="k">def</span> <span class="nf">get_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paramstyle</span><span class="o">=</span><span class="s">&#39;pyformat&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">paramstyle</span> <span class="o">==</span> <span class="s">&#39;qmark&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;?&#39;</span>
+        <span class="k">elif</span> <span class="n">paramstyle</span> <span class="o">==</span> <span class="s">&#39;numeric&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;:1&#39;</span>
+        <span class="k">elif</span> <span class="n">paramstyle</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">paramstyle</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;pyformat&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+        <span class="k">raise</span> <span class="n">UnknownParamstyle</span><span class="p">,</span> <span class="n">paramstyle</span>
+        </div>
+<div class="viewcode-block" id="SQLParam.sqlquery"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLParam.sqlquery">[docs]</a>    <span class="k">def</span> <span class="nf">sqlquery</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="n">SQLQuery</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+        </div>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqlquery</span><span class="p">()</span> <span class="o">+</span> <span class="n">other</span>
+        
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqlquery</span><span class="p">()</span> 
+            
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;param: </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</div>
+<span class="n">sqlparam</span> <span class="o">=</span>  <span class="n">SQLParam</span>
+
+<div class="viewcode-block" id="SQLQuery"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLQuery">[docs]</a><span class="k">class</span> <span class="nc">SQLQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    You can pass this sort of thing as a clause in any db function.</span>
+<span class="sd">    Otherwise, you can pass a dictionary to the keyword argument `vars`</span>
+<span class="sd">    and the function will call reparam for you.</span>
+
+<span class="sd">    Internally, consists of `items`, which is a list of strings and</span>
+<span class="sd">    SQLParams, which get concatenated to produce the actual query.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;items&quot;</span><span class="p">]</span>
+
+    <span class="c"># tested in sqlquote&#39;s docstring</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;Creates a new SQLQuery.</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; SQLQuery(&quot;x&quot;)</span>
+<span class="sd">            &lt;sql: &#39;x&#39;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; q = SQLQuery([&#39;SELECT * FROM &#39;, &#39;test&#39;, &#39; WHERE x=&#39;, SQLParam(1)])</span>
+<span class="sd">            &gt;&gt;&gt; q</span>
+<span class="sd">            &lt;sql: &#39;SELECT * FROM test WHERE x=1&#39;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; q.query(), q.values()</span>
+<span class="sd">            (&#39;SELECT * FROM test WHERE x=%s&#39;, [1])</span>
+<span class="sd">            &gt;&gt;&gt; SQLQuery(SQLParam(1))</span>
+<span class="sd">            &lt;sql: &#39;1&#39;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">items</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">items</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">SQLParam</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">items</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">]</span>
+            
+        <span class="c"># Take care of SQLLiterals</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">SQLParam</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">SQLLiteral</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">v</span>
+
+<div class="viewcode-block" id="SQLQuery.append"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLQuery.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">other</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">items</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">+</span> <span class="n">items</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">other</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            
+        <span class="k">return</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="n">items</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">basestring</span><span class="p">,</span> <span class="n">SQLParam</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">())</span>
+        
+<div class="viewcode-block" id="SQLQuery.query"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLQuery.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paramstyle</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the query part of the sql query.</span>
+<span class="sd">            &gt;&gt;&gt; q = SQLQuery([&quot;SELECT * FROM test WHERE name=&quot;, SQLParam(&#39;joe&#39;)])</span>
+<span class="sd">            &gt;&gt;&gt; q.query()</span>
+<span class="sd">            &#39;SELECT * FROM test WHERE name=%s&#39;</span>
+<span class="sd">            &gt;&gt;&gt; q.query(paramstyle=&#39;qmark&#39;)</span>
+<span class="sd">            &#39;SELECT * FROM test WHERE name=?&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">SQLParam</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_marker</span><span class="p">(</span><span class="n">paramstyle</span><span class="p">)</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">safestr</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">safestr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="c"># automatically escape % characters in the query</span>
+                <span class="c"># For backward compatability, ignore escaping when the query looks already escaped</span>
+                <span class="k">if</span> <span class="n">paramstyle</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;pyformat&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="s">&#39;%&#39;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> <span class="s">&#39;</span><span class="si">%%</span><span class="s">&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%%</span><span class="s">&#39;</span><span class="p">)</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="SQLQuery.values"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLQuery.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the values of the parameters used in the sql query.</span>
+<span class="sd">            &gt;&gt;&gt; q = SQLQuery([&quot;SELECT * FROM test WHERE name=&quot;, SQLParam(&#39;joe&#39;)])</span>
+<span class="sd">            &gt;&gt;&gt; q.values()</span>
+<span class="sd">            [&#39;joe&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">SQLParam</span><span class="p">)]</span>
+        </div>
+<div class="viewcode-block" id="SQLQuery.join"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLQuery.join">[docs]</a>    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Joins multiple queries.</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; SQLQuery.join([&#39;a&#39;, &#39;b&#39;], &#39;, &#39;)</span>
+<span class="sd">        &lt;sql: &#39;a, b&#39;&gt;</span>
+
+<span class="sd">        Optinally, prefix and suffix arguments can be provided.</span>
+
+<span class="sd">        &gt;&gt;&gt; SQLQuery.join([&#39;a&#39;, &#39;b&#39;], &#39;, &#39;, prefix=&#39;(&#39;, suffix=&#39;)&#39;)</span>
+<span class="sd">        &lt;sql: &#39;(a, b)&#39;&gt;</span>
+
+<span class="sd">        If target argument is provided, the items are appended to target instead of creating a new SQLQuery.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="p">()</span>
+
+        <span class="n">target_items</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">items</span>
+
+        <span class="k">if</span> <span class="n">prefix</span><span class="p">:</span>
+            <span class="n">target_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">target_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+                <span class="n">target_items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">target_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">suffix</span><span class="p">:</span>
+            <span class="n">target_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">target</span>
+    </div>
+    <span class="n">join</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">join</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">()</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">sqlify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>            
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">safestr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_str</span><span class="p">())</span>
+        
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">safeunicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_str</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;sql: </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="SQLLiteral"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.SQLLiteral">[docs]</a><span class="k">class</span> <span class="nc">SQLLiteral</span><span class="p">:</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Protects a string from `sqlquote`.</span>
+
+<span class="sd">        &gt;&gt;&gt; sqlquote(&#39;NOW()&#39;)</span>
+<span class="sd">        &lt;sql: &quot;&#39;NOW()&#39;&quot;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sqlquote(SQLLiteral(&#39;NOW()&#39;))</span>
+<span class="sd">        &lt;sql: &#39;NOW()&#39;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
+</div>
+<span class="n">sqlliteral</span> <span class="o">=</span> <span class="n">SQLLiteral</span>
+
+<span class="k">def</span> <span class="nf">_sqllist</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; _sqllist([1, 2, 3])</span>
+<span class="sd">        &lt;sql: &#39;(1, 2, 3)&#39;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;(&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sqlparam</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+<div class="viewcode-block" id="reparam"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.reparam">[docs]</a><span class="k">def</span> <span class="nf">reparam</span><span class="p">(</span><span class="n">string_</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes a string and a dictionary and interpolates the string</span>
+<span class="sd">    using values from the dictionary. Returns an `SQLQuery` for the result.</span>
+
+<span class="sd">        &gt;&gt;&gt; reparam(&quot;s = $s&quot;, dict(s=True))</span>
+<span class="sd">        &lt;sql: &quot;s = &#39;t&#39;&quot;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; reparam(&quot;s IN $s&quot;, dict(s=[1, 2]))</span>
+<span class="sd">        &lt;sql: &#39;s IN (1, 2)&#39;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dictionary</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c"># eval mucks with it</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">live</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">_interpolate</span><span class="p">(</span><span class="n">string_</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">live</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sqlquote</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">sqlify</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    converts `obj` to its proper SQL version</span>
+
+<span class="sd">        &gt;&gt;&gt; sqlify(None)</span>
+<span class="sd">        &#39;NULL&#39;</span>
+<span class="sd">        &gt;&gt;&gt; sqlify(True)</span>
+<span class="sd">        &quot;&#39;t&#39;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; sqlify(3)</span>
+<span class="sd">        &#39;3&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># because `1 == True and hash(1) == hash(True)`</span>
+    <span class="c"># we have to do this the hard way...</span>
+
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;NULL&#39;</span>
+    <span class="k">elif</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;&#39;t&#39;&quot;</span>
+    <span class="k">elif</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;&#39;f&#39;&quot;</span>
+    <span class="k">elif</span> <span class="n">datetime</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+<div class="viewcode-block" id="sqllist"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.sqllist">[docs]</a><span class="k">def</span> <span class="nf">sqllist</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the arguments for use in something like a WHERE clause.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; sqllist([&#39;a&#39;, &#39;b&#39;])</span>
+<span class="sd">        &#39;a, b&#39;</span>
+<span class="sd">        &gt;&gt;&gt; sqllist(&#39;a&#39;)</span>
+<span class="sd">        &#39;a&#39;</span>
+<span class="sd">        &gt;&gt;&gt; sqllist(u&#39;abc&#39;)</span>
+<span class="sd">        u&#39;abc&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="n">lst</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="sqlors"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.sqlors">[docs]</a><span class="k">def</span> <span class="nf">sqlors</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    `left is a SQL clause like `tablename.arg = ` </span>
+<span class="sd">    and `lst` is a list of values. Returns a reparam-style</span>
+<span class="sd">    pair featuring the SQL that ORs together the clause</span>
+<span class="sd">    for each item in the lst.</span>
+
+<span class="sd">        &gt;&gt;&gt; sqlors(&#39;foo = &#39;, [])</span>
+<span class="sd">        &lt;sql: &#39;1=2&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sqlors(&#39;foo = &#39;, [1])</span>
+<span class="sd">        &lt;sql: &#39;foo = 1&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sqlors(&#39;foo = &#39;, 1)</span>
+<span class="sd">        &lt;sql: &#39;foo = 1&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sqlors(&#39;foo = &#39;, [1,2,3])</span>
+<span class="sd">        &lt;sql: &#39;(foo = 1 OR foo = 2 OR foo = 3 OR 1=2)&#39;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">iters</span><span class="p">):</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+        <span class="n">ln</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ln</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="s">&quot;1=2&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ln</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">iters</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SQLQuery</span><span class="p">([</span><span class="s">&#39;(&#39;</span><span class="p">]</span> <span class="o">+</span> 
+          <span class="nb">sum</span><span class="p">([[</span><span class="n">left</span><span class="p">,</span> <span class="n">sqlparam</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&#39; OR &#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">],</span> <span class="p">[])</span> <span class="o">+</span>
+          <span class="p">[</span><span class="s">&#39;1=2)&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">left</span> <span class="o">+</span> <span class="n">sqlparam</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+        </div>
+<span class="k">def</span> <span class="nf">sqlwhere</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">grouping</span><span class="o">=</span><span class="s">&#39; AND &#39;</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a `dictionary` to an SQL WHERE clause `SQLQuery`.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; sqlwhere({&#39;cust_id&#39;: 2, &#39;order_id&#39;:3})</span>
+<span class="sd">        &lt;sql: &#39;order_id = 3 AND cust_id = 2&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sqlwhere({&#39;cust_id&#39;: 2, &#39;order_id&#39;:3}, grouping=&#39;, &#39;)</span>
+<span class="sd">        &lt;sql: &#39;order_id = 3, cust_id = 2&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sqlwhere({&#39;a&#39;: &#39;a&#39;, &#39;b&#39;: &#39;b&#39;}).query()</span>
+<span class="sd">        &#39;a = %s AND b = %s&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span> <span class="o">+</span> <span class="s">&#39; = &#39;</span> <span class="o">+</span> <span class="n">sqlparam</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">()],</span> <span class="n">grouping</span><span class="p">)</span>
+
+<div class="viewcode-block" id="sqlquote"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.sqlquote">[docs]</a><span class="k">def</span> <span class="nf">sqlquote</span><span class="p">(</span><span class="n">a</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensures `a` is quoted properly for use in a SQL query.</span>
+
+<span class="sd">        &gt;&gt;&gt; &#39;WHERE x = &#39; + sqlquote(True) + &#39; AND y = &#39; + sqlquote(3)</span>
+<span class="sd">        &lt;sql: &quot;WHERE x = &#39;t&#39; AND y = 3&quot;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; &#39;WHERE x = &#39; + sqlquote(True) + &#39; AND y IN &#39; + sqlquote([2, 3])</span>
+<span class="sd">        &lt;sql: &quot;WHERE x = &#39;t&#39; AND y IN (2, 3)&quot;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_sqllist</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sqlparam</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">sqlquery</span><span class="p">()</span>
+</div>
+<span class="k">class</span> <span class="nc">Transaction</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Database transaction.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transaction_count</span> <span class="o">=</span> <span class="n">transaction_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">transaction_engine</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;Transaction Engine used in top level transactions.&quot;&quot;&quot;</span>
+            <span class="k">def</span> <span class="nf">do_transact</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">unload</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">do_commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">do_rollback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+        <span class="k">class</span> <span class="nc">subtransaction_engine</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;Transaction Engine used in sub transactions.&quot;&quot;&quot;</span>
+            <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
+                <span class="n">db_cursor</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="n">q</span> <span class="o">%</span> <span class="n">transaction_count</span><span class="p">))</span>
+
+            <span class="k">def</span> <span class="nf">do_transact</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&#39;SAVEPOINT webpy_sp_</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">do_commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&#39;RELEASE SAVEPOINT webpy_sp_</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">do_rollback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&#39;ROLLBACK TO SAVEPOINT webpy_sp_</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">dummy_engine</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;Transaction Engine used instead of subtransaction_engine </span>
+<span class="sd">            when sub transactions are not supported.&quot;&quot;&quot;</span>
+            <span class="n">do_transact</span> <span class="o">=</span> <span class="n">do_commit</span> <span class="o">=</span> <span class="n">do_rollback</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_count</span><span class="p">:</span>
+            <span class="c"># nested transactions are not supported in some databases</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ignore_nested_transactions&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">dummy_engine</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">subtransaction_engine</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">transaction_engine</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">do_transact</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exctype</span><span class="p">,</span> <span class="n">excvalue</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">exctype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_count</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">do_commit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_count</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">rollback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_count</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">do_rollback</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_count</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DB"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB">[docs]</a><span class="k">class</span> <span class="nc">DB</span><span class="p">:</span> 
+    <span class="sd">&quot;&quot;&quot;Database&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_module</span><span class="p">,</span> <span class="n">keywords</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># some DB implementaions take optional paramater `driver` to use a specific driver modue</span>
+        <span class="c"># but it should not be passed to connect</span>
+        <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;driver&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_module</span> <span class="o">=</span> <span class="n">db_module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span> <span class="o">=</span> <span class="n">keywords</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span> <span class="o">=</span> <span class="n">threadeddict</span><span class="p">()</span>
+        <span class="c"># flag to enable/disable printing queries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">printing</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;debug_sql&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supports_multiple_insert</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">DBUtils</span>
+            <span class="c"># enable pooling if DBUtils module is available.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span> <span class="o">=</span> <span class="bp">False</span>
+            
+        <span class="c"># Pooling can be disabled by passing pooling=False in the keywords.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;pooling&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span>
+            
+    <span class="k">def</span> <span class="nf">_getctx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;db&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_getctx</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_load_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">dbq_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># stack of transactions</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect_with_pooling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">db_execute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="s">&#39;commit&#39;</span><span class="p">):</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="s">&#39;rollback&#39;</span><span class="p">):</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">rollback</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">None</span>
+            
+        <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="n">unload</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="c"># do db commit and release the connection if pooling is enabled.            </span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">unload</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unload_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">)</span>
+                
+        <span class="k">def</span> <span class="nf">rollback</span><span class="p">():</span>
+            <span class="c"># do db rollback and release the connection if pooling is enabled.</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pooling</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unload_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">)</span>
+                
+        <span class="n">ctx</span><span class="o">.</span><span class="n">commit</span> <span class="o">=</span> <span class="n">commit</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">rollback</span> <span class="o">=</span> <span class="n">rollback</span>
+            
+    <span class="k">def</span> <span class="nf">_unload_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">ctx</span><span class="o">.</span><span class="n">db</span>
+            
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_module</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_connect_with_pooling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">get_pooled_db</span><span class="p">():</span>
+            <span class="kn">from</span> <span class="nn">DBUtils</span> <span class="kn">import</span> <span class="n">PooledDB</span>
+
+            <span class="c"># In DBUtils 0.9.3, `dbapi` argument is renamed as `creator`</span>
+            <span class="c"># see Bug#122112</span>
+            
+            <span class="k">if</span> <span class="n">PooledDB</span><span class="o">.</span><span class="n">__version__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="s">&#39;0.9.3&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">PooledDB</span><span class="o">.</span><span class="n">PooledDB</span><span class="p">(</span><span class="n">dbapi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_module</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">PooledDB</span><span class="o">.</span><span class="n">PooledDB</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_module</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_pooleddb&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pooleddb</span> <span class="o">=</span> <span class="n">get_pooled_db</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pooleddb</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">_db_cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_param_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns parameter marker based on paramstyle attribute if this database.&quot;&quot;&quot;</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;paramstyle&#39;</span><span class="p">,</span> <span class="s">&#39;pyformat&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">style</span> <span class="o">==</span> <span class="s">&#39;qmark&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;?&#39;</span>
+        <span class="k">elif</span> <span class="n">style</span> <span class="o">==</span> <span class="s">&#39;numeric&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;:1&#39;</span>
+        <span class="k">elif</span> <span class="n">style</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;pyformat&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+        <span class="k">raise</span> <span class="n">UnknownParamstyle</span><span class="p">,</span> <span class="n">style</span>
+
+    <span class="k">def</span> <span class="nf">_db_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="n">sql_query</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;executes an sql query&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">dbq_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">paramstyle</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;paramstyle&#39;</span><span class="p">,</span> <span class="s">&#39;pyformat&#39;</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql_query</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">paramstyle</span><span class="p">),</span> <span class="n">sql_query</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">printing</span><span class="p">:</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">debug</span><span class="p">,</span> <span class="s">&#39;ERR:&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sql_query</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">printing</span><span class="p">:</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">debug</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">): </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">dbq_count</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sql_query</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+    
+    <span class="k">def</span> <span class="nf">_where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="nb">vars</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">)):</span>
+            <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;id = &quot;</span> <span class="o">+</span> <span class="n">sqlparam</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
+        <span class="c">#@@@ for backward-compatibility</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">where</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">where</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="n">where</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">where</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">where</span> <span class="o">=</span> <span class="n">reparam</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">where</span>
+    
+<div class="viewcode-block" id="DB.query"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql_query</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">processed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute SQL query `sql_query` using dictionary `vars` to interpolate it.</span>
+<span class="sd">        If `processed=True`, `vars` is a `reparam`-style list to use </span>
+<span class="sd">        instead of interpolating.</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; db.query(&quot;SELECT * FROM foo&quot;, _test=True)</span>
+<span class="sd">            &lt;sql: &#39;SELECT * FROM foo&#39;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; db.query(&quot;SELECT * FROM foo WHERE x = $x&quot;, vars=dict(x=&#39;f&#39;), _test=True)</span>
+<span class="sd">            &lt;sql: &quot;SELECT * FROM foo WHERE x = &#39;f&#39;&quot;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; db.query(&quot;SELECT * FROM foo WHERE x = &quot; + sqlquote(&#39;f&#39;), _test=True)</span>
+<span class="sd">            &lt;sql: &quot;SELECT * FROM foo WHERE x = &#39;f&#39;&quot;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">processed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql_query</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+            <span class="n">sql_query</span> <span class="o">=</span> <span class="n">reparam</span><span class="p">(</span><span class="n">sql_query</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">_test</span><span class="p">:</span> <span class="k">return</span> <span class="n">sql_query</span>
+        
+        <span class="n">db_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_cursor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">sql_query</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">description</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
+            <span class="k">def</span> <span class="nf">iterwrapper</span><span class="p">():</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+                <span class="k">while</span> <span class="n">row</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">storage</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">row</span><span class="p">)))</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">iterbetter</span><span class="p">(</span><span class="n">iterwrapper</span><span class="p">())</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">__len__</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">db_cursor</span><span class="o">.</span><span class="n">rowcount</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">storage</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">x</span><span class="p">)))</span> \
+                               <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">rowcount</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">out</span>
+    </div>
+<div class="viewcode-block" id="DB.select"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+               <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects `what` from `tables` with clauses `where`, `order`, </span>
+<span class="sd">        `group`, `limit`, and `offset`. Uses vars to interpolate. </span>
+<span class="sd">        Otherwise, each clause can be a SQLQuery.</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; db.select(&#39;foo&#39;, _test=True)</span>
+<span class="sd">            &lt;sql: &#39;SELECT * FROM foo&#39;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; db.select([&#39;foo&#39;, &#39;bar&#39;], where=&quot;foo.bar_id = bar.id&quot;, limit=5, _test=True)</span>
+<span class="sd">            &lt;sql: &#39;SELECT * FROM foo, bar WHERE foo.bar_id = bar.id LIMIT 5&#39;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">sql_clauses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sql_clauses</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="n">clauses</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_clause</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span> <span class="k">for</span> <span class="n">sql</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">sql_clauses</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">]</span>
+        <span class="n">qout</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clauses</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_test</span><span class="p">:</span> <span class="k">return</span> <span class="n">qout</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">qout</span><span class="p">,</span> <span class="n">processed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="DB.where"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.where">[docs]</a>    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+              <span class="n">offset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects from `table` where keys are equal to values in `kwargs`.</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; db.where(&#39;foo&#39;, bar_id=3, _test=True)</span>
+<span class="sd">            &lt;sql: &#39;SELECT * FROM foo WHERE bar_id = 3&#39;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; db.where(&#39;foo&#39;, source=2, crust=&#39;dewey&#39;, _test=True)</span>
+<span class="sd">            &lt;sql: &quot;SELECT * FROM foo WHERE source = 2 AND crust = &#39;dewey&#39;&quot;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">where</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s">&#39; = &#39;</span> <span class="o">+</span> <span class="n">sqlquote</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="n">what</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> 
+               <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="n">_test</span><span class="p">,</span> 
+               <span class="n">where</span><span class="o">=</span><span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="s">&#39; AND &#39;</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="DB.sql_clauses"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.sql_clauses">[docs]</a>    <span class="k">def</span> <span class="nf">sql_clauses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s">&#39;SELECT&#39;</span><span class="p">,</span> <span class="n">what</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;FROM&#39;</span><span class="p">,</span> <span class="n">sqllist</span><span class="p">(</span><span class="n">tables</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s">&#39;WHERE&#39;</span><span class="p">,</span> <span class="n">where</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;GROUP BY&#39;</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;ORDER BY&#39;</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;LIMIT&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;OFFSET&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="DB.gen_clause"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.gen_clause">[docs]</a>    <span class="k">def</span> <span class="nf">gen_clause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="nb">vars</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">sql</span> <span class="o">==</span> <span class="s">&#39;WHERE&#39;</span><span class="p">:</span>
+                <span class="n">nout</span> <span class="o">=</span> <span class="s">&#39;id = &#39;</span> <span class="o">+</span> <span class="n">sqlquote</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nout</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="c">#@@@</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">val</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c"># backwards-compatibility</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">):</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="n">reparam</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">xjoin</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">and</span> <span class="n">b</span><span class="p">:</span> <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">b</span>
+            <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">a</span> <span class="ow">or</span> <span class="n">b</span>
+
+        <span class="k">return</span> <span class="n">xjoin</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">nout</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DB.insert"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">values</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts `values` into `tablename`. Returns current sequence ID.</span>
+<span class="sd">        Set `seqname` to the ID if it&#39;s not the default, or to `False`</span>
+<span class="sd">        if there isn&#39;t one.</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; q = db.insert(&#39;foo&#39;, name=&#39;bob&#39;, age=2, created=SQLLiteral(&#39;NOW()&#39;), _test=True)</span>
+<span class="sd">            &gt;&gt;&gt; q</span>
+<span class="sd">            &lt;sql: &quot;INSERT INTO foo (age, name, created) VALUES (2, &#39;bob&#39;, NOW())&quot;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; q.query()</span>
+<span class="sd">            &#39;INSERT INTO foo (age, name, created) VALUES (%s, %s, NOW())&#39;</span>
+<span class="sd">            &gt;&gt;&gt; q.values()</span>
+<span class="sd">            [2, &#39;bob&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">q</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="s">&quot;(&quot;</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span>
+        
+        <span class="k">if</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">_keys</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="s">&#39;, &#39;</span><span class="p">)</span>
+            <span class="n">_values</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">sqlparam</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="s">&#39;, &#39;</span><span class="p">)</span>
+            <span class="n">sql_query</span> <span class="o">=</span> <span class="s">&quot;INSERT INTO </span><span class="si">%s</span><span class="s"> &quot;</span> <span class="o">%</span> <span class="n">tablename</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">_keys</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; VALUES &#39;</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">_values</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sql_query</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_insert_default_values_query</span><span class="p">(</span><span class="n">tablename</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">_test</span><span class="p">:</span> <span class="k">return</span> <span class="n">sql_query</span>
+        
+        <span class="n">db_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_cursor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">seqname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span> 
+            <span class="n">sql_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_insert_query</span><span class="p">(</span><span class="n">sql_query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql_query</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="c"># for some databases, a separate query has to be made to find </span>
+            <span class="c"># the id of the inserted row.</span>
+            <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span> <span class="o">=</span> <span class="n">sql_query</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">q1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">q2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">sql_query</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">out</span> <span class="o">=</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> 
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">out</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_get_insert_default_values_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;INSERT INTO </span><span class="si">%s</span><span class="s"> DEFAULT VALUES&quot;</span> <span class="o">%</span> <span class="n">table</span>
+
+<div class="viewcode-block" id="DB.multiple_insert"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.multiple_insert">[docs]</a>    <span class="k">def</span> <span class="nf">multiple_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">seqname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts multiple rows into `tablename`. The `values` must be a list of dictioanries, </span>
+<span class="sd">        one for each row to be inserted, each with the same set of keys.</span>
+<span class="sd">        Returns the list of ids of the inserted rows.        </span>
+<span class="sd">        Set `seqname` to the ID if it&#39;s not the default, or to `False`</span>
+<span class="sd">        if there isn&#39;t one.</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; db.supports_multiple_insert = True</span>
+<span class="sd">            &gt;&gt;&gt; values = [{&quot;name&quot;: &quot;foo&quot;, &quot;email&quot;: &quot;foo@example.com&quot;}, {&quot;name&quot;: &quot;bar&quot;, &quot;email&quot;: &quot;bar@example.com&quot;}]</span>
+<span class="sd">            &gt;&gt;&gt; db.multiple_insert(&#39;person&#39;, values=values, _test=True)</span>
+<span class="sd">            &lt;sql: &quot;INSERT INTO person (name, email) VALUES (&#39;foo&#39;, &#39;foo@example.com&#39;), (&#39;bar&#39;, &#39;bar@example.com&#39;)&quot;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+            
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_multiple_insert</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="o">=</span><span class="n">seqname</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="n">_test</span><span class="p">,</span> <span class="o">**</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">seqname</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">out</span>
+                
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="c">#@@ make sure all keys are valid</span>
+
+        <span class="c"># make sure all rows have same keys.</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">!=</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;Bad data&#39;</span>
+
+        <span class="n">sql_query</span> <span class="o">=</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="s">&#39;INSERT INTO </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">) VALUES &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tablename</span><span class="p">,</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keys</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sql_query</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;, &quot;</span><span class="p">)</span>
+            <span class="n">SQLQuery</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">SQLParam</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">sql_query</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s">&quot;(&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">&quot;)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_test</span><span class="p">:</span> <span class="k">return</span> <span class="n">sql_query</span>
+
+        <span class="n">db_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_cursor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">seqname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span> 
+            <span class="n">sql_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_insert_query</span><span class="p">(</span><span class="n">sql_query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql_query</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="c"># for some databases, a separate query has to be made to find </span>
+            <span class="c"># the id of the inserted row.</span>
+            <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span> <span class="o">=</span> <span class="n">sql_query</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">q1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">q2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">sql_query</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">out</span> <span class="o">=</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>        
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> 
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    </div>
+<div class="viewcode-block" id="DB.update"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">values</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update `tables` with clause `where` (interpolated using `vars`)</span>
+<span class="sd">        and setting `values`.</span>
+
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; name = &#39;Joseph&#39;</span>
+<span class="sd">            &gt;&gt;&gt; q = db.update(&#39;foo&#39;, where=&#39;name = $name&#39;, name=&#39;bob&#39;, age=2,</span>
+<span class="sd">            ...     created=SQLLiteral(&#39;NOW()&#39;), vars=locals(), _test=True)</span>
+<span class="sd">            &gt;&gt;&gt; q</span>
+<span class="sd">            &lt;sql: &quot;UPDATE foo SET age = 2, name = &#39;bob&#39;, created = NOW() WHERE name = &#39;Joseph&#39;&quot;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; q.query()</span>
+<span class="sd">            &#39;UPDATE foo SET age = %s, name = %s, created = NOW() WHERE name = %s&#39;</span>
+<span class="sd">            &gt;&gt;&gt; q.values()</span>
+<span class="sd">            [2, &#39;bob&#39;, &#39;Joseph&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_where</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="s">&quot;UPDATE &quot;</span> <span class="o">+</span> <span class="n">sqllist</span><span class="p">(</span><span class="n">tables</span><span class="p">)</span> <span class="o">+</span> 
+          <span class="s">&quot; SET &quot;</span> <span class="o">+</span> <span class="n">sqlwhere</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="s">&#39;, &#39;</span><span class="p">)</span> <span class="o">+</span> 
+          <span class="s">&quot; WHERE &quot;</span> <span class="o">+</span> <span class="n">where</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_test</span><span class="p">:</span> <span class="k">return</span> <span class="n">query</span>
+        
+        <span class="n">db_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_cursor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">rowcount</span>
+    </div>
+<div class="viewcode-block" id="DB.delete"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes from `table` with clauses `where` and `using`.</span>
+
+<span class="sd">            &gt;&gt;&gt; db = DB(None, {})</span>
+<span class="sd">            &gt;&gt;&gt; name = &#39;Joe&#39;</span>
+<span class="sd">            &gt;&gt;&gt; db.delete(&#39;foo&#39;, where=&#39;name = $name&#39;, vars=locals(), _test=True)</span>
+<span class="sd">            &lt;sql: &quot;DELETE FROM foo WHERE name = &#39;Joe&#39;&quot;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_where</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="s">&#39;DELETE FROM &#39;</span> <span class="o">+</span> <span class="n">table</span>
+        <span class="k">if</span> <span class="n">where</span><span class="p">:</span> <span class="n">q</span> <span class="o">+=</span> <span class="s">&#39; WHERE &#39;</span> <span class="o">+</span> <span class="n">where</span>
+        <span class="k">if</span> <span class="n">using</span><span class="p">:</span> <span class="n">q</span> <span class="o">+=</span> <span class="s">&#39; USING &#39;</span> <span class="o">+</span> <span class="n">sqllist</span><span class="p">(</span><span class="n">using</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_test</span><span class="p">:</span> <span class="k">return</span> <span class="n">q</span>
+
+        <span class="n">db_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_cursor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_db_execute</span><span class="p">(</span><span class="n">db_cursor</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">transactions</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">db_cursor</span><span class="o">.</span><span class="n">rowcount</span>
+</div>
+    <span class="k">def</span> <span class="nf">_process_insert_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">query</span>
+
+<div class="viewcode-block" id="DB.transaction"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.DB.transaction">[docs]</a>    <span class="k">def</span> <span class="nf">transaction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;Start a transaction.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Transaction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
+    </div></div>
+<span class="k">class</span> <span class="nc">PostgresDB</span><span class="p">(</span><span class="n">DB</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;Postgres driver.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;pw&#39;</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;pw&#39;</span><span class="p">)</span>
+            
+        <span class="n">db_module</span> <span class="o">=</span> <span class="n">import_driver</span><span class="p">([</span><span class="s">&quot;psycopg2&quot;</span><span class="p">,</span> <span class="s">&quot;psycopg&quot;</span><span class="p">,</span> <span class="s">&quot;pgdb&quot;</span><span class="p">],</span> <span class="n">preferred</span><span class="o">=</span><span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;driver&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">db_module</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;psycopg2&quot;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">psycopg2.extensions</span>
+            <span class="n">psycopg2</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">register_type</span><span class="p">(</span><span class="n">psycopg2</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">)</span>
+
+        <span class="c"># if db is not provided postgres driver will take it from PGDATABASE environment variable</span>
+        <span class="k">if</span> <span class="s">&#39;db&#39;</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;database&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;db&#39;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbname</span> <span class="o">=</span> <span class="s">&quot;postgres&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="n">db_module</span><span class="o">.</span><span class="n">paramstyle</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_module</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supports_multiple_insert</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequences</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">_process_insert_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">seqname</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># when seqname is not provided guess the seqname and make sure it exists</span>
+            <span class="n">seqname</span> <span class="o">=</span> <span class="n">tablename</span> <span class="o">+</span> <span class="s">&quot;_id_seq&quot;</span>
+            <span class="k">if</span> <span class="n">seqname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_sequences</span><span class="p">():</span>
+                <span class="n">seqname</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="k">if</span> <span class="n">seqname</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">+=</span> <span class="s">&quot;; SELECT currval(&#39;</span><span class="si">%s</span><span class="s">&#39;)&quot;</span> <span class="o">%</span> <span class="n">seqname</span>
+            
+        <span class="k">return</span> <span class="n">query</span>
+    
+    <span class="k">def</span> <span class="nf">_get_all_sequences</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query postgres to find names of all sequences used in this database.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequences</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="s">&quot;SELECT c.relname FROM pg_class c WHERE c.relkind = &#39;S&#39;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sequences</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">relname</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">q</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequences</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="p">):</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">set_client_encoding</span><span class="p">(</span><span class="s">&#39;UTF8&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c"># fallback for pgdb driver</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;set client_encoding to &#39;UTF-8&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conn</span>
+        
+    <span class="k">def</span> <span class="nf">_connect_with_pooling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="p">):</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">_connect_with_pooling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">_con</span><span class="o">.</span><span class="n">_con</span><span class="o">.</span><span class="n">set_client_encoding</span><span class="p">(</span><span class="s">&#39;UTF8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conn</span>
+
+<span class="k">class</span> <span class="nc">MySQLDB</span><span class="p">(</span><span class="n">DB</span><span class="p">):</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">MySQLdb</span> <span class="kn">as</span> <span class="nn">db</span>
+        <span class="k">if</span> <span class="s">&#39;pw&#39;</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;pw&#39;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;pw&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s">&#39;charset&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;charset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;utf8&#39;</span>
+        <span class="k">elif</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;charset&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;charset&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="s">&#39;pyformat&#39;</span> <span class="c"># it&#39;s both, like psycopg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbname</span> <span class="o">=</span> <span class="s">&quot;mysql&quot;</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supports_multiple_insert</span> <span class="o">=</span> <span class="bp">True</span>
+        
+    <span class="k">def</span> <span class="nf">_process_insert_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">query</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="s">&#39;SELECT last_insert_id();&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_insert_default_values_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;INSERT INTO </span><span class="si">%s</span><span class="s"> () VALUES()&quot;</span> <span class="o">%</span> <span class="n">table</span>
+
+<span class="k">def</span> <span class="nf">import_driver</span><span class="p">(</span><span class="n">drivers</span><span class="p">,</span> <span class="n">preferred</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import the first available driver or preferred driver.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">preferred</span><span class="p">:</span>
+        <span class="n">drivers</span> <span class="o">=</span> <span class="p">[</span><span class="n">preferred</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">drivers</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;Unable to import &quot;</span> <span class="o">+</span> <span class="s">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">drivers</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">SqliteDB</span><span class="p">(</span><span class="n">DB</span><span class="p">):</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">import_driver</span><span class="p">([</span><span class="s">&quot;sqlite3&quot;</span><span class="p">,</span> <span class="s">&quot;pysqlite2.dbapi2&quot;</span><span class="p">,</span> <span class="s">&quot;sqlite&quot;</span><span class="p">],</span> <span class="n">preferred</span><span class="o">=</span><span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;driver&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">db</span><span class="o">.</span><span class="n">__name__</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;sqlite3&quot;</span><span class="p">,</span> <span class="s">&quot;pysqlite2.dbapi2&quot;</span><span class="p">]:</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="s">&#39;qmark&#39;</span>
+
+        <span class="c"># sqlite driver doesn&#39;t create datatime objects for timestamp columns unless `detect_types` option is passed.</span>
+        <span class="c"># It seems to be supported in sqlite3 and pysqlite2 drivers, not surte about sqlite.</span>
+        <span class="n">keywords</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;detect_types&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">PARSE_DECLTYPES</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">paramstyle</span>
+        <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;database&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;db&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbname</span> <span class="o">=</span> <span class="s">&quot;sqlite&quot;</span>        
+        <span class="n">DB</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_insert_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">query</span><span class="p">,</span> <span class="n">SQLQuery</span><span class="p">(</span><span class="s">&#39;SELECT last_insert_rowid();&#39;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">iterbetter</span><span class="p">):</span>
+            <span class="k">del</span> <span class="n">out</span><span class="o">.</span><span class="n">__len__</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+<span class="k">class</span> <span class="nc">FirebirdDB</span><span class="p">(</span><span class="n">DB</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Firebird Database.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">kinterbasdb</span> <span class="kn">as</span> <span class="nn">db</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">db</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="s">&#39;pw&#39;</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;pw&#39;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;pw&#39;</span><span class="p">]</span>
+        <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;database&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;db&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;db&#39;</span><span class="p">]</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_test</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="c"># firebird doesn&#39;t support using clause</span>
+        <span class="n">using</span><span class="o">=</span><span class="bp">None</span>
+        <span class="k">return</span> <span class="n">DB</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">using</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">_test</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sql_clauses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s">&#39;SELECT&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;FIRST&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;SKIP&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">what</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;FROM&#39;</span><span class="p">,</span> <span class="n">sqllist</span><span class="p">(</span><span class="n">tables</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s">&#39;WHERE&#39;</span><span class="p">,</span> <span class="n">where</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;GROUP BY&#39;</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;ORDER BY&#39;</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">MSSQLDB</span><span class="p">(</span><span class="n">DB</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pymssql</span> <span class="kn">as</span> <span class="nn">db</span>    
+        <span class="k">if</span> <span class="s">&#39;pw&#39;</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;pw&#39;</span><span class="p">)</span>
+        <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;database&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;db&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbname</span> <span class="o">=</span> <span class="s">&quot;mssql&quot;</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sql_clauses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s">&#39;SELECT&#39;</span><span class="p">,</span> <span class="n">what</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;FROM&#39;</span><span class="p">,</span> <span class="n">sqllist</span><span class="p">(</span><span class="n">tables</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s">&#39;WHERE&#39;</span><span class="p">,</span> <span class="n">where</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;GROUP BY&#39;</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;ORDER BY&#39;</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;OFFSET&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+            
+    <span class="k">def</span> <span class="nf">_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test LIMIT.</span>
+
+<span class="sd">            Fake presence of pymssql module for running tests.</span>
+<span class="sd">            &gt;&gt;&gt; import sys</span>
+<span class="sd">            &gt;&gt;&gt; sys.modules[&#39;pymssql&#39;] = sys.modules[&#39;sys&#39;]</span>
+<span class="sd">            </span>
+<span class="sd">            MSSQL has TOP clause instead of LIMIT clause.</span>
+<span class="sd">            &gt;&gt;&gt; db = MSSQLDB(db=&#39;test&#39;, user=&#39;joe&#39;, pw=&#39;secret&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; db.select(&#39;foo&#39;, limit=4, _test=True)</span>
+<span class="sd">            &lt;sql: &#39;SELECT * TOP 4 FROM foo&#39;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">OracleDB</span><span class="p">(</span><span class="n">DB</span><span class="p">):</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span> 
+        <span class="kn">import</span> <span class="nn">cx_Oracle</span> <span class="kn">as</span> <span class="nn">db</span> 
+        <span class="k">if</span> <span class="s">&#39;pw&#39;</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span> 
+            <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;pw&#39;</span><span class="p">)</span> 
+
+        <span class="c">#@@ TODO: use db.makedsn if host, port is specified </span>
+        <span class="n">keywords</span><span class="p">[</span><span class="s">&#39;dsn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;db&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbname</span> <span class="o">=</span> <span class="s">&#39;oracle&#39;</span> 
+        <span class="n">db</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="s">&#39;numeric&#39;</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramstyle</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">paramstyle</span>
+
+        <span class="c"># oracle doesn&#39;t support pooling </span>
+        <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;pooling&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> 
+        <span class="n">DB</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span> 
+
+    <span class="k">def</span> <span class="nf">_process_insert_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">seqname</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="n">seqname</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> 
+            <span class="c"># It is not possible to get seq name from table name in Oracle</span>
+            <span class="k">return</span> <span class="n">query</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">query</span> <span class="o">+</span> <span class="s">&quot;; SELECT </span><span class="si">%s</span><span class="s">.currval FROM dual&quot;</span> <span class="o">%</span> <span class="n">seqname</span> 
+
+<span class="n">_databases</span> <span class="o">=</span> <span class="p">{}</span>
+<div class="viewcode-block" id="database"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.db.database">[docs]</a><span class="k">def</span> <span class="nf">database</span><span class="p">(</span><span class="n">dburl</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates appropriate database using params.</span>
+<span class="sd">    </span>
+<span class="sd">    Pooling will be enabled if DBUtils module is available. </span>
+<span class="sd">    Pooling can be disabled by passing pooling=False in params.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dbn</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;dbn&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dbn</span> <span class="ow">in</span> <span class="n">_databases</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_databases</span><span class="p">[</span><span class="n">dbn</span><span class="p">](</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">UnknownDB</span><span class="p">,</span> <span class="n">dbn</span>
+</div>
+<span class="k">def</span> <span class="nf">register_database</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">clazz</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Register a database.</span>
+
+<span class="sd">        &gt;&gt;&gt; class LegacyDB(DB): </span>
+<span class="sd">        ...     def __init__(self, **params): </span>
+<span class="sd">        ...        pass </span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; register_database(&#39;legacy&#39;, LegacyDB)</span>
+<span class="sd">        &gt;&gt;&gt; db = database(dbn=&#39;legacy&#39;, db=&#39;test&#39;, user=&#39;joe&#39;, passwd=&#39;secret&#39;) </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_databases</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">clazz</span>
+
+<span class="n">register_database</span><span class="p">(</span><span class="s">&#39;mysql&#39;</span><span class="p">,</span> <span class="n">MySQLDB</span><span class="p">)</span>
+<span class="n">register_database</span><span class="p">(</span><span class="s">&#39;postgres&#39;</span><span class="p">,</span> <span class="n">PostgresDB</span><span class="p">)</span>
+<span class="n">register_database</span><span class="p">(</span><span class="s">&#39;sqlite&#39;</span><span class="p">,</span> <span class="n">SqliteDB</span><span class="p">)</span>
+<span class="n">register_database</span><span class="p">(</span><span class="s">&#39;firebird&#39;</span><span class="p">,</span> <span class="n">FirebirdDB</span><span class="p">)</span>
+<span class="n">register_database</span><span class="p">(</span><span class="s">&#39;mssql&#39;</span><span class="p">,</span> <span class="n">MSSQLDB</span><span class="p">)</span>
+<span class="n">register_database</span><span class="p">(</span><span class="s">&#39;oracle&#39;</span><span class="p">,</span> <span class="n">OracleDB</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_interpolate</span><span class="p">(</span><span class="n">format</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes a format string and returns a list of 2-tuples of the form</span>
+<span class="sd">    (boolean, string) where boolean says whether string should be evaled</span>
+<span class="sd">    or not.</span>
+
+<span class="sd">    from &lt;http://lfw.org/python/Itpl.py&gt; (public domain, Ka-Ping Yee)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">tokenize</span> <span class="kn">import</span> <span class="n">tokenprog</span>
+
+    <span class="k">def</span> <span class="nf">matchorfail</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">tokenprog</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">_ItplError</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">match</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+    <span class="n">namechars</span> <span class="o">=</span> <span class="s">&quot;abcdefghijklmnopqrstuvwxyz&quot;</span> \
+        <span class="s">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&quot;</span><span class="p">;</span>
+    <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">dollar</span> <span class="o">=</span> <span class="n">format</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;$&quot;</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dollar</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> 
+            <span class="k">break</span>
+        <span class="n">nextchar</span> <span class="o">=</span> <span class="n">format</span><span class="p">[</span><span class="n">dollar</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">nextchar</span> <span class="o">==</span> <span class="s">&quot;{&quot;</span><span class="p">:</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">dollar</span><span class="p">]))</span>
+            <span class="n">pos</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">dollar</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span>
+            <span class="k">while</span> <span class="n">level</span><span class="p">:</span>
+                <span class="n">match</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">matchorfail</span><span class="p">(</span><span class="n">format</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                <span class="n">tstart</span><span class="p">,</span> <span class="n">tend</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">regs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="n">format</span><span class="p">[</span><span class="n">tstart</span><span class="p">:</span><span class="n">tend</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&quot;{&quot;</span><span class="p">:</span> 
+                    <span class="n">level</span> <span class="o">=</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&quot;}&quot;</span><span class="p">:</span>  
+                    <span class="n">level</span> <span class="o">=</span> <span class="n">level</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">format</span><span class="p">[</span><span class="n">dollar</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">elif</span> <span class="n">nextchar</span> <span class="ow">in</span> <span class="n">namechars</span><span class="p">:</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">dollar</span><span class="p">]))</span>
+            <span class="n">match</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">matchorfail</span><span class="p">(</span><span class="n">format</span><span class="p">,</span> <span class="n">dollar</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">format</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;.&quot;</span> <span class="ow">and</span> \
+                    <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">format</span><span class="p">)</span> <span class="ow">and</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">namechars</span><span class="p">:</span>
+                    <span class="n">match</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">matchorfail</span><span class="p">(</span><span class="n">format</span><span class="p">,</span> <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="ow">in</span> <span class="s">&quot;([&quot;</span><span class="p">:</span>
+                    <span class="n">pos</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+                    <span class="k">while</span> <span class="n">level</span><span class="p">:</span>
+                        <span class="n">match</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">matchorfail</span><span class="p">(</span><span class="n">format</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                        <span class="n">tstart</span><span class="p">,</span> <span class="n">tend</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">regs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                        <span class="n">token</span> <span class="o">=</span> <span class="n">format</span><span class="p">[</span><span class="n">tstart</span><span class="p">:</span><span class="n">tend</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s">&quot;([&quot;</span><span class="p">:</span> 
+                            <span class="n">level</span> <span class="o">=</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s">&quot;)]&quot;</span><span class="p">:</span>  
+                            <span class="n">level</span> <span class="o">=</span> <span class="n">level</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span> 
+                    <span class="k">break</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">format</span><span class="p">[</span><span class="n">dollar</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">pos</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">dollar</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">dollar</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">nextchar</span> <span class="o">==</span> <span class="s">&quot;$&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">format</span><span class="p">):</span> 
+        <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">format</span><span class="p">[</span><span class="n">pos</span><span class="p">:]))</span>
+    <span class="k">return</span> <span class="n">chunks</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

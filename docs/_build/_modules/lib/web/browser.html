@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.browser &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.browser</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Browser to test web applications.</span>
+<span class="sd">(from web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">re_compile</span>
+<span class="kn">from</span> <span class="nn">net</span> <span class="kn">import</span> <span class="n">htmlunquote</span>
+
+<span class="kn">import</span> <span class="nn">httplib</span><span class="o">,</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&quot;BrowserError&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Browser&quot;</span><span class="p">,</span> <span class="s">&quot;AppBrowser&quot;</span><span class="p">,</span>
+    <span class="s">&quot;AppHandler&quot;</span>
+<span class="p">]</span>
+
+<div class="viewcode-block" id="BrowserError"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.BrowserError">[docs]</a><span class="k">class</span> <span class="nc">BrowserError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Browser"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser">[docs]</a><span class="k">class</span> <span class="nc">Browser</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">cookielib</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cookiejar</span> <span class="o">=</span> <span class="n">cookielib</span><span class="o">.</span><span class="n">CookieJar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cookie_processor</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPCookieProcessor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cookiejar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;http://0.0.0.0:8080/&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="s">&quot;/&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_response</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forms</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Browser.reset"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clears all cookies and history.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cookiejar</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Browser.build_opener"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.build_opener">[docs]</a>    <span class="k">def</span> <span class="nf">build_opener</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the opener using urllib2.build_opener. </span>
+<span class="sd">        Subclasses can override this function to prodive custom openers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">build_opener</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Browser.do_request"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.do_request">[docs]</a>    <span class="k">def</span> <span class="nf">do_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;requesting&#39;</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">get_method</span><span class="p">(),</span> <span class="n">req</span><span class="o">.</span><span class="n">get_full_url</span><span class="p">()</span>
+        <span class="n">opener</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_opener</span><span class="p">()</span>
+        <span class="n">opener</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cookie_processor</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_response</span> <span class="o">=</span> <span class="n">opener</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_response</span> <span class="o">=</span> <span class="n">e</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_response</span><span class="o">.</span><span class="n">geturl</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">get_selector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_response</span><span class="o">.</span><span class="n">code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forms</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_response</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Browser.open"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Opens the specified url.&quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">basejoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Browser.show"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Opens the current page in real web browser.&quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;page.html&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="kn">import</span> <span class="nn">webbrowser</span><span class="o">,</span> <span class="nn">os</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;file://&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s">&#39;page.html&#39;</span><span class="p">)</span>
+        <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Browser.get_response"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.get_response">[docs]</a>    <span class="k">def</span> <span class="nf">get_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a copy of the current response.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">addinfourl</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_response</span><span class="o">.</span><span class="n">info</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_response</span><span class="o">.</span><span class="n">geturl</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Browser.get_soup"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.get_soup">[docs]</a>    <span class="k">def</span> <span class="nf">get_soup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns beautiful soup of the current document.&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">BeautifulSoup</span>
+        <span class="k">return</span> <span class="n">BeautifulSoup</span><span class="o">.</span><span class="n">BeautifulSoup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Browser.get_text"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.get_text">[docs]</a>    <span class="k">def</span> <span class="nf">get_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns content of e or the current document as plain text.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_soup</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">htmlunquote</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">recursiveChildGenerator</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)])</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_links</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_soup</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">)]</span>
+        
+<div class="viewcode-block" id="Browser.get_links"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.get_links">[docs]</a>    <span class="k">def</span> <span class="nf">get_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns all links in the document.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_links</span><span class="p">(),</span>
+            <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="n">text_regex</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="n">url_regex</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="n">predicate</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Browser.follow_link"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.follow_link">[docs]</a>    <span class="k">def</span> <span class="nf">follow_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">link</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_links</span><span class="p">(),</span>
+                <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="n">text_regex</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="n">url_regex</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="n">predicate</span><span class="p">)</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="n">links</span> <span class="ow">and</span> <span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            
+        <span class="k">if</span> <span class="n">link</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">link</span><span class="p">[</span><span class="s">&#39;href&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BrowserError</span><span class="p">(</span><span class="s">&quot;No link found&quot;</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Browser.find_link"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.find_link">[docs]</a>    <span class="k">def</span> <span class="nf">find_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_links</span><span class="p">(),</span> 
+            <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="n">text_regex</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="n">url_regex</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="n">predicate</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">links</span> <span class="ow">and</span> <span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">None</span>
+            </div>
+    <span class="k">def</span> <span class="nf">_filter_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">links</span><span class="p">,</span> 
+            <span class="n">text</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">text_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">url_regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">predicate</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">predicates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">predicates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span> <span class="n">link</span><span class="p">:</span> <span class="n">link</span><span class="o">.</span><span class="n">string</span> <span class="o">==</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text_regex</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">predicates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span> <span class="n">link</span><span class="p">:</span> <span class="n">re_compile</span><span class="p">(</span><span class="n">text_regex</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">string</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">predicates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span> <span class="n">link</span><span class="p">:</span> <span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;href&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">url_regex</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">predicates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span> <span class="n">link</span><span class="p">:</span> <span class="n">re_compile</span><span class="p">(</span><span class="n">url_regex</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;href&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">predicate</span><span class="p">:</span>
+            <span class="n">predicate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicate</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">link</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">predicates</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="p">(</span><span class="n">link</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">link</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span> <span class="k">if</span> <span class="n">f</span><span class="p">(</span><span class="n">link</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="Browser.get_forms"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.get_forms">[docs]</a>    <span class="k">def</span> <span class="nf">get_forms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns all forms in the current document.</span>
+<span class="sd">        The returned form objects implement the ClientForm.HTMLForm interface.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forms</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">ClientForm</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_forms</span> <span class="o">=</span> <span class="n">ClientForm</span><span class="o">.</span><span class="n">ParseResponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_response</span><span class="p">(),</span> <span class="n">backwards_compat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forms</span>
+</div>
+<div class="viewcode-block" id="Browser.select_form"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.select_form">[docs]</a>    <span class="k">def</span> <span class="nf">select_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Selects the specified form.&quot;&quot;&quot;</span>
+        <span class="n">forms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_forms</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">forms</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">forms</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">predicate</span><span class="p">:</span>
+            <span class="n">forms</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">forms</span> <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">f</span><span class="p">)]</span>
+            
+        <span class="k">if</span> <span class="n">forms</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form</span> <span class="o">=</span> <span class="n">forms</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BrowserError</span><span class="p">(</span><span class="s">&quot;No form selected.&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Browser.submit"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.Browser.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;submits the currently selected form.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BrowserError</span><span class="p">(</span><span class="s">&quot;No form selected.&quot;</span><span class="p">)</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="AppBrowser"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.AppBrowser">[docs]</a><span class="k">class</span> <span class="nc">AppBrowser</span><span class="p">(</span><span class="n">Browser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Browser interface to test web.py apps.</span>
+<span class="sd">    </span>
+<span class="sd">        b = AppBrowser(app)</span>
+<span class="sd">        b.open(&#39;/&#39;)</span>
+<span class="sd">        b.follow_link(text=&#39;Login&#39;)</span>
+<span class="sd">        </span>
+<span class="sd">        b.select_form(name=&#39;login&#39;)</span>
+<span class="sd">        b[&#39;username&#39;] = &#39;joe&#39;</span>
+<span class="sd">        b[&#39;password&#39;] = &#39;secret&#39;</span>
+<span class="sd">        b.submit()</span>
+
+<span class="sd">        assert b.path == &#39;/&#39;</span>
+<span class="sd">        assert &#39;Welcome joe&#39; in b.get_text()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="n">Browser</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+
+<div class="viewcode-block" id="AppBrowser.build_opener"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.AppBrowser.build_opener">[docs]</a>    <span class="k">def</span> <span class="nf">build_opener</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">build_opener</span><span class="p">(</span><span class="n">AppHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">))</span>
+</div></div>
+<div class="viewcode-block" id="AppHandler"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.AppHandler">[docs]</a><span class="k">class</span> <span class="nc">AppHandler</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;urllib2 handler to handle requests using web.py application.&quot;&quot;&quot;</span>
+    <span class="n">handler_order</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+
+<div class="viewcode-block" id="AppHandler.http_open"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.AppHandler.http_open">[docs]</a>    <span class="k">def</span> <span class="nf">http_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+            <span class="n">localpart</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">get_selector</span><span class="p">(),</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">get_method</span><span class="p">(),</span>
+            <span class="n">host</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">get_host</span><span class="p">(),</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">get_data</span><span class="p">(),</span>
+            <span class="n">headers</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">header_items</span><span class="p">()),</span>
+            <span class="n">https</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">get_type</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;https&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_response</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">get_full_url</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="AppHandler.https_open"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.browser.AppHandler.https_open">[docs]</a>    <span class="k">def</span> <span class="nf">https_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_open</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+    </div>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">https_request</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPHandler</span><span class="o">.</span><span class="n">do_request_</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c"># for python 2.3</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_make_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">header_items</span><span class="p">])</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPMessage</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">addinfourl</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">headers</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">code</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">code</span><span class="p">),</span> <span class="n">msg</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

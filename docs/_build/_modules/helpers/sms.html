@@ -1,0 +1,165 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>helpers.sms &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for helpers.sms</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">framework</span> <span class="kn">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">lib</span> <span class="kn">import</span> <span class="n">twilio</span>
+<span class="kn">from</span> <span class="nn">lib</span> <span class="kn">import</span> <span class="n">web</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="reply"><a class="viewcode-back" href="../../modules/helpers.html#helpers.sms.reply">[docs]</a><span class="k">def</span> <span class="nf">reply</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>    
+    
+    <span class="n">message</span> <span class="o">=</span> <span class="n">clean</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">message_id</span> <span class="o">=</span> <span class="n">Controller</span><span class="o">.</span><span class="n">get_db</span><span class="p">()</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;messages&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">sms</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">outgoing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s">&quot;queued&quot;</span><span class="p">)</span>        
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> 
+    <span class="n">Tasks</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tube</span><span class="o">=</span><span class="s">&#39;sms&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;user&#39;</span><span class="p">:</span> <span class="n">user</span><span class="p">,</span> <span class="s">&#39;message_id&#39;</span><span class="p">:</span> <span class="n">message_id</span><span class="p">,</span> <span class="s">&#39;message&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">},</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>                   
+    <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;text/plain&quot;</span><span class="p">)</span>    
+    <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+</div>
+<div class="viewcode-block" id="send"><a class="viewcode-back" href="../../modules/helpers.html#helpers.sms.send">[docs]</a><span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="n">phone</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Sending sms...&quot;</span><span class="p">)</span>    
+    
+    <span class="n">message</span> <span class="o">=</span> <span class="n">clean</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;twilio&#39;</span><span class="p">)</span>
+    <span class="n">account</span> <span class="o">=</span> <span class="n">twilio</span><span class="o">.</span><span class="n">Account</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;sid&#39;</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;token&#39;</span><span class="p">])</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">base_url</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callback</span><span class="p">:</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">)</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>    <span class="s">&#39;From&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;phone&#39;</span><span class="p">],</span>
+                <span class="s">&#39;To&#39;</span><span class="p">:</span> <span class="n">phone</span><span class="p">,</span>
+                <span class="s">&#39;Body&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+                <span class="s">&#39;StatusCallback&#39;</span><span class="p">:</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">twilio/status&quot;</span> <span class="o">%</span> <span class="n">callback</span>
+                <span class="p">}</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;/</span><span class="si">%s</span><span class="s">/Accounts/</span><span class="si">%s</span><span class="s">/SMS/Messages.json&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;api&#39;</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;sid&#39;</span><span class="p">]),</span> <span class="s">&#39;POST&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="p">)</span>        
+        <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>        
+        <span class="n">smsid</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s">&#39;TwilioResponse&#39;</span><span class="p">][</span><span class="s">&#39;SMSMessage&#39;</span><span class="p">][</span><span class="s">&#39;Sid&#39;</span><span class="p">]</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&quot;passed&quot;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">smsid</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&quot;blocked&quot;</span>        
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="validate"><a class="viewcode-back" href="../../modules/helpers.html#helpers.sms.validate">[docs]</a><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>    
+    <span class="c"># this is just a cheap validate that depends on the attacker not knowing our AccountSid, it&#39;s not secure        </span>
+        
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;twilio&#39;</span><span class="p">)</span>        
+    <span class="k">if</span> <span class="n">request</span><span class="p">(</span><span class="s">&#39;AccountSid&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;sid&#39;</span><span class="p">]:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Request from Twilio does not have correct sid! Possibly an attack! Blocking message.&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;--&gt; was theirs [</span><span class="si">%s</span><span class="s">] vs ours [</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;AccountSid&#39;</span><span class="p">),</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;sid&#39;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+    
+    </div>
+<div class="viewcode-block" id="clean"><a class="viewcode-back" href="../../modules/helpers.html#helpers.sms.clean">[docs]</a><span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">160</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;--&gt; message is too long! will be cut off!&quot;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="p">[:</span><span class="mi">160</span><span class="p">]</span>    
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">ord</span><span class="p">(</span><span class="n">message</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">127</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;--&gt; message contains a weird character that will be converted to &#39;?&#39;&quot;</span><span class="p">)</span>            
+            <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="p">[:</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;?&#39;</span> <span class="o">+</span> <span class="n">message</span><span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">message</span>
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

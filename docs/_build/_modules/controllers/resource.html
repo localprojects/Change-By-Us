@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.resource &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.resource</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">giveaminute.location</span> <span class="kn">as</span> <span class="nn">mLocation</span>
+<span class="kn">import</span> <span class="nn">giveaminute.projectResource</span> <span class="kn">as</span> <span class="nn">mProjectResource</span>
+
+<div class="viewcode-block" id="Resource"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource">[docs]</a><span class="k">class</span> <span class="nc">Resource</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="Resource.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">param0</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_login</span><span class="p">(</span><span class="s">&quot;/login&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showAddResource</span><span class="p">()</span>    
+    </div>
+<div class="viewcode-block" id="Resource.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">param0</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">action</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addResource</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;edit&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;image&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceImage</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;location&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceLocation</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;description&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceDescription</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;url&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceUrl</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;contactemail&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceContactEmail</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;address&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceAddress</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;keywords&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateResourceKeywords</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c">#return self.not_found()</span>
+                    <span class="k">return</span> <span class="s">&#39;param0 not found&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+<span class="c">#                 return self.not_found() </span>
+                <span class="k">return</span> <span class="s">&#39;param0 not found&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Resource.showAddResource"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.showAddResource">[docs]</a>    <span class="k">def</span> <span class="nf">showAddResource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">locationData</span> <span class="o">=</span> <span class="n">mLocation</span><span class="o">.</span><span class="n">getSimpleLocationDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">locations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">locationData</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locationData</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;locations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">locations</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;resource&#39;</span><span class="p">)</span>    
+        
+        </div>
+<div class="viewcode-block" id="Resource.addResource"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.addResource">[docs]</a>    <span class="k">def</span> <span class="nf">addResource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;main_text&#39;</span><span class="p">)):</span> <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;title&#39;</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">)</span>
+        <span class="n">physical_address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;physical_address&#39;</span><span class="p">)</span>
+        <span class="n">location_id</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location_id&#39;</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">makeUrlAbsolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">)</span>  <span class="k">else</span> <span class="bp">None</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">word</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">))</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="n">contact_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;contact_name&#39;</span><span class="p">)</span>
+        <span class="n">contact_email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;contact_email&#39;</span><span class="p">)</span>
+        <span class="n">facebook_url</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">makeUrlAbsolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;facebook_url&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;facebook_url&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="n">twitter_url</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">makeUrlAbsolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;twitter_url&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;twitter_url&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="n">image_id</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;image&#39;</span><span class="p">))</span> 
+        
+        <span class="c"># TODO this is a temp fix for a form issue</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">contact_name</span> <span class="o">==</span> <span class="s">&#39;null&#39;</span><span class="p">):</span>
+            <span class="n">contact_name</span> <span class="o">=</span> <span class="bp">None</span>
+            
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">projectResourceId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;project_resource&#39;</span><span class="p">,</span> 
+                                        <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="p">,</span>
+                                        <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="p">,</span>
+                                        <span class="n">physical_address</span> <span class="o">=</span> <span class="n">physical_address</span><span class="p">,</span>
+                                        <span class="n">location_id</span> <span class="o">=</span> <span class="n">location_id</span><span class="p">,</span>
+                                        <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="p">,</span>
+                                        <span class="n">facebook_url</span> <span class="o">=</span> <span class="n">facebook_url</span><span class="p">,</span>
+                                        <span class="n">twitter_url</span> <span class="o">=</span> <span class="n">twitter_url</span><span class="p">,</span>
+                                        <span class="n">keywords</span> <span class="o">=</span> <span class="n">keywords</span><span class="p">,</span>
+                                        <span class="n">contact_name</span> <span class="o">=</span> <span class="n">contact_name</span><span class="p">,</span>
+                                        <span class="n">contact_email</span> <span class="o">=</span> <span class="n">contact_email</span><span class="p">,</span>
+                                        <span class="n">created_datetime</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                        <span class="n">image_id</span> <span class="o">=</span> <span class="n">image_id</span><span class="p">,</span>
+                                        <span class="n">is_hidden</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">contact_user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t add resource to system&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Resource.updateResourceImage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceImage">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceImage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">imageId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;image_id&#39;</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">imageId</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="n">imageId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without image id, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Resource.updateResourceLocation"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceLocation">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceLocation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">locationId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location_id&#39;</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">locationId</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceLocation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="n">locationId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without location id, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Resource.updateResourceDescription"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceDescription">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">description</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceTextData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without description, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Resource.updateResourceUrl"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceUrl">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceUrl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">url</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceTextData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="s">&#39;url&#39;</span><span class="p">,</span> <span class="n">util</span><span class="o">.</span><span class="n">makeUrlAbsolute</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without url, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+                </div>
+<div class="viewcode-block" id="Resource.updateResourceContactEmail"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceContactEmail">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceContactEmail</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;contactemail&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">email</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceTextData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="s">&#39;contact_email&#39;</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without email, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Resource.updateResourceAddress"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceAddress">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceAddress</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;address&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">address</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceTextData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="s">&#39;physical_address&#39;</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without address, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="Resource.updateResourceKeywords"><a class="viewcode-back" href="../../modules/controllers.html#controllers.resource.Resource.updateResourceKeywords">[docs]</a>    <span class="k">def</span> <span class="nf">updateResourceKeywords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resourceId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isResourceOwner</span><span class="p">(</span><span class="n">resourceId</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** resource edit attempt without ownership, resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">keywords</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">word</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">))</span> <span class="k">else</span> <span class="bp">None</span>
+        
+        <span class="k">return</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">updateProjectResourceTextData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">,</span> <span class="s">&#39;keywords&#39;</span><span class="p">,</span> <span class="n">keywords</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

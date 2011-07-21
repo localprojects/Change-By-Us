@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.tests &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.tests</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.tests</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    Jinja test functions. Used with the &quot;is&quot; operator.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">jinja2.runtime</span> <span class="kn">import</span> <span class="n">Undefined</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Mapping</span> <span class="k">as</span> <span class="n">MappingType</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">UserDict</span>
+    <span class="n">MappingType</span> <span class="o">=</span> <span class="p">(</span><span class="n">UserDict</span><span class="o">.</span><span class="n">UserDict</span><span class="p">,</span> <span class="n">UserDict</span><span class="o">.</span><span class="n">DictMixin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+
+<span class="c"># nose, nothing here to test</span>
+<span class="n">__test__</span> <span class="o">=</span> <span class="bp">False</span>
+
+
+<span class="n">number_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;^-?\d+(\.\d+)?$&#39;</span><span class="p">)</span>
+<span class="n">regex_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">number_re</span><span class="p">)</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">test_callable</span> <span class="o">=</span> <span class="nb">callable</span>
+<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">test_callable</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;__call__&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="test_odd"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_odd">[docs]</a><span class="k">def</span> <span class="nf">test_odd</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is odd.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span>
+
+</div>
+<div class="viewcode-block" id="test_even"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_even">[docs]</a><span class="k">def</span> <span class="nf">test_even</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is even.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span>
+
+</div>
+<div class="viewcode-block" id="test_divisibleby"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_divisibleby">[docs]</a><span class="k">def</span> <span class="nf">test_divisibleby</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if a variable is divisible by a number.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">%</span> <span class="n">num</span> <span class="o">==</span> <span class="mi">0</span>
+
+</div>
+<div class="viewcode-block" id="test_defined"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_defined">[docs]</a><span class="k">def</span> <span class="nf">test_defined</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is defined:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {% if variable is defined %}</span>
+<span class="sd">            value of variable: {{ variable }}</span>
+<span class="sd">        {% else %}</span>
+<span class="sd">            variable is not defined</span>
+<span class="sd">        {% endif %}</span>
+
+<span class="sd">    See the :func:`default` filter for a simple way to set undefined</span>
+<span class="sd">    variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="test_undefined"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_undefined">[docs]</a><span class="k">def</span> <span class="nf">test_undefined</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like :func:`defined` but the other way round.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="test_none"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_none">[docs]</a><span class="k">def</span> <span class="nf">test_none</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is none.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="test_lower"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_lower">[docs]</a><span class="k">def</span> <span class="nf">test_lower</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is lowercased.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">islower</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="test_upper"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_upper">[docs]</a><span class="k">def</span> <span class="nf">test_upper</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is uppercased.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="test_string"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_string">[docs]</a><span class="k">def</span> <span class="nf">test_string</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the object is a string.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="test_mapping"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_mapping">[docs]</a><span class="k">def</span> <span class="nf">test_mapping</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the object is a mapping (dict etc.).</span>
+
+<span class="sd">    .. versionadded:: 2.6</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">MappingType</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="test_number"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_number">[docs]</a><span class="k">def</span> <span class="nf">test_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is a number.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="test_sequence"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_sequence">[docs]</a><span class="k">def</span> <span class="nf">test_sequence</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return true if the variable is a sequence. Sequences are variables</span>
+<span class="sd">    that are iterable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">value</span><span class="o">.</span><span class="n">__getitem__</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="test_sameas"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_sameas">[docs]</a><span class="k">def</span> <span class="nf">test_sameas</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if an object points to the same memory address than another</span>
+<span class="sd">    object:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {% if foo.attribute is sameas false %}</span>
+<span class="sd">            the foo attribute really is the `False` singleton</span>
+<span class="sd">        {% endif %}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">other</span>
+
+</div>
+<div class="viewcode-block" id="test_iterable"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_iterable">[docs]</a><span class="k">def</span> <span class="nf">test_iterable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if it&#39;s possible to iterate over an object.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">iter</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="test_escaped"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.tests.test_escaped">[docs]</a><span class="k">def</span> <span class="nf">test_escaped</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the value is escaped.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">)</span>
+
+</div>
+<span class="n">TESTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;odd&#39;</span><span class="p">:</span>              <span class="n">test_odd</span><span class="p">,</span>
+    <span class="s">&#39;even&#39;</span><span class="p">:</span>             <span class="n">test_even</span><span class="p">,</span>
+    <span class="s">&#39;divisibleby&#39;</span><span class="p">:</span>      <span class="n">test_divisibleby</span><span class="p">,</span>
+    <span class="s">&#39;defined&#39;</span><span class="p">:</span>          <span class="n">test_defined</span><span class="p">,</span>
+    <span class="s">&#39;undefined&#39;</span><span class="p">:</span>        <span class="n">test_undefined</span><span class="p">,</span>
+    <span class="s">&#39;none&#39;</span><span class="p">:</span>             <span class="n">test_none</span><span class="p">,</span>
+    <span class="s">&#39;lower&#39;</span><span class="p">:</span>            <span class="n">test_lower</span><span class="p">,</span>
+    <span class="s">&#39;upper&#39;</span><span class="p">:</span>            <span class="n">test_upper</span><span class="p">,</span>
+    <span class="s">&#39;string&#39;</span><span class="p">:</span>           <span class="n">test_string</span><span class="p">,</span>
+    <span class="s">&#39;mapping&#39;</span><span class="p">:</span>          <span class="n">test_mapping</span><span class="p">,</span>
+    <span class="s">&#39;number&#39;</span><span class="p">:</span>           <span class="n">test_number</span><span class="p">,</span>
+    <span class="s">&#39;sequence&#39;</span><span class="p">:</span>         <span class="n">test_sequence</span><span class="p">,</span>
+    <span class="s">&#39;iterable&#39;</span><span class="p">:</span>         <span class="n">test_iterable</span><span class="p">,</span>
+    <span class="s">&#39;callable&#39;</span><span class="p">:</span>         <span class="n">test_callable</span><span class="p">,</span>
+    <span class="s">&#39;sameas&#39;</span><span class="p">:</span>           <span class="n">test_sameas</span><span class="p">,</span>
+    <span class="s">&#39;escaped&#39;</span><span class="p">:</span>          <span class="n">test_escaped</span>
+<span class="p">}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.inheritance &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.inheritance</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.inheritance</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Tests the template inheritance feature.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">DictLoader</span>
+
+
+<span class="n">LAYOUTTEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">|{% block block1 %}block 1 from layout{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">|{% block block2 %}block 2 from layout{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">|{% block block3 %}</span>
+<span class="s">{% block block4 %}nested block 4 from layout{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">ndblock %}|&#39;&#39;&#39;</span>
+
+<span class="n">LEVEL1TEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">xtends &quot;layout&quot; %}</span>
+<span class="s">{% block block1 %}block 1 from level1{</span><span class="si">% e</span><span class="s">ndblock %}&#39;&#39;&#39;</span>
+
+<span class="n">LEVEL2TEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">xtends &quot;level1&quot; %}</span>
+<span class="s">{% block block2 %}{% block block5 %}nested block 5 from level2{%</span>
+<span class="s">endblock %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;&#39;&#39;</span>
+
+<span class="n">LEVEL3TEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">xtends &quot;level2&quot; %}</span>
+<span class="s">{% block block5 %}block 5 from level3{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">{% block block4 %}block 4 from level3{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="n">LEVEL4TEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">xtends &quot;level3&quot; %}</span>
+<span class="s">{% block block3 %}block 3 from level4{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="n">WORKINGTEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">xtends &quot;layout&quot; %}</span>
+<span class="s">{% block block1 %}</span>
+<span class="s">  {</span><span class="si">% i</span><span class="s">f false %}</span>
+<span class="s">    {% block block2 %}</span>
+<span class="s">      this should workd</span>
+<span class="s">    {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">  {</span><span class="si">% e</span><span class="s">ndif %}</span>
+<span class="s">{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+    <span class="s">&#39;layout&#39;</span><span class="p">:</span>       <span class="n">LAYOUTTEMPLATE</span><span class="p">,</span>
+    <span class="s">&#39;level1&#39;</span><span class="p">:</span>       <span class="n">LEVEL1TEMPLATE</span><span class="p">,</span>
+    <span class="s">&#39;level2&#39;</span><span class="p">:</span>       <span class="n">LEVEL2TEMPLATE</span><span class="p">,</span>
+    <span class="s">&#39;level3&#39;</span><span class="p">:</span>       <span class="n">LEVEL3TEMPLATE</span><span class="p">,</span>
+    <span class="s">&#39;level4&#39;</span><span class="p">:</span>       <span class="n">LEVEL4TEMPLATE</span><span class="p">,</span>
+    <span class="s">&#39;working&#39;</span><span class="p">:</span>      <span class="n">WORKINGTEMPLATE</span>
+<span class="p">}),</span> <span class="n">trim_blocks</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="InheritanceTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase">[docs]</a><span class="k">class</span> <span class="nc">InheritanceTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InheritanceTestCase.test_layout"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_layout">[docs]</a>    <span class="k">def</span> <span class="nf">test_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;layout&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;|block 1 from layout|block 2 from &#39;</span>
+                                 <span class="s">&#39;layout|nested block 4 from layout|&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_level1"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_level1">[docs]</a>    <span class="k">def</span> <span class="nf">test_level1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;level1&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;|block 1 from level1|block 2 from &#39;</span>
+                                 <span class="s">&#39;layout|nested block 4 from layout|&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_level2"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_level2">[docs]</a>    <span class="k">def</span> <span class="nf">test_level2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;level2&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;|block 1 from level1|nested block 5 from &#39;</span>
+                                 <span class="s">&#39;level2|nested block 4 from layout|&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_level3"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_level3">[docs]</a>    <span class="k">def</span> <span class="nf">test_level3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;level3&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;|block 1 from level1|block 5 from level3|&#39;</span>
+                                 <span class="s">&#39;block 4 from level3|&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_level4"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_level4">[docs]</a>    <span class="k">def</span> <span class="nf">test_level4</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;level4&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;|block 1 from level1|block 5 from &#39;</span>
+                                 <span class="s">&#39;level3|block 3 from level4|&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_super"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_super">[docs]</a>    <span class="k">def</span> <span class="nf">test_super</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="s">&#39;{% block intro %}INTRO{</span><span class="si">% e</span><span class="s">ndblock %}|&#39;</span>
+                 <span class="s">&#39;BEFORE|{% block data %}INNER{</span><span class="si">% e</span><span class="s">ndblock %}|AFTER&#39;</span><span class="p">,</span>
+            <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;a&quot; %}{% block data %}({{ &#39;</span>
+                 <span class="s">&#39;super() }}){</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;b&quot; %}{% block intro %}--{{ &#39;</span>
+                 <span class="s">&#39;super() }}--{</span><span class="si">% e</span><span class="s">ndblock %}</span><span class="se">\n</span><span class="s">{% block data &#39;</span>
+                 <span class="s">&#39;%}[{{ super() }}]{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;--INTRO--|BEFORE|[(INNER)]|AFTER&#39;</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_working"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_working">[docs]</a>    <span class="k">def</span> <span class="nf">test_working</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;working&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_reuse_blocks"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_reuse_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">test_reuse_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ self.foo() }}|{% block foo %}42&#39;</span>
+                               <span class="s">&#39;{</span><span class="si">% e</span><span class="s">ndblock %}|{{ self.foo() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;42|42|42&#39;</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_preserve_blocks"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_preserve_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">test_preserve_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% i</span><span class="s">f false %}{% block x %}A{</span><span class="si">% e</span><span class="s">ndblock %}{</span><span class="si">% e</span><span class="s">ndif %}{{ self.x() }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;a&quot; %}{% block x %}B{{ super() }}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;BA&#39;</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_dynamic_inheritance"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_dynamic_inheritance">[docs]</a>    <span class="k">def</span> <span class="nf">test_dynamic_inheritance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;master1&#39;</span><span class="p">:</span> <span class="s">&#39;MASTER1{% block x %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;master2&#39;</span><span class="p">:</span> <span class="s">&#39;MASTER2{% block x %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;child&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends master %}{% block x %}CHILD{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;child&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="s">&#39;master</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;MASTER</span><span class="si">%d</span><span class="s">CHILD&#39;</span> <span class="o">%</span> <span class="n">m</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_multi_inheritance"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_multi_inheritance">[docs]</a>    <span class="k">def</span> <span class="nf">test_multi_inheritance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;master1&#39;</span><span class="p">:</span> <span class="s">&#39;MASTER1{% block x %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;master2&#39;</span><span class="p">:</span> <span class="s">&#39;MASTER2{% block x %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;child&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;{</span><span class="si">% i</span><span class="s">f master %}{</span><span class="si">% e</span><span class="s">xtends master %}{</span><span class="si">% e</span><span class="s">lse %}{</span><span class="si">% e</span><span class="s">xtends</span>
+<span class="s">                        &#39;master1&#39; %}{</span><span class="si">% e</span><span class="s">ndif %}{% block x %}CHILD{</span><span class="si">% e</span><span class="s">ndblock %}&#39;&#39;&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;child&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="s">&#39;master2&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;MASTER2CHILD&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="s">&#39;master1&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;MASTER1CHILD&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;MASTER1CHILD&#39;</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_scoped_block"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_scoped_block">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoped_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;master.html&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}[{% block item scoped %}&#39;</span>
+                           <span class="s">&#39;{</span><span class="si">% e</span><span class="s">ndblock %}]{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;master.html&quot; %}{% block item %}&#39;</span>
+                            <span class="s">&#39;{{ item }}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;[0][1][2][3][4]&#39;</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_super_in_scoped_block"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_super_in_scoped_block">[docs]</a>    <span class="k">def</span> <span class="nf">test_super_in_scoped_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;master.html&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}[{% block item scoped %}&#39;</span>
+                           <span class="s">&#39;{{ item }}{</span><span class="si">% e</span><span class="s">ndblock %}]{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;master.html&quot; %}{% block item %}&#39;</span>
+                            <span class="s">&#39;{{ super() }}|{{ item * 2 }}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;[0|0][1|2][2|4][3|6][4|8]&#39;</span>
+</div>
+<div class="viewcode-block" id="InheritanceTestCase.test_scoped_block_after_inheritance"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.InheritanceTestCase.test_scoped_block_after_inheritance">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoped_block_after_inheritance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;layout.html&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {% block useless %}{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="p">,</span>
+            <span class="s">&#39;index.html&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {</span><span class="si">%- e</span><span class="s">xtends &#39;layout.html&#39; %}</span>
+<span class="s">            {</span><span class="si">% f</span><span class="s">rom &#39;helpers.html&#39; import foo with context %}</span>
+<span class="s">            {% block useless %}</span>
+<span class="s">                {</span><span class="si">% f</span><span class="s">or x in [1, 2, 3] %}</span>
+<span class="s">                    {% block testing scoped %}</span>
+<span class="s">                        {{ foo(x) }}</span>
+<span class="s">                    {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">                {</span><span class="si">% e</span><span class="s">ndfor %}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="p">,</span>
+            <span class="s">&#39;helpers.html&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {% macro foo(x) %}{{ the_foo + x }}{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            &#39;&#39;&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;index.html&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">the_foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">rv</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;43&#39;</span><span class="p">,</span> <span class="s">&#39;44&#39;</span><span class="p">,</span> <span class="s">&#39;45&#39;</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="BugFixTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.BugFixTestCase">[docs]</a><span class="k">class</span> <span class="nc">BugFixTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BugFixTestCase.test_fixed_macro_scoping_bug"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.BugFixTestCase.test_fixed_macro_scoping_bug">[docs]</a>    <span class="k">def</span> <span class="nf">test_fixed_macro_scoping_bug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;test.html&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">xtends &#39;details.html&#39; %}</span>
+
+<span class="s">        {% macro my_macro() %}</span>
+<span class="s">        my_macro</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+
+<span class="s">        {% block inner_box %}</span>
+<span class="s">            {{ my_macro() }}</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="p">,</span>
+            <span class="s">&#39;details.html&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">xtends &#39;standard.html&#39; %}</span>
+
+<span class="s">        {% macro my_macro() %}</span>
+<span class="s">        my_macro</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+
+<span class="s">        {% block content %}</span>
+<span class="s">            {% block outer_box %}</span>
+<span class="s">                outer_box</span>
+<span class="s">                {% block inner_box %}</span>
+<span class="s">                    inner_box</span>
+<span class="s">                {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">,</span>
+            <span class="s">&#39;standard.html&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {% block content %}&amp;nbsp;{</span><span class="si">% e</span><span class="s">ndblock %}</span>
+<span class="s">        &#39;&#39;&#39;</span>
+        <span class="p">}))</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&quot;test.html&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="o">==</span> <span class="p">[</span><span class="s">u&#39;outer_box&#39;</span><span class="p">,</span> <span class="s">u&#39;my_macro&#39;</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.inheritance.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">InheritanceTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">BugFixTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

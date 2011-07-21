@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.join &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.join</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">giveaminute.user</span> <span class="kn">as</span> <span class="nn">mUser</span>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+<span class="kn">import</span> <span class="nn">lib.web</span>
+
+<div class="viewcode-block" id="Join"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join">[docs]</a><span class="k">class</span> <span class="nc">Join</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="Join.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">param0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;users&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUsers</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;ideas&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getIdeas</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;auth&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">authenticateUser</span><span class="p">(</span><span class="n">param0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showJoin</span><span class="p">()</span>            
+            </div>
+<div class="viewcode-block" id="Join.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">param0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;code&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verifyBetaCode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;beta_code&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>   
+            <span class="c">#return self.newUser()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">newUnauthenticatedUser</span><span class="p">()</span>
+            </div>
+<div class="viewcode-block" id="Join.showJoin"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.showJoin">[docs]</a>    <span class="k">def</span> <span class="nf">showJoin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">referer</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTP_REFERER&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">referer</span> <span class="ow">and</span> <span class="s">&quot;/login&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">referer</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;redir_from&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">referer</span>
+                
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;join&#39;</span><span class="p">,{</span><span class="s">&#39;user&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">})</span>  
+        </div>
+<div class="viewcode-block" id="Join.getUsers"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.getUsers">[docs]</a>    <span class="k">def</span> <span class="nf">getUsers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">mUser</span><span class="o">.</span><span class="n">findUserByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">n_users</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">n_users</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">n_users</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+        </div>
+<div class="viewcode-block" id="Join.getIdeas"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.getIdeas">[docs]</a>    <span class="k">def</span> <span class="nf">getIdeas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">phone</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">cleanUSPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;sms_phone&#39;</span><span class="p">))</span>
+            
+            <span class="n">dataUser</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">findUserByPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">dataUser</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">sms_number_already_used</span> <span class="o">=</span> <span class="bp">True</span><span class="p">))</span>
+            
+            <span class="n">data</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">findIdeasByPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">sms_number_already_used</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">n_ideas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">sms_number_already_used</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">n_ideas</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">sms_number_already_used</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">n_ideas</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+        </div>
+<div class="viewcode-block" id="Join.newUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.newUser">[docs]</a>    <span class="k">def</span> <span class="nf">newUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">firstName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;f_name&#39;</span><span class="p">)</span>
+        <span class="n">lastName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;l_name&#39;</span><span class="p">)</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">)</span>
+        <span class="n">phone</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">cleanUSPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;sms_phone&#39;</span><span class="p">))</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;beta_code&#39;</span><span class="p">)</span>        
+                
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">appMode</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verifyBetaCode</span><span class="p">(</span><span class="n">code</span><span class="p">)):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** beta user attempted register w/ invalid code&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>        
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">firstName</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: no first name&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lastName</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: no last name&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">email</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">validate_email</span><span class="p">(</span><span class="n">email</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: invalid email&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: no password&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">createUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">userId</span><span class="p">):</span>
+                <span class="c"># log in user</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">userId</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+                <span class="c"># set cbu_key for blog access</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">setcookie</span><span class="p">(</span><span class="s">&#39;cbu_key&#39;</span><span class="p">,</span> <span class="n">util</span><span class="o">.</span><span class="n">obfuscate</span><span class="p">(</span><span class="n">userId</span><span class="p">),</span> <span class="n">domain</span> <span class="o">=</span> <span class="s">&quot;.changeby.us&quot;</span><span class="p">)</span>
+
+            
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">appMode</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">expireBetaCode</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+                
+                <span class="n">mIdea</span><span class="o">.</span><span class="n">attachIdeasByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="n">phone</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">phone</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">mIdea</span><span class="o">.</span><span class="n">attachIdeasByPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+            
+                <span class="k">return</span> <span class="n">userId</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+                </div>
+<div class="viewcode-block" id="Join.authenticateUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.authenticateUser">[docs]</a>    <span class="k">def</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">):</span>
+        <span class="c"># kill existing session</span>
+        <span class="c"># self.session.kill()</span>
+    
+        <span class="n">userId</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">createUserFromAuthGuid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">)</span>
+        <span class="n">isSuccess</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">userId</span><span class="p">):</span>
+            <span class="n">isSuccess</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+        
+            <span class="c"># log in user</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">userId</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+            <span class="c"># set cbu_key for blog access</span>
+            <span class="n">web</span><span class="o">.</span><span class="n">setcookie</span><span class="p">(</span><span class="s">&#39;cbu_key&#39;</span><span class="p">,</span> <span class="n">util</span><span class="o">.</span><span class="n">obfuscate</span><span class="p">(</span><span class="n">userId</span><span class="p">),</span> <span class="n">domain</span> <span class="o">=</span> <span class="s">&quot;.changeby.us&quot;</span><span class="p">)</span>
+            
+            <span class="n">mIdea</span><span class="o">.</span><span class="n">attachIdeasByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">phone</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">phone</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">mIdea</span><span class="o">.</span><span class="n">attachIdeasByPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">phone</span><span class="p">)</span>            
+    
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;join&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;is_email_auth_attempt&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span> <span class="s">&#39;is_email_auth_attempt_successful&#39;</span><span class="p">:</span> <span class="n">isSuccess</span><span class="p">})</span>
+                </div>
+<div class="viewcode-block" id="Join.newUnauthenticatedUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.newUnauthenticatedUser">[docs]</a>    <span class="k">def</span> <span class="nf">newUnauthenticatedUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;main_text&#39;</span><span class="p">)):</span> <span class="k">return</span> <span class="bp">False</span>
+  
+        <span class="n">firstName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;f_name&#39;</span><span class="p">)</span>
+        <span class="n">lastName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;l_name&#39;</span><span class="p">)</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">)</span>
+        <span class="n">phone</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">cleanUSPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;sms_phone&#39;</span><span class="p">))</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;beta_code&#39;</span><span class="p">)</span>        
+                
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">appMode</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verifyBetaCode</span><span class="p">(</span><span class="n">code</span><span class="p">)):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** beta user attempted register w/ invalid code&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>        
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">firstName</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: no first name&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lastName</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: no last name&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">email</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">validate_email</span><span class="p">(</span><span class="n">email</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: invalid email&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** error on user create: no password&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#create unauth data record and email user</span>
+            <span class="n">authGuid</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">mUser</span><span class="o">.</span><span class="n">createUnauthenticatedUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">,</span> <span class="n">phone</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailUnauthenticatedUser</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="Join.verifyBetaCode"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.verifyBetaCode">[docs]</a>    <span class="k">def</span> <span class="nf">verifyBetaCode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select code from beta_invite_code where code = $code and user_id is null limit 1&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;code&#39;</span><span class="p">:</span><span class="n">code</span><span class="p">}))</span>
+            
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem verifying beta code&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Join.expireBetaCode"><a class="viewcode-back" href="../../modules/controllers.html#controllers.join.Join.expireBetaCode">[docs]</a>    <span class="k">def</span> <span class="nf">expireBetaCode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;beta_invite_code&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;code = $code&quot;</span><span class="p">,</span> <span class="n">user_id</span> <span class="o">=</span> <span class="n">userId</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;code&#39;</span><span class="p">:</span><span class="n">code</span><span class="p">})</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t expire beta code&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            
+            </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

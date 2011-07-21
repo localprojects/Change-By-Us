@@ -1,0 +1,1003 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.nodes &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.nodes</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.nodes</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    This module implements additional nodes derived from the ast base node.</span>
+
+<span class="sd">    It also provides some node tree helper functions like `in_lineno` and</span>
+<span class="sd">    `get_nodes` used by the parser and translator in order to normalize</span>
+<span class="sd">    python and jinja nodes.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">izip</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">MethodType</span><span class="p">,</span> <span class="n">FunctionType</span>
+
+
+<span class="c">#: the types we support for context functions</span>
+<span class="n">_context_function_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">FunctionType</span><span class="p">,</span> <span class="n">MethodType</span><span class="p">)</span>
+
+
+<span class="n">_binop_to_func</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;*&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span>
+    <span class="s">&#39;/&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">truediv</span><span class="p">,</span>
+    <span class="s">&#39;//&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">floordiv</span><span class="p">,</span>
+    <span class="s">&#39;**&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">pow</span><span class="p">,</span>
+    <span class="s">&#39;%&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">mod</span><span class="p">,</span>
+    <span class="s">&#39;+&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+    <span class="s">&#39;-&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">sub</span>
+<span class="p">}</span>
+
+<span class="n">_uaop_to_func</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;not&#39;</span><span class="p">:</span>      <span class="n">operator</span><span class="o">.</span><span class="n">not_</span><span class="p">,</span>
+    <span class="s">&#39;+&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span>
+    <span class="s">&#39;-&#39;</span><span class="p">:</span>        <span class="n">operator</span><span class="o">.</span><span class="n">neg</span>
+<span class="p">}</span>
+
+<span class="n">_cmpop_to_func</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;eq&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">eq</span><span class="p">,</span>
+    <span class="s">&#39;ne&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">ne</span><span class="p">,</span>
+    <span class="s">&#39;gt&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">gt</span><span class="p">,</span>
+    <span class="s">&#39;gteq&#39;</span><span class="p">:</span>     <span class="n">operator</span><span class="o">.</span><span class="n">ge</span><span class="p">,</span>
+    <span class="s">&#39;lt&#39;</span><span class="p">:</span>       <span class="n">operator</span><span class="o">.</span><span class="n">lt</span><span class="p">,</span>
+    <span class="s">&#39;lteq&#39;</span><span class="p">:</span>     <span class="n">operator</span><span class="o">.</span><span class="n">le</span><span class="p">,</span>
+    <span class="s">&#39;in&#39;</span><span class="p">:</span>       <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">b</span><span class="p">,</span>
+    <span class="s">&#39;notin&#39;</span><span class="p">:</span>    <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">b</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="Impossible"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Impossible">[docs]</a><span class="k">class</span> <span class="nc">Impossible</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised if the node could not perform a requested action.&quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="NodeType"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.NodeType">[docs]</a><span class="k">class</span> <span class="nc">NodeType</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A metaclass for nodes that handles the field and attribute</span>
+<span class="sd">    inheritance.  fields and attributes from the parent class are</span>
+<span class="sd">    automatically forwarded to the child.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="s">&#39;fields&#39;</span><span class="p">,</span> <span class="s">&#39;attributes&#39;</span><span class="p">:</span>
+            <span class="n">storage</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">storage</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">attr</span><span class="p">,</span> <span class="p">()))</span>
+            <span class="n">storage</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="p">()))</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;multiple inheritance not allowed&#39;</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">storage</span><span class="p">)),</span> <span class="s">&#39;layout conflict&#39;</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;abstract&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="EvalContext"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.EvalContext">[docs]</a><span class="k">class</span> <span class="nc">EvalContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Holds evaluation time information.  Custom attributes can be attached</span>
+<span class="sd">    to it in extensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">template_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">autoescape</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoescape</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">autoescape</span><span class="p">(</span><span class="n">template_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoescape</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">autoescape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">volatile</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="EvalContext.save"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.EvalContext.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="EvalContext.revert"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.EvalContext.revert">[docs]</a>    <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="get_eval_context"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.get_eval_context">[docs]</a><span class="k">def</span> <span class="nf">get_eval_context</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">ctx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">environment</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;if no eval context is passed, the &#39;</span>
+                               <span class="s">&#39;node must have an attached &#39;</span>
+                               <span class="s">&#39;environment.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">EvalContext</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ctx</span>
+
+</div>
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Baseclass for all Jinja2 nodes.  There are a number of nodes available</span>
+<span class="sd">    of different types.  There are three major types:</span>
+
+<span class="sd">    -   :class:`Stmt`: statements</span>
+<span class="sd">    -   :class:`Expr`: expressions</span>
+<span class="sd">    -   :class:`Helper`: helper nodes</span>
+<span class="sd">    -   :class:`Template`: the outermost wrapper node</span>
+
+<span class="sd">    All nodes have fields and attributes.  Fields may be other nodes, lists,</span>
+<span class="sd">    or arbitrary values.  Fields are passed to the constructor as regular</span>
+<span class="sd">    positional arguments, attributes as keyword arguments.  Each node has</span>
+<span class="sd">    two attributes: `lineno` (the line number of the node) and `environment`.</span>
+<span class="sd">    The `environment` attribute is set at the end of the parsing process for</span>
+<span class="sd">    all nodes automatically.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">NodeType</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">attributes</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;lineno&#39;</span><span class="p">,</span> <span class="s">&#39;environment&#39;</span><span class="p">)</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">fields</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;abstract nodes are not instanciable&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> takes 0 arguments&#39;</span> <span class="o">%</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> takes 0 or </span><span class="si">%d</span><span class="s"> argument</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">),</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s">&#39;s&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+                <span class="p">))</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">izip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">attributes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">attributes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;unknown attribute </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span>
+                            <span class="nb">iter</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+
+<div class="viewcode-block" id="Node.iter_fields"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.iter_fields">[docs]</a>    <span class="k">def</span> <span class="nf">iter_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method iterates over all fields that are defined and yields</span>
+<span class="sd">        ``(key, value)`` tuples.  Per default all fields are returned, but</span>
+<span class="sd">        it&#39;s possible to limit that to some fields by providing the `only`</span>
+<span class="sd">        parameter or to exclude some using the `exclude` parameter.  Both</span>
+<span class="sd">        should be sets or tuples of field names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">exclude</span> <span class="ow">is</span> <span class="n">only</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> \
+               <span class="p">(</span><span class="n">exclude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">)</span> <span class="ow">or</span> \
+               <span class="p">(</span><span class="n">only</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">only</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Node.iter_child_nodes"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.iter_child_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">iter_child_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterates over all direct child nodes of the node.  This iterates</span>
+<span class="sd">        over all fields and yields the values of they are nodes.  If the value</span>
+<span class="sd">        of a field is a list all the nodes in that list are returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_fields</span><span class="p">(</span><span class="n">exclude</span><span class="p">,</span> <span class="n">only</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+                        <span class="k">yield</span> <span class="n">n</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">item</span>
+</div>
+<div class="viewcode-block" id="Node.find"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.find">[docs]</a>    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the first node of a given type.  If no such node exists the</span>
+<span class="sd">        return value is `None`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">node_type</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Node.find_all"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.find_all">[docs]</a>    <span class="k">def</span> <span class="nf">find_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all the nodes of a given type.  If the type is a tuple,</span>
+<span class="sd">        the check is performed for any of the tuple items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_child_nodes</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">child</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">child</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">node_type</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Node.set_ctx"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.set_ctx">[docs]</a>    <span class="k">def</span> <span class="nf">set_ctx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the context of a node and all child nodes.  Per default the</span>
+<span class="sd">        parser will all generate nodes that have a &#39;load&#39; context as it&#39;s the</span>
+<span class="sd">        most common one.  This method is used in the parser to set assignment</span>
+<span class="sd">        targets and other nodes to a store context.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">todo</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+        <span class="k">while</span> <span class="n">todo</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">todo</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s">&#39;ctx&#39;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+            <span class="n">todo</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter_child_nodes</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="Node.set_lineno"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.set_lineno">[docs]</a>    <span class="k">def</span> <span class="nf">set_lineno</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the line numbers of the node and children.&quot;&quot;&quot;</span>
+        <span class="n">todo</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+        <span class="k">while</span> <span class="n">todo</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">todo</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s">&#39;lineno&#39;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">override</span><span class="p">:</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">lineno</span> <span class="o">=</span> <span class="n">lineno</span>
+            <span class="n">todo</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter_child_nodes</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="Node.set_environment"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Node.set_environment">[docs]</a>    <span class="k">def</span> <span class="nf">set_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the environment for all nodes.&quot;&quot;&quot;</span>
+        <span class="n">todo</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+        <span class="k">while</span> <span class="n">todo</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">todo</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+            <span class="n">todo</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter_child_nodes</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_fields</span><span class="p">())</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">iter_fields</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span> <span class="k">for</span>
+                      <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
+        <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Stmt"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Stmt">[docs]</a><span class="k">class</span> <span class="nc">Stmt</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base node for all statements.&quot;&quot;&quot;</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="Helper"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Helper">[docs]</a><span class="k">class</span> <span class="nc">Helper</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Nodes that exist in a specific context only.&quot;&quot;&quot;</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="Template"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Template">[docs]</a><span class="k">class</span> <span class="nc">Template</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Node that represents a template.  This must be the outermost node that</span>
+<span class="sd">    is passed to the compiler.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="Output"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Output">[docs]</a><span class="k">class</span> <span class="nc">Output</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A node that holds multiple expressions which are then printed out.</span>
+<span class="sd">    This is used both for the `print` statement and the regular template data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;nodes&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="Extends"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Extends">[docs]</a><span class="k">class</span> <span class="nc">Extends</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an extends statement.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="For"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.For">[docs]</a><span class="k">class</span> <span class="nc">For</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The for loop.  `target` is the target for the iteration (usually a</span>
+<span class="sd">    :class:`Name` or :class:`Tuple`), `iter` the iterable.  `body` is a list</span>
+<span class="sd">    of nodes that are used as loop-body, and `else_` a list of nodes for the</span>
+<span class="sd">    `else` block.  If no else node exists it has to be an empty list.</span>
+
+<span class="sd">    For filtered nodes an expression can be stored as `test`, otherwise `None`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;target&#39;</span><span class="p">,</span> <span class="s">&#39;iter&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">,</span> <span class="s">&#39;else_&#39;</span><span class="p">,</span> <span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="s">&#39;recursive&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="If"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.If">[docs]</a><span class="k">class</span> <span class="nc">If</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;If `test` is true, `body` is rendered, else `else_`.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">,</span> <span class="s">&#39;else_&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Macro"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Macro">[docs]</a><span class="k">class</span> <span class="nc">Macro</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A macro definition.  `name` is the name of the macro, `args` a list of</span>
+<span class="sd">    arguments and `defaults` a list of defaults if there are any.  `body` is</span>
+<span class="sd">    a list of nodes for the macro body.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;args&#39;</span><span class="p">,</span> <span class="s">&#39;defaults&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="CallBlock"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.CallBlock">[docs]</a><span class="k">class</span> <span class="nc">CallBlock</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like a macro without a name but a call instead.  `call` is called with</span>
+<span class="sd">    the unnamed macro as `caller` argument this node holds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;call&#39;</span><span class="p">,</span> <span class="s">&#39;args&#39;</span><span class="p">,</span> <span class="s">&#39;defaults&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="FilterBlock"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.FilterBlock">[docs]</a><span class="k">class</span> <span class="nc">FilterBlock</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Node for filter sections.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">,</span> <span class="s">&#39;filter&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Block"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Block">[docs]</a><span class="k">class</span> <span class="nc">Block</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A node that represents a block.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">,</span> <span class="s">&#39;scoped&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Include"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Include">[docs]</a><span class="k">class</span> <span class="nc">Include</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A node that represents the include tag.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">,</span> <span class="s">&#39;with_context&#39;</span><span class="p">,</span> <span class="s">&#39;ignore_missing&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Import"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Import">[docs]</a><span class="k">class</span> <span class="nc">Import</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A node that represents the import tag.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">,</span> <span class="s">&#39;target&#39;</span><span class="p">,</span> <span class="s">&#39;with_context&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="FromImport"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.FromImport">[docs]</a><span class="k">class</span> <span class="nc">FromImport</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A node that represents the from import tag.  It&#39;s important to not</span>
+<span class="sd">    pass unsafe names to the name attribute.  The compiler translates the</span>
+<span class="sd">    attribute lookups directly into getattr calls and does *not* use the</span>
+<span class="sd">    subscript callback of the interface.  As exported variables may not</span>
+<span class="sd">    start with double underscores (which the parser asserts) this is not a</span>
+<span class="sd">    problem for regular Jinja code, but if this node is used in an extension</span>
+<span class="sd">    extra care must be taken.</span>
+
+<span class="sd">    The list of names may contain tuples if aliases are wanted.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">,</span> <span class="s">&#39;names&#39;</span><span class="p">,</span> <span class="s">&#39;with_context&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ExprStmt"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.ExprStmt">[docs]</a><span class="k">class</span> <span class="nc">ExprStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A statement that evaluates an expression and discards the result.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="Assign"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Assign">[docs]</a><span class="k">class</span> <span class="nc">Assign</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assigns an expression to a target.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;target&#39;</span><span class="p">,</span> <span class="s">&#39;node&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Baseclass for all expressions.&quot;&quot;&quot;</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="Expr.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Expr.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the value of the expression as constant or raise</span>
+<span class="sd">        :exc:`Impossible` if this was not possible.</span>
+
+<span class="sd">        An :class:`EvalContext` can be provided, if none is given</span>
+<span class="sd">        a default context is created which requires the nodes to have</span>
+<span class="sd">        an attached environment.</span>
+
+<span class="sd">        .. versionchanged:: 2.4</span>
+<span class="sd">           the `eval_ctx` parameter was added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Expr.can_assign"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Expr.can_assign">[docs]</a>    <span class="k">def</span> <span class="nf">can_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if it&#39;s possible to assign something to this node.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div></div>
+<div class="viewcode-block" id="BinExpr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.BinExpr">[docs]</a><span class="k">class</span> <span class="nc">BinExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Baseclass for all binary expressions.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">)</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="BinExpr.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.BinExpr.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="c"># intercepted operators cannot be folded at compile time</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">sandboxed</span> <span class="ow">and</span> \
+           <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">intercepted_binops</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">_binop_to_func</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="UnaryExpr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.UnaryExpr">[docs]</a><span class="k">class</span> <span class="nc">UnaryExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Baseclass for all unary expressions.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,)</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="UnaryExpr.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.UnaryExpr.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="c"># intercepted operators cannot be folded at compile time</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">sandboxed</span> <span class="ow">and</span> \
+           <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">intercepted_unops</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">_uaop_to_func</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="Name"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Name">[docs]</a><span class="k">class</span> <span class="nc">Name</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Looks up a name or stores a value in a name.</span>
+<span class="sd">    The `ctx` of the node can be one of the following values:</span>
+
+<span class="sd">    -   `store`: store a value in the name</span>
+<span class="sd">    -   `load`: load that name</span>
+<span class="sd">    -   `param`: like `store` but if the name was defined as function parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;ctx&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Name.can_assign"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Name.can_assign">[docs]</a>    <span class="k">def</span> <span class="nf">can_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;false&#39;</span><span class="p">,</span> <span class="s">&#39;none&#39;</span><span class="p">,</span>
+                                 <span class="s">&#39;True&#39;</span><span class="p">,</span> <span class="s">&#39;False&#39;</span><span class="p">,</span> <span class="s">&#39;None&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Baseclass for literals.&quot;&quot;&quot;</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="Const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Const">[docs]</a><span class="k">class</span> <span class="nc">Const</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;All constant values.  The parser will return this node for simple</span>
+<span class="sd">    constants such as ``42`` or ``&quot;foo&quot;`` but it can be used to store more</span>
+<span class="sd">    complex values such as lists too.  Only constants with a safe</span>
+<span class="sd">    representation (objects where ``eval(repr(x)) == x`` is true).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="Const.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Const.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Const.from_untrusted"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Const.from_untrusted">[docs]</a>    <span class="k">def</span> <span class="nf">from_untrusted</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a const object if the value is representable as</span>
+<span class="sd">        constant value in the generated code, otherwise it will raise</span>
+<span class="sd">        an `Impossible` exception.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">compiler</span> <span class="kn">import</span> <span class="n">has_safe_repr</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_safe_repr</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="n">environment</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TemplateData"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.TemplateData">[docs]</a><span class="k">class</span> <span class="nc">TemplateData</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A constant template string.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;data&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="TemplateData.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.TemplateData.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">volatile</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+
+</div></div>
+<div class="viewcode-block" id="Tuple"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Tuple">[docs]</a><span class="k">class</span> <span class="nc">Tuple</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For loop unpacking and some other things like multiple arguments</span>
+<span class="sd">    for subscripts.  Like for :class:`Name` `ctx` specifies if the tuple</span>
+<span class="sd">    is used for loading the names or storing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;items&#39;</span><span class="p">,</span> <span class="s">&#39;ctx&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Tuple.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Tuple.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Tuple.can_assign"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Tuple.can_assign">[docs]</a>    <span class="k">def</span> <span class="nf">can_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">can_assign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+</div></div>
+<div class="viewcode-block" id="List"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.List">[docs]</a><span class="k">class</span> <span class="nc">List</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Any list literal such as ``[1, 2, 3]``&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;items&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="List.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.List.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="Dict"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Dict">[docs]</a><span class="k">class</span> <span class="nc">Dict</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Any dict literal such as ``{1: 2, 3: 4}``.  The items must be a list of</span>
+<span class="sd">    :class:`Pair` nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;items&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="Dict.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Dict.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Pair"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Pair">[docs]</a><span class="k">class</span> <span class="nc">Pair</span><span class="p">(</span><span class="n">Helper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A key, value pair for dicts.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pair.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Pair.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Keyword"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Keyword">[docs]</a><span class="k">class</span> <span class="nc">Keyword</span><span class="p">(</span><span class="n">Helper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A key, value pair for keyword arguments where key is a string.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Keyword.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Keyword.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="CondExpr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.CondExpr">[docs]</a><span class="k">class</span> <span class="nc">CondExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A conditional expression (inline if expression).  (``{{</span>
+<span class="sd">    foo if bar else baz }}``)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="s">&#39;expr1&#39;</span><span class="p">,</span> <span class="s">&#39;expr2&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CondExpr.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.CondExpr.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr1</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+        <span class="c"># if we evaluate to an undefined object, we better do that at runtime</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr2</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Filter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Filter">[docs]</a><span class="k">class</span> <span class="nc">Filter</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This node applies a filter on an expression.  `name` is the name of</span>
+<span class="sd">    the filter, the rest of the fields are the same as for :class:`Call`.</span>
+
+<span class="sd">    If the `node` of a filter is `None` the contents of the last buffer are</span>
+<span class="sd">    filtered.  Buffers are created by macros and filter blocks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;args&#39;</span><span class="p">,</span> <span class="s">&#39;kwargs&#39;</span><span class="p">,</span> <span class="s">&#39;dyn_args&#39;</span><span class="p">,</span> <span class="s">&#39;dyn_kwargs&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Filter.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Filter.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">volatile</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="c"># we have to be careful here because we call filter_ below.</span>
+        <span class="c"># if this variable would be called filter, 2to3 would wrap the</span>
+        <span class="c"># call in a list beause it is assuming we are talking about the</span>
+        <span class="c"># builtin filter function here which no longer returns a list in</span>
+        <span class="c"># python 3.  because of that, do not rename filter_ to filter!</span>
+        <span class="n">filter_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filter_</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="s">&#39;contextfilter&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="s">&#39;evalcontextfilter&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="s">&#39;environmentfilter&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dyn_args</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dyn_kwargs</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">filter_</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="Test"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Test">[docs]</a><span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies a test on an expression.  `name` is the name of the test, the</span>
+<span class="sd">    rest of the fields are the same as for :class:`Call`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;args&#39;</span><span class="p">,</span> <span class="s">&#39;kwargs&#39;</span><span class="p">,</span> <span class="s">&#39;dyn_args&#39;</span><span class="p">,</span> <span class="s">&#39;dyn_kwargs&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calls an expression.  `args` is a list of arguments, `kwargs` a list</span>
+<span class="sd">    of keyword arguments (list of :class:`Keyword` nodes), and `dyn_args`</span>
+<span class="sd">    and `dyn_kwargs` has to be either `None` or a node that is used as</span>
+<span class="sd">    node for dynamic positional (``*args``) or keyword (``**kwargs``)</span>
+<span class="sd">    arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;args&#39;</span><span class="p">,</span> <span class="s">&#39;kwargs&#39;</span><span class="p">,</span> <span class="s">&#39;dyn_args&#39;</span><span class="p">,</span> <span class="s">&#39;dyn_kwargs&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Call.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Call.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">volatile</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+        <span class="c"># don&#39;t evaluate context functions</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">_context_function_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;contextfunction&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;evalcontextfunction&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;environmentfunction&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dyn_args</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dyn_kwargs</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="Getitem"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Getitem">[docs]</a><span class="k">class</span> <span class="nc">Getitem</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get an attribute or item from an expression and prefer the item.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;arg&#39;</span><span class="p">,</span> <span class="s">&#39;ctx&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Getitem.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Getitem.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">!=</span> <span class="s">&#39;load&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">),</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">arg</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Getitem.can_assign"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Getitem.can_assign">[docs]</a>    <span class="k">def</span> <span class="nf">can_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div></div>
+<div class="viewcode-block" id="Getattr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Getattr">[docs]</a><span class="k">class</span> <span class="nc">Getattr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get an attribute or item from an expression that is a ascii-only</span>
+<span class="sd">    bytestring and prefer the attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="s">&#39;attr&#39;</span><span class="p">,</span> <span class="s">&#39;ctx&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Getattr.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Getattr.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">!=</span> <span class="s">&#39;load&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">),</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Getattr.can_assign"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Getattr.can_assign">[docs]</a>    <span class="k">def</span> <span class="nf">can_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div></div>
+<div class="viewcode-block" id="Slice"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Slice">[docs]</a><span class="k">class</span> <span class="nc">Slice</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a slice object.  This must only be used as argument for</span>
+<span class="sd">    :class:`Subscript`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;start&#39;</span><span class="p">,</span> <span class="s">&#39;stop&#39;</span><span class="p">,</span> <span class="s">&#39;step&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Slice.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Slice.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">const</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="n">const</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="n">const</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">),</span> <span class="n">const</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="Concat"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Concat">[docs]</a><span class="k">class</span> <span class="nc">Concat</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Concatenates the list of expressions provided after converting them to</span>
+<span class="sd">    unicode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;nodes&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="Concat.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Concat.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Compare"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Compare">[docs]</a><span class="k">class</span> <span class="nc">Compare</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares an expression with some other expressions.  `ops` must be a</span>
+<span class="sd">    list of :class:`Operand`\s.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;expr&#39;</span><span class="p">,</span> <span class="s">&#39;ops&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Compare.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Compare.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">:</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">_cmpop_to_func</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">op</span><span class="p">](</span><span class="n">value</span><span class="p">,</span> <span class="n">new_value</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">new_value</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div></div>
+<div class="viewcode-block" id="Operand"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Operand">[docs]</a><span class="k">class</span> <span class="nc">Operand</span><span class="p">(</span><span class="n">Helper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Holds an operator and an expression.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;op&#39;</span><span class="p">,</span> <span class="s">&#39;expr&#39;</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+    <span class="n">Operand</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">The following operators are available: &#39;</span> <span class="o">+</span> \
+        <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="s">&#39;``</span><span class="si">%s</span><span class="s">``&#39;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">_binop_to_func</span><span class="p">)</span> <span class="o">|</span>
+                  <span class="nb">set</span><span class="p">(</span><span class="n">_uaop_to_func</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">_cmpop_to_func</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="Mul"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Mul">[docs]</a><span class="k">class</span> <span class="nc">Mul</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Multiplies the left with the right node.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;*&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Div"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Div">[docs]</a><span class="k">class</span> <span class="nc">Div</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Divides the left by the right node.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span>
+
+</div>
+<div class="viewcode-block" id="FloorDiv"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.FloorDiv">[docs]</a><span class="k">class</span> <span class="nc">FloorDiv</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Divides the left by the right node and truncates conver the</span>
+<span class="sd">    result into an integer by truncating.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;//&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Add"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Add">[docs]</a><span class="k">class</span> <span class="nc">Add</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add the left to the right node.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;+&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Sub"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Sub">[docs]</a><span class="k">class</span> <span class="nc">Sub</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Substract the right from the left node.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Mod"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Mod">[docs]</a><span class="k">class</span> <span class="nc">Mod</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Left modulo right.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;%&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Pow"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Pow">[docs]</a><span class="k">class</span> <span class="nc">Pow</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Left to the power of right.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;**&#39;</span>
+
+</div>
+<div class="viewcode-block" id="And"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.And">[docs]</a><span class="k">class</span> <span class="nc">And</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Short circuited AND.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;and&#39;</span>
+
+<div class="viewcode-block" id="And.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.And.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Or"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Or">[docs]</a><span class="k">class</span> <span class="nc">Or</span><span class="p">(</span><span class="n">BinExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Short circuited OR.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;or&#39;</span>
+
+<div class="viewcode-block" id="Or.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Or.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Not"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Not">[docs]</a><span class="k">class</span> <span class="nc">Not</span><span class="p">(</span><span class="n">UnaryExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Negate the expression.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;not&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Neg"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Neg">[docs]</a><span class="k">class</span> <span class="nc">Neg</span><span class="p">(</span><span class="n">UnaryExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make the expression negative.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
+
+</div>
+<div class="viewcode-block" id="Pos"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Pos">[docs]</a><span class="k">class</span> <span class="nc">Pos</span><span class="p">(</span><span class="n">UnaryExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make the expression positive (noop for most expressions)&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="s">&#39;+&#39;</span>
+
+
+<span class="c"># Helpers for extensions</span>
+
+</div>
+<div class="viewcode-block" id="EnvironmentAttribute"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.EnvironmentAttribute">[docs]</a><span class="k">class</span> <span class="nc">EnvironmentAttribute</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads an attribute from the environment object.  This is useful for</span>
+<span class="sd">    extensions that want to call a callback stored on the environment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="ExtensionAttribute"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.ExtensionAttribute">[docs]</a><span class="k">class</span> <span class="nc">ExtensionAttribute</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the attribute of an extension bound to the environment.</span>
+<span class="sd">    The identifier is the identifier of the :class:`Extension`.</span>
+
+<span class="sd">    This node is usually constructed by calling the</span>
+<span class="sd">    :meth:`~jinja2.ext.Extension.attr` method on an extension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;identifier&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ImportedName"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.ImportedName">[docs]</a><span class="k">class</span> <span class="nc">ImportedName</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;If created with an import name the import name is returned on node</span>
+<span class="sd">    access.  For example ``ImportedName(&#39;cgi.escape&#39;)`` returns the `escape`</span>
+<span class="sd">    function from the cgi module on evaluation.  Imports are optimized by the</span>
+<span class="sd">    compiler so there is no need to assign them to local variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;importname&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="InternalName"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.InternalName">[docs]</a><span class="k">class</span> <span class="nc">InternalName</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An internal name in the compiler.  You cannot create these nodes</span>
+<span class="sd">    yourself but the parser provides a</span>
+<span class="sd">    :meth:`~jinja2.parser.Parser.free_identifier` method that creates</span>
+<span class="sd">    a new identifier for you.  This identifier is not available from the</span>
+<span class="sd">    template and is not threated specially by the compiler.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Can</span><span class="se">\&#39;</span><span class="s">t create internal names.  Use the &#39;</span>
+                        <span class="s">&#39;`free_identifier` method on a parser.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="MarkSafe"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.MarkSafe">[docs]</a><span class="k">class</span> <span class="nc">MarkSafe</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mark the wrapped expression as safe (wrap it as `Markup`).&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;expr&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="MarkSafe.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.MarkSafe.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="MarkSafeIfAutoescape"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.MarkSafeIfAutoescape">[docs]</a><span class="k">class</span> <span class="nc">MarkSafeIfAutoescape</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mark the wrapped expression as safe (wrap it as `Markup`) but</span>
+<span class="sd">    only if autoescaping is active.</span>
+
+<span class="sd">    .. versionadded:: 2.5</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;expr&#39;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="MarkSafeIfAutoescape.as_const"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.MarkSafeIfAutoescape.as_const">[docs]</a>    <span class="k">def</span> <span class="nf">as_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">get_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">volatile</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Impossible</span><span class="p">()</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">as_const</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+</div></div>
+<div class="viewcode-block" id="ContextReference"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.ContextReference">[docs]</a><span class="k">class</span> <span class="nc">ContextReference</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the current template context.  It can be used like a</span>
+<span class="sd">    :class:`Name` node, with a ``&#39;load&#39;`` ctx and will return the</span>
+<span class="sd">    current :class:`~jinja2.runtime.Context` object.</span>
+
+<span class="sd">    Here an example that assigns the current template name to a</span>
+<span class="sd">    variable named `foo`::</span>
+
+<span class="sd">        Assign(Name(&#39;foo&#39;, ctx=&#39;store&#39;),</span>
+<span class="sd">               Getattr(ContextReference(), &#39;name&#39;))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="Continue"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Continue">[docs]</a><span class="k">class</span> <span class="nc">Continue</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Continue a loop.&quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="Break"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Break">[docs]</a><span class="k">class</span> <span class="nc">Break</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Break a loop.&quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="Scope"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.Scope">[docs]</a><span class="k">class</span> <span class="nc">Scope</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An artificial scope.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="EvalContextModifier"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.EvalContextModifier">[docs]</a><span class="k">class</span> <span class="nc">EvalContextModifier</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Modifies the eval context.  For each option that should be modified,</span>
+<span class="sd">    a :class:`Keyword` has to be added to the :attr:`options` list.</span>
+
+<span class="sd">    Example to change the `autoescape` setting::</span>
+
+<span class="sd">        EvalContextModifier(options=[Keyword(&#39;autoescape&#39;, Const(True))])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;options&#39;</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="ScopedEvalContextModifier"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.nodes.ScopedEvalContextModifier">[docs]</a><span class="k">class</span> <span class="nc">ScopedEvalContextModifier</span><span class="p">(</span><span class="n">EvalContextModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Modifies the eval context and reverts it later.  Works exactly like</span>
+<span class="sd">    :class:`EvalContextModifier` but will only modify the</span>
+<span class="sd">    :class:`~jinja2.nodes.EvalContext` for nodes in the :attr:`body`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">,)</span>
+
+
+<span class="c"># make sure nobody creates custom nodes</span></div>
+<span class="k">def</span> <span class="nf">_failing_new</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;can</span><span class="se">\&#39;</span><span class="s">t create custom node types&#39;</span><span class="p">)</span>
+<span class="n">NodeType</span><span class="o">.</span><span class="n">__new__</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_failing_new</span><span class="p">);</span> <span class="k">del</span> <span class="n">_failing_new</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,180 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.visitor &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.visitor</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.visitor</span>
+<span class="sd">    ~~~~~~~~~~~~~~</span>
+
+<span class="sd">    This module implements a visitor for the nodes.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">jinja2.nodes</span> <span class="kn">import</span> <span class="n">Node</span>
+
+
+<div class="viewcode-block" id="NodeVisitor"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeVisitor">[docs]</a><span class="k">class</span> <span class="nc">NodeVisitor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Walks the abstract syntax tree and call visitor functions for every</span>
+<span class="sd">    node found.  The visitor functions may return values which will be</span>
+<span class="sd">    forwarded by the `visit` method.</span>
+
+<span class="sd">    Per default the visitor functions for the nodes are ``&#39;visit_&#39;`` +</span>
+<span class="sd">    class name of the node.  So a `TryFinally` node visit function would</span>
+<span class="sd">    be `visit_TryFinally`.  This behavior can be changed by overriding</span>
+<span class="sd">    the `get_visitor` function.  If no visitor function exists for a node</span>
+<span class="sd">    (return value `None`) the `generic_visit` visitor is used instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NodeVisitor.get_visitor"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeVisitor.get_visitor">[docs]</a>    <span class="k">def</span> <span class="nf">get_visitor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the visitor function for this node or `None` if no visitor</span>
+<span class="sd">        exists for this node.  In that case the generic visit function is</span>
+<span class="sd">        used instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;visit_&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="NodeVisitor.visit"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeVisitor.visit">[docs]</a>    <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visit a node.&quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_visitor</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="NodeVisitor.generic_visit"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeVisitor.generic_visit">[docs]</a>    <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called if no explicit visitor function exists for a node.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iter_child_nodes</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="NodeTransformer"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeTransformer">[docs]</a><span class="k">class</span> <span class="nc">NodeTransformer</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Walks the abstract syntax tree and allows modifications of nodes.</span>
+
+<span class="sd">    The `NodeTransformer` will walk the AST and use the return value of the</span>
+<span class="sd">    visitor functions to replace or remove the old node.  If the return</span>
+<span class="sd">    value of the visitor function is `None` the node will be removed</span>
+<span class="sd">    from the previous location otherwise it&#39;s replaced with the return</span>
+<span class="sd">    value.  The return value may be the original node in which case no</span>
+<span class="sd">    replacement takes place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NodeTransformer.generic_visit"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeTransformer.generic_visit">[docs]</a>    <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">old_value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iter_fields</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">new_values</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">old_value</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+                            <span class="n">new_values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                            <span class="k">continue</span>
+                    <span class="n">new_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">old_value</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">new_values</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+                <span class="n">new_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_node</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="nb">delattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">new_node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="NodeTransformer.visit_list"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.visitor.NodeTransformer.visit_list">[docs]</a>    <span class="k">def</span> <span class="nf">visit_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;As transformers may return lists in some places this method</span>
+<span class="sd">        can be used to enforce a list as return value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="p">[</span><span class="n">rv</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">rv</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

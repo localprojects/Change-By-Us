@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.debugerror &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.debugerror</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">pretty debug errors</span>
+<span class="sd">(part of web.py)</span>
+
+<span class="sd">portions adapted from Django &lt;djangoproject.com&gt; </span>
+<span class="sd">Copyright (c) 2005, the Lawrence Journal-World</span>
+<span class="sd">Used under the modified BSD license:</span>
+<span class="sd">http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;debugerror&quot;</span><span class="p">,</span> <span class="s">&quot;djangoerror&quot;</span><span class="p">,</span> <span class="s">&quot;emailerrors&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">urlparse</span><span class="o">,</span> <span class="nn">pprint</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">template</span> <span class="kn">import</span> <span class="n">Template</span>
+<span class="kn">from</span> <span class="nn">net</span> <span class="kn">import</span> <span class="n">websafe</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">sendmail</span><span class="p">,</span> <span class="n">safestr</span>
+<span class="kn">import</span> <span class="nn">webapi</span> <span class="kn">as</span> <span class="nn">web</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">os.path</span>
+<span class="n">whereami</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">__file__</span><span class="p">)</span>
+<span class="n">whereami</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">whereami</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">djangoerror_t</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">$def with (exception_type, exception_value, frames)</span>
+<span class="s">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot; &quot;http://www.w3.org/TR/html4/loose.dtd&quot;&gt;</span>
+<span class="s">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="s">&lt;head&gt;</span>
+<span class="s">  &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot; /&gt;</span>
+<span class="s">  &lt;meta name=&quot;robots&quot; content=&quot;NONE,NOARCHIVE&quot; /&gt;</span>
+<span class="s">  &lt;title&gt;$exception_type at $ctx.path&lt;/title&gt;</span>
+<span class="s">  &lt;style type=&quot;text/css&quot;&gt;</span>
+<span class="s">    html * { padding:0; margin:0; }</span>
+<span class="s">    body * { padding:10px 20px; }</span>
+<span class="s">    body * * { padding:0; }</span>
+<span class="s">    body { font:small sans-serif; }</span>
+<span class="s">    body&gt;div { border-bottom:1px solid #ddd; }</span>
+<span class="s">    h1 { font-weight:normal; }</span>
+<span class="s">    h2 { margin-bottom:.8em; }</span>
+<span class="s">    h2 span { font-size:80%; color:#666; font-weight:normal; }</span>
+<span class="s">    h3 { margin:1em 0 .5em 0; }</span>
+<span class="s">    h4 { margin:0 0 .5em 0; font-weight: normal; }</span>
+<span class="s">    table { </span>
+<span class="s">        border:1px solid #ccc; border-collapse: collapse; background:white; }</span>
+<span class="s">    tbody td, tbody th { vertical-align:top; padding:2px 3px; }</span>
+<span class="s">    thead th { </span>
+<span class="s">        padding:1px 6px 1px 3px; background:#fefefe; text-align:left; </span>
+<span class="s">        font-weight:normal; font-size:11px; border:1px solid #ddd; }</span>
+<span class="s">    tbody th { text-align:right; color:#666; padding-right:.5em; }</span>
+<span class="s">    table.vars { margin:5px 0 2px 40px; }</span>
+<span class="s">    table.vars td, table.req td { font-family:monospace; }</span>
+<span class="s">    table td.code { width:100%;}</span>
+<span class="s">    table td.code div { overflow:hidden; }</span>
+<span class="s">    table.source th { color:#666; }</span>
+<span class="s">    table.source td { </span>
+<span class="s">        font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }</span>
+<span class="s">    ul.traceback { list-style-type:none; }</span>
+<span class="s">    ul.traceback li.frame { margin-bottom:1em; }</span>
+<span class="s">    div.context { margin: 10px 0; }</span>
+<span class="s">    div.context ol { </span>
+<span class="s">        padding-left:30px; margin:0 10px; list-style-position: inside; }</span>
+<span class="s">    div.context ol li { </span>
+<span class="s">        font-family:monospace; white-space:pre; color:#666; cursor:pointer; }</span>
+<span class="s">    div.context ol.context-line li { color:black; background-color:#ccc; }</span>
+<span class="s">    div.context ol.context-line li span { float: right; }</span>
+<span class="s">    div.commands { margin-left: 40px; }</span>
+<span class="s">    div.commands a { color:black; text-decoration:none; }</span>
+<span class="s">    #summary { background: #ffc; }</span>
+<span class="s">    #summary h2 { font-weight: normal; color: #666; }</span>
+<span class="s">    #explanation { background:#eee; }</span>
+<span class="s">    #template, #template-not-exist { background:#f6f6f6; }</span>
+<span class="s">    #template-not-exist ul { margin: 0 0 0 20px; }</span>
+<span class="s">    #traceback { background:#eee; }</span>
+<span class="s">    #requestinfo { background:#f6f6f6; padding-left:120px; }</span>
+<span class="s">    #summary table { border:none; background:transparent; }</span>
+<span class="s">    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }</span>
+<span class="s">    #requestinfo h3 { margin-bottom:-1em; }</span>
+<span class="s">    .error { background: #ffc; }</span>
+<span class="s">    .specific { color:#cc3300; font-weight:bold; }</span>
+<span class="s">  &lt;/style&gt;</span>
+<span class="s">  &lt;script type=&quot;text/javascript&quot;&gt;</span>
+<span class="s">  //&lt;!--</span>
+<span class="s">    function getElementsByClassName(oElm, strTagName, strClassName){</span>
+<span class="s">        // Written by Jonathan Snook, http://www.snook.ca/jon; </span>
+<span class="s">        // Add-ons by Robert Nyman, http://www.robertnyman.com</span>
+<span class="s">        var arrElements = (strTagName == &quot;*&quot; &amp;&amp; document.all)? document.all :</span>
+<span class="s">        oElm.getElementsByTagName(strTagName);</span>
+<span class="s">        var arrReturnElements = new Array();</span>
+<span class="s">        strClassName = strClassName.replace(/\-/g, &quot;</span><span class="se">\\</span><span class="s">-&quot;);</span>
+<span class="s">        var oRegExp = new RegExp(&quot;(^|</span><span class="se">\\</span><span class="s">s)&quot; + strClassName + &quot;(</span><span class="se">\\</span><span class="s">s|$$)&quot;);</span>
+<span class="s">        var oElement;</span>
+<span class="s">        for(var i=0; i&lt;arrElements.length; i++){</span>
+<span class="s">            oElement = arrElements[i];</span>
+<span class="s">            if(oRegExp.test(oElement.className)){</span>
+<span class="s">                arrReturnElements.push(oElement);</span>
+<span class="s">            }</span>
+<span class="s">        }</span>
+<span class="s">        return (arrReturnElements)</span>
+<span class="s">    }</span>
+<span class="s">    function hideAll(elems) {</span>
+<span class="s">      for (var e = 0; e &lt; elems.length; e++) {</span>
+<span class="s">        elems[e].style.display = &#39;none&#39;;</span>
+<span class="s">      }</span>
+<span class="s">    }</span>
+<span class="s">    window.onload = function() {</span>
+<span class="s">      hideAll(getElementsByClassName(document, &#39;table&#39;, &#39;vars&#39;));</span>
+<span class="s">      hideAll(getElementsByClassName(document, &#39;ol&#39;, &#39;pre-context&#39;));</span>
+<span class="s">      hideAll(getElementsByClassName(document, &#39;ol&#39;, &#39;post-context&#39;));</span>
+<span class="s">    }</span>
+<span class="s">    function toggle() {</span>
+<span class="s">      for (var i = 0; i &lt; arguments.length; i++) {</span>
+<span class="s">        var e = document.getElementById(arguments[i]);</span>
+<span class="s">        if (e) {</span>
+<span class="s">          e.style.display = e.style.display == &#39;none&#39; ? &#39;block&#39; : &#39;none&#39;;</span>
+<span class="s">        }</span>
+<span class="s">      }</span>
+<span class="s">      return false;</span>
+<span class="s">    }</span>
+<span class="s">    function varToggle(link, id) {</span>
+<span class="s">      toggle(&#39;v&#39; + id);</span>
+<span class="s">      var s = link.getElementsByTagName(&#39;span&#39;)[0];</span>
+<span class="s">      var uarr = String.fromCharCode(0x25b6);</span>
+<span class="s">      var darr = String.fromCharCode(0x25bc);</span>
+<span class="s">      s.innerHTML = s.innerHTML == uarr ? darr : uarr;</span>
+<span class="s">      return false;</span>
+<span class="s">    }</span>
+<span class="s">    //--&gt;</span>
+<span class="s">  &lt;/script&gt;</span>
+<span class="s">&lt;/head&gt;</span>
+<span class="s">&lt;body&gt;</span>
+
+<span class="s">$def dicttable (d, kls=&#39;req&#39;, id=None):</span>
+<span class="s">    $ items = d and d.items() or []</span>
+<span class="s">    $items.sort()</span>
+<span class="s">    $:dicttable_items(items, kls, id)</span>
+<span class="s">        </span>
+<span class="s">$def dicttable_items(items, kls=&#39;req&#39;, id=None):</span>
+<span class="s">    $if items:</span>
+<span class="s">        &lt;table class=&quot;$kls&quot;</span>
+<span class="s">        $if id: id=&quot;$id&quot;</span>
+<span class="s">        &gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Variable&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</span>
+<span class="s">        &lt;tbody&gt;</span>
+<span class="s">        $for k, v in items:</span>
+<span class="s">            &lt;tr&gt;&lt;td&gt;$k&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;div&gt;$prettify(v)&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;</span>
+<span class="s">        &lt;/tbody&gt;</span>
+<span class="s">        &lt;/table&gt;</span>
+<span class="s">    $else:</span>
+<span class="s">        &lt;p&gt;No data.&lt;/p&gt;</span>
+
+<span class="s">&lt;div id=&quot;summary&quot;&gt;</span>
+<span class="s">  &lt;h1&gt;$exception_type at $ctx.path&lt;/h1&gt;</span>
+<span class="s">  &lt;h2&gt;$exception_value&lt;/h2&gt;</span>
+<span class="s">  &lt;table&gt;&lt;tr&gt;</span>
+<span class="s">    &lt;th&gt;Python&lt;/th&gt;</span>
+<span class="s">    &lt;td&gt;$frames[0].filename in $frames[0].function, line $frames[0].lineno&lt;/td&gt;</span>
+<span class="s">  &lt;/tr&gt;&lt;tr&gt;</span>
+<span class="s">    &lt;th&gt;Web&lt;/th&gt;</span>
+<span class="s">    &lt;td&gt;$ctx.method $ctx.home$ctx.path&lt;/td&gt;</span>
+<span class="s">  &lt;/tr&gt;&lt;/table&gt;</span>
+<span class="s">&lt;/div&gt;</span>
+<span class="s">&lt;div id=&quot;traceback&quot;&gt;</span>
+<span class="s">&lt;h2&gt;Traceback &lt;span&gt;(innermost first)&lt;/span&gt;&lt;/h2&gt;</span>
+<span class="s">&lt;ul class=&quot;traceback&quot;&gt;</span>
+<span class="s">$for frame in frames:</span>
+<span class="s">    &lt;li class=&quot;frame&quot;&gt;</span>
+<span class="s">    &lt;code&gt;$frame.filename&lt;/code&gt; in &lt;code&gt;$frame.function&lt;/code&gt;</span>
+<span class="s">    $if frame.context_line is not None:</span>
+<span class="s">        &lt;div class=&quot;context&quot; id=&quot;c$frame.id&quot;&gt;</span>
+<span class="s">        $if frame.pre_context:</span>
+<span class="s">            &lt;ol start=&quot;$frame.pre_context_lineno&quot; class=&quot;pre-context&quot; id=&quot;pre$frame.id&quot;&gt;</span>
+<span class="s">            $for line in frame.pre_context:</span>
+<span class="s">                &lt;li onclick=&quot;toggle(&#39;pre$frame.id&#39;, &#39;post$frame.id&#39;)&quot;&gt;$line&lt;/li&gt;</span>
+<span class="s">            &lt;/ol&gt;</span>
+<span class="s">            &lt;ol start=&quot;$frame.lineno&quot; class=&quot;context-line&quot;&gt;&lt;li onclick=&quot;toggle(&#39;pre$frame.id&#39;, &#39;post$frame.id&#39;)&quot;&gt;$frame.context_line &lt;span&gt;...&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;</span>
+<span class="s">        $if frame.post_context:</span>
+<span class="s">            &lt;ol start=&#39;${frame.lineno + 1}&#39; class=&quot;post-context&quot; id=&quot;post$frame.id&quot;&gt;</span>
+<span class="s">            $for line in frame.post_context:</span>
+<span class="s">                &lt;li onclick=&quot;toggle(&#39;pre$frame.id&#39;, &#39;post$frame.id&#39;)&quot;&gt;$line&lt;/li&gt;</span>
+<span class="s">            &lt;/ol&gt;</span>
+<span class="s">      &lt;/div&gt;</span>
+<span class="s">    </span>
+<span class="s">    $if frame.vars:</span>
+<span class="s">        &lt;div class=&quot;commands&quot;&gt;</span>
+<span class="s">        &lt;a href=&#39;#&#39; onclick=&quot;return varToggle(this, &#39;$frame.id&#39;)&quot;&gt;&lt;span&gt;&amp;#x25b6;&lt;/span&gt; Local vars&lt;/a&gt;</span>
+<span class="s">        $# $inspect.formatargvalues(*inspect.getargvalues(frame[&#39;tb&#39;].tb_frame))</span>
+<span class="s">        &lt;/div&gt;</span>
+<span class="s">        $:dicttable(frame.vars, kls=&#39;vars&#39;, id=(&#39;v&#39; + str(frame.id)))</span>
+<span class="s">      &lt;/li&gt;</span>
+<span class="s">  &lt;/ul&gt;</span>
+<span class="s">&lt;/div&gt;</span>
+
+<span class="s">&lt;div id=&quot;requestinfo&quot;&gt;</span>
+<span class="s">$if ctx.output or ctx.headers:</span>
+<span class="s">    &lt;h2&gt;Response so far&lt;/h2&gt;</span>
+<span class="s">    &lt;h3&gt;HEADERS&lt;/h3&gt;</span>
+<span class="s">    $:dicttable_items(ctx.headers)</span>
+
+<span class="s">    &lt;h3&gt;BODY&lt;/h3&gt;</span>
+<span class="s">    &lt;p class=&quot;req&quot; style=&quot;padding-bottom: 2em&quot;&gt;&lt;code&gt;</span>
+<span class="s">    $ctx.output</span>
+<span class="s">    &lt;/code&gt;&lt;/p&gt;</span>
+<span class="s">  </span>
+<span class="s">&lt;h2&gt;Request information&lt;/h2&gt;</span>
+
+<span class="s">&lt;h3&gt;INPUT&lt;/h3&gt;</span>
+<span class="s">$:dicttable(web.input(_unicode=False))</span>
+
+<span class="s">&lt;h3 id=&quot;cookie-info&quot;&gt;COOKIES&lt;/h3&gt;</span>
+<span class="s">$:dicttable(web.cookies())</span>
+
+<span class="s">&lt;h3 id=&quot;meta-info&quot;&gt;META&lt;/h3&gt;</span>
+<span class="s">$ newctx = [(k, v) for (k, v) in ctx.iteritems() if not k.startswith(&#39;_&#39;) and not isinstance(v, dict)]</span>
+<span class="s">$:dicttable(dict(newctx))</span>
+
+<span class="s">&lt;h3 id=&quot;meta-info&quot;&gt;ENVIRONMENT&lt;/h3&gt;</span>
+<span class="s">$:dicttable(ctx.env)</span>
+<span class="s">&lt;/div&gt;</span>
+
+<span class="s">&lt;div id=&quot;explanation&quot;&gt;</span>
+<span class="s">  &lt;p&gt;</span>
+<span class="s">    You&#39;re seeing this error because you have &lt;code&gt;web.config.debug&lt;/code&gt;</span>
+<span class="s">    set to &lt;code&gt;True&lt;/code&gt;. Set that to &lt;code&gt;False&lt;/code&gt; if you don&#39;t to see this.</span>
+<span class="s">  &lt;/p&gt;</span>
+<span class="s">&lt;/div&gt;</span>
+
+<span class="s">&lt;/body&gt;</span>
+<span class="s">&lt;/html&gt;</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">djangoerror_r</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="djangoerror"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.debugerror.djangoerror">[docs]</a><span class="k">def</span> <span class="nf">djangoerror</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">_get_lines_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">context_lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns context_lines before and after lineno from file.</span>
+<span class="sd">        Returns (pre_context_lineno, pre_context, context_line, post_context).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lineno</span> <span class="o">-</span> <span class="n">context_lines</span><span class="p">)</span>
+            <span class="n">upper_bound</span> <span class="o">=</span> <span class="n">lineno</span> <span class="o">+</span> <span class="n">context_lines</span>
+
+            <span class="n">pre_context</span> <span class="o">=</span> \
+                <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">source</span><span class="p">[</span><span class="n">lower_bound</span><span class="p">:</span><span class="n">lineno</span><span class="p">]]</span>
+            <span class="n">context_line</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="n">lineno</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">post_context</span> <span class="o">=</span> \
+                <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">source</span><span class="p">[</span><span class="n">lineno</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">upper_bound</span><span class="p">]]</span>
+
+            <span class="k">return</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">pre_context</span><span class="p">,</span> <span class="n">context_line</span><span class="p">,</span> <span class="n">post_context</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="p">[],</span> <span class="bp">None</span><span class="p">,</span> <span class="p">[]</span>    
+    
+    <span class="n">exception_type</span><span class="p">,</span> <span class="n">exception_value</span><span class="p">,</span> <span class="n">tback</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">tback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_filename</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_lineno</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c"># hack to get correct line number for templates</span>
+        <span class="n">lineno</span> <span class="o">+=</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_locals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;__lineoffset__&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">pre_context_lineno</span><span class="p">,</span> <span class="n">pre_context</span><span class="p">,</span> <span class="n">context_line</span><span class="p">,</span> <span class="n">post_context</span> <span class="o">=</span> \
+            <span class="n">_get_lines_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;__hidetraceback__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_locals</span><span class="p">:</span>
+            <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">storage</span><span class="p">({</span>
+                <span class="s">&#39;tback&#39;</span><span class="p">:</span> <span class="n">tback</span><span class="p">,</span>
+                <span class="s">&#39;filename&#39;</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span>
+                <span class="s">&#39;function&#39;</span><span class="p">:</span> <span class="n">function</span><span class="p">,</span>
+                <span class="s">&#39;lineno&#39;</span><span class="p">:</span> <span class="n">lineno</span><span class="p">,</span>
+                <span class="s">&#39;vars&#39;</span><span class="p">:</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_locals</span><span class="p">,</span>
+                <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="nb">id</span><span class="p">(</span><span class="n">tback</span><span class="p">),</span>
+                <span class="s">&#39;pre_context&#39;</span><span class="p">:</span> <span class="n">pre_context</span><span class="p">,</span>
+                <span class="s">&#39;context_line&#39;</span><span class="p">:</span> <span class="n">context_line</span><span class="p">,</span>
+                <span class="s">&#39;post_context&#39;</span><span class="p">:</span> <span class="n">post_context</span><span class="p">,</span>
+                <span class="s">&#39;pre_context_lineno&#39;</span><span class="p">:</span> <span class="n">pre_context_lineno</span><span class="p">,</span>
+            <span class="p">}))</span>
+        <span class="n">tback</span> <span class="o">=</span> <span class="n">tback</span><span class="o">.</span><span class="n">tb_next</span>
+    <span class="n">frames</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="n">urljoin</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urljoin</span>
+    <span class="k">def</span> <span class="nf">prettify</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">out</span> <span class="o">=</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span> 
+            <span class="n">out</span> <span class="o">=</span> <span class="s">&#39;[could not display: &lt;&#39;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> \
+                  <span class="s">&#39;: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;&gt;]&#39;</span>
+        <span class="k">return</span> <span class="n">out</span>
+        
+    <span class="k">global</span> <span class="n">djangoerror_r</span>
+    <span class="k">if</span> <span class="n">djangoerror_r</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">djangoerror_r</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">djangoerror_t</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">__file__</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="n">websafe</span><span class="p">)</span>
+        
+    <span class="n">t</span> <span class="o">=</span> <span class="n">djangoerror_r</span>
+    <span class="nb">globals</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;ctx&#39;</span><span class="p">:</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="p">,</span> <span class="s">&#39;web&#39;</span><span class="p">:</span><span class="n">web</span><span class="p">,</span> <span class="s">&#39;dict&#39;</span><span class="p">:</span><span class="nb">dict</span><span class="p">,</span> <span class="s">&#39;str&#39;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="s">&#39;prettify&#39;</span><span class="p">:</span> <span class="n">prettify</span><span class="p">}</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">func_globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">globals</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">t</span><span class="p">(</span><span class="n">exception_type</span><span class="p">,</span> <span class="n">exception_value</span><span class="p">,</span> <span class="n">frames</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="debugerror"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.debugerror.debugerror">[docs]</a><span class="k">def</span> <span class="nf">debugerror</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A replacement for `internalerror` that presents a nice page with lots</span>
+<span class="sd">    of debug information for the programmer.</span>
+
+<span class="sd">    (Based on the beautiful 500 page from [Django](http://djangoproject.com/), </span>
+<span class="sd">    designed by [Wilson Miner](http://wilsonminer.com/).)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">_InternalError</span><span class="p">(</span><span class="n">djangoerror</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="emailerrors"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.debugerror.emailerrors">[docs]</a><span class="k">def</span> <span class="nf">emailerrors</span><span class="p">(</span><span class="n">to_address</span><span class="p">,</span> <span class="n">olderror</span><span class="p">,</span> <span class="n">from_address</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps the old `internalerror` handler (pass as `olderror`) to </span>
+<span class="sd">    additionally email all errors to `to_address`, to aid in</span>
+<span class="sd">    debugging production websites.</span>
+<span class="sd">    </span>
+<span class="sd">    Emails contain a normal text traceback as well as an</span>
+<span class="sd">    attachment containing the nice `debugerror` page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">from_address</span> <span class="o">=</span> <span class="n">from_address</span> <span class="ow">or</span> <span class="n">to_address</span>
+
+    <span class="k">def</span> <span class="nf">emailerrors_internal</span><span class="p">():</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">olderror</span><span class="p">()</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="n">error_name</span> <span class="o">=</span> <span class="n">tb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">error_value</span> <span class="o">=</span> <span class="n">tb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">tb_txt</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="o">*</span><span class="n">tb</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">method</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">home</span> <span class="o">+</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fullpath</span>
+
+        <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">tb_txt</span><span class="p">)</span>
+
+        <span class="n">sendmail</span><span class="p">(</span>
+            <span class="s">&quot;your buggy site &lt;</span><span class="si">%s</span><span class="s">&gt;&quot;</span> <span class="o">%</span> <span class="n">from_address</span><span class="p">,</span>
+            <span class="s">&quot;the bugfixer &lt;</span><span class="si">%s</span><span class="s">&gt;&quot;</span> <span class="o">%</span> <span class="n">to_address</span><span class="p">,</span>
+            <span class="s">&quot;bug: </span><span class="si">%(error_name)s</span><span class="s">: </span><span class="si">%(error_value)s</span><span class="s"> (</span><span class="si">%(path)s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="nb">locals</span><span class="p">(),</span>
+            <span class="n">message</span><span class="p">,</span>
+            <span class="n">attachments</span><span class="o">=</span><span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s">&quot;bug.html&quot;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">safestr</span><span class="p">(</span><span class="n">djangoerror</span><span class="p">()))</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">error</span>
+    
+    <span class="k">return</span> <span class="n">emailerrors_internal</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">urls</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="s">&#39;index&#39;</span>
+    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">application</span> <span class="kn">import</span> <span class="n">application</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">application</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="nb">globals</span><span class="p">())</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">internalerror</span> <span class="o">=</span> <span class="n">debugerror</span>
+    
+    <span class="k">class</span> <span class="nc">index</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">thisdoesnotexist</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

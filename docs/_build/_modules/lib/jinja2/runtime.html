@@ -1,0 +1,641 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.runtime &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.runtime</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.runtime</span>
+<span class="sd">    ~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Runtime helpers.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">imap</span>
+<span class="kn">from</span> <span class="nn">jinja2.nodes</span> <span class="kn">import</span> <span class="n">EvalContext</span><span class="p">,</span> <span class="n">_context_function_types</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">partial</span><span class="p">,</span> <span class="n">soft_unicode</span><span class="p">,</span> <span class="n">escape</span><span class="p">,</span> <span class="n">missing</span><span class="p">,</span> \
+     <span class="n">concat</span><span class="p">,</span> <span class="n">internalcode</span><span class="p">,</span> <span class="nb">next</span><span class="p">,</span> <span class="n">object_type_repr</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">UndefinedError</span><span class="p">,</span> <span class="n">TemplateRuntimeError</span><span class="p">,</span> \
+     <span class="n">TemplateNotFound</span>
+
+
+<span class="c"># these variables are exported to the template runtime</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;LoopContext&#39;</span><span class="p">,</span> <span class="s">&#39;TemplateReference&#39;</span><span class="p">,</span> <span class="s">&#39;Macro&#39;</span><span class="p">,</span> <span class="s">&#39;Markup&#39;</span><span class="p">,</span>
+           <span class="s">&#39;TemplateRuntimeError&#39;</span><span class="p">,</span> <span class="s">&#39;missing&#39;</span><span class="p">,</span> <span class="s">&#39;concat&#39;</span><span class="p">,</span> <span class="s">&#39;escape&#39;</span><span class="p">,</span>
+           <span class="s">&#39;markup_join&#39;</span><span class="p">,</span> <span class="s">&#39;unicode_join&#39;</span><span class="p">,</span> <span class="s">&#39;to_string&#39;</span><span class="p">,</span> <span class="s">&#39;identity&#39;</span><span class="p">,</span>
+           <span class="s">&#39;TemplateNotFound&#39;</span><span class="p">]</span>
+
+<span class="c">#: the name of the function that is used to convert something into</span>
+<span class="c">#: a string.  2to3 will adopt that automatically and the generated</span>
+<span class="c">#: code can take advantage of it.</span>
+<span class="n">to_string</span> <span class="o">=</span> <span class="nb">unicode</span>
+
+<span class="c">#: the identity function.  Useful for certain things in the environment</span>
+<span class="n">identity</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+
+
+<div class="viewcode-block" id="markup_join"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.markup_join">[docs]</a><span class="k">def</span> <span class="nf">markup_join</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Concatenation that escapes if necessary and converts to unicode.&quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">iterator</span> <span class="o">=</span> <span class="n">imap</span><span class="p">(</span><span class="n">soft_unicode</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+        <span class="n">buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="s">u&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">iterator</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">concat</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="unicode_join"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.unicode_join">[docs]</a><span class="k">def</span> <span class="nf">unicode_join</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Simple args to unicode conversion and concatenation.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">concat</span><span class="p">(</span><span class="n">imap</span><span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="n">seq</span><span class="p">))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">new_context</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">template_name</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">shared</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Internal helper to for context creation.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">shared</span><span class="p">:</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="nb">vars</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">globals</span> <span class="ow">or</span> <span class="p">(),</span> <span class="o">**</span><span class="nb">vars</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">locals</span><span class="p">:</span>
+        <span class="c"># if the parent is shared a copy should be created because</span>
+        <span class="c"># we don&#39;t want to modify the dict passed</span>
+        <span class="k">if</span> <span class="n">shared</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">locals</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;l_&#39;</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">parent</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">template_name</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TemplateReference"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.TemplateReference">[docs]</a><span class="k">class</span> <span class="nc">TemplateReference</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The `self` in templates.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__context</span> <span class="o">=</span> <span class="n">context</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__context</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">BlockReference</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__context</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%r</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__context</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The template context holds the variables of a template.  It stores the</span>
+<span class="sd">    values passed to the template and also the names the template exports.</span>
+<span class="sd">    Creating instances is neither supported nor useful as it&#39;s created</span>
+<span class="sd">    automatically at various stages of the template evaluation and should not</span>
+<span class="sd">    be created by hand.</span>
+
+<span class="sd">    The context is immutable.  Modifications on :attr:`parent` **must not**</span>
+<span class="sd">    happen and modifications on :attr:`vars` are allowed from generated</span>
+<span class="sd">    template code only.  Template filters and global functions marked as</span>
+<span class="sd">    :func:`contextfunction`\s get the active context passed as first argument</span>
+<span class="sd">    and are allowed to access the context read-only.</span>
+
+<span class="sd">    The template context supports read only dict operations (`get`,</span>
+<span class="sd">    `keys`, `values`, `items`, `iterkeys`, `itervalues`, `iteritems`,</span>
+<span class="sd">    `__getitem__`, `__contains__`).  Additionally there is a :meth:`resolve`</span>
+<span class="sd">    method that doesn&#39;t fail with a `KeyError` but returns an</span>
+<span class="sd">    :class:`Undefined` object for missing variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;parent&#39;</span><span class="p">,</span> <span class="s">&#39;vars&#39;</span><span class="p">,</span> <span class="s">&#39;environment&#39;</span><span class="p">,</span> <span class="s">&#39;eval_ctx&#39;</span><span class="p">,</span> <span class="s">&#39;exported_vars&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;blocks&#39;</span><span class="p">,</span> <span class="s">&#39;__weakref__&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">blocks</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_ctx</span> <span class="o">=</span> <span class="n">EvalContext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exported_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="c"># create the initial mapping of blocks.  Whenever template inheritance</span>
+        <span class="c"># takes place the runtime will update this mapping with the new blocks</span>
+        <span class="c"># from the template.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">super</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">current</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Render a parent block.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">LookupError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;there is no parent block &#39;</span>
+                                              <span class="s">&#39;called </span><span class="si">%r</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span>
+                                              <span class="n">name</span><span class="o">=</span><span class="s">&#39;super&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BlockReference</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an item from the template context, if it doesn&#39;t exist</span>
+<span class="sd">        `default` is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Looks up a variable like `__getitem__` or `get` but returns an</span>
+<span class="sd">        :class:`Undefined` object with the name of the name looked up.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_exported</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a new dict with the exported variables.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exported_vars</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy of the complete context as dict including the</span>
+<span class="sd">        exported variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">)</span>
+
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="n">__self</span><span class="p">,</span> <span class="n">__obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call the callable with the arguments and keyword arguments</span>
+<span class="sd">        provided but inject the active context or environment as first</span>
+<span class="sd">        argument if the callable is a :func:`contextfunction` or</span>
+<span class="sd">        :func:`environmentfunction`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="n">__traceback_hide__</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__obj</span><span class="p">,</span> <span class="n">_context_function_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__obj</span><span class="p">,</span> <span class="s">&#39;contextfunction&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">__self</span><span class="p">,)</span> <span class="o">+</span> <span class="n">args</span>
+            <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__obj</span><span class="p">,</span> <span class="s">&#39;evalcontextfunction&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">__self</span><span class="o">.</span><span class="n">eval_ctx</span><span class="p">,)</span> <span class="o">+</span> <span class="n">args</span>
+            <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__obj</span><span class="p">,</span> <span class="s">&#39;environmentfunction&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">__self</span><span class="o">.</span><span class="n">environment</span><span class="p">,)</span> <span class="o">+</span> <span class="n">args</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">__obj</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">__self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;value was undefined because &#39;</span>
+                                                <span class="s">&#39;a callable raised a &#39;</span>
+                                                <span class="s">&#39;StopIteration exception&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">derived</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal helper function to create a derived context.&quot;&quot;&quot;</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">new_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{},</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="nb">locals</span><span class="p">)</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">vars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">)</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">eval_ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_ctx</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">context</span>
+
+    <span class="k">def</span> <span class="nf">_all</span><span class="p">(</span><span class="n">meth</span><span class="p">):</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_all</span><span class="p">(),</span> <span class="n">meth</span><span class="p">)()</span>
+        <span class="n">proxy</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">meth</span><span class="p">)</span><span class="o">.</span><span class="n">__doc__</span>
+        <span class="n">proxy</span><span class="o">.</span><span class="n">__name__</span> <span class="o">=</span> <span class="n">meth</span>
+        <span class="k">return</span> <span class="n">proxy</span>
+
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">_all</span><span class="p">(</span><span class="s">&#39;keys&#39;</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">_all</span><span class="p">(</span><span class="s">&#39;values&#39;</span><span class="p">)</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">_all</span><span class="p">(</span><span class="s">&#39;items&#39;</span><span class="p">)</span>
+
+    <span class="c"># not available on python 3</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="s">&#39;iterkeys&#39;</span><span class="p">):</span>
+        <span class="n">iterkeys</span> <span class="o">=</span> <span class="n">_all</span><span class="p">(</span><span class="s">&#39;iterkeys&#39;</span><span class="p">)</span>
+        <span class="n">itervalues</span> <span class="o">=</span> <span class="n">_all</span><span class="p">(</span><span class="s">&#39;itervalues&#39;</span><span class="p">)</span>
+        <span class="n">iteritems</span> <span class="o">=</span> <span class="n">_all</span><span class="p">(</span><span class="s">&#39;iteritems&#39;</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">_all</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lookup a variable or raise `KeyError` if the variable is</span>
+<span class="sd">        undefined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> of </span><span class="si">%r</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_all</span><span class="p">()),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+
+
+<span class="c"># register the context as mapping if possible</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Mapping</span>
+    <span class="n">Mapping</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Context</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">BlockReference</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;One block on a template reference.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">stack</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stack</span> <span class="o">=</span> <span class="n">stack</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">=</span> <span class="n">depth</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">super</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Super the block.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stack</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span> \
+                <span class="n">undefined</span><span class="p">(</span><span class="s">&#39;there is no parent block called </span><span class="si">%r</span><span class="s">.&#39;</span> <span class="o">%</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;super&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BlockReference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stack</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stack</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_depth</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+
+<div class="viewcode-block" id="LoopContext"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.LoopContext">[docs]</a><span class="k">class</span> <span class="nc">LoopContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A loop context for dynamic iteration.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recurse</span> <span class="o">=</span> <span class="n">recurse</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c"># try to get the length of the iterable early.  This must be done</span>
+        <span class="c"># here because there are some broken iterators around where there</span>
+        <span class="c"># __len__ is the number of iterations left (i&#39;m looking at your</span>
+        <span class="c"># listreverseiterator!).</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="LoopContext.cycle"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.LoopContext.cycle">[docs]</a>    <span class="k">def</span> <span class="nf">cycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cycles among the arguments with the current loop index.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;no items for cycling given&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index0</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)]</span>
+</div>
+    <span class="n">first</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">index0</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">index0</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">index0</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">revindex</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">index0</span><span class="p">)</span>
+    <span class="n">revindex0</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LoopContextIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recurse</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Tried to call non recursive loop.  Maybe you &#39;</span>
+                            <span class="s">&quot;forgot the &#39;recursive&#39; modifier.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recurse</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recurse</span><span class="p">)</span>
+
+    <span class="c"># a nifty trick to enhance the error message if someone tried to call</span>
+    <span class="c"># the the loop without or with too many arguments.</span>
+    <span class="n">__call__</span> <span class="o">=</span> <span class="n">loop</span>
+    <span class="k">del</span> <span class="n">loop</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LoopContext.length"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.LoopContext.length">[docs]</a>    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># if was not possible to get the length of the iterator when</span>
+            <span class="c"># the loop context was created (ie: iterating over a generator)</span>
+            <span class="c"># we have to convert the iterable into a sequence and use the</span>
+            <span class="c"># length of that.</span>
+            <span class="n">iterable</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterator</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">index0</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_length</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%r</span><span class="s">/</span><span class="si">%r</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+        <span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">LoopContextIterator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The iterator for a loop context.&quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;context&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">index0</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">_iterator</span><span class="p">),</span> <span class="n">ctx</span>
+
+
+<div class="viewcode-block" id="Macro"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.runtime.Macro">[docs]</a><span class="k">class</span> <span class="nc">Macro</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps a macro function.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span>
+                 <span class="n">catch_kwargs</span><span class="p">,</span> <span class="n">catch_varargs</span><span class="p">,</span> <span class="n">caller</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_argument_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span> <span class="o">=</span> <span class="n">arguments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">catch_kwargs</span> <span class="o">=</span> <span class="n">catch_kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">catch_varargs</span> <span class="o">=</span> <span class="n">catch_varargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">caller</span> <span class="o">=</span> <span class="n">caller</span>
+
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># try to consume the positional arguments</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_argument_count</span><span class="p">])</span>
+        <span class="n">off</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+
+        <span class="c"># if the number of arguments consumed is not the number of</span>
+        <span class="c"># arguments expected we start filling in keyword arguments</span>
+        <span class="c"># and defaults.</span>
+        <span class="k">if</span> <span class="n">off</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argument_count</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">arguments</span><span class="p">):]):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argument_count</span> <span class="o">+</span> <span class="n">off</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span>
+                            <span class="s">&#39;parameter </span><span class="si">%r</span><span class="s"> was not provided&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c"># it&#39;s important that the order of these arguments does not change</span>
+        <span class="c"># if not also changed in the compiler&#39;s `function_scoping` method.</span>
+        <span class="c"># the order is caller, keyword arguments, positional arguments!</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">caller</span><span class="p">:</span>
+            <span class="n">caller</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;caller&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">caller</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">caller</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;No caller defined&#39;</span><span class="p">,</span>
+                                                     <span class="n">name</span><span class="o">=</span><span class="s">&#39;caller&#39;</span><span class="p">)</span>
+            <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">caller</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">catch_kwargs</span><span class="p">:</span>
+            <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;macro </span><span class="si">%r</span><span class="s"> takes no keyword argument </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">catch_varargs</span><span class="p">:</span>
+            <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_argument_count</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argument_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;macro </span><span class="si">%r</span><span class="s"> takes not more than </span><span class="si">%d</span><span class="s"> argument(s)&#39;</span> <span class="o">%</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_func</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="s">&#39;anonymous&#39;</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">Undefined</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The default undefined type.  This undefined type can be printed and</span>
+<span class="sd">    iterated over, but every other access will raise an :exc:`UndefinedError`:</span>
+
+<span class="sd">    &gt;&gt;&gt; foo = Undefined(name=&#39;foo&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; str(foo)</span>
+<span class="sd">    &#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; not foo</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; foo + 42</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    UndefinedError: &#39;foo&#39; is undefined</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;_undefined_hint&#39;</span><span class="p">,</span> <span class="s">&#39;_undefined_obj&#39;</span><span class="p">,</span> <span class="s">&#39;_undefined_name&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;_undefined_exception&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">exc</span><span class="o">=</span><span class="n">UndefinedError</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_hint</span> <span class="o">=</span> <span class="n">hint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_obj</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_exception</span> <span class="o">=</span> <span class="n">exc</span>
+
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">_fail_with_undefined_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Regular callback function for undefined objects that raises an</span>
+<span class="sd">        `UndefinedError` on call.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_hint</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_obj</span> <span class="ow">is</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">hint</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%r</span><span class="s"> is undefined&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="n">hint</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> has no element </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">object_type_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_undefined_obj</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hint</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%r</span><span class="s"> has no attribute </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">object_type_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_undefined_obj</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_hint</span>
+        <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_exception</span><span class="p">(</span><span class="n">hint</span><span class="p">)</span>
+
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;__&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fail_with_undefined_error</span><span class="p">()</span>
+
+    <span class="n">__add__</span> <span class="o">=</span> <span class="n">__radd__</span> <span class="o">=</span> <span class="n">__mul__</span> <span class="o">=</span> <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">__div__</span> <span class="o">=</span> <span class="n">__rdiv__</span> <span class="o">=</span> \
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__rtruediv__</span> <span class="o">=</span> <span class="n">__floordiv__</span> <span class="o">=</span> <span class="n">__rfloordiv__</span> <span class="o">=</span> \
+    <span class="n">__mod__</span> <span class="o">=</span> <span class="n">__rmod__</span> <span class="o">=</span> <span class="n">__pos__</span> <span class="o">=</span> <span class="n">__neg__</span> <span class="o">=</span> <span class="n">__call__</span> <span class="o">=</span> \
+    <span class="n">__getitem__</span> <span class="o">=</span> <span class="n">__lt__</span> <span class="o">=</span> <span class="n">__le__</span> <span class="o">=</span> <span class="n">__gt__</span> <span class="o">=</span> <span class="n">__ge__</span> <span class="o">=</span> <span class="n">__int__</span> <span class="o">=</span> \
+    <span class="n">__float__</span> <span class="o">=</span> <span class="n">__complex__</span> <span class="o">=</span> <span class="n">__pow__</span> <span class="o">=</span> <span class="n">__rpow__</span> <span class="o">=</span> \
+        <span class="n">_fail_with_undefined_error</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="c"># unicode goes after __str__ because we configured 2to3 to rename</span>
+    <span class="c"># __unicode__ to __str__.  because the 2to3 tree is not designed to</span>
+    <span class="c"># remove nodes from it, we leave the above __str__ around and let</span>
+    <span class="c"># it override at runtime.</span>
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">u&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Undefined&#39;</span>
+
+
+<span class="k">class</span> <span class="nc">DebugUndefined</span><span class="p">(</span><span class="n">Undefined</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An undefined that returns the debug info when printed.</span>
+
+<span class="sd">    &gt;&gt;&gt; foo = DebugUndefined(name=&#39;foo&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; str(foo)</span>
+<span class="sd">    &#39;{{ foo }}&#39;</span>
+<span class="sd">    &gt;&gt;&gt; not foo</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; foo + 42</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    UndefinedError: &#39;foo&#39; is undefined</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_hint</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_obj</span> <span class="ow">is</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">u&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span>
+            <span class="k">return</span> <span class="s">&#39;{{ no such element: </span><span class="si">%s</span><span class="s">[</span><span class="si">%r</span><span class="s">] }}&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">object_type_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_undefined_obj</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_name</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="s">u&#39;{{ undefined value printed: </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_hint</span>
+
+
+<span class="k">class</span> <span class="nc">StrictUndefined</span><span class="p">(</span><span class="n">Undefined</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An undefined that barks on print and iteration as well as boolean</span>
+<span class="sd">    tests and all kinds of comparisons.  In other words: you can do nothing</span>
+<span class="sd">    with it except checking if it&#39;s defined using the `defined` test.</span>
+
+<span class="sd">    &gt;&gt;&gt; foo = StrictUndefined(name=&#39;foo&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; str(foo)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    UndefinedError: &#39;foo&#39; is undefined</span>
+<span class="sd">    &gt;&gt;&gt; not foo</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    UndefinedError: &#39;foo&#39; is undefined</span>
+<span class="sd">    &gt;&gt;&gt; foo + 42</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    UndefinedError: &#39;foo&#39; is undefined</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">__iter__</span> <span class="o">=</span> <span class="n">__unicode__</span> <span class="o">=</span> <span class="n">__str__</span> <span class="o">=</span> <span class="n">__len__</span> <span class="o">=</span> <span class="n">__nonzero__</span> <span class="o">=</span> <span class="n">__eq__</span> <span class="o">=</span> \
+        <span class="n">__ne__</span> <span class="o">=</span> <span class="n">__bool__</span> <span class="o">=</span> <span class="n">Undefined</span><span class="o">.</span><span class="n">_fail_with_undefined_error</span>
+
+
+<span class="c"># remove remaining slots attributes, after the metaclass did the magic they</span>
+<span class="c"># are unneeded and irritating as they contain wrong data for the subclasses.</span>
+<span class="k">del</span> <span class="n">Undefined</span><span class="o">.</span><span class="n">__slots__</span><span class="p">,</span> <span class="n">DebugUndefined</span><span class="o">.</span><span class="n">__slots__</span><span class="p">,</span> <span class="n">StrictUndefined</span><span class="o">.</span><span class="n">__slots__</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.location &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.location</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+  
+<div class="viewcode-block" id="getLocationsWithScoring"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.location.getLocationsWithScoring">[docs]</a><span class="k">def</span> <span class="nf">getLocationsWithScoring</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** hit locations&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># TODO</span>
+        <span class="c"># this is temporary until actual scoring is determined</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">select l.location_id</span>
+<span class="s">    ,l.name</span>
+<span class="s">    ,l.lat</span>
+<span class="s">    ,l.lon</span>
+<span class="s">    ,(select count(*) as count</span>
+<span class="s">            from project p</span>
+<span class="s">            inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1</span>
+<span class="s">            where</span>
+<span class="s">            p.is_active = 1 </span>
+<span class="s">            and p.location_id = l.location_id) as num_projects</span>
+<span class="s">    ,(select count(*) as count</span>
+<span class="s">            from idea i</span>
+<span class="s">            where</span>
+<span class="s">            i.is_active = 1</span>
+<span class="s">            and i.location_id = l.location_id) as num_ideas</span>
+<span class="s">    ,(select count(*) as count</span>
+<span class="s">            from project_resource r</span>
+<span class="s">            where</span>
+<span class="s">            r.is_active = 1 and r.is_hidden = 0 and r.location_id = l.location_id) as num_project_resources</span>
+<span class="s">from location l where l.location_id &gt; 0&quot;&quot;&quot;</span><span class="p">;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get locations&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span> 
+        </div>
+<div class="viewcode-block" id="getLocations"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.location.getLocations">[docs]</a><span class="k">def</span> <span class="nf">getLocations</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select l.location_id, l.name, l.lat, l.lon from location l where l.location_id &gt; 0</span>
+<span class="s">                order by l.location_id&quot;&quot;&quot;</span><span class="p">;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get locations&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span> 
+</div>
+<div class="viewcode-block" id="getLocationInfo"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.location.getLocationInfo">[docs]</a><span class="k">def</span> <span class="nf">getLocationInfo</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">locationId</span><span class="p">):</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select &#39;n_projects&#39; as key_name, count(*) as num from project where location_id = $id</span>
+<span class="s">union</span>
+<span class="s">select &#39;n_ideas&#39; as key_name, count(*) as num from idea where location_id = $id</span>
+<span class="s">union</span>
+<span class="s">select &#39;n_resources&#39; as key_name, count(*) as num from project_resource where location_id = $id;&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">locationId</span><span class="p">}))</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">key_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">num</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get location info&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">info</span>
+
+<span class="c"># deprecated ?</span></div>
+<div class="viewcode-block" id="getSimpleLocationDictionary"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.location.getSimpleLocationDictionary">[docs]</a><span class="k">def</span> <span class="nf">getSimpleLocationDictionary</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">getLocations</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    
+    <span class="n">locations</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;name&#39;</span><span class="p">:</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;location_id&#39;</span><span class="p">:</span><span class="n">item</span><span class="o">.</span><span class="n">location_id</span><span class="p">})</span>
+        
+    <span class="k">return</span> <span class="n">locations</span>
+    
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

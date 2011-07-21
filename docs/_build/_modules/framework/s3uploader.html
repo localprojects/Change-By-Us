@@ -1,0 +1,128 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.s3uploader &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.s3uploader</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">mimetypes</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/../&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">import</span> <span class="nn">lib.S3</span> <span class="kn">as</span> <span class="nn">S3</span>
+
+<div class="viewcode-block" id="S3Uploader"><a class="viewcode-back" href="../../modules/framework.html#framework.s3uploader.S3Uploader">[docs]</a><span class="k">class</span> <span class="nc">S3Uploader</span><span class="p">():</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="S3Uploader.upload"><a class="viewcode-back" href="../../modules/framework.html#framework.s3uploader.S3Uploader.upload">[docs]</a>    <span class="k">def</span> <span class="nf">upload</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">):</span>
+        <span class="n">aws_config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aws&#39;</span><span class="p">)</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">S3</span><span class="o">.</span><span class="n">AWSAuthConnection</span><span class="p">(</span><span class="n">aws_config</span><span class="p">[</span><span class="s">&#39;access_key_id&#39;</span><span class="p">],</span> <span class="n">aws_config</span><span class="p">[</span><span class="s">&#39;secret_access_key&#39;</span><span class="p">])</span>
+        <span class="k">print</span> <span class="n">source</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s">&#39;.&#39;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;file not found (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">source</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">filedata</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">content_type</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">source</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">content_type</span><span class="p">:</span>
+            <span class="n">content_type</span> <span class="o">=</span> <span class="s">&#39;text/plain&#39;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Uploading </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">aws_config</span><span class="p">[</span><span class="s">&#39;bucket&#39;</span><span class="p">],</span> <span class="n">destination</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">aws_config</span><span class="p">[</span><span class="s">&#39;bucket&#39;</span><span class="p">],</span> <span class="n">destination</span><span class="p">,</span> <span class="n">S3</span><span class="o">.</span><span class="n">S3Object</span><span class="p">(</span><span class="n">filedata</span><span class="p">),</span> <span class="p">{</span><span class="s">&#39;x-amz-acl&#39;</span><span class="p">:</span> <span class="s">&#39;public-read&#39;</span><span class="p">,</span> <span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="n">content_type</span><span class="p">})</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">message</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;[SOURCE] [DESTINATION]&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">S3Uploader</span><span class="o">.</span><span class="n">upload</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

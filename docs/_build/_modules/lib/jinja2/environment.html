@@ -1,0 +1,1214 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.environment &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.environment</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.environment</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Provides a class that holds runtime and parsing time options.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">nodes</span>
+<span class="kn">from</span> <span class="nn">jinja2.defaults</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">jinja2.lexer</span> <span class="kn">import</span> <span class="n">get_lexer</span><span class="p">,</span> <span class="n">TokenStream</span>
+<span class="kn">from</span> <span class="nn">jinja2.parser</span> <span class="kn">import</span> <span class="n">Parser</span>
+<span class="kn">from</span> <span class="nn">jinja2.optimizer</span> <span class="kn">import</span> <span class="n">optimize</span>
+<span class="kn">from</span> <span class="nn">jinja2.compiler</span> <span class="kn">import</span> <span class="n">generate</span>
+<span class="kn">from</span> <span class="nn">jinja2.runtime</span> <span class="kn">import</span> <span class="n">Undefined</span><span class="p">,</span> <span class="n">new_context</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">TemplateNotFound</span><span class="p">,</span> \
+     <span class="n">TemplatesNotFound</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">import_string</span><span class="p">,</span> <span class="n">LRUCache</span><span class="p">,</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">missing</span><span class="p">,</span> \
+     <span class="n">concat</span><span class="p">,</span> <span class="n">consume</span><span class="p">,</span> <span class="n">internalcode</span><span class="p">,</span> <span class="n">_encode_filename</span>
+
+
+<span class="c"># for direct template usage we have up to ten living environments</span>
+<span class="n">_spontaneous_environments</span> <span class="o">=</span> <span class="n">LRUCache</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c"># the function to create jinja traceback objects.  This is dynamically</span>
+<span class="c"># imported on the first exception in the exception handler.</span>
+<span class="n">_make_traceback</span> <span class="o">=</span> <span class="bp">None</span>
+
+
+<div class="viewcode-block" id="get_spontaneous_environment"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.get_spontaneous_environment">[docs]</a><span class="k">def</span> <span class="nf">get_spontaneous_environment</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a new spontaneous environment.  A spontaneous environment is an</span>
+<span class="sd">    unnamed and unaccessible (in theory) environment that is used for</span>
+<span class="sd">    templates generated from a string and not from the file system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">_spontaneous_environments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Environment</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">env</span>
+    <span class="n">_spontaneous_environments</span><span class="p">[</span><span class="n">args</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">shared</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">env</span>
+
+</div>
+<div class="viewcode-block" id="create_cache"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.create_cache">[docs]</a><span class="k">def</span> <span class="nf">create_cache</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the cache class for the given size.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">LRUCache</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="copy_cache"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.copy_cache">[docs]</a><span class="k">def</span> <span class="nf">copy_cache</span><span class="p">(</span><span class="n">cache</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an empty copy of the given cache.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">cache</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">LRUCache</span><span class="p">(</span><span class="n">cache</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="load_extensions"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.load_extensions">[docs]</a><span class="k">def</span> <span class="nf">load_extensions</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">extensions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load the extensions from the list and bind it to the environment.</span>
+<span class="sd">    Returns a dict of instanciated environments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">extension</span> <span class="ow">in</span> <span class="n">extensions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extension</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">extension</span> <span class="o">=</span> <span class="n">import_string</span><span class="p">(</span><span class="n">extension</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">extension</span><span class="o">.</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">extension</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_environment_sanity_check</span><span class="p">(</span><span class="n">environment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform a sanity check on the environment.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">),</span> <span class="s">&#39;undefined must &#39;</span> \
+           <span class="s">&#39;be a subclass of undefined because filters depend on it.&#39;</span>
+    <span class="k">assert</span> <span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span> <span class="o">!=</span> \
+           <span class="n">environment</span><span class="o">.</span><span class="n">variable_start_string</span> <span class="o">!=</span> \
+           <span class="n">environment</span><span class="o">.</span><span class="n">comment_start_string</span><span class="p">,</span> <span class="s">&#39;block, variable and comment &#39;</span> \
+           <span class="s">&#39;start strings must be different&#39;</span>
+    <span class="k">assert</span> <span class="n">environment</span><span class="o">.</span><span class="n">newline_sequence</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">),</span> \
+           <span class="s">&#39;newline_sequence set to unknown line ending string.&#39;</span>
+    <span class="k">return</span> <span class="n">environment</span>
+
+
+<div class="viewcode-block" id="Environment"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment">[docs]</a><span class="k">class</span> <span class="nc">Environment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;The core component of Jinja is the `Environment`.  It contains</span>
+<span class="sd">    important shared variables like configuration, filters, tests,</span>
+<span class="sd">    globals and others.  Instances of this class may be modified if</span>
+<span class="sd">    they are not shared and if no template was loaded so far.</span>
+<span class="sd">    Modifications on environments after the first template was loaded</span>
+<span class="sd">    will lead to surprising effects and undefined behavior.</span>
+
+<span class="sd">    Here the possible initialization parameters:</span>
+
+<span class="sd">        `block_start_string`</span>
+<span class="sd">            The string marking the begin of a block.  Defaults to ``&#39;{%&#39;``.</span>
+
+<span class="sd">        `block_end_string`</span>
+<span class="sd">            The string marking the end of a block.  Defaults to ``&#39;%}&#39;``.</span>
+
+<span class="sd">        `variable_start_string`</span>
+<span class="sd">            The string marking the begin of a print statement.</span>
+<span class="sd">            Defaults to ``&#39;{{&#39;``.</span>
+
+<span class="sd">        `variable_end_string`</span>
+<span class="sd">            The string marking the end of a print statement.  Defaults to</span>
+<span class="sd">            ``&#39;}}&#39;``.</span>
+
+<span class="sd">        `comment_start_string`</span>
+<span class="sd">            The string marking the begin of a comment.  Defaults to ``&#39;{#&#39;``.</span>
+
+<span class="sd">        `comment_end_string`</span>
+<span class="sd">            The string marking the end of a comment.  Defaults to ``&#39;#}&#39;``.</span>
+
+<span class="sd">        `line_statement_prefix`</span>
+<span class="sd">            If given and a string, this will be used as prefix for line based</span>
+<span class="sd">            statements.  See also :ref:`line-statements`.</span>
+
+<span class="sd">        `line_comment_prefix`</span>
+<span class="sd">            If given and a string, this will be used as prefix for line based</span>
+<span class="sd">            based comments.  See also :ref:`line-statements`.</span>
+
+<span class="sd">            .. versionadded:: 2.2</span>
+
+<span class="sd">        `trim_blocks`</span>
+<span class="sd">            If this is set to ``True`` the first newline after a block is</span>
+<span class="sd">            removed (block, not variable tag!).  Defaults to `False`.</span>
+
+<span class="sd">        `newline_sequence`</span>
+<span class="sd">            The sequence that starts a newline.  Must be one of ``&#39;\r&#39;``,</span>
+<span class="sd">            ``&#39;\n&#39;`` or ``&#39;\r\n&#39;``.  The default is ``&#39;\n&#39;`` which is a</span>
+<span class="sd">            useful default for Linux and OS X systems as well as web</span>
+<span class="sd">            applications.</span>
+
+<span class="sd">        `extensions`</span>
+<span class="sd">            List of Jinja extensions to use.  This can either be import paths</span>
+<span class="sd">            as strings or extension classes.  For more information have a</span>
+<span class="sd">            look at :ref:`the extensions documentation &lt;jinja-extensions&gt;`.</span>
+
+<span class="sd">        `optimized`</span>
+<span class="sd">            should the optimizer be enabled?  Default is `True`.</span>
+
+<span class="sd">        `undefined`</span>
+<span class="sd">            :class:`Undefined` or a subclass of it that is used to represent</span>
+<span class="sd">            undefined values in the template.</span>
+
+<span class="sd">        `finalize`</span>
+<span class="sd">            A callable that can be used to process the result of a variable</span>
+<span class="sd">            expression before it is output.  For example one can convert</span>
+<span class="sd">            `None` implicitly into an empty string here.</span>
+
+<span class="sd">        `autoescape`</span>
+<span class="sd">            If set to true the XML/HTML autoescaping feature is enabled by</span>
+<span class="sd">            default.  For more details about auto escaping see</span>
+<span class="sd">            :class:`~jinja2.utils.Markup`.  As of Jinja 2.4 this can also</span>
+<span class="sd">            be a callable that is passed the template name and has to</span>
+<span class="sd">            return `True` or `False` depending on autoescape should be</span>
+<span class="sd">            enabled by default.</span>
+
+<span class="sd">            .. versionchanged:: 2.4</span>
+<span class="sd">               `autoescape` can now be a function</span>
+
+<span class="sd">        `loader`</span>
+<span class="sd">            The template loader for this environment.</span>
+
+<span class="sd">        `cache_size`</span>
+<span class="sd">            The size of the cache.  Per default this is ``50`` which means</span>
+<span class="sd">            that if more than 50 templates are loaded the loader will clean</span>
+<span class="sd">            out the least recently used template.  If the cache size is set to</span>
+<span class="sd">            ``0`` templates are recompiled all the time, if the cache size is</span>
+<span class="sd">            ``-1`` the cache will not be cleaned.</span>
+
+<span class="sd">        `auto_reload`</span>
+<span class="sd">            Some loaders load templates from locations where the template</span>
+<span class="sd">            sources may change (ie: file system or database).  If</span>
+<span class="sd">            `auto_reload` is set to `True` (default) every time a template is</span>
+<span class="sd">            requested the loader checks if the source changed and if yes, it</span>
+<span class="sd">            will reload the template.  For higher performance it&#39;s possible to</span>
+<span class="sd">            disable that.</span>
+
+<span class="sd">        `bytecode_cache`</span>
+<span class="sd">            If set to a bytecode cache object, this object will provide a</span>
+<span class="sd">            cache for the internal Jinja bytecode so that templates don&#39;t</span>
+<span class="sd">            have to be parsed if they were not changed.</span>
+
+<span class="sd">            See :ref:`bytecode-cache` for more information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#: if this environment is sandboxed.  Modifying this variable won&#39;t make</span>
+    <span class="c">#: the environment sandboxed though.  For a real sandboxed environment</span>
+    <span class="c">#: have a look at jinja2.sandbox.  This flag alone controls the code</span>
+    <span class="c">#: generation by the compiler.</span>
+    <span class="n">sandboxed</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c">#: True if the environment is just an overlay</span>
+    <span class="n">overlayed</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c">#: the environment this environment is linked to if it is an overlay</span>
+    <span class="n">linked_to</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c">#: shared environments have this set to `True`.  A shared environment</span>
+    <span class="c">#: must not be modified</span>
+    <span class="n">shared</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c">#: these are currently EXPERIMENTAL undocumented features.</span>
+    <span class="n">exception_handler</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">exception_formatter</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">block_start_string</span><span class="o">=</span><span class="n">BLOCK_START_STRING</span><span class="p">,</span>
+                 <span class="n">block_end_string</span><span class="o">=</span><span class="n">BLOCK_END_STRING</span><span class="p">,</span>
+                 <span class="n">variable_start_string</span><span class="o">=</span><span class="n">VARIABLE_START_STRING</span><span class="p">,</span>
+                 <span class="n">variable_end_string</span><span class="o">=</span><span class="n">VARIABLE_END_STRING</span><span class="p">,</span>
+                 <span class="n">comment_start_string</span><span class="o">=</span><span class="n">COMMENT_START_STRING</span><span class="p">,</span>
+                 <span class="n">comment_end_string</span><span class="o">=</span><span class="n">COMMENT_END_STRING</span><span class="p">,</span>
+                 <span class="n">line_statement_prefix</span><span class="o">=</span><span class="n">LINE_STATEMENT_PREFIX</span><span class="p">,</span>
+                 <span class="n">line_comment_prefix</span><span class="o">=</span><span class="n">LINE_COMMENT_PREFIX</span><span class="p">,</span>
+                 <span class="n">trim_blocks</span><span class="o">=</span><span class="n">TRIM_BLOCKS</span><span class="p">,</span>
+                 <span class="n">newline_sequence</span><span class="o">=</span><span class="n">NEWLINE_SEQUENCE</span><span class="p">,</span>
+                 <span class="n">extensions</span><span class="o">=</span><span class="p">(),</span>
+                 <span class="n">optimized</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">undefined</span><span class="o">=</span><span class="n">Undefined</span><span class="p">,</span>
+                 <span class="n">finalize</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">autoescape</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">loader</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">cache_size</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                 <span class="n">auto_reload</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">bytecode_cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c"># !!Important notice!!</span>
+        <span class="c">#   The constructor accepts quite a few arguments that should be</span>
+        <span class="c">#   passed by keyword rather than position.  However it&#39;s important to</span>
+        <span class="c">#   not change the order of arguments because it&#39;s used at least</span>
+        <span class="c">#   internally in those cases:</span>
+        <span class="c">#       -   spontaneus environments (i18n extension and Template)</span>
+        <span class="c">#       -   unittests</span>
+        <span class="c">#   If parameter changes are required only add parameters at the end</span>
+        <span class="c">#   and don&#39;t change the arguments (or the defaults!) of the arguments</span>
+        <span class="c">#   existing already.</span>
+
+        <span class="c"># lexer / parser information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_start_string</span> <span class="o">=</span> <span class="n">block_start_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_end_string</span> <span class="o">=</span> <span class="n">block_end_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variable_start_string</span> <span class="o">=</span> <span class="n">variable_start_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variable_end_string</span> <span class="o">=</span> <span class="n">variable_end_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comment_start_string</span> <span class="o">=</span> <span class="n">comment_start_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comment_end_string</span> <span class="o">=</span> <span class="n">comment_end_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line_statement_prefix</span> <span class="o">=</span> <span class="n">line_statement_prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line_comment_prefix</span> <span class="o">=</span> <span class="n">line_comment_prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trim_blocks</span> <span class="o">=</span> <span class="n">trim_blocks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline_sequence</span> <span class="o">=</span> <span class="n">newline_sequence</span>
+
+        <span class="c"># runtime information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">undefined</span> <span class="o">=</span> <span class="n">undefined</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimized</span> <span class="o">=</span> <span class="n">optimized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finalize</span> <span class="o">=</span> <span class="n">finalize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoescape</span> <span class="o">=</span> <span class="n">autoescape</span>
+
+        <span class="c"># defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="n">DEFAULT_FILTERS</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tests</span> <span class="o">=</span> <span class="n">DEFAULT_TESTS</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">globals</span> <span class="o">=</span> <span class="n">DEFAULT_NAMESPACE</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c"># set the loader provided</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loader</span> <span class="o">=</span> <span class="n">loader</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bytecode_cache</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">create_cache</span><span class="p">(</span><span class="n">cache_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bytecode_cache</span> <span class="o">=</span> <span class="n">bytecode_cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_reload</span> <span class="o">=</span> <span class="n">auto_reload</span>
+
+        <span class="c"># load extensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span> <span class="o">=</span> <span class="n">load_extensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extensions</span><span class="p">)</span>
+
+        <span class="n">_environment_sanity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Environment.add_extension"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.add_extension">[docs]</a>    <span class="k">def</span> <span class="nf">add_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extension</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds an extension after the environment was created.</span>
+
+<span class="sd">        .. versionadded:: 2.5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">load_extensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">[</span><span class="n">extension</span><span class="p">]))</span>
+</div>
+<div class="viewcode-block" id="Environment.extend"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add the items to the instance of the environment if they do not exist</span>
+<span class="sd">        yet.  This is used by :ref:`extensions &lt;writing-extensions&gt;` to register</span>
+<span class="sd">        callbacks and configuration values without breaking inheritance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attributes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.overlay"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.overlay">[docs]</a>    <span class="k">def</span> <span class="nf">overlay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_start_string</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">block_end_string</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">variable_start_string</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">variable_end_string</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">comment_start_string</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">comment_end_string</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">line_statement_prefix</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">line_comment_prefix</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">trim_blocks</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">extensions</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">optimized</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">undefined</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">finalize</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">loader</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">cache_size</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span> <span class="n">auto_reload</span><span class="o">=</span><span class="n">missing</span><span class="p">,</span>
+                <span class="n">bytecode_cache</span><span class="o">=</span><span class="n">missing</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new overlay environment that shares all the data with the</span>
+<span class="sd">        current environment except of cache and the overridden attributes.</span>
+<span class="sd">        Extensions cannot be removed for an overlayed environment.  An overlayed</span>
+<span class="sd">        environment automatically gets all the extensions of the environment it</span>
+<span class="sd">        is linked to plus optional extra extensions.</span>
+
+<span class="sd">        Creating overlays should happen after the initial environment was set</span>
+<span class="sd">        up completely.  Not all attributes are truly linked, some are just</span>
+<span class="sd">        copied over so modifications on the original environment may not shine</span>
+<span class="sd">        through.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+        <span class="k">del</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;cache_size&#39;</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;extensions&#39;</span><span class="p">]</span>
+
+        <span class="n">rv</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">overlayed</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">linked_to</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cache_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">rv</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">create_cache</span><span class="p">(</span><span class="n">cache_size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rv</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">copy_cache</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">)</span>
+
+        <span class="n">rv</span><span class="o">.</span><span class="n">extensions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">rv</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extensions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">rv</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">load_extensions</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">extensions</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">_environment_sanity_check</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+</div>
+    <span class="n">lexer</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_lexer</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s">&quot;The lexer for this environment.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Environment.iter_extensions"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.iter_extensions">[docs]</a>    <span class="k">def</span> <span class="nf">iter_extensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterates over the extensions by priority.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
+                           <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">priority</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Environment.getitem"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.getitem">[docs]</a>    <span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an item or attribute of an object but prefer the item.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">attr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">argument</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">argument</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.getattr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.getattr">[docs]</a>    <span class="k">def</span> <span class="nf">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an item or attribute of an object but prefer the attribute.</span>
+<span class="sd">        Unlike :meth:`getitem` the attribute *must* be a bytestring.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attribute</span><span class="p">)</span>
+</div>
+    <span class="nd">@internalcode</span>
+<div class="viewcode-block" id="Environment.parse"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the sourcecode and return the abstract syntax tree.  This</span>
+<span class="sd">        tree of nodes is used by the compiler to convert the template into</span>
+<span class="sd">        executable source- or bytecode.  This is useful for debugging or to</span>
+<span class="sd">        extract information from templates.</span>
+
+<span class="sd">        If you are :ref:`developing Jinja2 extensions &lt;writing-extensions&gt;`</span>
+<span class="sd">        this gives you a good overview of the node tree generated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TemplateSyntaxError</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">source_hint</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal parsing function used by `parse` and `compile`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_encode_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Environment.lex"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.lex">[docs]</a>    <span class="k">def</span> <span class="nf">lex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lex the given sourcecode and return a generator that yields</span>
+<span class="sd">        tokens as tuples in the form ``(lineno, token_type, value)``.</span>
+<span class="sd">        This can be useful for :ref:`extension development &lt;writing-extensions&gt;`</span>
+<span class="sd">        and debugging templates.</span>
+
+<span class="sd">        This does not perform preprocessing.  If you want the preprocessing</span>
+<span class="sd">        of the extensions to be applied you have to filter source through</span>
+<span class="sd">        the :meth:`preprocess` method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">tokeniter</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TemplateSyntaxError</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">source_hint</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.preprocess"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.preprocess">[docs]</a>    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Preprocesses the source with all extensions.  This is automatically</span>
+<span class="sd">        called for all parsing and compiling methods but *not* for :meth:`lex`</span>
+<span class="sd">        because there you usually only want the actual source tokenized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">iter_extensions</span><span class="p">(),</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+</div>
+    <span class="k">def</span> <span class="nf">_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called by the parser to do the preprocessing and filtering</span>
+<span class="sd">        for all the extensions.  Returns a :class:`~jinja2.lexer.TokenStream`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_extensions</span><span class="p">():</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">filter_stream</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">TokenStream</span><span class="p">):</span>
+                <span class="n">stream</span> <span class="o">=</span> <span class="n">TokenStream</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stream</span>
+
+    <span class="k">def</span> <span class="nf">_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">defer_init</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal hook that can be overriden to hook a different generate</span>
+<span class="sd">        method in.</span>
+
+<span class="sd">        .. versionadded:: 2.5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">generate</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">defer_init</span><span class="o">=</span><span class="n">defer_init</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal hook that can be overriden to hook a different compile</span>
+<span class="sd">        method in.</span>
+
+<span class="sd">        .. versionadded:: 2.5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">compile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="s">&#39;exec&#39;</span><span class="p">)</span>
+
+    <span class="nd">@internalcode</span>
+<div class="viewcode-block" id="Environment.compile"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.compile">[docs]</a>    <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">defer_init</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compile a node or template source code.  The `name` parameter is</span>
+<span class="sd">        the load name of the template after it was joined using</span>
+<span class="sd">        :meth:`join_path` if necessary, not the filename on the file system.</span>
+<span class="sd">        the `filename` parameter is the estimated filename of the template on</span>
+<span class="sd">        the file system.  If the template came from a database or memory this</span>
+<span class="sd">        can be omitted.</span>
+
+<span class="sd">        The return value of this method is a python code object.  If the `raw`</span>
+<span class="sd">        parameter is `True` the return value will be a string with python</span>
+<span class="sd">        code equivalent to the bytecode returned otherwise.  This method is</span>
+<span class="sd">        mainly used internally.</span>
+
+<span class="sd">        `defer_init` is use internally to aid the module code generator.  This</span>
+<span class="sd">        causes the generated code to be able to import without the global</span>
+<span class="sd">        environment variable to be set.</span>
+
+<span class="sd">        .. versionadded:: 2.4</span>
+<span class="sd">           `defer_init` parameter added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_hint</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="n">source_hint</span> <span class="o">=</span> <span class="n">source</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimized</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">optimize</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span>
+                                    <span class="n">defer_init</span><span class="o">=</span><span class="n">defer_init</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">raw</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">source</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;&lt;template&gt;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">_encode_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TemplateSyntaxError</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">source_hint</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.compile_expression"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.compile_expression">[docs]</a>    <span class="k">def</span> <span class="nf">compile_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">undefined_to_none</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A handy helper method that returns a callable that accepts keyword</span>
+<span class="sd">        arguments that appear as variables in the expression.  If called it</span>
+<span class="sd">        returns the result of the expression.</span>
+
+<span class="sd">        This is useful if applications want to use the same rules as Jinja</span>
+<span class="sd">        in template &quot;configuration files&quot; or similar situations.</span>
+
+<span class="sd">        Example usage:</span>
+
+<span class="sd">        &gt;&gt;&gt; env = Environment()</span>
+<span class="sd">        &gt;&gt;&gt; expr = env.compile_expression(&#39;foo == 42&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; expr(foo=23)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; expr(foo=42)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Per default the return value is converted to `None` if the</span>
+<span class="sd">        expression returns an undefined value.  This can be changed</span>
+<span class="sd">        by setting `undefined_to_none` to `False`.</span>
+
+<span class="sd">        &gt;&gt;&gt; env.compile_expression(&#39;var&#39;)() is None</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; env.compile_expression(&#39;var&#39;, undefined_to_none=False)()</span>
+<span class="sd">        Undefined</span>
+
+<span class="sd">        .. versionadded:: 2.1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">Parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s">&#39;variable&#39;</span><span class="p">)</span>
+        <span class="n">exc_info</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">parser</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">eos</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&#39;chunk after expression&#39;</span><span class="p">,</span>
+                                          <span class="n">parser</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                                          <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">expr</span><span class="o">.</span><span class="n">set_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TemplateSyntaxError</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">exc_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">source_hint</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">Assign</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="s">&#39;result&#39;</span><span class="p">,</span> <span class="s">&#39;store&#39;</span><span class="p">),</span> <span class="n">expr</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">TemplateExpression</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">undefined_to_none</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.compile_templates"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.compile_templates">[docs]</a>    <span class="k">def</span> <span class="nf">compile_templates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">extensions</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filter_func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                          <span class="nb">zip</span><span class="o">=</span><span class="s">&#39;deflated&#39;</span><span class="p">,</span> <span class="n">log_function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                          <span class="n">ignore_errors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">py_compile</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds all the templates the loader can find, compiles them</span>
+<span class="sd">        and stores them in `target`.  If `zip` is `None`, instead of in a</span>
+<span class="sd">        zipfile, the templates will be will be stored in a directory.</span>
+<span class="sd">        By default a deflate zip algorithm is used, to switch to</span>
+<span class="sd">        the stored algorithm, `zip` can be set to ``&#39;stored&#39;``.</span>
+
+<span class="sd">        `extensions` and `filter_func` are passed to :meth:`list_templates`.</span>
+<span class="sd">        Each template returned will be compiled to the target folder or</span>
+<span class="sd">        zipfile.</span>
+
+<span class="sd">        By default template compilation errors are ignored.  In case a</span>
+<span class="sd">        log function is provided, errors are logged.  If you want template</span>
+<span class="sd">        syntax errors to abort the compilation you can set `ignore_errors`</span>
+<span class="sd">        to `False` and you will get an exception on syntax errors.</span>
+
+<span class="sd">        If `py_compile` is set to `True` .pyc files will be written to the</span>
+<span class="sd">        target instead of standard .py files.</span>
+
+<span class="sd">        .. versionadded:: 2.4</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">jinja2.loaders</span> <span class="kn">import</span> <span class="n">ModuleLoader</span>
+
+        <span class="k">if</span> <span class="n">log_function</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">log_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="n">py_compile</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">imp</span><span class="o">,</span> <span class="nn">marshal</span>
+            <span class="n">py_header</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">get_magic</span><span class="p">()</span> <span class="o">+</span> \
+                <span class="s">u&#39;</span><span class="se">\xff\xff\xff\xff</span><span class="s">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;iso-8859-15&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">write_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">zip</span><span class="p">:</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="n">ZipInfo</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="n">info</span><span class="o">.</span><span class="n">external_attr</span> <span class="o">=</span> <span class="mo">0755</span> <span class="o">&lt;&lt;</span> <span class="il">16L</span>
+                <span class="n">zip_file</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="n">mode</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">zip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span><span class="p">,</span> <span class="n">ZipInfo</span><span class="p">,</span> <span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">ZIP_STORED</span>
+            <span class="n">zip_file</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">deflated</span><span class="o">=</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span>
+                                                 <span class="n">stored</span><span class="o">=</span><span class="n">ZIP_STORED</span><span class="p">)[</span><span class="nb">zip</span><span class="p">])</span>
+            <span class="n">log_function</span><span class="p">(</span><span class="s">&#39;Compiling into Zip archive &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">log_function</span><span class="p">(</span><span class="s">&#39;Compiling into folder &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_templates</span><span class="p">(</span><span class="n">extensions</span><span class="p">,</span> <span class="n">filter_func</span><span class="p">):</span>
+                <span class="n">source</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">get_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_errors</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                    <span class="n">log_function</span><span class="p">(</span><span class="s">&#39;Could not compile &quot;</span><span class="si">%s</span><span class="s">&quot;: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+                    <span class="k">continue</span>
+
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">ModuleLoader</span><span class="o">.</span><span class="n">get_module_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">py_compile</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compile</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">_encode_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+                    <span class="n">write_file</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">py_header</span> <span class="o">+</span>
+                               <span class="n">marshal</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span>
+                    <span class="n">log_function</span><span class="p">(</span><span class="s">&#39;Byte-compiled &quot;</span><span class="si">%s</span><span class="s">&quot; as </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                                 <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span> <span class="o">+</span> <span class="s">&#39;c&#39;</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">write_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+                    <span class="n">log_function</span><span class="p">(</span><span class="s">&#39;Compiled &quot;</span><span class="si">%s</span><span class="s">&quot; as </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">zip</span><span class="p">:</span>
+                <span class="n">zip_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">log_function</span><span class="p">(</span><span class="s">&#39;Finished compiling templates&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.list_templates"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.list_templates">[docs]</a>    <span class="k">def</span> <span class="nf">list_templates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extensions</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filter_func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of templates for this environment.  This requires</span>
+<span class="sd">        that the loader supports the loader&#39;s</span>
+<span class="sd">        :meth:`~BaseLoader.list_templates` method.</span>
+
+<span class="sd">        If there are other files in the template folder besides the</span>
+<span class="sd">        actual templates, the returned list can be filtered.  There are two</span>
+<span class="sd">        ways: either `extensions` is set to a list of file extensions for</span>
+<span class="sd">        templates, or a `filter_func` can be provided which is a callable that</span>
+<span class="sd">        is passed a template name and should return `True` if it should end up</span>
+<span class="sd">        in the result list.</span>
+
+<span class="sd">        If the loader does not support that, a :exc:`TypeError` is raised.</span>
+
+<span class="sd">        .. versionadded:: 2.4</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">list_templates</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">extensions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;either extensions or filter_func &#39;</span>
+                                <span class="s">&#39;can be passed, but not both&#39;</span><span class="p">)</span>
+            <span class="n">filter_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> \
+                                    <span class="n">x</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">extensions</span>
+        <span class="k">if</span> <span class="n">filter_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">filter_func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</div>
+<div class="viewcode-block" id="Environment.handle_exception"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.handle_exception">[docs]</a>    <span class="k">def</span> <span class="nf">handle_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rendered</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">source_hint</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exception handling helper.  This is used internally to either raise</span>
+<span class="sd">        rewritten exceptions or return a rendered traceback for the template.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">global</span> <span class="n">_make_traceback</span>
+        <span class="k">if</span> <span class="n">exc_info</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+
+        <span class="c"># the debugging module is imported when it&#39;s used for the first time.</span>
+        <span class="c"># we&#39;re doing a lot of stuff there and for applications that do not</span>
+        <span class="c"># get any exceptions in template rendering there is no need to load</span>
+        <span class="c"># all of that.</span>
+        <span class="k">if</span> <span class="n">_make_traceback</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">jinja2.debug</span> <span class="kn">import</span> <span class="n">make_traceback</span> <span class="k">as</span> <span class="n">_make_traceback</span>
+        <span class="n">traceback</span> <span class="o">=</span> <span class="n">_make_traceback</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">source_hint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rendered</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exception_formatter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exception_formatter</span><span class="p">(</span><span class="n">traceback</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exception_handler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exception_handler</span><span class="p">(</span><span class="n">traceback</span><span class="p">)</span>
+        <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">standard_exc_info</span>
+        <span class="k">raise</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span>
+</div>
+<div class="viewcode-block" id="Environment.join_path"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.join_path">[docs]</a>    <span class="k">def</span> <span class="nf">join_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Join a template with the parent.  By default all the lookups are</span>
+<span class="sd">        relative to the loader root so this method returns the `template`</span>
+<span class="sd">        parameter unchanged, but if the paths should be relative to the</span>
+<span class="sd">        parent template, this function can be used to calculate the real</span>
+<span class="sd">        template name.</span>
+
+<span class="sd">        Subclasses may override this method and implement template path</span>
+<span class="sd">        joining here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">template</span>
+</div>
+    <span class="nd">@internalcode</span>
+    <span class="k">def</span> <span class="nf">_load_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">globals</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;no loader for this environment specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_reload</span> <span class="ow">or</span> \
+                                         <span class="n">template</span><span class="o">.</span><span class="n">is_up_to_date</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">template</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">template</span>
+        <span class="k">return</span> <span class="n">template</span>
+
+    <span class="nd">@internalcode</span>
+<div class="viewcode-block" id="Environment.get_template"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.get_template">[docs]</a>    <span class="k">def</span> <span class="nf">get_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load a template from the loader.  If a loader is configured this</span>
+<span class="sd">        method ask the loader for the template and returns a :class:`Template`.</span>
+<span class="sd">        If the `parent` parameter is not `None`, :meth:`join_path` is called</span>
+<span class="sd">        to get the real template name before loading.</span>
+
+<span class="sd">        The `globals` parameter can be used to provide template wide globals.</span>
+<span class="sd">        These variables are available in the context at render time.</span>
+
+<span class="sd">        If the template does not exist a :exc:`TemplateNotFound` exception is</span>
+<span class="sd">        raised.</span>
+
+<span class="sd">        .. versionchanged:: 2.4</span>
+<span class="sd">           If `name` is a :class:`Template` object it is returned from the</span>
+<span class="sd">           function unchanged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Template</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_path</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_template</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_globals</span><span class="p">(</span><span class="nb">globals</span><span class="p">))</span>
+</div>
+    <span class="nd">@internalcode</span>
+<div class="viewcode-block" id="Environment.select_template"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.select_template">[docs]</a>    <span class="k">def</span> <span class="nf">select_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Works like :meth:`get_template` but tries a number of templates</span>
+<span class="sd">        before it fails.  If it cannot find any of the templates, it will</span>
+<span class="sd">        raise a :exc:`TemplatesNotFound` exception.</span>
+
+<span class="sd">        .. versionadded:: 2.3</span>
+
+<span class="sd">        .. versionchanged:: 2.4</span>
+<span class="sd">           If `names` contains a :class:`Template` object it is returned</span>
+<span class="sd">           from the function unchanged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TemplatesNotFound</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s">u&#39;Tried to select from an empty list &#39;</span>
+                                            <span class="s">u&#39;of templates.&#39;</span><span class="p">)</span>
+        <span class="nb">globals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_globals</span><span class="p">(</span><span class="nb">globals</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Template</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">name</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_path</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_template</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">TemplateNotFound</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">raise</span> <span class="n">TemplatesNotFound</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+</div>
+    <span class="nd">@internalcode</span>
+<div class="viewcode-block" id="Environment.get_or_select_template"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.get_or_select_template">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_select_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_name_or_list</span><span class="p">,</span>
+                               <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does a typecheck and dispatches to :meth:`select_template`</span>
+<span class="sd">        if an iterable of template names is given, otherwise to</span>
+<span class="sd">        :meth:`get_template`.</span>
+
+<span class="sd">        .. versionadded:: 2.3</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_name_or_list</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">template_name_or_list</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_name_or_list</span><span class="p">,</span> <span class="n">Template</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">template_name_or_list</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_template</span><span class="p">(</span><span class="n">template_name_or_list</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.from_string"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.from_string">[docs]</a>    <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">template_class</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load a template from a string.  This parses the source given and</span>
+<span class="sd">        returns a :class:`Template` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">globals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_globals</span><span class="p">(</span><span class="nb">globals</span><span class="p">)</span>
+        <span class="n">cls</span> <span class="o">=</span> <span class="n">template_class</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_class</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">from_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="nb">globals</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Environment.make_globals"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Environment.make_globals">[docs]</a>    <span class="k">def</span> <span class="nf">make_globals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict for the globals.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">globals</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">globals</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Template"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template">[docs]</a><span class="k">class</span> <span class="nc">Template</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The central template object.  This class represents a compiled template</span>
+<span class="sd">    and is used to evaluate it.</span>
+
+<span class="sd">    Normally the template object is generated from an :class:`Environment` but</span>
+<span class="sd">    it also has a constructor that makes it possible to create a template</span>
+<span class="sd">    instance directly using the constructor.  It takes the same arguments as</span>
+<span class="sd">    the environment constructor but it&#39;s not possible to specify a loader.</span>
+
+<span class="sd">    Every template object has a few methods and members that are guaranteed</span>
+<span class="sd">    to exist.  However it&#39;s important that a template object should be</span>
+<span class="sd">    considered immutable.  Modifications on the object are not supported.</span>
+
+<span class="sd">    Template objects created from the constructor rather than an environment</span>
+<span class="sd">    do have an `environment` attribute that points to a temporary environment</span>
+<span class="sd">    that is probably shared with other templates created with the constructor</span>
+<span class="sd">    and compatible settings.</span>
+
+<span class="sd">    &gt;&gt;&gt; template = Template(&#39;Hello {{ name }}!&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; template.render(name=&#39;John Doe&#39;)</span>
+<span class="sd">    u&#39;Hello John Doe!&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; stream = template.stream(name=&#39;John Doe&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; stream.next()</span>
+<span class="sd">    u&#39;Hello John Doe!&#39;</span>
+<span class="sd">    &gt;&gt;&gt; stream.next()</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    StopIteration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+                <span class="n">block_start_string</span><span class="o">=</span><span class="n">BLOCK_START_STRING</span><span class="p">,</span>
+                <span class="n">block_end_string</span><span class="o">=</span><span class="n">BLOCK_END_STRING</span><span class="p">,</span>
+                <span class="n">variable_start_string</span><span class="o">=</span><span class="n">VARIABLE_START_STRING</span><span class="p">,</span>
+                <span class="n">variable_end_string</span><span class="o">=</span><span class="n">VARIABLE_END_STRING</span><span class="p">,</span>
+                <span class="n">comment_start_string</span><span class="o">=</span><span class="n">COMMENT_START_STRING</span><span class="p">,</span>
+                <span class="n">comment_end_string</span><span class="o">=</span><span class="n">COMMENT_END_STRING</span><span class="p">,</span>
+                <span class="n">line_statement_prefix</span><span class="o">=</span><span class="n">LINE_STATEMENT_PREFIX</span><span class="p">,</span>
+                <span class="n">line_comment_prefix</span><span class="o">=</span><span class="n">LINE_COMMENT_PREFIX</span><span class="p">,</span>
+                <span class="n">trim_blocks</span><span class="o">=</span><span class="n">TRIM_BLOCKS</span><span class="p">,</span>
+                <span class="n">newline_sequence</span><span class="o">=</span><span class="n">NEWLINE_SEQUENCE</span><span class="p">,</span>
+                <span class="n">extensions</span><span class="o">=</span><span class="p">(),</span>
+                <span class="n">optimized</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">undefined</span><span class="o">=</span><span class="n">Undefined</span><span class="p">,</span>
+                <span class="n">finalize</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">autoescape</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">get_spontaneous_environment</span><span class="p">(</span>
+            <span class="n">block_start_string</span><span class="p">,</span> <span class="n">block_end_string</span><span class="p">,</span> <span class="n">variable_start_string</span><span class="p">,</span>
+            <span class="n">variable_end_string</span><span class="p">,</span> <span class="n">comment_start_string</span><span class="p">,</span> <span class="n">comment_end_string</span><span class="p">,</span>
+            <span class="n">line_statement_prefix</span><span class="p">,</span> <span class="n">line_comment_prefix</span><span class="p">,</span> <span class="n">trim_blocks</span><span class="p">,</span>
+            <span class="n">newline_sequence</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">extensions</span><span class="p">),</span> <span class="n">optimized</span><span class="p">,</span> <span class="n">undefined</span><span class="p">,</span>
+            <span class="n">finalize</span><span class="p">,</span> <span class="n">autoescape</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">template_class</span><span class="o">=</span><span class="n">cls</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Template.from_code"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.from_code">[docs]</a>    <span class="k">def</span> <span class="nf">from_code</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="nb">globals</span><span class="p">,</span> <span class="n">uptodate</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a template object from compiled code and the globals.  This</span>
+<span class="sd">        is used by the loaders and environment to create a template object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;environment&#39;</span><span class="p">:</span>  <span class="n">environment</span><span class="p">,</span>
+            <span class="s">&#39;__file__&#39;</span><span class="p">:</span>     <span class="n">code</span><span class="o">.</span><span class="n">co_filename</span>
+        <span class="p">}</span>
+        <span class="k">exec</span> <span class="n">code</span> <span class="ow">in</span> <span class="n">namespace</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_from_namespace</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">_uptodate</span> <span class="o">=</span> <span class="n">uptodate</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Template.from_module_dict"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.from_module_dict">[docs]</a>    <span class="k">def</span> <span class="nf">from_module_dict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">module_dict</span><span class="p">,</span> <span class="nb">globals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a template object from a module.  This is used by the</span>
+<span class="sd">        module loader to create a template object.</span>
+
+<span class="sd">        .. versionadded:: 2.4</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_from_namespace</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">module_dict</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_from_namespace</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="nb">globals</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">globals</span> <span class="o">=</span> <span class="nb">globals</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;__file__&#39;</span><span class="p">]</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;blocks&#39;</span><span class="p">]</span>
+
+        <span class="c"># render function and module</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">root_render_func</span> <span class="o">=</span> <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;root&#39;</span><span class="p">]</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">_module</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># debug and loader helpers</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">_debug_info</span> <span class="o">=</span> <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;debug_info&#39;</span><span class="p">]</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">_uptodate</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># store the reference</span>
+        <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;environment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="n">namespace</span><span class="p">[</span><span class="s">&#39;__jinja_template__&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+
+        <span class="k">return</span> <span class="n">t</span>
+
+<div class="viewcode-block" id="Template.render"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method accepts the same arguments as the `dict` constructor:</span>
+<span class="sd">        A dict, a dict subclass or some keyword arguments.  If no arguments</span>
+<span class="sd">        are given the context will be empty.  These two calls do the same::</span>
+
+<span class="sd">            template.render(knights=&#39;that say nih&#39;)</span>
+<span class="sd">            template.render({&#39;knights&#39;: &#39;that say nih&#39;})</span>
+
+<span class="sd">        This will return the rendered template as unicode string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_render_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_context</span><span class="p">(</span><span class="nb">vars</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Template.stream"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.stream">[docs]</a>    <span class="k">def</span> <span class="nf">stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Works exactly like :meth:`generate` but returns a</span>
+<span class="sd">        :class:`TemplateStream`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TemplateStream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Template.generate"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For very large templates it can be useful to not render the whole</span>
+<span class="sd">        template at once but evaluate each statement after another and yield</span>
+<span class="sd">        piece for piece.  This method basically does exactly that and returns</span>
+<span class="sd">        a generator that yields one item after another as unicode strings.</span>
+
+<span class="sd">        It accepts the same arguments as :meth:`render`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_render_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_context</span><span class="p">(</span><span class="nb">vars</span><span class="p">)):</span>
+                <span class="k">yield</span> <span class="n">event</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Template.new_context"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.new_context">[docs]</a>    <span class="k">def</span> <span class="nf">new_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">shared</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new :class:`Context` for this template.  The vars</span>
+<span class="sd">        provided will be passed to the template.  Per default the globals</span>
+<span class="sd">        are added to the context.  If shared is set to `True` the data</span>
+<span class="sd">        is passed as it to the context without adding the globals.</span>
+
+<span class="sd">        `locals` can be a dict of local variables for internal usage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">new_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span>
+                           <span class="nb">vars</span><span class="p">,</span> <span class="n">shared</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">globals</span><span class="p">,</span> <span class="nb">locals</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Template.make_module"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.make_module">[docs]</a>    <span class="k">def</span> <span class="nf">make_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">shared</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method works like the :attr:`module` attribute when called</span>
+<span class="sd">        without arguments but it will evaluate the template on every call</span>
+<span class="sd">        rather than caching it.  It&#39;s also possible to provide</span>
+<span class="sd">        a dict which is then used as context.  The arguments are the same</span>
+<span class="sd">        as for the :meth:`new_context` method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TemplateModule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_context</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="n">shared</span><span class="p">,</span> <span class="nb">locals</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Template.module"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.module">[docs]</a>    <span class="k">def</span> <span class="nf">module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The template as module.  This is used for imports in the</span>
+<span class="sd">        template runtime but is also useful if one wants to access</span>
+<span class="sd">        exported template variables from the Python layer:</span>
+
+<span class="sd">        &gt;&gt;&gt; t = Template(&#39;{% macro foo() %}42{% endmacro %}23&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; unicode(t.module)</span>
+<span class="sd">        u&#39;23&#39;</span>
+<span class="sd">        &gt;&gt;&gt; t.module.foo()</span>
+<span class="sd">        u&#39;42&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module</span> <span class="o">=</span> <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_module</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="Template.get_corresponding_lineno"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.get_corresponding_lineno">[docs]</a>    <span class="k">def</span> <span class="nf">get_corresponding_lineno</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineno</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the source line number of a line number in the</span>
+<span class="sd">        generated bytecode as they are not in sync.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">template_line</span><span class="p">,</span> <span class="n">code_line</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">debug_info</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">code_line</span> <span class="o">&lt;=</span> <span class="n">lineno</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">template_line</span>
+        <span class="k">return</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Template.is_up_to_date"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.is_up_to_date">[docs]</a>    <span class="k">def</span> <span class="nf">is_up_to_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If this variable is `False` there is a newer version available.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uptodate</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uptodate</span><span class="p">()</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Template.debug_info"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.Template.debug_info">[docs]</a>    <span class="k">def</span> <span class="nf">debug_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The debug info mapping.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">)))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_debug_info</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;&amp;&#39;</span><span class="p">)]</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;memory:</span><span class="si">%x</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TemplateModule"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateModule">[docs]</a><span class="k">class</span> <span class="nc">TemplateModule</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an imported template.  All the exported names of the</span>
+<span class="sd">    template are available as attributes on this object.  Additionally</span>
+<span class="sd">    converting it into an unicode- or bytestrings renders the contents.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_body_stream</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">root_render_func</span><span class="p">(</span><span class="n">context</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_exported</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name__</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__html__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_body_stream</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="c"># unicode goes after __str__ because we configured 2to3 to rename</span>
+    <span class="c"># __unicode__ to __str__.  because the 2to3 tree is not designed to</span>
+    <span class="c"># remove nodes from it, we leave the above __str__ around and let</span>
+    <span class="c"># it override at runtime.</span>
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_body_stream</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name__</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;memory:</span><span class="si">%x</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TemplateExpression"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateExpression">[docs]</a><span class="k">class</span> <span class="nc">TemplateExpression</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The :meth:`jinja2.Environment.compile_expression` method returns an</span>
+<span class="sd">    instance of this object.  It encapsulates the expression-like access</span>
+<span class="sd">    to the template with an expression it wraps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">undefined_to_none</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_template</span> <span class="o">=</span> <span class="n">template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_to_none</span> <span class="o">=</span> <span class="n">undefined_to_none</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_template</span><span class="o">.</span><span class="n">new_context</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">consume</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_template</span><span class="o">.</span><span class="n">root_render_func</span><span class="p">(</span><span class="n">context</span><span class="p">))</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">vars</span><span class="p">[</span><span class="s">&#39;result&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undefined_to_none</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">):</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+</div>
+<div class="viewcode-block" id="TemplateStream"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateStream">[docs]</a><span class="k">class</span> <span class="nc">TemplateStream</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A template stream works pretty much like an ordinary python generator</span>
+<span class="sd">    but it can buffer multiple items to reduce the number of total iterations.</span>
+<span class="sd">    Per default the output is unbuffered which means that for every unbuffered</span>
+<span class="sd">    instruction in the template one unicode string is yielded.</span>
+
+<span class="sd">    If buffering is enabled with a buffer size of 5, five items are combined</span>
+<span class="sd">    into a new unicode string.  This is mainly useful if you are streaming</span>
+<span class="sd">    big templates to a client via WSGI which flushes after each iteration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">gen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disable_buffering</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TemplateStream.dump"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateStream.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s">&#39;strict&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump the complete stream into a file or file-like object.</span>
+<span class="sd">        Per default unicode strings are written, if you want to encode</span>
+<span class="sd">        before writing specifiy an `encoding`.</span>
+
+<span class="sd">        Example usage::</span>
+
+<span class="sd">            Template(&#39;Hello {{ name }}!&#39;).stream(name=&#39;foo&#39;).dump(&#39;hello.html&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">close</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">fp</span> <span class="o">=</span> <span class="nb">file</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">close</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">encoding</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">iterable</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iterable</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s">&#39;writelines&#39;</span><span class="p">):</span>
+                <span class="n">fp</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+                    <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">close</span><span class="p">:</span>
+                <span class="n">fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="TemplateStream.disable_buffering"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateStream.disable_buffering">[docs]</a>    <span class="k">def</span> <span class="nf">disable_buffering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Disable the output buffering.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span><span class="o">.</span><span class="n">next</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffered</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="TemplateStream.enable_buffering"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateStream.enable_buffering">[docs]</a>    <span class="k">def</span> <span class="nf">enable_buffering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enable buffering.  Buffer `size` items before yielding them.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;buffer size too small&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">generator</span><span class="p">(</span><span class="nb">next</span><span class="p">):</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">c_size</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">push</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">append</span>
+
+            <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="n">c_size</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">:</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="nb">next</span><span class="p">()</span>
+                        <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+                            <span class="n">c_size</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">c_size</span><span class="p">:</span>
+                        <span class="k">return</span>
+                <span class="k">yield</span> <span class="n">concat</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">buf</span><span class="p">[:]</span>
+                <span class="n">c_size</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffered</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next</span> <span class="o">=</span> <span class="n">generator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen</span><span class="o">.</span><span class="n">next</span><span class="p">)</span><span class="o">.</span><span class="n">next</span>
+</div>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="TemplateStream.next"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.environment.TemplateStream.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next</span><span class="p">()</span>
+
+
+<span class="c"># hook in default template class.  if anyone reads this comment: ignore that</span>
+<span class="c"># it&#39;s possible to use custom templates ;-)</span></div></div>
+<span class="n">Environment</span><span class="o">.</span><span class="n">template_class</span> <span class="o">=</span> <span class="n">Template</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

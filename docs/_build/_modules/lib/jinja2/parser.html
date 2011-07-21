@@ -1,0 +1,989 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.parser &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.parser</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.parser</span>
+<span class="sd">    ~~~~~~~~~~~~~</span>
+
+<span class="sd">    Implements the template parser.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">nodes</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">TemplateAssertionError</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="nb">next</span>
+<span class="kn">from</span> <span class="nn">jinja2.lexer</span> <span class="kn">import</span> <span class="n">describe_token</span><span class="p">,</span> <span class="n">describe_token_expr</span>
+
+
+<span class="c">#: statements that callinto</span>
+<span class="n">_statement_keywords</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s">&#39;for&#39;</span><span class="p">,</span> <span class="s">&#39;if&#39;</span><span class="p">,</span> <span class="s">&#39;block&#39;</span><span class="p">,</span> <span class="s">&#39;extends&#39;</span><span class="p">,</span> <span class="s">&#39;print&#39;</span><span class="p">,</span>
+                                 <span class="s">&#39;macro&#39;</span><span class="p">,</span> <span class="s">&#39;include&#39;</span><span class="p">,</span> <span class="s">&#39;from&#39;</span><span class="p">,</span> <span class="s">&#39;import&#39;</span><span class="p">,</span>
+                                 <span class="s">&#39;set&#39;</span><span class="p">])</span>
+<span class="n">_compare_operators</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s">&#39;eq&#39;</span><span class="p">,</span> <span class="s">&#39;ne&#39;</span><span class="p">,</span> <span class="s">&#39;lt&#39;</span><span class="p">,</span> <span class="s">&#39;lteq&#39;</span><span class="p">,</span> <span class="s">&#39;gt&#39;</span><span class="p">,</span> <span class="s">&#39;gteq&#39;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="Parser"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser">[docs]</a><span class="k">class</span> <span class="nc">Parser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This is the central parsing class Jinja2 uses.  It&#39;s passed to</span>
+<span class="sd">    extensions and can be used to parse expressions or statements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">state</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">_tokenize</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">extension</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">iter_extensions</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">extension</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">extension</span><span class="o">.</span><span class="n">parse</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_identifier</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag_stack</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_token_stack</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Parser.fail"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.fail">[docs]</a>    <span class="k">def</span> <span class="nf">fail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">exc</span><span class="o">=</span><span class="n">TemplateSyntaxError</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience method that raises `exc` with the message, passed</span>
+<span class="sd">        line number or last line number as well as the current name and</span>
+<span class="sd">        filename.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">lineno</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">raise</span> <span class="n">exc</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_fail_ut_eof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">end_token_stack</span><span class="p">,</span> <span class="n">lineno</span><span class="p">):</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">exprs</span> <span class="ow">in</span> <span class="n">end_token_stack</span><span class="p">:</span>
+            <span class="n">expected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">describe_token_expr</span><span class="p">,</span> <span class="n">exprs</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">end_token_stack</span><span class="p">:</span>
+            <span class="n">currently_looking</span> <span class="o">=</span> <span class="s">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">describe_token_expr</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">end_token_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">currently_looking</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Unexpected end of template.&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Encountered unknown tag </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">currently_looking</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">:</span>
+                <span class="n">message</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;You probably made a nesting mistake. Jinja &#39;</span>
+                               <span class="s">&#39;is expecting this tag, but currently looking &#39;</span>
+                               <span class="s">&#39;for </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">currently_looking</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">message</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;Jinja was looking for the following tags: &#39;</span>
+                               <span class="s">&#39;</span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">currently_looking</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag_stack</span><span class="p">:</span>
+            <span class="n">message</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;The innermost block that needs to be &#39;</span>
+                           <span class="s">&#39;closed is </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">lineno</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Parser.fail_unknown_tag"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.fail_unknown_tag">[docs]</a>    <span class="k">def</span> <span class="nf">fail_unknown_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called if the parser encounters an unknown tag.  Tries to fail</span>
+<span class="sd">        with a human readable error message that could help to identify</span>
+<span class="sd">        the problem.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fail_ut_eof</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_token_stack</span><span class="p">,</span> <span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.fail_eof"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.fail_eof">[docs]</a>    <span class="k">def</span> <span class="nf">fail_eof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_tokens</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Like fail_unknown_tag but for end of template situations.&quot;&quot;&quot;</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end_token_stack</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">end_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end_tokens</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fail_ut_eof</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">stack</span><span class="p">,</span> <span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.is_tuple_end"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.is_tuple_end">[docs]</a>    <span class="k">def</span> <span class="nf">is_tuple_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_end_rules</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Are we at the end of a tuple?&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;variable_end&#39;</span><span class="p">,</span> <span class="s">&#39;block_end&#39;</span><span class="p">,</span> <span class="s">&#39;rparen&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">extra_end_rules</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test_any</span><span class="p">(</span><span class="n">extra_end_rules</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Parser.free_identifier"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.free_identifier">[docs]</a>    <span class="k">def</span> <span class="nf">free_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new free identifier as :class:`~jinja2.nodes.InternalName`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_identifier</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">InternalName</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">Node</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="s">&#39;fi</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_identifier</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_statement"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_statement">[docs]</a>    <span class="k">def</span> <span class="nf">parse_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse a single statement.&quot;&quot;&quot;</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;tag name expected&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">pop_tag</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">_statement_keywords</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;parse_&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">value</span><span class="p">)()</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s">&#39;call&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_call_block</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s">&#39;filter&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_filter_block</span><span class="p">()</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ext</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+            <span class="c"># did not work out, remove the token we pushed by accident</span>
+            <span class="c"># from the stack so that the unknown tag fail function can</span>
+            <span class="c"># produce a proper error message.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tag_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">pop_tag</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail_unknown_tag</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pop_tag</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tag_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_statements"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_statements">[docs]</a>    <span class="k">def</span> <span class="nf">parse_statements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_tokens</span><span class="p">,</span> <span class="n">drop_needle</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse multiple statements into a list until one of the end tokens</span>
+<span class="sd">        is reached.  This is used to parse the body of statements as it also</span>
+<span class="sd">        parses template data if appropriate.  The parser checks first if the</span>
+<span class="sd">        current token is a colon and skips it if there is one.  Then it checks</span>
+<span class="sd">        for the block end and parses until if one of the `end_tokens` is</span>
+<span class="sd">        reached.  Per default the active token in the stream at the end of</span>
+<span class="sd">        the call is the matched end token.  If this is not wanted `drop_needle`</span>
+<span class="sd">        can be set to `True` and the end token is removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># the first token may be a colon for python compatibility</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;colon&#39;</span><span class="p">)</span>
+
+        <span class="c"># in the future it would be possible to add whole code sections</span>
+        <span class="c"># by adding some sort of end of statement token and parsing those here.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;block_end&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subparse</span><span class="p">(</span><span class="n">end_tokens</span><span class="p">)</span>
+
+        <span class="c"># we reached the end of the template too early, the subparser</span>
+        <span class="c"># does not check for this, so we do that now</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;eof&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail_eof</span><span class="p">(</span><span class="n">end_tokens</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">drop_needle</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_set"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_set">[docs]</a>    <span class="k">def</span> <span class="nf">parse_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse an assign statement.&quot;&quot;&quot;</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;assign&#39;</span><span class="p">)</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_tuple</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Assign</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_for"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_for">[docs]</a>    <span class="k">def</span> <span class="nf">parse_for</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse a for loop.&quot;&quot;&quot;</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name:for&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">(</span><span class="n">extra_end_rules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;name:in&#39;</span><span class="p">,))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name:in&#39;</span><span class="p">)</span>
+        <span class="nb">iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_tuple</span><span class="p">(</span><span class="n">with_condexpr</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">extra_end_rules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;name:recursive&#39;</span><span class="p">,))</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:if&#39;</span><span class="p">):</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+        <span class="n">recursive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:recursive&#39;</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endfor&#39;</span><span class="p">,</span> <span class="s">&#39;name:else&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s">&#39;endfor&#39;</span><span class="p">:</span>
+            <span class="n">else_</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">else_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endfor&#39;</span><span class="p">,),</span> <span class="n">drop_needle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">For</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">else_</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span>
+                         <span class="n">recursive</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_if"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_if">[docs]</a>    <span class="k">def</span> <span class="nf">parse_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse an if construct.&quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">result</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">If</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name:if&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_tuple</span><span class="p">(</span><span class="n">with_condexpr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:elif&#39;</span><span class="p">,</span> <span class="s">&#39;name:else&#39;</span><span class="p">,</span>
+                                               <span class="s">&#39;name:endif&#39;</span><span class="p">))</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:elif&#39;</span><span class="p">):</span>
+                <span class="n">new_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">If</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">else_</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_node</span><span class="p">]</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">new_node</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:else&#39;</span><span class="p">):</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">else_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endif&#39;</span><span class="p">,),</span>
+                                                   <span class="n">drop_needle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">else_</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">break</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_block"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_block">[docs]</a>    <span class="k">def</span> <span class="nf">parse_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Block</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">scoped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:scoped&#39;</span><span class="p">)</span>
+
+        <span class="c"># common problem people encounter when switching from django</span>
+        <span class="c"># to jinja.  we do not support hyphens in block names, so let&#39;s</span>
+        <span class="c"># raise a nicer error message in that case.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;sub&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;Block names in Jinja have to be valid Python &#39;</span>
+                      <span class="s">&#39;identifiers and may not contain hypens, use an &#39;</span>
+                      <span class="s">&#39;underscore instead.&#39;</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endblock&#39;</span><span class="p">,),</span> <span class="n">drop_needle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_extends"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_extends">[docs]</a>    <span class="k">def</span> <span class="nf">parse_extends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Extends</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_import_context"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_import_context">[docs]</a>    <span class="k">def</span> <span class="nf">parse_import_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test_any</span><span class="p">(</span><span class="s">&#39;name:with&#39;</span><span class="p">,</span> <span class="s">&#39;name:without&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+           <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">look</span><span class="p">()</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:context&#39;</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">with_context</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s">&#39;with&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">with_context</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_include"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_include">[docs]</a>    <span class="k">def</span> <span class="nf">parse_include</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Include</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:ignore&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+           <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">look</span><span class="p">()</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:missing&#39;</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">ignore_missing</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">ignore_missing</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_import_context</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_import"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_import">[docs]</a>    <span class="k">def</span> <span class="nf">parse_import</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Import</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name:as&#39;</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">(</span><span class="n">name_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_import_context</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_from"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_from">[docs]</a>    <span class="k">def</span> <span class="nf">parse_from</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">FromImport</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name:import&#39;</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">parse_context</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;with&#39;</span><span class="p">,</span> <span class="s">&#39;without&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">look</span><span class="p">()</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:context&#39;</span><span class="p">):</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">with_context</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s">&#39;with&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">parse_context</span><span class="p">():</span>
+                    <span class="k">break</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">(</span><span class="n">name_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;names starting with an underline can not &#39;</span>
+                              <span class="s">&#39;be imported&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                              <span class="n">exc</span><span class="o">=</span><span class="n">TemplateAssertionError</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:as&#39;</span><span class="p">):</span>
+                    <span class="n">alias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">(</span><span class="n">name_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">alias</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">parse_context</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;comma&#39;</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&#39;with_context&#39;</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">with_context</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_signature"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_signature">[docs]</a>    <span class="k">def</span> <span class="nf">parse_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;lparen&#39;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;rparen&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">(</span><span class="n">name_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">arg</span><span class="o">.</span><span class="n">set_ctx</span><span class="p">(</span><span class="s">&#39;param&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;assign&#39;</span><span class="p">):</span>
+                <span class="n">defaults</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">())</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;rparen&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_call_block"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_call_block">[docs]</a>    <span class="k">def</span> <span class="nf">parse_call_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">CallBlock</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lparen&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_signature</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">call</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Call</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;expected call&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endcall&#39;</span><span class="p">,),</span> <span class="n">drop_needle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_filter_block"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_filter_block">[docs]</a>    <span class="k">def</span> <span class="nf">parse_filter_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">FilterBlock</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endfilter&#39;</span><span class="p">,),</span>
+                                          <span class="n">drop_needle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_macro"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_macro">[docs]</a>    <span class="k">def</span> <span class="nf">parse_macro</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Macro</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_assign_target</span><span class="p">(</span><span class="n">name_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_signature</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statements</span><span class="p">((</span><span class="s">&#39;name:endmacro&#39;</span><span class="p">,),</span>
+                                          <span class="n">drop_needle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_print"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_print">[docs]</a>    <span class="k">def</span> <span class="nf">parse_print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Output</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;block_end&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_assign_target"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_assign_target">[docs]</a>    <span class="k">def</span> <span class="nf">parse_assign_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_tuple</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">name_only</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                            <span class="n">extra_end_rules</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse an assignment target.  As Jinja2 allows assignments to</span>
+<span class="sd">        tuples, this function can parse all allowed assignment targets.  Per</span>
+<span class="sd">        default assignments to tuples are parsed, that can be disable however</span>
+<span class="sd">        by setting `with_tuple` to `False`.  If only assignments to names are</span>
+<span class="sd">        wanted `name_only` can be set to `True`.  The `extra_end_rules`</span>
+<span class="sd">        parameter is forwarded to the tuple parsing function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name_only</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">with_tuple</span><span class="p">:</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_tuple</span><span class="p">(</span><span class="n">simplified</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                          <span class="n">extra_end_rules</span><span class="o">=</span><span class="n">extra_end_rules</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_primary</span><span class="p">()</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">set_ctx</span><span class="p">(</span><span class="s">&#39;store&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="o">.</span><span class="n">can_assign</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;can</span><span class="se">\&#39;</span><span class="s">t assign to </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">target</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span>
+                      <span class="n">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">target</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">target</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_expression"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_expression">[docs]</a>    <span class="k">def</span> <span class="nf">parse_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_condexpr</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse an expression.  Per default all expressions are parsed, if</span>
+<span class="sd">        the optional `with_condexpr` parameter is set to `False` conditional</span>
+<span class="sd">        expressions are not parsed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">with_condexpr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_condexpr</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_or</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_condexpr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_condexpr">[docs]</a>    <span class="k">def</span> <span class="nf">parse_condexpr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">expr1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_or</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:if&#39;</span><span class="p">):</span>
+            <span class="n">expr2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_or</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:else&#39;</span><span class="p">):</span>
+                <span class="n">expr3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_condexpr</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">expr3</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">expr1</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">CondExpr</span><span class="p">(</span><span class="n">expr2</span><span class="p">,</span> <span class="n">expr1</span><span class="p">,</span> <span class="n">expr3</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">expr1</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_or"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_or">[docs]</a>    <span class="k">def</span> <span class="nf">parse_or</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_and</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:or&#39;</span><span class="p">):</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_and</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Or</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_and"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_and">[docs]</a>    <span class="k">def</span> <span class="nf">parse_and</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_not</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:and&#39;</span><span class="p">):</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_not</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">And</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_not"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_not">[docs]</a>    <span class="k">def</span> <span class="nf">parse_not</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:not&#39;</span><span class="p">):</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span>
+            <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_not</span><span class="p">(),</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_compare</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_compare"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_compare">[docs]</a>    <span class="k">def</span> <span class="nf">parse_compare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_add</span><span class="p">()</span>
+        <span class="n">ops</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">token_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span>
+            <span class="k">if</span> <span class="n">token_type</span> <span class="ow">in</span> <span class="n">_compare_operators</span><span class="p">:</span>
+                <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Operand</span><span class="p">(</span><span class="n">token_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_add</span><span class="p">()))</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip_if</span><span class="p">(</span><span class="s">&#39;name:in&#39;</span><span class="p">):</span>
+                <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Operand</span><span class="p">(</span><span class="s">&#39;in&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_add</span><span class="p">()))</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:not&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+                 <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">look</span><span class="p">()</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:in&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Operand</span><span class="p">(</span><span class="s">&#39;notin&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_add</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ops</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Compare</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">ops</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_add"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_add">[docs]</a>    <span class="k">def</span> <span class="nf">parse_add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_sub</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_sub</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_sub"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_sub">[docs]</a>    <span class="k">def</span> <span class="nf">parse_sub</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_concat</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;sub&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_concat</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Sub</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_concat"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_concat">[docs]</a>    <span class="k">def</span> <span class="nf">parse_concat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_mul</span><span class="p">()]</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;tilde&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_mul</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Concat</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_mul"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_mul">[docs]</a>    <span class="k">def</span> <span class="nf">parse_mul</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_div</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;mul&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_div</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Mul</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_div"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_div">[docs]</a>    <span class="k">def</span> <span class="nf">parse_div</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_floordiv</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;div&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_floordiv</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Div</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_floordiv"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_floordiv">[docs]</a>    <span class="k">def</span> <span class="nf">parse_floordiv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_mod</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;floordiv&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_mod</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">FloorDiv</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_mod"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_mod">[docs]</a>    <span class="k">def</span> <span class="nf">parse_mod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_pow</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;mod&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_pow</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Mod</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_pow"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_pow">[docs]</a>    <span class="k">def</span> <span class="nf">parse_pow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_unary</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;pow&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_unary</span><span class="p">()</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Pow</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">return</span> <span class="n">left</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_unary"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_unary">[docs]</a>    <span class="k">def</span> <span class="nf">parse_unary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_filter</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">token_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">if</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;sub&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Neg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_unary</span><span class="p">(</span><span class="bp">False</span><span class="p">),</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Pos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_unary</span><span class="p">(</span><span class="bp">False</span><span class="p">),</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_primary</span><span class="p">()</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_postfix</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">with_filter</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_filter_expr</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_primary"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_primary">[docs]</a>    <span class="k">def</span> <span class="nf">parse_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;false&#39;</span><span class="p">,</span> <span class="s">&#39;True&#39;</span><span class="p">,</span> <span class="s">&#39;False&#39;</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;True&#39;</span><span class="p">),</span>
+                                   <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="s">&#39;None&#39;</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;load&#39;</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;string&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="p">[</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">lineno</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;string&#39;</span><span class="p">:</span>
+                <span class="n">buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;integer&#39;</span><span class="p">,</span> <span class="s">&#39;float&#39;</span><span class="p">):</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lparen&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_tuple</span><span class="p">(</span><span class="n">explicit_parentheses</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;rparen&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lbracket&#39;</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_list</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lbrace&#39;</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;unexpected &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">describe_token</span><span class="p">(</span><span class="n">token</span><span class="p">),</span> <span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_tuple"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_tuple">[docs]</a>    <span class="k">def</span> <span class="nf">parse_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simplified</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">with_condexpr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                    <span class="n">extra_end_rules</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">explicit_parentheses</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Works like `parse_expression` but if multiple expressions are</span>
+<span class="sd">        delimited by a comma a :class:`~jinja2.nodes.Tuple` node is created.</span>
+<span class="sd">        This method could also return a regular expression instead of a tuple</span>
+<span class="sd">        if no commas where found.</span>
+
+<span class="sd">        The default parsing mode is a full tuple.  If `simplified` is `True`</span>
+<span class="sd">        only names and literals are parsed.  The `no_condexpr` parameter is</span>
+<span class="sd">        forwarded to :meth:`parse_expression`.</span>
+
+<span class="sd">        Because tuples do not require delimiters and may end in a bogus comma</span>
+<span class="sd">        an extra hint is needed that marks the end of a tuple.  For example</span>
+<span class="sd">        for loops support tuples between `for` and `in`.  In that case the</span>
+<span class="sd">        `extra_end_rules` is set to ``[&#39;name:in&#39;]``.</span>
+
+<span class="sd">        `explicit_parentheses` is true if the parsing was triggered by an</span>
+<span class="sd">        expression in parentheses.  This is used to figure out if an empty</span>
+<span class="sd">        tuple is a valid expression or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">if</span> <span class="n">simplified</span><span class="p">:</span>
+            <span class="n">parse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_primary</span>
+        <span class="k">elif</span> <span class="n">with_condexpr</span><span class="p">:</span>
+            <span class="n">parse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parse</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">(</span><span class="n">with_condexpr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">is_tuple</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tuple_end</span><span class="p">(</span><span class="n">extra_end_rules</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse</span><span class="p">())</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;comma&#39;</span><span class="p">:</span>
+                <span class="n">is_tuple</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_tuple</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c"># if we don&#39;t have explicit parentheses, an empty tuple is</span>
+            <span class="c"># not a valid expression.  This would mean nothing (literally</span>
+            <span class="c"># nothing) in the spot of an expression would be an empty</span>
+            <span class="c"># tuple.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">explicit_parentheses</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;Expected an expression, got </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">&#39;</span> <span class="o">%</span>
+                          <span class="n">describe_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Tuple</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&#39;load&#39;</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_list"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_list">[docs]</a>    <span class="k">def</span> <span class="nf">parse_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;lbracket&#39;</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;rbracket&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">items</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;rbracket&#39;</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;rbracket&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_dict"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_dict">[docs]</a>    <span class="k">def</span> <span class="nf">parse_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;lbrace&#39;</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;rbrace&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">items</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;rbrace&#39;</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;colon&#39;</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">lineno</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;rbrace&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_postfix"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_postfix">[docs]</a>    <span class="k">def</span> <span class="nf">parse_postfix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">token_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span>
+            <span class="k">if</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;dot&#39;</span> <span class="ow">or</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;lbracket&#39;</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_subscript</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="c"># calls are valid both after postfix expressions (getattr</span>
+            <span class="c"># and getitem) as well as filters and tests</span>
+            <span class="k">elif</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;lparen&#39;</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_call</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_filter_expr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_filter_expr">[docs]</a>    <span class="k">def</span> <span class="nf">parse_filter_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">token_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span>
+            <span class="k">if</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;pipe&#39;</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_filter</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s">&#39;is&#39;</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_test</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="c"># calls are valid both after postfix expressions (getattr</span>
+            <span class="c"># and getitem) as well as filters and tests</span>
+            <span class="k">elif</span> <span class="n">token_type</span> <span class="o">==</span> <span class="s">&#39;lparen&#39;</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_call</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_subscript"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_subscript">[docs]</a>    <span class="k">def</span> <span class="nf">parse_subscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;dot&#39;</span><span class="p">:</span>
+            <span class="n">attr_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">attr_token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">attr_token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;load&#39;</span><span class="p">,</span>
+                                     <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">attr_token</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;integer&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;expected name or number&#39;</span><span class="p">,</span> <span class="n">attr_token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">(</span><span class="n">attr_token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">attr_token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Getitem</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="s">&#39;load&#39;</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lbracket&#39;</span><span class="p">:</span>
+            <span class="n">priority_on_attribute</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;rbracket&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_subscribed</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;rbracket&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Tuple</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&#39;load&#39;</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Getitem</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="s">&#39;load&#39;</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;expected subscript expression&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_subscribed"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_subscribed">[docs]</a>    <span class="k">def</span> <span class="nf">parse_subscribed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;colon&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;colon&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">node</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;colon&#39;</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;rbracket&#39;</span><span class="p">,</span> <span class="s">&#39;comma&#39;</span><span class="p">):</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;colon&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;rbracket&#39;</span><span class="p">,</span> <span class="s">&#39;comma&#39;</span><span class="p">):</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Slice</span><span class="p">(</span><span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_call"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_call">[docs]</a>    <span class="k">def</span> <span class="nf">parse_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;lparen&#39;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dyn_args</span> <span class="o">=</span> <span class="n">dyn_kwargs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">require_comma</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">def</span> <span class="nf">ensure</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;invalid syntax for function call expression&#39;</span><span class="p">,</span>
+                          <span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s">&#39;rparen&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">require_comma</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+                <span class="c"># support for trailing comma</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;rparen&#39;</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;mul&#39;</span><span class="p">:</span>
+                <span class="n">ensure</span><span class="p">(</span><span class="n">dyn_args</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dyn_kwargs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                <span class="n">dyn_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;pow&#39;</span><span class="p">:</span>
+                <span class="n">ensure</span><span class="p">(</span><span class="n">dyn_kwargs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                <span class="n">dyn_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ensure</span><span class="p">(</span><span class="n">dyn_args</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dyn_kwargs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span> <span class="ow">and</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">look</span><span class="p">()</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;assign&#39;</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">value</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()</span>
+                    <span class="n">kwargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Keyword</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+                                                <span class="n">lineno</span><span class="o">=</span><span class="n">value</span><span class="o">.</span><span class="n">lineno</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ensure</span><span class="p">(</span><span class="ow">not</span> <span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">())</span>
+
+            <span class="n">require_comma</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;rparen&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">dyn_args</span><span class="p">,</span> <span class="n">dyn_kwargs</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Call</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">dyn_args</span><span class="p">,</span> <span class="n">dyn_kwargs</span><span class="p">,</span>
+                          <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_filter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_filter">[docs]</a>    <span class="k">def</span> <span class="nf">parse_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">start_inline</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;pipe&#39;</span> <span class="ow">or</span> <span class="n">start_inline</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">start_inline</span><span class="p">:</span>
+                <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;dot&#39;</span><span class="p">:</span>
+                <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                <span class="n">name</span> <span class="o">+=</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lparen&#39;</span><span class="p">:</span>
+                <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">dyn_args</span><span class="p">,</span> <span class="n">dyn_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_call</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">dyn_args</span> <span class="o">=</span> <span class="n">dyn_kwargs</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">dyn_args</span><span class="p">,</span>
+                                <span class="n">dyn_kwargs</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="n">start_inline</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.parse_test"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse_test">[docs]</a>    <span class="k">def</span> <span class="nf">parse_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:not&#39;</span><span class="p">):</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">negated</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">negated</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;dot&#39;</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">+=</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">dyn_args</span> <span class="o">=</span> <span class="n">dyn_kwargs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;lparen&#39;</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">dyn_args</span><span class="p">,</span> <span class="n">dyn_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_call</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="s">&#39;integer&#39;</span><span class="p">,</span>
+                                          <span class="s">&#39;float&#39;</span><span class="p">,</span> <span class="s">&#39;lparen&#39;</span><span class="p">,</span> <span class="s">&#39;lbracket&#39;</span><span class="p">,</span>
+                                          <span class="s">&#39;lbrace&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> \
+             <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test_any</span><span class="p">(</span><span class="s">&#39;name:else&#39;</span><span class="p">,</span> <span class="s">&#39;name:or&#39;</span><span class="p">,</span>
+                                          <span class="s">&#39;name:and&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&#39;name:is&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;You cannot chain multiple tests with is&#39;</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Test</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">dyn_args</span><span class="p">,</span>
+                          <span class="n">dyn_kwargs</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">negated</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Parser.subparse"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.subparse">[docs]</a>    <span class="k">def</span> <span class="nf">subparse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_tokens</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">data_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">add_data</span> <span class="o">=</span> <span class="n">data_buffer</span><span class="o">.</span><span class="n">append</span>
+
+        <span class="k">if</span> <span class="n">end_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_end_token_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end_tokens</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">flush_data</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">data_buffer</span><span class="p">:</span>
+                <span class="n">lineno</span> <span class="o">=</span> <span class="n">data_buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lineno</span>
+                <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Output</span><span class="p">(</span><span class="n">data_buffer</span><span class="p">[:],</span> <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="p">))</span>
+                <span class="k">del</span> <span class="n">data_buffer</span><span class="p">[:]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span>
+                <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;data&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                        <span class="n">add_data</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">TemplateData</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                                    <span class="n">lineno</span><span class="o">=</span><span class="n">token</span><span class="o">.</span><span class="n">lineno</span><span class="p">))</span>
+                    <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;variable_begin&#39;</span><span class="p">:</span>
+                    <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                    <span class="n">add_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_tuple</span><span class="p">(</span><span class="n">with_condexpr</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;variable_end&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;block_begin&#39;</span><span class="p">:</span>
+                    <span class="n">flush_data</span><span class="p">()</span>
+                    <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">end_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> \
+                       <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test_any</span><span class="p">(</span><span class="o">*</span><span class="n">end_tokens</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">body</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_statement</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="n">body</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s">&#39;block_end&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;internal parsing error&#39;</span><span class="p">)</span>
+
+            <span class="n">flush_data</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_end_token_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">body</span>
+</div>
+<div class="viewcode-block" id="Parser.parse"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.parser.Parser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the whole template into a `Template` node.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subparse</span><span class="p">(),</span> <span class="n">lineno</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">set_environment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

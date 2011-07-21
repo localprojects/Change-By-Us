@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.loader &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.loader</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.loader</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Test the loaders.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span><span class="p">,</span> <span class="n">dict_loader</span><span class="p">,</span> \
+     <span class="n">package_loader</span><span class="p">,</span> <span class="n">filesystem_loader</span><span class="p">,</span> <span class="n">function_loader</span><span class="p">,</span> \
+     <span class="n">choice_loader</span><span class="p">,</span> <span class="n">prefix_loader</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">loaders</span>
+<span class="kn">from</span> <span class="nn">jinja2.loaders</span> <span class="kn">import</span> <span class="n">split_template_path</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateNotFound</span>
+
+
+<div class="viewcode-block" id="LoaderTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase">[docs]</a><span class="k">class</span> <span class="nc">LoaderTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LoaderTestCase.test_dict_loader"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_dict_loader">[docs]</a>    <span class="k">def</span> <span class="nf">test_dict_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">dict_loader</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;justdict.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOO&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">,</span> <span class="s">&#39;missing.html&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_package_loader"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_package_loader">[docs]</a>    <span class="k">def</span> <span class="nf">test_package_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">package_loader</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;BAR&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">,</span> <span class="s">&#39;missing.html&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_filesystem_loader"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_filesystem_loader">[docs]</a>    <span class="k">def</span> <span class="nf">test_filesystem_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">filesystem_loader</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;BAR&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;foo/test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOO&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">,</span> <span class="s">&#39;missing.html&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_choice_loader"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_choice_loader">[docs]</a>    <span class="k">def</span> <span class="nf">test_choice_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">choice_loader</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;justdict.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOO&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;BAR&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">,</span> <span class="s">&#39;missing.html&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_function_loader"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_function_loader">[docs]</a>    <span class="k">def</span> <span class="nf">test_function_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">function_loader</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;justfunction.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOO&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">,</span> <span class="s">&#39;missing.html&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_prefix_loader"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_prefix_loader">[docs]</a>    <span class="k">def</span> <span class="nf">test_prefix_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">prefix_loader</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;a/test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;BAR&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;b/justdict.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOO&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">,</span> <span class="s">&#39;missing&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_caching"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_caching">[docs]</a>    <span class="k">def</span> <span class="nf">test_caching</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">class</span> <span class="nc">TestLoader</span><span class="p">(</span><span class="n">loaders</span><span class="o">.</span><span class="n">BaseLoader</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">get_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">template</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s">u&#39;foo&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="ow">not</span> <span class="n">changed</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">TestLoader</span><span class="p">(),</span> <span class="n">cache_size</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span> <span class="ow">is</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">)</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">assert</span> <span class="n">tmpl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">)</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">TestLoader</span><span class="p">(),</span> <span class="n">cache_size</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">)</span> \
+               <span class="ow">is</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;template&#39;</span><span class="p">)</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">TestLoader</span><span class="p">(),</span> <span class="n">cache_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;one&#39;</span><span class="p">)</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;two&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t2</span> <span class="ow">is</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;two&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t1</span> <span class="ow">is</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;one&#39;</span><span class="p">)</span>
+        <span class="n">t3</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;three&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s">&#39;one&#39;</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">cache</span>
+        <span class="k">assert</span> <span class="s">&#39;two&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">cache</span>
+        <span class="k">assert</span> <span class="s">&#39;three&#39;</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">cache</span>
+</div>
+<div class="viewcode-block" id="LoaderTestCase.test_split_template_path"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.LoaderTestCase.test_split_template_path">[docs]</a>    <span class="k">def</span> <span class="nf">test_split_template_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">split_template_path</span><span class="p">(</span><span class="s">&#39;foo/bar&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;bar&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">split_template_path</span><span class="p">(</span><span class="s">&#39;./foo/bar&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;bar&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">split_template_path</span><span class="p">,</span> <span class="s">&#39;../foo&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="ModuleLoaderTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase">[docs]</a><span class="k">class</span> <span class="nc">ModuleLoaderTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+    <span class="n">archive</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="ModuleLoaderTestCase.compile_down"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.compile_down">[docs]</a>    <span class="k">def</span> <span class="nf">compile_down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">zip</span><span class="o">=</span><span class="s">&#39;deflated&#39;</span><span class="p">,</span> <span class="n">py_compile</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ModuleLoaderTestCase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">prefix_loader</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">zip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s">&#39;.zip&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_env</span><span class="o">.</span><span class="n">compile_templates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">archive</span><span class="p">,</span> <span class="nb">zip</span><span class="o">=</span><span class="nb">zip</span><span class="p">,</span>
+                                       <span class="n">log_function</span><span class="o">=</span><span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">,</span>
+                                       <span class="n">py_compile</span><span class="o">=</span><span class="n">py_compile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">loaders</span><span class="o">.</span><span class="n">ModuleLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">archive</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ModuleLoaderTestCase.teardown"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.teardown">[docs]</a>    <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ModuleLoaderTestCase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">teardown</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mod_env&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">archive</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">archive</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">archive</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="ModuleLoaderTestCase.test_log"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.test_log">[docs]</a>    <span class="k">def</span> <span class="nf">test_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compile_down</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="s">&#39;Compiled &quot;a/foo/test.html&quot; as &#39;</span> \
+               <span class="s">&#39;tmpl_a790caf9d669e39ea4d280d597ec891c4ef0404a&#39;</span> <span class="ow">in</span> <span class="n">log</span>
+        <span class="k">assert</span> <span class="s">&#39;Finished compiling templates&#39;</span> <span class="ow">in</span> <span class="n">log</span>
+        <span class="k">assert</span> <span class="s">&#39;Could not compile &quot;a/syntaxerror.html&quot;: &#39;</span> \
+               <span class="s">&#39;Encountered unknown tag </span><span class="se">\&#39;</span><span class="s">endif</span><span class="se">\&#39;</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">log</span>
+</div>
+    <span class="k">def</span> <span class="nf">_test_common</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;a/test.html&#39;</span><span class="p">)</span>
+        <span class="n">tmpl2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;a/test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl1</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="n">tmpl2</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+
+        <span class="n">tmpl1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;b/justdict.html&#39;</span><span class="p">)</span>
+        <span class="n">tmpl2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;b/justdict.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl1</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="n">tmpl2</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ModuleLoaderTestCase.test_deflated_zip_compile"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.test_deflated_zip_compile">[docs]</a>    <span class="k">def</span> <span class="nf">test_deflated_zip_compile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compile_down</span><span class="p">(</span><span class="nb">zip</span><span class="o">=</span><span class="s">&#39;deflated&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_common</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ModuleLoaderTestCase.test_stored_zip_compile"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.test_stored_zip_compile">[docs]</a>    <span class="k">def</span> <span class="nf">test_stored_zip_compile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compile_down</span><span class="p">(</span><span class="nb">zip</span><span class="o">=</span><span class="s">&#39;stored&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_common</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ModuleLoaderTestCase.test_filesystem_compile"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.test_filesystem_compile">[docs]</a>    <span class="k">def</span> <span class="nf">test_filesystem_compile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compile_down</span><span class="p">(</span><span class="nb">zip</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_common</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ModuleLoaderTestCase.test_weak_references"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.test_weak_references">[docs]</a>    <span class="k">def</span> <span class="nf">test_weak_references</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compile_down</span><span class="p">()</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;a/test.html&#39;</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">ModuleLoader</span><span class="o">.</span><span class="n">get_template_key</span><span class="p">(</span><span class="s">&#39;a/test.html&#39;</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span>
+
+        <span class="c"># unset all, ensure the module is gone from sys.modules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span> <span class="o">=</span> <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">gc</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">assert</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span>
+</div>
+<div class="viewcode-block" id="ModuleLoaderTestCase.test_byte_compilation"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.ModuleLoaderTestCase.test_byte_compilation">[docs]</a>    <span class="k">def</span> <span class="nf">test_byte_compilation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compile_down</span><span class="p">(</span><span class="n">py_compile</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s">&#39;Byte-compiled &quot;a/test.html&quot;&#39;</span> <span class="ow">in</span> <span class="n">log</span>
+        <span class="n">tmpl1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;a/test.html&#39;</span><span class="p">)</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_env</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">module</span><span class="o">.</span> \
+            <span class="n">tmpl_3c4ddf650c1a73df961a6d3d2ce2752f1b8fd490</span>
+        <span class="k">assert</span> <span class="n">mod</span><span class="o">.</span><span class="n">__file__</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.pyc&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.loader.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">LoaderTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">ModuleLoaderTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

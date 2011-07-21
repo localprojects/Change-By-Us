@@ -1,0 +1,432 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.debug &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.debug</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.debug</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    Implements the debug interface for Jinja.  This module does some pretty</span>
+<span class="sd">    ugly stuff with the Python traceback system in order to achieve tracebacks</span>
+<span class="sd">    with correct line numbers, locals and contents.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">TracebackType</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">CodeType</span><span class="p">,</span> <span class="n">missing</span><span class="p">,</span> <span class="n">internal_code</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateSyntaxError</span>
+
+<span class="c"># on pypy we can take advantage of transparent proxies</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">__pypy__</span> <span class="kn">import</span> <span class="n">tproxy</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">tproxy</span> <span class="o">=</span> <span class="bp">None</span>
+
+
+<span class="c"># how does the raise helper look like?</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">exec</span> <span class="s">&quot;raise TypeError, &#39;foo&#39;&quot;</span>
+<span class="k">except</span> <span class="ne">SyntaxError</span><span class="p">:</span>
+    <span class="n">raise_helper</span> <span class="o">=</span> <span class="s">&#39;raise __jinja_exception__[1]&#39;</span>
+<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+    <span class="n">raise_helper</span> <span class="o">=</span> <span class="s">&#39;raise __jinja_exception__[0], __jinja_exception__[1]&#39;</span>
+
+
+<div class="viewcode-block" id="TracebackFrameProxy"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.TracebackFrameProxy">[docs]</a><span class="k">class</span> <span class="nc">TracebackFrameProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Proxies a traceback frame.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tb</span> <span class="o">=</span> <span class="n">tb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tb_next</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="TracebackFrameProxy.tb_next"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.TracebackFrameProxy.tb_next">[docs]</a>    <span class="k">def</span> <span class="nf">tb_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tb_next</span>
+</div>
+<div class="viewcode-block" id="TracebackFrameProxy.set_next"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.TracebackFrameProxy.set_next">[docs]</a>    <span class="k">def</span> <span class="nf">set_next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">next</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">tb_set_next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tb_set_next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="p">,</span> <span class="nb">next</span> <span class="ow">and</span> <span class="nb">next</span><span class="o">.</span><span class="n">tb</span> <span class="ow">or</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="c"># this function can fail due to all the hackery it does</span>
+                <span class="c"># on various python implementations.  We just catch errors</span>
+                <span class="c"># down and ignore them if necessary.</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tb_next</span> <span class="o">=</span> <span class="nb">next</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="TracebackFrameProxy.is_jinja_frame"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.TracebackFrameProxy.is_jinja_frame">[docs]</a>    <span class="k">def</span> <span class="nf">is_jinja_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;__jinja_template__&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_globals</span>
+</div>
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="make_frame_proxy"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.make_frame_proxy">[docs]</a><span class="k">def</span> <span class="nf">make_frame_proxy</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+    <span class="n">proxy</span> <span class="o">=</span> <span class="n">TracebackFrameProxy</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tproxy</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">proxy</span>
+    <span class="k">def</span> <span class="nf">operation_handler</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">operation</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;__getattribute__&#39;</span><span class="p">,</span> <span class="s">&#39;__getattr__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s">&#39;__setattr__&#39;</span><span class="p">:</span>
+            <span class="n">proxy</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">operation</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tproxy</span><span class="p">(</span><span class="n">TracebackType</span><span class="p">,</span> <span class="n">operation_handler</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ProcessedTraceback"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.ProcessedTraceback">[docs]</a><span class="k">class</span> <span class="nc">ProcessedTraceback</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Holds a Jinja preprocessed traceback for priting or reraising.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">frames</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">frames</span><span class="p">,</span> <span class="s">&#39;no frames for this traceback?&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exc_type</span> <span class="o">=</span> <span class="n">exc_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exc_value</span> <span class="o">=</span> <span class="n">exc_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames</span> <span class="o">=</span> <span class="n">frames</span>
+
+        <span class="c"># newly concatenate the frames (which are proxies)</span>
+        <span class="n">prev_tb</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">tb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">prev_tb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">prev_tb</span><span class="o">.</span><span class="n">set_next</span><span class="p">(</span><span class="n">tb</span><span class="p">)</span>
+            <span class="n">prev_tb</span> <span class="o">=</span> <span class="n">tb</span>
+        <span class="n">prev_tb</span><span class="o">.</span><span class="n">set_next</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ProcessedTraceback.render_as_text"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.ProcessedTraceback.render_as_text">[docs]</a>    <span class="k">def</span> <span class="nf">render_as_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a string with the traceback.&quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exc_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_value</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ProcessedTraceback.render_as_html"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.ProcessedTraceback.render_as_html">[docs]</a>    <span class="k">def</span> <span class="nf">render_as_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a unicode string with the traceback as rendered HTML.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">jinja2.debugrenderer</span> <span class="kn">import</span> <span class="n">render_traceback</span>
+        <span class="k">return</span> <span class="s">u&#39;</span><span class="si">%s</span><span class="se">\n\n</span><span class="s">&lt;!--</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">--&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">render_traceback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_as_text</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="ProcessedTraceback.is_template_syntax_error"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.ProcessedTraceback.is_template_syntax_error">[docs]</a>    <span class="k">def</span> <span class="nf">is_template_syntax_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`True` if this is a template syntax error.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exc_value</span><span class="p">,</span> <span class="n">TemplateSyntaxError</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="ProcessedTraceback.exc_info"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.ProcessedTraceback.exc_info">[docs]</a>    <span class="k">def</span> <span class="nf">exc_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exception info tuple with a proxy around the frame objects.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="ProcessedTraceback.standard_exc_info"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.ProcessedTraceback.standard_exc_info">[docs]</a>    <span class="k">def</span> <span class="nf">standard_exc_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Standard python exc_info for re-raising&quot;&quot;&quot;</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c"># the frame will be an actual traceback (or transparent proxy) if</span>
+        <span class="c"># we are on pypy or a python implementation with support for tproxy</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">tb</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">TracebackType</span><span class="p">:</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span>
+
+</div></div>
+<div class="viewcode-block" id="make_traceback"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.make_traceback">[docs]</a><span class="k">def</span> <span class="nf">make_traceback</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">source_hint</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a processed traceback object from the exc_info.&quot;&quot;&quot;</span>
+    <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">exc_info</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc_value</span><span class="p">,</span> <span class="n">TemplateSyntaxError</span><span class="p">):</span>
+        <span class="n">exc_info</span> <span class="o">=</span> <span class="n">translate_syntax_error</span><span class="p">(</span><span class="n">exc_value</span><span class="p">,</span> <span class="n">source_hint</span><span class="p">)</span>
+        <span class="n">initial_skip</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">initial_skip</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">translate_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">initial_skip</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="translate_syntax_error"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.translate_syntax_error">[docs]</a><span class="k">def</span> <span class="nf">translate_syntax_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rewrites a syntax error to please traceback systems.&quot;&quot;&quot;</span>
+    <span class="n">error</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+    <span class="n">error</span><span class="o">.</span><span class="n">translated</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">exc_info</span> <span class="o">=</span> <span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">filename</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;&lt;unknown&gt;&#39;</span>
+    <span class="k">return</span> <span class="n">fake_exc_info</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">error</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="translate_exception"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.translate_exception">[docs]</a><span class="k">def</span> <span class="nf">translate_exception</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">initial_skip</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;If passed an exc_info it will automatically rewrite the exceptions</span>
+<span class="sd">    all the way down to the correct line numbers and frames.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tb</span> <span class="o">=</span> <span class="n">exc_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c"># skip some internal frames if wanted</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">initial_skip</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">tb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span>
+    <span class="n">initial_tb</span> <span class="o">=</span> <span class="n">tb</span>
+
+    <span class="k">while</span> <span class="n">tb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># skip frames decorated with @internalcode.  These are internal</span>
+        <span class="c"># calls we can&#39;t avoid and that are useless in template debugging</span>
+        <span class="c"># output.</span>
+        <span class="k">if</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span> <span class="ow">in</span> <span class="n">internal_code</span><span class="p">:</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span>
+            <span class="k">continue</span>
+
+        <span class="c"># save a reference to the next frame if we override the current</span>
+        <span class="c"># one with a faked one.</span>
+        <span class="nb">next</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span>
+
+        <span class="c"># fake template exceptions</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_globals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;__jinja_template__&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">get_corresponding_lineno</span><span class="p">(</span><span class="n">tb</span><span class="o">.</span><span class="n">tb_lineno</span><span class="p">)</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">fake_exc_info</span><span class="p">(</span><span class="n">exc_info</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">tb</span><span class="p">,),</span> <span class="n">template</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                               <span class="n">lineno</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_frame_proxy</span><span class="p">(</span><span class="n">tb</span><span class="p">))</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="nb">next</span>
+
+    <span class="c"># if we don&#39;t have any exceptions in the frames left, we have to</span>
+    <span class="c"># reraise it unchanged.</span>
+    <span class="c"># XXX: can we backup here?  when could this happen?</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">exc_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">exc_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">exc_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">ProcessedTraceback</span><span class="p">(</span><span class="n">exc_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">exc_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">frames</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="fake_exc_info"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.debug.fake_exc_info">[docs]</a><span class="k">def</span> <span class="nf">fake_exc_info</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper for `translate_exception`.&quot;&quot;&quot;</span>
+    <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">exc_info</span>
+
+    <span class="c"># figure the real context out</span>
+    <span class="k">if</span> <span class="n">tb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">real_locals</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_locals</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">real_locals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;context&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ctx</span><span class="p">:</span>
+            <span class="nb">locals</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">locals</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">real_locals</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;l_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="nb">locals</span><span class="p">[</span><span class="n">name</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c"># if there is a local called __jinja_exception__, we get</span>
+        <span class="c"># rid of it to not break the debug functionality.</span>
+        <span class="nb">locals</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;__jinja_exception__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">locals</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c"># assamble fake globals we need</span>
+    <span class="nb">globals</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;__name__&#39;</span><span class="p">:</span>             <span class="n">filename</span><span class="p">,</span>
+        <span class="s">&#39;__file__&#39;</span><span class="p">:</span>             <span class="n">filename</span><span class="p">,</span>
+        <span class="s">&#39;__jinja_exception__&#39;</span><span class="p">:</span>  <span class="n">exc_info</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
+
+        <span class="c"># we don&#39;t want to keep the reference to the template around</span>
+        <span class="c"># to not cause circular dependencies, but we mark it as Jinja</span>
+        <span class="c"># frame for the ProcessedTraceback</span>
+        <span class="s">&#39;__jinja_template__&#39;</span><span class="p">:</span>   <span class="bp">None</span>
+    <span class="p">}</span>
+
+    <span class="c"># and fake the exception</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">lineno</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">raise_helper</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="s">&#39;exec&#39;</span><span class="p">)</span>
+
+    <span class="c"># if it&#39;s possible, change the name of the code.  This won&#39;t work</span>
+    <span class="c"># on some python environments such as google appengine</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tb</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="s">&#39;template&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+            <span class="k">if</span> <span class="n">function</span> <span class="o">==</span> <span class="s">&#39;root&#39;</span><span class="p">:</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="s">&#39;top-level template code&#39;</span>
+            <span class="k">elif</span> <span class="n">function</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;block_&#39;</span><span class="p">):</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="s">&#39;block &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">function</span><span class="p">[</span><span class="mi">6</span><span class="p">:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="s">&#39;template&#39;</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">CodeType</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">code</span><span class="o">.</span><span class="n">co_nlocals</span><span class="p">,</span> <span class="n">code</span><span class="o">.</span><span class="n">co_stacksize</span><span class="p">,</span>
+                        <span class="n">code</span><span class="o">.</span><span class="n">co_flags</span><span class="p">,</span> <span class="n">code</span><span class="o">.</span><span class="n">co_code</span><span class="p">,</span> <span class="n">code</span><span class="o">.</span><span class="n">co_consts</span><span class="p">,</span>
+                        <span class="n">code</span><span class="o">.</span><span class="n">co_names</span><span class="p">,</span> <span class="n">code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span>
+                        <span class="n">location</span><span class="p">,</span> <span class="n">code</span><span class="o">.</span><span class="n">co_firstlineno</span><span class="p">,</span>
+                        <span class="n">code</span><span class="o">.</span><span class="n">co_lnotab</span><span class="p">,</span> <span class="p">(),</span> <span class="p">())</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c"># execute the code and catch the new traceback</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">exec</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">,</span> <span class="nb">locals</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="n">new_tb</span> <span class="o">=</span> <span class="n">exc_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">tb_next</span>
+
+    <span class="c"># return without this frame</span>
+    <span class="k">return</span> <span class="n">exc_info</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">new_tb</span><span class="p">,)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_init_ugly_crap</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;This function implements a few ugly things so that we can patch the</span>
+<span class="sd">    traceback objects.  The function returned allows resetting `tb_next` on</span>
+<span class="sd">    any python traceback object.  Do not attempt to use this on non cpython</span>
+<span class="sd">    interpreters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">ctypes</span>
+    <span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">TracebackType</span>
+
+    <span class="c"># figure out side of _Py_ssize_t</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">pythonapi</span><span class="p">,</span> <span class="s">&#39;Py_InitModule4_64&#39;</span><span class="p">):</span>
+        <span class="n">_Py_ssize_t</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int64</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_Py_ssize_t</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
+
+    <span class="c"># regular python</span>
+    <span class="k">class</span> <span class="nc">_PyObject</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="n">_PyObject</span><span class="o">.</span><span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;ob_refcnt&#39;</span><span class="p">,</span> <span class="n">_Py_ssize_t</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;ob_type&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_PyObject</span><span class="p">))</span>
+    <span class="p">]</span>
+
+    <span class="c"># python with trace</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s">&#39;getobjects&#39;</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">_PyObject</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="n">_PyObject</span><span class="o">.</span><span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s">&#39;_ob_next&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_PyObject</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s">&#39;_ob_prev&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_PyObject</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s">&#39;ob_refcnt&#39;</span><span class="p">,</span> <span class="n">_Py_ssize_t</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;ob_type&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_PyObject</span><span class="p">))</span>
+        <span class="p">]</span>
+
+    <span class="k">class</span> <span class="nc">_Traceback</span><span class="p">(</span><span class="n">_PyObject</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="n">_Traceback</span><span class="o">.</span><span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;tb_next&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_Traceback</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;tb_frame&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_PyObject</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;tb_lasti&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;tb_lineno&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">tb_set_next</span><span class="p">(</span><span class="n">tb</span><span class="p">,</span> <span class="nb">next</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the tb_next attribute of a traceback object.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">tb</span><span class="p">,</span> <span class="n">TracebackType</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="nb">next</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">TracebackType</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;tb_set_next arguments must be traceback objects&#39;</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">_Traceback</span><span class="o">.</span><span class="n">from_address</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">tb</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">_Traceback</span><span class="o">.</span><span class="n">from_address</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span><span class="p">))</span>
+            <span class="n">old</span><span class="o">.</span><span class="n">ob_refcnt</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">next</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tb_next</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">_Traceback</span><span class="p">)()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">next</span> <span class="o">=</span> <span class="n">_Traceback</span><span class="o">.</span><span class="n">from_address</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="nb">next</span><span class="p">))</span>
+            <span class="nb">next</span><span class="o">.</span><span class="n">ob_refcnt</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tb_next</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">pointer</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tb_set_next</span>
+
+
+<span class="c"># try to get a tb_set_next implementation if we don&#39;t have transparent</span>
+<span class="c"># proxies.</span>
+<span class="n">tb_set_next</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="k">if</span> <span class="n">tproxy</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">jinja2._debugsupport</span> <span class="kn">import</span> <span class="n">tb_set_next</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tb_set_next</span> <span class="o">=</span> <span class="n">_init_ugly_crap</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">del</span> <span class="n">_init_ugly_crap</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

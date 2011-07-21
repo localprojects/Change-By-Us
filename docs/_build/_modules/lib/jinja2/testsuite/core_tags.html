@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.core_tags &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.core_tags</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.core_tags</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Test the core tags like for and if.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">UndefinedError</span><span class="p">,</span> \
+     <span class="n">DictLoader</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ForLoopTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase">[docs]</a><span class="k">class</span> <span class="nc">ForLoopTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ForLoopTestCase.test_simple"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_simple">[docs]</a>    <span class="k">def</span> <span class="nf">test_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}{{ item }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;0123456789&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_else"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_else">[docs]</a>    <span class="k">def</span> <span class="nf">test_else</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}XXX{</span><span class="si">% e</span><span class="s">lse %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_empty_blocks"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_empty_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&lt;{</span><span class="si">% f</span><span class="s">or item in seq %}{</span><span class="si">% e</span><span class="s">lse %}{</span><span class="si">% e</span><span class="s">ndfor %}&gt;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&lt;&gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_context_vars"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_context_vars">[docs]</a>    <span class="k">def</span> <span class="nf">test_context_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or item in seq -%}</span>
+<span class="s">        {{ loop.index }}|{{ loop.index0 }}|{{ loop.revindex }}|{{</span>
+<span class="s">            loop.revindex0 }}|{{ loop.first }}|{{ loop.last }}|{{</span>
+<span class="s">           loop.length }}###{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;###&#39;</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">one_index</span><span class="p">,</span> <span class="n">one_index0</span><span class="p">,</span> <span class="n">one_revindex</span><span class="p">,</span> <span class="n">one_revindex0</span><span class="p">,</span> <span class="n">one_first</span><span class="p">,</span>
+         <span class="n">one_last</span><span class="p">,</span> <span class="n">one_length</span><span class="p">)</span> <span class="o">=</span> <span class="n">one</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">two_index</span><span class="p">,</span> <span class="n">two_index0</span><span class="p">,</span> <span class="n">two_revindex</span><span class="p">,</span> <span class="n">two_revindex0</span><span class="p">,</span> <span class="n">two_first</span><span class="p">,</span>
+         <span class="n">two_last</span><span class="p">,</span> <span class="n">two_length</span><span class="p">)</span> <span class="o">=</span> <span class="n">two</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">int</span><span class="p">(</span><span class="n">one_index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">two_index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="nb">int</span><span class="p">(</span><span class="n">one_index0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">two_index0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="nb">int</span><span class="p">(</span><span class="n">one_revindex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">two_revindex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="nb">int</span><span class="p">(</span><span class="n">one_revindex0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">two_revindex0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">one_first</span> <span class="o">==</span> <span class="s">&#39;True&#39;</span> <span class="ow">and</span> <span class="n">two_first</span> <span class="o">==</span> <span class="s">&#39;False&#39;</span>
+        <span class="k">assert</span> <span class="n">one_last</span> <span class="o">==</span> <span class="s">&#39;False&#39;</span> <span class="ow">and</span> <span class="n">two_last</span> <span class="o">==</span> <span class="s">&#39;True&#39;</span>
+        <span class="k">assert</span> <span class="n">one_length</span> <span class="o">==</span> <span class="n">two_length</span> <span class="o">==</span> <span class="s">&#39;2&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_cycling"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_cycling">[docs]</a>    <span class="k">def</span> <span class="nf">test_cycling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}{{</span>
+<span class="s">            loop.cycle(&#39;&lt;1&gt;&#39;, &#39;&lt;2&gt;&#39;) }}{</span><span class="si">% e</span><span class="s">ndfor %}{%</span>
+<span class="s">            for item in seq %}{{ loop.cycle(*through) }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">through</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;&lt;1&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;2&gt;&#39;</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">output</span> <span class="o">==</span> <span class="s">&#39;&lt;1&gt;&lt;2&gt;&#39;</span> <span class="o">*</span> <span class="mi">4</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_scope"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_scope">[docs]</a>    <span class="k">def</span> <span class="nf">test_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}{</span><span class="si">% e</span><span class="s">ndfor %}{{ item }}&#39;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">output</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_varlen"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_varlen">[docs]</a>    <span class="k">def</span> <span class="nf">test_varlen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">inner</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">item</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in iter %}{{ item }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="n">inner</span><span class="p">())</span>
+        <span class="k">assert</span> <span class="n">output</span> <span class="o">==</span> <span class="s">&#39;01234&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_noniter"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_noniter">[docs]</a>    <span class="k">def</span> <span class="nf">test_noniter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in none %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_recursive"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_recursive">[docs]</a>    <span class="k">def</span> <span class="nf">test_recursive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or item in seq recursive -%}</span>
+<span class="s">            [{{ item.a }}{</span><span class="si">% i</span><span class="s">f item.b %}&lt;{{ loop(item.b) }}&gt;{</span><span class="si">% e</span><span class="s">ndif %}]</span>
+<span class="s">        {</span><span class="si">%- e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">)]),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">)]),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">)])</span>
+        <span class="p">])</span> <span class="o">==</span> <span class="s">&#39;[1&lt;[1][2]&gt;][2&lt;[1][2]&gt;][3&lt;[a]&gt;]&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_looploop"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_looploop">[docs]</a>    <span class="k">def</span> <span class="nf">test_looploop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or row in table %}</span>
+<span class="s">            {</span><span class="si">%- s</span><span class="s">et rowloop = loop -%}</span>
+<span class="s">            {</span><span class="si">% f</span><span class="s">or cell in row -%}</span>
+<span class="s">                [{{ rowloop.index }}|{{ loop.index }}]</span>
+<span class="s">            {</span><span class="si">%- e</span><span class="s">ndfor %}</span>
+<span class="s">        {</span><span class="si">%- e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">table</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;ab&#39;</span><span class="p">,</span> <span class="s">&#39;cd&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="s">&#39;[1|1][1|2][2|1][2|2]&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_reversed_bug"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_reversed_bug">[docs]</a>    <span class="k">def</span> <span class="nf">test_reversed_bug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or i in items %}{{ i }}&#39;</span>
+                               <span class="s">&#39;{</span><span class="si">% i</span><span class="s">f not loop.last %}&#39;</span>
+                               <span class="s">&#39;,{</span><span class="si">% e</span><span class="s">ndif %}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="nb">reversed</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">==</span> <span class="s">&#39;1,2,3&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_loop_errors"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_loop_errors">[docs]</a>    <span class="k">def</span> <span class="nf">test_loop_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or item in [1] if loop.index</span>
+<span class="s">                                      == 0 %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or item in [] %}...{</span><span class="si">% e</span><span class="s">lse</span>
+<span class="s">            %}{{ loop }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_loop_filter"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_loop_filter">[docs]</a>    <span class="k">def</span> <span class="nf">test_loop_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in range(10) if item &#39;</span>
+                               <span class="s">&#39;is even %}[{{ item }}]{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[0][2][4][6][8]&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {</span><span class="si">%- f</span><span class="s">or item in range(10) if item is even %}[{{</span>
+<span class="s">                loop.index }}:{{ item }}]{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[1:0][2:2][3:4][4:6][5:8]&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_loop_unassignable"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_loop_unassignable">[docs]</a>    <span class="k">def</span> <span class="nf">test_loop_unassignable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                           <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or loop in seq %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_scoped_special_var"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_scoped_special_var">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoped_special_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or s in seq %}[{{ loop.first }}{</span><span class="si">% f</span><span class="s">or c in s %}&#39;</span>
+                            <span class="s">&#39;|{{ loop.first }}{</span><span class="si">% e</span><span class="s">ndfor %}]{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;ab&#39;</span><span class="p">,</span> <span class="s">&#39;cd&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;[True|True|False][False|True|False]&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_scoped_loop_var"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_scoped_loop_var">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoped_loop_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or x in seq %}{{ loop.first }}&#39;</span>
+                            <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or y in seq %}{</span><span class="si">% e</span><span class="s">ndfor %}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s">&#39;ab&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;TrueFalse&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or x in seq %}{</span><span class="si">% f</span><span class="s">or y in seq %}&#39;</span>
+                            <span class="s">&#39;{{ loop.first }}{</span><span class="si">% e</span><span class="s">ndfor %}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s">&#39;ab&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;TrueFalseTrueFalse&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_recursive_empty_loop_iter"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_recursive_empty_loop_iter">[docs]</a>    <span class="k">def</span> <span class="nf">test_recursive_empty_loop_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {</span><span class="si">%- f</span><span class="s">or item in foo recursive -%}{</span><span class="si">%- e</span><span class="s">ndfor -%}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">[]))</span> <span class="o">==</span> <span class="s">&#39;&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_call_in_loop"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_call_in_loop">[docs]</a>    <span class="k">def</span> <span class="nf">test_call_in_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {%- macro do_something() -%}</span>
+<span class="s">            [{{ caller() }}]</span>
+<span class="s">        {</span><span class="si">%- e</span><span class="s">ndmacro %}</span>
+
+<span class="s">        {</span><span class="si">%- f</span><span class="s">or i in [1, 2, 3] %}</span>
+<span class="s">            {</span><span class="si">%- c</span><span class="s">all do_something() -%}</span>
+<span class="s">                {{ i }}</span>
+<span class="s">            {</span><span class="si">%- e</span><span class="s">ndcall %}</span>
+<span class="s">        {</span><span class="si">%- e</span><span class="s">ndfor -%}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[1][2][3]&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_scoping_bug"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_scoping_bug">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoping_bug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {</span><span class="si">%- f</span><span class="s">or item in foo %}...{{ item }}...{</span><span class="si">% e</span><span class="s">ndfor %}</span>
+<span class="s">        {%- macro item(a) %}...{{ a }}...{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">        {{- item(2) -}}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span> <span class="o">==</span> <span class="s">&#39;...1......2...&#39;</span>
+</div>
+<div class="viewcode-block" id="ForLoopTestCase.test_unpacking"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.ForLoopTestCase.test_unpacking">[docs]</a>    <span class="k">def</span> <span class="nf">test_unpacking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or a, b, c in [[1, 2, 3]] %}&#39;</span>
+            <span class="s">&#39;{{ a }}|{{ b }}|{{ c }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1|2|3&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="IfConditionTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase">[docs]</a><span class="k">class</span> <span class="nc">IfConditionTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="IfConditionTestCase.test_simple"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase.test_simple">[docs]</a>    <span class="k">def</span> <span class="nf">test_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% i</span><span class="s">f true %}...{</span><span class="si">% e</span><span class="s">ndif %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span>
+</div>
+<div class="viewcode-block" id="IfConditionTestCase.test_elif"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase.test_elif">[docs]</a>    <span class="k">def</span> <span class="nf">test_elif</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% i</span><span class="s">f false %}XXX{</span><span class="si">% e</span><span class="s">lif true</span>
+<span class="s">            %}...{</span><span class="si">% e</span><span class="s">lse %}XXX{</span><span class="si">% e</span><span class="s">ndif %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span>
+</div>
+<div class="viewcode-block" id="IfConditionTestCase.test_else"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase.test_else">[docs]</a>    <span class="k">def</span> <span class="nf">test_else</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">f false %}XXX{</span><span class="si">% e</span><span class="s">lse %}...{</span><span class="si">% e</span><span class="s">ndif %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span>
+</div>
+<div class="viewcode-block" id="IfConditionTestCase.test_empty"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase.test_empty">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;[{</span><span class="si">% i</span><span class="s">f true %}{</span><span class="si">% e</span><span class="s">lse %}{</span><span class="si">% e</span><span class="s">ndif %}]&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[]&#39;</span>
+</div>
+<div class="viewcode-block" id="IfConditionTestCase.test_complete"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase.test_complete">[docs]</a>    <span class="k">def</span> <span class="nf">test_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">f a %}A{</span><span class="si">% e</span><span class="s">lif b %}B{</span><span class="si">% e</span><span class="s">lif c == d %}&#39;</span>
+                               <span class="s">&#39;C{</span><span class="si">% e</span><span class="s">lse %}D{</span><span class="si">% e</span><span class="s">ndif %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mf">42.0</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;C&#39;</span>
+</div>
+<div class="viewcode-block" id="IfConditionTestCase.test_no_scope"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.IfConditionTestCase.test_no_scope">[docs]</a>    <span class="k">def</span> <span class="nf">test_no_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">f a %}{</span><span class="si">% s</span><span class="s">et foo = 1 %}{</span><span class="si">% e</span><span class="s">ndif %}{{ foo }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;1&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">f true %}{</span><span class="si">% s</span><span class="s">et foo = 1 %}{</span><span class="si">% e</span><span class="s">ndif %}{{ foo }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="MacrosTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase">[docs]</a><span class="k">class</span> <span class="nc">MacrosTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">trim_blocks</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MacrosTestCase.test_simple"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_simple">[docs]</a>    <span class="k">def</span> <span class="nf">test_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{% macro say_hello(name) %}Hello {{ name }}!{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">{{ say_hello(&#39;Peter&#39;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;Hello Peter!&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_scoping"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_scoping">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{% macro level1(data1) %}</span>
+<span class="s">{% macro level2(data2) %}{{ data1 }}|{{ data2 }}{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">{{ level2(&#39;bar&#39;) }}{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">{{ level1(&#39;foo&#39;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;foo|bar&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_arguments"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">test_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{% macro m(a, b, c=&#39;c&#39;, d=&#39;d&#39;) %}{{ a }}|{{ b }}|{{ c }}|{{ d }}{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">{{ m() }}|{{ m(&#39;a&#39;) }}|{{ m(&#39;a&#39;, &#39;b&#39;) }}|{{ m(1, 2, 3) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;||c|d|a||c|d|a|b|c|d|1|2|3|d&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_varargs"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_varargs">[docs]</a>    <span class="k">def</span> <span class="nf">test_varargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{% macro test() %}{{ varargs|join(&#39;|&#39;) }}{</span><span class="si">% e</span><span class="s">ndmacro %}</span><span class="se">\</span>
+<span class="s">{{ test(1, 2, 3) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1|2|3&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_simple_call"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_simple_call">[docs]</a>    <span class="k">def</span> <span class="nf">test_simple_call</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{% macro test() %}[[{{ caller() }}]]{</span><span class="si">% e</span><span class="s">ndmacro %}</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% c</span><span class="s">all test() %}data{</span><span class="si">% e</span><span class="s">ndcall %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[[data]]&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_complex_call"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_complex_call">[docs]</a>    <span class="k">def</span> <span class="nf">test_complex_call</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{% macro test() %}[[{{ caller(&#39;data&#39;) }}]]{</span><span class="si">% e</span><span class="s">ndmacro %}</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% c</span><span class="s">all(data) test() %}{{ data }}{</span><span class="si">% e</span><span class="s">ndcall %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[[data]]&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_caller_undefined"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_caller_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">test_caller_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% s</span><span class="s">et caller = 42 %}</span><span class="se">\</span>
+<span class="s">{% macro test() %}{{ caller is not defined }}{</span><span class="si">% e</span><span class="s">ndmacro %}</span><span class="se">\</span>
+<span class="s">{{ test() }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;True&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_include"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_include">[docs]</a>    <span class="k">def</span> <span class="nf">test_include</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span><span class="s">&#39;include&#39;</span><span class="p">:</span>
+            <span class="s">&#39;{% macro test(foo) %}[{{ foo }}]{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span><span class="p">}))</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;include&quot; import test %}{{ test(&quot;foo&quot;) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[foo]&#39;</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_macro_api"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_macro_api">[docs]</a>    <span class="k">def</span> <span class="nf">test_macro_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% macro foo(a, b) %}{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span>
+                               <span class="s">&#39;{% macro bar() %}{{ varargs }}{{ kwargs }}{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span>
+                               <span class="s">&#39;{% macro baz() %}{{ caller() }}{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">arguments</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">defaults</span> <span class="o">==</span> <span class="p">()</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;foo&#39;</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">caller</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">catch_kwargs</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">catch_varargs</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">arguments</span> <span class="o">==</span> <span class="p">()</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">defaults</span> <span class="o">==</span> <span class="p">()</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">caller</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">catch_kwargs</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">catch_varargs</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">baz</span><span class="o">.</span><span class="n">caller</span>
+</div>
+<div class="viewcode-block" id="MacrosTestCase.test_callself"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.MacrosTestCase.test_callself">[docs]</a>    <span class="k">def</span> <span class="nf">test_callself</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% macro foo(x) %}{{ x }}{</span><span class="si">% i</span><span class="s">f x &gt; 1 %}|&#39;</span>
+                                    <span class="s">&#39;{{ foo(x - 1) }}{</span><span class="si">% e</span><span class="s">ndif %}{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span>
+                                    <span class="s">&#39;{{ foo(5) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;5|4|3|2|1&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.core_tags.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">ForLoopTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">IfConditionTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">MacrosTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

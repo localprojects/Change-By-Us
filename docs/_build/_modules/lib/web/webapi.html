@@ -1,0 +1,477 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.webapi &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.webapi</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Web API (wrapper around WSGI)</span>
+<span class="sd">(from web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&quot;config&quot;</span><span class="p">,</span>
+    <span class="s">&quot;header&quot;</span><span class="p">,</span> <span class="s">&quot;debug&quot;</span><span class="p">,</span>
+    <span class="s">&quot;input&quot;</span><span class="p">,</span> <span class="s">&quot;data&quot;</span><span class="p">,</span>
+    <span class="s">&quot;setcookie&quot;</span><span class="p">,</span> <span class="s">&quot;cookies&quot;</span><span class="p">,</span>
+    <span class="s">&quot;ctx&quot;</span><span class="p">,</span> 
+    <span class="s">&quot;HTTPError&quot;</span><span class="p">,</span> 
+
+    <span class="c"># 200, 201, 202</span>
+    <span class="s">&quot;OK&quot;</span><span class="p">,</span> <span class="s">&quot;Created&quot;</span><span class="p">,</span> <span class="s">&quot;Accepted&quot;</span><span class="p">,</span>    
+    <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;created&quot;</span><span class="p">,</span> <span class="s">&quot;accepted&quot;</span><span class="p">,</span>
+    
+    <span class="c"># 301, 302, 303, 304, 307</span>
+    <span class="s">&quot;Redirect&quot;</span><span class="p">,</span> <span class="s">&quot;Found&quot;</span><span class="p">,</span> <span class="s">&quot;SeeOther&quot;</span><span class="p">,</span> <span class="s">&quot;NotModified&quot;</span><span class="p">,</span> <span class="s">&quot;TempRedirect&quot;</span><span class="p">,</span> 
+    <span class="s">&quot;redirect&quot;</span><span class="p">,</span> <span class="s">&quot;found&quot;</span><span class="p">,</span> <span class="s">&quot;seeother&quot;</span><span class="p">,</span> <span class="s">&quot;notmodified&quot;</span><span class="p">,</span> <span class="s">&quot;tempredirect&quot;</span><span class="p">,</span>
+
+    <span class="c"># 400, 401, 403, 404, 405, 406, 409, 410, 412</span>
+    <span class="s">&quot;BadRequest&quot;</span><span class="p">,</span> <span class="s">&quot;Unauthorized&quot;</span><span class="p">,</span> <span class="s">&quot;Forbidden&quot;</span><span class="p">,</span> <span class="s">&quot;NotFound&quot;</span><span class="p">,</span> <span class="s">&quot;NoMethod&quot;</span><span class="p">,</span> <span class="s">&quot;NotAcceptable&quot;</span><span class="p">,</span> <span class="s">&quot;Conflict&quot;</span><span class="p">,</span> <span class="s">&quot;Gone&quot;</span><span class="p">,</span> <span class="s">&quot;PreconditionFailed&quot;</span><span class="p">,</span>
+    <span class="s">&quot;badrequest&quot;</span><span class="p">,</span> <span class="s">&quot;unauthorized&quot;</span><span class="p">,</span> <span class="s">&quot;forbidden&quot;</span><span class="p">,</span> <span class="s">&quot;notfound&quot;</span><span class="p">,</span> <span class="s">&quot;nomethod&quot;</span><span class="p">,</span> <span class="s">&quot;notacceptable&quot;</span><span class="p">,</span> <span class="s">&quot;conflict&quot;</span><span class="p">,</span> <span class="s">&quot;gone&quot;</span><span class="p">,</span> <span class="s">&quot;preconditionfailed&quot;</span><span class="p">,</span>
+
+    <span class="c"># 500</span>
+    <span class="s">&quot;InternalError&quot;</span><span class="p">,</span> 
+    <span class="s">&quot;internalerror&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">cgi</span><span class="o">,</span> <span class="nn">Cookie</span><span class="o">,</span> <span class="nn">pprint</span><span class="o">,</span> <span class="nn">urlparse</span><span class="o">,</span> <span class="nn">urllib</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">storage</span><span class="p">,</span> <span class="n">storify</span><span class="p">,</span> <span class="n">threadeddict</span><span class="p">,</span> <span class="n">dictadd</span><span class="p">,</span> <span class="n">intget</span><span class="p">,</span> <span class="n">safestr</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">storage</span><span class="p">()</span>
+<span class="n">config</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">A configuration object for various aspects of web.py.</span>
+
+<span class="s">`debug`</span>
+<span class="s">   : when True, enables reloading, disabled template caching and sets internalerror to debugerror.</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HTTPError"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.HTTPError">[docs]</a><span class="k">class</span> <span class="nc">HTTPError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">header</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="ne">Exception</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+        </div>
+<span class="k">def</span> <span class="nf">_status_code</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">classname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">docstring</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">classname</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="c"># 304 Not Modified -&gt; NotModified    </span>
+    <span class="n">docstring</span> <span class="o">=</span> <span class="n">docstring</span> <span class="ow">or</span> <span class="s">&#39;`</span><span class="si">%s</span><span class="s">` status&#39;</span> <span class="o">%</span> <span class="n">status</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        
+    <span class="c"># trick to create class dynamically with dynamic docstring.</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">classname</span><span class="p">,</span> <span class="p">(</span><span class="n">HTTPError</span><span class="p">,</span> <span class="nb">object</span><span class="p">),</span> <span class="p">{</span>
+        <span class="s">&#39;__doc__&#39;</span><span class="p">:</span> <span class="n">docstring</span><span class="p">,</span>
+        <span class="s">&#39;__init__&#39;</span><span class="p">:</span> <span class="n">__init__</span>
+    <span class="p">})</span>
+
+<span class="n">ok</span> <span class="o">=</span> <span class="n">OK</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;200 OK&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="n">created</span> <span class="o">=</span> <span class="n">Created</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;201 Created&quot;</span><span class="p">)</span>
+<span class="n">accepted</span> <span class="o">=</span> <span class="n">Accepted</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;202 Accepted&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Redirect"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.Redirect">[docs]</a><span class="k">class</span> <span class="nc">Redirect</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `301 Moved Permanently` redirect.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s">&#39;301 Moved Permanently&#39;</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a `status` redirect to the new URL. </span>
+<span class="sd">        `url` is joined with the base URL so that things like </span>
+<span class="sd">        `redirect(&quot;about&quot;) will work properly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">newloc</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urljoin</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">newloc</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">absolute</span><span class="p">:</span>
+                <span class="n">home</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">realhome</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">home</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">home</span>
+            <span class="n">newloc</span> <span class="o">=</span> <span class="n">home</span> <span class="o">+</span> <span class="n">newloc</span>
+
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s">&#39;text/html&#39;</span><span class="p">,</span>
+            <span class="s">&#39;Location&#39;</span><span class="p">:</span> <span class="n">newloc</span>
+        <span class="p">}</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+</div>
+<span class="n">redirect</span> <span class="o">=</span> <span class="n">Redirect</span>
+
+<div class="viewcode-block" id="Found"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.Found">[docs]</a><span class="k">class</span> <span class="nc">Found</span><span class="p">(</span><span class="n">Redirect</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `302 Found` redirect.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">Redirect</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="s">&#39;302 Found&#39;</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">)</span>
+</div>
+<span class="n">found</span> <span class="o">=</span> <span class="n">Found</span>
+
+<div class="viewcode-block" id="SeeOther"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.SeeOther">[docs]</a><span class="k">class</span> <span class="nc">SeeOther</span><span class="p">(</span><span class="n">Redirect</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `303 See Other` redirect.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">Redirect</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="s">&#39;303 See Other&#39;</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">)</span>
+    </div>
+<span class="n">seeother</span> <span class="o">=</span> <span class="n">SeeOther</span>
+
+<div class="viewcode-block" id="NotModified"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.NotModified">[docs]</a><span class="k">class</span> <span class="nc">NotModified</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `304 Not Modified` status.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;304 Not Modified&quot;</span><span class="p">)</span>
+</div>
+<span class="n">notmodified</span> <span class="o">=</span> <span class="n">NotModified</span>
+
+<div class="viewcode-block" id="TempRedirect"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.TempRedirect">[docs]</a><span class="k">class</span> <span class="nc">TempRedirect</span><span class="p">(</span><span class="n">Redirect</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `307 Temporary Redirect` redirect.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">Redirect</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="s">&#39;307 Temporary Redirect&#39;</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">)</span>
+</div>
+<span class="n">tempredirect</span> <span class="o">=</span> <span class="n">TempRedirect</span>
+
+<div class="viewcode-block" id="BadRequest"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.BadRequest">[docs]</a><span class="k">class</span> <span class="nc">BadRequest</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`400 Bad Request` error.&quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;bad request&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&quot;400 Bad Request&quot;</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s">&#39;text/html&#39;</span><span class="p">}</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+</div>
+<span class="n">badrequest</span> <span class="o">=</span> <span class="n">BadRequest</span>
+
+<span class="k">class</span> <span class="nc">_NotFound</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`404 Not Found` error.&quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;not found&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&#39;404 Not Found&#39;</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s">&#39;text/html&#39;</span><span class="p">}</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">message</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NotFound"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.NotFound">[docs]</a><span class="k">def</span> <span class="nf">NotFound</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns HTTPError with &#39;404 Not Found&#39; error from the active application.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_NotFound</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;app_stack&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">notfound</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_NotFound</span><span class="p">()</span>
+</div>
+<span class="n">notfound</span> <span class="o">=</span> <span class="n">NotFound</span>
+
+<span class="n">unauthorized</span> <span class="o">=</span> <span class="n">Unauthorized</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;401 Unauthorized&quot;</span><span class="p">)</span>
+<span class="n">forbidden</span> <span class="o">=</span> <span class="n">Forbidden</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;403 Forbidden&quot;</span><span class="p">)</span>
+<span class="n">notacceptable</span> <span class="o">=</span> <span class="n">NotAcceptable</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;406 Not Acceptable&quot;</span><span class="p">)</span>
+<span class="n">conflict</span> <span class="o">=</span> <span class="n">Conflict</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;409 Conflict&quot;</span><span class="p">)</span>
+<span class="n">preconditionfailed</span> <span class="o">=</span> <span class="n">PreconditionFailed</span> <span class="o">=</span> <span class="n">_status_code</span><span class="p">(</span><span class="s">&quot;412 Precondition Failed&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NoMethod"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.NoMethod">[docs]</a><span class="k">class</span> <span class="nc">NoMethod</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `405 Method Not Allowed` error.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&#39;405 Method Not Allowed&#39;</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s">&#39;Content-Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;text/html&#39;</span>
+        
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;HEAD&#39;</span><span class="p">,</span> <span class="s">&#39;POST&#39;</span><span class="p">,</span> <span class="s">&#39;PUT&#39;</span><span class="p">,</span> <span class="s">&#39;DELETE&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="p">:</span>
+            <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">method</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">methods</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">method</span><span class="p">)]</span>
+
+        <span class="n">headers</span><span class="p">[</span><span class="s">&#39;Allow&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        </div>
+<span class="n">nomethod</span> <span class="o">=</span> <span class="n">NoMethod</span>
+
+<div class="viewcode-block" id="Gone"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.Gone">[docs]</a><span class="k">class</span> <span class="nc">Gone</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`410 Gone` error.&quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;gone&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&#39;410 Gone&#39;</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s">&#39;text/html&#39;</span><span class="p">}</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+</div>
+<span class="n">gone</span> <span class="o">=</span> <span class="n">Gone</span>
+
+<span class="k">class</span> <span class="nc">_InternalError</span><span class="p">(</span><span class="n">HTTPError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;500 Internal Server Error`.&quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;internal server error&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s">&#39;500 Internal Server Error&#39;</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s">&#39;text/html&#39;</span><span class="p">}</span>
+        <span class="n">HTTPError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">message</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InternalError"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.InternalError">[docs]</a><span class="k">def</span> <span class="nf">InternalError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns HTTPError with &#39;500 internal error&#39; error from the active application.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_InternalError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;app_stack&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">internalerror</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_InternalError</span><span class="p">()</span>
+</div>
+<span class="n">internalerror</span> <span class="o">=</span> <span class="n">InternalError</span>
+
+<div class="viewcode-block" id="header"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.header">[docs]</a><span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="n">hdr</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds the header `hdr: value` with the response.</span>
+<span class="sd">    </span>
+<span class="sd">    If `unique` is True and a header with that name already exists,</span>
+<span class="sd">    it doesn&#39;t add a new one. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hdr</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">safestr</span><span class="p">(</span><span class="n">hdr</span><span class="p">),</span> <span class="n">safestr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="c"># protection against HTTP response splitting attack</span>
+    <span class="k">if</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">hdr</span> <span class="ow">or</span> <span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">hdr</span> <span class="ow">or</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">or</span> <span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;invalid characters in header&#39;</span>
+        
+    <span class="k">if</span> <span class="n">unique</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">hdr</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="k">return</span>
+    
+    <span class="n">ctx</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">hdr</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+    </div>
+<span class="k">def</span> <span class="nf">rawinput</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns storage object with GET or POST arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">method</span> <span class="ow">or</span> <span class="s">&quot;both&quot;</span>
+    <span class="kn">from</span> <span class="nn">cStringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+    <span class="k">def</span> <span class="nf">dictify</span><span class="p">(</span><span class="n">fs</span><span class="p">):</span> 
+        <span class="c"># hack to make web.input work with enctype=&#39;text/plain.</span>
+        <span class="k">if</span> <span class="n">fs</span><span class="o">.</span><span class="n">list</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fs</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="p">[]</span> 
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">fs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fs</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+    
+    <span class="n">e</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;both&#39;</span><span class="p">,</span> <span class="s">&#39;post&#39;</span><span class="p">,</span> <span class="s">&#39;put&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="s">&#39;REQUEST_METHOD&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;POST&#39;</span><span class="p">,</span> <span class="s">&#39;PUT&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;CONTENT_TYPE&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;multipart/&#39;</span><span class="p">):</span>
+                <span class="c"># since wsgi.input is directly passed to cgi.FieldStorage, </span>
+                <span class="c"># it can not be called multiple times. Saving the FieldStorage</span>
+                <span class="c"># object in ctx to allow calling web.input multiple times.</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;_fieldstorage&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="p">:</span>
+                    <span class="n">fp</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="s">&#39;wsgi.input&#39;</span><span class="p">]</span>
+                    <span class="n">a</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">FieldStorage</span><span class="p">(</span><span class="n">fp</span><span class="o">=</span><span class="n">fp</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">keep_blank_values</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">ctx</span><span class="o">.</span><span class="n">_fieldstorage</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fp</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">data</span><span class="p">())</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">FieldStorage</span><span class="p">(</span><span class="n">fp</span><span class="o">=</span><span class="n">fp</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">keep_blank_values</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">dictify</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;both&#39;</span><span class="p">,</span> <span class="s">&#39;get&#39;</span><span class="p">]:</span>
+        <span class="n">e</span><span class="p">[</span><span class="s">&#39;REQUEST_METHOD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">dictify</span><span class="p">(</span><span class="n">cgi</span><span class="o">.</span><span class="n">FieldStorage</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">keep_blank_values</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">process_fieldstorage</span><span class="p">(</span><span class="n">fs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">process_fieldstorage</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">fs</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">fs</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fs</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fs</span>
+
+    <span class="k">return</span> <span class="n">storage</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">process_fieldstorage</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dictadd</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+
+<div class="viewcode-block" id="input"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.input">[docs]</a><span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="o">*</span><span class="n">requireds</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a `storage` object with the GET and POST arguments. </span>
+<span class="sd">    See `storify` for how `requireds` and `defaults` work.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_method</span> <span class="o">=</span> <span class="n">defaults</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;_method&#39;</span><span class="p">,</span> <span class="s">&#39;both&#39;</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">rawinput</span><span class="p">(</span><span class="n">_method</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">defaults</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;_unicode&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span> <span class="c"># force unicode conversion by default.</span>
+        <span class="k">return</span> <span class="n">storify</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">*</span><span class="n">requireds</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">badrequest</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="data"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.data">[docs]</a><span class="k">def</span> <span class="nf">data</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns the data sent with the request.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ctx</span><span class="p">:</span>
+        <span class="n">cl</span> <span class="o">=</span> <span class="n">intget</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;CONTENT_LENGTH&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;wsgi.input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">data</span>
+</div>
+<div class="viewcode-block" id="setcookie"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.setcookie">[docs]</a><span class="k">def</span> <span class="nf">setcookie</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">httponly</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets a cookie.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expires</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> 
+        <span class="n">expires</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1000000000</span> 
+    <span class="n">kargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;expires&#39;</span><span class="p">:</span> <span class="n">expires</span><span class="p">,</span> <span class="s">&#39;path&#39;</span><span class="p">:</span><span class="s">&#39;/&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">domain</span><span class="p">:</span> 
+        <span class="n">kargs</span><span class="p">[</span><span class="s">&#39;domain&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">domain</span>
+    <span class="k">if</span> <span class="n">secure</span><span class="p">:</span>
+        <span class="n">kargs</span><span class="p">[</span><span class="s">&#39;secure&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">secure</span>
+    <span class="c"># @@ should we limit cookies to a different path?</span>
+    <span class="n">cookie</span> <span class="o">=</span> <span class="n">Cookie</span><span class="o">.</span><span class="n">SimpleCookie</span><span class="p">()</span>
+    <span class="n">cookie</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">safestr</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span> 
+        <span class="n">cookie</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">cookie</span><span class="o">.</span><span class="n">items</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">OutputString</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">httponly</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">+=</span> <span class="s">&#39;; httponly&#39;</span>
+    <span class="n">header</span><span class="p">(</span><span class="s">&#39;Set-Cookie&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="cookies"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.cookies">[docs]</a><span class="k">def</span> <span class="nf">cookies</span><span class="p">(</span><span class="o">*</span><span class="n">requireds</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a `storage` object with all the cookies in it.</span>
+<span class="sd">    See `storify` for how `requireds` and `defaults` work.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cookie</span> <span class="o">=</span> <span class="n">Cookie</span><span class="o">.</span><span class="n">SimpleCookie</span><span class="p">()</span>
+    <span class="n">cookie</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTP_COOKIE&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">storify</span><span class="p">(</span><span class="n">cookie</span><span class="p">,</span> <span class="o">*</span><span class="n">requireds</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="ow">and</span> <span class="n">urllib</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">badrequest</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+</div>
+<div class="viewcode-block" id="debug"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.webapi.debug">[docs]</a><span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints a prettyprinted version of `args` to stderr.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span> 
+        <span class="n">out</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;wsgi.errors&#39;</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span> 
+        <span class="n">out</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">out</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;&#39;</span>
+</div>
+<span class="k">def</span> <span class="nf">_debugwrite</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span> 
+        <span class="n">out</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;wsgi.errors&#39;</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span> 
+        <span class="n">out</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">debug</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">_debugwrite</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">context</span> <span class="o">=</span> <span class="n">threadeddict</span><span class="p">()</span>
+
+<span class="n">ctx</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">A `storage` object containing various information about the request:</span>
+<span class="s">  </span>
+<span class="s">`environ` (aka `env`)</span>
+<span class="s">   : A dictionary containing the standard WSGI environment variables.</span>
+
+<span class="s">`host`</span>
+<span class="s">   : The domain (`Host` header) requested by the user.</span>
+
+<span class="s">`home`</span>
+<span class="s">   : The base path for the application.</span>
+
+<span class="s">`ip`</span>
+<span class="s">   : The IP address of the requester.</span>
+
+<span class="s">`method`</span>
+<span class="s">   : The HTTP method used.</span>
+
+<span class="s">`path`</span>
+<span class="s">   : The path request.</span>
+<span class="s">   </span>
+<span class="s">`query`</span>
+<span class="s">   : If there are no query arguments, the empty string. Otherwise, a `?` followed</span>
+<span class="s">     by the query string.</span>
+
+<span class="s">`fullpath`</span>
+<span class="s">   : The full path requested, including query arguments (`== path + query`).</span>
+
+<span class="s">### Response Data</span>
+
+<span class="s">`status` (default: &quot;200 OK&quot;)</span>
+<span class="s">   : The status code to be used in the response.</span>
+
+<span class="s">`headers`</span>
+<span class="s">   : A list of 2-tuples to be used in the response.</span>
+
+<span class="s">`output`</span>
+<span class="s">   : A string to be used as the response.</span>
+<span class="s">&quot;&quot;&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.exceptions &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.exceptions</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.exceptions</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Jinja exceptions.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="TemplateError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplateError">[docs]</a><span class="k">class</span> <span class="nc">TemplateError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Baseclass for all template errors.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="ne">Exception</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="TemplateError.message"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplateError.message">[docs]</a>    <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">message</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TemplateNotFound"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplateNotFound">[docs]</a><span class="k">class</span> <span class="nc">TemplateNotFound</span><span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">,</span> <span class="n">TemplateError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised if a template does not exist.&quot;&quot;&quot;</span>
+
+    <span class="c"># looks weird, but removes the warning descriptor that just</span>
+    <span class="c"># bogusly warns us about message being deprecated</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="ne">IOError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">templates</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="c"># unicode goes after __str__ because we configured 2to3 to rename</span>
+    <span class="c"># __unicode__ to __str__.  because the 2to3 tree is not designed to</span>
+    <span class="c"># remove nodes from it, we leave the above __str__ around and let</span>
+    <span class="c"># it override at runtime.</span>
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
+
+</div>
+<div class="viewcode-block" id="TemplatesNotFound"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplatesNotFound">[docs]</a><span class="k">class</span> <span class="nc">TemplatesNotFound</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like :class:`TemplateNotFound` but raised if multiple templates</span>
+<span class="sd">    are selected.  This is a subclass of :class:`TemplateNotFound`</span>
+<span class="sd">    exception, so just catching the base exception will catch both.</span>
+
+<span class="sd">    .. versionadded:: 2.2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">(),</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s">u&#39;non of the templates given were found: &#39;</span> <span class="o">+</span> \
+                      <span class="s">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span>
+        <span class="n">TemplateNotFound</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span> <span class="ow">and</span> <span class="n">names</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">None</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">templates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TemplateSyntaxError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplateSyntaxError">[docs]</a><span class="k">class</span> <span class="nc">TemplateSyntaxError</span><span class="p">(</span><span class="n">TemplateError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised to tell the user that there is a problem with the template.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">TemplateError</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span> <span class="o">=</span> <span class="n">lineno</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># this is set to True if the debug.translate_syntax_error</span>
+        <span class="c"># function translated the syntax error into a new traceback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">translated</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="c"># unicode goes after __str__ because we configured 2to3 to rename</span>
+    <span class="c"># __unicode__ to __str__.  because the 2to3 tree is not designed to</span>
+    <span class="c"># remove nodes from it, we leave the above __str__ around and let</span>
+    <span class="c"># it override at runtime.</span>
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># for translated errors we only return the message</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
+
+        <span class="c"># otherwise attach some stuff</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="s">&#39;line </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="s">&#39;File &quot;</span><span class="si">%s</span><span class="s">&quot;, </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="s">&#39;  &#39;</span> <span class="o">+</span> <span class="n">location</span><span class="p">]</span>
+
+        <span class="c"># if the source is set, add the line to the output</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="bp">self</span><span class="o">.</span><span class="n">lineno</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;    &#39;</span> <span class="o">+</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="s">u&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TemplateAssertionError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplateAssertionError">[docs]</a><span class="k">class</span> <span class="nc">TemplateAssertionError</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like a template syntax error, but covers cases where something in the</span>
+<span class="sd">    template caused an error at compile time that wasn&#39;t necessarily caused</span>
+<span class="sd">    by a syntax error.  However it&#39;s a direct subclass of</span>
+<span class="sd">    :exc:`TemplateSyntaxError` and has the same attributes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="TemplateRuntimeError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.TemplateRuntimeError">[docs]</a><span class="k">class</span> <span class="nc">TemplateRuntimeError</span><span class="p">(</span><span class="n">TemplateError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A generic runtime error in the template engine.  Under some situations</span>
+<span class="sd">    Jinja may raise this exception.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="UndefinedError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.UndefinedError">[docs]</a><span class="k">class</span> <span class="nc">UndefinedError</span><span class="p">(</span><span class="n">TemplateRuntimeError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised if a template tries to operate on :class:`Undefined`.&quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="SecurityError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.SecurityError">[docs]</a><span class="k">class</span> <span class="nc">SecurityError</span><span class="p">(</span><span class="n">TemplateRuntimeError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised if a template tries to do something insecure if the</span>
+<span class="sd">    sandbox is enabled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="FilterArgumentError"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.exceptions.FilterArgumentError">[docs]</a><span class="k">class</span> <span class="nc">FilterArgumentError</span><span class="p">(</span><span class="n">TemplateRuntimeError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This error is raised if a filter was called with inappropriate</span>
+<span class="sd">    arguments</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

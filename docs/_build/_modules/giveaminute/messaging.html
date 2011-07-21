@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.messaging &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.messaging</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">helpers.sms</span> <span class="kn">as</span> <span class="nn">sms</span>
+<span class="kn">from</span> <span class="nn">framework.emailer</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c">## EMAIL FUNCTIONS</span>
+
+<span class="c"># send email to invited users</span>
+<div class="viewcode-block" id="emailInvite"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailInvite">[docs]</a><span class="k">def</span> <span class="nf">emailInvite</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">inviterName</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;You&#39;ve been invited by </span><span class="si">%s</span><span class="s"> to join a project&quot;</span> <span class="o">%</span> <span class="n">inviterName</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">project/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">projectId</span><span class="p">))</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/project_invite&#39;</span><span class="p">,</span> 
+                          <span class="p">{</span><span class="s">&#39;inviter&#39;</span><span class="p">:</span><span class="n">inviterName</span><span class="p">,</span> <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="n">title</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span><span class="n">description</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">:</span> <span class="n">link</span><span class="p">,</span> <span class="s">&#39;message&#39;</span><span class="p">:</span><span class="n">message</span><span class="p">},</span> 
+                          <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>     
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send invite email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        
+<span class="c"># email project admins when new user joins</span></div>
+<div class="viewcode-block" id="emailProjectJoin"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailProjectJoin">[docs]</a><span class="k">def</span> <span class="nf">emailProjectJoin</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">userName</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">defaultUrl</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;A new member </span><span class="si">%s</span><span class="s"> has joined your project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">userName</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+    <span class="n">userLink</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">useraccount/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">defaultUrl</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">userId</span><span class="p">))</span>
+    <span class="n">memberLink</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">project/</span><span class="si">%s</span><span class="s">#show,members&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">defaultUrl</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">projectId</span><span class="p">))</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/project_join&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="n">title</span><span class="p">,</span> <span class="s">&#39;user_name&#39;</span><span class="p">:</span><span class="n">userName</span><span class="p">,</span> <span class="s">&#39;user_link&#39;</span><span class="p">:</span><span class="n">userLink</span><span class="p">,</span> <span class="s">&#39;member_link&#39;</span><span class="p">:</span><span class="n">memberLink</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+                        
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send join email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+<span class="c"># email project admins about endorsements        </span></div>
+<div class="viewcode-block" id="emailProjectEndorsement"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailProjectEndorsement">[docs]</a><span class="k">def</span> <span class="nf">emailProjectEndorsement</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">leaderName</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> liked your project!&quot;</span> <span class="o">%</span> <span class="n">leaderName</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/project_endorsement&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="n">title</span><span class="p">,</span> <span class="s">&#39;leader_name&#39;</span><span class="p">:</span><span class="n">leaderName</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send endorsement email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+<span class="c"># email resource contacts on resource add        </span></div>
+<div class="viewcode-block" id="emailResourceNotification"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailResourceNotification">[docs]</a><span class="k">def</span> <span class="nf">emailResourceNotification</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">resourceName</span><span class="p">):</span>
+    <span class="c"># if dev, don&#39;t email resources</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;dev&#39;</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;A project on Changeby.us has added </span><span class="si">%s</span><span class="s"> as a resource&quot;</span> <span class="o">%</span> <span class="n">resourceName</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">project/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">projectId</span><span class="p">))</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/resource_notification&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="n">title</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span><span class="n">description</span><span class="p">,</span> <span class="s">&#39;resource_name&#39;</span><span class="p">:</span><span class="n">resourceName</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">:</span><span class="n">link</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send resource notification email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c">### WE DON&#39;T WANT TO SEND THESE YET</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** pretend we sent a notification email to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** body = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">body</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">True</span>
+      
+<span class="c"># email resource owner on approval</span></div>
+<div class="viewcode-block" id="emailResourceApproval"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailResourceApproval">[docs]</a><span class="k">def</span> <span class="nf">emailResourceApproval</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;Your resource has been approved&quot;</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/resource_approval&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;link&#39;</span><span class="p">:</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">),</span>
+                        <span class="s">&#39;title&#39;</span><span class="p">:</span><span class="n">title</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send resource approval email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        
+<span class="c"># email deleted users</span></div>
+<div class="viewcode-block" id="emailAccountDeactivation"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailAccountDeactivation">[docs]</a><span class="k">def</span> <span class="nf">emailAccountDeactivation</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;Your account has been deactivated&quot;</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">tou&quot;</span> <span class="o">%</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/account_deactivation&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;link&#39;</span><span class="p">:</span><span class="n">link</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send account deactivation email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="emailTempPassword"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailTempPassword">[docs]</a><span class="k">def</span> <span class="nf">emailTempPassword</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;Your password has been reset&quot;</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">login&quot;</span> <span class="o">%</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/forgot_password&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;password&#39;</span><span class="p">:</span><span class="n">password</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">:</span><span class="n">link</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send forgot password email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="directMessageUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.directMessageUser">[docs]</a><span class="k">def</span> <span class="nf">directMessageUser</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">toUserId</span><span class="p">,</span> <span class="n">toName</span><span class="p">,</span> <span class="n">toEmail</span><span class="p">,</span> <span class="n">fromUserId</span><span class="p">,</span> <span class="n">fromName</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    
+    <span class="c">#email = &quot;%s &lt;%s&gt;&quot; % (toName, toEmail)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">toEmail</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;Change By Us message from </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">fromName</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">useraccount/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">),</span> <span class="n">fromUserId</span><span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/direct_message&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span><span class="n">fromName</span><span class="p">,</span> <span class="s">&#39;message&#39;</span><span class="p">:</span><span class="n">message</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">:</span><span class="n">link</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">isSent</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_noreplies_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_noreplies_email&#39;</span><span class="p">])</span>  
+                                                       
+        <span class="k">if</span> <span class="p">(</span><span class="n">isSent</span><span class="p">):</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;direct_message&#39;</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="p">,</span> <span class="n">to_user_id</span> <span class="o">=</span> <span class="n">toUserId</span><span class="p">,</span> <span class="n">from_user_id</span> <span class="o">=</span> <span class="n">fromUserId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t log direct message&quot;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send direct message email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        
+<span class="c"># email unauthenticated users</span></div>
+<div class="viewcode-block" id="emailUnauthenticatedUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailUnauthenticatedUser">[docs]</a><span class="k">def</span> <span class="nf">emailUnauthenticatedUser</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">authGuid</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;Please authenticate your account&quot;</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">join/auth/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">),</span> <span class="n">authGuid</span><span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/auth_user&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;link&#39;</span><span class="p">:</span><span class="n">link</span><span class="p">},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+                        
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send authenticate user email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+        
+<span class="c"># email upon idea submission</span></div>
+<div class="viewcode-block" id="emailIdeaConfirmation"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.emailIdeaConfirmation">[docs]</a><span class="k">def</span> <span class="nf">emailIdeaConfirmation</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">responseEmail</span><span class="p">,</span> <span class="n">locationId</span><span class="p">):</span>
+    <span class="n">emailAccount</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&quot;Thanks for submitting an idea to Change by Us!&quot;</span>
+    <span class="n">searchLink</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">search?location_id=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">locationId</span><span class="p">)</span>
+    <span class="n">createLink</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">create&quot;</span> <span class="o">%</span> <span class="n">host</span>
+    
+    <span class="n">body</span> <span class="o">=</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;email/idea_confirmation&#39;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">&#39;search_link&#39;</span><span class="p">:</span><span class="n">searchLink</span><span class="p">,</span>
+                         <span class="s">&#39;create_link&#39;</span><span class="p">:</span><span class="n">createLink</span><span class="p">,</span>
+                         <span class="s">&#39;response_email&#39;</span><span class="p">:</span><span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">]},</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span>
+                        
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Emailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> 
+                            <span class="n">subject</span><span class="p">,</span> 
+                            <span class="n">body</span><span class="p">,</span>
+                            <span class="n">from_name</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_name&#39;</span><span class="p">],</span>
+                            <span class="n">from_address</span> <span class="o">=</span> <span class="n">emailAccount</span><span class="p">[</span><span class="s">&#39;from_email&#39;</span><span class="p">])</span>  
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t send authenticate user email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+<span class="c">### SMS FUNCTIONS</span>
+        
+<span class="c"># add phone number to table of stopped numbers</span></div>
+<div class="viewcode-block" id="stopSMS"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.stopSMS">[docs]</a><span class="k">def</span> <span class="nf">stopSMS</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;sms_stopped_phone&#39;</span><span class="p">,</span> <span class="n">phone</span> <span class="o">=</span> <span class="n">phone</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t stop messages to phone number </span><span class="si">%s</span><span class="s">.  Number may already be in database.&quot;</span> <span class="o">%</span> <span class="n">phone</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="isPhoneStopped"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.isPhoneStopped">[docs]</a><span class="k">def</span> <span class="nf">isPhoneStopped</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select phone from sms_stopped_phone where phone = $phone limit 1&quot;</span><span class="p">;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;phone&#39;</span><span class="p">:</span><span class="n">phone</span><span class="p">}))</span>
+        
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get sms stopped value for </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">phone</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+        <span class="c"># in this case, we err on NOT sending messages and thus return True</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="sendSMSConfirmation"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.sendSMSConfirmation">[docs]</a><span class="k">def</span> <span class="nf">sendSMSConfirmation</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** sending confirmation to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">phone</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">isPhoneStopped</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;Thanks for adding your idea to changeby.us Visit </span><span class="si">%s</span><span class="s">mobile to browse and join projects related to your idea.&quot;</span> <span class="o">%</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">sms</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">phone</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="sendSMSInvite"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.messaging.sendSMSInvite">[docs]</a><span class="k">def</span> <span class="nf">sendSMSInvite</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">,</span> <span class="n">projectId</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** sending invite to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">phone</span><span class="p">)</span>  
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">isPhoneStopped</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">)):</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">project/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default_host&#39;</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">projectId</span><span class="p">))</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;You&#39;ve been invited to a project on changeby.us. Visit </span><span class="si">%s</span><span class="s"> to see the project. Reply &#39;STOP&#39; to stop changeby.us messages.&quot;</span> <span class="o">%</span> <span class="n">link</span>        
+            <span class="k">return</span> <span class="n">sms</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">phone</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>    
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** something failed in sending sms invite&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>    
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

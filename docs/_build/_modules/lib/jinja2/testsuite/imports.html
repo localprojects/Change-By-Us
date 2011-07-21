@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.imports &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.imports</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.imports</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Tests the import features (with includes).</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">DictLoader</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">TemplatesNotFound</span>
+
+
+<span class="n">test_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">module</span><span class="o">=</span><span class="s">&#39;{% macro test() %}[{{ foo }}|{{ bar }}]{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span><span class="p">,</span>
+    <span class="n">header</span><span class="o">=</span><span class="s">&#39;[{{ foo }}|{{ 23 }}]&#39;</span><span class="p">,</span>
+    <span class="n">o_printer</span><span class="o">=</span><span class="s">&#39;({{ o }})&#39;</span>
+<span class="p">)))</span>
+<span class="n">test_env</span><span class="o">.</span><span class="n">globals</span><span class="p">[</span><span class="s">&#39;bar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">23</span>
+
+
+<div class="viewcode-block" id="ImportsTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.ImportsTestCase">[docs]</a><span class="k">class</span> <span class="nc">ImportsTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ImportsTestCase.test_context_imports"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.ImportsTestCase.test_context_imports">[docs]</a>    <span class="k">def</span> <span class="nf">test_context_imports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">mport &quot;module&quot; as m %}{{ m.test() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">mport &quot;module&quot; as m without context %}{{ m.test() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">mport &quot;module&quot; as m with context %}{{ m.test() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[42|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;module&quot; import test %}{{ test() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;module&quot; import test without context %}{{ test() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;module&quot; import test with context %}{{ test() }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[42|23]&#39;</span>
+</div>
+<div class="viewcode-block" id="ImportsTestCase.test_trailing_comma"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.ImportsTestCase.test_trailing_comma">[docs]</a>    <span class="k">def</span> <span class="nf">test_trailing_comma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;foo&quot; import bar, baz with context %}&#39;</span><span class="p">)</span>
+        <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;foo&quot; import bar, baz, with context %}&#39;</span><span class="p">)</span>
+        <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;foo&quot; import bar, with context %}&#39;</span><span class="p">)</span>
+        <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;foo&quot; import bar, with, context %}&#39;</span><span class="p">)</span>
+        <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;foo&quot; import bar, with with context %}&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ImportsTestCase.test_exports"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.ImportsTestCase.test_exports">[docs]</a>    <span class="k">def</span> <span class="nf">test_exports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {% macro toplevel() %}...{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            {% macro __private() %}...{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            {</span><span class="si">% s</span><span class="s">et variable = 42 %}</span>
+<span class="s">            {</span><span class="si">% f</span><span class="s">or item in [1] %}</span>
+<span class="s">                {% macro notthere() %}{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndfor %}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">module</span>
+        <span class="k">assert</span> <span class="n">m</span><span class="o">.</span><span class="n">toplevel</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s">&#39;__missing&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">m</span><span class="o">.</span><span class="n">variable</span> <span class="o">==</span> <span class="mi">42</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s">&#39;notthere&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="IncludesTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.IncludesTestCase">[docs]</a><span class="k">class</span> <span class="nc">IncludesTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="IncludesTestCase.test_context_include"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.IncludesTestCase.test_context_include">[docs]</a>    <span class="k">def</span> <span class="nf">test_context_include</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude &quot;header&quot; %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[42|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude &quot;header&quot; with context %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[42|23]&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude &quot;header&quot; without context %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[|23]&#39;</span>
+</div>
+<div class="viewcode-block" id="IncludesTestCase.test_choice_includes"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.IncludesTestCase.test_choice_includes">[docs]</a>    <span class="k">def</span> <span class="nf">test_choice_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [&quot;missing&quot;, &quot;header&quot;] %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[42|23]&#39;</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [&quot;missing&quot;, &quot;missing2&quot;] ignore missing %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&#39;</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [&quot;missing&quot;, &quot;missing2&quot;] %}&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">TemplatesNotFound</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">templates</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;missing&#39;</span><span class="p">,</span> <span class="s">&#39;missing2&#39;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;missing2&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;thou shalt raise&#39;</span>
+
+        <span class="k">def</span> <span class="nf">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">**</span><span class="n">ctx</span><span class="p">):</span>
+            <span class="n">ctx</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
+            <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;[42|23]&#39;</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [&quot;missing&quot;, &quot;header&quot;] %}&#39;</span><span class="p">)</span>
+        <span class="n">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude x %}&#39;</span><span class="p">)</span>
+        <span class="n">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;missing&#39;</span><span class="p">,</span> <span class="s">&#39;header&#39;</span><span class="p">])</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [x, &quot;header&quot;] %}&#39;</span><span class="p">)</span>
+        <span class="n">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;missing&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude x %}&#39;</span><span class="p">)</span>
+        <span class="n">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;header&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude x %}&#39;</span><span class="p">)</span>
+        <span class="n">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;header&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [x] %}&#39;</span><span class="p">)</span>
+        <span class="n">test_includes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;header&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IncludesTestCase.test_include_ignoring_missing"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.IncludesTestCase.test_include_ignoring_missing">[docs]</a>    <span class="k">def</span> <span class="nf">test_include_ignoring_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude &quot;missing&quot; %}&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateNotFound</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">extra</span> <span class="ow">in</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;with context&#39;</span><span class="p">,</span> <span class="s">&#39;without context&#39;</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude &quot;missing&quot; ignore missing &#39;</span> <span class="o">+</span>
+                                     <span class="n">extra</span> <span class="o">+</span> <span class="s">&#39; %}&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&#39;</span>
+</div>
+<div class="viewcode-block" id="IncludesTestCase.test_context_include_with_overrides"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.IncludesTestCase.test_context_include_with_overrides">[docs]</a>    <span class="k">def</span> <span class="nf">test_context_include_with_overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">main</span><span class="o">=</span><span class="s">&quot;{</span><span class="si">% f</span><span class="s">or item in [1, 2, 3] %}{</span><span class="si">% i</span><span class="s">nclude &#39;item&#39; %}{</span><span class="si">% e</span><span class="s">ndfor %}&quot;</span><span class="p">,</span>
+            <span class="n">item</span><span class="o">=</span><span class="s">&quot;{{ item }}&quot;</span>
+        <span class="p">)))</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;123&quot;</span>
+</div>
+<div class="viewcode-block" id="IncludesTestCase.test_unoptimized_scopes"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.IncludesTestCase.test_unoptimized_scopes">[docs]</a>    <span class="k">def</span> <span class="nf">test_unoptimized_scopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">test_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">            {% macro outer(o) %}</span>
+<span class="s">            {% macro inner() %}</span>
+<span class="s">            {</span><span class="si">% i</span><span class="s">nclude &quot;o_printer&quot; %}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            {{ inner() }}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            {{ outer(&quot;FOO&quot;) }}</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;(FOO)&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.imports.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">ImportsTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">IncludesTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

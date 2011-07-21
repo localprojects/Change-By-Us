@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.user &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.user</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">giveaminute.user</span> <span class="kn">as</span> <span class="nn">mUser</span>
+<span class="kn">import</span> <span class="nn">giveaminute.location</span> <span class="kn">as</span> <span class="nn">mLocation</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<div class="viewcode-block" id="UserAccount"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount">[docs]</a><span class="k">class</span> <span class="nc">UserAccount</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="UserAccount.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="p">(</span><span class="n">userId</span> <span class="ow">and</span>
+            <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">userId</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showProfilePage</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showAccountPage</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="UserAccount.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;messages&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUserMessages</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;messageprefs&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setUserMessagePreferences</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;edit&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">editUser</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;editdescription&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">editDescription</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;password&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">changePassword</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="UserAccount.showAccountPage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.showAccountPage">[docs]</a>    <span class="k">def</span> <span class="nf">showAccountPage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">updateAccountPageVisit</span><span class="p">()</span>
+                    
+            <span class="n">userActivity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">getActivityDictionary</span><span class="p">()</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="n">mLocation</span><span class="o">.</span><span class="n">getSimpleLocationDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;user_activity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">userActivity</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">userActivity</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;locations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locations</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">locations</span><span class="p">)</span>
+            
+            <span class="n">connected_fb</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">connected_tw</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">user_id</span><span class="p">:</span>
+                <span class="n">check_fb</span> <span class="o">=</span> <span class="s">&quot;select * from facebook_user where user_id = $id&quot;</span>
+                <span class="n">res_fb</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">check_fb</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">s</span><span class="o">.</span><span class="n">user_id</span> <span class="p">}))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res_fb</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">connected_fb</span> <span class="o">=</span> <span class="bp">True</span>
+                    
+                <span class="n">check_tw</span> <span class="o">=</span> <span class="s">&quot;select * from twitter_user where user_id = $id&quot;</span>
+                <span class="n">res_tw</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">check_tw</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">s</span><span class="o">.</span><span class="n">user_id</span> <span class="p">}))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res_tw</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">connected_tw</span> <span class="o">=</span> <span class="bp">True</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;useraccount&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;connected_fb&#39;</span><span class="p">:</span><span class="n">connected_fb</span><span class="p">,</span> <span class="s">&#39;connected_tw&#39;</span><span class="p">:</span><span class="n">connected_tw</span><span class="p">,</span> <span class="s">&#39;test&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** attempt to access account page without user object&quot;</span><span class="p">)</span>
+            <span class="c"># quick fix to avoid error when logging in too quickly</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+            <span class="c">#return self.not_found()</span>
+            </div>
+<div class="viewcode-block" id="UserAccount.showProfilePage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.showProfilePage">[docs]</a>    <span class="k">def</span> <span class="nf">showProfilePage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">userActivity</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">getProfileActivityDictionary</span><span class="p">()</span>
+            <span class="n">locations_list</span> <span class="o">=</span> <span class="n">mLocation</span><span class="o">.</span><span class="n">getSimpleLocationDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;user_activity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">userActivity</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">userActivity</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;locations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locations_list</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">locations_list</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isModerator</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;user_profile_email&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span>
+        
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;useraccount&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># user doesn&#39;t exist/is inactive</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="UserAccount.getUserMessages"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.getUserMessages">[docs]</a>    <span class="k">def</span> <span class="nf">getUserMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_messages&#39;</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;offset&#39;</span><span class="p">)</span>
+        
+        <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">limit</span> <span class="ow">and</span> <span class="n">offset</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">limit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+                <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">getMessages</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get messages&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="UserAccount.setUserMessagePreferences"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.setUserMessagePreferences">[docs]</a>    <span class="k">def</span> <span class="nf">setUserMessagePreferences</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;pref&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">pref</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">setMessagePreferences</span><span class="p">(</span><span class="n">pref</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    </div>
+<div class="viewcode-block" id="UserAccount.editUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.editUser">[docs]</a>    <span class="k">def</span> <span class="nf">editUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">firstName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;f_name&#39;</span><span class="p">)</span>
+        <span class="n">lastName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;l_name&#39;</span><span class="p">)</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">imageId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;image_id&#39;</span><span class="p">)</span>
+        <span class="n">locationId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location_id&#39;</span><span class="p">)</span>
+         
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">firstName</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">lastName</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">email</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">updateInfo</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">,</span> <span class="n">imageId</span><span class="p">,</span> <span class="n">locationId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** not enough info to update user&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="UserAccount.editDescription"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.editDescription">[docs]</a>    <span class="k">def</span> <span class="nf">editDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">updateDescription</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>        
+        </div>
+<div class="viewcode-block" id="UserAccount.changePassword"><a class="viewcode-back" href="../../modules/controllers.html#controllers.user.UserAccount.changePassword">[docs]</a>    <span class="k">def</span> <span class="nf">changePassword</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;new_password&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">updatePassword</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>   
+    </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
