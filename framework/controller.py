@@ -137,11 +137,30 @@ class Controller():
         
 
     def render(self, template_name, template_values=None, suffix="html", content_type = "text/html"):
-        if template_values is None: template_values = {}
+        """
+        Custom renderer for Change by Us templates.
         
-        # Set the user object in case it's been created since we initialized
+        @type   template_name: string
+        @param  template_name: Name of template (without extension)
+        @type   template_values: dict
+        @param  template_values: Values to include in the template.
+        @type   suffix: string
+        @param  suffix: Extension of template file.
+        @type   content_type: string
+        @param  content_type: HTTP header content type to output.
+        
+        @rtype: ?
+        @returns: ?
+        
+        """
+        if template_values is None: 
+            template_values = {}
+        
+        # Set the user object in case it's been created since we initialized.
         self.setUserObject()
         
+        # Hand all config values to the template.  This method is deprecated
+        # but around until all templates have been updated.
         config = Config.get_all()       
         config['base_url'] = Config.base_url()
         for key in config:      
@@ -149,35 +168,49 @@ class Controller():
                 for param in config[key]:
                     template_values["%s_%s" % (key, param)] = config[key][param]
             else:
-                template_values[key] = config[key]              
-        if self.user: template_values['user'] = self.user
+                template_values[key] = config[key]
         
-        #add template data object
-        if self.template_data: template_values['template_data'] = self.template_data 
+        # Give all config values as a dict in a config space.
+        template_values['config'] = config
         
+        # Send user data to template
+        if self.user:
+            template_values['user'] = self.user
+        
+        # Add template data object
+        if self.template_data:
+            template_values['template_data'] = self.template_data 
+        
+        # Create full URL from web.py values
         template_values['full_url'] = web.ctx.home + web.ctx.fullpath
 
+        # Check for "flash"?
         if hasattr(self.session, 'flash') and self.session.flash is not None:
             template_values['flash'] = self.session.flash
             log.info('showing flash message: "' + self.session.flash + '"')
             self.session.flash = None
             self.session.invalidate()
-        template_values['session_id'] = self.session.session_id    
 
-        # debug debug gubed
-        log.info("*** session  = %s" % self.session)
+        template_values['session_id'] = self.session.session_id 
         
+        # Put session values into template ??
         keys = self.session.keys()
         for key in keys:
             template_values[key] = self.session[key]
+            
+        # Set up template and Jinja
         template_values['template_name'] = template_name
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')
         renderer._lookup.filters.update(custom_filters.filters)
 
+        # Set HTTP header
         web.header("Content-Type", content_type)
-        #log.info("TEMPLATE %s: %s" % (template_name, template_values))
+
+        # Debug data.
         log.info("200: %s (%s)" % (content_type, template_name))
+        log.info("*** session  = %s" % self.session)
         
+        # Return template and data.
         return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
 
     def json(self, data):
