@@ -144,11 +144,18 @@ class Controller():
         
         config = Config.get_all()       
         config['base_url'] = Config.base_url()
-        for key in config:      
+        for key in config:
+            
+            log.debug("--- Config: handling key %r" % key)
             if type(config[key]) is dict:
+                
+                log.debug("--- Config: key %r is a dictionary: %r" % (key, config[key]))
                 for param in config[key]:
+                    
+                    log.debug("--- Config: setting %s_%s to %r" % (key, param, config[key][param]))
                     template_values["%s_%s" % (key, param)] = config[key][param]
             else:
+                log.info("--- Config: key %r is not a dictionary: %r" % (key, config[key]))
                 template_values[key] = config[key]              
         if self.user: template_values['user'] = self.user
         
