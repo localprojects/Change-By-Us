@@ -1,45 +1,60 @@
 <!DOCTYPE html>
 <html class='universe'>
-	
-	<head class='heavens'>
-		<title>{% block title %}GAM Templates{% endblock %}</title>
+<head class='heavens'>
+		<title>{% block title %}CBU Templates{% endblock %}</title>
 		
-		<!-- Always force IE9 rendering engine & Chrome Frame; remove this if you use the .htaccess -->
-		<!-- <meta http-equiv="X-UA-Compatible" content="IE=9,chrome=1"/> -->
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		{% if d.config.htaccess %}
+		    <!-- Always force IE9 rendering engine & Chrome Frame; -->
+		    <!-- <meta http-equiv="X-UA-Compatible" content="IE=9,chrome=1"/> -->
+		{% endif %}
 		
-		<meta name="description" content="Change by Us NYC is a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live."/>
-		<meta name="author" content="Type/Code LLC."/>
+		<!-- Basic meta data -->
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="description" content="Change by Us is a place to put your ideas into action by creating projects and building teams to make your city a better place to live." />
 		<meta name="viewport" content="width=1020" />
 		
-		<meta property="og:site_name" content="{{ d.config.site.name }}"/>
+		<!-- Open Graph and Facebook -->
+		<meta property="fb:app_id" content="{{ d.config.facebook.app_id }}" />
+		<meta property="og:site_name" content="{{ d.config.site.name }}" />
 		{% block og_title %}
-			<meta property="og:title" content="{{ d.config.site.name }}"/>
+        <meta property="og:title" content="{{ d.config.site.name }}" />
 		{% endblock %}
-		<meta property="og:type" content="government"/>
-		<meta property="og:url" content="{% if d.full_url %}{{ d.full_url }}{% else %}{{ d.default_host }}{% endif %}"/>
-		<meta property="og:image" content="{{ d.default_host }}static/images/fb-share100x100.png"/>
-		<meta property="fb:app_id" content="{{ d.facebook_app_id }}"/>
+		<meta property="og:type" content="government" />
+		<meta property="og:url" content="{% if d.full_url %}{{ d.full_url }}{% else %}{{ d.default_host }}{% endif %}" />
+		<meta property="og:image" content="{{ d.default_host }}static/images/fb-share100x100.png" />
 		{% block og_description %}
-			<meta property="og:description" content="Change by Us NYC is a place for New Yorkers to put their ideas into action by creating projects and building teams to make our city a better place to live."/>
+			 <meta property="og:description" content="Change by Us is a place to put your ideas into action by creating projects and building teams to make your city a better place to live." />
 		{% endblock %}
 		
-		<link rel="icon" href="/static/images/favicon.ico"/>
-		<link rel="shortcut icon" href="/static/images/favicon.ico"/>
-		<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+		<!-- Links -->
+		<link rel="icon" href="/static/images/favicon.ico" />
+		<link rel="shortcut icon" href="/static/images/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		
+		<!-- Stylesheets -->
 		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
 		{% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
-		<link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
+		    <link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
 		{% endif %}
 		{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-		<link rel="stylesheet" href="/static/css/tc.gam.admin.css" type="text/css" media="screen" />
+		    <link rel="stylesheet" href="/static/css/tc.gam.admin.css" type="text/css" media="screen" />
 		{% endif %}
 		
+		<!--[if IE]>
+		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie.css" type="text/css" media="screen" charset="utf-8"/>
+		<![endif]-->
+		<!--[if lte IE 8]>
+		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie8.css" type="text/css" media="screen" charset="utf-8"/>
+		<![endif]-->
+		<!--[if lte IE 7]>
+		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie7.css" type="text/css" media="screen" charset="utf-8"/>
+		<![endif]-->
+		
+		<!-- Javascript -->
 		{% block javascript_header %}
 		<script>
 			var app_page = {
@@ -48,11 +63,11 @@
 				prevent_logging:{% if d.template_data.app_env == 'dev' %}false{% else %}true{% endif %}
 			};
 			
-			//TODO not hardcode this
+			// TODO not hardcode this
 			app_page.data.info_addr = { name:'info', domain:'nyc.changeby.us' };
 			app_page.data.media_root = '{{d.template_data.media_root}}';
 			
-			//for tooltip only
+			// for tooltip only
 			var media_root = '{{d.template_data.media_root}}';
 			
 			app_page.features.push(function(app){
@@ -65,22 +80,10 @@
 		</script>
 		{% endblock %}
 		
-		<script type="text/javascript" src="http://use.typekit.com/mco2pzd.js"></script>
-		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-
-		<!--[if IE]>
-		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie.css" type="text/css" media="screen" charset="utf-8"/>
-		<![endif]-->
-		
-		<!--[if lte IE 8]>
-		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie8.css" type="text/css" media="screen" charset="utf-8"/>
-		<![endif]-->
-		
-		<!--[if lte IE 7]>
-		<link rel="stylesheet" href="/static/css/ie/tc.gam.ie7.css" type="text/css" media="screen" charset="utf-8"/>
-		<![endif]-->
-	
-	</head>
+		<!-- Typekit font -->
+		<script type="text/javascript" src="http://use.typekit.com/{{ d.config.typekit.key }}.js"></script>
+		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>	
+</head>
 	
 	<!-- the "green-nyc" class is to decorate page with green-specific styles -->
 	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}'>
