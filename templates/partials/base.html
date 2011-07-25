@@ -85,36 +85,41 @@
 		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>	
 </head>
 	
-	<!-- the "green-nyc" class is to decorate page with green-specific styles -->
-	<body class='earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}'>
-		
-		<div class='exosphere'>
-		
-			<div class='atmosphere'>
-				<div class='stratosphere'>
+<!-- the "green-nyc" class is to decorate page with green-specific styles -->
+<body class="earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}">
+		<div class="exosphere">
+			<div class="atmosphere">
+				<div class="stratosphere">
+				
+				  <!-- Main navigation -->
 					<ul class="navbar clearfix">
-						<li class="home nyc">
-							<a href="/"><span>Change by Us NYC</span></a>
+						<li class="home {{ d.config.site.city_id }}">
+							<a href="/"><span>{{ d.config.site.name }}</span></a>
 						</li>
-						<!--<li class="simplicity">
-							<a href="http://www.nyc.gov/html/simplicity/html/about/about.shtml" target="_blank"><span>NYC SimpliCity</span></a>
-						</li>-->
+						
 						<li class="news-about">
-							<a href='http://nycblog.changeby.us'>News</a>
-							<a href='/about'>About</a>
+							<a href="{{ d.config.blog_host }}">News</a>
+							<a href="/about">About</a>
 						</li>
+						
 						<li class="divider"></li>
+						
 						<li class="userland">
-							<div class="join"><a href='/join'>Join</a></div>
-							<div class='login'><a href='/login'>Login</a></div>
-							<div class='username'>
-								<a href='/useraccount#user-account,account'><span class="unbold">Hi, </span>{%- if d.template_data and d.template_data.user -%}
-								                                                            {%- if d.template_data.user.data.f_name -%}
-								                                                                {{ d.template_data.user.data.f_name|truncate(12, true) }}
-								                                                            {%- elif d.template_data.user.data.affiliation -%}
-								                                                                {{ d.template_data.user.data.affiliation|truncate(12, true) }}
-								                                                            {%- endif -%}
-								                                                       {%- endif -%}!</a>
+						  <!-- User account actions -->
+							<div class="join"><a href="/join">Join</a></div>
+							<div class="login"><a href="/login">Login</a></div>
+							<div class="username">
+								<a href="/useraccount#user-account,account">
+								  <span class="unbold">Hi, </span>
+								  {%- if d.template_data and d.template_data.user -%}
+                    {%- if d.template_data.user.data.f_name -%}
+                      {{ d.template_data.user.data.f_name|truncate(12, true) }}
+                    {%- elif d.template_data.user.data.affiliation -%}
+                      {{ d.template_data.user.data.affiliation|truncate(12, true) }}
+                    {%- endif -%}
+                  {%- endif -%}!
+                </a>
+                
 								<div class="dropdown no-js">
 									<div class="membrane">
 										<a href="/useraccount#user-account,account">Account</a>
@@ -122,8 +127,19 @@
 									</div>
 								</div>
 							</div>
-							<div class='messages {% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}has-messages{% endif %}'><a href='/useraccount#user-account,messages'>
-								<span class="indicator">{% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}<span class="num">{{ d.template_data.user.data.num_new_messages }}</span>{% endif %}</span></a></div>
+							
+							<!-- Messages -->
+							<div class='messages {% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}has-messages{% endif %}'>
+						    <a href='/useraccount#user-account,messages'>
+								  <span class="indicator">
+								    {% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}    
+								      <span class="num">{{ d.template_data.user.data.num_new_messages }}</span>
+								    {% endif %}
+								  </span>
+								</a>
+						  </div>
+							
+							<!-- Projects -->
 							<div class='myprojects'>
 								<a href='/useraccount'><span class="unbold">My </span>Projects</a>
 								<div class="dropdown no-js">
@@ -141,6 +157,7 @@
 								</div>
 							</div>
 						</li>
+						
 						<li class="search">
 							<form action='/search' method='GET'>
 								<input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
@@ -148,59 +165,46 @@
 								<input type='submit' value='' class='searchInput' />
 							</form>
 						</li>
-						<li class="splashland"><!-- .splashland can be deleted after beta period is over -->
-							<div class="join"><span class="fancy-caps">Have <span>an</span> invite code?</span><a href='/join'>Sign Up</a></div>
-							<div class='login'><a href='/login'>Login</a></div>
-						</li>
-					</ul><!--end navbar-->
+						
+						{% if d.app_mode == 'beta' %}
+  						<li class="splashland"><!-- .splashland can be deleted after beta period is over -->
+  				      <div class="join">
+  				        <span class="fancy-caps">Have <span>an</span> invite code?</span><a href='/join'>Sign Up</a>
+  				      </div>
+  				      <div class='login'>
+  				        <a href='/login'>Login</a>
+  				      </div>
+  						</li>
+						{% endif %}
+					</ul>
 					
+					<!-- Administration bar -->
 					{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 						<ul class="adminbar">
 							<li class="content"><a href="/cms/content">Content</a></li>
 							<li class="admin-settings"><a href="/cms/admin">Admin Settings</a></li>
-							{% if d.template_data.show_questions %}
-								<!--<li class="adminQuestion add">
-									<a href="#" class="addEditQuestion"><strong>ADD</strong> <em>or</em> <strong>EDIT</strong><br>QUESTIONS</a>
-								<li>
-								<li class="adminQuestion">
-									<form action="#">
-										<select class="questions">
-											<option value="question0">All question campaigns</option>
-											<option value="question1">Hey NYC, how can we make ...</option>
-											<option value="question2">Hey NYC, how can we grow ...</option>
-											<option value="question3">Hey NYC, how can we do ...</option>
-											<option value="question4">Hey NYC, how can we fit ...</option>
-										</select>
-									</form>
-								</li>
-								<li class="adminQuestion question">
-									Question:
-								</li>-->
-							{% endif %}
 							{% block project_admin %}{% endblock %}
 						</ul>
 					{% endif %}
-					
 				</div>
 			</div>
 			
 			{% block continent %}
 				<div class='continent'>
 					<div class='headlands'>
-					
 					</div>
 					
 					<div class='midlands'>
-					
 					</div>
 					
 					<div class='foothills'>
-					
 					</div>
 				</div>
 			{% endblock %}
 		
+		<!-- Footer -->
 		<div class='seafloor'>
+		  <!-- List of supporters -->
 			<div class='box logos clearfix'>
 				<a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml' target='_blank' class="simplicity"><img src='/static/images/footer-nycsimplicity2.png' alt='Local Projects' /></a>
 				<a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
@@ -212,16 +216,17 @@
 				<a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>	
 			</div>
 			
+			<!-- Basic links and search -->
 			<div class='west'>
 				<div class="box">
 					<ul class="sitemap">
-						<li><a href='/about'>About Change by Us NYC</a></li>
-						<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
-						<li><a href='http://nycblog.changeby.us'>News</a></li>
+						<li><a href='/about'>About {{ d.config.site.name }}</a></li>
+						<li><a href='{{ d.config.blog_host }}'>News</a></li>
 						<li><a href='/tou#community-policy'>Community Policy</a></li>
 						<li class="sitemap-tou"><a href='/tou'>Terms of Use</a></li>
 						<li><a href='/tou#privacy'>Privacy Policy</a></li>
 					</ul>
+					
 					<div class="search generic-search clearfix">
 						<form action='/search' method='GET'>
 							<input type='text' id='ft-search-field' class='ft-search-field serif has-been-focused' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
@@ -231,258 +236,172 @@
 					<a href="/feedback" class="feedback-button rounded-button small">Contact Us</a>
 				</div>
 			</div>
+			
+			<!-- Credits -->
 			<div class='east'>
 				<div class='box'>
 					<p class="fancy-caps">Design <span>and</span> Development</p>
-					<p>&copy; 2011 <strong>Local Projects, LLC.</strong><br />All rights reserved.</p>
-				</div>
-				<div class='box'>
-					<p class="fancy-caps">Content <span>and</span> NYC Logo</p>
-					<p>&copy; 2011 <strong>Mayor's Fund to <br />Advance the City of New York</strong><br />All rights reserved.</p>
+					<p>&copy; 2011 <strong><a href="http://localprojects.net/">Local Projects, LLC.</a></strong><br />All rights reserved.</p>
+					<p></p>
+					<p>&copy; 2011 <strong><a href="http://codeforamerica.org/"Code for America</strong><br />All rights reserved.</p>
 				</div>
 			</div>
 		</div>
-				
-		{% include 'partials/dev_util.html' %}
 		
-		</div>
-		
-		<div id='modal' class='modal'></div>
-		
-		<div class='tooltip' id='organization-tooltip' style='display:none;position:absolute;'></div>
-		
-		<!-- invite ideas merlin template -->
-		<div class='template-content modal-content merlin invite-user'>
-			<div class='step invite-message-info'>
-				<h2 class="has-name">Invite <strong><span class="name">&nbsp;</span></strong> To Your Project</h2>
-				<h2 class="no-name">Invite To Your Project</h2>
-				<p class="has-name">You can send a message to <span class="name"></span> with some details about your project and reasons to join. (Optional)</p>
-				<p class="no-name">You can send a message with some details about your project and reasons to join. (Optional)</p>
-				<form action='#' class="form-pane">
-					<div class="fields">
-						<textarea name='invite-message' class='invite-message has-been-focused'></textarea>
-						<span class="charlimit invite-message">200</span>
-					</div>
-					<a class='submit rounded-button' href="#">Send</a>
-				</form>
-			</div>
-			
-			<div class="step invite-message-project-info">
-				<h2 class="has-name">Invite <strong><span class="name">XXXXXXX</span></strong> To Your Project</h2>
-				<h2 class="no-name">Invite To Your Project</h2>
-				<p class="has-name">Since you are a part of multiple projects, we need to know which project you would like to invite <span class="name">XXXXXX</span> to?</p>
-				<p class="no-name">Since you are a part of multiple projects, we need to know which project you would like to send an invite for?</p>
-				<form action='#' class="form-pane non-float checklist">
-					<div class="fields">
-						{% if d.template_data and d.template_data.user %}
-							{% if d.template_data.user.data.projects|length > 0 %}
-								{% for project in d.template_data.user.data.projects %}
-									<div class="row">
-										<p class='clearfix'><input style='float:left;' type="radio" class="project-radio" rel="#project,{{ project.project_id }}" name="invite-project-name" id="invite-project-{{ project.project_id }}" />
-										<label style='float:left;' for="invite-project-{{ project.project_id }}">{{ project.title }}</label></p>
-									</div>
-								{% endfor %}
-							{% else %}
-							
-							{% endif %}
-						{% endif %}
-					</div>
-					<a class='submit rounded-button' href="#">Send</a>
-				</form>
-			</div>
-			
-			<div class='step invite-message-submit spinner-message'>
-				<p>Thanks for sending an invitation!</p>
-				<p><img src='/static/images/loader32x32.gif' alt='' /></p>
-			</div>
-			
-			<div class="step invite-message-error">
-				<p>There was an error sending this invitation.</p>
-			</div>
-			
-			<a class='close' href="#"><span>close</span></a>
-		</div>
-		
-		<!-- delete idea modal template -->
-		<div class="template-content modal-content confirm-delete remove-idea">
-			<div class="step">
-				<h2><strong>Delete</strong> this Idea?</h2>
-				<div>
-					<p>This deletes the idea from the system permanently! <br/>Are you sure?</p>
-				</div>
-				<div class="actions">
-					<a class="submit rounded-button" href="#">Yes, Delete Idea</a>
-					<a class="cancel" href="#">No, keep it.</a>
-				</div>
-			</div>
-			<a class='close' href="#"><span>close</span></a>
-		</div>
-		
-		<!-- message modal template -->
-		{% if d.template_data and d.template_data.user %}
-			<div class="template-content modal-content contact-user">
-				<div class="step step-start contact-message">
-					<h2>Send <strong class='to_u_name'>&nbsp;</strong> a message</h2>
-					<div class="clearfix">
-						<textarea class="contact-user-text" id="contact-user-text" name="contact-user-text"></textarea>
-						<input type="submit" class="contact-user-submit rounded-button" id="contact-user-submit" name="contact-user-submit" value="Send" />
-					</div>
-					<div>
-						<span class="charlimit">0/200</span>
-					</div>
-				</div>
-				
-				<div class="step step-submit contact-message-submit" style="display:none">
-					<h2>Sending <strong class='to_u_name'>&nbsp;</strong> a message!</h2>
-				</div>
-				
-				<div class="step step-success contact-message-success" style="display:none">
-					<h2>You sent <strong class='to_u_name'>&nbsp;</strong> a message!</h2>
-					<a class="rounded-button" href="#">Close</a>
-				</div>
-				
-				<div class="step step-success contact-message-error" style="display:none">
-					<h2>There was an error sending your message.</h2>
-				</div>
-				
-				<a class='close' href="#"><span>close</span></a>
-			</div>
+		<!-- Development help -->
+		{% if d.config.dev %}
+		  {% include 'partials/dev_util.html' %}
 		{% endif %}
-		
-		<!-- add resource modal template -->
-		{% if d.template_data and d.template_data.user %}
-			{% include 'partials/add_resource.html' %}
-		{% endif %}
-		
-		<!-- Javascript goes here -->
-		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.min.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.tabs.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.tooltips.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.dynamic.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.overlay.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.expose.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jquery.easing.1.3.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jquery.color.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jquery.elastic.js"></script>
-		<script type="text/javascript" src="/static/js/libs/fileuploader.js"></script>
-		<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
-		<script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
-		<script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
-				
-		<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.topbar.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.modal.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.carousel.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.tooltip.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
-		<script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
-		<script type="text/javascript" src="/static/js/tc.gam.project.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.invite.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.add_resource.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.user_handler.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
-				
-		{% block page_js %}{% endblock page_js %}
-		
-		<script type='text/javascript'>
-			jQuery(document).one('ready',function(e){
-				
-				if( tc.jQ('ul.adminbar li.adminQuestion select.questions').length > 0 )
-				{
-					tc.jQ('ul.adminbar li.adminQuestion select.questions').jqDropDown({
-						effect: 'fade',
-						effectSpeed: 150,
-						afterToggle: function(){
-							$('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').addClass('down');
-						
-							var removeDownClass = function(){
-								$('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').removeClass('down');
-								$(document).unbind('mousedown', removeDownClass);
-							};
-						
-							$(document).bind('mousedown', removeDownClass );
-						}
-					});
-				};
-				
-				tc.jQ('input[type=checkbox],input[type=radio]')
-					.not('.has-prettycheckbox')
-					.prettyCheckboxes();
-					
-				tc.jQ(".time-since").time_since(); //pretty date formatting
-				
-				{% if d.template_data and d.template_data.media_root %} app_page.media_root = '{{ d.template_data.media_root }}'; {% else %} app_page.media_root = '/'; {% endif %}
-				
-				{% if d.template_data and d.template_data.user %} 
-					app_page.user = {{ d.template_data.user.json }};
-					{% if d.template_data.user.is_admin %} app_page.user.is_admin = true; {% endif %}
-					{% if d.template_data.user.is_leader %} app_page.user.is_leader = true; {% endif %}
-					{% if d.template_data.user.is_moderator %} app_page.user.is_moderator = true; {% endif %}
-				{% else %}
-					app_page.user = null;
-				{% endif %}
-				
-				{% if d.template_data and d.template_data.project_user %} app_page.project_user = {{ d.template_data.project_user.json }}; {% else %} app_page.project_user = null; {% endif %}
-				{% if d.locations %} app_page.data.locations = {{ d.locations.json }}; {% endif %}
-				{% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
-				if(!app_page.data.locations){ app_page.data.locations = []; }
-				{% if d.template_data and d.template_data.redir_from %} app_page.data.redir_from = "{{ d.template_data.redir_from }}"; {% endif %}
-				{% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
-				
-				if (app_page.data.info_addr) {
-					$('.nospam.infomail').html(tc.makeEmailLink(app_page.data.info_addr.name, app_page.data.info_addr.domain));
-				}
-				
-				tc.util.log(':::: APP_PAGE ::::');
-				tc.util.dump(app_page);
-				
-				tc.app(app_page);
-				
-				/* DELETE THIS LATER!!!!!!! */
-				$('.dev-util .toggle').click(function() {
-				  $('.dev-util-content').toggle();
-				});
-				/* STOP DELETEING!!!!! */
-			});
-		</script>
-		
-		{% if d.template_data.app_env and d.template_data.app_env == 'live' %}
-			<script type="text/javascript">
-				
-				var _gaq = _gaq || [];
-				_gaq.push(['_setAccount', 'UA-22834983-1']);
-				_gaq.push(['_trackPageview']);
-				
-				(function() {
-					var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-					ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-					var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-				})();
-				
-			</script>
-		{% endif %}
-		
-		<div id="fb-root"></div>
-		<script>
-			window.fbAsyncInit = function() {
-				FB.init({appId: '{{d.facebook_app_id}}', status: true, cookie: true, xfbml: true});
-				tc.util.dump('FB.init!');
-			};
-		
-			(function() {
-				var e = document.createElement('script'); e.async = true;
-				e.src = document.location.protocol +
-					'//connect.facebook.net/en_US/all.js';
-				document.getElementById('fb-root').appendChild(e);
-			}());
-		</script>
-		
-		{% block javascript_footer %}{% endblock %}
-		
-	</body>
+  </div>
 	
+	<!-- Modal dialogues placeholder -->	
+  <div id='modal' class='modal'></div>
+  
+  <!-- Tooltip placeholder -->
+  <div class='tooltip' id='organization-tooltip' style='display:none;position:absolute;'></div>
+		
+	<!-- Invite ideas merlin template (does this need to be on every page?) -->
+  {% include 'partials/base_invite.html' %}
+	
+	<!-- Delete idea modal template (does this need to be on every page?) -->
+  {% include 'partials/base_idea_delete.html' %}
+	
+	<!-- Message modal template -->
+	{% include 'partials/base_message.html' %}
+	
+	<!-- Resource modal template -->
+	{% if d.template_data and d.template_data.user %}
+		{% include 'partials/add_resource.html' %}
+	{% endif %}
+	
+	<!-- Javascript goes here -->
+	<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.min.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.tabs.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.tooltips.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.dynamic.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.overlay.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.expose.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jquery.easing.1.3.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jquery.color.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jquery.elastic.js"></script>
+	<script type="text/javascript" src="/static/js/libs/fileuploader.js"></script>
+	<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
+	<script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
+	<script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
+			
+	<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.topbar.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.modal.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.carousel.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.tooltip.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
+	<script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
+	<script type="text/javascript" src="/static/js/tc.gam.project.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.invite.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.add_resource.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.user_handler.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
+			
+	{% block page_js %}{% endblock page_js %}
+	
+	<script type='text/javascript'>
+		jQuery(document).one('ready',function(e){
+			
+			if( tc.jQ('ul.adminbar li.adminQuestion select.questions').length > 0 )
+			{
+				tc.jQ('ul.adminbar li.adminQuestion select.questions').jqDropDown({
+					effect: 'fade',
+					effectSpeed: 150,
+					afterToggle: function(){
+						$('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').addClass('down');
+					
+						var removeDownClass = function(){
+							$('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').removeClass('down');
+							$(document).unbind('mousedown', removeDownClass);
+						};
+					
+						$(document).bind('mousedown', removeDownClass );
+					}
+				});
+			};
+			
+			tc.jQ('input[type=checkbox],input[type=radio]')
+				.not('.has-prettycheckbox')
+				.prettyCheckboxes();
+				
+			tc.jQ(".time-since").time_since(); //pretty date formatting
+			
+			{% if d.template_data and d.template_data.media_root %} app_page.media_root = '{{ d.template_data.media_root }}'; {% else %} app_page.media_root = '/'; {% endif %}
+			
+			{% if d.template_data and d.template_data.user %} 
+				app_page.user = {{ d.template_data.user.json }};
+				{% if d.template_data.user.is_admin %} app_page.user.is_admin = true; {% endif %}
+				{% if d.template_data.user.is_leader %} app_page.user.is_leader = true; {% endif %}
+				{% if d.template_data.user.is_moderator %} app_page.user.is_moderator = true; {% endif %}
+			{% else %}
+				app_page.user = null;
+			{% endif %}
+			
+			{% if d.template_data and d.template_data.project_user %} app_page.project_user = {{ d.template_data.project_user.json }}; {% else %} app_page.project_user = null; {% endif %}
+			{% if d.locations %} app_page.data.locations = {{ d.locations.json }}; {% endif %}
+			{% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
+			if(!app_page.data.locations){ app_page.data.locations = []; }
+			{% if d.template_data and d.template_data.redir_from %} app_page.data.redir_from = "{{ d.template_data.redir_from }}"; {% endif %}
+			{% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
+			
+			if (app_page.data.info_addr) {
+				$('.nospam.infomail').html(tc.makeEmailLink(app_page.data.info_addr.name, app_page.data.info_addr.domain));
+			}
+			
+			tc.util.log(':::: APP_PAGE ::::');
+			tc.util.dump(app_page);
+			
+			tc.app(app_page);
+			
+			/* DELETE THIS LATER!!!!!!! */
+			$('.dev-util .toggle').click(function() {
+			  $('.dev-util-content').toggle();
+			});
+			/* STOP DELETEING!!!!! */
+		});
+	</script>
+	
+	{% if d.template_data.app_env and d.template_data.app_env == 'live' %}
+		<script type="text/javascript">
+			
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', '{{ d.config.google_analytics.key }}']);
+			_gaq.push(['_trackPageview']);
+			
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+			
+		</script>
+	{% endif %}
+	
+	<div id="fb-root"></div>
+	<script>
+		window.fbAsyncInit = function() {
+			FB.init({appId: '{{d.facebook_app_id}}', status: true, cookie: true, xfbml: true});
+			tc.util.dump('FB.init!');
+		};
+	
+		(function() {
+			var e = document.createElement('script'); e.async = true;
+			e.src = document.location.protocol +
+				'//connect.facebook.net/en_US/all.js';
+			document.getElementById('fb-root').appendChild(e);
+		}());
+	</script>
+	
+	{% block javascript_footer %}{% endblock %}
+	
+</body>
 </html>
