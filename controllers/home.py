@@ -1,4 +1,5 @@
 from framework.controller import *
+from framework.config import Config
 import giveaminute.location as mLocation
 import giveaminute.user as mUser
 import giveaminute.project as mProject
