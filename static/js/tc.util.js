@@ -1,15 +1,22 @@
-/******************************************/
-/******************************************/
-/****  JS Document                     ****/
-/****  by Andrew Mahon                 ****/
-/****  amahon@gmail.com                ****/
-/******************************************/
-/******************************************/
+/**
+ * File: Utilities
+ * This file holds various utility functions for CBU.
+ */
 
-if(!tc){ var tc = {}; }
+var tc = tc || {};
+tc.util = tc.util || {};
 
 (function(tc) {
-	tc.util = {};
+
+  /**
+   * Function: Log
+   * Logs a basic message to the console if available.
+   *
+   * Parameters:
+   * message - {String} Message to log.
+   * level - {String} Property of console to send message to.  Options are (info,
+   *     log, debug, error, ??)
+   */
 	tc.util.log = function(message,level){
 		if(app_page && app_page.prevent_logging){ return; }
 		if (typeof console != "undefined" && typeof console.log != "undefined") {
