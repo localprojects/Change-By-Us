@@ -1,0 +1,50 @@
+	<div class='template-content modal-content merlin invite-user'>
+		<div class='step invite-message-info'>
+			<h2 class="has-name">Invite <strong><span class="name">&nbsp;</span></strong> To Your Project</h2>
+			<h2 class="no-name">Invite To Your Project</h2>
+			<p class="has-name">You can send a message to <span class="name"></span> with some details about your project and reasons to join. (Optional)</p>
+			<p class="no-name">You can send a message with some details about your project and reasons to join. (Optional)</p>
+			<form action='#' class="form-pane">
+				<div class="fields">
+					<textarea name='invite-message' class='invite-message has-been-focused'></textarea>
+					<span class="charlimit invite-message">200</span>
+				</div>
+				<a class='submit rounded-button' href="#">Send</a>
+			</form>
+		</div>
+		
+		<div class="step invite-message-project-info">
+			<h2 class="has-name">Invite <strong><span class="name">XXXXXXX</span></strong> To Your Project</h2>
+			<h2 class="no-name">Invite To Your Project</h2>
+			<p class="has-name">Since you are a part of multiple projects, we need to know which project you would like to invite <span class="name">XXXXXX</span> to?</p>
+			<p class="no-name">Since you are a part of multiple projects, we need to know which project you would like to send an invite for?</p>
+			<form action='#' class="form-pane non-float checklist">
+				<div class="fields">
+					{% if d.template_data and d.template_data.user %}
+						{% if d.template_data.user.data.projects|length > 0 %}
+							{% for project in d.template_data.user.data.projects %}
+								<div class="row">
+									<p class='clearfix'><input style='float:left;' type="radio" class="project-radio" rel="#project,{{ project.project_id }}" name="invite-project-name" id="invite-project-{{ project.project_id }}" />
+									<label style='float:left;' for="invite-project-{{ project.project_id }}">{{ project.title }}</label></p>
+								</div>
+							{% endfor %}
+						{% else %}
+						
+						{% endif %}
+					{% endif %}
+				</div>
+				<a class='submit rounded-button' href="#">Send</a>
+			</form>
+		</div>
+		
+		<div class='step invite-message-submit spinner-message'>
+			<p>Thanks for sending an invitation!</p>
+			<p><img src='/static/images/loader32x32.gif' alt='' /></p>
+		</div>
+		
+		<div class="step invite-message-error">
+			<p>There was an error sending this invitation.</p>
+		</div>
+		
+		<a class='close' href="#"><span>close</span></a>
+	</div>

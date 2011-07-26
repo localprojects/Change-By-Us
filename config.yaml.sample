@@ -14,15 +14,22 @@
 #--------------------------------------------------------------------
 # Explanation of these values is needed.
 #
+# dev -- Yes or No (what does this affect?)
 # app_mode -- If 'beta', the site will be in private beta mode.  Set
 #             to anything else to get out of beta mode.  This is 
 #             currently handled by the __init__ of the Controller
 #             class.
+# app_env  -- Environment such as production or development (what
+#             does this affect?)
+# instance -- ??
+# htaccess -- Yes or no.  Is the site behind htaccess.
+#
 #--------------------------------------------------------------------
 dev: %(dev)s
 app_mode: %(appmode)s
 app_env: %(app_env)s
 instance: %(instance)s
+htaccess: %(htaccess)s
 
 
 # Locations
@@ -37,23 +44,37 @@ blog_host: %(blog_host)s
 # Site settings
 #--------------------------------------------------------------------
 # Various site settings
-#
+# 
+# name      -- the site name, like "Change by Us NYC"
+# city      -- the city name, like "NYC"
+# city_id   -- and identifier for the city, like "nyc"
+# full_city -- the longer city name, like "New York City"
 #--------------------------------------------------------------------
 site:
     name: %(site_name)s
     city: %(site_city)s
+    city_id: %(site_city_id)s
+    full_city: %(site_full_city)s
 
 
 # Homepage
 #--------------------------------------------------------------------
 # Home page specific settings
 #
+# question         -- The main marquee question on the homepage.
+# who_is_listening -- Yes or No.  Enable this feature on homepage;
+#                     currently the content is not configurable.
+# news             -- Yes or No.  Enable this feature on homepage;
+#                     currently the content is not configurable.
 #--------------------------------------------------------------------
 homepage:
     is_display_leaderboard: %(homepage_is_display_leaderboard)s
     is_display_featured_projects: %(homepage_is_display_featured_projects)s
     num_featured_projects: %(homepage_num_featured_projects)s
-    num_recent_ideas: %(homepage_num_recent_ideas)s    
+    num_recent_ideas: %(homepage_num_recent_ideas)s
+    question: %(homepage_question)s
+    who_is_listening: %(homepage_who_is_listening)s
+    news: %(homepage_news)s
 
 
 # Server settings
@@ -160,3 +181,11 @@ aws:
     access_key_id: %(aws_access_key_id)s
     secret_access_key: %(aws_secret_access_key)s
     bucket: %(s3_bucket)s
+
+# Typekit key is the name of the JS file, like http://use.typekit.com/XXXXXX.js
+typekit:
+    key: %(typekit_key)s
+
+# Key should be in the form: UA-XXXXXX-X
+google_analytics:
+    key: %(google_analytics_key)s

@@ -1,9 +1,6 @@
 {% extends "./partials/base.html" %}
 
-{% block title %}
-{{ d.site_name }} - User Account
-{% endblock title %}
-
+{% block title %} User Account {% endblock title %}
 
 {% block project_admin %}
 	{{ super() }}
@@ -13,7 +10,6 @@
 {% endblock %}
 
 {% block continent %}
-
 <script type="text/javascript" src='/static/js/lp.gam.facebookConnect.js'></script>
 
 <div class='continent user-account'>
@@ -26,6 +22,7 @@
 				<div class="hd clearfix">
 					<div class='box box-thumb'>
 						<div class="leader-tag"><span>Local Leader</span></div>
+						
 						<div class="thumb">
 							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
 								<a class="change-image change-profile-image" href="#">
@@ -39,16 +36,16 @@
 							{% endif %}
 						</div>
 					</div>
+					
 					<div class='box box-info'>
 						<div class="user-info serif">
 							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
 
-							{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}
-							<span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
-							{% endif %}
+  						{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}
+                <span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
+  						{% endif %}
 							
 							{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-								
 								<div class="description mod-inline-edit">
 									<div class="editable-content">
 										{% if d.template_data.user_activity.data.user.description %}
@@ -57,20 +54,17 @@
 									</div>
 									<div class="inline-edit-controls"></div>
 								</div>
-							
 							{% else %}
-							
 								{% if d.template_data.user_activity.data.user.description %}
 									<div class="description">
 										{{ d.template_data.user_activity.data.user.description }}
 									</div>
 								{% endif %}
-							
 							{% endif %}
-							
 						</div>
 					</div>
 				</div>
+				
 				<div class="bd">
 					<ul class="tabs">
 						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.resources|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
@@ -87,221 +81,214 @@
 					{% if d.template_data.user and (d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id) %}
 						<a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>
 					{% endif %}
-					
 				</div>
 			</div>
 		</div>
+		
 		<div class="east">
 			<div>
-			
 				<div class="activity-view step">
 					{% if d.template_data and d.template_data.user_activity.data.projects|length > 0 %}
-					<div class="box my-projects">
-						<div class="hd">
-							<h2>
-								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-									<span class="light">My</span>
-								{% else %}
-									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-								{% endif %}
-								Projects <span class="counter">{{ d.template_data.user_activity.data.projects|length }}</span>
-							</h2>
-						</div>
-						<div class="bd">
-							
-							{% for project in d.template_data.user_activity.data.projects %}
-							
-								<div class='clearfix project-header'>
-									<div class="thumb">
-										{% if project.image_id > -1  %}
-											<img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
-										{% else %}
-											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										{% endif %}
-										<span class="overlay-tag"></span>
-									</div>
-									<div class="tools">
-										<div class="members">
-											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
-										</div>
-									</div>
-									<div class="main">
-										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
-										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
-										<div class="sub-ft">
-											{% if d.template_data and d.template_data.app_mode != 'beta' %}
-												<div class="twitter">
-													<a href="http://twitter.com/share" data-url="{{ d.default_host }}project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-												</div>
-												<div class="facebook">
-													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-													<fb:like href="{{ d.default_host }}project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
-												</div>
-											{% endif %}
-										</div>
-									</div>
-								</div>
-							
-							{% endfor %}
-							
-						</div>
-					</div><!-- end my-projects -->
+  					<div class="box my-projects">
+  						<div class="hd">
+  							<h2>
+  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+  									<span class="light">My</span>
+  								{% else %}
+  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+  								{% endif %}
+  								Projects <span class="counter">{{ d.template_data.user_activity.data.projects|length }}</span>
+  							</h2>
+  						</div>
+  						
+  						<div class="bd">
+  							{% for project in d.template_data.user_activity.data.projects %}
+  								<div class='clearfix project-header'>
+  									<div class="thumb">
+  										{% if project.image_id > -1  %}
+  											<img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+  										{% else %}
+  											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+  										{% endif %}
+  										<span class="overlay-tag"></span>
+  									</div>
+  									
+  									<div class="tools">
+  										<div class="members">
+  											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+  										</div>
+  									</div>
+  									
+  									<div class="main">
+  										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+  										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
+  										<div class="sub-ft">
+  											{% if d.template_data and d.template_data.app_mode != 'beta' %}
+  												<div class="twitter">
+  													<a href="http://twitter.com/share" data-url="{{ d.default_host }}project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+  												</div>
+  												<div class="facebook">
+  													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+  													<fb:like href="{{ d.default_host }}project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
+  												</div>
+  											{% endif %}
+  										</div>
+  									</div>
+  								</div>
+  							{% endfor %}
+  						</div>
+  					</div><!-- end my-projects -->
 					{% endif %}
 					
 					{% if d.template_data and d.template_data.user_activity.data.ideas|length > 0%}
-					<div class="box my-ideas">
-						<div class="hd">
-							<h2>
-								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-									<span class="light">My</span>
-								{% else %}
-									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-								{% endif %}
-								Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
-							</h2>
-						</div>
-						<div class="bd clearfix">
-							<ul class="idea-cards">
-								
-								{% for idea in d.template_data.user_activity.data.ideas %}
-								
-									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
-										{% if d.template_data and d.template_data.user and d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id %}
-										<div class="note-card-public-controls">
-											{% if d.template_data.user.data.projects|length > 0 %}
-												<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-											{% endif %}
-											<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
-										</div>
-										{% endif %}
-										<div class="note-card">
-											<div class="membrane">
-												{% if d.template_data and d.template_data.user %}
-													{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
-														<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
-													{% endif %}
-												{% endif %}
-												<cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
-												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
-												<cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
-											</div>
-										</div>
-									</li>
-								
-								{% endfor %}
-								
-							</ul>
-						</div>
-					</div><!--end my-ideas-->
+  					<div class="box my-ideas">
+  						<div class="hd">
+  							<h2>
+  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+  									<span class="light">My</span>
+  								{% else %}
+  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+  								{% endif %}
+  								Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
+  							</h2>
+  						</div>
+
+  						<div class="bd clearfix">
+  							<ul class="idea-cards">
+  								{% for idea in d.template_data.user_activity.data.ideas %}
+  									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
+  										{% if d.template_data and d.template_data.user and d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id %}
+    										<div class="note-card-public-controls">
+    											{% if d.template_data.user.data.projects|length > 0 %}
+    												<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+    											{% endif %}
+    											<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+    										</div>
+  										{% endif %}
+  										<div class="note-card">
+  											<div class="membrane">
+  												{% if d.template_data and d.template_data.user %}
+  													{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+  														<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+  													{% endif %}
+  												{% endif %}
+  												<cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
+  												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
+  												<cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
+  											</div>
+  										</div>
+  									</li>
+  								{% endfor %}
+  							</ul>
+  						</div>
+  					</div><!--end my-ideas-->
 					{% endif %}
 					
 					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 and (d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-					<div class="box my-resources">
-						<div class="hd">
-							<h2>
-								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-									<span class="light">My</span>
-								{% else %}
-									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-								{% endif %}
-								Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span>
-							</h2>
-						</div>
-						<div class="bd">
-							<table class="resources-list triplewide clearfix">
-								<tbody>
-									{% for resource in d.template_data.user_activity.data.resources %}
-										{% if loop.index % 3 == 1 %}
-										<tr>
-										{% endif %}
-											<td {% if resource.is_official %}class="official-resource"{% endif %}>
-												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-													<a class="add-button rounded-button small add-resource" href="#addResource,{{ resource.project_resource_id }}">Add</a>
-												{% endif %}
-												{% if resource.image_id > 0 %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
-												{% else %}
-												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-												{% endif %}
-												<span class="resource-name">
-													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
-													<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
-														<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
-													</span>
-												</span>
-												<div class="added-dialog">
-													<span class="added-header">Added <em>to</em> your project<br /></span>
-													<span class="added-text">We've sent them a link to your project page.</span>
-													<!-- <span class="added-close"></span> -->
-												</div>
-											</td>
-										{% if loop.index % 3 == 0 %}
-										</tr>
-										{% endif %}
-									{% endfor %}
-								</tbody>
-							</table>
-						</div>
-					</div><!--end my-resources-->
+  					<div class="box my-resources">
+  						<div class="hd">
+  							<h2>
+  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+  									<span class="light">My</span>
+  								{% else %}
+  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+  								{% endif %}
+  								Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span>
+  							</h2>
+  						</div>
+  						<div class="bd">
+  							<table class="resources-list triplewide clearfix">
+  								<tbody>
+  									{% for resource in d.template_data.user_activity.data.resources %}
+  										{% if loop.index % 3 == 1 %}
+  										<tr>
+  										{% endif %}
+  											<td {% if resource.is_official %}class="official-resource"{% endif %}>
+  												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+  													<a class="add-button rounded-button small add-resource" href="#addResource,{{ resource.project_resource_id }}">Add</a>
+  												{% endif %}
+  												{% if resource.image_id > 0 %}
+  												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+  												{% else %}
+  												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+  												{% endif %}
+  												<span class="resource-name">
+  													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
+  													<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+  														<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
+  													</span>
+  												</span>
+  												<div class="added-dialog">
+  													<span class="added-header">Added <em>to</em> your project<br /></span>
+  													<span class="added-text">We've sent them a link to your project page.</span>
+  													<!-- <span class="added-close"></span> -->
+  												</div>
+  											</td>
+  										{% if loop.index % 3 == 0 %}
+  										</tr>
+  										{% endif %}
+  									{% endfor %}
+  								</tbody>
+  							</table>
+  						</div>
+  					</div><!--end my-resources-->
 					{% endif %}
 					
 					{% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}
-					<div class="box my-endorsed-projects my-projects">
-						<div class="hd">
-							<h2>
-								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-									<span class="light">My</span>
-								{% else %}
-									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-								{% endif %}
-								Supported Projects <span class="counter">{{ d.template_data.user_activity.data.endorsed_projects|length }}</span>
-							</h2>
-						</div>
-						<div class="bd">
-							
-							{% for project in d.template_data.user_activity.data.endorsed_projects %}
-							
-								<div class='clearfix project-header'>
-									<div class="thumb">
-										{% if project.image_id > -1  %}
-											<img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
-										{% else %}
-											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-										{% endif %}
-										<span class="overlay-tag"></span>
-									</div>
-									<div class="tools">
-										<div class="members">
-											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
-										</div>
-									</div>
-									<div class="main">
-										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
-										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
-										<div class="sub-ft">
-											{% if d.template_data and d.template_data.app_mode != 'beta' %}
-												<div class="twitter">
-													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-												</div>
-												<div class="facebook">
-													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-													<fb:like href="http://changeby.us/project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
-												</div>
-											{% endif %}
-										</div>
-									</div>
-								</div>
-							
-							{% endfor %}
-							
-						</div>
-					</div><!-- end my-endorsed-projects -->
+  					<div class="box my-endorsed-projects my-projects">
+  						<div class="hd">
+  							<h2>
+  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+  									<span class="light">My</span>
+  								{% else %}
+  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
+  								{% endif %}
+  								Supported Projects <span class="counter">{{ d.template_data.user_activity.data.endorsed_projects|length }}</span>
+  							</h2>
+  						</div>
+  						<div class="bd">
+  							
+  							{% for project in d.template_data.user_activity.data.endorsed_projects %}
+  							
+  								<div class='clearfix project-header'>
+  									<div class="thumb">
+  										{% if project.image_id > -1  %}
+  											<img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+  										{% else %}
+  											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+  										{% endif %}
+  										<span class="overlay-tag"></span>
+  									</div>
+  									<div class="tools">
+  										<div class="members">
+  											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+  										</div>
+  									</div>
+  									<div class="main">
+  										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+  										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
+  										<div class="sub-ft">
+  											{% if d.template_data and d.template_data.app_mode != 'beta' %}
+  												<div class="twitter">
+  													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+  												</div>
+  												<div class="facebook">
+  													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+  													<fb:like href="http://changeby.us/project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
+  												</div>
+  											{% endif %}
+  										</div>
+  									</div>
+  								</div>
+  							
+  							{% endfor %}
+  							
+  						</div>
+  					</div><!-- end my-endorsed-projects -->
 					{% endif %}
-					
 				</div><!--end activity-view-->
 				
 				{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-				
 					<div class="messages-view step" >
 						<div class="box messages">
 							<div class="hd">
@@ -324,7 +311,6 @@
 									
 									{% for message in d.template_data.user_activity.data.messages %}
 										{% if message.message_type == "member_comment" %}
-										
 											<li class="message-item member-comment">
 												<!--<a class="close" href="#"><span>Close</span></a>-->
 												<div class="thumb">
@@ -347,42 +333,36 @@
 													</div>
 												</div>
 											</li>
-											
 										{% elif message.message_type == "join" %}
-										
 											{{ notification_message(message, 'join-notification') }}
-											
 										{% elif message.message_type == "invite" %}
-										
 											<li class="message-item user-notification invite-notification">
 												<!--<a class="close" href="#"><span>Close</span></a>-->
 												<span class="title">{{ message.body }}</span>
+												
 												<div class="controls">
 													<a href="/project/{{ message.project_id }}">Click to see project</a>
 												</div>
 											</li>
-											
 										{% elif message.message_type == "goal_achieved" %}
-										
 											{{ notification_message(message, 'goal-achieved-notification') }}
-									
 										{% elif message.message_type == "endorsement" %}
-										
 											{{ notification_message(message, 'endorsement-notification') }}
-											
 										{% endif %}
 									{% endfor %}
-									
 								</ol>
 							</div>
+							
 							<div class="load-more">
 								<a href=""><span>Older messages</span></a>
 							</div>
 						</div>
+						
 						<div class="box preferences">
 							<div class="hd">
 								<h3>Email Preferences</h3>
 							</div>
+							
 							<div class="bd">
 								<ul class="checklist">
 									<li>
@@ -399,11 +379,11 @@
 					</div><!-- end messages-view -->
 				
 					<div class="account-view password-view step merlin">
-						
 						<div class="box user-account">
 							<div class="hd">
 								<h2>Account</h2>
 							</div>
+							
 							<div class="bd step edit-account-details">
 								<form action="" method="POST" class="account-info">
 									<div class="user-details">
@@ -467,9 +447,9 @@
 										</div>
 										
 										<div style="clear:both"></div>
-										
 									</div>
 								</form>	
+								
 								{%- if d.template_data.app_mode != 'beta' -%}
 									<div class="social-networking">
 										<div class="social-connect-wrapper">
@@ -483,93 +463,89 @@
 									</div>
 								{%- endif -%}
 							</div>
+							
 							<div class="bd step submit-account-details">
 								<p>Processing your account details&hellip;</p>
 								<p><img src='/static/images/loader32x32.gif' /></p>
 							</div>
+							
 							<div class="bd step account-details-submitted">
 								<p>Your account details have been updated!</p>
 							</div>
+							
 							<div class="bd step account-details-error">
 								<p>There was an error updating your account details.</p>
 							</div>
 						</div>
-						
 					</div><!--end account-view-->
 					
-					
 					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
-					<div class="resources-view step merlin">
-						<div class="hd">
-							<h2><span class="light">My </span>Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span></h2>
-						</div>
-						<div class="bd">
-							<ul class='my-res'>
-								{% for resource in d.template_data.user_activity.data.resources %}
-									<li class='clearfix' id='{{ resource.project_resource_id }}'>
-										<div class='left'>
-											<div class="thumb">
-												<a class="change-image"><span>Change Photo</span></a>
-												{% if resource.image_id > 0 %}
-												<img width='90' height='90' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" />
-												{% else %}
-												<img width='90' height='90' src='/static/images/thumb_genAvatar100.png' alt="" />
-												{% endif %}
-											</div>
-											<h4 class="serif">{{ resource.title }}</h4>
-											<div class='box res-location mod-inline-edit' location_id='{% if resource.location_id %}{{ resource.location_id }}{% endif %}'>
-												<div class="editable-content serif">
-												{% if resource.location_name %}
-													{{ resource.location_name }}
-												{% endif %}
-												</div>
-												<div class="inline-edit-controls"></div>
-											</div>
-										</div>
-										<div class='right'>
-											<div class='box res-description mod-inline-edit'>
-												<span class='section-title'>Mission</span>
-												<div class="inline-edit-controls"></div>
-												<p class="editable-content">{{ resource.description }}</p>
-											</div>
-											<div class='box res-url mod-inline-edit'>
-												<span class='section-title'>URL</span>
-												<div class="inline-edit-controls"></div>
-												<p class="editable-content">{{ resource.url }}</p>
-											</div>
-											<div class='box res-email mod-inline-edit'>
-												<span class='section-title'>Email</span>
-												<div class="inline-edit-controls"></div>
-												<p class="editable-content">{{ resource.contact_email }}</p>
-											</div>
-											<div class='box res-addr mod-inline-edit box-half'>
-												<span class='section-title'>Physical Address</span>
-												<p class="editable-content">{{ resource.physical_address }}</p>
-												<div class="inline-edit-controls"></div>
-											</div>
-											<div class='box mod-inline-edit res-keywords box-half'>
-												<span class='section-title'>Keywords</span>
-												<p class="editable-content">{{ resource.keywords|replace(',',', ') }}</p>
-												<div class="inline-edit-controls"></div>
-											</div>
-										</div>
-									</li>
-								{% endfor %}
-							</ul>
-						</div>
-					</div><!--end resources-view-->
+  					<div class="resources-view step merlin">
+  						<div class="hd">
+  							<h2><span class="light">My </span>Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span></h2>
+  						</div>
+  						<div class="bd">
+  							<ul class='my-res'>
+  								{% for resource in d.template_data.user_activity.data.resources %}
+  									<li class='clearfix' id='{{ resource.project_resource_id }}'>
+  										<div class='left'>
+  											<div class="thumb">
+  												<a class="change-image"><span>Change Photo</span></a>
+  												{% if resource.image_id > 0 %}
+  												<img width='90' height='90' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" />
+  												{% else %}
+  												<img width='90' height='90' src='/static/images/thumb_genAvatar100.png' alt="" />
+  												{% endif %}
+  											</div>
+  											<h4 class="serif">{{ resource.title }}</h4>
+  											<div class='box res-location mod-inline-edit' location_id='{% if resource.location_id %}{{ resource.location_id }}{% endif %}'>
+  												<div class="editable-content serif">
+  												{% if resource.location_name %}
+  													{{ resource.location_name }}
+  												{% endif %}
+  												</div>
+  												<div class="inline-edit-controls"></div>
+  											</div>
+  										</div>
+  										<div class='right'>
+  											<div class='box res-description mod-inline-edit'>
+  												<span class='section-title'>Mission</span>
+  												<div class="inline-edit-controls"></div>
+  												<p class="editable-content">{{ resource.description }}</p>
+  											</div>
+  											<div class='box res-url mod-inline-edit'>
+  												<span class='section-title'>URL</span>
+  												<div class="inline-edit-controls"></div>
+  												<p class="editable-content">{{ resource.url }}</p>
+  											</div>
+  											<div class='box res-email mod-inline-edit'>
+  												<span class='section-title'>Email</span>
+  												<div class="inline-edit-controls"></div>
+  												<p class="editable-content">{{ resource.contact_email }}</p>
+  											</div>
+  											<div class='box res-addr mod-inline-edit box-half'>
+  												<span class='section-title'>Physical Address</span>
+  												<p class="editable-content">{{ resource.physical_address }}</p>
+  												<div class="inline-edit-controls"></div>
+  											</div>
+  											<div class='box mod-inline-edit res-keywords box-half'>
+  												<span class='section-title'>Keywords</span>
+  												<p class="editable-content">{{ resource.keywords|replace(',',', ') }}</p>
+  												<div class="inline-edit-controls"></div>
+  											</div>
+  										</div>
+  									</li>
+  								{% endfor %}
+  							</ul>
+  						</div>
+  					</div><!--end resources-view-->
 					{% endif %}
-					
-				
 				{% endif %}
-				
-				
 			</div>	
 		</div>
 	</div>
 
 	<div class='foothills'>
-
 	</div>
 	
 	<div class="template-content message-item member-comment">
@@ -672,7 +648,6 @@
 {% endblock continent %}
 
 {% block page_js %}
-
 	<script type="text/javascript" >
 		{% if d.connected_fb %}
 			app_page.data.facebook_connected = true;
@@ -693,7 +668,6 @@
 				to_u_id: {{ d.template_data.user_activity.data.user.u_id }}
 			};
 		{% endif %}
-		
 	</script>
 	
 	<script type="text/javascript" src='/static/js/tc.gam.contact.js'></script>
@@ -713,7 +687,5 @@
 			);
 		</script>
 	<![endif]-->
-	
-
 {% endblock page_js %}
 

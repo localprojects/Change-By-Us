@@ -106,6 +106,10 @@ class Home(Controller):
 
 
     def showHome(self):
+        """
+        Sets up template data and renders homepage template.
+        
+        """
         homepage = Config.get('homepage')
         
         locationData = mLocation.getSimpleLocationDictionary(self.db)

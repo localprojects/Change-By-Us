@@ -1,17 +1,14 @@
 {% extends "./partials/base.html" %}
 
-{% block title %}
-{{ d.site_name }} - Join
-{% endblock title %}
+{% block title %} Join {% endblock title %}
 
 {% block continent %}
-
 <script type="text/javascript" src='/static/js/lp.gam.facebookConnect.js'></script>
 
 <div class='continent register'>
 	<div class='headlands clearfix'>
 		<div class='west'>
-			<h1>{{ d.site_name }} is a place to make your city better.</h1>
+			<h1>{{ d.config.site.name }} is a place to make your city better.</h1>
 			<h3>Share your ideas. Build projects. Make a change.</h3>
 		</div>
 		<div class='east'>
@@ -53,7 +50,7 @@
 			</div><!--end step-->
 			
 			<div class='step user-info clearfix' style='display:none;' >
-				<p>{{ d.site_name }} uses real names. <a href='/tou#names' class='real-names'>Read Why</a>.</p>
+				<p>{{ d.config.site.name }} uses real names. <a href='/tou#names' class='real-names'>Read Why</a>.</p>
 				
 				<div class="west">
 					<div class="row">
@@ -91,7 +88,7 @@
 			</div><!--end step-->
 			
 			<div class='step twitter-step clearfix ' style='display:none;'>
-				<p><strong>Enter your email to get updates from {{ d.site_name }} projects.</strong></p>
+				<p><strong>Enter your email to get updates from {{ d.config.site.name }} projects.</strong></p>
 				
 				<div class="west">
 					<div class="row">
@@ -129,7 +126,7 @@
 			</div><!--end step-->
 			
 			<div class='step email-step clearfix ' style='display:none;'>
-				<!--<p><strong>Enter your email to get updates from {{ d.site_name }} projects.</strong></p>
+				<!--<p><strong>Enter your email to get updates from {{ d.config.site.name }} projects.</strong></p>
 				
 				<div class="fields">
 					<input type='text' name='email-alt' id='email-alt' class='email-alt'/>
@@ -153,7 +150,7 @@
 			
 			<div class='step sms-lookup clearfix ' style='display:none;'>
 				<div class='west'>
-					<p>Did you text your ideas to {{ d.site_name }}?  Enter your phone number to link them to your profile.</p>
+					<p>Did you text your ideas to {{ d.config.site.name }}?  Enter your phone number to link them to your profile.</p>
 					<p>
 						<input type='text' name='phone_1' id='phone_1' class='phone_1'/>
 						<input type='text' name='phone_2' id='phone_2' class='phone_2'/>
@@ -180,7 +177,7 @@
 			
 			<div class='step sms-no-results clearfix ' style='display:none;'>
 				<p>We couldn't find any ideas sent from</p>
-				<p class="phone-num">(718) 222-6680</p>
+				<p class='phone-num'>(XXX) XXX-XXXX</p>
 			</div><!--end step-->
 			
 			<div class='step sms-already-used clearfix ' style='display:none;'>
@@ -211,7 +208,7 @@
 			</div><!--end step-->
 			
 			<div class='step email-already-used clearfix' style='display:none;'>
-				<p class="west">An account using that email already exists on Change by Us. To recover your password, please click <a href='/login#forgot-password'>here</a>.</p>
+				<p class="west">An account using that email already exists on {{ d.config.site.name }}. To recover your password, please click <a href='/login#forgot-password'>here</a>.</p>
 			</div><!--end step-->
 			
 			<div class='step email-authentication-error clearfix' style='display:none;'>
@@ -232,9 +229,8 @@
 	<div class='foothills'>
 		<a class='back' href='#' style='display:none'><span>Back</span></a>
 	</div>
-	
-
 </div>
+
 <div class='template-content modal-content toc'>
 	<h2><strong>Terms of Use</strong></h2>
 	<div class="scroll-pane">
@@ -243,7 +239,6 @@
 	<a class='close' href="#"><span>close</span></a>
 </div>
 {% endblock continent %}
-
 
 {% block page_js %}
 <script type='text/javascript'>
@@ -270,7 +265,7 @@
 	{% elif d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
 		app_page.data.first_join_step = 'user-info';
 	{% endif %}
-	
 </script>
+
 <script type="text/javascript" src='/static/js/pages/join.js'></script>
 {% endblock page_js %}

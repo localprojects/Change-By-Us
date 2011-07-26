@@ -1,160 +1,150 @@
 <!DOCTYPE html>
 <html class='universe'>
+<head class='heavens'>
+	<title>{{ d.config.site.name }} | {% block title %}Mobile{% endblock title %}</title>
 	
-	<head class='heavens'>
-		<title>{% block title %}{{ d.site_name }}{% endblock title %}</title>
-		
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-		<meta name="MobileOptimized" content="320" />
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
-		
-		<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
-		<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
-		<link rel="stylesheet" href="/static/css/tc.gam.mobile.css" type="text/css" media="screen" />
-		
-	</head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+	<meta name="MobileOptimized" content="320" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
 	
-	<body class='earth'>
-		<div class='exosphere'>
-			
-			<div class='atmosphere'>
-				<div class='stratosphere'>
-					<ul class="clearfix">
-						<li class="home">
-							<a href="/mobile"><span>NYC SimpliCity | {{ d.site_name }}</span></a>
-						</li>
-						<li class="userland">
-							<div class='logout' style="{% if d.template_data and d.template_data.user %}{% else %}display:none;{% endif %}">
-								<a href='#'>Logout</a>
-							</div>
-							<div class='login' style="{% if d.template_data and d.template_data.user %}display:none;{% endif %}">
-								<a href='#'>Login</a>
-							</div>
-							<div class="join" style="{% if d.template_data and d.template_data.user %}display:none;{% endif %}">
-								<a href='#'>Sign Up</a>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div><!-- end .atmosphere -->
+	<link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="/static/css/tc.gam.mobile.css" type="text/css" media="screen" />
+</head>
+
+<body class='earth'>
+	<div class='exosphere'>
+		<div class='atmosphere'>
+			<div class='stratosphere'>
+				<ul class="clearfix">
+					<li class="home">
+						<a href="/mobile"><span>{{ d.config.site.name }}</span></a>
+					</li>
+					<li class="userland">
+						<div class='logout' style="{% if d.template_data and d.template_data.user %}{% else %}display:none;{% endif %}">
+							<a href='#'>Logout</a>
+						</div>
+						<div class='login' style="{% if d.template_data and d.template_data.user %}display:none;{% endif %}">
+							<a href='#'>Login</a>
+						</div>
+						<div class="join" style="{% if d.template_data and d.template_data.user %}display:none;{% endif %}">
+							<a href='#'>Sign Up</a>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div><!-- end .atmosphere -->
+	
+		{% block continent %}
+			Main
+		{% endblock %}
 		
-			{% block continent %}
-				Main
-			{% endblock %}
-			
-			<div class='seafloor'>
-				<div class="row">
-					<div class="west">
-						<a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml' target='_blank' class="simplicity"><img src='/static/images/footer-nycsimplicity2.png' alt='NYC Simplicity' /></a>
-					</div>
-					<div class="east">
-						<a href="/feedback" class="feedback-button rounded-button small" target="_blank">Contact Us</a>
-					</div>
-				</div>
-				<div class="row logos">
-					<div class="row nomb">
-						<a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
-						<a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
-						<a href='http://www.nyc.gov/html/planyc2030/html/home/home.shtml' target='_blank'><img src='/static/images/footer-planyc.png' alt='PLANYC' /></a>
-					</div>
-					<div class="row nomb">
-						<span class="supported-by fancy-caps">Supported <span>by</span></span>
-						<a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
-						<a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
-					</div>
-				</div>
+		<div class='seafloor'>
+			<div class="row">
 				<div class="west">
-					<div class="box">
-						<ul>
-							<li><a href='/about'>About {{ d.site_name }}</a></li>
-							<li><a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml'>About NYC Simplicity</a></li>
-							<li><a href='http://nycblog.changeby.us'>News</a></li>
-							<li><a href='/tou#community-policy'>Community Policy</a></li>
-							<li class="sitemap-tou"><a href='/tou'>Terms of Use</a></li>
-							<li><a href='/tou#privacy'>Privacy Policy</a></li>
-						</ul>
-					</div>
 				</div>
 				<div class="east">
-					<div class='box'>
-						<p class="fancy-caps">Design <span>and</span> Development</p>
-						<p>&copy; 2011 <strong>Local Projects, LLC.</strong><br />All rights reserved.</p>
-					</div>
-					<div class='box'>
-						<p class="fancy-caps">Content <span>and</span> NYC Logo</p>
-						<p>&copy; 2011 <strong>Mayor's Fund to Advance the City of New York</strong><br />All rights reserved.</p>
-					</div>
+					<a href="/feedback" class="feedback-button rounded-button small" target="_blank">Contact Us</a>
 				</div>
-			</div><!-- end .seafloor -->
-		
-		</div><!-- end .exosphere -->
-		
-		<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>
-		<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
-		<script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.carousel.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
-		<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
-		
-		<div id="fb-root"></div>
-		<script type="text/javascript">
-			(function(window) {
-				
-				window.app_page = {
-					data:{},
-					features:[]
-				};
-			
-				{% if d.template_data and d.template_data.user %}
-					window.app_page.user = {{ d.template_data.user.json }}; 
-				{% endif %}
-			
-				{% if d.template_data and d.template_data.locations %} 
-					window.app_page.data.locations = {{ d.template_data.locations.json }}; 
-				{% endif %}
-				
-			}(this));
-		</script>
-		
-		{% block page_js %}{% endblock %}
-		
-		<script type="text/javascript">
-			(function(window, $) {
-				$(function() {
-					$(window).bind("orientationchange", function(e) {
-						if (typeof window.orientation !== "undefined") {
-							switch (Math.abs(window.orientation)) {
-								case 0: // portrait
-									
-									break;
-								
-								case 90: // landscape
-									
-									break;
-								
-								default:
-									break;
-							}
-						}
-					});
-					
-					$.ajaxSetup({
-						error: function(xhr, ts, err) {
-							tc.util.log("AJAX ERROR", "warn");
-							tc.util.log(ts, "warn");
-							if (err) {
-								tc.util.dump(err);
-							}
-						}
-					});
-					
-					window.app = tc.app(app_page);
-				});
-			}(this, this.jQuery));
-		</script>
-	</body>
+			</div>
+			<div class="row logos">
+				<div class="row nomb">
+					<a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
+					<a href='http://codeforamerica.org' target='_blank'><img src='/static/images/footer-codeforamerica.png' alt='Code for America' /></a>
+					<a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
+				</div>
+				<div class="row nomb">
+					<span class="supported-by fancy-caps">Supported <span>by</span></span>
+					<a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
+					<a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
+				</div>
+			</div>
+			<div class="west">
+				<div class="box">
+					<ul>
+						<li><a href='/about'>About {{ d.config.site.name }}</a></li>
+						<li><a href='{{ d.config.blog_host }}'>News</a></li>
+						<li><a href='/tou#community-policy'>Community Policy</a></li>
+						<li class="sitemap-tou"><a href='/tou'>Terms of Use</a></li>
+						<li><a href='/tou#privacy'>Privacy Policy</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="east">
+				<div class='box'>
+					<p class="fancy-caps">Design <span>and</span> Development</p>
+					<p>&copy; 2011 <strong>Local Projects, LLC.</strong><br />All rights reserved.</p>
+					<p>&copy; 2011 <strong>Code for America</strong><br />All rights reserved.</p>
+				</div>
+			</div>
+		</div><!-- end .seafloor -->
+	</div><!-- end .exosphere -->
 	
+	<script type="text/javascript" src="/static/js/libs/jquery-1.5.1.js"></script>
+	<script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
+	<script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.carousel.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
+	<script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
+	
+	<div id="fb-root"></div>
+	<script type="text/javascript">
+		(function(window) {
+			
+			window.app_page = {
+				data:{},
+				features:[]
+			};
+		
+			{% if d.template_data and d.template_data.user %}
+				window.app_page.user = {{ d.template_data.user.json }}; 
+			{% endif %}
+		
+			{% if d.template_data and d.template_data.locations %} 
+				window.app_page.data.locations = {{ d.template_data.locations.json }}; 
+			{% endif %}
+			
+		}(this));
+	</script>
+	
+	{% block page_js %}{% endblock %}
+	
+	<script type="text/javascript">
+		(function(window, $) {
+			$(function() {
+				$(window).bind("orientationchange", function(e) {
+					if (typeof window.orientation !== "undefined") {
+						switch (Math.abs(window.orientation)) {
+							case 0: // portrait
+								
+								break;
+							
+							case 90: // landscape
+								
+								break;
+							
+							default:
+								break;
+						}
+					}
+				});
+				
+				$.ajaxSetup({
+					error: function(xhr, ts, err) {
+						tc.util.log("AJAX ERROR", "warn");
+						tc.util.log(ts, "warn");
+						if (err) {
+							tc.util.dump(err);
+						}
+					}
+				});
+				
+				window.app = tc.app(app_page);
+			});
+		}(this, this.jQuery));
+	</script>
+</body>
 </html>
