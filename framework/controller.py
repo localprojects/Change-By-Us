@@ -1,4 +1,4 @@
-import yaml, memcache, json
+import yaml, memcache, json, gettext, locale
 from cgi import escape
 import helpers.custom_filters as custom_filters
 from lib.web.contrib.template import render_jinja
@@ -178,14 +178,28 @@ class Controller():
         for key in keys:
             template_values[key] = self.session[key]
         template_values['template_name'] = template_name
-        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')
+        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', extensions=['jinja2.ext.i18n'])
         renderer._lookup.filters.update(custom_filters.filters)
+
+        translation = self.get_gettext_translation('en_US')
+        renderer._lookup.install_gettext_translations(translation)
 
         web.header("Content-Type", content_type)
         #log.info("TEMPLATE %s: %s" % (template_name, template_values))
         log.info("200: %s (%s)" % (content_type, template_name))
         
         return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
+
+    def get_gettext_translation(self, locale_id):
+        """
+        Returns the translation object for the current locale.
+        """
+        cur_dir = os.path.abspath(os.path.dirname(__file__))
+
+        # i18n directory.
+        locale_dir = os.path.join(cur_dir, '..', 'i18n')
+        
+        return gettext.translation('messages', locale_dir, [locale_id], fallback=True)
 
     def json(self, data):
         output = json.dumps(data)
