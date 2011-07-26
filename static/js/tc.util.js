@@ -1,107 +1,80 @@
 /**
  * File: Utilities
  * This file holds various utility functions for CBU.
+ * 
+ * Dependencies:
+ * tc.gam.base.js
  */
 var tc = tc || {};
 tc.util = tc.util || {};
 
-(function (tc) {
+/**
+ * Function: tc.util.log
+ * Logs a basic message to the console if available.
+ *
+ * Parameters:
+ * message - {String} Message to log.
+ * level - {String} Property of console to send message to.  Options are (info,
+ *     log, debug, error, ??)
+ */
+tc.util.log = function(message, level) {
+    // Check if app_page as prevented logging.
+    if (app_page && app_page.prevent_logging) {
+        return;
+    }
+    
+    // If console is available, use this.
+    if (typeof console != "undefined" && typeof console.log != "undefined") {
+        if (!level) {
+            console.info(message);
+        } else {
+            console[level](message);
+        }
+    }
+    
+    // For iPhone development, use ipd.
+    if (typeof ipd != "undefined" && typeof ipd.log != "undefined") {
+        ipd.log(message);
+    }
+};
 
-    /**
-     * Function: Log
-     * Logs a basic message to the console if available.
-     *
-     * Parameters:
-     * message - {String} Message to log.
-     * level - {String} Property of console to send message to.  Options are (info,
-     *     log, debug, error, ??)
-     */
-    tc.util.log = function (message, level) {
-        if (app_page && app_page.prevent_logging) {
-            return;
-        }
-        if (typeof console != "undefined" && typeof console.log != "undefined") {
-            if (!level) {
-                console.info(message);
-            } else {
-                console[level](message);
-            }
-        }
-        if (typeof ipd != "undefined" && typeof ipd.log != "undefined") {
-            ipd.log(message);
-        }
-    };
-    tc.util.dump = function (object) {
-        if (app_page && app_page.prevent_logging) {
-            return;
-        }
-        if (typeof console != "undefined" && typeof console.log != "undefined") {
-            console.log(object);
-        }
-
-        if (typeof ipd != "undefined" && typeof ipd.log != "undefined") {
-            ipd.log(object);
-        }
-    };
-
-    if (jQuery) {
-        tc.jQ = jQuery;
+/**
+ * Function: tc.util.dump
+ * Dumps variable to log for debugging.
+ *
+ * Parameters:
+ * message - {Object} Object to dump.
+ */
+tc.util.dump = function(object) {
+    // Check if app_page as prevented logging.
+    if (app_page && app_page.prevent_logging) {
+        return;
+    }
+    
+    // Log to console if available.
+    if (typeof console != "undefined" && typeof console.log != "undefined") {
+        console.log(object);
     }
 
-/* indexOf not supported in IE
-	   // Mozilla's implementation bellow:
-		
-		(using jQuery.inArray for now)
-	
-	if (!Array.prototype.indexOf) {
-		Array.prototype.indexOf = function(obj) {
-			if (this === void 0 || this === null)
-				throw new TypeError();
-			
-			var t = Object(this);
-			var len = t.length >>> 0;
-			if (len === 0)
-				return -1;
-			
-			var n = 0;
-			if (arguments.length > 0) {
-				n = Number(arguments[1]);
-				if (n !== n)
-					n = 0;
-				else if (n !== 0 && n !== (1/0) && n !== -(1/0))
-					n = (n > 0 || -1) * Math.floor(Math.abs(n));
-			}
-			
-			if (n >= len)
-				return -1;
-			
-			var k = n >= 0
-				? n
-				: Math.max(len - Math.abs(n), 0);
-			
-			for (; k < len; k++) {
-				if (k in t && t[k] === obj)
-					return k;
-			}
-			return -1;
-		};
-	}*/
+    // If iphone available, log.
+    if (typeof ipd != "undefined" && typeof ipd.log != "undefined") {
+        ipd.log(object);
+    }
+};
 
-})(tc);
-
-
-// makeClass - By John Resig (MIT Licensed)
-
-
-function makeClass() {
-    return function (args) {
-        if (this instanceof arguments.callee) {
-            if (typeof this.init == "function") this.init.apply(this, args.callee ? args : arguments);
-        } else return new arguments.callee(arguments);
-    };
-}
-
-tc.timer = function (time, func, callback) {
+/**
+ * Function: tc.timer
+ * Set timer utilizing setTimeout() function.
+ *
+ * Parameters:
+ * time - {Integer} Milliseconds.
+ * func - {Function} Function to call at the end of the timer.
+ * callback - {Function} Function to callback when timer is cleared out.  See clearTimer().
+ *
+ * Returns:
+ * {Object} The object that holds the 'timer' and `callback`.
+ */
+tc.timer = function(time, func, callback) {
     var a = {
         timer: setTimeout(func, time),
         callback: null
@@ -112,6 +85,16 @@ tc.timer = function (time, func, callback) {
     return a;
 };
 
+/**
+ * Function: tc.clearTimer
+ * Clears a timer set at timer().
+ *
+ * Parameters:
+ * a - {Object} Object returned from timer().
+ *
+ * Returns:
+ * {Object} The function itself.
+ */
 tc.clearTimer = function (a) {
     clearTimeout(a.timer);
     if (typeof (a.callback) == 'function') {
@@ -119,3 +102,18 @@ tc.clearTimer = function (a) {
     };
     return this;
 };
+
+/**
+ * Function: makeClass
+ * Creates a "class" in Javascript.  See <http://ejohn.org/blog/simple-class-instantiation/>
+ *
+ * Authors:
+ * - John Resig (MIT Licensed)
+ */
+function makeClass() {
+    return function (args) {
+        if (this instanceof arguments.callee) {
+            if (typeof this.init == "function") this.init.apply(this, args.callee ? args : arguments);
+        } else return new arguments.callee(arguments);
+    };
+}
