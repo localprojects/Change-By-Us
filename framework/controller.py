@@ -209,7 +209,7 @@ class Controller():
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', extensions=['jinja2.ext.i18n'])
         renderer._lookup.filters.update(custom_filters.filters)
 
-        translation = self.get_gettext_translation('en_US')
+        translation = self.get_gettext_translation('en_TEST')
         renderer._lookup.install_gettext_translations(translation)
 
         # Set HTTP header
