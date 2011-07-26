@@ -2,50 +2,53 @@
  * File: Utilities
  * This file holds various utility functions for CBU.
  */
-
 var tc = tc || {};
 tc.util = tc.util || {};
 
-(function(tc) {
+(function (tc) {
 
-  /**
-   * Function: Log
-   * Logs a basic message to the console if available.
-   *
-   * Parameters:
-   * message - {String} Message to log.
-   * level - {String} Property of console to send message to.  Options are (info,
-   *     log, debug, error, ??)
-   */
-	tc.util.log = function(message,level){
-		if(app_page && app_page.prevent_logging){ return; }
-		if (typeof console != "undefined" && typeof console.log != "undefined") {
-			if(!level){
-				console.info(message);
-			} else {
-				console[level](message);
-			}
-		}
-		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
-			ipd.log(message);
-		}
-	};
-	tc.util.dump = function(object){
-		if(app_page && app_page.prevent_logging){ return; }
-		if (typeof console != "undefined" && typeof console.log != "undefined") {
-			console.log(object);
-		}
-		
-		if (typeof ipd != "undefined" && typeof ipd.log != "undefined"){
-			ipd.log(object);
-		}
-	};
-	
-	if(jQuery){
-	  tc.jQ = jQuery;
-	}
-	
-	/* indexOf not supported in IE
+    /**
+     * Function: Log
+     * Logs a basic message to the console if available.
+     *
+     * Parameters:
+     * message - {String} Message to log.
+     * level - {String} Property of console to send message to.  Options are (info,
+     *     log, debug, error, ??)
+     */
+    tc.util.log = function (message, level) {
+        if (app_page && app_page.prevent_logging) {
+            return;
+        }
+        if (typeof console != "undefined" && typeof console.log != "undefined") {
+            if (!level) {
+                console.info(message);
+            } else {
+                console[level](message);
+            }
+        }
+        if (typeof ipd != "undefined" && typeof ipd.log != "undefined") {
+            ipd.log(message);
+        }
+    };
+    tc.util.dump = function (object) {
+        if (app_page && app_page.prevent_logging) {
+            return;
+        }
+        if (typeof console != "undefined" && typeof console.log != "undefined") {
+            console.log(object);
+        }
+
+        if (typeof ipd != "undefined" && typeof ipd.log != "undefined") {
+            ipd.log(object);
+        }
+    };
+
+    if (jQuery) {
+        tc.jQ = jQuery;
+    }
+
+/* indexOf not supported in IE
 	   // Mozilla's implementation bellow:
 		
 		(using jQuery.inArray for now)
@@ -83,29 +86,36 @@ tc.util = tc.util || {};
 			return -1;
 		};
 	}*/
-	
+
 })(tc);
 
 
 // makeClass - By John Resig (MIT Licensed)
-function makeClass(){
-  return function(args){
-    if ( this instanceof arguments.callee ) {
-      if ( typeof this.init == "function" )
-        this.init.apply( this, args.callee ? args : arguments );
-    } else
-      return new arguments.callee( arguments );
-  };
+
+
+function makeClass() {
+    return function (args) {
+        if (this instanceof arguments.callee) {
+            if (typeof this.init == "function") this.init.apply(this, args.callee ? args : arguments);
+        } else return new arguments.callee(arguments);
+    };
 }
 
-tc.timer = function(time,func,callback){
-	var a = {timer:setTimeout(func,time),callback:null}
-	if(typeof(callback) == 'function'){a.callback = callback;}
-	return a;
+tc.timer = function (time, func, callback) {
+    var a = {
+        timer: setTimeout(func, time),
+        callback: null
+    }
+    if (typeof (callback) == 'function') {
+        a.callback = callback;
+    }
+    return a;
 };
 
-tc.clearTimer = function(a){
-	clearTimeout(a.timer);
-	if(typeof(a.callback) == 'function'){a.callback();};
-	return this;
+tc.clearTimer = function (a) {
+    clearTimeout(a.timer);
+    if (typeof (a.callback) == 'function') {
+        a.callback();
+    };
+    return this;
 };
