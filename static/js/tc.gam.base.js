@@ -11,6 +11,13 @@
 var tc = tc || {};
 
 /**
+ * Variable: tc.gam
+ * This is the main container for the CBU (was GAM)
+ * application.
+ */
+tc.gam = tc.gam || {};
+
+/**
  * Variable: app_page
  * Container for the app page. ??
  */
