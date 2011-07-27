@@ -253,6 +253,12 @@ class Controller():
             lang = self.request('lang')
         elif hasattr(self.session, 'lang') and self.session.lang is not None:
             lang = self.session.lang
+        
+        # TODO: As a last resort, we should check for the user's language in 
+        #       their browser settings.  This is available from the request 
+        #       header Accept-Language, and is available to the controller 
+        #       through web.ctx.environ.get('HTTP_ACCEPT_LANGUAGE').
+        #                                                      - MP 2011-07-27
 
         self.session.lang = lang
         return lang
