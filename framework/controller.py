@@ -322,7 +322,7 @@ class Controller():
         select_tag = '<select>'
         
         for value, label in options.iteritems():
-            checked = ' checked="checked"' if value == selected_option else ''
+            checked = ' selected="selected"' if value == selected_option else ''
             select_tag += '<option value="%s"%s>%s</option>' \
                           % (value, checked, label)
         select_tag += '</select>'
