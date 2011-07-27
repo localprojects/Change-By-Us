@@ -145,6 +145,16 @@ class Controller():
 
         return var
 
+    def get_language(self):
+        lang = ""
+        if (self.request('lang')):
+            lang = self.request('lang')
+        elif hasattr(self.session, 'lang') and self.session.lang is not None:
+            lang = self.session.lang
+
+        self.session.lang = lang
+        return lang
+
     def render(self, template_name, template_values=None, suffix="html", content_type = "text/html"):
         """
         Custom renderer for Change by Us templates.
@@ -220,7 +230,7 @@ class Controller():
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', extensions=['jinja2.ext.i18n'])
         renderer._lookup.filters.update(custom_filters.filters)
 
-        translation = self.get_gettext_translation('en_TEST')
+        translation = self.get_gettext_translation(self.get_language())
         renderer._lookup.install_gettext_translations(translation)
 
         # Set HTTP header
@@ -235,7 +245,7 @@ class Controller():
 
     def get_gettext_translation(self, locale_id):
         """
-        Returns the translation object for the current locale.
+        Returns the translation object for the specified locale.
         """
         cur_dir = os.path.abspath(os.path.dirname(__file__))
 
