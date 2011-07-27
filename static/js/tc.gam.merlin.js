@@ -18,7 +18,7 @@
 tc.merlin = tc.merlin || makeClass();
 
 /**
- * Variable: Options
+ * Variable: tc.merlin.prototype.options
  * Default options for Merlin.
  */
 tc.merlin.prototype.options = {
