@@ -248,7 +248,7 @@ class Controller():
         the value is returned.
         
         """
-        lang = None
+        lang = ""
         if (self.request('lang')):
             lang = self.request('lang')
         elif hasattr(self.session, 'lang') and self.session.lang is not None:
