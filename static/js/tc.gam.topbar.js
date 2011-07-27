@@ -30,6 +30,11 @@ tc.top_bar = function(element, options) {
                 tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
             });
         };
+        
+        //Update the query string when the language is changed
+        tc.jQ('.lang', element).change(function() {
+            window.location.search = 'lang=' + this.value;
+        });
     }
     
     init();
