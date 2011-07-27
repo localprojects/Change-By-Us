@@ -32,7 +32,7 @@ tc.top_bar = function(element, options) {
         };
         
         //Update the query string when the language is changed
-        tc.jQ('.lang', element).change(function() {
+        tc.jQ('.lang > select', element).change(function() {
             window.location.search = 'lang=' + this.value;
         });
     }
