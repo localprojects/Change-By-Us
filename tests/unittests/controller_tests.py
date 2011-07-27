@@ -33,5 +33,5 @@ class I18nTests (TestCase):
         # Yeah, I'm hitting the file system.  Deal with it.
         controller = Controller()
         langs = controller.get_supported_languages()
-        self.assertEqual(langs, {'en_TEST':'en_TEST'})
+        self.assertEqual(langs, {'en_TEST':'L33t'})
 

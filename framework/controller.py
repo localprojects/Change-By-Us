@@ -223,6 +223,13 @@ class Controller():
         # Install the translation
         translation = self.get_gettext_translation(self.get_language())
         renderer._lookup.install_gettext_translations(translation)
+        
+        # Insert HTML for the language chooser
+        curr_lang = self.get_language()
+        all_langs = self.get_supported_languages()
+        
+        template_values['language_selector'] = self.choice_list(
+            all_langs, curr_lang)
 
         # Set HTTP header
         web.header("Content-Type", content_type)
@@ -267,21 +274,19 @@ class Controller():
         language names as values.
         
         """
-        locale_dir = self.get_i18n_dir()
-        lang_dirs = [entry for entry in os.listdir(locale_dir)
-                           if os.path.isdir(os.path.join(locale_dir, entry))]
-        
-        return dict(zip(lang_dirs, lang_dirs))
+        try:
+            enabled_langs = Config.get('lang')
+        except KeyError:
+            enabled_langs = {}
+        return enabled_langs
         
 
     def get_gettext_translation(self, locale_id):
         """
         Returns the translation object for the specified locale.
         """
-        cur_dir = os.path.abspath(os.path.dirname(__file__))
-
         # i18n directory.
-        locale_dir = os.path.join(cur_dir, '..', 'i18n')
+        locale_dir = self.get_i18n_dir()
 
         # Look in the translaton for the locale_id in locale_dir. Fallback to the 
         # default text if not found.
@@ -311,6 +316,18 @@ class Controller():
         log.info("200: text/html")
 
         return doc
+    
+    def choice_list(self, options, selected_option=None):
+        """Return an options list."""
+        select_tag = '<select>'
+        
+        for value, label in options.iteritems():
+            checked = ' checked="checked"' if value == selected_option else ''
+            select_tag += '<option value="%s"%s>%s</option>' \
+                          % (value, checked, label)
+        select_tag += '</select>'
+        return select_tag
+        
 
     def text(self, string):
         web.header("Content-Type", "text/plain")
