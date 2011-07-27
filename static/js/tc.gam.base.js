@@ -1,16 +1,24 @@
 /**
- * @file
- * Base file for the TC GAM application.
+ * File: Base
+ * Base file for the TC application.  This should be included
+ * before any other TC file.
  */
 
 /**
- * Define globl objects that are used everywhere.
+ * Variable: tc
+ * This is the main container for the tc framework.
  */
 var tc = tc || {};
+
+/**
+ * Variable: app_page
+ * Container for the app page. ??
+ */
 var app_page = app_page || {};
 
 /**
- * Localize jQuery into tc.  Not sure why this is needed?
+ * Variable: tc.jQ
+ * Localize jQuery into tc.  Not exactly sure why.
  */
 if (typeof jQuery != "undefined") {
     tc.jQ = jQuery;
