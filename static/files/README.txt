@@ -1,0 +1,1 @@
+The static/files/ directory is meant for custom files that are served out.  This can be for CSS or it cold be uploaded files.
