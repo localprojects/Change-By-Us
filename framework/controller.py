@@ -258,6 +258,9 @@ class Controller():
         #       their browser settings.  This is available from the request 
         #       header Accept-Language, and is available to the controller 
         #       through web.ctx.environ.get('HTTP_ACCEPT_LANGUAGE').
+        #
+        #       For more info, see 
+        #       http://www.w3.org/International/questions/qa-accept-lang-locales
         #                                                      - MP 2011-07-27
 
         self.session.lang = lang
