@@ -239,8 +239,8 @@ class Controller():
         Gets the language that has been set by the user, first checking the
         querystring and then the session. The session variable is set before
         the value is returned.
+        
         """
-
         lang = None
         if (self.request('lang')):
             lang = self.request('lang')
@@ -249,6 +249,30 @@ class Controller():
 
         self.session.lang = lang
         return lang
+    
+    
+    def get_i18n_dir(self):
+        """Return the path to the directory with the locale files"""
+        cur_dir = os.path.abspath(os.path.dirname(__file__))
+
+        # i18n directory.
+        locale_dir = os.path.join(cur_dir, '..', 'i18n')
+        return locale_dir
+    
+    
+    def get_supported_languages(self):
+        """
+        Find the language files available in the translations directory. Returns
+        a dictionary which has language codes as keys, and human-readable
+        language names as values.
+        
+        """
+        locale_dir = self.get_i18n_dir()
+        lang_dirs = [entry for entry in os.listdir(locale_dir)
+                           if os.path.isdir(os.path.join(locale_dir, entry))]
+        
+        return dict(zip(lang_dirs, lang_dirs))
+        
 
     def get_gettext_translation(self, locale_id):
         """
