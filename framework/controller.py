@@ -240,8 +240,7 @@ class Controller():
         querystring and then the session. The session variable is set before
         the value is returned.
         """
-
-        lang = None
+        lang = ""
         if (self.request('lang')):
             lang = self.request('lang')
         elif hasattr(self.session, 'lang') and self.session.lang is not None:
