@@ -1,6 +1,9 @@
 /**
  * File: User Handler
  * User handling functionality.
+ *
+ * Filename:
+ * tc.gam.user_handler.js
  * 
  * Dependencies:
  * - tc.gam.base.js

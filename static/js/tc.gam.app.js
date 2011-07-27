@@ -1,6 +1,9 @@
 /**
  * File: App
  * This file defines the "app" of the tc framework.
+ *
+ * Filename:
+ * tc.gam.app.js
  * 
  * Dependencies:
  * - tc.gam.base.js

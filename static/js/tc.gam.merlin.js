@@ -2,6 +2,9 @@
  * File: Merlin
  * This file defines the wizard handling framework, known as
  * Merlin.
+ *
+ * Filename:
+ * tc.gam.merlin.js
  * 
  * Dependencies:
  * - tc.gam.base.js
