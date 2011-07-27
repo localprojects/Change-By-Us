@@ -145,16 +145,6 @@ class Controller():
 
         return var
 
-    def get_language(self):
-        lang = ""
-        if (self.request('lang')):
-            lang = self.request('lang')
-        elif hasattr(self.session, 'lang') and self.session.lang is not None:
-            lang = self.session.lang
-
-        self.session.lang = lang
-        return lang
-
     def render(self, template_name, template_values=None, suffix="html", content_type = "text/html"):
         """
         Custom renderer for Change by Us templates.
@@ -230,6 +220,7 @@ class Controller():
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', extensions=['jinja2.ext.i18n'])
         renderer._lookup.filters.update(custom_filters.filters)
 
+        # Install the translation
         translation = self.get_gettext_translation(self.get_language())
         renderer._lookup.install_gettext_translations(translation)
 
@@ -243,6 +234,22 @@ class Controller():
         # Return template and data.
         return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
 
+    def get_language(self):
+        """
+        Gets the language that has been set by the user, first checking the
+        querystring and then the session. The session variable is set before
+        the value is returned.
+        """
+
+        lang = None
+        if (self.request('lang')):
+            lang = self.request('lang')
+        elif hasattr(self.session, 'lang') and self.session.lang is not None:
+            lang = self.session.lang
+
+        self.session.lang = lang
+        return lang
+
     def get_gettext_translation(self, locale_id):
         """
         Returns the translation object for the specified locale.
@@ -252,6 +259,8 @@ class Controller():
         # i18n directory.
         locale_dir = os.path.join(cur_dir, '..', 'i18n')
 
+        # Look in the translaton for the locale_id in locale_dir. Fallback to the 
+        # default text if not found.
         return gettext.translation('messages', locale_dir, [locale_id], fallback=True)
 
     def json(self, data):
