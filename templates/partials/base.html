@@ -2,18 +2,17 @@
 <html class='universe'>
 <head class='heavens'>
         <title>{{ d.config.site.name }} | {% block title %}Home{% endblock %}</title>
-        
+
         {% if d.config.htaccess %}
             <!-- Always force IE9 rendering engine & Chrome Frame; -->
             <!-- <meta http-equiv="X-UA-Compatible" content="IE=9,chrome=1"/> -->
         {% endif %}
-        
+
         <!-- Basic meta data -->
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="description" content="{{ d.config.site.name }} is a place to put your ideas into action by creating projects and building teams to make your city a better place to live." />
-        <meta name="author" content="Type/Code LLC."/>
         <meta name="viewport" content="width=1020" />
-        
+
         <!-- Open Graph and Facebook -->
         <meta property="fb:app_id" content="{{ d.config.facebook.app_id }}" />
         <meta property="og:site_name" content="{{ d.config.site.name }}" />
@@ -26,12 +25,12 @@
         {% block og_description %}
              <meta property="og:description" content="{{ d.config.site.name }} is a place to put your ideas into action by creating projects and building teams to make your city a better place to live." />
         {% endblock %}
-        
+
         <!-- Links -->
         <link rel="icon" href="/static/images/favicon.ico" />
         <link rel="shortcut icon" href="/static/images/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        
+
         <!-- Stylesheets -->
         <link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
         <link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
@@ -44,7 +43,7 @@
         {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
             <link rel="stylesheet" href="/static/css/tc.gam.admin.css" type="text/css" media="screen" />
         {% endif %}
-        
+
         <!--[if IE]>
         <link rel="stylesheet" href="/static/css/ie/tc.gam.ie.css" type="text/css" media="screen" charset="utf-8"/>
         <![endif]-->
@@ -54,7 +53,21 @@
         <!--[if lte IE 7]>
         <link rel="stylesheet" href="/static/css/ie/tc.gam.ie7.css" type="text/css" media="screen" charset="utf-8"/>
         <![endif]-->
-        
+
+        <!-- Custom variable styles -->
+        <style>
+            {% if d.config.homepage.postboard_bg %}
+                .continent.home .splash-background {
+                    background-image: url('{{ d.config.homepage.postboard_bg }}');
+                }
+            {% endif %}
+            {% if d.config.homepage.top_left_tag_bg %}
+                .continent.home span.hey {
+                    background-image: url('{{ d.config.homepage.top_left_tag_bg }}');
+                }
+            {% endif %}
+        </style>
+
         <!-- Javascript -->
         {% block javascript_header %}
         <script>
@@ -63,14 +76,14 @@
                 features:[],
                 prevent_logging:{% if d.template_data.app_env == 'dev' %}false{% else %}true{% endif %}
             };
-            
+
             // TODO not hardcode this
-            app_page.data.info_addr = { name:'info', domain:'{{ d.config.blog_host }}' };
+            app_page.data.info_addr = { name:'info', domain:'{{ d.config.email.common_domain }}' };
             app_page.data.media_root = '{{d.template_data.media_root}}';
-            
+
             // for tooltip only
             var media_root = '{{d.template_data.media_root}}';
-            
+
             app_page.features.push(function(app){
                 tc.util.log('CBU: Base');
                 app.components.modal = new tc.modal(app,{
@@ -80,18 +93,18 @@
             });
         </script>
         {% endblock %}
-        
+
         <!-- Typekit font -->
         <script type="text/javascript" src="http://use.typekit.com/{{ d.config.typekit.key }}.js"></script>
-        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>    
+        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 </head>
-    
+
 <!-- the "green-nyc" class is to decorate page with green-specific styles -->
 <body class="earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}">
         <div class="exosphere">
             <div class="atmosphere">
                 <div class="stratosphere">
-                
+
                   <!-- Main navigation -->
                     <ul class="navbar clearfix">
                         <li class="home {{ d.config.site.city_id }}">
@@ -101,14 +114,14 @@
                         <li class="lang">
                             {{ d.language_selector }}
                         </li>
-                        
+
                         <li class="news-about">
                             <a href="{{ d.config.blog_host }}">News</a>
                             <a href="/about">About</a>
                         </li>
-                        
+
                         <li class="divider"></li>
-                        
+
                         <li class="userland">
                           <!-- User account actions -->
                             <div class="join"><a href="/join">Join</a></div>
@@ -124,7 +137,7 @@
                                     {%- endif -%}
                                   {%- endif -%}!
                                 </a>
-                
+
                                 <div class="dropdown no-js">
                                     <div class="membrane">
                                         <a href="/useraccount#user-account,account">Account</a>
@@ -132,18 +145,18 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Messages -->
                             <div class='messages {% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}has-messages{% endif %}'>
                             <a href='/useraccount#user-account,messages'>
                                   <span class="indicator">
-                                    {% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}    
+                                    {% if d.template_data and d.template_data.user and d.template_data.user.data.num_new_messages > 0 %}
                                       <span class="num">{{ d.template_data.user.data.num_new_messages }}</span>
                                     {% endif %}
                                   </span>
                                 </a>
-                            </div>
-                            
+                          </div>
+
                             <!-- Projects -->
                             <div class='myprojects'>
                                 <a href='/useraccount'><span class="unbold">My </span>Projects</a>
@@ -162,7 +175,7 @@
                                 </div>
                             </div>
                         </li>
-                        
+
                         <li class="search">
                             <form action='/search' method='GET'>
                                 <input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
@@ -170,7 +183,7 @@
                                 <input type='submit' value='' class='searchInput' />
                             </form>
                         </li>
-                        
+
                         {% if d.app_mode == 'beta' %}
                           <li class="splashland"><!-- .splashland can be deleted after beta period is over -->
                         <div class="join">
@@ -182,7 +195,7 @@
                           </li>
                         {% endif %}
                     </ul>
-                    
+
                     <!-- Administration bar -->
                     {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
                         <ul class="adminbar">
@@ -193,34 +206,33 @@
                     {% endif %}
                 </div>
             </div>
-            
+
             {% block continent %}
                 <div class='continent'>
                     <div class='headlands'>
                     </div>
-                    
+
                     <div class='midlands'>
                     </div>
-                    
+
                     <div class='foothills'>
                     </div>
                 </div>
             {% endblock %}
-        
+
         <!-- Footer -->
         <div class='seafloor'>
           <!-- List of supporters -->
             <div class='box logos clearfix'>
-                <a href='http://www.nyc.gov/html/simplicity/html/about/about.shtml' target='_blank' class="simplicity"><img src='/static/images/footer-nycsimplicity2.png' alt='Local Projects' /></a>
+                <span class="supported fancy-caps">Developed <span>by</span></span>
                 <a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
-                <a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
-                <a href='http://www.nyc.gov/html/planyc2030/html/home/home.shtml' target='_blank'><img src='/static/images/footer-planyc.png' alt='PLANYC' /></a>
+                <a href='http://codeoframerica.org' target='_blank'><img src='/static/images/footer-cfa.png' alt='Code for America' /></a>
                 <span class="supported fancy-caps">Supported <span>by</span></span>
                 <a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
-                <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>    
-                <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>    
+                <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
+                <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>
             </div>
-            
+
             <!-- Basic links and search -->
             <div class='west'>
                 <div class="box">
@@ -231,7 +243,7 @@
                         <li class="sitemap-tou"><a href='/tou'>Terms of Use</a></li>
                         <li><a href='/tou#privacy'>Privacy Policy</a></li>
                     </ul>
-                    
+
                     <div class="search generic-search clearfix">
                         <form action='/search' method='GET'>
                             <input type='text' id='ft-search-field' class='ft-search-field serif has-been-focused' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
@@ -241,7 +253,7 @@
                     <a href="/feedback" class="feedback-button rounded-button small">Contact Us</a>
                 </div>
             </div>
-            
+
             <!-- Credits -->
             <div class='east'>
                 <div class='box'>
@@ -252,34 +264,34 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Development help -->
         {% if d.config.dev %}
           {% include 'partials/dev_util.html' %}
         {% endif %}
   </div>
-    
-    <!-- Modal dialogues placeholder -->    
+
+    <!-- Modal dialogues placeholder -->
   <div id='modal' class='modal'></div>
-  
+
   <!-- Tooltip placeholder -->
   <div class='tooltip' id='organization-tooltip' style='display:none;position:absolute;'></div>
-        
+
     <!-- Invite ideas merlin template (does this need to be on every page?) -->
   {% include 'partials/base_invite.html' %}
-    
+
     <!-- Delete idea modal template (does this need to be on every page?) -->
   {% include 'partials/base_idea_delete.html' %}
-    
+
     <!-- Message modal template -->
     {% include 'partials/base_message.html' %}
-    
+
     <!-- Resource modal template -->
     {% if d.template_data and d.template_data.user %}
         {% include 'partials/add_resource.html' %}
     {% endif %}
-    
-    <!-- Javascript goes here -->
+
+    <!-- Javascript libraries -->
     <script type="text/javascript" src="/static/js/libs/jquery-1.5.1.min.js"></script>
     <script type="text/javascript" src="/static/js/libs/jqtools.tabs.js"></script>
     <script type="text/javascript" src="/static/js/libs/jqtools.tooltips.js"></script>
@@ -292,11 +304,13 @@
     <script type="text/javascript" src="/static/js/libs/jquery.color.js"></script>
     <script type="text/javascript" src="/static/js/libs/jquery.elastic.js"></script>
     <script type="text/javascript" src="/static/js/libs/fileuploader.js"></script>
-    <script type="text/javascript" src="/static/js/libs/tc.util.js"></script>
     <script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
     <script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
     <script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
-            
+
+  <!-- Javascript TC GAM framework -->
+    <script type="text/javascript" src="/static/js/tc.gam.base.js"></script>
+    <script type="text/javascript" src="/static/js/tc.util.js"></script>
     <script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
     <script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
     <script type="text/javascript" src="/static/js/tc.gam.topbar.js"></script>
@@ -310,12 +324,12 @@
     <script type="text/javascript" src="/static/js/tc.gam.add_resource.js"></script>
     <script type="text/javascript" src="/static/js/tc.gam.user_handler.js"></script>
     <script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
-            
+
     {% block page_js %}{% endblock page_js %}
-    
+
     <script type='text/javascript'>
         jQuery(document).one('ready',function(e){
-            
+
             if( tc.jQ('ul.adminbar li.adminQuestion select.questions').length > 0 )
             {
                 tc.jQ('ul.adminbar li.adminQuestion select.questions').jqDropDown({
@@ -323,26 +337,26 @@
                     effectSpeed: 150,
                     afterToggle: function(){
                         $('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').addClass('down');
-                    
+
                         var removeDownClass = function(){
                             $('ul.adminbar li.adminQuestion div.ddContainer a.ddToggle').removeClass('down');
                             $(document).unbind('mousedown', removeDownClass);
                         };
-                    
+
                         $(document).bind('mousedown', removeDownClass );
                     }
                 });
             };
-            
+
             tc.jQ('input[type=checkbox],input[type=radio]')
                 .not('.has-prettycheckbox')
                 .prettyCheckboxes();
-                
+
             tc.jQ(".time-since").time_since(); //pretty date formatting
-            
+
             {% if d.template_data and d.template_data.media_root %} app_page.media_root = '{{ d.template_data.media_root }}'; {% else %} app_page.media_root = '/'; {% endif %}
-            
-            {% if d.template_data and d.template_data.user %} 
+
+            {% if d.template_data and d.template_data.user %}
                 app_page.user = {{ d.template_data.user.json }};
                 {% if d.template_data.user.is_admin %} app_page.user.is_admin = true; {% endif %}
                 {% if d.template_data.user.is_leader %} app_page.user.is_leader = true; {% endif %}
@@ -350,23 +364,23 @@
             {% else %}
                 app_page.user = null;
             {% endif %}
-            
+
             {% if d.template_data and d.template_data.project_user %} app_page.project_user = {{ d.template_data.project_user.json }}; {% else %} app_page.project_user = null; {% endif %}
             {% if d.locations %} app_page.data.locations = {{ d.locations.json }}; {% endif %}
             {% if d.template_data and d.template_data.locations %} app_page.data.locations = {{ d.template_data.locations.json }}; {% endif %}
             if(!app_page.data.locations){ app_page.data.locations = []; }
             {% if d.template_data and d.template_data.redir_from %} app_page.data.redir_from = "{{ d.template_data.redir_from }}"; {% endif %}
             {% if d.all_ideas %} app_page.data.all_ideas = {{ d.all_ideas.json }}; {% else %} app_page.data.all_ideas = null; {% endif %}
-            
+
             if (app_page.data.info_addr) {
                 $('.nospam.infomail').html(tc.makeEmailLink(app_page.data.info_addr.name, app_page.data.info_addr.domain));
             }
-            
+
             tc.util.log(':::: APP_PAGE ::::');
             tc.util.dump(app_page);
-            
+
             tc.app(app_page);
-            
+
             /* DELETE THIS LATER!!!!!!! */
             $('.dev-util .toggle').click(function() {
               $('.dev-util-content').toggle();
@@ -374,30 +388,30 @@
             /* STOP DELETEING!!!!! */
         });
     </script>
-    
+
     {% if d.template_data.app_env and d.template_data.app_env == 'live' %}
         <script type="text/javascript">
-            
+
             var _gaq = _gaq || [];
             _gaq.push(['_setAccount', '{{ d.config.google_analytics.key }}']);
             _gaq.push(['_trackPageview']);
-            
+
             (function() {
                 var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
                 ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
                 var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
             })();
-            
+
         </script>
     {% endif %}
-    
+
     <div id="fb-root"></div>
     <script>
         window.fbAsyncInit = function() {
             FB.init({appId: '{{d.facebook_app_id}}', status: true, cookie: true, xfbml: true});
             tc.util.dump('FB.init!');
         };
-    
+
         (function() {
             var e = document.createElement('script'); e.async = true;
             e.src = document.location.protocol +
@@ -405,8 +419,8 @@
             document.getElementById('fb-root').appendChild(e);
         }());
     </script>
-    
+
     {% block javascript_footer %}{% endblock %}
-    
+
 </body>
 </html>

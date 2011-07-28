@@ -1,5 +1,5 @@
 /**
- * @file
+ * File:
  * Page JS for Project file attachments.
  */
 
@@ -54,13 +54,6 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
                                 limit: 50
                             }
                         },
-                        /*
-                        file: {
-                            selector: 'input.file-attach',
-                            validators: ['required'],
-                            hint: 'Browse for file to upload'
-                        }
-                        */
                     },
                     init: function(merlin, dom) {
                         merlin.current_step.inputs.title.dom
@@ -68,23 +61,14 @@ tc.gam.project_widgets.add_file = function(project, dom, deps, options) {
                             .removeClass('has-attempted-submit')
                             .val('')
                             .triggerHandler('keyup');
-                        /*
-                        merlin.current_step.inputs.file.dom
-                            .removeClass('has-been-focused')
-                            .removeClass('has-attempted-submit')
-                            .val('')
-                            .triggerHandler('keyup');
-                        */
                         
                         merlin.current_step.inputs.title.dom.val('Title');
-                        //merlin.current_step.inputs.file.dom.val('File');
                         
                     },
                     finish: function(merlin, dom) {
                         merlin.options.data = tc.jQ.extend(merlin.options.data, {
                             project_id: merlin.app.app_page.data.project.project_id,
                             title: merlin.current_step.inputs.title.dom.val(),
-                            //file: merlin.current_step.inputs.file.dom.val()
                         });
                     }
                 },
