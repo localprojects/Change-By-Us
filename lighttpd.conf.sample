@@ -63,6 +63,7 @@ accesslog.filename         = var.accesslog
 #
 #--------------------------------------------------------------------
 server.modules = (
+    "mod_expire",
     "mod_rewrite",
     "mod_alias",
     "mod_access",
@@ -114,6 +115,14 @@ compress.allowed-encodings = ("bzip2", "gzip", "deflate")
 compress.cache-dir = var.cachedir
 compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
 
+# Expires Headers
+#--------------------------------------------------------------------
+# Set a long cache expiration for static content
+#
+#--------------------------------------------------------------------
+$HTTP["url"] =~ "^/static/" {
+     expire.url = ( "" => "access 1 years" )
+}
 
 # File handling
 #--------------------------------------------------------------------
