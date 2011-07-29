@@ -196,7 +196,4 @@ app_page.features.push(function(app){
 		// random note-card backgrounds
 		tc.randomNoteCardBg(tc.jQ('.ideas-invite .items'));
 		
-		// add 'official resource' tags to resources
-		tc.addOfficialResourceTags(tc.jQ('.box.resources .organizations table.resources-list'));
-		
 	});

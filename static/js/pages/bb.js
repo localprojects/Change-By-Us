@@ -48,7 +48,7 @@
 					inputs: {
 						email: {
 							selector: "#email-input",
-							validators: ["min-3", "max-32", "email"],
+							validators: ["min-6", "max-254", "email"],
 							hint: (function() {
 								if (app.app_page.user && app.app_page.user.email) {
 									return false;
@@ -325,7 +325,7 @@
 					inputs: {
 						email: {
 							selector: "input.login-email",
-							validators: ["min-3", "max-180", "email"]
+							validators: ["min-6", "max-254", "email"]
 						},
 						password: {
 							selector: "input.login-pass",

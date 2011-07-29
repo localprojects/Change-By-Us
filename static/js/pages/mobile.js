@@ -144,7 +144,7 @@
 					inputs: {
 						email: {
 							selector: "input.email",
-							validators: ["required", "min-3", "max-32", "email"]
+							validators: ["required", "min-6", "max-254", "email"]
 						}
 					},
 					init: function(merlin, dom) {
@@ -431,7 +431,7 @@
 					inputs: {
 						email: {
 							selector: "input.email",
-							validators: ["required", "min-3", "max-180", "email"]
+							validators: ["required", "min-6", "max-254", "email"]
 						},
 						password: {
 							selector: "input.password",
@@ -495,7 +495,7 @@
 					inputs: {
 						email: {
 							selector: "input.email",
-							validators: ["required", "min-3", "max-180", "email"]
+							validators: ["required", "min-6", "max-254", "email"]
 						}
 					},
 					init: function(merlin, dom) {
