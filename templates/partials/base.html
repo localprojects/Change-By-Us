@@ -32,11 +32,16 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         <!-- Stylesheets -->
-        <link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
-        <link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
-        <link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
-        <link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
-        <link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
+        {% if d.config.app_env == 'dev' %}
+            <link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
+        {% else %}
+            <link rel="stylesheet" href="/static/build/css/tc-all-min.css" type="text/css" media="screen" />
+        {% endif %}
+        
         {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
             <link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
         {% endif %}
@@ -292,38 +297,46 @@
     {% endif %}
 
     <!-- Javascript libraries -->
-    <script type="text/javascript" src="/static/js/libs/jquery-1.5.1.min.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqtools.tabs.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqtools.tooltips.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqtools.dynamic.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqtools.overlay.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqtools.expose.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jquery.easing.1.3.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jquery.color.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jquery.elastic.js"></script>
-    <script type="text/javascript" src="/static/js/libs/fileuploader.js"></script>
-    <script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
-    <script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
-    <script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
-
-  <!-- Javascript TC GAM framework -->
-    <script type="text/javascript" src="/static/js/tc.gam.base.js"></script>
-    <script type="text/javascript" src="/static/js/tc.util.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.topbar.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.modal.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.carousel.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.tooltip.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
-    <script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
-    <script type="text/javascript" src="/static/js/tc.gam.project.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.invite.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.add_resource.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.user_handler.js"></script>
-    <script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
+    {% if d.config.app_env == 'dev' %}
+        <script type="text/javascript" src="/static/js/libs/jquery-1.5.1.min.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqtools.tabs.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqtools.tooltips.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqtools.dynamic.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqtools.scrollable.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqtools.overlay.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqtools.expose.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jquery.hashchange.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jquery.color.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jquery.elastic.js"></script>
+        <script type="text/javascript" src="/static/js/libs/fileuploader.js"></script>
+        <script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
+        <script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
+        <script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
+    {% else %}
+        <script type="text/javascript" src="/static/build/js/libs.js"></script>
+    {% endif %}
+    
+    <!-- Javascript TC GAM framework -->
+    {% if d.config.app_env == 'dev' %}
+        <script type="text/javascript" src="/static/js/tc.gam.base.js"></script>
+        <script type="text/javascript" src="/static/js/tc.util.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.validate.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.merlin.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.topbar.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.modal.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.carousel.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.tooltip.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.locationDropdown.js"></script>
+        <script type="text/javascript" src='/static/js/tc.gam.inlineEditor.js'></script>
+        <script type="text/javascript" src="/static/js/tc.gam.project.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.invite.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.add_resource.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.user_handler.js"></script>
+        <script type="text/javascript" src="/static/js/tc.gam.app.js"></script>
+    {% else %}
+        <script type="text/javascript" src="/static/build/js/tc-min.js"></script>
+    {% endif %}
 
     {% block page_js %}{% endblock page_js %}
 
