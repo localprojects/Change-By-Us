@@ -24,6 +24,7 @@ import boto
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from optparse import OptionParser, IndentedHelpFormatter  # for command-line menu
+import time     # for sleeping
 
 # Assuming we start in the scripts folder, we need
 # to traverse up for everything in our project
@@ -118,13 +119,22 @@ class Mailable():
         return "<html><head></head><body>%s</body></html>" % body 
     
     def sendEmail(self, to=None, recipients=None, subject=None, body=None):
-        return Emailer.send(addresses=to,
-                        subject=subject,
-                        text=body,
-                        html=self.htmlify(body),
-                        from_name = self.MailerSettings.get('FromName'),
-                        from_address = self.MailerSettings.get('FromEmail'),
-                        bcc=recipients)
+        complete = False
+        while not complete:
+            try:
+                retval = Emailer.send(addresses=to,
+                            subject=subject,
+                            text=body,
+                            html=self.htmlify(body),
+                            from_name = self.MailerSettings.get('FromName'),
+                            from_address = self.MailerSettings.get('FromEmail'),
+                            bcc=recipients)
+                complete = True
+            except:
+                # Most probably we got an SES error, which means we should wait and retry
+                time.sleep(1)
+                pass
+        
 
         
 class Configurable():

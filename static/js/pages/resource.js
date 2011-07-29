@@ -104,7 +104,7 @@ app_page.features.push(function(app){
 					},
 					contact:{
 						selector:'input.contact',
-						validators:['min-3','max-50','required','email'],
+						validators:['min-6','max-254','required','email'],
 						hint:''
 					},
 					tos_agree:{
