@@ -1,4 +1,5 @@
 //Load the file that is being tested
+EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.base.js');
 EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.validate.js');
 
 describe('GAM Validate', function () {
