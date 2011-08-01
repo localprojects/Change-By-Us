@@ -27,6 +27,8 @@ tc.gam.widgets.example_widget = function(dom) {
         name: 'merlin_app_id',
         dom: tc.jQ('.merlin.example-wizard'),
         next_button: tc.jQ('a.next-button'),
+        back_button: tc.jQ('a.back-button'),
+        error_indicator: tc.jQ('.error-indicator'),
         first_step: 'step_id_1',
         data: {
             data_property: 'default-value',
