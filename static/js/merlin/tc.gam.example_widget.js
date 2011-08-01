@@ -19,57 +19,14 @@
 tc.gam.widgets = tc.gam.widgets || {};
 
 /**
- * Function: tc.gam.widgets.example_widget
- * Custom widget for a merlin wizard.
- *
- * Parameters:
- * data_object - ??
- * dom - jQuery element to use as context to find() other elements.
- * deps - ??
- * options - Object of options. ??
- */
-tc.gam.widgets.example_widget = function(data_object, dom, deps, options) {
-    var this_widget = this;
-	var widget = tc.gam.widget(this, data_object);
-	this.dom = dom;
-	
-    // Initialize components
-	this.components = {
-		'merlin': null
-	};
-	
-	// Define options for widget that are passed in.
-	this.options = tc.jQ.extend({ 'name': 'custom_widget_name' }, options);
-	
-	// Create merlin build method, call and show intial step
-    this.build_merlin = function() {
-        if (this.components.merlin) {
-            return;
-        }
-        this.components.merlin = new tc.merlin(options.app, this.merlin_options(dom));
-    }
-    this.build_merlin();
-    this.components.merlin.show_step('step_id_X');
-    
-    // Return the widget object.
-    return { 
-		'show': function() {
-			this_widget.components.merlin.show_step('step_id_X');
-			widget.show();
-		},
-		'hide': widget.hide
-	};
-}
-
-/**
  * Variable: tc.gam.widgets.example_widget.merlin_options
  * Define the merlin wizard options here.
  */
-tc.gam.widgets.example_widget.merlin_options = function(dom) {
+tc.gam.widgets.example_widget = function(dom) {
     return {
         name: 'merlin_app_id',
-        dom: dom.find('.merlin.example-wizard'),
-        next_button: dom.find('a.next-button'),
+        dom: tc.jQ('.merlin.example-wizard'),
+        next_button: tc.jQ('a.next-button'),
         first_step: 'step_id_1',
         data: {
             data_property: 'default-value',
@@ -89,7 +46,7 @@ tc.gam.widgets.example_widget.merlin_options = function(dom) {
                         hint: 'This is a hint for a textfield...',
                         handlers: {
                             focus: function(e, d) {
-                                alert('Were focused!');
+                                tc.jQ('.messages').append('<li>Focuses on the input field.</li>');
                             }
                         }
                     },
@@ -98,7 +55,7 @@ tc.gam.widgets.example_widget.merlin_options = function(dom) {
                     }
                 },
                 init: function(merlin, dom) {
-                    // Init stuff here.
+                    tc.jQ('.messages').append('<li>Starting Step 01.</li>');
                 },
                 finish: function(merlin, dom) {
                     // Add data from the inputs.
@@ -106,6 +63,9 @@ tc.gam.widgets.example_widget.merlin_options = function(dom) {
                         text_input: merlin.current_step.inputs.input_textfield.dom.val(),
                         checkbox_input: merlin.current_step.inputs.input_checkbox.dom.val()
                     });
+                    
+                    tc.jQ('.messages').append('<li>Passed Step 01.</li>');
+                    tc.jQ('.messages').append('<li>Data: ' + JSON.stringify(merlin.options.data) + '</li>');
                 }
             },
             'step_id_2': {
@@ -119,7 +79,7 @@ tc.gam.widgets.example_widget.merlin_options = function(dom) {
                     }
                 },
                 init: function(merlin, dom) {
-                    // Init stuff here.
+                    tc.jQ('.messages').append('<li>Passed Step 01.</li>');
                 },
                 finish: function(merlin, dom) {
                     // Add data from the inputs.
@@ -146,3 +106,26 @@ tc.gam.widgets.example_widget.merlin_options = function(dom) {
         }
     };
 };
+
+/**
+ * Function: jQuery ready
+ *
+ */
+jQuery(document).ready(function(e) {
+    // Create object for the page application, which is the container
+    // for Features.  Features are functions that accept the app object.
+    var app_page = {
+        data: {},
+        features: [],
+        prevent_logging: false
+    };
+    
+    // Push a feature.  This feature contains an app.component that is a
+    // new merlin object.  This merlin object is defined above.
+    app_page.features.push(function(app) {
+        app.components.example = new tc.merlin(app, tc.gam.widgets.example_widget());
+    });
+    
+    // Create app.
+    tc.app(app_page);
+});

@@ -51,7 +51,8 @@ tc.app.prototype.init = function(page) {
         cache: false
     });
 
-    // Handle feature functions.  Not sure what these are ??
+    // Handle feature functions.  These are general features for the application,
+    // such as merlin wizard set of widgets.
     if (page.features) {
         for (i in page.features) {
             if (tc.jQ.isFunction(page.features[i])) {

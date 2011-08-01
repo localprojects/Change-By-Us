@@ -15,26 +15,11 @@
     <link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
     
-    <!-- Javascript -->
-    <script>
-        var app_page = {
-            data:{},
-            features:[],
-            prevent_logging: false
-        };
-    
-        app_page.features.push(function(app){
-            tc.util.log('CBU: Base');
-            app.components.modal = new tc.modal(app,{
-                element:tc.jQ('#modal')
-            });
-            app.components.top_bar = tc.top_bar(tc.jQ(".stratosphere"), {});
-        });
-    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/js/merlin/merlin_example.css" type="text/css" media="screen" />
 </head>
 
-<!-- the "green-nyc" class is to decorate page with green-specific styles -->
-<body class="earth {% if d.template_data and d.template_data.user %}logged-in{% endif %} {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}admin{%endif%} {% if d.template_data and d.template_data.project and d.template_data.project.data.info.is_official and d.template_data.project.data.info.is_official == 1 %}green-nyc{% endif %} {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}beta-splash{% endif %}">
+<body class="earth">
     <div class="exosphere">
         <div class="atmosphere">
             <div class="stratosphere">
@@ -46,9 +31,14 @@
             </div>
 
             <div class='midlands'>
+                <ul class="messages">
+                    <li>Messages go here.</li>
+                </ul>
+            
                 <!-- Example merlin wizard here -->
                 <div class="merlin example-wizard clearfix">
                     <a href="#" class="next-button">Next</a>
+                    <a href="#" class="back-button">Back</a>
                     
                     <div class="step step-selector-1">
                         <h3>Step 01</h3>
@@ -69,12 +59,12 @@
                     
                     <div class="step step-id-3-success">
                         <h3>Step 03: Success</h3>
-                        <!-- Thank you message -->
+                        <p>Success!</p>
                     </div>
                     
                     <div class="step step-id-4-error">
                         <h3>Step 04: Error</h3>
-                        <!-- Error message -->
+                        <p>Error.</p>
                     </div>
                 </div>
             </div>
