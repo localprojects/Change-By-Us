@@ -31,6 +31,7 @@ tc.gam.widgets.example_widget =  {
     progress_element: tc.jQ('.progress-element'),  // Still not working or fully understood
     magic: false, // Makes a mess if true.
     first_step: 'step_id_1',
+    use_hashchange: false, // Turning this to true seems to cause a repeat of steps
     data: {
         data_property: 'default-value',
         text_input: '',
@@ -38,7 +39,6 @@ tc.gam.widgets.example_widget =  {
         email_input: '',
         error_select: 'none'
     },
-    use_hashchange: false, // Turning this to true seems to cause a repeat of steps
     steps: {
         'step_id_1': {
             progress_selector: '.1',  // Still not working or fully understood
