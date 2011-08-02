@@ -22,16 +22,33 @@ tc.gam.widgets = tc.gam.widgets || {};
  * Variable: tc.gam.widgets.example_widget
  * Define the merlin wizard options object here.
  */
-tc.gam.widgets.example_widget =  {
+tc.gam.widgets.example_widget = {
+    // name: Used as an identifier, specifically in any hash navigation.
     name: 'merlin_app_id',
+    // dom: jQuery element that will be used to further find() items.
     dom: tc.jQ('.merlin.example-wizard'),
+    // next_button: jQuery element acts as the next button.
     next_button: tc.jQ('a.next-button'),
-    back_button: tc.jQ('a.back-button'),  // Still not working or fully understood
+    // back_button: jQuery element acts as the next button.  (Still not working or 
+    // fully understood.)
+    back_button: tc.jQ('a.back-button'),
+    // error_indicator: jQuery element that will contain any error messages from the
+    // validators.
     error_indicator: tc.jQ('.error-indicator'),
-    progress_element: tc.jQ('.progress-element'),  // Still not working or fully understood
-    magic: false, // Makes a mess if true.
+    // progress_element: jQuery element to display progress of wizard.  (Still not working or 
+    // fully understood.)
+    progress_element: tc.jQ('.progress-element'),
+    // magic: Boolean on whether to use magic, which handles transitional effects
+    // for steps.  (Makes a big mess if set to true for this example)
+    magic: false,
+    // use_hashchange: Boolean to handle changing URL with hash navigation.  (Turning this 
+    // to true seems to cause a repeat of steps.)
+    use_hashchange: false,
+    // first_step: Step ID as defined in the steps object below that will be shown as
+    // first step in the wizard.
     first_step: 'step_id_1',
-    use_hashchange: false, // Turning this to true seems to cause a repeat of steps
+    // data: Object to store data for the wizard.  It is suggested practice to fill
+    // this with the defaults you will be using for the wizard.
     data: {
         data_property: 'default-value',
         text_input: '',
@@ -39,22 +56,43 @@ tc.gam.widgets.example_widget =  {
         email_input: '',
         error_select: 'none'
     },
+    // steps: Object holding each step definition.
     steps: {
         'step_id_1': {
-            progress_selector: '.1',  // Still not working or fully understood
+            // progress_selector: Not sure? (Still not working or fully understood.)
+            progress_selector: '.1',
+            // selector: jQuery selector for the element that contains the step.
             selector: '.step.step-selector-1',
+            // prev_step: Step ID for the previous step.  Do not define or define as null
+            // if no previous step is used.
             prev_step: null,
+            // next_step: Step ID for the next step to use when this step is validated.
             next_step: 'step_id_2',
-			use_for_history: false, // Not sure what is used for.
+            // use_for_history: (Not sure what is used for?)
+			use_for_history: false,
+			// inputs: Object to hold definition of input elements of the wizard.
             inputs: {
                 'input_textfield': {
+                    // selector: jQuery selector for the input element.
                     selector: 'input.textfield-input',
+                    // validators: Array of strings that refer to validators. The complete 
+                    // list of validators can be found in the JS Docs on page 
+                    // docs/js/files/tc-gam-validate-js.html. Or in the file 
+                    // static/js/tc.gam.validate.js. 
                     validators: ['min-3', 'max-200', 'required'],
+                    // hint: String to use for text fields that will be put in the
+                    // textfield as instructions.
                     hint: 'This is a hint for a textfield...',
+                    // counter: Used for textfields, provides a visual counter of
+                    // characters.
                     counter: {
+                        // selector: jQuery selectory for element to fill with counter.
                         selector: '.charlimit.charlimit-textfield-input',
+                        // limit: Character limit for counter.  This should be in align
+                        // with a validator of max-X.
                         limit: 200
                     },
+                    // handlers: Object of event handlers.  See ??
                     handlers: {
                         focus: function(e, d) {
                             tc.jQ('.messages').append('<li>Focuses on the input field.</li>');
@@ -65,9 +103,15 @@ tc.gam.widgets.example_widget =  {
                     selector: 'input.checkbox-input'
                 }
             },
+            // init: Function that takes in a merlin and dom paramters.  This is fired when
+            // the step is initialized each time.
             init: function(merlin, dom) {
+                // Custom debug messages for example purposes.
                 tc.jQ('.messages').append('<li>Starting Step 01.</li>');
             },
+            // init: Function that takes in a merlin and dom paramters.  This is fired when
+            // the step is validated and moving on each time.  This is a good place to set
+            // data into the data object.
             finish: function(merlin, dom) {
                 // Add data from the inputs.
                 merlin.options.data = tc.jQ.extend(merlin.options.data, {
@@ -75,6 +119,7 @@ tc.gam.widgets.example_widget =  {
                     checkbox_input: merlin.current_step.inputs.input_checkbox.dom.val()
                 });
                 
+                // Custom debug messages for example purposes.
                 tc.jQ('.messages').append('<li>Passed Step 01.</li>');
                 tc.jQ('.messages').append('<li>Data: ' + JSON.stringify(merlin.options.data) + '</li>');
             }
@@ -104,11 +149,15 @@ tc.gam.widgets.example_widget =  {
                     error_select: merlin.current_step.inputs.error_select.dom.val()
                 });
                 
+                // Custom debug messages for example purposes.
                 tc.jQ('.messages').append('<li>Passed Step 02.</li>');
                 tc.jQ('.messages').append('<li>Data: ' + JSON.stringify(merlin.options.data) + '</li>');
                 
+                // Handle error selection.
                 if (merlin.options.data.error_select == 'error') {
-                    // How to raise error in merline?
+                    // How to raise error in merlin?
+                    
+                    // Custom debug messages for example purposes.
                     tc.jQ('.messages').append('<li>Raising error.</li>');
                 }
                 // This causes recursion
@@ -123,12 +172,16 @@ tc.gam.widgets.example_widget =  {
         'step_id_3_success': {
             selector: '.step.step-id-3-success',
             init: function(merlin, dom) {
+            
+                // Custom debug messages for example purposes.
                 tc.jQ('.messages').append('<li>Init Step 03, Success.</li>');
             }
         },
         'step_id_4_error': {
             selector: '.step.step-id-4-error',
             init: function(merlin, dom) {
+            
+                // Custom debug messages for example purposes.
                 tc.jQ('.messages').append('<li>Init Step 04, Error.</li>');
             }
         }
