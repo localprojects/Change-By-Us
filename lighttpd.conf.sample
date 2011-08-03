@@ -47,13 +47,13 @@ var.cachedir = "./run/cache"
 #--------------------------------------------------------------------
 # Various server settings.
 #
-#--------------------------------------------------------------------       
+#--------------------------------------------------------------------
 server.port                = 8080
 server.pid-file            = var.pidfile
 server.username            = var.username
 server.groupname           = var.groupname
-server.document-root       = var.docroot 
-server.errorlog            = var.errorlog 
+server.document-root       = var.docroot
+server.errorlog            = var.errorlog
 accesslog.filename         = var.accesslog
 
 
@@ -63,12 +63,14 @@ accesslog.filename         = var.accesslog
 #
 #--------------------------------------------------------------------
 server.modules = (
+    "mod_expire",
     "mod_rewrite",
     "mod_alias",
     "mod_access",
     "mod_fastcgi",
     "mod_accesslog",
-    "mod_auth"
+    "mod_auth",
+    "mod_compress"
     )
 
 
@@ -76,7 +78,7 @@ server.modules = (
 #--------------------------------------------------------------------
 # Settings for Fast CGI.
 #
-#--------------------------------------------------------------------       
+#--------------------------------------------------------------------
 fastcgi.server = ("/main.py" =>
     ((  "socket" => "/tmp/fastcgi.socket",
         "bin-path" => var.binpath,
@@ -113,6 +115,14 @@ compress.allowed-encodings = ("bzip2", "gzip", "deflate")
 compress.cache-dir = var.cachedir
 compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
 
+# Expires Headers
+#--------------------------------------------------------------------
+# Set a long cache expiration for static content
+#
+#--------------------------------------------------------------------
+$HTTP["url"] =~ "^/static/" {
+     expire.url = ( "" => "access 1 years" )
+}
 
 # File handling
 #--------------------------------------------------------------------
@@ -134,10 +144,10 @@ url.rewrite-once = (
     "^/favicon.ico$" => "/static/util/favicon.ico",
     "^/css/(.*)$" => "/static/css/$1",
     "^/img/(.*)$" => "/static/img/$1",
-    "^/js/(.*)$" => "/static/js/$1",      
-    "^/swf/(.*)$" => "/static/swf/$1",         
+    "^/js/(.*)$" => "/static/js/$1",
+    "^/swf/(.*)$" => "/static/swf/$1",
     "^/static/(.*)$" => "/static/$1",
-    "^/xml/(.*)$" => "/static/xml/$1", 
+    "^/xml/(.*)$" => "/static/xml/$1",
     "^/(.*)$" => "/main.py/$1"
     )
 
