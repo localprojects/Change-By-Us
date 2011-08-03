@@ -67,7 +67,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         userprompt: $dom.find(".conversation-input label"),
         textpane: $dom.find(".conversation-input textarea"),
         message_stack: $dom.find("ol.comment-stack"),
-        load_more_button: $dom.find('.load_more_button')
+        load_more_button: $dom.find('.load_more_button'),
+        message_type_button: $dom.find('.conversation-tabs a')
     };
     
      var handlers = {
@@ -178,7 +179,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     $dom.find('.message-text').each(handlers.handle_message_body);
                 }
             });
-            
         },
         remove_comment:function(e){
             e.preventDefault();
@@ -206,9 +206,42 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     });
                 }
             });
+        },
+        message_type_button_click:function(event) {
+            var $a = $(this),
+                message_type = $a.attr('id');
+            
+            // Remove active class
+            elements.message_type_button.parent().removeClass('active');
+            
+            // Set active class
+            $a.parent().addClass('active');
+            
+            // Toggle visibility of appropriate conversation widget
+            activate_widget[message_type]();
+            event.preventDefault();
         }
     };
+    
+    var activate_widget = {
+        /**
+         * Function: activate_widget['conversation-comment']
+         * Only show the text input conversation widget (hide the file uploader,
+         * etc.).
+         */
+        'conversation-comment' : function() {
+            tc.util.log('comment!!');
+        },
         
+        /**
+         * Function: activate_widget['conversation-file']
+         * Show the file uploader.  Hide the text input if no file is selected.
+         */
+        'conversation-file' : function() {
+            tc.util.log('file!!');
+        }
+    };
+            
     function generate_message_markup(data){
         tc.util.dump(data);
         var markup;
@@ -361,8 +394,14 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         if (elements.textpane.length) {
             elements.textpane.elastic(); //make textarea auto grow its height
         }
+        
+        // TODO: The following are inconsistent with the way that we're using 
+        //       the elements object. We should correct that.
         $dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:me}, handlers.change_message_filter);
         $dom.find('a.close').unbind('click').bind('click', {project:project,me:me}, handlers.remove_comment);
+        
+        console.log(handlers.message_type_button_click);
+        elements.message_type_button.click(handlers.message_type_button_click);
     };
     
     /**
