@@ -7,6 +7,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         options = tc.jQ.extend({name:'conversation'}, opts),
         components = {
             merlin:null
+        },
+        runtime_data = {
+            message_filter:'all',
+            n_to_fetch:10,
+            offset: options.app.app_page.data.project.info.messages.n_returned,
+            message_template:tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children())
         };
     
     //backwards compatibility
@@ -14,13 +20,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     me.options = options;
     
     tc.util.dump(options);
-    
-    this.runtime_data = {
-        message_filter:'all',
-        n_to_fetch:10,
-        offset: options.app.app_page.data.project.info.messages.n_returned,
-        message_template:tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children())
-    };
     
     this.generate_message = function(d){
         var $out, $main;
@@ -132,14 +131,14 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     }
                     if (!d.length) {
                         return;
-                    } else if(d.length < this.runtime_data.n_to_fetch){
+                    } else if(d.length < runtime_data.n_to_fetch){
                         this.elements.load_more_button.animate({
                             opacity:0.0
                         });
                     }
                     for(i in d){
                         this.elements.message_stack.append(this.generate_message(d[i]));
-                        this.runtime_data.offset++;
+                        runtime_data.offset++;
                     }
                     $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
                 }
@@ -170,7 +169,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     }
                     if (!d.length) {
                         return;
-                    } else if(d.length < this.runtime_data.n_to_fetch){
+                    } else if(d.length < runtime_data.n_to_fetch){
                         this.elements.load_more_button.animate({
                             opacity:0.0
                         });
@@ -205,7 +204,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                                 return false;
                             }
                             $dom.find('#message-'+e.target.href.split(',')[1]).slideUp();
-                            this.runtime_data.offset--;
+                            runtime_data.offset--;
                         }
                     });
                 }
