@@ -2,6 +2,7 @@ from unittest2 import TestCase
 from paste.fixture import TestApp
 from lib import web
 
+import mock
 import main
 
 class FileUploadTest (TestCase):
@@ -11,6 +12,12 @@ class FileUploadTest (TestCase):
         # Set the debug flag to true, despite what is in the config file
         web.config.debug = False
         web.config.session_parameters['cookie_name'] = 'gam'
+        
+        # TODO: Clean up this initialization
+        web.ctx.method = ''
+        web.ctx.path = ''
+        import StringIO
+        web.ctx.env = {'wsgi.input':StringIO.StringIO()}
         
         # Set up the routes
         app = web.application(main.ROUTES, globals())
@@ -33,3 +40,19 @@ class FileUploadTest (TestCase):
         self.assertEqual(response.status, 200)
         response.mustcontain('file_id')
         response.mustcontain('"success": false')
+
+    def test_FileUploadServiceUsesS3Uploader(self):
+        import controllers.createProject as createProject
+        
+        class UselessStub (object):
+            def add(self, *args, **kwargs):
+                pass
+        
+        createProject.S3FileServer = mock.Mock(return_value=UselessStub())
+        
+        controller = createProject.CreateProject()
+        controller.request = lambda _ : []
+        
+        controller.uploadFile()
+        self.assertEqual(createProject.S3FileServer.call_count, 1)
+        

@@ -5,7 +5,7 @@ import giveaminute.location as mLocation
 import framework.util as util
 from framework.controller import *
 from framework.image_server import *
-from framework.file_server import FileServer
+from framework.file_server import FileServer, S3FileServer
 from PIL import Image
 import lib.web
 import json
@@ -120,7 +120,7 @@ class CreateProject(Controller):
             data = web.data()
         
         # Get a file server wrapper
-        fs = FileServer()
+        fs = S3FileServer()
         
         # Upload the file to the server
         fileId = fs.add(self.db, data, 'giveaminute', [100, 100])
