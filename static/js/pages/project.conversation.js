@@ -22,15 +22,15 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 	};
 	
 	this.generate_message = function(d){
-		var out, $main;
-		out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children());
-		$main = out.find('.main');
+		var $out, $main;
+		$out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children());
+		$main = $out.find('.main');
 		
 		//add user image
 		if(d.owner.image_id){
-			out.find('img').attr('src',this.options.app.app_page.media_root+'images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
+			$out.find('img').attr('src',this.options.app.app_page.media_root+'images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
 		} else {
-			out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
+			$out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
 		}
 		
 		//handle message type for message author heading
@@ -45,7 +45,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		
 		//add the idea card if idea is present
 		if(d.idea){	
-			out.find('blockquote.serif').before('<div class="note-card">\
+			$out.find('blockquote.serif').before('<div class="note-card">\
 				<cite class="note-meta-hd"></cite>\
 				<blockquote>\
 					<p class="message-test">&nbsp;</p>\
@@ -55,12 +55,12 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 		}
 		
 		//add message body, text dependent on message type		
-		out.find('blockquote.serif p').html(this.handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
-		out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
-		out.attr('id','message-'+d.message_id);
-		out.find('.meta-ft').text(d.created).time_since();;
-		out.find('a.close').attr('href','#remove,'+d.message_id);
-		return out;
+		$out.find('blockquote.serif p').html(this.handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
+		$out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
+		$out.attr('id','message-'+d.message_id);
+		$out.find('.meta-ft').text(d.created).time_since();;
+		$out.find('a.close').attr('href','#remove,'+d.message_id);
+		return $out;
 	};
 	
 	this.elements = {
@@ -252,8 +252,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			(this.options.app.app_page.user && this.options.app.app_page.user.is_admin) ||
 			(this.options.app.app_page.user && this.options.app.app_page.user.is_leader)){
 		
-			this.build_merlin = function(){
-			tc.util.log('conversation.build_merlin')
+			this.build_merlin = function() {
+			tc.util.log('conversation.build_merlin');
 			if(this.components.merlin){
 				return;
 			}
@@ -303,7 +303,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 						},
 						finish:function(merlin,dom){
 							tc.util.dump(merlin.current_step.dom.height());
-							merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height())
+							merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height());
 							merlin.options.data = tc.jQ.extend(merlin.options.data,{
 								project_id:merlin.app.app_page.data.project.project_id,
 								message:merlin.current_step.inputs.message.dom.val(),
