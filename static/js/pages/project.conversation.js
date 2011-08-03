@@ -268,7 +268,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                     main_text:""
                 },
                 use_hashchange:false,
-                steps:{
+                steps: {
+                    //Step 1
                     'message':{
                         selector:'.step.message',
                         next_step:'message-submit',
@@ -278,17 +279,22 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                                 validators:['min-3','max-200','required'],
                                 hint:'',
                                 handlers:{
-                                    focus:function(e,d){
+                                    focus:function(event, data) {
+                                        // a jQuery object pointing to the input field
+                                        var $this = tc.jQ(this);
                                         
-                                        tc.util.dump(tc.validator_utils.is_empty(tc.jQ(this).val()));
+                                        tc.util.dump(tc.validator_utils.is_empty($this.val()));
                                         
-                                        if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
-                                            e.data.me.dom.find(".conversation-input label").hide();
+                                        // if the value is blank
+                                        if (tc.validator_utils.is_empty($this.val())) {
+                                            // hide the default text
+                                            event.data.me.dom.find(".conversation-input label").hide();
                                         }
                                     },
-                                    blur:function(e,d){
+                                    blur:function(event, data) {
+                                        // show the default text
                                         if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
-                                            e.data.me.dom.find(".conversation-input label").show();
+                                            event.data.me.dom.find(".conversation-input label").show();
                                         }
                                     }
                                 }
@@ -298,12 +304,12 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                                 validators:['max-0']
                             }
                         },
-                        init:function(merlin,dom){
-                            merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused').removeClass('has-attempted-submit');
+                        init:function(merlin, dom) {
+                            merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused has-attempted-submit');
                         },
-                        finish:function(merlin,dom){
+                        finish:function(merlin, dom) {
                             tc.util.dump(merlin.current_step.dom.height());
-                            merlin.dom.find('.step.submit').css('height',merlin.current_step.dom.height());
+                            merlin.dom.find('.step.submit').css('height', merlin.current_step.dom.height());
                             merlin.options.data = tc.jQ.extend(merlin.options.data,{
                                 project_id:merlin.app.app_page.data.project.project_id,
                                 message:merlin.current_step.inputs.message.dom.val(),
@@ -311,9 +317,10 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                             });
                         }
                     },
+                    //Step 2
                     'message-submit':{
                         selector:'.step.submit',
-                        init:function(merlin,dom){
+                        init:function(merlin, dom){
                             tc.jQ.ajax({
                                 type:'POST',
                                 url:'/project/message/add',
@@ -326,13 +333,16 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                                         this.show_step('message-submit-error');
                                         return false;
                                     }
-                                    project.dom.trigger('add-new-message',this.options.data);
+                                    project.dom.trigger('add-new-message', this.options.data);
                                     //window.location.hash = 'project_conversation,message';
+                                    
+                                    //We're done, go back to step 1 so we can do it again!
                                     this.show_step('message');
                                 }
                             });
                         }
                     },
+                    //Step Error
                     'message-submit-error':{
                         selector:'.step.submit-error',
                         init:function(merlin,dom){
