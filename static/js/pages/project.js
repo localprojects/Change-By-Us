@@ -41,6 +41,45 @@ app_page.features.push(function(app) {
 });
 
 /**
+ * App Page Feature: Tab Navigation
+ * Handle tab navigation.  The assumption is that the second class in the
+ * "ul.project-tabs li a" corresponds to the ".project-sections div" class
+ * that will be shown.
+ */
+app_page.features.push(function(app) {
+    // Hide any non-current content.
+    tc.jQ('.project-sections div.project-section:not(.current)').hide();
+    
+    // Handle tab links.
+    tc.jQ('ul.project-tabs li a').each(function(index) {
+        var $this_tab = tc.jQ(this);
+        var classes = $this_tab.attr("class").split(' ');
+        
+        // Assume that the second class is the one that corresponds to
+        // the content to show/hide.
+        var section = classes[1];
+        
+        // Add click event.
+        $this_tab.click(function(e) {
+            e.preventDefault();
+            
+            // Handle showing and hiding of content.
+            tc.jQ('.project-sections div.project-section')
+                .hide().removeClass('current');
+            tc.jQ('.project-sections div.project-section.' + section)
+                .show().addClass('current');
+            
+            // Hash change.
+            window.location.hash = section;
+            
+            // Mark as tab links
+            tc.jQ('.project-tabs li a').removeClass('current');
+            tc.jQ(this).addClass('current');
+        });
+    });
+});
+
+/**
  * App Page Feature: Visual Enhancements
  * Various visual enhancements
  */
