@@ -1,6 +1,7 @@
 /**
  * File: Project
- * This file ....
+ * This file provides the main logic, event handling, and
+ * widget container for the Project page and features.
  *
  * Filename:
  * tc.game.project.js
