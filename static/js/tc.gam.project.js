@@ -12,6 +12,12 @@
  */
 
 /**
+ * Variable: tc.gam.project_widgets
+ * Container for project widgets.
+ */
+tc.gam.project_widgets = tc.gam.project_widgets || {};
+
+/**
  * Function: tc.gam.project
  * Project object for  ....
  *
@@ -21,11 +27,10 @@
  * Returns:
  * {Object} ??
  */
-tc.gam.project = function(options) {    
-    var me;
+tc.gam.project = function(options) {
     var hash_onload;
-    me = this;
-    this_project = this;
+    var me = this;
+    var this_project = this;
     
     // Combine options (this is currently unnecessary).
     this.options = tc.jQ.extend({}, options);
@@ -68,12 +73,18 @@ tc.gam.project = function(options) {
     // Add goals stack if available
     if (tc.gam.project_widgets.goals_stack) {
         this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this,
-            this.dom.find('.box.goals-stack-holder'),{ widget: this.widget }, { app: options.app });
+            this.dom.find('.box.goals-stack-holder'), { widget: this.widget }, { app: options.app });
     }
     
-    // return project page to initial state
-    function go_home(e) {
-        if(e){
+    /**
+     * Function: tc.gam.project.go_home
+     * Return project page to initial state.
+     *
+     * Parameters:
+     * e - ??
+     */
+    this.go_home = function(e) {
+        if (e) {
             e.data.project.components.goals_main.show(false);
             e.data.project.components.conversation.show(false);
             
@@ -140,7 +151,7 @@ tc.gam.project = function(options) {
                 case 'goals_stack':
                 case 'related_resources':
                 case 'add_link':
-                    go_home(e);
+                    this_project.go_home(e);
                     break;
             }
         },
@@ -150,7 +161,7 @@ tc.gam.project = function(options) {
             hash = window.location.hash.substring(1,window.location.hash.length);
             if(hash == 'project-home'){
                 e.preventDefault();
-                go_home(e);
+                this_project.go_home(e);
                 return;
             }
             switch(hash.split(',')[0]){
@@ -227,7 +238,3 @@ tc.gam.widget = function(inheritor,project){
     
     return inheritor;
 };
-
-if(!tc.gam.project_widgets){
-    tc.gam.project_widgets = {};
-}
