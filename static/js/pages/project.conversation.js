@@ -21,7 +21,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     
     tc.util.dump(options);
     
-    this.generate_message = function(d){
+    var generate_message = function(d){
         var $out, $main;
         $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children());
         $main = $out.find('.main');
@@ -55,7 +55,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         }
         
         //add message body, text dependent on message type      
-        $out.find('blockquote.serif p').html(this.handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
+        $out.find('blockquote.serif p').html(handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
         $out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
         $out.attr('id','message-'+d.message_id);
         $out.find('.meta-ft').text(d.created).time_since();;
@@ -63,16 +63,16 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         return $out;
     };
     
-    this.elements = {
+    var elements = {
         userprompt: $dom.find(".conversation-input label"),
         textpane: $dom.find(".conversation-input textarea"),
         message_stack: $dom.find("ol.comment-stack"),
         load_more_button: $dom.find('.load_more_button')
     };
     
-    this.handlers = {
+     var handlers = {
         userprompt_click: function(e, d) {
-            e.data.me.elements.textpane.focus();
+            elements.textpane.focus();
         },
         add_new_message:function(e,d){
             var message, admin_def_msg;
@@ -83,31 +83,28 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             }
             message = generate_message_markup(d);
             message.hide();
-            e.data.me.elements.message_stack.prepend(message);
-            $dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_comment);
+            elements.message_stack.prepend(message);
+            $dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, handlers.remove_comment);
             message.slideDown(500);
         },
         construct_links:function(text){
-            var exp;
-            exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
         return text.replace(exp,"<a target='_blank' href='$1'>$1</a>"); 
         },
         handle_message_body:function(i,j){
             var message, exp;
             message = tc.jQ(j);
-        message.html(me.handlers.construct_links(message.text())); 
+            message.html(handlers.construct_links(message.text())); 
         },
         change_message_filter:function(e,d){
+            var t = tc.jQ(e.target);
             
-            var t;
-            t = tc.jQ(e.target);
-            
-            e.data.me.elements.message_stack.children().remove();
-            e.data.me.runtime_data.offset = 0;
+            elements.message_stack.children().remove();
+            runtime_data.offset = 0;
             if(t.hasClass('changed')){
-                e.data.me.runtime_data.message_filter = t.text();
+                runtime_data.message_filter = t.text();
             } else {
-                e.data.me.runtime_data.message_filter = t.val();
+                runtime_data.message_filter = t.val();
             }
             
             tc.jQ.ajax({
@@ -115,9 +112,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 url:"/project/messages",
                 data:{
                     project_id: options.app.app_page.data.project.project_id,
-                    n_messages: e.data.me.runtime_data.n_to_fetch,
-                    offset: e.data.me.runtime_data.offset,
-                    filter: e.data.me.runtime_data.message_filter
+                    n_messages: runtime_data.n_to_fetch,
+                    offset: runtime_data.offset,
+                    filter: runtime_data.message_filter
                 },
                 context:e.data.me,
                 dataType:"text",
@@ -132,15 +129,15 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     if (!d.length) {
                         return;
                     } else if(d.length < runtime_data.n_to_fetch){
-                        this.elements.load_more_button.animate({
+                        elements.load_more_button.animate({
                             opacity:0.0
                         });
                     }
                     for(i in d){
-                        this.elements.message_stack.append(this.generate_message(d[i]));
+                        elements.message_stack.append(generate_message(d[i]));
                         runtime_data.offset++;
                     }
-                    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
+                    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, handlers.remove_comment);
                 }
             });
             
@@ -153,9 +150,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 url:"/project/messages",
                 data:{
                     project_id: options.app.app_page.data.project.project_id,
-                    n_messages: e.data.me.runtime_data.n_to_fetch,
-                    offset: e.data.me.runtime_data.offset,
-                    filter: e.data.me.runtime_data.message_filter
+                    n_messages: runtime_data.n_to_fetch,
+                    offset: runtime_data.offset,
+                    filter: runtime_data.message_filter
                 },
                 context:e.data.me,
                 dataType:"text",
@@ -170,15 +167,15 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     if (!d.length) {
                         return;
                     } else if(d.length < runtime_data.n_to_fetch){
-                        this.elements.load_more_button.animate({
+                        elements.load_more_button.animate({
                             opacity:0.0
                         });
                     }
                     for(i in d){
-                        this.elements.message_stack.append(this.generate_message(d[i]));
+                        elements.message_stack.append(generate_message(d[i]));
                     }
-                    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
-                    $dom.find('.message-text').each(this.handlers.handle_message_body);
+                    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, handlers.remove_comment);
+                    $dom.find('.message-text').each(handlers.handle_message_body);
                 }
             });
             
@@ -211,18 +208,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             });
         }
     };
-    
-    project.dom.bind('add-new-message',{me:this},this.handlers.add_new_message);
-    this.elements.load_more_button.bind('click', { project:project,me:this }, this.handlers.load_more_button_click);
-    if (this.elements.userprompt.length) {
-        this.elements.userprompt.bind("click", { project:project,me:this },this.handlers.userprompt_click);
-    }
-    if (this.elements.textpane.length) {
-        this.elements.textpane.elastic(); //make textarea auto grow its height
-    }
-    $dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
-    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
-    
+        
     function generate_message_markup(data){
         tc.util.dump(data);
         var markup;
@@ -230,8 +216,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.attr('id','message-'+data.message_id);
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
-        markup.find('p.message-body').html(me.handlers.construct_links(data.message));
-        
+        markup.find('p.message-body').html(handlers.construct_links(data.message));
         
         if(options.app.app_page.user){
             if(options.app.app_page.user.image_id){
@@ -245,121 +230,159 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         return markup;
     }
     
-    $dom.find('.message-text').each(this.handlers.handle_message_body);
-    
-    if( (options.app.app_page.project_user.is_member) || 
-            (options.app.app_page.project_user.is_project_admin) || 
-            (options.app.app_page.user && options.app.app_page.user.is_admin) ||
-            (options.app.app_page.user && options.app.app_page.user.is_leader)){
+    var getMerlin = function() {
+        tc.util.log('conversation.build_merlin');
+        if(components.merlin){
+            return components.merlin;
+        }
         
-            this.build_merlin = function() {
-            tc.util.log('conversation.build_merlin');
-            if(components.merlin){
-                return;
-            }
-            components.merlin = new tc.merlin(options.app,{
-                name:'project_conversation',
-                dom:$dom.find('.merlin.submit-message'),
-                next_button:$dom.find('a.submit-button'),
-                first_step:'message',
-                data:{
-                    message:null,
-                    project_id:null,
-                    main_text:""
-                },
-                use_hashchange:false,
-                steps: {
-                    //Step 1
-                    'message':{
-                        selector:'.step.message',
-                        next_step:'message-submit',
-                        inputs:{
-                            message:{
-                                selector:'textarea.message-input',
-                                validators:['min-3','max-200','required'],
-                                hint:'',
-                                handlers:{
-                                    focus:function(event, data) {
-                                        // a jQuery object pointing to the input field
-                                        var $this = tc.jQ(this);
-                                        
-                                        tc.util.dump(tc.validator_utils.is_empty($this.val()));
-                                        
-                                        // if the value is blank
-                                        if (tc.validator_utils.is_empty($this.val())) {
-                                            // hide the default text
-                                            $dom.find(".conversation-input label").hide();
-                                        }
-                                    },
-                                    blur:function(event, data) {
-                                        // show the default text
-                                        if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
-                                            $dom.find(".conversation-input label").show();
-                                        }
+        return new tc.merlin(options.app,{
+            name:'project_conversation',
+            dom:$dom.find('.merlin.submit-message'),
+            next_button:$dom.find('a.submit-button'),
+            first_step:'message',
+            data:{
+                message:null,
+                project_id:null,
+                main_text:""
+            },
+            use_hashchange:false,
+            steps: {
+                //Step 1
+                'message':{
+                    selector:'.step.message',
+                    next_step:'message-submit',
+                    inputs:{
+                        message:{
+                            selector:'textarea.message-input',
+                            validators:['min-3','max-200','required'],
+                            hint:'',
+                            handlers:{
+                                focus:function(event, data) {
+                                    // a jQuery object pointing to the input field
+                                    var $this = tc.jQ(this);
+
+                                    tc.util.dump(tc.validator_utils.is_empty($this.val()));
+
+                                    // if the value is blank
+                                    if (tc.validator_utils.is_empty($this.val())) {
+                                        // hide the default text
+                                        $dom.find(".conversation-input label").hide();
+                                    }
+                                },
+                                blur:function(event, data) {
+                                    // show the default text
+                                    if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
+                                        $dom.find(".conversation-input label").show();
                                     }
                                 }
-                            },
-                            main_text:{
-                                selector:'input.main_text',
-                                validators:['max-0']
                             }
                         },
-                        init:function(merlin, dom) {
-                            merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused has-attempted-submit');
-                        },
-                        finish:function(merlin, dom) {
-                            tc.util.dump(merlin.current_step.dom.height());
-                            merlin.dom.find('.step.submit').css('height', merlin.current_step.dom.height());
-                            merlin.options.data = tc.jQ.extend(merlin.options.data,{
-                                project_id:merlin.app.app_page.data.project.project_id,
-                                message:merlin.current_step.inputs.message.dom.val(),
-                                main_text:merlin.current_step.inputs.main_text.dom.val()
-                            });
+                        main_text:{
+                            selector:'input.main_text',
+                            validators:['max-0']
                         }
                     },
-                    //Step 2
-                    'message-submit':{
-                        selector:'.step.submit',
-                        init:function(merlin, dom){
-                            tc.jQ.ajax({
-                                type:'POST',
-                                url:'/project/message/add',
-                                data:merlin.options.data,
-                                context:merlin,
-                                dataType:'text',
-                                success:function(data,ts,xhr){
-                                    if(data == 'False'){
-                                        //window.location.hash = 'project_conversation,message-submit-error';
-                                        this.show_step('message-submit-error');
-                                        return false;
-                                    }
-                                    project.dom.trigger('add-new-message', this.options.data); //"this" is the merlin
-                                    //window.location.hash = 'project_conversation,message';
-                                    
-                                    //We're done, go back to step 1 so we can do it again!
-                                    this.show_step('message');
+                    init:function(merlin, dom) {
+                        merlin.current_step.inputs.message.dom.val('').removeClass('has-been-focused has-attempted-submit');
+                    },
+                    finish:function(merlin, dom) {
+                        tc.util.dump(merlin.current_step.dom.height());
+                        merlin.dom.find('.step.submit').css('height', merlin.current_step.dom.height());
+                        merlin.options.data = tc.jQ.extend(merlin.options.data,{
+                            project_id:merlin.app.app_page.data.project.project_id,
+                            message:merlin.current_step.inputs.message.dom.val(),
+                            main_text:merlin.current_step.inputs.main_text.dom.val()
+                        });
+                    }
+                },
+                //Step 2
+                'message-submit':{
+                    selector:'.step.submit',
+                    init:function(merlin, dom){
+                        tc.jQ.ajax({
+                            type:'POST',
+                            url:'/project/message/add',
+                            data:merlin.options.data,
+                            context:merlin,
+                            dataType:'text',
+                            success:function(data,ts,xhr){
+                                if(data == 'False'){
+                                    //window.location.hash = 'project_conversation,message-submit-error';
+                                    this.show_step('message-submit-error');
+                                    return false;
                                 }
-                            });
-                        }
-                    },
-                    //Step Error
-                    'message-submit-error':{
-                        selector:'.step.submit-error',
-                        init:function(merlin,dom){
-                            tc.timer(1000,function(){
-                                merlin.show_step('message');
+                                project.dom.trigger('add-new-message', this.options.data); //"this" is the merlin
                                 //window.location.hash = 'project_conversation,message';
-                            });
-                        }
+
+                                //We're done, go back to step 1 so we can do it again!
+                                this.show_step('message');
+                            }
+                        });
+                    }
+                },
+                //Step Error
+                'message-submit-error':{
+                    selector:'.step.submit-error',
+                    init:function(merlin,dom){
+                        tc.timer(1000,function(){
+                            merlin.show_step('message');
+                            //window.location.hash = 'project_conversation,message';
+                        });
                     }
                 }
-            });
-        };
+            }
+        });
+    };
+    
+    /**
+     * Function: isProjectMember
+     * Is the user a member of this project?
+     */
+    var isProjectMember = function() {
+        return ( 
+            (options.app.app_page.project_user.is_member) || 
+            (options.app.app_page.project_user.is_project_admin) || 
+            (options.app.app_page.user && options.app.app_page.user.is_admin) ||
+            (options.app.app_page.user && options.app.app_page.user.is_leader) 
+        );
+    };
+    
+    /**
+     * Function: bindEvents
+     * Bind events during initialization.
+     */
+    var bindEvents = function() {
+        project.dom.bind('add-new-message',{me:me},handlers.add_new_message);
+        elements.load_more_button.bind('click', { project:project,me:me }, handlers.load_more_button_click);
+        if (elements.userprompt.length) {
+            elements.userprompt.bind("click", { project:project,me:me }, handlers.userprompt_click);
+        }
+        if (elements.textpane.length) {
+            elements.textpane.elastic(); //make textarea auto grow its height
+        }
+        $dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:me}, handlers.change_message_filter);
+        $dom.find('a.close').unbind('click').bind('click', {project:project,me:me}, handlers.remove_comment);
+    };
+    
+    /**
+     * Function: init
+     * Initialize the conversation widget.
+     */
+    var init = function() {
+        bindEvents();
         
-        this.build_merlin();
-        components.merlin.show_step('message');
-        
-    }
+        $dom.find('.message-text').each(handlers.handle_message_body);
+
+        //If this user is a member of the project
+        if(isProjectMember()) {
+            //Enable the merlin widget for participating in the conversation
+            components.merlin = getMerlin();
+            components.merlin.show_step('message');
+        }
+    };
+    
+    init();
     
     return { 
         show: function(){
