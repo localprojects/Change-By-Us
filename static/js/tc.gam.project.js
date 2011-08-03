@@ -18,14 +18,54 @@
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 /**
+ * Function: tc.gam.widget
+ * Widget object to extend other widgets.  Specifically
+ * this adds a show and hide function for each widget.
+ *
+ * Parameters:
+ * inheritor - {Object} Object to add functionality to.
+ * project - {Object} Project object for DOM use?
+ *
+ * Returns:
+ * {Object} Original inheritor object passed in with new
+ * properties.
+ */
+tc.gam.widget = function (inheritor, project) {
+    if (!inheritor) {
+        return;
+    }
+
+    inheritor.show = function (propagate) {
+        if (inheritor.dom) {
+            inheritor.dom.show();
+        }
+        if (propagate !== false) {
+            project.dom.trigger('project-widget-show', {
+                name: inheritor.options.name
+            });
+        }
+    };
+
+    inheritor.hide = function (propagate) {
+        if (inheritor.dom) {
+            inheritor.dom.hide();
+        }
+        if (propagate !== false) {
+            project.dom.trigger('project-widget-hide', {
+                name: inheritor.options.name
+            });
+        }
+    };
+
+    return inheritor;
+};
+
+/**
  * Function: tc.gam.project
- * Project object for  ....
+ * Project object that handles overarching logic of project.
  *
  * Parameters:
  * options - {Object} Object of options
- *
- * Returns:
- * {Object} ??
  */
 tc.gam.project = function(options) {
     var hash_onload;
@@ -78,13 +118,7 @@ tc.gam.project = function(options) {
             this.dom.find('.box.goals-stack-holder'), { widget: this.widget }, { app: options.app });
     }
 
-    /**
-     * Function: tc.gam.project.go_home
-     * Return project page to initial state.
-     *
-     * Parameters:
-     * e - ??
-     */
+    // Return project page to initial state.
     this.go_home = function (e) {
         if (e) {
             e.data.project.components.goals_main.show(false);
@@ -105,83 +139,96 @@ tc.gam.project = function(options) {
         }
     }
 
+    // Object of handlers.
     this.handlers = {
+        // This function shows a specific widget, more specficially
+        // it hides the other widgets.
         widget_show: function (e, d) {
-            tc.util.dump(d.name);
             switch (d.name) {
-            case 'members':
-                e.data.project.components.goals_main.hide(false);
-                if (tc.gam.project_widgets.goals_stack) {
-                    e.data.project.components.goals_stack.hide(false);
-                }
-                e.data.project.components.goals_add.hide(false);
-                e.data.project.components.conversation.hide(false);
-                e.data.project.components.add_link.hide(false);
-                break;
-            case 'goals_add':
-                e.data.project.components.goals_main.hide(false);
-                break;
-            case 'goals_stack':
-                e.data.project.components.goals_add.hide(false);
-                e.data.project.components.goals_main.hide(false);
-                break;
-            case 'related_resources':
-                e.data.project.components.goals_main.hide(false);
-                if (tc.gam.project_widgets.goals_stack) {
-                    e.data.project.components.goals_stack.hide(false);
-                }
-                e.data.project.components.members.hide(false);
-                e.data.project.components.conversation.hide(false);
-                e.data.project.components.add_link.hide(false);
-                break;
-            case 'add_link':
-                e.data.project.components.goals_main.hide(false);
-                if (tc.gam.project_widgets.goals_stack) {
-                    e.data.project.components.goals_stack.hide(false);
-                }
-                e.data.project.components.members.hide(false);
-                e.data.project.components.conversation.hide(false);
-                e.data.project.components.related_resources.hide(false);
-                break;
+                case 'members':
+                    e.data.project.components.goals_main.hide(false);
+                    if (tc.gam.project_widgets.goals_stack) {
+                        e.data.project.components.goals_stack.hide(false);
+                    }
+                    e.data.project.components.goals_add.hide(false);
+                    e.data.project.components.conversation.hide(false);
+                    e.data.project.components.add_link.hide(false);
+                    break;
+                    
+                case 'goals_add':
+                    e.data.project.components.goals_main.hide(false);
+                    break;
+                    
+                case 'goals_stack':
+                    e.data.project.components.goals_add.hide(false);
+                    e.data.project.components.goals_main.hide(false);
+                    break;
+                    
+                case 'related_resources':
+                    e.data.project.components.goals_main.hide(false);
+                    if (tc.gam.project_widgets.goals_stack) {
+                        e.data.project.components.goals_stack.hide(false);
+                    }
+                    e.data.project.components.members.hide(false);
+                    e.data.project.components.conversation.hide(false);
+                    e.data.project.components.add_link.hide(false);
+                    break;
+                    
+                case 'add_link':
+                    e.data.project.components.goals_main.hide(false);
+                    if (tc.gam.project_widgets.goals_stack) {
+                        e.data.project.components.goals_stack.hide(false);
+                    }
+                    e.data.project.components.members.hide(false);
+                    e.data.project.components.conversation.hide(false);
+                    e.data.project.components.related_resources.hide(false);
+                    break;
             }
         },
+        
+        // Hide widget.  This just uses the go_home function in all cases.
         widget_hide: function (e, d) {
-            tc.util.dump('project.widget_hide');
             switch (d.name) {
-            case 'members':
-            case 'goals_add':
-            case 'goals_stack':
-            case 'related_resources':
-            case 'add_link':
-                this_project.go_home(e);
-                break;
-            }
+                case 'members':
+                case 'goals_add':
+                case 'goals_stack':
+                case 'related_resources':
+                case 'add_link':
+                    this_project.go_home(e);
+                    break;
+                }
         },
+        
+        // Hash change event.
         hashchange: function (e) {
-            tc.util.log('tc.project.handlers.hashchange');
-            var hash;
-            hash = window.location.hash.substring(1, window.location.hash.length);
+            var hash = window.location.hash.substring(1, window.location.hash.length);
+            
+            // For project-home hash, fire go_home.
             if (hash == 'project-home') {
                 e.preventDefault();
                 this_project.go_home(e);
                 return;
             }
+            
+            // Handle the format of (show|hide),component-id
             switch (hash.split(',')[0]) {
-            case 'show':
-                e.preventDefault();
-                tc.util.dump(hash.split(',')[1]);
-                if (e.data.project.components[hash.split(',')[1]]) {
-                    e.data.project.components[hash.split(',')[1]].show();
+                case 'show':
+                    e.preventDefault();
+                    if (e.data.project.components[hash.split(',')[1]]) {
+                        e.data.project.components[hash.split(',')[1]].show();
+                    }
+                    break;
+                    
+                case 'hide':
+                    e.preventDefault();
+                    if (e.data.project.components[hash.split(',')[1]]) {
+                        e.data.project.components[hash.split(',')[1]].hide();
+                    }
+                    break;
                 }
-                break;
-            case 'hide':
-                e.preventDefault();
-                if (e.data.project.components[hash.split(',')[1]]) {
-                    e.data.project.components[hash.split(',')[1]].hide();
-                }
-                break;
-            }
         },
+        
+        // Remove idea event.
         idea_remove: function (e, d) {
             if (e.data.project.components.related_ideas) {
                 e.data.project.components.related_ideas.remove_idea(d.id);
@@ -190,6 +237,7 @@ tc.gam.project = function(options) {
         }
     };
 
+    // Update goals.  (This is believed to be broken)
     this.update_goals = function () {
         tc.jQ.ajax({
             type: 'GET',
@@ -211,42 +259,13 @@ tc.gam.project = function(options) {
         });
     };
 
+    // Bind events.
     tc.jQ(window).bind('hashchange', this.event_data, this.handlers.hashchange);
     this.dom.bind('project-widget-show', this.event_data, this.handlers.widget_show);
     this.dom.bind('project-widget-hide', this.event_data, this.handlers.widget_hide);
     this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
 
+    // Fire off hashchange event.
     window.location.hash = hash_onload;
     tc.jQ(window).trigger('hashchange');
-};
-
-
-tc.gam.widget = function (inheritor, project) {
-    if (!inheritor) {
-        return;
-    }
-
-    inheritor.show = function (propagate) {
-        if (inheritor.dom) {
-            inheritor.dom.show();
-        }
-        if (propagate !== false) {
-            project.dom.trigger('project-widget-show', {
-                name: inheritor.options.name
-            });
-        }
-    };
-
-    inheritor.hide = function (propagate) {
-        if (inheritor.dom) {
-            inheritor.dom.hide();
-        }
-        if (propagate !== false) {
-            project.dom.trigger('project-widget-hide', {
-                name: inheritor.options.name
-            });
-        }
-    };
-
-    return inheritor;
 };
