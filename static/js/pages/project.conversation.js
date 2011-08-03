@@ -1,23 +1,24 @@
 if(!tc){ var tc = {}; }
 if(!tc.gam){ tc.gam = {}; }
 if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
-tc.gam.project_widgets.conversation = function(project,dom,deps,options){
-    var widget, me;
-    tc.util.log("project.conversation");
-    this.options = tc.jQ.extend({name:'conversation'},options);
-    this.dom = dom;
-    widget = tc.gam.widget(this,project);
-    me = this;
-    this.components = {
-        merlin:null
-    };
+tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
+    var me = this,
+        widget = tc.gam.widget(me, project),
+        options = tc.jQ.extend({name:'conversation'}, opts),
+        components = {
+            merlin:null
+        };
     
-    tc.util.dump(this.options);
+    //backwards compatibility
+    me.dom = $dom;
+    me.options = options;
+    
+    tc.util.dump(options);
     
     this.runtime_data = {
         message_filter:'all',
         n_to_fetch:10,
-        offset: this.options.app.app_page.data.project.info.messages.n_returned,
+        offset: options.app.app_page.data.project.info.messages.n_returned,
         message_template:tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children())
     };
     
@@ -28,7 +29,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
         
         //add user image
         if(d.owner.image_id){
-            $out.find('img').attr('src',this.options.app.app_page.media_root+'images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
+            $out.find('img').attr('src',options.app.app_page.media_root+'images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
         } else {
             $out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
         }
@@ -64,10 +65,10 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
     };
     
     this.elements = {
-        userprompt: this.dom.find(".conversation-input label"),
-        textpane: this.dom.find(".conversation-input textarea"),
-        message_stack:this.dom.find("ol.comment-stack"),
-        load_more_button:this.dom.find('.load_more_button')
+        userprompt: $dom.find(".conversation-input label"),
+        textpane: $dom.find(".conversation-input textarea"),
+        message_stack: $dom.find("ol.comment-stack"),
+        load_more_button: $dom.find('.load_more_button')
     };
     
     this.handlers = {
@@ -76,15 +77,15 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
         },
         add_new_message:function(e,d){
             var message, admin_def_msg;
-            e.data.me.dom.find(".empty-state-box").hide();
-            admin_def_msg = e.data.me.dom.find(".admin-default-message");
+            $dom.find(".empty-state-box").hide();
+            admin_def_msg = $dom.find(".admin-default-message");
             if (admin_def_msg.length) {
                 admin_def_msg.remove();
             }
             message = generate_message_markup(d);
             message.hide();
             e.data.me.elements.message_stack.prepend(message);
-            e.data.me.dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_comment);
+            $dom.find('a.close').unbind('click').bind('click', {project:project,me:e.data.me}, e.data.me.handlers.remove_comment);
             message.slideDown(500);
         },
         construct_links:function(text){
@@ -114,7 +115,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                 type:"GET",
                 url:"/project/messages",
                 data:{
-                    project_id: e.data.me.options.app.app_page.data.project.project_id,
+                    project_id: options.app.app_page.data.project.project_id,
                     n_messages: e.data.me.runtime_data.n_to_fetch,
                     offset: e.data.me.runtime_data.offset,
                     filter: e.data.me.runtime_data.message_filter
@@ -140,7 +141,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                         this.elements.message_stack.append(this.generate_message(d[i]));
                         this.runtime_data.offset++;
                     }
-                    this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
+                    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
                 }
             });
             
@@ -152,7 +153,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                 type:"GET",
                 url:"/project/messages",
                 data:{
-                    project_id: e.data.me.options.app.app_page.data.project.project_id,
+                    project_id: options.app.app_page.data.project.project_id,
                     n_messages: e.data.me.runtime_data.n_to_fetch,
                     offset: e.data.me.runtime_data.offset,
                     filter: e.data.me.runtime_data.message_filter
@@ -177,8 +178,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                     for(i in d){
                         this.elements.message_stack.append(this.generate_message(d[i]));
                     }
-                    this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
-                    this.dom.find('.message-text').each(this.handlers.handle_message_body);
+                    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
+                    $dom.find('.message-text').each(this.handlers.handle_message_body);
                 }
             });
             
@@ -194,7 +195,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                         type:'POST',
                         url:'/project/message/remove',
                         data:{
-                            project_id: e.data.me.options.app.app_page.data.project.project_id,
+                            project_id: options.app.app_page.data.project.project_id,
                             message_id: e.target.href.split(',')[1]
                         },
                         context:e.data.me,
@@ -203,7 +204,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                             if(data == 'False'){
                                 return false;
                             }
-                            this.dom.find('#message-'+e.target.href.split(',')[1]).slideUp();
+                            $dom.find('#message-'+e.target.href.split(',')[1]).slideUp();
                             this.runtime_data.offset--;
                         }
                     });
@@ -220,8 +221,8 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
     if (this.elements.textpane.length) {
         this.elements.textpane.elastic(); //make textarea auto grow its height
     }
-    this.dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
-    this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
+    $dom.find('select.message_filter_select').unbind('change').bind('change', {project:project,me:this}, this.handlers.change_message_filter);
+    $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
     
     function generate_message_markup(data){
         tc.util.dump(data);
@@ -233,11 +234,11 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
         markup.find('p.message-body').html(me.handlers.construct_links(data.message));
         
         
-        if(me.options.app.app_page.user){
-            if(me.options.app.app_page.user.image_id){
-                markup.find(".thumb img").attr("src", me.options.app.app_page.media_root+"images/"+(me.options.app.app_page.user.image_id % 10)+"/"+me.options.app.app_page.user.image_id+".png");
+        if(options.app.app_page.user){
+            if(options.app.app_page.user.image_id){
+                markup.find(".thumb img").attr("src", options.app.app_page.media_root+"images/"+(options.app.app_page.user.image_id % 10)+"/"+options.app.app_page.user.image_id+".png");
             }
-            markup.find(".meta-hd > strong").html("<a href='/useraccount/"+me.options.app.app_page.user.user_id+"'>"+me.options.app.app_page.user.f_name+" "+me.options.app.app_page.user.l_name.substring(0,1)+"</a>");
+            markup.find(".meta-hd > strong").html("<a href='/useraccount/"+options.app.app_page.user.user_id+"'>"+options.app.app_page.user.f_name+" "+options.app.app_page.user.l_name.substring(0,1)+"</a>");
         } else {
             markup.find(".meta-hd").hide();
         }
@@ -245,22 +246,22 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
         return markup;
     }
     
-    this.dom.find('.message-text').each(this.handlers.handle_message_body);
+    $dom.find('.message-text').each(this.handlers.handle_message_body);
     
-    if( (this.options.app.app_page.project_user.is_member) || 
-            (this.options.app.app_page.project_user.is_project_admin) || 
-            (this.options.app.app_page.user && this.options.app.app_page.user.is_admin) ||
-            (this.options.app.app_page.user && this.options.app.app_page.user.is_leader)){
+    if( (options.app.app_page.project_user.is_member) || 
+            (options.app.app_page.project_user.is_project_admin) || 
+            (options.app.app_page.user && options.app.app_page.user.is_admin) ||
+            (options.app.app_page.user && options.app.app_page.user.is_leader)){
         
             this.build_merlin = function() {
             tc.util.log('conversation.build_merlin');
-            if(this.components.merlin){
+            if(components.merlin){
                 return;
             }
-            this.components.merlin = new tc.merlin(options.app,{
+            components.merlin = new tc.merlin(options.app,{
                 name:'project_conversation',
-                dom:dom.find('.merlin.submit-message'),
-                next_button:dom.find('a.submit-button'),
+                dom:$dom.find('.merlin.submit-message'),
+                next_button:$dom.find('a.submit-button'),
                 first_step:'message',
                 data:{
                     message:null,
@@ -288,13 +289,13 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                                         // if the value is blank
                                         if (tc.validator_utils.is_empty($this.val())) {
                                             // hide the default text
-                                            event.data.me.dom.find(".conversation-input label").hide();
+                                            $dom.find(".conversation-input label").hide();
                                         }
                                     },
                                     blur:function(event, data) {
                                         // show the default text
                                         if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
-                                            event.data.me.dom.find(".conversation-input label").show();
+                                            $dom.find(".conversation-input label").show();
                                         }
                                     }
                                 }
@@ -333,7 +334,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
                                         this.show_step('message-submit-error');
                                         return false;
                                     }
-                                    project.dom.trigger('add-new-message', this.options.data);
+                                    project.dom.trigger('add-new-message', this.options.data); //"this" is the merlin
                                     //window.location.hash = 'project_conversation,message';
                                     
                                     //We're done, go back to step 1 so we can do it again!
@@ -357,13 +358,13 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
         };
         
         this.build_merlin();
-        this.components.merlin.show_step('message');
+        components.merlin.show_step('message');
         
     }
     
     return { 
         show: function(){
-            me.components.merlin.show_step('message');
+            components.merlin.show_step('message');
             widget.show();
         },
         hide: widget.hide
