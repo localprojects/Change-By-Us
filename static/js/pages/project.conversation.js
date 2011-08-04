@@ -406,10 +406,18 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 '<span class="qq-upload-failed-text">Failed</span>' +
             '</li>',
             onComplete: function(id, fileName, responseJSON) {
+                var $thumb;
+                
                 // Trigger uploaded event with new image IDs
                 tc.util.log(id);
                 tc.util.log(fileName);
                 tc.util.log(responseJSON);
+                
+                if (responseJSON.success) {
+                    $thumb = $('.qq-upload-file-thumb');
+                    $thumb.empty().append('<img src=' + responseJSON.thumb_url + '>');
+                }
+                
                 return true;
             }
         });
