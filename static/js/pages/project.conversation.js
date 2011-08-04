@@ -389,7 +389,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             action: '/create/file',
             multiple: false,
             template:'<div class="qq-uploader">' + 
-                        '<div class="qq-upload-button">Browse for file</div>' +
+                        '<div class="qq-upload-button"><label>Browse for file</label></div>' +
                      '</div>' + 
                      '<ul class="qq-upload-list"></ul>',
             onComplete: function(id, fileName, responseJSON) {
