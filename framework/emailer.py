@@ -40,11 +40,11 @@ class Emailer():
         try:
             if webapi.config.get('email_engine') == 'aws':
                 try:                   
-                    send_via_ses(addresses, subject, text, html, attachment, from_name, from_address, **kwargs)
+                    send_email_via_ses(addresses, subject, text, html, attachment, from_name, from_address, **kwargs)
                 except:
-                    send_via_smtp(addresses, subject, text, html, attachment, from_name, from_address, **kwargs)
+                    send_email_via_smtp(addresses, subject, text, html, attachment, from_name, from_address, **kwargs)
             else:
-                send_via_smtp(addresses, subject, text, html, attachment, from_name, from_address, **kwargs)
+                send_email_via_smtp(addresses, subject, text, html, attachment, from_name, from_address, **kwargs)
         except Exception, e:
             log.error("Could not send email due to: %s" % e)
             return False
