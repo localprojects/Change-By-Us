@@ -69,7 +69,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         message_stack: $dom.find("ol.comment-stack"),
         load_more_button: $dom.find('.load_more_button'),
         message_type_button: $dom.find('.conversation-tabs a'),
-        file_uploader_container: $dom.find('.conversation-input .file-uploader')
+        file_uploader_container: $dom.find('.conversation-input .file-uploader'),
+        input_file_widget: $dom.find('.conversation-input-file-field'),
+        input_message_widget: $dom.find('.conversation-input-message-field')
     };
     
      var handlers = {
@@ -232,6 +234,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
          */
         'conversation-comment' : function() {
             tc.util.log('comment!!');
+
+            elements.input_message_widget.show();
+            elements.input_file_widget.hide();
         },
         
         /**
@@ -240,6 +245,11 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
          */
         'conversation-file' : function() {
             tc.util.log('file!!');
+            
+            elements.input_message_widget.hide();
+            elements.input_file_widget.show();
+            
+            
         }
     };
             
@@ -377,6 +387,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         return new qq.FileUploader({
             element: elements.file_uploader_container.get(0),
             action: '/create/file',
+            multiple: false,
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
                 tc.util.log(id);
