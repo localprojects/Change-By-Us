@@ -6,6 +6,7 @@ import framework.util as util
 from framework.controller import *
 from framework.image_server import *
 from framework.file_server import FileServer, S3FileServer
+from framework.config import Config
 from PIL import Image
 import lib.web
 import json
@@ -30,9 +31,7 @@ class CreateProject(Controller):
         
             return self.json(dict(thumbnail_id = imageId, success = (imageId != None) ))
         elif (action == 'file'):
-            # Requires a parameter qqfile
-            fileId = self.uploadFile()
-            return self.json(dict(file_id = fileId, success = (fileId != None)))
+            return self.newFile()
         else:
             return self.newProject()  
         
@@ -64,7 +63,24 @@ class CreateProject(Controller):
         else:
             log.error("*** only logged in users can create projects")
             return False
-                    
+    
+    def newFile(self):
+        # Requires a parameter qqfile
+        file_id = self.uploadFile()
+        
+        # Optionally, provide a max width and height for a thumbnail image
+        max_width = self.request('max_width')
+        max_height = self.request('max_height')
+        
+        thumb_url = self.getImageUrl(file_id, max_width, max_height)
+        print thumb_url
+        
+        return self.json({
+            'file_id' : file_id, 
+            'thumb_url' : thumb_url,
+            'success' : (file_id != None)
+        })
+    
     def getKeywordsJSON(self):
         s = "%s %s" % (self.request('text'), self.request('title'))
         kw = keywords.getKeywords(self.db, s)
@@ -123,6 +139,18 @@ class CreateProject(Controller):
         fs = S3FileServer()
         
         # Upload the file to the server
-        fileId = fs.add(self.db, data, 'giveaminute', [100, 100])
+        file_id = fs.add(self.db, data, 'giveaminute', [100, 100])
         
-        return fileId
+        return file_id
+    
+    def getImageUrl(self, file_id, max_width=None, max_height=None):
+        """
+        Get the URL to an image representation of the file. For images, this may
+        be used for getting a thumbnail. Specify max width and height in that
+        case. Otherwise you'll probably just get a generic file image.
+        
+        """
+        static_root = Config.get('staticfiles').get('root')
+        stub_thumb_name = 'generic_file_thumbnail.png'
+        
+        return os.path.join(static_root, 'images', stub_thumb_name)
