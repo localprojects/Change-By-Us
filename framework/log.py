@@ -1,5 +1,6 @@
 import os, logging, __main__
 import logging.handlers
+from config import Config
 try:
     from lib import web
 except ImportError:
@@ -30,7 +31,7 @@ name = os.path.basename(__main__.__file__).split('.')[0]    # log identifier/fil
 log = logging.getLogger(name)
 log.setLevel(logging.DEBUG)
 
-logfile = '%s/../logs/%s.log' % (os.path.dirname(os.path.realpath(__file__)), name)
+logfile = Config.get('logfile') # %s/../logs/%s.log' % (os.path.dirname(os.path.realpath(__file__)), name)
 
 fh = logging.handlers.TimedRotatingFileHandler(logfile, 'midnight')
 fh.setLevel(logging.DEBUG)
