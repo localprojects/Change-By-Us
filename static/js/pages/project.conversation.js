@@ -265,6 +265,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
+        if (data.thumb_url) {
+            markup.find('.file-thumb').html('<img src="'+data.thumb_url+'" alt="File thumbnail" />');
+        }
+        
         if(options.app.app_page.user){
             if(options.app.app_page.user.image_id){
                 markup.find(".thumb img").attr("src", options.app.app_page.media_root+"images/"+(options.app.app_page.user.image_id % 10)+"/"+options.app.app_page.user.image_id+".png");
@@ -339,7 +343,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                         merlin.options.data = tc.jQ.extend(merlin.options.data,{
                             project_id:merlin.app.app_page.data.project.project_id,
                             message:merlin.current_step.inputs.message.dom.val(),
-                            main_text:merlin.current_step.inputs.main_text.dom.val()
+                            main_text:merlin.current_step.inputs.main_text.dom.val(),
+                            thumb_url: tc.jQ('.conversation-file-thumb').attr('src')
                         });
                     }
                 },
@@ -427,7 +432,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 tc.util.log(responseJSON);
                 
                 if (responseJSON.success) {
-                    $('.qq-upload-file-thumb').empty().append('<img src=' + responseJSON.thumb_url + '>');
+                    $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.thumb_url + '>');
                     components.file_uploader.state = 'success';
                 } 
                 
