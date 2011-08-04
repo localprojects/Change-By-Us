@@ -246,7 +246,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         'conversation-file' : function() {
             tc.util.log('file!!');
             
-            elements.input_message_widget.hide();
+            if (!components.file_uploader ||
+                (components.file_uploader && !components.file_uploader.state)) {
+                elements.input_message_widget.hide();
+            }
             elements.input_file_widget.show();
             
             
@@ -394,6 +397,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 max_height:100
             },
             template:'<div class="qq-uploader">' + 
+                        '<div class="qq-upload-drop-area"><span>Drop files here to upload</span></div>' +
                         '<div class="qq-upload-button"><label>Browse for file</label></div>' +
                      '</div>' + 
                      '<ul class="qq-upload-list"></ul>',
@@ -413,6 +417,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 
                 // Show the message input field
                 $('.conversation-input-message-field').show();
+                
+                components.file_uploader.state = 'submitted';
             },
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
@@ -422,6 +428,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 
                 if (responseJSON.success) {
                     $('.qq-upload-file-thumb').empty().append('<img src=' + responseJSON.thumb_url + '>');
+                    components.file_uploader.state = 'success';
+                } 
+                
+                else {
+                    // TODO: determine what else needs to happen on failure.
+                    components.file_uploader.state = 'failed';
                 }
                 
                 return true;
@@ -478,7 +490,11 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         if(isProjectMember()) {
             //Enable the merlin widget for participating in the conversation
             components.merlin = getMerlin();
+            tc.util.log('----- Merlin!!! -----');
+            tc.util.log(components.merlin);
             components.file_uploader = getFileUploader();
+            tc.util.log('----- Components!!! -----');
+            tc.util.log(components.file_uploader);
             components.merlin.show_step('message');
         }
     };
