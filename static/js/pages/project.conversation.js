@@ -388,6 +388,11 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             element: elements.file_uploader_container.get(0),
             action: '/create/file',
             multiple: false,
+            sizeLimit: 20971520, //max size, 20 mb in bytes
+            params: {
+                max_width:200,
+                max_height:200
+            },
             template:'<div class="qq-uploader">' + 
                         '<div class="qq-upload-button"><label>Browse for file</label></div>' +
                      '</div>' + 
