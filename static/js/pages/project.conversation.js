@@ -68,7 +68,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         textpane: $dom.find(".conversation-input textarea"),
         message_stack: $dom.find("ol.comment-stack"),
         load_more_button: $dom.find('.load_more_button'),
-        message_type_button: $dom.find('.conversation-tabs a')
+        message_type_button: $dom.find('.conversation-tabs a'),
+        file_uploader_container: $dom.find('.conversation-input .file-uploader')
     };
     
      var handlers = {
@@ -369,6 +370,24 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     };
     
     /**
+     * Function: getFileUploader
+     * Create a file upload widget and put it in the appropriate place.
+     */
+    var getFileUploader = function() {
+        return new qq.FileUploader({
+            element: elements.file_uploader_container.get(0),
+            action: '/create/file',
+            onComplete: function(id, fileName, responseJSON) {
+                // Trigger uploaded event with new image IDs
+                tc.util.log(id);
+                tc.util.log(fileName);
+                tc.util.log(responseJSON);
+                return true;
+            }
+        });
+    };
+    
+    /**
      * Function: isProjectMember
      * Is the user a member of this project?
      */
@@ -417,6 +436,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         if(isProjectMember()) {
             //Enable the merlin widget for participating in the conversation
             components.merlin = getMerlin();
+            components.file_uploader = getFileUploader();
             components.merlin.show_step('message');
         }
     };
