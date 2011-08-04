@@ -388,6 +388,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             element: elements.file_uploader_container.get(0),
             action: '/create/file',
             multiple: false,
+            template:'<div class="qq-uploader">' + 
+                        '<div class="qq-upload-button">Browse for file</div>' +
+                     '</div>' + 
+                     '<ul class="qq-upload-list"></ul>',
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
                 tc.util.log(id);
