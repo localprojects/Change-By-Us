@@ -367,6 +367,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                                 project.dom.trigger('add-new-message', this.options.data); //"this" is the merlin
                                 //window.location.hash = 'project_conversation,message';
 
+                                //HACK HACK HACK!!!!
+                                components.file_uploader = getFileUploader();
+                                activate_widget['conversation-file']();
+
                                 //We're done, go back to step 1 so we can do it again!
                                 this.show_step('message');
                             }
