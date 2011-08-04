@@ -398,7 +398,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                      '</div>' + 
                      '<ul class="qq-upload-list"></ul>',
             fileTemplate: '<li>' +
-                '<span class="qq-upload-file-thumb"></span>' +
+                '<span class="qq-upload-file-thumb"><img src="/static/images/loader32x32.gif" style="margin: 16px;"></span>' +
                 '<span class="qq-upload-file-details">' +
                     '<span class="qq-upload-file"></span>' +
                     '<span class="qq-upload-spinner"></span>' +
@@ -407,6 +407,13 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     '<div class="qq-upload-size"></div>' +
                 '</span>' +
             '</li>',
+            onSubmit: function(fileName) {
+                // Hide the browse for file button
+                $('.qq-uploader').hide();
+                
+                // Show the message input field
+                $('.conversation-input-message-field').show();
+            },
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
                 tc.util.log(id);
@@ -414,7 +421,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 tc.util.log(responseJSON);
                 
                 if (responseJSON.success) {
-                    $('.qq-uploader').hide();
                     $('.qq-upload-file-thumb').empty().append('<img src=' + responseJSON.thumb_url + '>');
                 }
                 
