@@ -390,13 +390,21 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             multiple: false,
             sizeLimit: 20971520, //max size, 20 mb in bytes
             params: {
-                max_width:200,
-                max_height:200
+                max_width:100,
+                max_height:100
             },
             template:'<div class="qq-uploader">' + 
                         '<div class="qq-upload-button"><label>Browse for file</label></div>' +
                      '</div>' + 
                      '<ul class="qq-upload-list"></ul>',
+            fileTemplate: '<li>' +
+                '<span class="qq-upload-file-thumb"></span>' +
+                '<span class="qq-upload-file"></span>' +
+                '<span class="qq-upload-spinner"></span>' +
+                '<span class="qq-upload-size"></span>' +
+                '<a class="qq-upload-cancel" href="#">Cancel</a>' +
+                '<span class="qq-upload-failed-text">Failed</span>' +
+            '</li>',
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
                 tc.util.log(id);
