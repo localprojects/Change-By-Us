@@ -399,23 +399,23 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                      '<ul class="qq-upload-list"></ul>',
             fileTemplate: '<li>' +
                 '<span class="qq-upload-file-thumb"></span>' +
-                '<span class="qq-upload-file"></span>' +
-                '<span class="qq-upload-spinner"></span>' +
-                '<span class="qq-upload-size"></span>' +
-                '<a class="qq-upload-cancel" href="#">Cancel</a>' +
-                '<span class="qq-upload-failed-text">Failed</span>' +
+                '<span class="qq-upload-file-details">' +
+                    '<span class="qq-upload-file"></span>' +
+                    '<span class="qq-upload-spinner"></span>' +
+                    '<a class="qq-upload-cancel" href="#">Cancel</a>' +
+                    '<span class="qq-upload-failed-text">Failed</span>' +
+                    '<div class="qq-upload-size"></div>' +
+                '</span>' +
             '</li>',
             onComplete: function(id, fileName, responseJSON) {
-                var $thumb;
-                
                 // Trigger uploaded event with new image IDs
                 tc.util.log(id);
                 tc.util.log(fileName);
                 tc.util.log(responseJSON);
                 
                 if (responseJSON.success) {
-                    $thumb = $('.qq-upload-file-thumb');
-                    $thumb.empty().append('<img src=' + responseJSON.thumb_url + '>');
+                    $('.qq-uploader').hide();
+                    $('.qq-upload-file-thumb').empty().append('<img src=' + responseJSON.thumb_url + '>');
                 }
                 
                 return true;
