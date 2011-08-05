@@ -466,7 +466,7 @@ class Project(Controller):
             log.error("*** message add attempted w/ no message")
             return False
         else:
-            return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id)
+            return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id, fileId=fileId)
             
     def removeMessage(self):
         messageId = self.request('message_id')
