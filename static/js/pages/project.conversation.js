@@ -36,6 +36,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         // Reset the file uploader, for realz
         if (state.fileUploader === 'needsreset') {
             components.file_uploader = getFileUploader();
+            state.fileId = '';
             state.fileUploader = 'new';
         }
                 
@@ -363,7 +364,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             project_id:merlin.app.app_page.data.project.project_id,
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
-                            thumb_url: tc.jQ('.conversation-file-thumb').attr('src')
+                            thumb_url: tc.jQ('.conversation-file-thumb').attr('src'),
+                            file_id: state.fileId
                         };
                     }
                 },
@@ -446,8 +448,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 
                 // Show the message input field
                 $('.conversation-input-message-field').show();
-                
-                components.file_uploader.state = 'submitted';
             },
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
@@ -458,6 +458,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 if (responseJSON.success) {
                     $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.thumb_url + '>');
                     state.fileUploader = 'successful';
+                    state.fileId = responseJSON.file_id;
                 } 
                 
                 else {
