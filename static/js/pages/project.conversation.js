@@ -16,7 +16,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         },
         state = {
             widgetId: 'conversation-comment', //The activated widget id
-            file: 'initialized',              //The file state: initialized, inprogress, uploaded
+            fileUploader: 'new',              //The file state: new, successful, unsuccessful, needsreset
             messages: {}                      //The message by widget id
         };
     
@@ -33,8 +33,21 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         // Set active class
         $('#' + state.widgetId).parent().addClass('active');
         
+        // Reset the file uploader, for realz
+        if (state.fileUploader === 'needsreset') {
+            components.file_uploader = getFileUploader();
+            state.fileUploader = 'new';
+        }
+                
         // Toggle visibility of appropriate conversation widget
         activate_widget[state.widgetId]();
+
+        // Set the text of the textarea based on the activated widget.
+        // Call blur to help merlin do validation
+        elements.textpane.val(state.messages[state.widgetId] || '').change();
+        
+        setLabelVisibility();
+        
     };
 
     var activate_widget = {
@@ -44,7 +57,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
          * etc.).
          */
         'conversation-comment' : function() {
-            elements.textpane.val(state.messages[state.widgetId] || '').blur();
             elements.input_message_widget.show();
             elements.input_file_widget.hide();
         },
@@ -54,11 +66,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
          * Show the file uploader.  Hide the text input if no file is selected.
          */
         'conversation-file' : function() {
-            if (!components.file_uploader ||
-                (components.file_uploader && !components.file_uploader.state)) {
+            if (state.fileUploader !== 'successful') {
                 elements.input_message_widget.hide();
             }
-            elements.textpane.val(state.messages[state.widgetId] || '').blur();
             elements.input_file_widget.show();
         }
     };
@@ -106,7 +116,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     };
     
     var elements = {
-        userprompt: $dom.find(".conversation-input label"),
+        userprompt: $dom.find(".conversation-input-message-field label"),
         textpane: $dom.find(".conversation-input textarea"),
         message_stack: $dom.find("ol.comment-stack"),
         load_more_button: $dom.find('.load_more_button'),
@@ -114,6 +124,15 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         file_uploader_container: $dom.find('.conversation-input .file-uploader'),
         input_file_widget: $dom.find('.conversation-input-file-field'),
         input_message_widget: $dom.find('.conversation-input-message-field')
+    };
+    
+    var setLabelVisibility = function() {
+        // show the default text
+        if (tc.validator_utils.is_empty(state.messages[state.widgetId] || '')) {
+            elements.userprompt.show();
+        } else {
+            elements.userprompt.hide();
+        }
     };
     
      var handlers = {
@@ -322,22 +341,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             hint:'',
                             handlers:{
                                 focus:function(event, data) {
-                                    // a jQuery object pointing to the input field
-                                    var $this = tc.jQ(this);
-
-                                    tc.util.dump(tc.validator_utils.is_empty($this.val()));
-
-                                    // if the value is blank
-                                    if (tc.validator_utils.is_empty($this.val())) {
-                                        // hide the default text
-                                        $dom.find(".conversation-input label").hide();
-                                    }
+                                    elements.userprompt.hide();
                                 },
                                 blur:function(event, data) {
-                                    // show the default text
-                                    if (tc.validator_utils.is_empty(tc.jQ(this).val())) {
-                                        $dom.find(".conversation-input label").show();
-                                    }
+                                    setLabelVisibility();
                                 }
                             }
                         },
@@ -352,12 +359,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     finish:function(merlin, dom) {
                         tc.util.dump(merlin.current_step.dom.height());
                         merlin.dom.find('.step.submit').css('height', merlin.current_step.dom.height());
-                        merlin.options.data = tc.jQ.extend(merlin.options.data,{
+                        merlin.options.data = {
                             project_id:merlin.app.app_page.data.project.project_id,
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
                             thumb_url: tc.jQ('.conversation-file-thumb').attr('src')
-                        });
+                        };
                     }
                 },
                 //Step 2
@@ -379,9 +386,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                                 project.dom.trigger('add-new-message', this.options.data); //"this" is the merlin
                                 //window.location.hash = 'project_conversation,message';
 
-                                //HACK HACK HACK!!!!
-                                components.file_uploader = getFileUploader();
-                                activate_widget['conversation-file']();
+                                //We just posted the message, so let's reset everything
+                                state.messages = {};
+                                state.fileUploader = 'needsreset';
+                                refreshUi();
 
                                 //We're done, go back to step 1 so we can do it again!
                                 this.show_step('message');
@@ -449,12 +457,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 
                 if (responseJSON.success) {
                     $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.thumb_url + '>');
-                    components.file_uploader.state = 'success';
+                    state.fileUploader = 'successful';
                 } 
                 
                 else {
                     // TODO: determine what else needs to happen on failure.
-                    components.file_uploader.state = 'failed';
+                    state.fileUploader = 'unsuccessful';
                 }
                 
                 return true;
