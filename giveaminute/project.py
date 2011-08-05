@@ -184,6 +184,7 @@ def smallProject(id, title, description, imageId, numMembers, ownerUserId, owner
 def message(id, 
             type, 
             message, 
+            fileId,
             createdDatetime, 
             userId, 
             name,
@@ -194,6 +195,12 @@ def message(id,
             ideaCreatedDatetime = None, 
             projectId = None, 
             projectTitle = None):
+    """
+    Construct and return a dictionary consisting of the data related to a
+    message, given by the parameters.  This data is usually pulled off of 
+    several database tables with keys linking back to a message_id.
+    
+    """
     if (ideaId):
         ideaObj = smallIdea(ideaId, idea, None, None, ideaSubType)
     else:
@@ -203,6 +210,7 @@ def message(id,
     
     return dict(message_id = id,
                 message_type = type,
+                file_id = fileId,
                 owner = smallUserDisplay(userId, name, imageId),
                 body = message,
                 created = str(createdDatetime),
@@ -1035,7 +1043,12 @@ def removeProjectGoal(db, projectGoalId):
         log.error(e)    
         return False 
         
-def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None):
+def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None, fileId = None):
+    """
+    Insert a new record into the project_message table.  Return true if 
+    successful.  Otherwise, if any exceptions arise, log and return false.
+    
+    """
     try:
         # censor behavior
         numFlags = censor.badwords(db, message)
@@ -1045,6 +1058,7 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
                                     message = message,
                                     user_id = userId,
                                     idea_id = ideaId,
+                                    file_id = fileId,
                                     project_goal_id = projectGoalId,
                                     message_type  = message_type,
                                     num_flags = numFlags,
@@ -1099,6 +1113,12 @@ def getGoals(db, projectId):
     return goals
     
 def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
+    """
+    Return a list of dictionaries with data representing project messages 
+    associated with the given projectId.  This data come from the tables
+    project_message, user, and idea.
+    
+    """
     messages = []
     
     if (filterBy not in ['member_comment','admin_comment','goal_achieved','join','endorsement']):
@@ -1109,6 +1129,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     m.project_message_id,
                     m.message_type,
                     m.message,
+                    m.file_id,
                     m.created_datetime,
                     u.user_id,
                     u.first_name,
@@ -1133,6 +1154,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
             messages.append(message(item.project_message_id, 
                                     item.message_type, 
                                     item.message, 
+                                    item.file_id,
                                     item.created_datetime, 
                                     item.user_id, 
                                     userNameDisplay(item.first_name, item.last_name, item.affiliation, isFullLastName(item.group_membership_bitmask)), 
