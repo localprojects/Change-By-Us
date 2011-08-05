@@ -439,10 +439,25 @@ class Project(Controller):
         return self.json(mProject.getGoals(self.db, projectId))
         
     def addMessage(self):
+        """
+        Add a message to the project discussion stream.
+        
+        POST Parameters:
+        ---------------
+        project_id -- The id of the project
+        main_text -- The message contents
+        file_id -- (optional) The file attachment on the message.  If no file
+            attachment is available, it should be an empty string or left off 
+            of the request entirely.
+        
+        """
         if (self.request('main_text')): return False
 
         projectId = self.request('project_id')
         message = self.request('message')
+        
+        # If the file_id is None or empty string, record it as None.
+        fileId = self.request('file_id') or None
         
         if (not projectId):
             log.error("*** message add attempted w/o project id")
