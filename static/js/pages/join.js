@@ -140,7 +140,7 @@ app_page.features.push(function(app){
 					},
 					email:{
 						selector:'input.email',
-						validators:['max-254,'min-6','email','required'],
+						validators:['max-254','min-6','email','required'],
 						hint:''
 					},
 					tos_email:{
