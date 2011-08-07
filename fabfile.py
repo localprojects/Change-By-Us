@@ -192,11 +192,11 @@ def get_remote_host_info():
 #----- /decorator(s) -----
 
 #----- Utility Functions -----
-def sudo_as(cmd):
+def sudo_as(cmd, **kwargs):
     temp_user = env.user
     env.user = env.sudo_as
     print "sudoing command %s as user %s" % (cmd, env.sudo_as)
-    resp = sudo(cmd)
+    resp = sudo(cmd, **kwargs)
     env.user = temp_user
     return resp
      
@@ -661,7 +661,9 @@ def _webserver_do(action=''):
     
     if env.webserver == 'lighttpd':
         # Keep in mind that this has to be configured for the new lighttpd init script
-        sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params)
+        # Also, because of the way /etc/init.d/lighttpd works, we need to ensure theres no
+        # shell (ie bash -l -c) or pseudo-terminal 
+        sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params, shell=False, pty=False)
     elif env.webserver == 'apache':
         if env.os_name == 'rhel5':
             sudo_as('/usr/sbin/apachectl %(action)s' % params)
