@@ -75,14 +75,42 @@
                         <a class="close" href="#remove,{{ message.message_id }}"><span>Close</span></a>
                     {% endif %}
                     <div class="membrane">
-                        <div class="thumb">
-                            {% if message.owner.image_id %}
-                                <img width='50' src='{{d.template_data.media_root}}images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
-                            {% else %}
-                                <img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
-                            {% endif %}
-                        </div>
-                        <div class="main">
+                        <span class="message-wrapper">
+                            <span class="thumb">
+                                {% if message.owner.image_id %}
+                                    <img width='50' src='{{d.template_data.media_root}}images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt=""/>
+                                {% else %}
+                                    <img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+                                {% endif %}
+                            </span>
+                            
+                            <span class="main">
+                                {% if message.idea %}
+                                    <div class="note-card">
+                                        <cite class="note-meta-hd"></cite>
+                                        <blockquote>
+                                            <p>{{ message.idea.text }}</p>
+                                        </blockquote>
+                                        <cite class="note-meta-ft"></cite>
+                                    </div>
+                                {% endif %}
+
+                                {% if message.message_type == 'join' %}
+                                    <blockquote class="serif">
+                                        <p class='message-text'>{{ message.idea.text }}</p>
+                                    </blockquote>
+                                {% else %}
+                                    {% if message.file_id %}
+                                        <div class="file-thumb"><img src="/static/images/generic_file_thumbnail.png" alt="File thumbnail"></div>
+                                    {% endif %}
+                                    <blockquote class="serif">
+                                        <p class='message-text'>{{ message.body }}</p>
+                                    </blockquote>
+                                {% endif %}
+                            </span>
+                        </span>
+                        
+                        <span class="aside">
                             {% if message.message_type == 'join' %}
                                 <cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> joined the project!</cite>
                             {% elif message.message_type == 'goal_achieved' %}
@@ -90,34 +118,11 @@
                             {% elif message.message_type == 'endorsement' %}
 
                             {% elif message.message_type == 'member_comment' or message.message_type == 'admin_comment' %}
-                                <cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> said</cite>
+                                <cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong></cite>
                             {% endif %}
-
-                            {% if message.idea %}
-                                <div class="note-card">
-                                    <cite class="note-meta-hd"></cite>
-                                    <blockquote>
-                                        <p>{{ message.idea.text }}</p>
-                                    </blockquote>
-                                    <cite class="note-meta-ft"></cite>
-                                </div>
-                            {% endif %}
-
-                            {% if message.message_type == 'join' %}
-                                <blockquote class="serif">
-                                    <p class='message-text'>{{ message.idea.text }}</p>
-                                </blockquote>
-                            {% else %}
-                                {% if message.file_id %}
-                                    <div class="file-thumb"><img src="/static/images/generic_file_thumbnail.png" alt="File thumbnail"></div>
-                                {% endif %}
-                                <blockquote class="serif">
-                                    <p class='message-text'>{{ message.body }}</p>
-                                </blockquote>
-                            {% endif %}
-
+                            
                             <cite class="meta-ft"><span class="time-since">{{ message.created }}</span></cite>
-                        </div>
+                        </span>
                     </div>
                 </li>
             {% endfor %}
