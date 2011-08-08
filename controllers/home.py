@@ -278,9 +278,10 @@ class Home(Controller):
                     log.info("Got IntegrityError inserting fbid %s for uid %s" % (profile['id'], uid))
                     query = "select facebook_id from facebook_user where user_id = $uid"
                     res = self.db.query(query, {'uid':uid})
+                    fbid = None
                     if len(res) > 0:
                         fbid = res[0].facebook_id
-                    if fbid != profile['id']:
+                    if fbid is not None and fbid != profile['id']:
                         log.info("Stored fbid (%s) does not match provided fbid (%s). Updating facebook_user for uid %s" % (fbid, profile['id'], uid))
                         # Check if the existing id is correct or not
                         # If it's not correct, update the record

@@ -347,7 +347,7 @@ def _upload_interpolated_files(files):
                 abs_etc_path = os.path.join(*temp_path[:-1])    # assuming the last index is the file
                 abs_etc_file = os.path.join(*temp_path)
                 # We want the target path to exist, but not the target file
-                sudo_as('if [ -d %s ];then if [ ! -e %s ];then sudo ln -s %s %s; else echo "Target file already exists! Will not overwrite"; fi; else echo "Target path is incorrect"; fi' % (abs_etc_path, abs_etc_file, remote_file, abs_etc_file))
+                sudo_as('if [ -d %s ];then if [ ! -e %s ];then sudo ln -snf %s %s; else echo "Target file already exists! Will not overwrite"; fi; else echo "Target path is incorrect"; fi' % (abs_etc_path, abs_etc_file, remote_file, abs_etc_file))
                 
 
 #----- /CRON related tasks -----
