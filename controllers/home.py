@@ -275,11 +275,13 @@ class Home(Controller):
                     # Check if the facebook user id is the same as what's in the database
                     # If not, check if graph.facebook.com gives us the correct user for the existing id
                     # otherwise add the new facebook uid
-                    log.warn("Got IntegrityError inserting fbid %s for uid %s" % (profile['id'], uid))
+                    log.info("Got IntegrityError inserting fbid %s for uid %s" % (profile['id'], uid))
                     query = "select facebook_id from facebook_user where user_id = $uid"
-                    fbid = (self.db.query(query, {'uid':uid}))[0].facebook_id
+                    res = self.db.query(query, {'uid':uid})
+                    if len(res) > 0:
+                        fbid = res[0].facebook_id
                     if fbid != profile['id']:
-                        log.warn("Stored fbid (%s) does not match provided fbid (%s). Updating facebook_user for uid %s" % (fbid, profile['id'], uid))
+                        log.info("Stored fbid (%s) does not match provided fbid (%s). Updating facebook_user for uid %s" % (fbid, profile['id'], uid))
                         # Check if the existing id is correct or not
                         # If it's not correct, update the record
                         self.db.update('facebook_user', where='user_id=%s' % uid, facebook_id=profile['id'])
