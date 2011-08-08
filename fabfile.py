@@ -207,6 +207,15 @@ def sudo_as(cmd, **kwargs):
 # any customizations.
 
 @common_config
+def live():
+    """
+    Work on demo environment
+    """
+    if env.rcfile is None:
+        env.rcfile = 'rcfile.%s' % env.settings
+        print "Using default rcfile since one was not provided with --config option:" % env.rcfile
+
+@common_config
 def demo():
     """
     Work on demo environment
@@ -441,7 +450,7 @@ def bundle_code():
 
     local('cd %(tmp_path)s && gzip %(release)s.tar' % env)
 
-    print "Bundled code is at %(tmp_path)s/%(release)s.tar.gz"
+    print "Bundled code is at %(tmp_path)s/%(release)s.tar.gz" % env
     print "----- ATTENTION -----"
     print "If you plan to run the deployer at a later time, execute this first .."
     print "    echo 'release = %(release)s' >> %(rcfile)s" % env
