@@ -50,12 +50,12 @@ def enable_aws_ses():
 #    return sendQuota
 
 if __name__ == "__main__":
+    web.config.logfile = Config.get('logfile')
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
     if Config.get('dev'):
         web.config.debug = True        
     log.info("Debug: %s" % web.config.debug)
     web.config.session_parameters['cookie_name'] = 'gam'
-
 
     # TODO:
     # Start with SES and fall-back to SMTP if both are enabled
