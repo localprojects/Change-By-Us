@@ -124,7 +124,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         message_type_button: $dom.find('.conversation-tabs a'),
         file_uploader_container: $dom.find('.conversation-input .file-uploader'),
         input_file_widget: $dom.find('.conversation-input-file-field'),
-        input_message_widget: $dom.find('.conversation-input-message-field')
+        input_message_widget: $dom.find('.conversation-input-message-field'),
+        thumbs: $dom.find('.file-thumb')
     };
     
     var setLabelVisibility = function() {
@@ -285,6 +286,11 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             
             //Don't follow the link
             event.preventDefault();
+        }, 
+        thumb_click:function(event) {
+          var $this = $(this);
+          
+          alert($this.attr('data-id'));
         }
     };
     
@@ -507,6 +513,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         
         //Update the state object when the key is pressed
         elements.textpane.keyup(handlers.textpane_keyup);
+        
+        //Show the modal carousel of higher res media
+        elements.thumbs.live('click', handlers.thumb_click);
     };
     
     /**

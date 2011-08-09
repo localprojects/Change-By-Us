@@ -83,7 +83,7 @@
                                     <img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
                                 {% endif %}
                             </span>
-                            
+
                             <span class="main">
                                 {% if message.idea %}
                                     <div class="note-card">
@@ -101,7 +101,7 @@
                                     </blockquote>
                                 {% else %}
                                     {% if message.file_id %}
-                                        <div class="file-thumb"><img src="/static/images/generic_file_thumbnail.png" alt="File thumbnail"></div>
+                                        <a data-id="{{ message.file_id }}" class="file-thumb" href="javascript:void(0);"><img src="/static/images/generic_file_thumbnail.png" alt="File thumbnail"></a>
                                     {% endif %}
                                     <blockquote class="serif">
                                         <p class='message-text'>{{ message.body }}</p>
@@ -109,7 +109,7 @@
                                 {% endif %}
                             </span>
                         </span>
-                        
+
                         <span class="aside">
                             {% if message.message_type == 'join' %}
                                 <cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> joined the project!</cite>
@@ -120,7 +120,7 @@
                             {% elif message.message_type == 'member_comment' or message.message_type == 'admin_comment' %}
                                 <cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong></cite>
                             {% endif %}
-                            
+
                             <cite class="meta-ft"><span class="time-since">{{ message.created }}</span></cite>
                         </span>
                     </div>
