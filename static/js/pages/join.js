@@ -16,6 +16,11 @@ app_page.features.push(function(app){
 		$t.addClass('has-been-clicked').siblings().addClass('cannot-be-clicked');
 	});
 	
+	tc.jQ('.toc-link').bind('click',function(e){
+	    window.open(tc.jQ(this).attr('href'));
+	    return false;
+	})
+	
 	app.components.merlin = new tc.merlin(app,{
 		dom:tc.jQ('form.merlin'),
 		progress_element:tc.jQ('.merlin-progress'),
