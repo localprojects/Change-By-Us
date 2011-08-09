@@ -495,7 +495,8 @@ class Project(Controller):
     def addKeywords(self):
         projectId = self.request('project_id')
         keywords = self.request('text')
-                
+        # Sanitize the incoming data
+        # Remove special 
         if (projectId and keywords):
             return mProject.addKeywords(self.db, projectId, keywords.split(','))        
         else:

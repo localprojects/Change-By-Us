@@ -112,7 +112,7 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 					url: "/project/tag/add",
 					data: {
 						project_id: e.data.me.options.app.app_page.data.project.project_id,
-						text: text
+						text: tc.jQ.trim(text)
 					},
 					context: e.data.me,
 					type: "POST",
@@ -123,15 +123,20 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 							return;
 						}
 						tags = this.dom.find("ul.tag-cloud");
-						text = text.split(",");
+						text = data.split(",");
+						index = parseInt(this.dom.find('li', tags).last().attr('id').replace('keyword-', '')) + 1;
 						for (i in text) {
-							temptag = tc.jQ("<li class='admin' id='keyword-"+ text[i] +"'>"+
-								"<a href='/search?terms="+ text[i] +"'>"+ text[i] + "</a>"+
-								"<a class='remove-btn keyword' href='#remove,"+ text[i] +"'>"+
+						    var keyword = text[i];
+						    if(keyword.length == 0) continue;
+						    var escKeyword = escape(keyword);
+							temptag = tc.jQ("<li class='admin' id='keyword-"+ index +"'>"+
+								"<a href='/search?terms="+ escKeyword +"'>"+ keyword + "</a>"+
+								"<a class='remove-btn keyword' href='#remove,"+ escKeyword +"'>"+
 									"<span>Remove</span></a>"+
 							"</li>");
 							temptag.find('a.remove-btn.keyword').bind('click', {project:project,me:this}, this.handlers.remove_keyword);
 							tags.append(temptag);
+							index++;
 						}
 					}
 				});
@@ -157,7 +162,7 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 						url:'/project/tag/remove',
 						data:{
 							project_id: e.data.me.options.app.app_page.data.project.project_id,
-							text: t.href.split(',')[1]
+							text: unescape(t.href.split(',')[1])
 						},
 						context:e.data.me,
 						dataType:'text',
@@ -165,7 +170,9 @@ tc.gam.project_widgets.infopane = function(project,dom,deps,options){
 							if(data == 'False'){
 								return false;
 							}
-							this.dom.find('#keyword-'+t.href.split(',')[1]).remove();
+							var kId = '#keyword-'+(parseInt(data)+1);
+							tc.util.log("KID: " + kId);
+							this.dom.find(kId).remove();
 						}
 					});
 				}
