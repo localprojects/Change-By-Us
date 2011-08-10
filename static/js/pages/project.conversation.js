@@ -81,7 +81,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         
         //add user image
         if(d.owner.image_id){
-            $out.find('img').attr('src',options.app.app_page.media_root+'images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
+            $out.find('img').attr('src', options.app.app_page.media_root+'images/'+(d.owner.image_id%10)+'/'+d.owner.image_id+'.png' );
         } else {
             $out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
         }
@@ -248,27 +248,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             e.preventDefault();
             
             e.data.project.options.app.components.modal.show({
-                app:e.data.project.options.app,
-                source_element:tc.jQ('.modal-content.remove-message'),
-                submit:function(){
-                    tc.jQ.ajax({
-                        type:'POST',
-                        url:'/project/message/remove',
-                        data:{
-                            project_id: options.app.app_page.data.project.project_id,
-                            message_id: e.target.href.split(',')[1]
-                        },
-                        context:e.data.me,
-                        dataType:'text',
-                        success:function(data,ts,xhr){
-                            if(data == 'False'){
-                                return false;
-                            }
-                            $dom.find('#message-'+e.target.href.split(',')[1]).slideUp();
-                            runtime_data.offset--;
-                        }
-                    });
-                }
+                app:options.app,
+                source_element:tc.jQ('.modal-content.remove-message')
             });
         },
         textpane_keyup:function(event){
@@ -278,9 +259,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             //Pull the id off the link just clicked
             state.widgetId = tc.jQ(this).attr('id');
             
-            console.log('--state--');
-            console.log(state);
-            
             //Sync up the UI with the state object
             refreshUi();
             
@@ -288,9 +266,22 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             event.preventDefault();
         }, 
         thumb_click:function(event) {
-          var $this = $(this);
+            var $this = $(this);
+
+            event.preventDefault();
+
+            if (me.carousel) {
+                me.carousel.destroy();
+            }
           
-          alert($this.attr('data-id'));
+            project.options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.media-modal')
+            });
+
+            me.carousel = new tc.carousel({
+                element: tc.jQ('#modal .media-modal .carousel')
+            });
         }
     };
     

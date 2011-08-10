@@ -38,8 +38,6 @@ tc.modal.prototype.init = function(app, options){
         element: null
     }, options);
     
-    console.log(this.options);
-    
     //Init the overlay with set options
     this.options.element.overlay({
         top: '15%',
