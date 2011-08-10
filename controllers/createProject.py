@@ -8,6 +8,7 @@ from framework.image_server import *
 from framework.file_server import FileServer, S3FileServer
 from framework.config import Config
 from PIL import Image
+from StringIO import StringIO
 import lib.web
 import json
 
@@ -65,8 +66,35 @@ class CreateProject(Controller):
             return False
     
     def newFile(self):
-        # Requires a parameter qqfile
+        """
+        Controller for the ``/create/attachment`` endpoint.
+        
+        **Parameters:**
+        
+        ``qqfile`` (required)
+            Contains the file to be uploaded.
+        
+        ``max_width``/``max_height``
+            The maximum width and height to use for the thumbnail image.
+        
+        """
+        # Upload the file to the server
         file_info = self.uploadFile()
+        
+        if not file_info['id']:
+            log.error("*** createProject.newFile: Failed to create file.")
+            return self.json({ 'success' : False })
+        
+        # Save an attachment record to the database
+        attachment_id = mProject.createAttachment(self.db,
+                                                  media_id=file_info['id'],
+                                                  media_type=file_info['type'],
+                                                  title=file_info['name'])
+        
+        if not attachment_id:
+            log.error(("*** createProject.newFile: Failed insert row for file "
+                       "with info %s into the attachments table." % file_info))
+            return self.json({ 'success' : False })
         
         # Optionally, provide a max width and height for a thumbnail image
         max_width = self.request('max_width')
@@ -75,8 +103,10 @@ class CreateProject(Controller):
         thumb_url = self.getImageUrl(file_info['id'], max_width, max_height)
         
         return self.json({
-            'attachment_id' : file_info['id'], 
-            'type' : file_info['type'],
+            'id' : attachment_id,
+            'media_id' : file_info['id'], 
+            'media_type' : file_info['type'],
+            'title' : file_info['name'],
             'thumb_url' : thumb_url,
             'success' : (file_info['id'] != None)
         })
@@ -127,14 +157,12 @@ class CreateProject(Controller):
         Handler for the /create/file endpoint. Looks for the variable named
         qqfile from the request and saves it to a file on the server.
         
-        Return information about the file in a ``dict``::
-        
-            {
-              ``id``
-              ``type``
-            }
+        Return information about the file in a ``dict`` with keys ``id``,
+        ``type``, and ``name``
             
         """
+        file_info = {}
+        
         # Get file from the request
         if (len(self.request('qqfile')) > 100):
             log.info("*** == %s" % type(web.input()['qqfile']))
@@ -142,16 +170,15 @@ class CreateProject(Controller):
         else:
             data = web.data()
         
-        file_info = {}
+        file_info['name'] = self.request('qqfile') or ''
         
         # Get a file server wrapper
-        fs = S3FileServer()
+        fs = S3FileServer(self.db)
         
         # Determine whether it's an image or another type of file
         try:
-            import Image
-            import StringIO
-            file_buffer = StringIO.StringIO(data)
+            # If we can open it with the PIL, it's an image.
+            file_buffer = StringIO(data)
             Image.open(file_buffer)
             
             file_info['type'] = 'image'
@@ -159,7 +186,7 @@ class CreateProject(Controller):
             file_info['type'] = 'file'
         
         # Upload the file to the server
-        file_info['id'] = fs.add(self.db, data, 'giveaminute', [100, 100])
+        file_info['id'] = fs.add(data, None, [100, 100])
         
         return file_info
     

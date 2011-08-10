@@ -1332,4 +1332,40 @@ def createInviteRecord(db, projectId, message, inviterUserId, ideaId, email = No
         
 def createInviteBody(message, projectId):
     return "%s\n\n%sproject/%s" % (message, Config.get('default_host'), str(projectId))
+
+def createAttachment (db, media_type, media_id, 
+                      title, description=None):
+    """
+    Adds a new row to the attachments table.
     
+    **Arguments:**
+    
+    ``db``
+        A ``web.db.DB`` database wrapper
+    ``media_type``
+        The type of media.  For now, the supported types are ``'image'`` and 
+        ``'file'``.
+    ``media_id``
+        The context-specific ID of the attachment media.  For files and images,
+        this is the name under which the content is saved on the filesystem.
+    ``title``
+        The title of the attachment.  This will be the display name.  For files
+        and images, this is the name that the file had before uploading.
+    ``description``
+        A longer description of the attachment
+    
+    **Return:**
+
+    ``True`` if the record was successfully created; otherwise ``False``.
+    
+    """
+    try:
+        db.insert('attachments', type=media_type,
+                                 media_id=media_id,
+                                 title=title,
+                                 descriptions=description)
+        return True;
+    except Exception, e:
+        log.info("*** problem adding attachment to the database")
+        log.error(e)
+        return False

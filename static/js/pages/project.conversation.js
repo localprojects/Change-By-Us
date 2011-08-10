@@ -417,7 +417,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     var getFileUploader = function() {
         return new qq.FileUploader({
             element: elements.file_uploader_container.get(0),
-            action: '/create/file',
+            action: '/create/attachment',
             multiple: false,
             sizeLimit: 20971520, //max size, 20 mb in bytes
             params: {
