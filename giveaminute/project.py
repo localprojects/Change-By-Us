@@ -1058,7 +1058,7 @@ def removeProjectGoal(db, projectGoalId):
         log.error(e)    
         return False 
         
-def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None, fileId = None):
+def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None, attachmentId = None):
     """
     Insert a new record into the project_message table.  Return true if 
     successful.  Otherwise, if any exceptions arise, log and return false.
@@ -1073,7 +1073,7 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
                                     message = message,
                                     user_id = userId,
                                     idea_id = ideaId,
-                                    file_id = fileId,
+                                    file_id = attachmentId,
                                     project_goal_id = projectGoalId,
                                     message_type  = message_type,
                                     num_flags = numFlags,
@@ -1338,8 +1338,8 @@ def createAttachment (db, media_type, media_id,
     """
     Adds a new row to the attachments table.
     
-    **Arguments:**
-    
+    Arguments:
+    ----------
     ``db``
         A ``web.db.DB`` database wrapper
     ``media_type``
@@ -1354,18 +1354,19 @@ def createAttachment (db, media_type, media_id,
     ``description``
         A longer description of the attachment
     
-    **Return:**
-
+    Return:
+    -------
     ``True`` if the record was successfully created; otherwise ``False``.
     
     """
     try:
-        db.insert('attachments', type=media_type,
-                                 media_id=media_id,
-                                 title=title,
-                                 descriptions=description)
-        return True;
+        attachment_id = db.insert('attachments', 
+                                  type=media_type,
+                                  media_id=media_id,
+                                  title=title,
+                                  descriptions=description)
+        return attachment_id
     except Exception, e:
         log.info("*** problem adding attachment to the database")
         log.error(e)
-        return False
+        return None

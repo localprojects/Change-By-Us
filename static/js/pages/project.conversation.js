@@ -384,7 +384,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
                             thumb_url: tc.jQ('.conversation-file-thumb').attr('src'),
-                            file_id: state.fileId
+                            attachment_id: state.fileId
                         };
                     }
                 },
@@ -477,7 +477,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 if (responseJSON.success) {
                     $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.thumb_url + '>');
                     state.fileUploader = 'successful';
-                    state.fileId = responseJSON.file_id;
+                    state.fileId = responseJSON.id;
                 } 
                 
                 else {

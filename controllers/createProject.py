@@ -91,7 +91,7 @@ class CreateProject(Controller):
                                                   media_type=file_info['type'],
                                                   title=file_info['name'])
         
-        if not attachment_id:
+        if attachment_id is None:
             log.error(("*** createProject.newFile: Failed insert row for file "
                        "with info %s into the attachments table." % file_info))
             return self.json({ 'success' : False })
