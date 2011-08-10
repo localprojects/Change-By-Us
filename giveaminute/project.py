@@ -193,6 +193,9 @@ def message(id,
             idea = None, 
             ideaSubType = None, 
             ideaCreatedDatetime = None, 
+            attachmentType = None,
+            attachmentId = None,
+            attachmentTitle = None,
             projectId = None, 
             projectTitle = None):
     """
@@ -220,6 +223,8 @@ def message(id,
         ideaObj = smallIdea(ideaId, idea, None, None, ideaSubType)
     else:
         ideaObj = None
+    
+    attachmentObj = smallAttachment(attachmentType, attachmentId, attachmentTitle)
          
     #something for goals here
     
@@ -230,9 +235,43 @@ def message(id,
                 body = message,
                 created = str(createdDatetime),
                 idea = ideaObj,
+                attachment = attachmentObj,
                 project_id = projectId,
-                project_title = projectTitle)
+                project_title = projectTitle,
+                )
                                                         
+
+def smallAttachment(media_type, media_id, title):
+    """Returns a dictionary representing basic attachment information"""
+    if media_type and media_id:
+        return dict(type=media_type,
+                    id=media_id,
+                    title=title,
+                    thumb_url=getAttachmentThumbUrl(media_type, media_id))
+    else:
+        return None
+
+
+def getAttachmentThumbUrl(media_type, media_id):
+    """
+    Get the URL to an image representation of the media. For images, this may be
+    used for getting a thumbnail. Specify max width and height in that case.
+    Otherwise you'll probably just get a generic file image.
+    
+    """
+    if media_type == 'file':
+        static_root = Config.get('staticfiles').get('root')
+        stub_thumb_name = 'generic_file_thumbnail.png'
+        
+        return os.path.join(static_root, 'images', stub_thumb_name)
+    
+    elif media_type == 'image':
+        media_root = Config.get('media').get('root')
+        image_thumb_name = '%s_thumb' % media_id
+        
+        return os.path.join(media_root, image_thumb_name)
+        
+
 def smallUser(id, first, last, image):
     if (id and first and last):
         return dict(u_id = id,
@@ -1146,6 +1185,9 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                     m.message,
                     m.file_id,
                     m.created_datetime,
+                    a.type as attachment_type,
+                    a.media_id as attachment_id,
+                    a.title as attachment_title,
                     u.user_id,
                     u.first_name,
                     u.last_name,
@@ -1159,6 +1201,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                 from project_message m
                 inner join user u on u.user_id = m.user_id
                 left join idea i on i.idea_id = m.idea_id
+                left join attachments a on a.id = m.file_id
                 where m.project_id = $id and m.is_active = 1
                 and ($filterBy is null or m.message_type = $filterBy)
                 order by m.created_datetime desc
@@ -1177,7 +1220,10 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
                                     item.idea_id, 
                                     item.idea_description, 
                                     item.idea_submission_type, 
-                                    item.idea_created_datetime))
+                                    item.idea_created_datetime,
+                                    item.attachment_type,
+                                    item.attachment_id,
+                                    item.attachment_title))
     except Exception, e:
         log.info("*** couldn't get messages")
         log.error(e)

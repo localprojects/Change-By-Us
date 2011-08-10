@@ -97,6 +97,7 @@ class Project(Controller):
             return self.not_found()
         
     def showProject(self, projectId):
+        """The main project detail view controller."""
         if (projectId):
             project = mProject.Project(self.db, projectId)
             
@@ -113,6 +114,7 @@ class Project(Controller):
                 return self.not_found()
         else:
             return self.not_found()
+    
         
     def showConversationRSS(self, projectId):
         if (projectId):

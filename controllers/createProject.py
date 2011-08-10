@@ -242,15 +242,5 @@ class CreateProject(Controller):
         that case. Otherwise you'll probably just get a generic file image.
         
         """
-        if media_type == 'file':
-            static_root = Config.get('staticfiles').get('root')
-            stub_thumb_name = 'generic_file_thumbnail.png'
-            
-            return os.path.join(static_root, 'images', stub_thumb_name)
-        
-        elif media_type == 'image':
-            media_root = Config.get('media').get('root')
-            image_thumb_name = '%s_thumb' % media_id
-            
-            return os.path.join(media_root, image_thumb_name)
+        return mProject.getAttachmentThumbUrl(media_type, media_id)
 
