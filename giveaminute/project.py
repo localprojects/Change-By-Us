@@ -200,6 +200,21 @@ def message(id,
     message, given by the parameters.  This data is usually pulled off of 
     several database tables with keys linking back to a message_id.
     
+    **Return:**
+
+    A ``dict`` with keys:
+
+    - ``message_id`` -- Primary key
+    - ``message_type`` -- ``'join'``, ``'goal_achieved'``,  ``'endorsement'``, 
+      ``'member_comment'``, or ``'admin_comment'``
+    - ``file_id`` -- The primary key of the attachment, if any
+    - ``owner`` -- The user that owns the message
+    - ``body`` -- The content of the message
+    - ``created`` -- The creation date
+    - ``idea`` -- The idea instance attached to the message, if any
+    - ``project_id`` -- The primary key of the project that the message is for
+    - ``project_title`` -- The title of the project
+    
     """
     if (ideaId):
         ideaObj = smallIdea(ideaId, idea, None, None, ideaSubType)
