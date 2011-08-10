@@ -266,22 +266,44 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             event.preventDefault();
         }, 
         thumb_click:function(event) {
-            var $this = $(this);
 
             event.preventDefault();
+
+            project.options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.conversation-media-modal')
+            });
+
+            var $carousel = tc.jQ('#modal .conversation-media-modal .carousel');
 
             if (me.carousel) {
                 me.carousel.destroy();
             }
           
-            project.options.app.components.modal.show({
-                app:options.app,
-                source_element:tc.jQ('.media-modal')
-            });
+            //this will be ajax, but you get the idea
+            setTimeout(function(){
+                var results = ['thing 1', 'thing 2', 'thing 3'],
+                    html = '', 
+                    i;
 
-            me.carousel = new tc.carousel({
-                element: tc.jQ('#modal .media-modal .carousel')
-            });
+
+                //with the ajax results
+                for (i=0; i<results.length; i++) {
+                    html += '<li style="height:200px;">' + results[i] + '</li>';
+                }
+                
+                $carousel.find('.items').append(html);
+                
+                me.carousel = new tc.carousel({
+                    element: $carousel,
+                    scrollable: {
+                        items: '.items',
+                        speed: 300,
+                        circular: true,
+                        initialIndex: 1
+                    }
+                });
+            }, 2500);
         }
     };
     
