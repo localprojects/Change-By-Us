@@ -184,12 +184,23 @@ class CreateProject(Controller):
         
         # If it's an image, upload the thumbnail as well
         if media_type == 'image':
-            thumb = self.makeThumbnailImage(data, (100, 100))
-            if thumb:
-                fs.add(thumb, media_id + '_thumb')
+            small = self.makeThumbnailImage(data, self.SMALL_THUMB_SIZE)
+            medium = self.makeThumbnailImage(data, self.MEDIUM_THUMB_SIZE)
+            large = self.makeThumbnailImage(data, self.LARGE_THUMB_SIZE)
+            
+            if small:
+                fs.add(small, mProject.getAttachmentThumbUrl(media_type, media_id, 'small'))
+            if medium:
+                fs.add(medium, mProject.getAttachmentThumbUrl(media_type, media_id, 'medium'))
+            if large:
+                fs.add(large, mProject.getAttachmentThumbUrl(media_type, media_id, 'large'))
         
         return file_info
     
+    
+    SMALL_THUMB_SIZE = (100,100)
+    MEDIUM_THUMB_SIZE = (240,240)
+    LARGE_THUMB_SIZE = (360,360)
     
     def makeThumbnailImage(self, data, size):
         """
@@ -209,7 +220,7 @@ class CreateProject(Controller):
             log.error('*** Error while opening image data: %s' % e)
             return
         
-        # Try to write the thumbnail
+        # Try to write the thumbnails
         try:
             img.thumbnail(size, Image.ANTIALIAS)
             img.save(write_buffer, img_format)
@@ -242,5 +253,5 @@ class CreateProject(Controller):
         that case. Otherwise you'll probably just get a generic file image.
         
         """
-        return mProject.getAttachmentThumbUrl(media_type, media_id)
+        return mProject.getAttachmentThumbUrl(media_type, media_id, self.SMALL_THUMB_SIZE)
 
