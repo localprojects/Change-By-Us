@@ -247,9 +247,18 @@ def smallAttachment(media_type, media_id, title):
         return dict(type=media_type,
                     id=media_id,
                     title=title,
+                    url=getAttachmentUrl(media_type, media_id),
                     thumb_url=getAttachmentThumbUrl(media_type, media_id))
     else:
         return None
+
+
+def getAttachmentUrl(media_type, media_id):
+    """Get the URL to wherever the media is stored."""
+    if media_type in ('file', 'image'):
+        media_root = Config.get('media').get('root')
+        
+        return os.path.join(media_root, media_id)
 
 
 def getAttachmentThumbUrl(media_type, media_id):
