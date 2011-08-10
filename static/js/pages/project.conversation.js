@@ -259,9 +259,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             //Pull the id off the link just clicked
             state.widgetId = tc.jQ(this).attr('id');
             
-            console.log('--state--');
-            console.log(state);
-            
             //Sync up the UI with the state object
             refreshUi();
             
@@ -269,14 +266,22 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             event.preventDefault();
         }, 
         thumb_click:function(event) {
-          var $this = $(this);
+            var $this = $(this);
+
+            event.preventDefault();
+
+            if (me.carousel) {
+                me.carousel.destroy();
+            }
           
-          event.preventDefault();
-          
-          project.options.app.components.modal.show({
-              app:options.app,
-              source_element:tc.jQ('.modal-content.remove-message')
-          });
+            project.options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.media-modal')
+            });
+
+            me.carousel = new tc.carousel({
+                element: tc.jQ('#modal .media-modal .carousel')
+            });
         }
     };
     
