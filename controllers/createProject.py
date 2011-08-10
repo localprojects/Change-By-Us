@@ -177,19 +177,63 @@ class CreateProject(Controller):
         fs = S3FileServer(self.db)
         
         # Determine whether it's an image or another type of file
+        media_type = file_info['type'] = self.getFileMediaType(data)
+        
+        # Upload the file to the server
+        media_id = file_info['id'] = fs.add(data, None)
+        
+        # If it's an image, upload the thumbnail as well
+        if media_type == 'image':
+            thumb = self.makeThumbnailImage(data, (100, 100))
+            if thumb:
+                fs.add(thumb, media_id + '_thumb')
+        
+        return file_info
+    
+    
+    def makeThumbnailImage(self, data, size):
+        """
+        Creates a thumbnail of the given size from the given image data.
+        Return the image data in a string.
+        
+        """
+        from StringIO import StringIO
+        
+        # Try to open the image
+        try:
+            read_buffer = StringIO(data)
+            img = Image.open(read_buffer)
+            img_format = img.format
+            write_buffer = StringIO()
+        except IOError, e:
+            log.error('*** Error while opening image data: %s' % e)
+            return
+        
+        # Try to write the thumbnail
+        try:
+            img.thumbnail(size, Image.ANTIALIAS)
+            img.save(write_buffer, img_format)
+        except IOError, e:
+            log.error('*** Error while saving thumbnail data: %s' %e)
+            return
+        
+        return write_buffer.getvalue()
+    
+        
+    def getFileMediaType(self, data):
+        """
+        Determine whether the file is an image or some other type of file.
+        
+        """
         try:
             # If we can open it with the PIL, it's an image.
             file_buffer = StringIO(data)
             img = Image.open(file_buffer)
-            
-            file_info['type'] = 'image'
+            return 'image'
+        
         except IOError:
-            file_info['type'] = 'file'
-        
-        # Upload the file to the server
-        file_info['id'] = fs.add(data, None, [100, 100])
-        
-        return file_info
+            return 'file'
+    
     
     def getThumbUrl(self, media_type, media_id, max_width=None, max_height=None):
         """
@@ -209,4 +253,4 @@ class CreateProject(Controller):
             image_thumb_name = '%s_thumb' % media_id
             
             return os.path.join(media_root, image_thumb_name)
-        
+
