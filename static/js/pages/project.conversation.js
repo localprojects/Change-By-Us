@@ -288,14 +288,16 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 },
                 dataType:'json',
                 success: function(data, status, xhr) {
+                    tc.util.log('messages');
                     tc.util.log(data);
+                    
                     var html = '', 
                         i;
 
                     //with the ajax results
                     for (i=0; i<data.length; i++) {
                         if (data[i].attachment && data[i].attachment.type === 'image') {
-                            html += '<li><div class="attachment-img"><img src="' + data[i].attachment.url + '" alt="' + data[i].attachment.title + '" /></div>' + 
+                            html += '<li><div class="attachment-img"><img src="' + data[i].attachment.large_thumb_url + '" alt="' + data[i].attachment.title + '" /></div>' + 
                                     '<div class="attachment-desc">' + data[i].body + '</div></li>';
                         }
                     }
