@@ -330,8 +330,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
-        if (data.thumb_url) {
-            markup.find('.file-thumb').html('<img src="'+data.thumb_url+'" alt="File thumbnail" />');
+        if (data.small_thumb_url) {
+            markup.find('.file-thumb').html('<img src="'+data.small_thumb_url+'" alt="File thumbnail" />');
         }
         
         if(options.app.app_page.user){
