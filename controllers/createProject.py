@@ -30,7 +30,7 @@ class CreateProject(Controller):
             imageId = self.uploadImage()
         
             return self.json(dict(thumbnail_id = imageId, success = (imageId != None) ))
-        elif (action == 'file'):
+        elif (action == 'attachment'):
             return self.newFile()
         else:
             return self.newProject()  
@@ -66,19 +66,19 @@ class CreateProject(Controller):
     
     def newFile(self):
         # Requires a parameter qqfile
-        file_id = self.uploadFile()
+        file_info = self.uploadFile()
         
         # Optionally, provide a max width and height for a thumbnail image
         max_width = self.request('max_width')
         max_height = self.request('max_height')
         
-        thumb_url = self.getImageUrl(file_id, max_width, max_height)
-        print thumb_url
+        thumb_url = self.getImageUrl(file_info['id'], max_width, max_height)
         
         return self.json({
-            'file_id' : file_id, 
+            'attachment_id' : file_info['id'], 
+            'type' : file_info['type'],
             'thumb_url' : thumb_url,
-            'success' : (file_id != None)
+            'success' : (file_info['id'] != None)
         })
     
     def getKeywordsJSON(self):
@@ -127,6 +127,13 @@ class CreateProject(Controller):
         Handler for the /create/file endpoint. Looks for the variable named
         qqfile from the request and saves it to a file on the server.
         
+        Return information about the file in a ``dict``::
+        
+            {
+              ``id``
+              ``type``
+            }
+            
         """
         # Get file from the request
         if (len(self.request('qqfile')) > 100):
@@ -135,13 +142,26 @@ class CreateProject(Controller):
         else:
             data = web.data()
         
+        file_info = {}
+        
         # Get a file server wrapper
         fs = S3FileServer()
         
-        # Upload the file to the server
-        file_id = fs.add(self.db, data, 'giveaminute', [100, 100])
+        # Determine whether it's an image or another type of file
+        try:
+            import Image
+            import StringIO
+            file_buffer = StringIO.StringIO(data)
+            Image.open(file_buffer)
+            
+            file_info['type'] = 'image'
+        except IOError:
+            file_info['type'] = 'file'
         
-        return file_id
+        # Upload the file to the server
+        file_info['id'] = fs.add(self.db, data, 'giveaminute', [100, 100])
+        
+        return file_info
     
     def getImageUrl(self, file_id, max_width=None, max_height=None):
         """
