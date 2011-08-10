@@ -100,7 +100,8 @@ class CreateProject(Controller):
         max_width = self.request('max_width')
         max_height = self.request('max_height')
         
-        thumb_url = self.getImageUrl(file_info['id'], max_width, max_height)
+        thumb_url = self.getThumbUrl(file_info['type'], file_info['id'], 
+                                     max_width, max_height)
         
         return self.json({
             'id' : attachment_id,
@@ -179,7 +180,7 @@ class CreateProject(Controller):
         try:
             # If we can open it with the PIL, it's an image.
             file_buffer = StringIO(data)
-            Image.open(file_buffer)
+            img = Image.open(file_buffer)
             
             file_info['type'] = 'image'
         except IOError:
@@ -190,14 +191,18 @@ class CreateProject(Controller):
         
         return file_info
     
-    def getImageUrl(self, file_id, max_width=None, max_height=None):
+    def getThumbUrl(self, media_type, media_id, max_width=None, max_height=None):
         """
-        Get the URL to an image representation of the file. For images, this may
-        be used for getting a thumbnail. Specify max width and height in that
-        case. Otherwise you'll probably just get a generic file image.
+        Get the URL to an image representation of the media. For images, this
+        may be used for getting a thumbnail. Specify max width and height in
+        that case. Otherwise you'll probably just get a generic file image.
         
         """
-        static_root = Config.get('staticfiles').get('root')
-        stub_thumb_name = 'generic_file_thumbnail.png'
+        if media_type == 'file':
+            static_root = Config.get('staticfiles').get('root')
+            stub_thumb_name = 'generic_file_thumbnail.png'
+            
+            return os.path.join(static_root, 'images', stub_thumb_name)
         
-        return os.path.join(static_root, 'images', stub_thumb_name)
+        elif media_type == 'image':
+            
