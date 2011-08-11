@@ -291,7 +291,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 dataType:'json',
                 success: function(data, status, xhr) {
                     var i, selectedIndex = 0, html = '';
-
+                    
                     //with the ajax results
                     for (i=0; i<data.length; i++) {
                         if (data[i].attachment && data[i].attachment.type === 'image') {
@@ -333,8 +333,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
-        if (data.small_thumb_url) {
-            markup.find('.file-thumb').html('<img src="'+data.small_thumb_url+'" alt="File thumbnail" />');
+        if (data.medium_thumb_url) {
+            markup.find('.file-thumb').html('<img src="'+data.medium_thumb_url+'" alt="File thumbnail" />');
         }
         
         if(options.app.app_page.user){
