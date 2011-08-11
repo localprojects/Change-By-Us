@@ -339,7 +339,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.attr('id','message-'+data.message_id);
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
-        markup.find('p.message-body').html(handlers.construct_links(data.message));
+        markup.find('p.message-text').html(handlers.construct_links(data.message));
         
         if (data.attachment && data.attachment.medium_thumb_url) {
             $thumb = markup.find('.file-thumb')
