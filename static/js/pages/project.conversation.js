@@ -340,8 +340,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
-        if (data.medium_thumb_url) {
-            markup.find('.file-thumb').html('<img src="'+data.medium_thumb_url+'" alt="File thumbnail" />');
+        console.log(data)
+        if (data.attachment) {
+            markup.find('.file-thumb').html('<img src="'+data.attachment.medium_thumb_url+'" alt="File thumbnail" />');
         }
         
         if(options.app.app_page.user){
@@ -408,7 +409,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
                             thumb_url: tc.jQ('.conversation-file-thumb').attr('src'),
-                            attachment_id: state.fileId
+                            attachment: state.message_attachment
                         };
                     }
                 },
@@ -501,7 +502,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 if (responseJSON.success) {
                     $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.small_thumb_url + '>');
                     state.fileUploader = 'successful';
-                    state.fileId = responseJSON.id;
+                    state.message_attachment = responseJSON;
                 } 
                 
                 else {
