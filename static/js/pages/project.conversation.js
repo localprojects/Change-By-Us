@@ -125,7 +125,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         file_uploader_container: $dom.find('.conversation-input .file-uploader'),
         input_file_widget: $dom.find('.conversation-input-file-field'),
         input_message_widget: $dom.find('.conversation-input-message-field'),
-        thumbs: $dom.find('.file-thumb')
+        media_thumbs: $dom.find('.file-thumb.media')
     };
     
     var setLabelVisibility = function() {
@@ -265,7 +265,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             //Don't follow the link
             event.preventDefault();
         }, 
-        thumb_click:function(event) {
+        media_thumb_click:function(event) {
             var $carousel, 
                 $carouselControls,
                 fileId = parseInt($(this).attr('data-id'), 10);
@@ -333,16 +333,28 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     
     function generate_message_markup(data){
         tc.util.dump(data);
-        var markup;
-        markup = tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
+        var $thumb,
+            markup = tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
         markup.attr('id','message-'+data.message_id);
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
         console.log(data)
-        if (data.attachment_medium_thumb_url) {
-            markup.find('.file-thumb').html('<img src="'+data.attachment_medium_thumb_url+'" alt="File thumbnail" />');
+        if (data.attachment.medium_thumb_url) {
+            $thumb = markup.find('.file-thumb')
+                .attr('data-id', data.attachment.id)
+                .html('<img src="'+data.attachment.medium_thumb_url+'" alt="File thumbnail" />');
+            
+            //If this is a generica file, go download
+            if (data.attachment.media_type === 'file') {
+                $thumb.addClass('file');
+                //TODO See if we can add the url to the attachment object
+                //so we can download a file. Edge case support.
+                //.attr('href', data.attachment.url);
+            } else {
+                $thumb.addClass('media');
+            }
         }
         
         if(options.app.app_page.user){
@@ -408,9 +420,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             project_id:merlin.app.app_page.data.project.project_id,
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
-                            thumb_url: tc.jQ('.conversation-file-thumb').attr('src'),
                             attachment_id: state.message_attachment.id,
-                            attachment_medium_thumb_url: state.message_attachment.medium_thumb_url
+                            attachment: state.message_attachment
                         };
                     }
                 },
@@ -554,7 +565,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         elements.textpane.keyup(handlers.textpane_keyup);
         
         //Show the modal carousel of higher res media
-        elements.thumbs.live('click', handlers.thumb_click);
+        elements.media_thumbs.live('click', handlers.media_thumb_click);
     };
     
     /**

@@ -101,7 +101,11 @@
                                     </blockquote>
                                 {% else %}
                                     {% if message.attachment %}
-                                        <a data-id="{{ message.file_id }}" class="file-thumb" href="javascript:void(0);"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
+                                        {% if message.attachment.type == 'file' %}
+                                            <a data-id="{{ message.file_id }}" class="file-thumb file" href="{{ message.attachment.url }}" target="_blank"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
+                                        {% else %}
+                                            <a data-id="{{ message.file_id }}" class="file-thumb media" href="javascript:void(0);"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
+                                        {% endif %}
                                     {% endif %}
                                     <blockquote class="serif">
                                         <p class='message-text'>{{ message.body }}</p>
@@ -159,7 +163,7 @@
     </div>
     -->
 
-    <div class="modal-content conversation-media-modal">
+    <div class="template-content modal-content conversation-media-modal">
         <div class="carousel">
             <a class="carousel-controls prev" href="javascript:void(0);">
                 <div class="carousel-controls-icon"></div>
@@ -187,7 +191,7 @@
             <img width='50' src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
         </div>
         <div class="main">
-            <div class="file-thumb"></div>
+            <a class="file-thumb" href="javascript:void(0);"></a>
             <!-- <cite class="meta-hd"><strong></strong> joined the project!</cite> -->
             <!-- <cite class="meta-hd"><strong><a></a></strong> said</cite> -->
             <blockquote class="serif">
