@@ -500,7 +500,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 tc.util.log(responseJSON);
                 
                 if (responseJSON.success) {
-                    $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.thumb_url + '>');
+                    $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.small_thumb_url + '>');
                     state.fileUploader = 'successful';
                     state.message_attachment = responseJSON;
                 } 
