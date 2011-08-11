@@ -105,6 +105,7 @@ class CreateProject(Controller):
             'medium_thumb_url' : mProject.getAttachmentThumbUrl(file_info['type'], file_info['id'], 'medium'),
             'large_thumb_url' : mProject.getAttachmentThumbUrl(file_info['type'], file_info['id'], 'large'),
             'success' : (file_info['id'] != None)
+            #TODO add url
         })
 
     def getKeywordsJSON(self):
