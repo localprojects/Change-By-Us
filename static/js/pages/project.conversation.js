@@ -266,7 +266,9 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             event.preventDefault();
         }, 
         thumb_click:function(event) {
-
+            var $carousel, 
+                fileId = parseInt($(this).attr('data-id'), 10);
+            
             event.preventDefault();
 
             project.options.app.components.modal.show({
@@ -274,7 +276,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 source_element:tc.jQ('.conversation-media-modal')
             });
 
-            var $carousel = tc.jQ('#modal .conversation-media-modal .carousel');
+            $carousel = tc.jQ('#modal .conversation-media-modal .carousel');
 
             if (me.carousel) {
                 me.carousel.destroy();
@@ -288,21 +290,22 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 },
                 dataType:'json',
                 success: function(data, status, xhr) {
-                    tc.util.log('messages');
-                    tc.util.log(data);
-                    
-                    var html = '', 
-                        i;
+                    var i, selectedIndex = 0, html = '';
 
                     //with the ajax results
                     for (i=0; i<data.length; i++) {
                         if (data[i].attachment && data[i].attachment.type === 'image') {
                             html += '<li><div class="attachment-img"><img src="' + data[i].attachment.large_thumb_url + '" alt="' + data[i].attachment.title + '" /></div>' + 
                                     '<div class="attachment-desc">' + data[i].body + '</div></li>';
+                            
+                            //Is this the index that we clicked to open the carousel?
+                            if (data[i].file_id === fileId) {
+                                selectedIndex = i;
+                            }
                         }
                     }
 
-                    $carousel.find('.items').append(html);
+                    $carousel.find('.items').html(html);
 
                     me.carousel = new tc.carousel({
                         element: $carousel,
@@ -310,12 +313,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             items: '.items',
                             speed: 300,
                             circular: true,
-                            initialIndex: 1
+                            initialIndex: selectedIndex
                         }
                     });
                 },
                 error: function(xhr, status, error) {
-                    
+                    $carousel.find('.items').html('<li>Uh oh. We couldn\'t get that image. Would you mind trying again?</li>');
                 }
             });
         }
