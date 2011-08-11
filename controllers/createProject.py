@@ -182,27 +182,30 @@ class CreateProject(Controller):
         # Upload the file to the server
         media_id = file_info['id'] = fs.add(data, None)
         
-        # If it's an image, upload the thumbnail as well
+        # If it's an image, upload the thumbnails as well
         if media_type == 'image':
-            small = self.makeThumbnailImage(data, self.SMALL_THUMB_SIZE)
-            medium = self.makeThumbnailImage(data, self.MEDIUM_THUMB_SIZE)
-            large = self.makeThumbnailImage(data, self.LARGE_THUMB_SIZE)
-            
-            if small:
-                fs.add(small, mProject.getAttachmentThumbUrl(media_type, media_id, 'small'))
-            if medium:
-                fs.add(medium, mProject.getAttachmentThumbUrl(media_type, media_id, 'medium'))
-            if large:
-                fs.add(large, mProject.getAttachmentThumbUrl(media_type, media_id, 'large'))
+            self.saveThumbnailImage(fs, media_type, media_id, data, 'small', self.SMALL_THUMB_SIZE)
+            self.saveThumbnailImage(fs, media_type, media_id, data, 'medium', self.MEDIUM_THUMB_SIZE)
+            self.saveThumbnailImage(fs, media_type, media_id, data, 'large', self.LARGE_THUMB_SIZE)
         
         return file_info
+    
+    
+    def saveThumbnailImage(self, fs, media_type, media_id, data, name, size):
+        thumb = self.getThumbnailImageData(data, size)
+        thumb_filename = mProject.getAttachmentThumbFileName(media_type, media_id, name)
+        
+        if thumb and fs.add(thumb, thumb_filename):
+            log.info("Wrote %s thumbnail image to %s" % (name, thumb_filename))
+        else:
+            log.error("Failed to write %s thumbnail image to %s" % (name, small_filename))
     
     
     SMALL_THUMB_SIZE = (100,100)
     MEDIUM_THUMB_SIZE = (240,240)
     LARGE_THUMB_SIZE = (360,360)
     
-    def makeThumbnailImage(self, data, size):
+    def getThumbnailImageData(self, data, size):
         """
         Creates a thumbnail of the given size from the given image data.
         Return the image data in a string.
@@ -253,5 +256,5 @@ class CreateProject(Controller):
         that case. Otherwise you'll probably just get a generic file image.
         
         """
-        return mProject.getAttachmentThumbUrl(media_type, media_id, self.SMALL_THUMB_SIZE)
+        return mProject.getAttachmentThumbUrl(media_type, media_id, 'small')
 

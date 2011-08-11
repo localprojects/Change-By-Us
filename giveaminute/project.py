@@ -263,6 +263,15 @@ def getAttachmentUrl(media_type, media_id):
         return os.path.join(media_root, media_id)
 
 
+def getAttachmentThumbFileName(media_type, media_id, size):
+    """Get a file name for an image representation of the media."""
+    if media_type == 'file':
+        return 'generic_file_thumbnail.png'
+    
+    elif media_type == 'image':
+        return '%s_thumb_%s' % (media_id, size)
+        
+
 def getAttachmentThumbUrl(media_type, media_id, size):
     """
     Get the URL to an image representation of the media. For images, this may be
@@ -278,7 +287,7 @@ def getAttachmentThumbUrl(media_type, media_id, size):
     
     elif media_type == 'image':
         media_root = Config.get('media').get('root')
-        image_thumb_name = '%s_thumb_%s' % (media_id, size)
+        image_thumb_name = getAttachmentThumbFileName(media_type, media_id, size)
         
         return os.path.join(media_root, image_thumb_name)
         
