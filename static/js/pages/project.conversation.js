@@ -75,9 +75,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     };
     
     var generate_message = function(d){
-        var $out, $main;
-        $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children());
-        $main = $out.find('.main');
+        var $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children()),
+            $main = $out.find('.main');
         
         //add user image
         if(d.owner.image_id){
@@ -85,15 +84,13 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         } else {
             $out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
         }
-        
+
+        //set the user's name and profile link
+        $out.find('.username').html('<a href="/useraccount/'+d.owner.u_id+'">'+d.owner.name+'</a>')
+                
         //handle message type for message author heading
-        switch(d.message_type){
-            case 'join':
-                $main.prepend('<cite class="meta-hd"><strong><a href="/useraccount/'+'XX'+'">'+'XX'+'</a></strong> joined the project!</cite>');
-                break;
-            default:
-                $main.prepend('<cite class="meta-hd"><strong><a href="/useraccount/'+'XX'+'">'+'XX'+'</a></strong> said</cite>');
-                break;
+        if (d.message_type === 'join') {
+            $out.find('.useraction').html(' joined the project!');
         }
         
         //add the idea card if idea is present
@@ -109,7 +106,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         
         //add message body, text dependent on message type      
         $out.find('blockquote.serif p').html(handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
-        $out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
         $out.attr('id','message-'+d.message_id);
         $out.find('.meta-ft').text(d.created).time_since();;
         $out.find('a.close').attr('href','#remove,'+d.message_id);
