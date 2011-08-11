@@ -341,8 +341,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
         console.log(data)
-        if (data.attachment) {
-            markup.find('.file-thumb').html('<img src="'+data.attachment.medium_thumb_url+'" alt="File thumbnail" />');
+        if (data.attachment_medium_thumb_url) {
+            markup.find('.file-thumb').html('<img src="'+data.attachment_medium_thumb_url+'" alt="File thumbnail" />');
         }
         
         if(options.app.app_page.user){
@@ -409,7 +409,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
                             thumb_url: tc.jQ('.conversation-file-thumb').attr('src'),
-                            attachment: state.message_attachment
+                            attachment_id: state.message_attachment.id,
+                            attachment_medium_thumb_url: state.message_attachment.medium_thumb_url
                         };
                     }
                 },
