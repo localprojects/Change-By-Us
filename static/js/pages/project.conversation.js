@@ -279,31 +279,45 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             if (me.carousel) {
                 me.carousel.destroy();
             }
-          
-            //this will be ajax, but you get the idea
-            setTimeout(function(){
-                var results = ['thing 1', 'thing 2', 'thing 3'],
-                    html = '', 
-                    i;
 
+            tc.jQ.ajax({
+                type:'GET',
+                url:'/project/messages',
+                data:{
+                    project_id: options.app.app_page.data.project.project_id
+                },
+                dataType:'json',
+                success: function(data, status, xhr) {
+                    tc.util.log('messages');
+                    tc.util.log(data);
+                    
+                    var html = '', 
+                        i;
 
-                //with the ajax results
-                for (i=0; i<results.length; i++) {
-                    html += '<li style="height:200px;">' + results[i] + '</li>';
-                }
-                
-                $carousel.find('.items').append(html);
-                
-                me.carousel = new tc.carousel({
-                    element: $carousel,
-                    scrollable: {
-                        items: '.items',
-                        speed: 300,
-                        circular: true,
-                        initialIndex: 1
+                    //with the ajax results
+                    for (i=0; i<data.length; i++) {
+                        if (data[i].attachment && data[i].attachment.type === 'image') {
+                            html += '<li><div class="attachment-img"><img src="' + data[i].attachment.large_thumb_url + '" alt="' + data[i].attachment.title + '" /></div>' + 
+                                    '<div class="attachment-desc">' + data[i].body + '</div></li>';
+                        }
                     }
-                });
-            }, 2500);
+
+                    $carousel.find('.items').append(html);
+
+                    me.carousel = new tc.carousel({
+                        element: $carousel,
+                        scrollable: {
+                            items: '.items',
+                            speed: 300,
+                            circular: true,
+                            initialIndex: 1
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    
+                }
+            });
         }
     };
     
@@ -316,8 +330,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
-        if (data.thumb_url) {
-            markup.find('.file-thumb').html('<img src="'+data.thumb_url+'" alt="File thumbnail" />');
+        if (data.small_thumb_url) {
+            markup.find('.file-thumb').html('<img src="'+data.small_thumb_url+'" alt="File thumbnail" />');
         }
         
         if(options.app.app_page.user){
