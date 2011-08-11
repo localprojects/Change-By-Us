@@ -267,6 +267,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         }, 
         thumb_click:function(event) {
             var $carousel, 
+                $carouselControls,
                 fileId = parseInt($(this).attr('data-id'), 10);
             
             event.preventDefault();
@@ -277,6 +278,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             });
 
             $carousel = tc.jQ('#modal .conversation-media-modal .carousel');
+            $carouselControls = tc.jQ('.carousel-controls', $carousel).hide();
 
             if (me.carousel) {
                 me.carousel.destroy();
@@ -291,6 +293,11 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 dataType:'json',
                 success: function(data, status, xhr) {
                     var i, selectedIndex = 0, html = '';
+                    
+                    //show the controls if more than one result
+                    if (data.length > 1) {
+                        $carouselControls.show();
+                    }
                     
                     //with the ajax results
                     for (i=0; i<data.length; i++) {
