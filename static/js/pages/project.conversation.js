@@ -238,6 +238,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     }
                     for(i in d){
                         elements.message_stack.append(generate_message(d[i]));
+                        runtime_data.offset++;
                     }
                     $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, handlers.remove_comment);
                     $dom.find('.message-text').each(handlers.handle_message_body);
@@ -340,8 +341,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-body').html(handlers.construct_links(data.message));
         
-        console.log(data)
-        if (data.attachment.medium_thumb_url) {
+        if (data.attachment && data.attachment.medium_thumb_url) {
             $thumb = markup.find('.file-thumb')
                 .attr('data-id', data.attachment.id)
                 .html('<img src="'+data.attachment.medium_thumb_url+'" alt="File thumbnail" />');
@@ -420,9 +420,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             project_id:merlin.app.app_page.data.project.project_id,
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
-                            attachment_id: state.message_attachment.id,
-                            attachment: state.message_attachment
                         };
+                        
+                        if (state.message_attachment) {
+                            merlin.options.data.attachment_id = state.message_attachment.id;
+                            merlin.options.data.attachment = state.message_attachment;
+                        }
                     }
                 },
                 //Step 2
