@@ -12,8 +12,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         runtime_data = {
             message_filter:'all',
             n_to_fetch:10,
-            offset: options.app.app_page.data.project.info.messages.n_returned,
-            message_template:tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children())
+            offset: options.app.app_page.data.project.info.messages.n_returned
         },
         state = {
             widgetId: 'conversation-comment', //The activated widget id
@@ -76,7 +75,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     };
     
     var generate_message = function(d){
-        var $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children()),
+        var $thumb,
+            $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children()),
             $main = $out.find('.main');
         
         //add user image
@@ -87,7 +87,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         }
 
         //set the user's name and profile link
-        $out.find('.username').html('<a href="/useraccount/'+d.owner.u_id+'">'+d.owner.name+'</a>')
+        $out.find('.username').html('<a href="/useraccount/'+d.owner.u_id+'">'+d.owner.name+'</a>');
                 
         //handle message type for message author heading
         if (d.message_type === 'join') {
@@ -103,6 +103,23 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 </blockquote>\
                 <cite class="note-meta-ft"></cite>\
             </div>');
+        }
+        
+        //add attachment thumbnail
+        if (d.attachment && d.attachment.medium_thumb_url) {
+            $thumb = $out.find('.file-thumb')
+                .attr('data-id', d.attachment.id)
+                .html('<img src="'+d.attachment.medium_thumb_url+'" alt="File thumbnail" />');
+
+            //If this is a generica file, go download
+            if (d.attachment.media_type === 'file') {
+                $thumb.addClass('file');
+                //TODO See if we can add the url to the attachment object
+                //so we can download a file. Edge case support.
+                //.attr('href', data.attachment.url);
+            } else {
+                $thumb.addClass('media');
+            }
         }
         
         //add message body, text dependent on message type      
@@ -233,6 +250,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             opacity:0.0
                         });
                     }
+                    
                     for(i in d){
                         elements.message_stack.append(generate_message(d[i]));
                         runtime_data.offset++;
@@ -287,7 +305,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 url:'/project/messages',
                 data:{
                     project_id: options.app.app_page.data.project.project_id,
-                    n_messages: MEDIA_MSGS_TO_LOAD ////TODO See https://github.com/codeforamerica/cbu/wiki/Compromises for details
+                    n_messages: MEDIA_MSGS_TO_LOAD //TODO See https://github.com/codeforamerica/cbu/wiki/Compromises for details
                 },
                 dataType:'json',
                 success: function(data, status, xhr) {
@@ -368,7 +386,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     }
     
     var getMerlin = function() {
-        tc.util.log('conversation.build_merlin');
         if(components.merlin){
             return components.merlin;
         }
@@ -508,10 +525,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             },
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
-                tc.util.log(id);
-                tc.util.log(fileName);
-                tc.util.log(responseJSON);
-                
                 if (responseJSON.success) {
                     $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.small_thumb_url + '>');
                     state.fileUploader = 'successful';
@@ -582,11 +595,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         if(isProjectMember()) {
             //Enable the merlin widget for participating in the conversation
             components.merlin = getMerlin();
-            tc.util.log('----- Merlin!!! -----');
-            tc.util.log(components.merlin);
             components.file_uploader = getFileUploader();
-            tc.util.log('----- Components!!! -----');
-            tc.util.log(components.file_uploader);
             components.merlin.show_step('message');
         }
     };
