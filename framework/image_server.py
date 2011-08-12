@@ -123,7 +123,8 @@ class ImageServer(Controller):
        
     @classmethod
     def path(cls, app, id):
-        path = "data/%s/images/%s/%s.png" % (app, str(id)[-1], id)
+        file_root = Config.get('media')['file_path']
+        path = "%s/images/%s/%s.png" % (file_root, str(id)[-1], id)
         return path
     
     def GET(self, app=None, mode=None, target_width=None, target_height=None, id=None):

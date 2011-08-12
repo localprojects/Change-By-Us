@@ -184,17 +184,17 @@ def smallProject(id, title, description, imageId, numMembers, ownerUserId, owner
 def message(id,
             type,
             message,
-            fileId,
             createdDatetime,
             userId,
             name,
             imageId,
+            attachmentId = None,
             ideaId = None,
             idea = None,
             ideaSubType = None,
             ideaCreatedDatetime = None,
-            attachmentType = None,
-            attachmentId = None,
+            attachmentMediaType = None,
+            attachmentMediaId = None,
             attachmentTitle = None,
             projectId = None,
             projectTitle = None):
@@ -202,6 +202,10 @@ def message(id,
     Construct and return a dictionary consisting of the data related to a
     message, given by the parameters.  This data is usually pulled off of
     several database tables with keys linking back to a message_id.
+    
+    NOTE: It is recommended to specify all of these as keyword arguments, not
+          positional. If the model changes, the positions of the arguments may
+          as well.
 
     **Return:**
 
@@ -224,13 +228,15 @@ def message(id,
     else:
         ideaObj = None
 
-    attachmentObj = smallAttachment(attachmentType, attachmentId, attachmentTitle)
+    attachmentObj = smallAttachment(attachmentMediaType, 
+                                    attachmentMediaId, 
+                                    attachmentTitle)
 
     #something for goals here
 
     return dict(message_id = id,
                 message_type = type,
-                file_id = fileId,
+                file_id = attachmentId,
                 owner = smallUserDisplay(userId, name, imageId),
                 body = message,
                 created = str(createdDatetime),
@@ -1229,21 +1235,21 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
         data = list(db.query(sql, {'id':projectId, 'limit':limit, 'offset':offset, 'filterBy':filterBy}))
 
         for item in data:
-            messages.append(message(item.project_message_id,
-                                    item.message_type,
-                                    item.message,
-                                    item.file_id,
-                                    item.created_datetime,
-                                    item.user_id,
-                                    userNameDisplay(item.first_name, item.last_name, item.affiliation, isFullLastName(item.group_membership_bitmask)),
-                                    item.image_id,
-                                    item.idea_id,
-                                    item.idea_description,
-                                    item.idea_submission_type,
-                                    item.idea_created_datetime,
-                                    item.attachment_type,
-                                    item.attachment_id,
-                                    item.attachment_title))
+            messages.append(message(id = item.project_message_id,
+                                    type = item.message_type,
+                                    message = item.message,
+                                    attachmentId = item.file_id,
+                                    createdDatetime = item.created_datetime,
+                                    userId = item.user_id,
+                                    name = userNameDisplay(item.first_name, item.last_name, item.affiliation, isFullLastName(item.group_membership_bitmask)),
+                                    imageId = item.image_id,
+                                    ideaId = item.idea_id,
+                                    idea = item.idea_description,
+                                    ideaSubType = item.idea_submission_type,
+                                    ideaCreatedDatetime = item.idea_created_datetime,
+                                    attachmentMediaType = item.attachment_type,
+                                    attachmentMediaId = item.attachment_id,
+                                    attachmentTitle = item.attachment_title))
     except Exception, e:
         log.info("*** couldn't get messages")
         log.error(e)
