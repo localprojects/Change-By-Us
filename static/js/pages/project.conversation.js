@@ -75,9 +75,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     };
     
     var generate_message = function(d){
-        var $out, $main;
-        $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children());
-        $main = $out.find('.main');
+        var $out = tc.jQ("<li></li>").append(tc.jQ('.template-content.message-markup').clone().children()),
+            $main = $out.find('.main');
         
         //add user image
         if(d.owner.image_id){
@@ -85,15 +84,13 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         } else {
             $out.find('img').attr('src','/static/images/thumb_genAvatar.jpg');
         }
-        
+
+        //set the user's name and profile link
+        $out.find('.username').html('<a href="/useraccount/'+d.owner.u_id+'">'+d.owner.name+'</a>')
+                
         //handle message type for message author heading
-        switch(d.message_type){
-            case 'join':
-                $main.prepend('<cite class="meta-hd"><strong><a href="/useraccount/'+'XX'+'">'+'XX'+'</a></strong> joined the project!</cite>');
-                break;
-            default:
-                $main.prepend('<cite class="meta-hd"><strong><a href="/useraccount/'+'XX'+'">'+'XX'+'</a></strong> said</cite>');
-                break;
+        if (d.message_type === 'join') {
+            $out.find('.useraction').html(' joined the project!');
         }
         
         //add the idea card if idea is present
@@ -109,7 +106,6 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         
         //add message body, text dependent on message type      
         $out.find('blockquote.serif p').html(handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
-        $out.find('.meta-hd strong a').text(d.owner.name).attr('href','/useraccount/'+d.owner.u_id);
         $out.attr('id','message-'+d.message_id);
         $out.find('.meta-ft').text(d.created).time_since();;
         $out.find('a.close').attr('href','#remove,'+d.message_id);
@@ -125,7 +121,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         file_uploader_container: $dom.find('.conversation-input .file-uploader'),
         input_file_widget: $dom.find('.conversation-input-file-field'),
         input_message_widget: $dom.find('.conversation-input-message-field'),
-        thumbs: $dom.find('.file-thumb')
+        media_thumbs: $dom.find('.file-thumb.media')
     };
     
     var setLabelVisibility = function() {
@@ -238,6 +234,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     }
                     for(i in d){
                         elements.message_stack.append(generate_message(d[i]));
+                        runtime_data.offset++;
                     }
                     $dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, handlers.remove_comment);
                     $dom.find('.message-text').each(handlers.handle_message_body);
@@ -265,7 +262,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             //Don't follow the link
             event.preventDefault();
         }, 
-        thumb_click:function(event) {
+        media_thumb_click:function(event) {
             var $carousel, 
                 $carouselControls,
                 fileId = parseInt($(this).attr('data-id'), 10);
@@ -333,16 +330,27 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     
     function generate_message_markup(data){
         tc.util.dump(data);
-        var markup;
-        markup = tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
+        var $thumb,
+            markup = tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
         markup.attr('id','message-'+data.message_id);
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
-        markup.find('p.message-body').html(handlers.construct_links(data.message));
+        markup.find('p.message-text').html(handlers.construct_links(data.message));
         
-        console.log(data)
-        if (data.attachment) {
-            markup.find('.file-thumb').html('<img src="'+data.attachment.medium_thumb_url+'" alt="File thumbnail" />');
+        if (data.attachment && data.attachment.medium_thumb_url) {
+            $thumb = markup.find('.file-thumb')
+                .attr('data-id', data.attachment.id)
+                .html('<img src="'+data.attachment.medium_thumb_url+'" alt="File thumbnail" />');
+            
+            //If this is a generica file, go download
+            if (data.attachment.media_type === 'file') {
+                $thumb.addClass('file');
+                //TODO See if we can add the url to the attachment object
+                //so we can download a file. Edge case support.
+                //.attr('href', data.attachment.url);
+            } else {
+                $thumb.addClass('media');
+            }
         }
         
         if(options.app.app_page.user){
@@ -408,9 +416,12 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                             project_id:merlin.app.app_page.data.project.project_id,
                             message:merlin.current_step.inputs.message.dom.val(),
                             main_text:merlin.current_step.inputs.main_text.dom.val(),
-                            thumb_url: tc.jQ('.conversation-file-thumb').attr('src'),
-                            attachment: state.message_attachment
                         };
+                        
+                        if (state.message_attachment) {
+                            merlin.options.data.attachment_id = state.message_attachment.id;
+                            merlin.options.data.attachment = state.message_attachment;
+                        }
                     }
                 },
                 //Step 2
@@ -553,7 +564,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
         elements.textpane.keyup(handlers.textpane_keyup);
         
         //Show the modal carousel of higher res media
-        elements.thumbs.live('click', handlers.thumb_click);
+        elements.media_thumbs.live('click', handlers.media_thumb_click);
     };
     
     /**
