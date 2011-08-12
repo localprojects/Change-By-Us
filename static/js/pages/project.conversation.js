@@ -5,6 +5,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
     var me = this,
         widget = tc.gam.widget(me, project),
         options = tc.jQ.extend({name:'conversation'}, opts),
+        MEDIA_MSGS_TO_LOAD = 100, //TODO See https://github.com/codeforamerica/cbu/wiki/Compromises for details
         components = {
             merlin:null
         },
@@ -285,7 +286,8 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                 type:'GET',
                 url:'/project/messages',
                 data:{
-                    project_id: options.app.app_page.data.project.project_id
+                    project_id: options.app.app_page.data.project.project_id,
+                    n_messages: MEDIA_MSGS_TO_LOAD ////TODO See https://github.com/codeforamerica/cbu/wiki/Compromises for details
                 },
                 dataType:'json',
                 success: function(data, status, xhr) {
