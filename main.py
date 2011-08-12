@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     # Add blitz.io route.  We put into new var because of an odd behaviors
     # where a changed ROUTES is not handled correctly.
-    if Config.get('blitz_io').get('route'):
+    if Config.get('blitz_io').get('route') and Config.get('app_env') != 'live':
         blitz_route = r'/%s/?([^/.]*)' % Config.get('blitz_io').get('route')
         NEW_ROUTES = (blitz_route, 'controllers.blitz.Blitz') + ROUTES
     else:
