@@ -83,7 +83,14 @@ tc.gam.project_widgets.resources = function(project,dom,deps,options){
 							temptd.find('img').attr('src',media_root+'images/'+(d.links[i].image_id%10)+'/'+d.links[i].image_id+'.png');
 						}
 						temptd.find('a.close').attr('href','#removeLink,'+d.links[i].link_id);
-						temptd.find('.link-link').attr('href',d.links[i].url).children('span').text(d.links[i].title);
+						// Edge case fix for long link titles
+						var title = d.links[i].title;
+						var fw = d.links[i].title.split(' ')[0];
+                        if(fw.length > 10 && fw.indexOf('http') == 0) {
+                            fw = fw.replace('https://', '').replace('http://', '');
+                            title = fw.substring(0, 10) + '...';
+                        }
+						temptd.find('.link-link').attr('href',d.links[i].url).attr('title',d.links[i].url).children('span').text(title);
 						temptbody.find('tr:last').append(temptd);
 					}
 					e.data.me.elements.links_table.children('tbody').replaceWith(temptbody);
