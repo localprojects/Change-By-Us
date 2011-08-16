@@ -227,6 +227,9 @@ class Controller():
         # Insert HTML for the language chooser
         curr_lang = self.get_language()
         all_langs = self.get_supported_languages()
+
+        template_values['language'] = {"current": curr_lang, "list":
+                all_langs.iteritems()}
         
         template_values['language_selector'] = self.choice_list(
             all_langs, curr_lang)

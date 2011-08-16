@@ -234,6 +234,25 @@
 </dd></dl>
 
 </div>
+<div class="section" id="module-controllers.blitz">
+<span id="blitz-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">blitz</span></tt> Module<a class="headerlink" href="#module-controllers.blitz" title="Permalink to this headline">¶</a></h2>
+<p>Module to handle integration with Bltiz.io.  The service
+requires that a specific route give back a specific value.
+This is important so that it is not used on sites
+unknowingly.</p>
+<dl class="class">
+<dt id="controllers.blitz.Blitz">
+<em class="property">class </em><tt class="descclassname">controllers.blitz.</tt><tt class="descname">Blitz</tt><a class="reference internal" href="../_modules/controllers/blitz.html#Blitz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.blitz.Blitz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controller class to handle Bltiz.io routes.</p>
+<dl class="method">
+<dt id="controllers.blitz.Blitz.GET">
+<tt class="descname">GET</tt><big>(</big><em>action=None</em><big>)</big><a class="reference internal" href="../_modules/controllers/blitz.html#Blitz.GET"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.blitz.Blitz.GET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get for Blitz.io route</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-controllers.createProject">
 <span id="createproject-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">createProject</span></tt> Module<a class="headerlink" href="#module-controllers.createProject" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -251,6 +270,12 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="controllers.createProject.CreateProject.getFileMediaType">
+<tt class="descname">getFileMediaType</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#controllers.createProject.CreateProject.getFileMediaType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether the file is an image or some other type of file.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="controllers.createProject.CreateProject.getKeywordsJSON">
 <tt class="descname">getKeywordsJSON</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/controllers/createProject.html#CreateProject.getKeywordsJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.createProject.CreateProject.getKeywordsJSON" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -266,8 +291,41 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="controllers.createProject.CreateProject.getThumbUrl">
+<tt class="descname">getThumbUrl</tt><big>(</big><em>media_type</em>, <em>media_id</em>, <em>max_width=None</em>, <em>max_height=None</em><big>)</big><a class="headerlink" href="#controllers.createProject.CreateProject.getThumbUrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL to an image representation of the media. For images, this
+may be used for getting a thumbnail. Specify max width and height in
+that case. Otherwise you&#8217;ll probably just get a generic file image.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="controllers.createProject.CreateProject.getThumbnailImageData">
+<tt class="descname">getThumbnailImageData</tt><big>(</big><em>data</em>, <em>size</em><big>)</big><a class="headerlink" href="#controllers.createProject.CreateProject.getThumbnailImageData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a thumbnail of the given size from the given image data.
+Return the image data in a string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="controllers.createProject.CreateProject.newFile">
+<tt class="descname">newFile</tt><big>(</big><big>)</big><a class="headerlink" href="#controllers.createProject.CreateProject.newFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controller for the <tt class="docutils literal"><span class="pre">/create/attachment</span></tt> endpoint.</p>
+<p><strong>Parameters:</strong></p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">qqfile</span></tt> (required)</dt>
+<dd>Contains the file to be uploaded.</dd>
+<dt><tt class="docutils literal"><span class="pre">max_width</span></tt>/<tt class="docutils literal"><span class="pre">max_height</span></tt></dt>
+<dd>The maximum width and height to use for the thumbnail image.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="controllers.createProject.CreateProject.newProject">
 <tt class="descname">newProject</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/controllers/createProject.html#CreateProject.newProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.createProject.CreateProject.newProject" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="controllers.createProject.CreateProject.saveThumbnailImage">
+<tt class="descname">saveThumbnailImage</tt><big>(</big><em>fs</em>, <em>media_type</em>, <em>media_id</em>, <em>data</em>, <em>name</em>, <em>size</em><big>)</big><a class="headerlink" href="#controllers.createProject.CreateProject.saveThumbnailImage" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -275,6 +333,8 @@
 <tt class="descname">uploadFile</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/controllers/createProject.html#CreateProject.uploadFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.createProject.CreateProject.uploadFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handler for the /create/file endpoint. Looks for the variable named
 qqfile from the request and saves it to a file on the server.</p>
+<p>Return information about the file in a <tt class="docutils literal"><span class="pre">dict</span></tt> with keys <tt class="docutils literal"><span class="pre">id</span></tt>,
+<tt class="docutils literal"><span class="pre">type</span></tt>, and <tt class="docutils literal"><span class="pre">name</span></tt></p>
 </dd></dl>
 
 <dl class="method">
@@ -364,7 +424,8 @@ qqfile from the request and saves it to a file on the server.</p>
 <dl class="method">
 <dt id="controllers.home.Home.showHome">
 <tt class="descname">showHome</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/controllers/home.html#Home.showHome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.home.Home.showHome" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Sets up template data and renders homepage template.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="controllers.home.Home.showLeaderboard">
@@ -536,7 +597,14 @@ qqfile from the request and saves it to a file on the server.</p>
 <dl class="method">
 <dt id="controllers.project.Project.addMessage">
 <tt class="descname">addMessage</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/controllers/project.html#Project.addMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.project.Project.addMessage" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Add a message to the project discussion stream.</p>
+<p>project_id &#8211; The id of the project
+main_text &#8211; The message contents
+attachment_id &#8211; (optional) The file attachment on the message. If no</p>
+<blockquote>
+<div>file attachment is available, it should be an empty string or left
+off of the request entirely.</div></blockquote>
+</dd></dl>
 
 <dl class="method">
 <dt id="controllers.project.Project.addResource">
@@ -651,7 +719,8 @@ qqfile from the request and saves it to a file on the server.</p>
 <dl class="method">
 <dt id="controllers.project.Project.showProject">
 <tt class="descname">showProject</tt><big>(</big><em>projectId</em><big>)</big><a class="reference internal" href="../_modules/controllers/project.html#Project.showProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controllers.project.Project.showProject" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The main project detail view controller.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="controllers.project.Project.updateDescription">
@@ -856,6 +925,7 @@ qqfile from the request and saves it to a file on the server.</p>
   <ul>
 <li><a class="reference internal" href="#">controllers Package</a><ul>
 <li><a class="reference internal" href="#module-controllers.admin"><tt class="docutils literal"><span class="pre">admin</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-controllers.blitz"><tt class="docutils literal"><span class="pre">blitz</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-controllers.createProject"><tt class="docutils literal"><span class="pre">createProject</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-controllers.home"><tt class="docutils literal"><span class="pre">home</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-controllers.idea"><tt class="docutils literal"><span class="pre">idea</span></tt> Module</a></li>

@@ -110,6 +110,12 @@ directory or one directory above it.</p>
 <dt id="framework.controller.Controller">
 <em class="property">class </em><tt class="descclassname">framework.controller.</tt><tt class="descname">Controller</tt><a class="reference internal" href="../_modules/framework/controller.html#Controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.controller.Controller" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
+<dt id="framework.controller.Controller.choice_list">
+<tt class="descname">choice_list</tt><big>(</big><em>options</em>, <em>selected_option=None</em><big>)</big><a class="headerlink" href="#framework.controller.Controller.choice_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an options list.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="framework.controller.Controller.csv">
 <tt class="descname">csv</tt><big>(</big><em>string</em>, <em>filename</em><big>)</big><a class="reference internal" href="../_modules/framework/controller.html#Controller.csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.controller.Controller.csv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -128,6 +134,34 @@ directory or one directory above it.</p>
 <dt id="framework.controller.Controller.get_db">
 <em class="property">classmethod </em><tt class="descname">get_db</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/framework/controller.html#Controller.get_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.controller.Controller.get_db" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="framework.controller.Controller.get_gettext_translation">
+<tt class="descname">get_gettext_translation</tt><big>(</big><em>locale_id</em><big>)</big><a class="headerlink" href="#framework.controller.Controller.get_gettext_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the translation object for the specified locale.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="framework.controller.Controller.get_i18n_dir">
+<tt class="descname">get_i18n_dir</tt><big>(</big><big>)</big><a class="headerlink" href="#framework.controller.Controller.get_i18n_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the path to the directory with the locale files</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="framework.controller.Controller.get_language">
+<tt class="descname">get_language</tt><big>(</big><big>)</big><a class="headerlink" href="#framework.controller.Controller.get_language" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the language that has been set by the user, first checking the
+querystring and then the session. The session variable is set before
+the value is returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="framework.controller.Controller.get_supported_languages">
+<tt class="descname">get_supported_languages</tt><big>(</big><big>)</big><a class="headerlink" href="#framework.controller.Controller.get_supported_languages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the language files available in the translations directory. Returns
+a dictionary which has language codes as keys, and human-readable
+language names as values.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="framework.controller.Controller.html">
@@ -162,7 +196,18 @@ directory or one directory above it.</p>
 <dl class="method">
 <dt id="framework.controller.Controller.render">
 <tt class="descname">render</tt><big>(</big><em>template_name</em>, <em>template_values=None</em>, <em>suffix='html'</em>, <em>content_type='text/html'</em><big>)</big><a class="reference internal" href="../_modules/framework/controller.html#Controller.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.controller.Controller.render" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Custom renderer for Change by Us templates.</p>
+<p>&#64;type   template_name: string
+&#64;param  template_name: Name of template (without extension)
+&#64;type   template_values: dict
+&#64;param  template_values: Values to include in the template.
+&#64;type   suffix: string
+&#64;param  suffix: Extension of template file.
+&#64;type   content_type: string
+&#64;param  content_type: HTTP header content type to output.</p>
+<p>&#64;rtype: ?
+&#64;returns: ?</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="framework.controller.Controller.request">
@@ -240,7 +285,7 @@ Assumes templates are in a <cite>templates</cite> directory one above current.</
 <p>A generic FileServer.</p>
 <dl class="method">
 <dt id="framework.file_server.FileServer.add">
-<tt class="descname">add</tt><big>(</big><em>db</em>, <em>data</em>, <em>filename</em>, <em>max_size=None</em>, <em>grayscale=False</em>, <em>mirror=True</em>, <em>thumb_max_size=None</em><big>)</big><a class="reference internal" href="../_modules/framework/file_server.html#FileServer.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.FileServer.add" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">add</tt><big>(</big><em>data</em>, <em>filename=None</em>, <em>make_unique=False</em>, <em>max_size=None</em>, <em>grayscale=False</em>, <em>mirror=True</em>, <em>thumb_max_size=None</em><big>)</big><a class="reference internal" href="../_modules/framework/file_server.html#FileServer.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.FileServer.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a file to the fileserver.  If either adding the database record for 
 the file or saving the file fails, then add will return None, and no
 modification will be made.  Otherwise, the ID of the record in the 
@@ -254,6 +299,12 @@ database will be returned.</p>
 <p>Arguments:
 db &#8211; A web.py database (<cite>web.db</cite>) object
 app &#8211; The name of the app (<cite>str</cite>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="framework.file_server.FileServer.getUniqueFilename">
+<tt class="descname">getUniqueFilename</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#framework.file_server.FileServer.getUniqueFilename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a unique name for the file.</p>
 </dd></dl>
 
 <dl class="method">
@@ -276,7 +327,7 @@ data &#8211; The data (string of bytes) contained in the file</p>
 
 <dl class="class">
 <dt id="framework.file_server.S3FileServer">
-<em class="property">class </em><tt class="descclassname">framework.file_server.</tt><tt class="descname">S3FileServer</tt><a class="reference internal" href="../_modules/framework/file_server.html#S3FileServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.S3FileServer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">framework.file_server.</tt><tt class="descname">S3FileServer</tt><big>(</big><em>db</em><big>)</big><a class="reference internal" href="../_modules/framework/file_server.html#S3FileServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.S3FileServer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#framework.file_server.FileServer" title="framework.file_server.FileServer"><tt class="xref py py-class docutils literal"><span class="pre">framework.file_server.FileServer</span></tt></a></p>
 <p>In order to use this FileServer, make sure that you have the aws section
 filled out in your conf.yaml file:</p>
@@ -306,12 +357,18 @@ the S3 server.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="framework.file_server.S3FileServer.getUniqueFilename">
+<tt class="descname">getUniqueFilename</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#framework.file_server.S3FileServer.getUniqueFilename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a unique name for the file.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="framework.file_server.S3FileServer.saveFile">
-<tt class="descname">saveFile</tt><big>(</big><em>fileid</em>, <em>data</em>, <em>mirror=True</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/framework/file_server.html#S3FileServer.saveFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.S3FileServer.saveFile" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">saveFile</tt><big>(</big><em>filename</em>, <em>data</em>, <em>mirror=True</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/framework/file_server.html#S3FileServer.saveFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.S3FileServer.saveFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the data into a file.  Return True is file successfully saved,
 otherwise False.</p>
 <p>Attributes:
-fileid &#8211; The id from the database record that corresponds to this file
+filename &#8211; The id from the database record that corresponds to the file
 data &#8211; The data (string of bytes) contained in the file</p>
 </dd></dl>
 
@@ -320,7 +377,7 @@ data &#8211; The data (string of bytes) contained in the file</p>
 <tt class="descname">saveTemporaryLocalFile</tt><big>(</big><em>path</em>, <em>data</em><big>)</big><a class="reference internal" href="../_modules/framework/file_server.html#S3FileServer.saveTemporaryLocalFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.file_server.S3FileServer.saveTemporaryLocalFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the file on the local file system.
 This is used only to temporarily save the file before uploading it to
-the S3 server.</p>
+the S3 server.  Creates directory if needed.</p>
 </dd></dl>
 
 </dd></dl>
@@ -358,7 +415,10 @@ the S3 server.</p>
 <dl class="classmethod">
 <dt id="framework.image_server.ImageServer.path">
 <em class="property">classmethod </em><tt class="descname">path</tt><big>(</big><em>app</em>, <em>id</em><big>)</big><a class="reference internal" href="../_modules/framework/image_server.html#ImageServer.path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#framework.image_server.ImageServer.path" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Path creates the path for an uploaded image.  Given the app name and
+the ID of the image, it will put it in the folder:
+data/APP_NAME/images/FIRST_DIGIT_OF_ID/ID.png</p>
+</dd></dl>
 
 <dl class="classmethod">
 <dt id="framework.image_server.ImageServer.remove">
