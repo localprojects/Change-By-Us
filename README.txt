@@ -1,64 +1,52 @@
--------------------------------------------------
-Pre-requisites
--------------------------------------------------
-Services and applications:
-    mysql
-    monit
-    pcre
-    fcgi
-    lighttpd
-    memcached
-    beanstalkd
+# Change by Us #
 
-Python packages:
-  These can be installed with pip/easy_install or other means:
-    flup
-    python-memcached
-    simplejson
-    python-yaml
-    python-mysqld OR MySQL-python
-    PIL
-    oauth2
-
-    # Make sure that boto is the latest version. If on ubuntu ensure that you're not
-    # using the system boto, which is outdated. Remove the apt-installed boto,
-    # and install from pip
-    boto    # necessary for AWS / SES / S3
-
-    python-dateutil # necessary for digest_emaile.py
-
-Mysql setup for the first time:
-    mysql -u root -p
-    > create database gam2; grant all on gam2.* to gam@localhost identified by 'gam';
-    > exit
-    mysql -u root -p gam2 < trunk/sql/models.sql
-    mysql -u root -p gam2 < trunk/sql/locations.sql
-    mysql -u root -p gam2 < trunk/sql/data.sql
+"Change by Us aims to invite ideas for civic solutions, intelligently form project groups, and effectively connect groups with resources to bring their ideas to life."
 
 
--------------------------------------------------
-Web Server Setup 
--------------------------------------------------
-Install lighttpd:
-    [package-manager] install lighttpd
+## Installation ##
 
-Launch lighttpd:
-    # Create logs folder 
-    mkdir -p trunk/logs && chmod -R a+rw trunk/logs
-    mkdir -p run    # necessary for the pid file to be stored
+Please see the INSTALL.txt file.
+
+
+## Upgrading ##
+
+For upgrade instructions, see the UPGRADE.txt.
+
+
+## Running ##
+
+To run the application, use the following command from the code root:
 
     lighttpd -D -f lighttpd.conf
     
-AWS configuration:
-    If thumbnails are being mirrored to S3, complete the info in the aws and media sections
-    of the config file accordingly. Otherwise image uploads will be saved to the local volume only.
+You can also look into using the Upstart script found at scripts/upstart/.
+More information on this can be found at [Running as Service in Install Instructions](https://github.com/codeforamerica/cbu/wiki/Installation-Instructions-%28Ubuntu%29).
 
--------------------------------------------------
-Troubleshooting and Debugging Notes
--------------------------------------------------
-Error:
-  On server startup:
-  boto.exception.NoAuthHandlerFound: No handler was ready to authenticate. 1 handlers were checked. ['HmacAuthV3Handler'] Check your credentials
-Solution:
-  This is invariably due to an AWS configuration issue. Either the key or the secret are wrong, or
-  incorrectly configured in the config file.
+   
+## How to Contribute ##
+
+Coming soon...
+
+
+## Code ##
+
+The code can be found on Assembla at: https://www.assembla.com/spaces/lp-changebyus
+
+
+## Documentation ##
+
+Main documentation can currently be found on Github at: https://github.com/codeforamerica/cbu/wiki/
+
+Compiled documentation from inline documentation is available
+in the following locations:
+
+    * Python: docs/_build/index.html
+    * Javascript: docs/js/index.html
+
+
+## Credits ##
+
+The following organizations have helped work on this platform:
+
+   * Local Projects
+   * Code for America
