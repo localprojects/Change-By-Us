@@ -243,7 +243,7 @@ tc.app.merlin_join_modal = function(modal, event_target, callback) {
         dom: modal.options.element.find('.introduce-yourself'),
         first_step: 'introduce-message-step',
         data: {
-            project_id: app.app_page.data.project.project_id,
+            project_id: app_page.data.project.project_id,
             message: null
         },
         use_hashchange: false,

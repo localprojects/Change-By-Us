@@ -1,6 +1,7 @@
 import cStringIO
 import traceback
 import framework.util as util
+import os
 from framework.s3uploader import S3Uploader
 from framework.log import log
 from framework.controller import Controller
@@ -13,7 +14,7 @@ class FileServer(object):
     
     """
     
-    def add(self, db, data, filename, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
+    def add(self, data, filename=None, make_unique=False, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
         """
         Add a file to the fileserver.  If either adding the database record for 
         the file or saving the file fails, then add will return None, and no
@@ -21,22 +22,25 @@ class FileServer(object):
         database will be returned.
         
         """
-        # Create a new record for the file
         log.info("FileServer.add")
-        id = self.addDbRecord(db, filename)
         
-        if id is None:
-            return None
+        # Create a unique filename
+        if not filename or make_unique:
+            filename = self.getUniqueFilename(filename)
         
         # Save the file to the system
-        success = self.saveFile(id, data, max_size=max_size, mirror=mirror)
+        success = self.saveFile(filename, data, max_size=max_size, mirror=mirror)
         
-        if not success:
-            self.removeDbRecord(db, id)
-            return None
+        # Return the media_id of the file
+        return filename
+    
+    
+    def getUniqueFilename(self, filename):
+        """
+        Get a unique name for the file. 
         
-        # Return the id of the file
-        return id
+        """
+        raise NotImplementedError
     
     
     def addDbRecord(self, db, filename):
@@ -49,7 +53,7 @@ class FileServer(object):
         
         """
         try:
-            id = db.insert('files', title=filename)
+            id = db.insert('attachments', title=filename)
         except Exception, e:
             log.error(e)
             return None
@@ -95,8 +99,46 @@ class S3FileServer(FileServer):
         bucket: '<BUCKET_NAME>'
     
     """
+    def __init__(self, db):
+        """
+        Creates an Amazon AWS S3 file server wrapper.
+        
+        Arguments:
+        ``db``
+            A ``web.db.DB`` object. This may come in handy for determining a
+            unique filename for a file. Will alleviate the need to make
+            additional requests to the S3 server.
+        
+        """
+        self.db = db
+        
+    
     def getConfigVar(self, var_name):
         return Config.get(var_name)
+    
+    
+    def getUniqueFilename(self, filename):
+        """
+        Get a unique name for the file. 
+        
+        """
+        rows = self.db.query('''select media_id from attachments
+              where type in $types''', {'types':['file','image']})
+        filenames = [row.media_id for row in rows]
+        
+        import random
+        alphanum = ('1234567890'
+            'abcdefghijklmnopqrstuvwxyz'
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        
+        # Construct random filenames until we find one that's not in use.
+        while True:
+            randomizer = ''.join([random.choice(alphanum) for _ in xrange(8)])
+            if '-'.join([filename, randomizer]) not in filenames:
+                filename = '-'.join([randomizer, filename]) if filename else randomizer
+                break
+        
+        return filename
     
     
     def getLocalPath(self, fileid):
@@ -121,10 +163,17 @@ class S3FileServer(FileServer):
         """
         Save the file on the local file system.
         This is used only to temporarily save the file before uploading it to
-        the S3 server.
+        the S3 server.  Creates directory if needed.
         
         """
+        directory = os.path.dirname(path)
         try:
+            # Attempt to create directory structure if
+            # not present.
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+                
+            # Create file
             with open(path, "wb") as f:
                 f.write(data)
         except Exception, e:
@@ -134,23 +183,23 @@ class S3FileServer(FileServer):
         return True
     
     
-    def saveFile(self, fileid, data, mirror=True, **kwargs):
+    def saveFile(self, filename, data, mirror=True, **kwargs):
         """
         Save the data into a file.  Return True is file successfully saved,
         otherwise False.
         
         Attributes:
-        fileid -- The id from the database record that corresponds to this file
+        filename -- The id from the database record that corresponds to the file
         data -- The data (string of bytes) contained in the file
         
         """
-        localpath = self.getLocalPath(fileid)
+        localpath = self.getLocalPath(filename)
         localsaved = self.saveTemporaryLocalFile(localpath, data)
         if not localsaved:
             return False
         
         isS3mirror = self.getConfigVar('media')['isS3mirror']
-        s3path = self.getS3Path(fileid)
+        s3path = self.getS3Path(filename)
         log.info("*** config = %s, mirror = %s" % (isS3mirror, mirror))
         if (isS3mirror and mirror):
             try:
