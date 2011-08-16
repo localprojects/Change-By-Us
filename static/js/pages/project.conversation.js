@@ -530,10 +530,10 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
                     state.fileUploader = 'successful';
                     state.message_attachment = responseJSON;
                 } 
-                
                 else {
                     // TODO: determine what else needs to happen on failure.
                     state.fileUploader = 'unsuccessful';
+                    $('.qq-upload-file-thumb').hide();
                 }
                 
                 return true;
