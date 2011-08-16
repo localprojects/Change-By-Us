@@ -1,6 +1,7 @@
 import cStringIO
 import traceback
 import framework.util as util
+import os
 from framework.s3uploader import S3Uploader
 from framework.log import log
 from framework.controller import Controller
@@ -162,10 +163,17 @@ class S3FileServer(FileServer):
         """
         Save the file on the local file system.
         This is used only to temporarily save the file before uploading it to
-        the S3 server.
+        the S3 server.  Creates directory if needed.
         
         """
+        directory = os.path.dirname(path)
         try:
+            # Attempt to create directory structure if
+            # not present.
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+                
+            # Create file
             with open(path, "wb") as f:
                 f.write(data)
         except Exception, e:
