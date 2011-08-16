@@ -4,13 +4,13 @@
 
 {% block project_admin %}
     {{ super() }}
-    
+
     {% if d.template_data.project.data.info.is_featured %}
         <li class="feature state-disabled"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Featured Project!</a></li>
     {% else %}
         <li class="feature"><a href="#featureProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps">Feature <span>this</span> project</a></li>
     {% endif %}
-    
+
     <li class="delete"><a href="#deleteProject,{{ d.template_data.project.data.project_id }}" class="fancy-caps delete-project">Delete <span>this</span> project</a></li>
 {% endblock %}
 
@@ -39,7 +39,7 @@
             {% else %}
                 <img width='100' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
             {% endif %}
-            
+
             <span class="overlay-tag"></span>
         </div>
         <div class="tools">
@@ -64,21 +64,13 @@
         </div>
         <div class="main">
             <h1><a href='/project/{{ d.template_data.project.data.project_id }}'>{{ d.template_data.project.data.info.title }}</a></h1>
-            <cite class="meta">
-                <span class="fancy-caps">Created <span>by</span></span> <strong><a href='/useraccount/{{ d.template_data.project.data.info.owner.u_id }}'>{{ d.template_data.project.data.info.owner.name }}</a></strong>
-            </cite>
-            <div class="sub-ft">
-                {% if d.template_data and d.template_data.user and not (d.template_data.project.data.info.owner.u_id == d.template_data['user'].data.u_id) %}
-                    <a href="#" class="contact">Contact {{ d.template_data.project.data.info.owner.name }}</a>
-                {% endif %}
-            </div>
         </div>
     </div><!-- end .headlands -->
- 
+
     <div class='midlands clearfix'>
         <div class="project-navigation clearfix">
             <div class="similar-project">Projects like this...</div>
-    
+
             {% if d.template_data and not(d.template_data.app_mode == 'beta') %}
                 <div class="project-twitter twitter">
                     <a href="http://twitter.com/share" class="twitter-share-button" data-url="{{ d.default_host }}project/{{ d.template_data.project.data.project_id }}" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
@@ -91,7 +83,7 @@
                     <fb:like href="{{ d.default_host }}project/{{ d.template_data.project.data.project_id }}" send="false" layout="button_count" width="40" show_faces="false"></fb:like>
                 </div>
             {% endif %}
-           
+
             <ul class="project-tabs">
                 <li><a href="#" class="project-tab project-home current">Home</a></li>
                 <li><a href="#" class="project-tab project-needs">Needs</a></li>
@@ -99,7 +91,7 @@
                 <li><a href="#" class="project-tab project-discussions">Discussions</a></li>
             </ul>
         </div>
-    
+
         <div class="east">
             {% if d.template_data.project_user.data.is_member %}
                 <div class="members-empty" style="{% if d.template_data.project.data.info.members['items']|length > 1 %}display:none;{% endif %}">
@@ -110,7 +102,7 @@
                     </div>
                 </div>
             {% endif %}
-            
+
             <div class="project-sections">
                 <div class="project-section project-home current">
                     {% include 'project/related_resources.html' %}
@@ -160,21 +152,21 @@
             </form>
             <div style="clear:both"></div>
         </div>
-    
+
         <div class='step finish'>
             <p>Thanks for introducing yourself&hellip;</p>
             <p><img src='/static/images/loader32x32.gif' /></p>
         </div>
-    
+
         <a class='close' href="#"><span>close</span></a>
     </div>
-    
+
     <div class='template-content modal-content join-no-user'>
         <h2><strong>Hold your horses!</strong> Please register.</h2>
         <p>You must <strong><a href='/join'>register</a></strong> or <strong><a href='/login'>login</a></strong> with {{ d.config.site.name }} in order to Join a project.</p>
         <a class='close' href="#"><span>close</span></a>
     </div>
-    
+
     <div class='template-content modal-content upload-image'>
         <div class='step'>
             <h2><strong>Upload</strong> a photo for your project.</h2>
@@ -185,7 +177,7 @@
         </div>
         <a class='close' href="#"><span>close</span></a>
     </div>
-    
+
     {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
         <!-- feature this project merlin template -->
         <div class="template-content modal-content merlin feature-project-dialog">
@@ -210,8 +202,8 @@
                 <p>Unable to Feature this project!</p>
             </div>
             <a class='close' href="#"><span>close</span></a>
-        </div>    
-        
+        </div>
+
         <div class="template-content modal-content confirm-delete project-delete">
             <div class="step">
                 <h2><strong>Delete</strong> this Project?</h2>
@@ -226,7 +218,7 @@
             <a class='close' href="#"><span>close</span></a>
         </div>
     {% endif %}
-    
+
     {% if d.template_data and d.template_data.project_user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
         <div class="template-content modal-content confirm-delete remove-resource">
             <div class="step">
@@ -242,7 +234,7 @@
             <a class='close' href="#"><span>close</span></a>
         </div>
     {% endif %}
-    
+
     {% if d.template_data.project_user.data.is_member %}
         {% if not d.template_data.project_user.data.is_project_admin %}
             <div class="template-content modal-content confirm-delete leave-project">
@@ -271,7 +263,7 @@
         {% else %}
             app_page.data.project = null;
         {% endif %}
-    
+
         {% if d.template_data.project.data.info.owner %}
             app_page.data.contact_modal = {
                 to_u_name: '{{ d.template_data.project.data.info.owner.name }}',
