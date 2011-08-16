@@ -6,7 +6,89 @@ import framework.util as util
 from framework.log import log
 
 class User():
+    """
+    An instance of a user.  A layer over the ``user`` table and related tables.
+    
+    
+    **Attributes:**
+    
+    ``db``
+        A ``web.db.DB`` instance. CBU uses a MySQL database, so this is
+        specifically a ``web.db.MySQLDB`` instance. It is created with the
+        ``web.db.database`` factory in ``framework.controller``.
+    
+    ``id``
+        The ID of the user instance.
+    
+    ``data``
+        The database row corresponding to the user, as a ``list``.
+    
+    ``projectData``
+        A set of rows of project data for *active* projects for which this user
+        is an administrator.
+    
+    ``userKey``
+        The ``user_key`` field from the table
+    
+    ``email``
+        The ``email`` field from the table
+    
+    ``firstName``
+        The ``first_name`` field from the table
+    
+    ``lastName``
+        The ``last_name`` field from the table
+    
+    ``imageId``
+        The ``image_id`` field from the table
+    
+    ``locationId``
+        The ``location_id`` field from the table
+    
+    ``location``
+        The ``location_name`` field from the table
+    
+    ``description``
+        The ``description`` field from the table
+    
+    ``affiliation``
+        The ``affiliation`` field from the table
+    
+    ``groupMembershipBitmask``
+        The ``group_membership_bitmask`` field from the table
+    
+    ``emailNotification``
+        The ``email_notification`` field from the table
+    
+    ``isAdmin``
+        True if the 2nd-lowest bit in the group membership bitmask is 1;
+        otherwise False
+        
+    ``isModerator``
+        True if the 3rd-lowest bit in the group membership bitmask is 1;
+        otherwise False
+        
+    ``isLeader``
+        True if the 4th-lowest bit in the group membership bitmask is 1;
+        otherwise False
+    
+    ``numMessages``
+        The number of new messages since the last time the user accessed their
+        account page
+        
+    """
     def __init__(self, db, userId):
+        """
+        Initializes a ser instance.
+        
+        **Arguments:**
+        
+        db -- A ``web.db.DB`` instance. CBU uses a MySQL database, so this is
+              specifically a ``web.db.MySQLDB`` instance. It is created with the
+              ``web.db.database`` factory in ``framework.controller``.
+        userId -- The ID of the user instance to pull from the database.
+        
+        """
         self.db = db
         self.id = userId        
         self.data = self.populateUserData()
@@ -193,6 +275,11 @@ where u.user_id = $id and u.is_active = 1"""
             
     # get abbreviated data for projects for which user is a member
     def getUserProjectList(self):
+        """
+        Returns a set of rows of project data for *active* projects for which 
+        this user is an administrator.
+        
+        """
         data = []
         
         try:
@@ -326,6 +413,11 @@ where u.user_id = $id and u.is_active = 1"""
         return ideas
         
     def getMessages(self, limit, offset):
+        """
+        Returns a list of messages for this user.  The results are paginated
+        (i.e., this will return ``limit`` rows, starting at ``ofsset``-th row).
+        
+        """
         messages = []
     
         try:
@@ -405,9 +497,18 @@ where u.user_id = $id and u.is_active = 1"""
         return messages  
         
     def getNumNewMessages(self):
+        """
+        
+        """
         num = 0
         
         try:
+            # Select the number of times that someone invited this user to a 
+            # project based on this user's idea.  TODO: is my interpretation
+            # correct?  Why is it selecting when this user is the invitee?
+            
+            # Select the number of times that this user submitted a message
+
             sql = """select 
                         (select count(inv.project_invite_id) from project_invite inv
                           inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id = $userId

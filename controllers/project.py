@@ -97,6 +97,7 @@ class Project(Controller):
             return self.not_found()
         
     def showProject(self, projectId):
+        """The main project detail view controller."""
         if (projectId):
             project = mProject.Project(self.db, projectId)
             
@@ -113,6 +114,7 @@ class Project(Controller):
                 return self.not_found()
         else:
             return self.not_found()
+    
         
     def showConversationRSS(self, projectId):
         if (projectId):
@@ -438,11 +440,27 @@ class Project(Controller):
         
         return self.json(mProject.getGoals(self.db, projectId))
         
+    
     def addMessage(self):
+        """
+        Add a message to the project discussion stream.
+        
+        POST Parameters:
+        ---------------
+        project_id -- The id of the project
+        main_text -- The message contents
+        attachment_id -- (optional) The file attachment on the message. If no
+            file attachment is available, it should be an empty string or left
+            off of the request entirely.
+        
+        """
         if (self.request('main_text')): return False
 
         projectId = self.request('project_id')
         message = self.request('message')
+        
+        # If the file_id is None or empty string, record it as None.
+        attachmentId = self.request('attachment_id') or None
         
         if (not projectId):
             log.error("*** message add attempted w/o project id")
@@ -451,8 +469,11 @@ class Project(Controller):
             log.error("*** message add attempted w/ no message")
             return False
         else:
-            return mProject.addMessage(self.db, projectId, message, 'member_comment', self.user.id)
-            
+            return mProject.addMessage(self.db, projectId, message, 
+                                       'member_comment', self.user.id, 
+                                       attachmentId=attachmentId)
+    
+    
     def removeMessage(self):
         messageId = self.request('message_id')
         

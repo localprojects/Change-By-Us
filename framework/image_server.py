@@ -17,11 +17,23 @@ class ImageServer(Controller):
         except Exception, e:
             log.error(e)
             return None
-        path = ImageServer.path(app, id)        
-        try:            
+
+        # Determine file and directory paths.
+        path = ImageServer.path(app, id)
+        directory = os.path.dirname(path)
+                   
+        try:
+            # Attempt to create directory structure if
+            # not present.
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            
+            # Create file.
             f = open(path, "wb")
             f.write(data)        
             f.close()
+            
+            # Get image object from new file.
             image = Image.open(path)
         except Exception, e:
             log.error(e)
@@ -123,7 +135,13 @@ class ImageServer(Controller):
        
     @classmethod
     def path(cls, app, id):
-        path = "data/%s/images/%s/%s.png" % (app, str(id)[-1], id)
+        """
+        Path creates the path for an uploaded image.  Given the app name and
+        the ID of the image, it will put it in the folder:
+        data/APP_NAME/images/FIRST_DIGIT_OF_ID/ID.png
+        """
+        file_root = Config.get('media')['file_path']
+        path = "%s/images/%s/%s.png" % (file_root, str(id)[-1], id)
         return path
     
     def GET(self, app=None, mode=None, target_width=None, target_height=None, id=None):
