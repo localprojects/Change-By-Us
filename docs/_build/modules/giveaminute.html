@@ -344,8 +344,10 @@
 
 <dl class="function">
 <dt id="giveaminute.project.addMessage">
-<tt class="descclassname">giveaminute.project.</tt><tt class="descname">addMessage</tt><big>(</big><em>db</em>, <em>projectId</em>, <em>message</em>, <em>message_type</em>, <em>userId=None</em>, <em>ideaId=None</em>, <em>projectGoalId=None</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#addMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.addMessage" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">addMessage</tt><big>(</big><em>db</em>, <em>projectId</em>, <em>message</em>, <em>message_type</em>, <em>userId=None</em>, <em>ideaId=None</em>, <em>projectGoalId=None</em>, <em>attachmentId=None</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#addMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.addMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a new record into the project_message table.  Return true if
+successful.  Otherwise, if any exceptions arise, log and return false.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="giveaminute.project.addResourceToProject">
@@ -356,6 +358,28 @@
 <dt id="giveaminute.project.approveItem">
 <tt class="descclassname">giveaminute.project.</tt><tt class="descname">approveItem</tt><big>(</big><em>db</em>, <em>table</em>, <em>id</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#approveItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.approveItem" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="function">
+<dt id="giveaminute.project.createAttachment">
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">createAttachment</tt><big>(</big><em>db</em>, <em>media_type</em>, <em>media_id</em>, <em>title</em>, <em>description=None</em><big>)</big><a class="headerlink" href="#giveaminute.project.createAttachment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a new row to the attachments table.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">db</span></tt></dt>
+<dd>A <tt class="docutils literal"><span class="pre">web.db.DB</span></tt> database wrapper</dd>
+<dt><tt class="docutils literal"><span class="pre">media_type</span></tt></dt>
+<dd>The type of media.  For now, the supported types are <tt class="docutils literal"><span class="pre">'image'</span></tt> and
+<tt class="docutils literal"><span class="pre">'file'</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">media_id</span></tt></dt>
+<dd>The context-specific ID of the attachment media.  For files and images,
+this is the name under which the content is saved on the filesystem.</dd>
+<dt><tt class="docutils literal"><span class="pre">title</span></tt></dt>
+<dd>The title of the attachment.  This will be the display name.  For files
+and images, this is the name that the file had before uploading.</dd>
+<dt><tt class="docutils literal"><span class="pre">description</span></tt></dt>
+<dd>A longer description of the attachment</dd>
+</dl>
+<p><tt class="xref docutils literal"><span class="pre">True</span></tt> if the record was successfully created; otherwise <tt class="xref docutils literal"><span class="pre">False</span></tt>.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="giveaminute.project.createInviteBody">
@@ -413,6 +437,26 @@
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="giveaminute.project.getAttachmentThumbFileName">
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">getAttachmentThumbFileName</tt><big>(</big><em>media_type</em>, <em>media_id</em>, <em>size</em><big>)</big><a class="headerlink" href="#giveaminute.project.getAttachmentThumbFileName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a file name for an image representation of the media.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="giveaminute.project.getAttachmentThumbUrl">
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">getAttachmentThumbUrl</tt><big>(</big><em>media_type</em>, <em>media_id</em>, <em>size</em><big>)</big><a class="headerlink" href="#giveaminute.project.getAttachmentThumbUrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL to an image representation of the media. For images, this may be
+used for getting a thumbnail. Specify max width and height in that case.
+Otherwise you&#8217;ll probably just get a generic file image.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="giveaminute.project.getAttachmentUrl">
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">getAttachmentUrl</tt><big>(</big><em>media_type</em>, <em>media_id</em><big>)</big><a class="headerlink" href="#giveaminute.project.getAttachmentUrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL to wherever the media is stored.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="giveaminute.project.getFeaturedProjects">
 <tt class="descclassname">giveaminute.project.</tt><tt class="descname">getFeaturedProjects</tt><big>(</big><em>db</em>, <em>limit=6</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#getFeaturedProjects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.getFeaturedProjects" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -440,7 +484,10 @@
 <dl class="function">
 <dt id="giveaminute.project.getMessages">
 <tt class="descclassname">giveaminute.project.</tt><tt class="descname">getMessages</tt><big>(</big><em>db</em>, <em>projectId</em>, <em>limit=10</em>, <em>offset=0</em>, <em>filterBy=None</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#getMessages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.getMessages" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return a list of dictionaries with data representing project messages
+associated with the given projectId.  This data come from the tables
+project_message, user, and idea.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="giveaminute.project.getNumMembers">
@@ -524,8 +571,30 @@
 
 <dl class="function">
 <dt id="giveaminute.project.message">
-<tt class="descclassname">giveaminute.project.</tt><tt class="descname">message</tt><big>(</big><em>id</em>, <em>type</em>, <em>message</em>, <em>createdDatetime</em>, <em>userId</em>, <em>name</em>, <em>imageId</em>, <em>ideaId=None</em>, <em>idea=None</em>, <em>ideaSubType=None</em>, <em>ideaCreatedDatetime=None</em>, <em>projectId=None</em>, <em>projectTitle=None</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.message" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">message</tt><big>(</big><em>id</em>, <em>type</em>, <em>message</em>, <em>createdDatetime</em>, <em>userId</em>, <em>name</em>, <em>imageId</em>, <em>attachmentId=None</em>, <em>ideaId=None</em>, <em>idea=None</em>, <em>ideaSubType=None</em>, <em>ideaCreatedDatetime=None</em>, <em>attachmentMediaType=None</em>, <em>attachmentMediaId=None</em>, <em>attachmentTitle=None</em>, <em>projectId=None</em>, <em>projectTitle=None</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct and return a dictionary consisting of the data related to a
+message, given by the parameters.  This data is usually pulled off of
+several database tables with keys linking back to a message_id.</p>
+<dl class="docutils">
+<dt>NOTE: It is recommended to specify all of these as keyword arguments, not</dt>
+<dd>positional. If the model changes, the positions of the arguments may
+as well.</dd>
+</dl>
+<p><strong>Return:</strong></p>
+<p>A <tt class="docutils literal"><span class="pre">dict</span></tt> with keys:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">message_id</span></tt> &#8211; Primary key</li>
+<li><tt class="docutils literal"><span class="pre">message_type</span></tt> &#8211; <tt class="docutils literal"><span class="pre">'join'</span></tt>, <tt class="docutils literal"><span class="pre">'goal_achieved'</span></tt>,  <tt class="docutils literal"><span class="pre">'endorsement'</span></tt>,
+<tt class="docutils literal"><span class="pre">'member_comment'</span></tt>, or <tt class="docutils literal"><span class="pre">'admin_comment'</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">file_id</span></tt> &#8211; The primary key of the attachment, if any</li>
+<li><tt class="docutils literal"><span class="pre">owner</span></tt> &#8211; The user that owns the message</li>
+<li><tt class="docutils literal"><span class="pre">body</span></tt> &#8211; The content of the message</li>
+<li><tt class="docutils literal"><span class="pre">created</span></tt> &#8211; The creation date</li>
+<li><tt class="docutils literal"><span class="pre">idea</span></tt> &#8211; The idea instance attached to the message, if any</li>
+<li><tt class="docutils literal"><span class="pre">project_id</span></tt> &#8211; The primary key of the project that the message is for</li>
+<li><tt class="docutils literal"><span class="pre">project_title</span></tt> &#8211; The title of the project</li>
+</ul>
+</dd></dl>
 
 <dl class="function">
 <dt id="giveaminute.project.removeEndorsement">
@@ -586,6 +655,12 @@
 <dt id="giveaminute.project.setLinkIsActive">
 <tt class="descclassname">giveaminute.project.</tt><tt class="descname">setLinkIsActive</tt><big>(</big><em>db</em>, <em>linkId</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/project.html#setLinkIsActive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.project.setLinkIsActive" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="function">
+<dt id="giveaminute.project.smallAttachment">
+<tt class="descclassname">giveaminute.project.</tt><tt class="descname">smallAttachment</tt><big>(</big><em>media_type</em>, <em>media_id</em>, <em>title</em><big>)</big><a class="headerlink" href="#giveaminute.project.smallAttachment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary representing basic attachment information</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="giveaminute.project.smallIdea">
@@ -691,7 +766,56 @@
 <dl class="class">
 <dt id="giveaminute.user.User">
 <em class="property">class </em><tt class="descclassname">giveaminute.user.</tt><tt class="descname">User</tt><big>(</big><em>db</em>, <em>userId</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/user.html#User"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.user.User" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>An instance of a user.  A layer over the <tt class="docutils literal"><span class="pre">user</span></tt> table and related tables.</p>
+<p><strong>Attributes:</strong></p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">db</span></tt></dt>
+<dd>A <tt class="docutils literal"><span class="pre">web.db.DB</span></tt> instance. CBU uses a MySQL database, so this is
+specifically a <tt class="docutils literal"><span class="pre">web.db.MySQLDB</span></tt> instance. It is created with the
+<tt class="docutils literal"><span class="pre">web.db.database</span></tt> factory in <tt class="docutils literal"><span class="pre">framework.controller</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">id</span></tt></dt>
+<dd>The ID of the user instance.</dd>
+<dt><tt class="docutils literal"><span class="pre">data</span></tt></dt>
+<dd>The database row corresponding to the user, as a <tt class="docutils literal"><span class="pre">list</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">projectData</span></tt></dt>
+<dd>A set of rows of project data for <em>active</em> projects for which this user
+is an administrator.</dd>
+<dt><tt class="docutils literal"><span class="pre">userKey</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">user_key</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">email</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">email</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">firstName</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">first_name</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">lastName</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">last_name</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">imageId</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">image_id</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">locationId</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">location_id</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">location</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">location_name</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">description</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">description</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">affiliation</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">affiliation</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">groupMembershipBitmask</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">group_membership_bitmask</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">emailNotification</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">email_notification</span></tt> field from the table</dd>
+<dt><tt class="docutils literal"><span class="pre">isAdmin</span></tt></dt>
+<dd>True if the 2nd-lowest bit in the group membership bitmask is 1;
+otherwise False</dd>
+<dt><tt class="docutils literal"><span class="pre">isModerator</span></tt></dt>
+<dd>True if the 3rd-lowest bit in the group membership bitmask is 1;
+otherwise False</dd>
+<dt><tt class="docutils literal"><span class="pre">isLeader</span></tt></dt>
+<dd>True if the 4th-lowest bit in the group membership bitmask is 1;
+otherwise False</dd>
+<dt><tt class="docutils literal"><span class="pre">numMessages</span></tt></dt>
+<dd>The number of new messages since the last time the user accessed their
+account page</dd>
+</dl>
+<dl class="method">
 <dt id="giveaminute.user.User.getActivityDictionary">
 <tt class="descname">getActivityDictionary</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/giveaminute/user.html#User.getActivityDictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.user.User.getActivityDictionary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -714,7 +838,9 @@
 <dl class="method">
 <dt id="giveaminute.user.User.getMessages">
 <tt class="descname">getMessages</tt><big>(</big><em>limit</em>, <em>offset</em><big>)</big><a class="reference internal" href="../_modules/giveaminute/user.html#User.getMessages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.user.User.getMessages" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns a list of messages for this user.  The results are paginated
+(i.e., this will return <tt class="docutils literal"><span class="pre">limit</span></tt> rows, starting at <tt class="docutils literal"><span class="pre">ofsset</span></tt>-th row).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="giveaminute.user.User.getNumNewMessages">
@@ -734,7 +860,9 @@
 <dl class="method">
 <dt id="giveaminute.user.User.getUserProjectList">
 <tt class="descname">getUserProjectList</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/giveaminute/user.html#User.getUserProjectList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#giveaminute.user.User.getUserProjectList" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns a set of rows of project data for <em>active</em> projects for which 
+this user is an administrator.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="giveaminute.user.User.getUserResources">
