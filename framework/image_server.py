@@ -140,8 +140,8 @@ class ImageServer(Controller):
         the ID of the image, it will put it in the folder:
         data/APP_NAME/images/FIRST_DIGIT_OF_ID/ID.png
         """
-        path = "data/%s/images/%s/%s.png" % (app, str(id)[-1], id)
-        
+        file_root = Config.get('media')['file_path']
+        path = "%s/images/%s/%s.png" % (file_root, str(id)[-1], id)
         return path
     
     def GET(self, app=None, mode=None, target_width=None, target_height=None, id=None):

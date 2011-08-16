@@ -34,15 +34,16 @@
         <!-- Stylesheets -->
         {% if d.config.app_env == 'dev' %}
             <link rel="stylesheet" href="/static/css/tc.reset.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
-            <link rel="stylesheet" href="/static/css/fileuploader.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/project/conversation.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.project.css" type="text/css" media="screen" />
         {% else %}
             <link rel="stylesheet" href="/static/build/css/tc-all-min.css" type="text/css" media="screen" />
         {% endif %}
-        
+
         {% if d.template_data and not(d.template_data.user) and d.template_data.app_mode == 'beta' %}
             <link rel="stylesheet" href="/static/css/tc.gam.splash.css" type="text/css" media="screen" />
         {% endif %}
@@ -100,9 +101,11 @@
         </script>
         {% endblock %}
 
-        <!-- Typekit font -->
-        <script type="text/javascript" src="http://use.typekit.com/{{ d.config.typekit.key }}.js"></script>
-        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+        {% if d.config.typekit %}
+            <!-- Typekit font -->
+            <script type="text/javascript" src="http://use.typekit.com/{{ d.config.typekit.key }}.js"></script>
+            <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+        {% endif %}
 </head>
 
 <!-- the "green-nyc" class is to decorate page with green-specific styles -->
@@ -317,7 +320,7 @@
     {% else %}
         <script type="text/javascript" src="/static/build/js/libs.js"></script>
     {% endif %}
-    
+
     <!-- Javascript TC GAM framework -->
     {% if d.config.app_env == 'dev' %}
         <script type="text/javascript" src="/static/js/tc.gam.base.js"></script>
