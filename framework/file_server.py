@@ -13,7 +13,7 @@ class FileServer(object):
     
     """
     
-    def add(self, data, filename=None, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
+    def add(self, data, filename=None, make_unique=False, max_size=None, grayscale=False, mirror=True, thumb_max_size=None):
         """
         Add a file to the fileserver.  If either adding the database record for 
         the file or saving the file fails, then add will return None, and no
@@ -24,8 +24,8 @@ class FileServer(object):
         log.info("FileServer.add")
         
         # Create a unique filename
-        if not filename:
-            filename = self.getUniqueFilename()
+        if not filename or make_unique:
+            filename = self.getUniqueFilename(filename)
         
         # Save the file to the system
         success = self.saveFile(filename, data, max_size=max_size, mirror=mirror)
@@ -34,7 +34,7 @@ class FileServer(object):
         return filename
     
     
-    def getUniqueFilename(self):
+    def getUniqueFilename(self, filename):
         """
         Get a unique name for the file. 
         
@@ -116,7 +116,7 @@ class S3FileServer(FileServer):
         return Config.get(var_name)
     
     
-    def getUniqueFilename(self):
+    def getUniqueFilename(self, filename):
         """
         Get a unique name for the file. 
         
@@ -132,8 +132,9 @@ class S3FileServer(FileServer):
         
         # Construct random filenames until we find one that's not in use.
         while True:
-            filename = ''.join([random.choice(alphanum) for _ in xrange(8)])
-            if filename not in filenames:
+            randomizer = ''.join([random.choice(alphanum) for _ in xrange(8)])
+            if '-'.join([filename, randomizer]) not in filenames:
+                filename = '-'.join([randomizer, filename]) if filename else randomizer
                 break
         
         return filename

@@ -144,7 +144,7 @@ class CreateProject(Controller):
             data = web.input()['qqfile']
         else:
             data = web.data()
-
+        
         imageId = ImageServer.add(self.db, data, 'giveaminute', [100, 100])
 
         return imageId
@@ -163,8 +163,10 @@ class CreateProject(Controller):
         # Get file from the request
         if (len(self.request('qqfile')) > 100):
             log.info("*** == %s" % type(web.input()['qqfile']))
+            file_name = ''
             data = web.input()['qqfile']
         else:
+            file_name = web.input()['qqfile']
             data = web.data()
 
         file_info['name'] = self.request('qqfile') or ''
@@ -176,7 +178,7 @@ class CreateProject(Controller):
         media_type = file_info['type'] = self.getFileMediaType(data)
 
         # Upload the file to the server
-        media_id = file_info['id'] = fs.add(data, None)
+        media_id = file_info['id'] = fs.add(data, file_name, make_unique=True)
 
         # If it's an image, upload the thumbnails as well
         if media_type == 'image':
