@@ -503,7 +503,7 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             },
             template:'<div class="qq-uploader">' + 
                         '<div class="qq-upload-drop-area"><span>Drop files here to upload</span></div>' +
-                        '<div class="qq-upload-button"><label>Browse for file</label></div>' +
+                        '<div class="qq-upload-button"><label>Browse for image or file</label></div>' +
                      '</div>' + 
                      '<ul class="qq-upload-list"></ul>',
             fileTemplate: '<li>' +
@@ -519,20 +519,20 @@ tc.gam.project_widgets.conversation = function(project, $dom, deps, opts){
             onSubmit: function(fileName) {
                 // Hide the browse for file button
                 $('.qq-uploader').hide();
-                
-                // Show the message input field
-                $('.conversation-input-message-field').show();
             },
             onComplete: function(id, fileName, responseJSON) {
                 // Trigger uploaded event with new image IDs
                 if (responseJSON.success) {
+                    // Show the message input field
+                    $('.conversation-input-message-field').show();
+
                     $('.qq-upload-file-thumb').empty().append('<img class="conversation-file-thumb" src=' + responseJSON.small_thumb_url + '>');
                     state.fileUploader = 'successful';
                     state.message_attachment = responseJSON;
                 } 
                 else {
-                    // TODO: determine what else needs to happen on failure.
-                    state.fileUploader = 'unsuccessful';
+                    // Setup for reset on failure.
+                    state.fileUploader = 'needsreset';
                     $('.qq-upload-file-thumb').hide();
                 }
                 
