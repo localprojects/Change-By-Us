@@ -35,7 +35,13 @@ The code can be found on Assembla at: https://www.assembla.com/spaces/lp-changeb
 
 ## Documentation ##
 
-Documentation can currently be found on Github at: https://github.com/codeforamerica/cbu/wiki/
+Main documentation can currently be found on Github at: https://github.com/codeforamerica/cbu/wiki/
+
+Compiled documentation from inline documentation is available
+in the following locations:
+
+    * Python: docs/_build/index.html
+    * Javascript: docs/js/index.html
 
 
 ## Credits ##
