@@ -48,7 +48,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			out.find('blockquote.serif').before('<div class="note-card">\
 				<cite class="note-meta-hd"></cite>\
 				<blockquote>\
-					<p class="message-test">&nbsp;</p>\
+					<p class="message-test">'+d.idea.text+'</p>\
 				</blockquote>\
 				<cite class="note-meta-ft"></cite>\
 			</div>');
