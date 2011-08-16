@@ -118,7 +118,23 @@
                         </li>
 
                         <li class="lang">
-                            {{ d.language_selector }}
+                        <div class='lang-selector'>
+                        {% if d.language.current and d.language.list %}
+                        <a href='/?lang={{ d.language.current }}'>{{ d.language.current }}</a>
+                        {% endif %}
+
+                          <div class="dropdown no-js">
+                            <div class="membrane">
+                              {% if d.language.current and d.language.list %}
+                              {% for value, label in d.language.list %}
+                              <a href="/?lang={{ value }}">
+                                <span class="lang-value">{{ value }}</span>{{ label }}
+                              </a>
+                              {% endfor %}
+                              {% endif %}
+                            </div>
+                          </div>
+                        </div>
                         </li>
 
                         <li class="news-about">
