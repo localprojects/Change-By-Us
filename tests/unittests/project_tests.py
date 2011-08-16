@@ -29,7 +29,8 @@ class FileUploadTest (TestCase):
         web.ctx.method = ''
         web.ctx.path = ''
         import StringIO
-        web.ctx.env = {'wsgi.input':StringIO.StringIO()}
+        web.ctx.env = {'wsgi.input': StringIO.StringIO(),
+                       'REQUEST_METHOD': ''}
         
         # Set up the routes
         app = web.application(main.ROUTES, globals())

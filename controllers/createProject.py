@@ -164,9 +164,10 @@ class CreateProject(Controller):
         if (len(self.request('qqfile')) > 100):
             log.info("*** == %s" % type(web.input()['qqfile']))
             file_name = ''
-            data = web.input()['qqfile']
+            data = self.request('qqfile')
         else:
-            file_name = web.input()['qqfile']
+            print web.input()
+            file_name = self.request('qqfile')
             data = web.data()
 
         file_info['name'] = self.request('qqfile') or ''
