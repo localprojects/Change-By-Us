@@ -19,8 +19,10 @@
 #             to anything else to get out of beta mode.  This is 
 #             currently handled by the __init__ of the Controller
 #             class.
-# app_env  -- Environment such as production or development (what
-#             does this affect?)
+# app_env  -- Environment, available are:
+#                * dev
+#                * staging
+#                * prod
 # instance -- ??
 # htaccess -- Yes or no.  Is the site behind htaccess.
 #
@@ -116,6 +118,10 @@ beanstalk:
 media:
     isS3mirror: True
     root: %(media_root)s 
+    file_path: 'data/files'
+    
+staticfiles:
+    root: %(staticfiles_root)s
     
 email:
     # Common email domain name (ie. google.com) that will be displayed

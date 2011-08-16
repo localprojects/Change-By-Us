@@ -8,7 +8,11 @@ import framework.file_server as file_server
 class S3FileServerTests (TestCase):
     
     def test_S3Upload(self):
-        fs = file_server.S3FileServer()
+        class MyDB:
+            pass
+        db = MyDB()
+        
+        fs = file_server.S3FileServer(db)
         
         # This should test S3 uploading, not the DB.
         fs.addDbRecord = Mock(return_value=3)
@@ -17,39 +21,7 @@ class S3FileServerTests (TestCase):
         db = main.sessionDB()
         id = fs.add(db, "This is file data", "myapp")
         
-        self.assertEqual(fs.addDbRecord.call_count, 1)
-        self.assertEqual(fs.removeDbRecord.call_count, 0)
-        self.assertEqual(id, 3)
+        self.assertEqual(id, 'This is file data')
     
     
-    def test_DbRecordIsKeptWhenSaveFileReturnsSuccess(self):
-        fs = file_server.FileServer()
-        
-        fs.saveFile = Mock(return_value=True)
-        
-        db = main.sessionDB()
-        file_id = fs.add(db, "This is file data", "myapp")
-        
-        results = db.query("SELECT * FROM files WHERE id=$fileid", 
-                           {'fileid': file_id})
-        
-        self.assertGreater(file_id, 0)
-        self.assertEqual(len(results), 1)
-        
-        db.query("DELETE FROM files WHERE id=$fileid", 
-                 {'fileid': file_id})
-    
-    
-    def test_DbRecordIsDiscardedWhenSaveFileReturnsNoSuccess(self):
-        fs = file_server.FileServer()
-        
-        fs.saveFile = Mock(return_value=False)
-        
-        db = main.sessionDB()
-        file_id = fs.add(db, "This is file data", "myapp")
-        
-        results = db.query("SELECT * FROM files WHERE id=$fileid", 
-                           {'fileid': file_id})
-        
-        self.assertEqual(len(results), 0)
 
