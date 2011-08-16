@@ -4,10 +4,22 @@ from lib import web
 
 import mock
 import main
+from framework.config import Config
 
 class FileUploadTest (TestCase):
 
     def setUp(self):
+        # HACK: We kept getting db.printing inexplicably set to True, so patch
+        # it to be False here.
+        _real_db_execute = web.db.DB._db_execute
+        def _db_execute(self, cur, sql_query):
+            self.printing = False
+            return _real_db_execute(self, cur, sql_query)
+        web.db.DB._db_execute = _db_execute
+            
+        # Set the dev flag in Config to False.
+        Config.load()
+        Config.data['dev'] = False
         
         # Set the debug flag to true, despite what is in the config file
         web.config.debug = False
@@ -23,7 +35,7 @@ class FileUploadTest (TestCase):
         app = web.application(main.ROUTES, globals())
         
         # Grab a database connection
-        db = main.sessionDB()
+        self.db = main.sessionDB()
         
         # Initialize the session holder (I don't know what that is yet)
         #main.SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
@@ -38,9 +50,9 @@ class FileUploadTest (TestCase):
         
         response = self.app.post('/create/attachment', params={'qqfile':'This is a qqfile'})
         self.assertEqual(response.status, 200)
-        response.mustcontain('attachment_id')
-        response.mustcontain('"success": false')
-        response.mustcontain('"type": "file"')
+        response.mustcontain('"media_id": ')
+        response.mustcontain('"media_type": "file"')
+        response.mustcontain('"success": true')
 
     def test_ImageUploadServiceEndpointHas200Status(self):
         # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
@@ -51,9 +63,7 @@ class FileUploadTest (TestCase):
         
         response = self.app.post('/create/attachment', upload_files=[('qqfile', 'very_small_image.png', png_data)])
         self.assertEqual(response.status, 200)
-        response.mustcontain('attachment_id')
         response.mustcontain('"success": false')
-        response.mustcontain('"type": "image"')
 
     def test_FileUploadServiceUsesS3Uploader(self):
         import controllers.createProject as createProject

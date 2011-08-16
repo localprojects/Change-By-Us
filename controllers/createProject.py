@@ -194,7 +194,7 @@ class CreateProject(Controller):
         if thumb and fs.add(thumb, thumb_filename):
             log.info("Wrote %s thumbnail image to %s" % (name, thumb_filename))
         else:
-            log.error("Failed to write %s thumbnail image to %s" % (name, small_filename))
+            log.error("Failed to write %s thumbnail image to %s" % (name, thumb_filename))
 
 
     SMALL_THUMB_SIZE = (100,100)
