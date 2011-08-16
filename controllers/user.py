@@ -112,7 +112,7 @@ class UserAccount(Controller):
         if (not util.strNullOrEmpty(firstName) and
             not util.strNullOrEmpty(lastName) and
             not util.strNullOrEmpty(email)):
-            return self.user.updateInfo(email, firstName, lastName, imageId, locationId)
+            return self.user.updateInfo(self.user, email, firstName, lastName, imageId, locationId)
         else:
             log.info("*** not enough info to update user")
             return False

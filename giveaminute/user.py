@@ -124,12 +124,13 @@ where u.user_id = $id and u.is_active = 1"""
             log.error(e)
             return False
             
-    def updateInfo(self, email, first, last, imageId = None, locationId = None):
+    def updateInfo(self, user, email, first, last, imageId = None, locationId = None):
         # check if email already in user
         if not (findUserByEmail(self.db, self.email)):
             return False
             
         try:
+            imageId = user.data.imageId if imageId == None else imageId # If its none, use the current imageId
             self.db.update('user', where = 'user_id = $userId', 
                             first_name = first,
                             last_name = last,
