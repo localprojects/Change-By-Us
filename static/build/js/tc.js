@@ -1581,8 +1581,8 @@ tc.top_bar = function(element, options) {
     
     function init() {
         if (isiPad === true) {
-            element.find(".username > a, .myprojects > a").removeAttr('href');
-            element.find(".username > a, .myprojects > a").toggle(
+            element.find(".username > a, .myprojects > a, .lang > a").removeAttr('href');
+            element.find(".username > a, .myprojects > a, .lang > a").toggle(
                 function() { 
                     tc.jQ('.userland .dropdown').hide();
                     tc.jQ(this).parent().children(".dropdown").stop(true, true).slideDown(o.slideSpeed);
@@ -1591,261 +1591,397 @@ tc.top_bar = function(element, options) {
                 }
             );
         } else {
-            element.find(".username, .myprojects").mouseenter(function () {
+            element.find(".username, .myprojects, .lang-selector").mouseenter(function () {
                 if( $.browser.msie && $.browser.version < 8 ) {
                     tc.jQ(this).children(".dropdown").stop(true, true).fadeIn(o.slideSpeed);
                 } else {
                     tc.jQ(this).children(".dropdown").stop(true, true).slideDown(o.slideSpeed);
                 }
+                tc.jQ(this).children("a").toggleClass("opened");
             }).mouseleave(function () {
                 tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
+                tc.jQ(this).children("a").toggleClass("opened");
             });
         };
-        
-        //Update the query string when the language is changed
-        tc.jQ('.lang > select', element).change(function() {
-            window.location.search = 'lang=' + this.value;
-        });
     }
     
     init();
     return {};
 };
+
 /********************   End ./static/js/tc.gam.topbar.js   ********************/
 
 
 /******************** Begin ./static/js/tc.gam.modal.js    ********************/
-if(!tc){ var tc = {}; }
+/**
+ * File: Modal
+ * This file defines the modal widget.
+ *
+ * Filename:
+ * tc.gam.modal.js
+ * 
+ * Dependencies:
+ * - tc.gam.base.js
+ * - tc.utils.js
+ */
 
+ /**
+  * Class: tc.modal
+  */
 tc.modal = makeClass();
 
+/**
+ * Variable: tc.modal.prototype.modal
+ * Internal reference to the modal object.
+ */
 tc.modal.prototype.modal = null;
 
-tc.modal.prototype.init = function(app,options){
-	tc.util.log('tc.modal.init');
-	this.options = tc.jQ.extend({
-		element:null
-	},options);
-	this.options.element.overlay({
-		top: "15%",
-		left: 'center',
-		fixed: false,
-		speed: 75,
-		mask: {
-			color: '#55504b',
-			opacity: 0.5,
-			zIndex: 19998
-		}
-	});
-	this.modal = this.options.element.data('overlay');
+/**
+ * Function: tc.modal.prototype.init
+ * Initialize the modal at creation time. See
+ * makeClass() for more details.
+ *
+ * Parameters:
+ * app - {Object} Reference to the application (app_page)
+ * options - {Object} Setup options object literal
+ */
+tc.modal.prototype.init = function(app, options){
+    tc.util.log('tc.modal.init');
+    
+    //Extend the options
+    this.options = tc.jQ.extend({
+        element: null
+    }, options);
+    
+    //Init the overlay with set options
+    this.options.element.overlay({
+        top: '15%',
+        left: 'center',
+        fixed: false,
+        speed: 75,
+        mask: {
+            color: '#55504b',
+            opacity: 0.5,
+            zIndex: 19998
+        }
+    });
+    
+    //Set the internal reference
+    this.modal = this.options.element.data('overlay');
 };
 
+
+/**
+ * Function: tc.modal.prototype.show
+ * Shows the modal dialog according to the given parameters.
+ *
+ * Parameters:
+ * opts - {Object} Options for how to handle the show event. Includes:
+ *        * source_element (required) - a jQuery object containing a template of
+ *            the content to be shown inside the modal. This is expected to have
+ *            a class of template-content
+ *        * submit - a function that will be executed if someone clicks an element
+ *            with a class of "submit".
+ *        * preventClose - prevent the modal from closing (?)
+ *        * init - a hook to do custom initialization
+ * event_target - {Object} An object passed into the init function (?)
+ */
 tc.modal.prototype.show = function(opts, event_target){
-	tc.util.log('tc.modal.show');
-	function load(me){
-		me.modal.load();
-	}
-	var content;
-	content = "";
-	if(opts.source_element){
-		content = opts.source_element.clone().removeClass("template-content");
-	}
-	this.options.element.children().remove();
-	content.show();
-	this.options.element.append(content);
-	tc.util.dump(this.options.element.find('.close'));
-	this.options.element.find('.close, .cancel').bind('click',{me:this},function(e){
-		e.preventDefault();
-		e.data.me.hide();
-	});
-	this.options.element.find('.submit').bind('click',{me:this,opts:opts},function(e){
-		e.preventDefault();
-		e.data.me.hide();
-		if(tc.jQ.isFunction(e.data.opts.submit)){
-			e.data.opts.submit();
-		}
-	});
-	this.options.element.bind('onBeforeClose',{me:this, opts:opts},function(e){
-		if(e.data.opts.preventClose){
-			return false;
-		}
-		return true;
-	});
-	this.options.element.bind('onClose',{me:this},function(e){
-		var me;
-		me = e.data.me;
-		if (tc.jQ.isFunction(me.cleanup)) {
-			me.cleanup.apply(me);
-			me.cleanup = null;
-		}
-		me.options.element.children().remove();
-	});
-	if(tc.jQ.isFunction(opts.init)){
-		if (event_target) {
-			opts.init(this,event_target,load);
-		} else {
-			opts.init(this, load);
-		}
-	} else {
-		load(this);
-	}
+    tc.util.log('tc.modal.show');
+
+    var content = '';
+    
+    function load(me){
+        me.modal.load();
+    }
+    
+    if(opts.source_element){
+        content = opts.source_element.clone().removeClass('template-content');
+    }
+    
+    this.options.element.children().remove();
+    content.show();
+    
+    this.options.element.append(content);
+
+    //Bind events
+    tc.util.dump(this.options.element.find('.close'));
+    
+    //Hide the modal when someone clicks elements with "close" or "cancel" classes
+    this.options.element.find('.close, .cancel').bind('click',{me:this},function(e){
+        e.preventDefault();
+        e.data.me.hide();
+    });
+    
+    //Call the opts.submit function if it exists when someone clicks an element with a "submit" class
+    this.options.element.find('.submit').bind('click',{me:this,opts:opts},function(e){
+        e.preventDefault();
+        e.data.me.hide();
+        if(tc.jQ.isFunction(e.data.opts.submit)){
+            e.data.opts.submit();
+        }
+    });
+    
+    //Prevent the modal from closing if explicitly specfied
+    this.options.element.bind('onBeforeClose',{me:this, opts:opts},function(e){
+        if(e.data.opts.preventClose){
+            return false;
+        }
+        return true;
+    });
+    
+    //Clean up on close
+    this.options.element.bind('onClose',{me:this},function(e){
+        var me;
+        me = e.data.me;
+        if (tc.jQ.isFunction(me.cleanup)) {
+            me.cleanup.apply(me);
+            me.cleanup = null;
+        }
+        me.options.element.children().remove();
+    });
+    
+    //call opts.init if provided, otherwise call load()
+    if(tc.jQ.isFunction(opts.init)){
+        if (event_target) {
+            opts.init(this, event_target, load);
+        } else {
+            opts.init(this, load);
+        }
+    } else {
+        load(this);
+    }
 };
 
+/**
+ * Function: tc.modal.prototype.hide
+ * Hide the modal.
+ */
 tc.modal.prototype.hide = function(){
-	tc.util.log('tc.modal.hide');
-	this.modal.close();
+    tc.util.log('tc.modal.hide');
+    this.modal.close();
 };
 /********************   End ./static/js/tc.gam.modal.js    ********************/
 
 
 /******************** Begin ./static/js/tc.gam.carousel.js ********************/
-if (!tc) { var tc = {}; }
+/**
+ * File: Carousel
+ * This file defines the carousel widget.
+ *
+ * Filename:
+ * tc.gam.carousel.js
+ * 
+ * Dependencies:
+ * - tc.gam.base.js
+ * - tc.utils.js
+ * - jqtools.scrollable.js
+ */
 
+/**
+ * Class: tc.carousel
+ */
 tc.carousel = makeClass();
 
+/**
+ * Variable: tc.carousel.prototype.carousel
+ * Internal reference to the carousel object.
+ */
 tc.carousel.prototype.carousel = null;
 
+/**
+ * Function: tc.carousel.prototype.init
+ * Initialize the carousel at creation time. See
+ * makeClass() for more details.
+ *
+ * Parameters:
+ * options - {Object} Setup options object literal
+ */
 tc.carousel.prototype.init = function(options) {
-	tc.util.log("tc.carousel.init");
-	
-	this.options = tc.jQ.extend({
-		element: null,
-		next_button:null,
-		prev_button:null,
-		scrollable: {
-			items: ".items",
-			speed: 300,
-			circular: true
-		},
-		scrollPaneSelector: ".scrollable:first",
-		pagination: false // { current: jQuery obj, total: jQuery obj }
-	}, options);
-	
-	this.rendered = false;
-	
-	if (this.has_items() && this.options.element.is(":visible")) {
-		this.render();
-	} else {
-		tc.util.log("postponing carousel rendering", "warn");
-	}
+    tc.util.log('tc.carousel.init');
+    
+    //Extend the options
+    this.options = tc.jQ.extend({
+        element: null,
+        next_button:null,
+        prev_button:null,
+        scrollable: {
+            items: '.items',
+            speed: 300,
+            circular: true
+        },
+        scrollPaneSelector: '.scrollable:first',
+        pagination: false // { current: jQuery obj, total: jQuery obj }
+    }, options);
+    
+    this.rendered = false;
+    
+    if (this.has_items() && this.options.element.is(':visible')) {
+        this.render();
+    } else {
+        tc.util.log('postponing carousel rendering', 'warn');
+    }
 };
 
+/**
+ * Function: tc.carousel.prototype.destroy
+ * Destroy the widget and unbind events.
+ */
 tc.carousel.prototype.destroy = function() {
-	this.options.element.find(this.options.scrollPaneSelector).removeData("scrollable");
-	if (this.next_btn) {
-		this.next_btn.unbind("click");
-	}
-	if (this.prev_btn) {
-		this.prev_btn.unbind("click");
-	}	
+    this.options.element.find(this.options.scrollPaneSelector).removeData('scrollable');
+    if (this.next_btn) {
+        this.next_btn.unbind('click');
+    }
+    if (this.prev_btn) {
+        this.prev_btn.unbind('click');
+    }   
 };
 
+/**
+ * Function: tc.carousel.prototype.render
+ * Render the widget.
+ *
+ * Parameters:
+ * width - {Number} 
+ * height - {Number} 
+ */
 tc.carousel.prototype.render = function(width, height) {
-	var me, scrollpane, w, h;
-	tc.util.log("tc.carousel.render");
-	if (this.rendered === true) { 
-		tc.util.log("carousel already rendered!!!", "warn");
-		return;
-	}
-	me = this;
-	w = width || this.options.element.width();
-	h = height || 0;
-	this.options.element.width(w);
-	scrollpane = this.options.element.find(this.options.scrollPaneSelector);
-	scrollpane.children(this.options.scrollable.items).children("li").each(function() {
-		var item, item_height;
-		item = tc.jQ(this);
-		item.width(w);
-		item_height = item.outerHeight();
-		if (item_height > h) {
-			h = item_height;
-		}
-	});
-	scrollpane.height(h);
-	this.carousel = scrollpane.scrollable(this.options.scrollable).data("scrollable");
-	
-	this.carousel.onSeek(function(e, i) {
-		me.update_pagination();
-	});
-	this.carousel.onAddItem(function(e, i) {
-		me.update_navigation();
-		me.update_pagination();
-	});
-	
-	if(!this.next_btn){
-		if(this.options.next_button){
-			this.next_btn = this.options.next_button;
-			this.next_btn.bind("click", {carousel:this.carousel}, function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				e.data.carousel.next();
-			});
-		} else {
-			this.next_btn = this.options.element.find(".next");
-			this.next_btn.bind("click", function(e) {
-				e.preventDefault();
-			});
-		}
-	}
-	
-	if(!this.prev_btn){
-		if(this.options.prev_button){
-			this.prev_btn = this.options.prev_button;
-			this.prev_btn.bind("click", {carousel:this.carousel}, function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				e.data.carousel.prev();
-			});
-		} else {
-			this.prev_btn = this.options.element.find(".prev");
-			this.prev_btn.bind("click", function(e) {
-				e.preventDefault();
-			});
-		}
-	}
-	
-	this.rendered = true;
-	this.update_navigation();
-	this.update_pagination();
+    var me, scrollpane, w, h;
+    tc.util.log('tc.carousel.render');
+    if (this.rendered === true) { 
+        tc.util.log('carousel already rendered!!!', 'warn');
+        return;
+    }
+    
+    me = this;
+    w = width || this.options.element.width();
+    h = height || 0;
+    
+    //Set the width on the element
+    this.options.element.width(w);
+    
+    //Set the scrollpane
+    scrollpane = this.options.element.find(this.options.scrollPaneSelector);
+    
+    scrollpane.children(this.options.scrollable.items).children('li').each(function() {
+        var item, item_height;
+        item = tc.jQ(this);
+        item.width(w);
+        item_height = item.outerHeight();
+        if (item_height > h) {
+            h = item_height;
+        }
+    });
+    
+    //Set the scrollpane height
+    scrollpane.height(h);
+    this.carousel = scrollpane.scrollable(this.options.scrollable).data('scrollable');
+    
+    //
+    this.carousel.onSeek(function(e, i) {
+        me.update_pagination();
+    });
+    
+    //
+    this.carousel.onAddItem(function(e, i) {
+        me.update_navigation();
+        me.update_pagination();
+    });
+    
+    //Handle the next button
+    if(!this.next_btn){
+        if(this.options.next_button){
+            this.next_btn = this.options.next_button;
+            this.next_btn.bind('click', {carousel:this.carousel}, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.data.carousel.next();
+            });
+        } else {
+            this.next_btn = this.options.element.find('.next');
+            this.next_btn.bind('click', function(e) {
+                e.preventDefault();
+            });
+        }
+    }
+    
+    //Handle the previous button
+    if(!this.prev_btn){
+        if(this.options.prev_button){
+            this.prev_btn = this.options.prev_button;
+            this.prev_btn.bind('click', {carousel:this.carousel}, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.data.carousel.prev();
+            });
+        } else {
+            this.prev_btn = this.options.element.find('.prev');
+            this.prev_btn.bind('click', function(e) {
+                e.preventDefault();
+            });
+        }
+    }
+    
+    this.rendered = true;
+    this.update_navigation();
+    this.update_pagination();
 };
 
-// if the carousel has only one item, 
-// hide the next/prev buttons
+/**
+ * Function: tc.carousel.prototype.update_navigation
+ * If the carousel has only one item, hide the next/prev buttons
+ */
 tc.carousel.prototype.update_navigation = function() {
-	if (!this.rendered) { return; }
-	tc.util.log("tc.carousel.update_navigation");
-	if (this.carousel.getSize() < 2) {
-		if (this.next_btn) { this.next_btn.hide(); }
-		if (this.prev_btn) { this.prev_btn.hide(); }
-	} else {
-		if (this.next_btn) { this.next_btn.show(); }
-		if (this.prev_btn) { this.prev_btn.show(); }
-	}
-	return this;
+    if (!this.rendered) { return; }
+    tc.util.log('tc.carousel.update_navigation');
+    if (this.carousel.getSize() < 2) {
+        if (this.next_btn) { this.next_btn.hide(); }
+        if (this.prev_btn) { this.prev_btn.hide(); }
+    } else {
+        if (this.next_btn) { this.next_btn.show(); }
+        if (this.prev_btn) { this.prev_btn.show(); }
+    }
+    return this;
 };
 
+/**
+ * Function: tc.carousel.prototype.update_pagination
+ * Update the current page and the total pages.
+ */
 tc.carousel.prototype.update_pagination = function() {
-	if (!this.options.pagination || !this.rendered) { return; }
-	tc.util.log("tc.carousel.update_pagination");
-	if (this.options.pagination) {
-		this.options.pagination.current.text( this.carousel.getIndex() + 1 );
-		this.options.pagination.total.text( this.carousel.getSize() );
-	}
-	return this;
+    if (!this.options.pagination || !this.rendered) { return; }
+    tc.util.log('tc.carousel.update_pagination');
+    if (this.options.pagination) {
+        this.options.pagination.current.text( this.carousel.getIndex() + 1 );
+        this.options.pagination.total.text( this.carousel.getSize() );
+    }
+    return this;
 };
 
+/**
+ * Function: tc.carousel.prototype.has_items
+ * Returns whether or not the carousel has any items.
+ */
 tc.carousel.prototype.has_items = function() {
-	return ( this.options.element.find(this.options.scrollPaneSelector).
-	         children(this.options.scrollable.items).
-	         children("li").length > 0 );
+    return ( this.options.element.find(this.options.scrollPaneSelector).
+             children(this.options.scrollable.items).
+             children('li').length > 0 );
 };
 
+/**
+ * Function: tc.carousel.prototype.is_rendered
+ * Returns whether or not the carousel is rendered.
+ */
 tc.carousel.prototype.is_rendered = function() {
-	return this.rendered;
+    return this.rendered;
 };
 
+/**
+ * Function: tc.carousel.prototype.get_element
+ * Returns the jQuery object of the element.
+ */
 tc.carousel.prototype.get_element = function(){
-	return this.options.element;
+    return this.options.element;
 };
 
 /********************   End ./static/js/tc.gam.carousel.js ********************/
@@ -2612,206 +2748,278 @@ tc.inlineLocationEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, 
 
 
 /******************** Begin ./static/js/tc.gam.project.js  ********************/
-if(!tc){ var tc = {}; }
-if(!tc.gam){ tc.gam = {}; }
+/**
+ * File: Project
+ * This file provides the main logic, event handling, and
+ * widget container for the Project page and features.
+ *
+ * Filename:
+ * tc.game.project.js
+ * 
+ * Dependencies:
+ * - tc.gam.base.js
+ * - tc.utils.js
+ * - tc.gam.app.js
+ */
 
+/**
+ * Variable: tc.gam.project_widgets
+ * Container for project widgets.
+ */
+tc.gam.project_widgets = tc.gam.project_widgets || {};
 
-tc.gam.project = function(options){	
-	var me, hash_onload;
-	me = this;
-	tc.util.log("tc.gam.project");
-	
-	this.options = tc.jQ.extend({
-		
-	},options);
-	
-	this.dom = this.options.dom;
-	this.event_data = { project:this };
-	this.data = this.options.data;
-	this.widget = new tc.gam.widget(null,this);
-	
-	hash_onload = window.location.hash;
-	
-	this.components = {
-		infopane:new tc.gam.project_widgets.infopane(this,this.dom.find('.box.mission'),{widget:this.widget},{app:options.app}),
-		resources:new tc.gam.project_widgets.resources(this,this.dom.find('.box.resources'),{widget:this.widget},{app:options.app}),
-		related_resources:new tc.gam.project_widgets.related_resources(this,this.dom.find('.box.related-resources'),{widget:this.widget},{app:options.app}),
-		add_link:new tc.gam.project_widgets.add_link(this,this.dom.find('.box.add-link'),{widget:this.widget},{app:options.app}),
-		goals_main:new tc.gam.project_widgets.goals_main(this,this.dom.find('.box.goals-main'),{widget:this.widget},{app:options.app}),
-		goals_add:new tc.gam.project_widgets.goals_add(this,this.dom.find('.box.goals-add'),{widget:this.widget},{app:options.app}),
-		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
-		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{app:options.app})
-	};
-		
-	if (tc.gam.project_widgets.fresh_ideas) {
-		this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.box.fresh-ideas'),{widget:this.widget},{app:options.app});
-	}
-	
-	if(tc.gam.project_widgets.goals_stack){
-		this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this,this.dom.find('.box.goals-stack-holder'),{widget:this.widget},{app:options.app});
-	}
-	
-	// return project page to initial state
-	function go_home(e) {
-		if(e){
-			e.data.project.components.goals_main.show(false);
-			e.data.project.components.conversation.show(false);
-			
-			if (tc.gam.project_widgets.goals_stack) {
-				e.data.project.components.goals_stack.hide(false);
-			}
-			if(tc.gam.project_widgets.members){
-				e.data.project.components.members.hide(false);
-			}
-			e.data.project.components.goals_add.hide(false);
-			e.data.project.components.add_link.hide(false);
-			e.data.project.components.related_resources.hide(false);
-		} else {
-			this.components.goals_main.show(false);
-			this.components.conversation.show(false);
-		}
-	}
-	
-	this.handlers = {
-		widget_show:function(e,d){
-			tc.util.dump(d.name);
-			switch(d.name){
-				case 'members':
-					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.goals_add.hide(false);
-					e.data.project.components.conversation.hide(false);
-					e.data.project.components.add_link.hide(false);
-					break;
-				case 'goals_add':
-					e.data.project.components.goals_main.hide(false);
-					break;
-				case 'goals_stack':
-					e.data.project.components.goals_add.hide(false);
-					e.data.project.components.goals_main.hide(false);
-					break;
-				case 'related_resources':
-					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.members.hide(false);
-					e.data.project.components.conversation.hide(false);
-					e.data.project.components.add_link.hide(false);
-					break;
-				case 'add_link':
-					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.members.hide(false);
-					e.data.project.components.conversation.hide(false);
-					e.data.project.components.related_resources.hide(false);
-					break;
-			}
-		},
-		widget_hide:function(e,d){
-			tc.util.dump('project.widget_hide');
-			switch(d.name){
-				case 'members':
-				case 'goals_add':
-				case 'goals_stack':
-				case 'related_resources':
-				case 'add_link':
-					go_home(e);
-					break;
-			}
-		},
-		hashchange:function(e){
-			tc.util.log('tc.project.handlers.hashchange');
-			var hash;
-			hash = window.location.hash.substring(1,window.location.hash.length);
-			if(hash == 'project-home'){
-				e.preventDefault();
-				go_home(e);
-				return;
-			}
-			switch(hash.split(',')[0]){
-				case 'show':
-					e.preventDefault();
-					tc.util.dump(hash.split(',')[1]);
-					if(e.data.project.components[hash.split(',')[1]]){
-						e.data.project.components[hash.split(',')[1]].show();
-					}
-					break;
-				case 'hide':
-					e.preventDefault();
-					if(e.data.project.components[hash.split(',')[1]]){
-						e.data.project.components[hash.split(',')[1]].hide();
-					}
-					break;
-			}
-		},
-		idea_remove: function(e, d) {
-			if (e.data.project.components.related_ideas) {
-				e.data.project.components.related_ideas.remove_idea(d.id);
-			}
-			e.data.project.components.members.remove_idea(d.id);
-		}
-	};
-	
-	this.update_goals = function() {
-		tc.jQ.ajax({
-			type: 'GET',
-			url: '/project/goals',
-			data: {
-				project_id: me.data.project_id
-			},
-			context: me,
-			dataType:'text',
-			success:function(data,ts,xhr){
-				var d;
-				try{
-					d = tc.jQ.parseJSON(data);
-				}catch(e){
-					return;
-				}
-				this.dom.trigger("goals-refresh", [d]);
-			}
-		});
-	};
+/**
+ * Function: tc.gam.widget
+ * Widget object to extend other widgets.  Specifically
+ * this adds a show and hide function for each widget.
+ *
+ * Parameters:
+ * inheritor - {Object} Object to add functionality to.
+ * project - {Object} Project object for DOM use?
+ *
+ * Returns:
+ * {Object} Original inheritor object passed in with new
+ * properties.
+ */
+tc.gam.widget = function (inheritor, project) {
+    if (!inheritor) {
+        return;
+    }
 
-	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
-	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
-	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
-	this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
-	
-	window.location.hash = hash_onload;
-	tc.jQ(window).trigger('hashchange');
+    inheritor.show = function (propagate) {
+        if (inheritor.dom) {
+            inheritor.dom.show();
+        }
+        if (propagate !== false) {
+            project.dom.trigger('project-widget-show', {
+                name: inheritor.options.name
+            });
+        }
+    };
+
+    inheritor.hide = function (propagate) {
+        if (inheritor.dom) {
+            inheritor.dom.hide();
+        }
+        if (propagate !== false) {
+            project.dom.trigger('project-widget-hide', {
+                name: inheritor.options.name
+            });
+        }
+    };
+
+    return inheritor;
 };
 
+/**
+ * Function: tc.gam.project
+ * Project object that handles overarching logic of project.
+ *
+ * Parameters:
+ * options - {Object} Object of options
+ */
+tc.gam.project = function(options) {
+    var hash_onload;
+    var me = this;
+    var this_project = this;
 
-tc.gam.widget = function(inheritor,project){
-	if(!inheritor){ return; }
-	
-	inheritor.show = function(propagate){
-		if(inheritor.dom){ inheritor.dom.show(); }
-		if(propagate !== false){
-			project.dom.trigger('project-widget-show',{name:inheritor.options.name});
-		}
-	};
-	
-	inheritor.hide = function(propagate){
-		if(inheritor.dom){ inheritor.dom.hide(); }
-		if(propagate !== false){
-			project.dom.trigger('project-widget-hide',{name:inheritor.options.name});
-		}
-	};
-	
-	return inheritor;
+    // Combine options (this is currently unnecessary).
+    this.options = tc.jQ.extend({}, options);
+
+    // Define local properties.
+    this.dom = this.options.dom;
+    this.event_data = {
+        project: this
+    };
+    this.data = this.options.data;
+    this.widget = new tc.gam.widget(null, this);
+
+    // Get hash location.
+    hash_onload = window.location.hash;
+
+    // Components of the project interface.
+    this.components = {
+        'infopane': new tc.gam.project_widgets.infopane(this, this.dom.find('.box.mission'),
+            { widget: this.widget }, { app: options.app }),
+        'resources': new tc.gam.project_widgets.resources(this, this.dom.find('.box.resources'),
+            { widget: this.widget }, { app: options.app }),
+        'related_resources': new tc.gam.project_widgets.related_resources(this, this.dom.find('.box.related-resources'),
+            { widget: this.widget }, { app: options.app }),
+        'add_link': new tc.gam.project_widgets.add_link(this, this.dom.find('.box.add-link'),
+            { widget: this.widget }, { app: options.app }),
+        'goals_main': new tc.gam.project_widgets.goals_main(this, this.dom.find('.box.goals-main'),
+            { widget: this.widget }, { app: options.app }),
+        'goals_add': new tc.gam.project_widgets.goals_add(this, this.dom.find('.box.goals-add'),
+            { widget: this.widget }, { app: options.app }),
+        'conversation': new tc.gam.project_widgets.conversation(this, this.dom.find('.box.conversation'),
+            { widget: this.widget }, { app: options.app }),
+        'members': new tc.gam.project_widgets.members(this, this.dom.find('.box.members'),
+            { widget: this.widget }, { app: options.app })
+    };
+
+    // Add fresh ideas component if available.
+    if (tc.gam.project_widgets.fresh_ideas) {
+        this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,
+            this.dom.find('.box.fresh-ideas'), { widget: this.widget }, { app: options.app });
+    }
+
+    // Add goals stack if available
+    if (tc.gam.project_widgets.goals_stack) {
+        this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this, 
+            this.dom.find('.box.goals-stack-holder'), { widget: this.widget }, { app: options.app });
+    }
+
+    // Return project page to initial state.
+    this.go_home = function (e) {
+        if (e) {
+            e.data.project.components.goals_main.show(false);
+            e.data.project.components.conversation.show(false);
+
+            if (tc.gam.project_widgets.goals_stack) {
+                e.data.project.components.goals_stack.hide(false);
+            }
+            if (tc.gam.project_widgets.members) {
+                e.data.project.components.members.hide(false);
+            }
+            e.data.project.components.goals_add.hide(false);
+            e.data.project.components.add_link.hide(false);
+            e.data.project.components.related_resources.hide(false);
+        } else {
+            this.components.goals_main.show(false);
+            this.components.conversation.show(false);
+        }
+    }
+
+    // Object of handlers.
+    this.handlers = {
+        // This function shows a specific widget, more specficially
+        // it hides the other widgets.
+        widget_show: function (e, d) {
+            switch (d.name) {
+                case 'members':
+                    e.data.project.components.goals_main.hide(false);
+                    if (tc.gam.project_widgets.goals_stack) {
+                        e.data.project.components.goals_stack.hide(false);
+                    }
+                    e.data.project.components.goals_add.hide(false);
+                    e.data.project.components.conversation.hide(false);
+                    e.data.project.components.add_link.hide(false);
+                    break;
+                    
+                case 'goals_add':
+                    e.data.project.components.goals_main.hide(false);
+                    break;
+                    
+                case 'goals_stack':
+                    e.data.project.components.goals_add.hide(false);
+                    e.data.project.components.goals_main.hide(false);
+                    break;
+                    
+                case 'related_resources':
+                    e.data.project.components.goals_main.hide(false);
+                    if (tc.gam.project_widgets.goals_stack) {
+                        e.data.project.components.goals_stack.hide(false);
+                    }
+                    e.data.project.components.members.hide(false);
+                    e.data.project.components.conversation.hide(false);
+                    e.data.project.components.add_link.hide(false);
+                    break;
+                    
+                case 'add_link':
+                    e.data.project.components.goals_main.hide(false);
+                    if (tc.gam.project_widgets.goals_stack) {
+                        e.data.project.components.goals_stack.hide(false);
+                    }
+                    e.data.project.components.members.hide(false);
+                    e.data.project.components.conversation.hide(false);
+                    e.data.project.components.related_resources.hide(false);
+                    break;
+            }
+        },
+        
+        // Hide widget.  This just uses the go_home function in all cases.
+        widget_hide: function (e, d) {
+            switch (d.name) {
+                case 'members':
+                case 'goals_add':
+                case 'goals_stack':
+                case 'related_resources':
+                case 'add_link':
+                    this_project.go_home(e);
+                    break;
+                }
+        },
+        
+        // Hash change event.
+        hashchange: function (e) {
+            var hash = window.location.hash.substring(1, window.location.hash.length);
+            
+            // For project-home hash, fire go_home.
+            if (hash == 'project-home') {
+                e.preventDefault();
+                this_project.go_home(e);
+                return;
+            }
+            
+            // Handle the format of (show|hide),component-id
+            switch (hash.split(',')[0]) {
+                case 'show':
+                    e.preventDefault();
+                    if (e.data.project.components[hash.split(',')[1]]) {
+                        e.data.project.components[hash.split(',')[1]].show();
+                    }
+                    break;
+                    
+                case 'hide':
+                    e.preventDefault();
+                    if (e.data.project.components[hash.split(',')[1]]) {
+                        e.data.project.components[hash.split(',')[1]].hide();
+                    }
+                    break;
+                }
+        },
+        
+        // Remove idea event.
+        idea_remove: function (e, d) {
+            if (e.data.project.components.related_ideas) {
+                e.data.project.components.related_ideas.remove_idea(d.id);
+            }
+            e.data.project.components.members.remove_idea(d.id);
+        }
+    };
+
+    // Update goals.  (This is believed to be broken)
+    this.update_goals = function () {
+        tc.jQ.ajax({
+            type: 'GET',
+            url: '/project/goals',
+            data: {
+                project_id: me.data.project_id
+            },
+            context: me,
+            dataType: 'text',
+            success: function (data, ts, xhr) {
+                var d;
+                try {
+                    d = tc.jQ.parseJSON(data);
+                } catch (e) {
+                    return;
+                }
+                this.dom.trigger("goals-refresh", [d]);
+            }
+        });
+    };
+
+    // Bind events.
+    tc.jQ(window).bind('hashchange', this.event_data, this.handlers.hashchange);
+    this.dom.bind('project-widget-show', this.event_data, this.handlers.widget_show);
+    this.dom.bind('project-widget-hide', this.event_data, this.handlers.widget_hide);
+    this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
+
+    // Fire off hashchange event.
+    window.location.hash = hash_onload;
+    tc.jQ(window).trigger('hashchange');
 };
-
-if(!tc.gam.project_widgets){
-	tc.gam.project_widgets = {};
-}
-
 /********************   End ./static/js/tc.gam.project.js  ********************/
 
 
@@ -3167,7 +3375,8 @@ tc.app.prototype.init = function(page) {
         cache: false
     });
 
-    // Handle feature functions.  Not sure what these are ??
+    // Handle feature functions.  These are general features for the application,
+    // such as merlin wizard set of widgets.
     if (page.features) {
         for (i in page.features) {
             if (tc.jQ.isFunction(page.features[i])) {

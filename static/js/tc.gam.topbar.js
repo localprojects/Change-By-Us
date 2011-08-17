@@ -10,8 +10,8 @@ tc.top_bar = function(element, options) {
     
     function init() {
         if (isiPad === true) {
-            element.find(".username > a, .myprojects > a").removeAttr('href');
-            element.find(".username > a, .myprojects > a").toggle(
+            element.find(".username > a, .myprojects > a, .lang > a").removeAttr('href');
+            element.find(".username > a, .myprojects > a, .lang > a").toggle(
                 function() { 
                     tc.jQ('.userland .dropdown').hide();
                     tc.jQ(this).parent().children(".dropdown").stop(true, true).slideDown(o.slideSpeed);
@@ -20,21 +20,18 @@ tc.top_bar = function(element, options) {
                 }
             );
         } else {
-            element.find(".username, .myprojects").mouseenter(function () {
+            element.find(".username, .myprojects, .lang-selector").mouseenter(function () {
                 if( $.browser.msie && $.browser.version < 8 ) {
                     tc.jQ(this).children(".dropdown").stop(true, true).fadeIn(o.slideSpeed);
                 } else {
                     tc.jQ(this).children(".dropdown").stop(true, true).slideDown(o.slideSpeed);
                 }
+                tc.jQ(this).children("a").toggleClass("opened");
             }).mouseleave(function () {
                 tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
+                tc.jQ(this).children("a").toggleClass("opened");
             });
         };
-        
-        //Update the query string when the language is changed
-        tc.jQ('.lang > select', element).change(function() {
-            window.location.search = 'lang=' + this.value;
-        });
     }
     
     init();

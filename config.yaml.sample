@@ -82,6 +82,9 @@ lang:
 # top_left_tag_bg  -- Path to image to use for top left tag background.  
 #                     The default NYC one is: 
 #                     /static/images/button_heyNYC_old.png
+# photo_credit     -- String to put in as photo credit for home page
+#                     image.  Leave blank for none.  Also, escape
+#                     HTML special characters.
 #--------------------------------------------------------------------
 homepage:
     is_display_leaderboard: %(homepage_is_display_leaderboard)s
@@ -93,6 +96,7 @@ homepage:
     news: %(homepage_news)s
     postboard_bg: %(homepage_postboard_bg)s
     top_left_tag_bg: %(homepage_top_left_tag_bg)s
+    photo_credit: %(homepage_photo_credit)s
 
 
 # Server settings
@@ -114,15 +118,42 @@ memcache:
 beanstalk:
     address: '0.0.0.0'
     port: 11238
-    
+
+
+# Media settings
+#--------------------------------------------------------------------
+# isS3mirror:       -- True or False (not sure what this designates
+#                      but probably has to do with S3)
+# root:             -- This is used for displaying uploaded files.  It
+#                      should be something like the following:
+#                      https://s3.amazonaws.com/BUCKET-NAME/data/files/
+# file_path:        -- This is the directory where the uploaded files are
+#                      stored on S3 and should align with what was inputted
+#                      for root.  Overall, this should be 'data/files'
+#
+#--------------------------------------------------------------------
 media:
     isS3mirror: True
     root: %(media_root)s 
     file_path: 'data/files'
     
+
+# Static files settings
+#--------------------------------------------------------------------
+# root:             -- Location of the static directory.  Used for default
+#                      file image.  This is used in forming URL's for src
+#                      attributes or link's href.  The default value is:
+#                      /static/
+#--------------------------------------------------------------------
 staticfiles:
-    root: %(staticfiles_root)s
+    root: %(staticfiles_root)s 
     
+
+# Email settings
+#--------------------------------------------------------------------
+# Various email settings
+#
+#--------------------------------------------------------------------
 email:
     # Common email domain name (ie. google.com) that will be displayed
     # on HTML pages.
