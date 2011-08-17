@@ -44,11 +44,21 @@
         </div>
         <div class="tools">
             <div class="member-content">
-                <div class="members {% if d.template_data.project.data.info.members['items']|length > 0 %}has-members{% endif %}">
+                <span class="vertical-align-middle-hack">
+                {% if d.template_data.project_user.data.is_project_admin %}
+                    <div class="control"><a href="#show,members">Manage</a></div>
+                {% endif %}
+
+                <div class="members {% if not d.template_data.project_user.data.is_member %}not-member{% else %}is-member{% endif %}">
                     <a href="#show,members">
                         <span class="counter members-counter">{{ d.template_data.project.data.info.members['items']|length }}</span> Members
                     </a>
                 </div>
+
+                {% if d.template_data.project_user.data.is_project_admin %}
+                    <div class="control"><a href="#show,members">Manage</a></div>
+                {% endif %}
+
                 {%  if not d.template_data.project_user.data.is_member %}
                 <div class="join">
                     <a class="ca-btn join-project" href="#">
@@ -56,6 +66,7 @@
                     </a>
                 </div>
                 {%  endif %}
+                </span>
             </div>
 
 
@@ -81,7 +92,7 @@
             -->
         </div>
         <div class="main">
-            <span class="title-hack">
+            <span class="vertical-align-middle-hack">
             <h1><a href='/project/{{ d.template_data.project.data.project_id }}'>{{ d.template_data.project.data.info.title }}</a></h1>
             </span>
         </div>
