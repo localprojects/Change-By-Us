@@ -89,13 +89,16 @@ if __name__ == "__main__":
 
     elif Config.get('email').get('aws_ses'):
         enable_aws_ses()
-
-    # Add blitz.io route.  We put into new var because of an odd behaviors
-    # where a changed ROUTES is not handled correctly.
-    if Config.get('blitz_io').get('route') and Config.get('app_env') != 'live':
-        blitz_route = r'/%s/?([^/.]*)' % Config.get('blitz_io').get('route')
-        NEW_ROUTES = (blitz_route, 'controllers.blitz.Blitz') + ROUTES
-    else:
+    
+    try:
+        # Add blitz.io route.  We put into new var because of an odd behaviors
+        # where a changed ROUTES is not handled correctly.
+        if Config.get('blitz_io').get('route') and Config.get('app_env') != 'live':
+            blitz_route = r'/%s/?([^/.]*)' % Config.get('blitz_io').get('route')
+            NEW_ROUTES = (blitz_route, 'controllers.blitz.Blitz') + ROUTES
+        else:
+            NEW_ROUTES = ROUTES
+    except KeyError:
         NEW_ROUTES = ROUTES
 
     # Create web.py app with defined routes.
