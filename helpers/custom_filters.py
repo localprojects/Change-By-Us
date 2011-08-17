@@ -16,7 +16,7 @@ def truncate_external_link_title(s, max_length):
     # looks to be a link and we truncate it to the specified amount of 
     # characters
     first_word = s.split()[0]
-    if len(first_word) > max_length and first_word.find('http') == 0:
+    if len(first_word) > max_length + 1:
         first_word = first_word.replace('https://', '').replace('http://', '')
         return "%s..." % first_word[:max_length]
     else:   
