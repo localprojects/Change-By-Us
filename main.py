@@ -2,10 +2,15 @@
 
 import os, sys
 from os import environ
+
+from sqlalchemy.orm import scoped_session, sessionmaker
+
 from framework.log import log
 from framework.session_holder import *
 from framework.task_manager import *
 from framework.image_server import *
+
+from giveaminute import models
 
 sys.path.append("lib/")
 from lib import web
@@ -41,6 +46,35 @@ def enable_aws_ses():
     web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
     web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
     
+def load_sqla(handler):
+    """
+    Create a load hook and use sqlalchemy's ``scoped session``. This construct
+    places the ``sessionmaker()`` into a registry that maintains a single
+    ``Session`` per application thread.
+    
+    For more information see: http://webpy.org/cookbook/sqlalchemy
+    
+    """
+    ##
+    # TODO: This should be `engine = models.get_db_engine()`.  See the note in
+    #       giveaminute.models for more information.
+    #
+    engine = models.engine
+    
+    web.ctx.orm = scoped_session(sessionmaker(bind=engine))
+    try:
+        return handler()
+    except web.HTTPError:
+       web.ctx.orm.commit()
+       raise
+    except:
+        web.ctx.orm.rollback()
+        raise
+    finally:
+        web.ctx.orm.commit()
+        # If the above alone doesn't work, uncomment 
+        # the following line:
+        #web.ctx.orm.expunge_all() 
 
 #def cmd_show_quota():
 #    ses = boto.connect_ses()
@@ -105,5 +139,7 @@ if __name__ == "__main__":
     app = web.application(NEW_ROUTES, globals())
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
+    
+    app.add_processor(load_sqla)
     app.run()
     
