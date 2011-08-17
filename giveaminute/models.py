@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
@@ -31,8 +32,10 @@ def get_session():
     ``web.ctx`` object.  The object is wrapped so that we can more easily stub
     it when necessary.
     """
-    import web
-    return web.ctx.orm
+    Session = scoped_session(sessionmaker(bind=engine))
+    return Session()
+#    import web
+#    return web.ctx.orm
 
 
 ##

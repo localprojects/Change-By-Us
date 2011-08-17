@@ -61,6 +61,7 @@ def load_sqla(handler):
     #
     engine = models.engine
     
+    log.debug("*** Loading the ORM")
     web.ctx.orm = scoped_session(sessionmaker(bind=engine))
     try:
         return handler()
@@ -140,6 +141,6 @@ if __name__ == "__main__":
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
     
-    app.add_processor(load_sqla)
+#    app.add_processor(load_sqla)
     app.run()
     
