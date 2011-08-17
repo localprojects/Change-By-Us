@@ -387,6 +387,10 @@ class Controller():
         log.info("303: Redirecting to " + url)
 
         return web.SeeOther(url)
+    
+    def no_method(self):
+        log.error("405: Method not Allowed")
+        return web.NoMethod()
 
     def refresh(self):
         url = web.ctx.path

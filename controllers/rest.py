@@ -5,9 +5,28 @@ from framework.log import log
 
 from giveaminute import models
 
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
+
+class NotFoundError (Exception):
+    pass
+class NoMethodError (Exception):
+    pass
+
 
 class RestController (Controller):
+    """
+    Base controller for REST endpoints.
     
+    In classes that derive from ``RestController``, use the routing functions::
+    
+    - ``REST_INDEX``, 
+    - ``REST_CREATE``, 
+    - ``REST_READ``, 
+    - ``REST_UPDATE``, and 
+    - ``REST_DELETE
+    
+    """
     def get_model(self):
         return self.model
     
@@ -21,19 +40,27 @@ class RestController (Controller):
 
         return d
     
-    def respond_with_405(self):
-        # TODO: Return a 405 (Method not Allowed)
-        return
+    def _BASE_METHOD_HANDLER(self, allowed_verbs, *args, **kwargs):
+        """
+        Routes requests to the appropriate REST verb.  The allowed verbs are
+        passed in as a list of strings corresponding to method names.
+        
+        """
+        try:
+            for verb in allowed_verbs:
+                if hasattr(self, verb):
+                    method_handler = getattr(self, verb)
+                    response_data = method_handler(*args, **kwargs)
+                    return self.json(response_data)
+            
+            return self.no_method()
+        
+        except NotFoundError:
+            return self.not_found()
+        
     
     def GET(self, *args, **kwargs):
-        if hasattr(self, 'INDEX'):
-            response_data = self.INDEX(*args, **kwargs)
-        elif hasattr(self, 'READ'):
-            response_data = self.READ(*args, **kwargs)
-        else:
-            return self.respond_with_405()
-        
-        return self.json(response_data)
+        return self._BASE_METHOD_HANDLER(['REST_INDEX','REST_READ'], *args, **kwargs)
     
     def POST(self, *args, **kwargs):
         # Check if something other than POST was desired.
@@ -45,36 +72,21 @@ class RestController (Controller):
         if real_method == 'PUT':
             return self.PUT(*args, **kwargs)
         elif real_method == 'DELETE':
-            return self.DELETE(*args, **kwargs)
+            return self.REST_DELETE(*args, **kwargs)
         
         # Actually handle the POST.
-        if hasattr(self, 'CREATE'):
-            response_data = self.CREATE(*args, **kwargs)
-        else:
-            return self.respond_with_405()
-        
-        return self.json(response_data)
+        return self._BASE_METHOD_HANDLER(['REST_CREATE'], *args, **kwargs)
     
     def PUT(self, *args, **kwargs):
-        if hasattr(self, 'UPDATE'):
-            response_data = self.UPDATE(*args, **kwargs)
-        else:
-            return self.respond_with_405()
-        
-        return self.json(response_data)
+        return self._BASE_METHOD_HANDLER(['REST_UPDATE'], *args, **kwargs)
     
     def DELETE(self, *args, **kwargs):
-        if hasattr(self, 'DELETE'):
-            response_data = self.DELETE(*args, **kwargs)
-        else:
-            return self.respond_with_405()
-        
-        return self.json(response_data)
+        return self._BASE_METHOD_HANDLER(['REST_DELETE'], *args, **kwargs)
     
 
 class ListInstancesMixin (object):
 
-    def INDEX(self, *args, **kwargs):
+    def REST_INDEX(self, *args, **kwargs):
         Model = self.get_model()
         session = self.get_session()
         
@@ -89,17 +101,40 @@ class ListInstancesMixin (object):
         
 
 
+class ReadInstanceMixin (object):
+
+    def REST_READ(self, *args, **kwargs):
+        Model = self.get_model()
+        session = self.get_session()
+        
+        query = session.query(Model)
+        if kwargs:
+            query = query.filter(**kwargs)
+        
+        if args:
+            # If we have any none kwargs then assume the last represents the primrary key
+            instance = query.get(args[-1])
+        else:
+            # Otherwise assume the kwargs uniquely identify the model
+            try:
+                instance = query.one()
+            except NoResultFound:
+                raise NotFoundError("No results found")
+            except MultipleResultsFound:
+                raise NotFoundError("Multiple results found; no single match")
+        
+        if instance is None:
+            raise NotFoundError("No results found")
+        
+        return self.row2dict(instance)
+        
+
+
 class NeedsList (ListInstancesMixin, RestController):
-    
     model = models.Need
+    ordering = models.Need.id
 
 
-class NeedInstance (Controller):
-
-    def GET(self, id):
-        pass
-    
-    def POST(self, id):
-        pass
-    
+class NeedInstance (ReadInstanceMixin, RestController):
+    model = models.Need
 
