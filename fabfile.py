@@ -434,7 +434,7 @@ def bundle_code():
     if env.scm == 'git':
         "Create an archive from the current Git master branch and upload it"
         local('git clone --depth 0 %(repository)s %(tmp_path)s' % env)
-        local('cd %(tmp_path)s && git pull origin %(branch)s && git co %(branch)s' % env)
+        local('cd %(tmp_path)s && git pull origin %(branch)s && git checkout %(branch)s' % env)
         local('cd %(tmp_path)s && git rev-parse %(branch)s > REVISION.TXT' % env)
         env.release = local('cd %(tmp_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
         local('cd %(tmp_path)s && git archive --format=tar %(branch)s > %(tmp_path)s/%(release)s.tar' % env)
