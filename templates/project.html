@@ -43,6 +43,23 @@
             <span class="overlay-tag"></span>
         </div>
         <div class="tools">
+            <div class="member-content">
+                <div class="members {% if d.template_data.project.data.info.members['items']|length > 0 %}has-members{% endif %}">
+                    <a href="#show,members">
+                        <span class="counter members-counter">{{ d.template_data.project.data.info.members['items']|length }}</span> Members
+                    </a>
+                </div>
+                {%  if not d.template_data.project_user.data.is_member %}
+                <div class="join">
+                    <a class="ca-btn join-project" href="#">
+                        <span>Join</span>
+                    </a>
+                </div>
+                {%  endif %}
+            </div>
+
+
+            <!--
             {%  if not d.template_data.project_user.data.is_member %}
                 <a class="ca-btn join-project" href="#">
                     <span>Join</span>
@@ -61,9 +78,12 @@
                     <span class="control"><a class="leave-project" href="#leaveProject,{{ d.template_data.project.data.project_id }}">Leave <span class="uncaps">this</span> project</a></span>
                 {% endif %}
             {% endif %}
+            -->
         </div>
         <div class="main">
+            <span class="title-hack">
             <h1><a href='/project/{{ d.template_data.project.data.project_id }}'>{{ d.template_data.project.data.info.title }}</a></h1>
+            </span>
         </div>
     </div><!-- end .headlands -->
 
