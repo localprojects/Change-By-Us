@@ -25,6 +25,11 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/search/?([^/.]*)', 'controllers.search.Search',
             r'/twilio/?([^/.]*)', 'controllers.sms.twilio.Twilio',
             r'/useraccount/?([^/.]*)', 'controllers.user.UserAccount',
+            
+            # RESTufl Resources
+            r'/rest/v1/needs/', 'controllers.rest.NeedsList',
+            r'/rest/v1/needs/(?P<need_id>\d+)/', 'controllers.rest.NeedInstance',
+            
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
             
 def sessionDB():
