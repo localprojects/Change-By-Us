@@ -45,6 +45,9 @@ class RestController (Controller):
         Routes requests to the appropriate REST verb.  The allowed verbs are
         passed in as a list of strings corresponding to method names.
         
+        Handles the following exceptions::
+        
+        - NotFoundError: return a 404 response
         """
         try:
             for verb in allowed_verbs:
@@ -100,9 +103,11 @@ class ListInstancesMixin (object):
         return [self.row2dict(row) for row in query]
         
 
-
 class ReadInstanceMixin (object):
-
+    """
+    Derive from this class to add READ functionality to a REST controller.
+    
+    """
     def REST_READ(self, *args, **kwargs):
         Model = self.get_model()
         session = self.get_session()
@@ -114,6 +119,9 @@ class ReadInstanceMixin (object):
         if args:
             # If we have any none kwargs then assume the last represents the primrary key
             instance = query.get(args[-1])
+            if instance is None:
+                raise NotFoundError("No results found")
+            
         else:
             # Otherwise assume the kwargs uniquely identify the model
             try:
@@ -123,12 +131,8 @@ class ReadInstanceMixin (object):
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
         
-        if instance is None:
-            raise NotFoundError("No results found")
-        
         return self.row2dict(instance)
         
-
 
 class NeedsList (ListInstancesMixin, RestController):
     model = models.Need
