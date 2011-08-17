@@ -3,689 +3,686 @@
 {% block title %} User Account {% endblock title %}
 
 {% block project_admin %}
-	{{ super() }}
-	{% if d.template_data.user_activity.data.user and d.template_data.user_activity.data.user.u_id %}
-		<li class="delete"><a href="#deleteUser,{{ d.template_data.user_activity.data.user.u_id }}" class="fancy-caps delete-user">Delete <span>this</span> user</a></li>
-	{% endif %}
+    {{ super() }}
+    {% if d.template_data.user_activity.data.user and d.template_data.user_activity.data.user.u_id %}
+        <li class="delete"><a href="#deleteUser,{{ d.template_data.user_activity.data.user.u_id }}" class="fancy-caps delete-user">Delete <span>this</span> user</a></li>
+    {% endif %}
 {% endblock %}
 
 {% block continent %}
 <script type="text/javascript" src='/static/js/lp.gam.facebookConnect.js'></script>
 
 <div class='continent user-account'>
-	<!--<div class='headlands'>
-	</div>-->
-	
-	<div class='midlands merlin clearfix {% if d.template_data and d.template_data.user_activity.data.user.is_leader == true %}is-leader{% endif %}'>
-		<div class="west">
-			<div class="box user-account-nav">
-				<div class="hd clearfix">
-					<div class='box box-thumb'>
-						<div class="leader-tag"><span>Local Leader</span></div>
-						
-						<div class="thumb">
-							{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-								<a class="change-image change-profile-image" href="#">
-									<span>Change Photo</span>
-								</a>
-							{% endif %}
-							{% if d.template_data.user_activity.data.user.image_id > 0 %}
-								<img width='90' src='{{d.template_data.media_root}}images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
-							{% else %}
-								<img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
-							{% endif %}
-						</div>
-					</div>
-					
-					<div class='box box-info'>
-						<div class="user-info serif">
-							<span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
+    <!--<div class='headlands'>
+    </div>-->
 
-  						{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}
+    <div class='midlands merlin clearfix {% if d.template_data and d.template_data.user_activity.data.user.is_leader == true %}is-leader{% endif %}'>
+        <div class="west">
+            <div class="box user-account-nav">
+                <div class="hd clearfix">
+                    <div class='box box-thumb'>
+                        <div class="leader-tag"><span>Local Leader</span></div>
+
+                        <div class="thumb">
+                            {% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+                                <a class="change-image change-profile-image" href="#">
+                                    <span>Change Photo</span>
+                                </a>
+                            {% endif %}
+                            {% if d.template_data.user_activity.data.user.image_id > 0 %}
+                                <img width='90' src='{{d.template_data.media_root}}images/{{ d.template_data.user_activity.data.user.image_id % 10 }}/{{ d.template_data.user_activity.data.user.image_id }}.png' alt="{{ d.template_data.user_activity.data.user.name }}" class='avatar'/>
+                            {% else %}
+                                <img width='90' src="/static/images/thumb_genAvatar100.png" alt="{{ d.template_data.user_activity.data.user.name }}" class="avatar"/>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class='box box-info'>
+                        <div class="user-info serif">
+                            <span class="name">{{ d.template_data.user_activity.data.user.name }}</span>
+
+                        {% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}
                 <span class="location"><em>from</em> <a href='search?location_id={% if d.template_data.user_activity.data.user.location_id %}{{ d.template_data.user_activity.data.user.location_id }}{% endif %}'>{{ d.template_data.user_activity.data.user.location }}</a></span>
-  						{% endif %}
-							
-							{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-								<div class="description mod-inline-edit">
-									<div class="editable-content">
-										{% if d.template_data.user_activity.data.user.description %}
-											{{ d.template_data.user_activity.data.user.description }}
-										{% endif %}
-									</div>
-									<div class="inline-edit-controls"></div>
-								</div>
-							{% else %}
-								{% if d.template_data.user_activity.data.user.description %}
-									<div class="description">
-										{{ d.template_data.user_activity.data.user.description }}
-									</div>
-								{% endif %}
-							{% endif %}
-						</div>
-					</div>
-				</div>
-				
-				<div class="bd">
-					<ul class="tabs">
-						<li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.resources|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
-						
-						{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-							<li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user.data.num_new_messages }}</span></a></li>
-							<li class="account"><a href="#user-account,account">Account</a></li>
-							{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
-							<li class="resources"><a href="#user-account,resources">Resources</a></li>
-							{% endif %}
-						{% endif %}
-					</ul>
-					
-					{% if d.template_data.user and (d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id) %}
-						<a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-		
-		<div class="east">
-			<div>
-				<div class="activity-view step">
-					{% if d.template_data and d.template_data.user_activity.data.projects|length > 0 %}
-  					<div class="box my-projects">
-  						<div class="hd">
-  							<h2>
-  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-  									<span class="light">My</span>
-  								{% else %}
-  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-  								{% endif %}
-  								Projects <span class="counter">{{ d.template_data.user_activity.data.projects|length }}</span>
-  							</h2>
-  						</div>
-  						
-  						<div class="bd">
-  							{% for project in d.template_data.user_activity.data.projects %}
-  								<div class='clearfix project-header'>
-  									<div class="thumb">
-  										{% if project.image_id > -1  %}
-  											<img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
-  										{% else %}
-  											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-  										{% endif %}
-  										<span class="overlay-tag"></span>
-  									</div>
-  									
-  									<div class="tools">
-  										<div class="members">
-  											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
-  										</div>
-  									</div>
-  									
-  									<div class="main">
-  										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
-  										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
-  										<div class="sub-ft">
-  											{% if d.template_data and d.template_data.app_mode != 'beta' %}
-  												<div class="twitter">
-  													<a href="http://twitter.com/share" data-url="{{ d.default_host }}project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-  												</div>
-  												<div class="facebook">
-  													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-  													<fb:like href="{{ d.default_host }}project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
-  												</div>
-  											{% endif %}
-  										</div>
-  									</div>
-  								</div>
-  							{% endfor %}
-  						</div>
-  					</div><!-- end my-projects -->
-					{% endif %}
-					
-					{% if d.template_data and d.template_data.user_activity.data.ideas|length > 0%}
-  					<div class="box my-ideas">
-  						<div class="hd">
-  							<h2>
-  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-  									<span class="light">My</span>
-  								{% else %}
-  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-  								{% endif %}
-  								Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
-  							</h2>
-  						</div>
+                        {% endif %}
 
-  						<div class="bd clearfix">
-  							<ul class="idea-cards">
-  								{% for idea in d.template_data.user_activity.data.ideas %}
-  									<li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
-  										{% if d.template_data and d.template_data.user and d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id %}
-    										<div class="note-card-public-controls">
-    											{% if d.template_data.user.data.projects|length > 0 %}
-    												<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
-    											{% endif %}
-    											<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
-    										</div>
-  										{% endif %}
-  										<div class="note-card">
-  											<div class="membrane">
-  												{% if d.template_data and d.template_data.user %}
-  													{% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
-  														<a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
-  													{% endif %}
-  												{% endif %}
-  												<cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
-  												<blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
-  												<cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
-  											</div>
-  										</div>
-  									</li>
-  								{% endfor %}
-  							</ul>
-  						</div>
-  					</div><!--end my-ideas-->
-					{% endif %}
-					
-					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 and (d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-  					<div class="box my-resources">
-  						<div class="hd">
-  							<h2>
-  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-  									<span class="light">My</span>
-  								{% else %}
-  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-  								{% endif %}
-  								Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span>
-  							</h2>
-  						</div>
-  						<div class="bd">
-  							<table class="resources-list triplewide clearfix">
-  								<tbody>
-  									{% for resource in d.template_data.user_activity.data.resources %}
-  										{% if loop.index % 3 == 1 %}
-  										<tr>
-  										{% endif %}
-  											<td {% if resource.is_official %}class="official-resource"{% endif %}>
-  												{% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
-  													<a class="add-button rounded-button small add-resource" href="#addResource,{{ resource.project_resource_id }}">Add</a>
-  												{% endif %}
-  												{% if resource.image_id > 0 %}
-  												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
-  												{% else %}
-  												<span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
-  												{% endif %}
-  												<span class="resource-name">
-  													{% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
-  													<span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
-  														<span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
-  													</span>
-  												</span>
-  												<div class="added-dialog">
-  													<span class="added-header">Added <em>to</em> your project<br /></span>
-  													<span class="added-text">We've sent them a link to your project page.</span>
-  													<!-- <span class="added-close"></span> -->
-  												</div>
-  											</td>
-  										{% if loop.index % 3 == 0 %}
-  										</tr>
-  										{% endif %}
-  									{% endfor %}
-  								</tbody>
-  							</table>
-  						</div>
-  					</div><!--end my-resources-->
-					{% endif %}
-					
-					{% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}
-  					<div class="box my-endorsed-projects my-projects">
-  						<div class="hd">
-  							<h2>
-  								{% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
-  									<span class="light">My</span>
-  								{% else %}
-  									<span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span> 
-  								{% endif %}
-  								Supported Projects <span class="counter">{{ d.template_data.user_activity.data.endorsed_projects|length }}</span>
-  							</h2>
-  						</div>
-  						<div class="bd">
-  							
-  							{% for project in d.template_data.user_activity.data.endorsed_projects %}
-  							
-  								<div class='clearfix project-header'>
-  									<div class="thumb">
-  										{% if project.image_id > -1  %}
-  											<img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
-  										{% else %}
-  											<img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
-  										{% endif %}
-  										<span class="overlay-tag"></span>
-  									</div>
-  									<div class="tools">
-  										<div class="members">
-  											<a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
-  										</div>
-  									</div>
-  									<div class="main">
-  										<h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
-  										<cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
-  										<div class="sub-ft">
-  											{% if d.template_data and d.template_data.app_mode != 'beta' %}
-  												<div class="twitter">
-  													<a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-  												</div>
-  												<div class="facebook">
-  													<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-  													<fb:like href="http://changeby.us/project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
-  												</div>
-  											{% endif %}
-  										</div>
-  									</div>
-  								</div>
-  							
-  							{% endfor %}
-  							
-  						</div>
-  					</div><!-- end my-endorsed-projects -->
-					{% endif %}
-				</div><!--end activity-view-->
-				
-				{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-					<div class="messages-view step" >
-						<div class="box messages">
-							<div class="hd">
-								<h2>Messages</h2>
-							</div>
-							<div class="bd">
-								<ol class="message-stack">
-									
-									{% macro notification_message(message, className='') -%}
-										<li class="message-item user-notification {{ className }}">
-											<!--<a class="close" href="#"><span>Close</span></a>-->
-											<span class="title">{{ message.body }}</span>
-											<div class="meta meta-top">
-												<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
-												<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}#show,members" class="serif">{{ message.project_title }}</a></cite>
-												<cite class="time-since">{{ message.created }}</cite>
-											</div>
-										</li>
-									{%- endmacro %}
-									
-									{% for message in d.template_data.user_activity.data.messages %}
-										{% if message.message_type == "member_comment" %}
-											<li class="message-item member-comment">
-												<!--<a class="close" href="#"><span>Close</span></a>-->
-												<div class="thumb">
-													{% if message.owner.image_id %}
-														<img width='50' src='{{d.template_data.media_root}}images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt="{{ message.owner.name }}" class='avatar'/>
-													{% else %}
-														<img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ message.owner.name }}" class="avatar"/>
-													{% endif %}
-												</div>
-												<div class="main">
-													<div class="meta meta-top">
-														<cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
-														<cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}" class="serif">{{ message.project_title }}</a></cite>
-													</div>
-													<blockquote class="excerpt">
-														<p>{{ message.body }}</p>
-													</blockquote>
-													<div class="meta meta-bottom">
-														<cite class="time-since">{{ message.created }}</cite>
-													</div>
-												</div>
-											</li>
-										{% elif message.message_type == "join" %}
-											{{ notification_message(message, 'join-notification') }}
-										{% elif message.message_type == "invite" %}
-											<li class="message-item user-notification invite-notification">
-												<!--<a class="close" href="#"><span>Close</span></a>-->
-												<span class="title">{{ message.body }}</span>
-												
-												<div class="controls">
-													<a href="/project/{{ message.project_id }}">Click to see project</a>
-												</div>
-											</li>
-										{% elif message.message_type == "goal_achieved" %}
-											{{ notification_message(message, 'goal-achieved-notification') }}
-										{% elif message.message_type == "endorsement" %}
-											{{ notification_message(message, 'endorsement-notification') }}
-										{% endif %}
-									{% endfor %}
-								</ol>
-							</div>
-							
-							<div class="load-more">
-								<a href=""><span>Older messages</span></a>
-							</div>
-						</div>
-						
-						<div class="box preferences">
-							<div class="hd">
-								<h3>Email Preferences</h3>
-							</div>
-							
-							<div class="bd">
-								<ul class="checklist">
-									<li>
-										<input type="radio" name="pref-emails-option" id="pref-emails-daily"/>
-										<label for="pref-emails-daily">Email daily digest</label>
-									</li>
-									<li>
-										<input type="radio" name="pref-emails-option" id="pref-no-emails"/>
-										<label for="pref-no-emails">No digest emails. You will still receive direct messages from other users.</label>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div><!-- end messages-view -->
-				
-					<div class="account-view password-view step merlin">
-						<div class="box user-account">
-							<div class="hd">
-								<h2>Account</h2>
-							</div>
-							
-							<div class="bd step edit-account-details">
-								<form action="" method="POST" class="account-info">
-									<div class="user-details">
-										<div class="fields">
-											<div class="row row-first-name">
-												<label>First name</label>
-												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.f_name }}" />
-											</div>
-											<div class="row row-last-name">
-												<label>Last name</label>
-												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.l_name }}" />
-											</div>
-											<div class="row row-email clearfix">
-												<label>Email address</label>
-												<input type="text" class="has-been-focused" value="{{ d.template_data.user.data.email }}" />
-											</div>
-											<div class="row row-hood clearfix">
-												<label>Neighborhood</label>
-												<input autocomplete='off' type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter has-been-focused' value='{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}{{ d.template_data.user_activity.data.user.location }}{% endif %}' {% if d.template_data.user_activity.data.user.location %}location_id='{{ d.template_data.user_activity.data.user.location_id }}'{% endif %}/>
-												<div class="location-hood-list" style="display:none"><ul><li></li></ul></div>
-											</div>
-										</div>
-										<div class="">
-											<input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
-											<a href="#user-account,password" class="change-password">Change Password</a>
-										</div>
-										
-										<div style="clear:both"></div>
-										
-										<div class="password-info merlin">
-											<div class="step hidden"></div>
-											<div class="step edit-password-details">
-												<div class="row">
-													<label>Old Password</label>
-													<input type="password" class="has-been-focused old-password" />
-												</div>
-												<div class="row">
-													<label>New Password</label>
-													<input type="password" class="has-been-focused new-password" />
-													<span class="pass-strength"></span>
-												</div>
-												<div class="row">
-													<label>Confirm Password</label>
-													<input type="password" class="has-been-focused confirm-new-password" />
-												</div>
-												<div class="controls">
-													<input class="rounded-button password-save-button" type="submit" value="Save"/>
-													<a href="#user-account,account" class="cancel">Cancel</a>
-												</div>
-											</div>
-											<div class="step submit-password-details">
-												<p>Changing your password&hellip;</p>
-												<p><img src='/static/images/loader32x32.gif' /></p>
-											</div>
-											<div class="step password-details-submitted">
-												<p>Password Changed</p>
-											</div>
-											<div class="step password-details-error">
-												<p>There was an error changing your password.</p>
-											</div>
-										</div>
-										
-										<div style="clear:both"></div>
-									</div>
-								</form>	
-								
-								{%- if d.template_data.app_mode != 'beta' -%}
-									<div class="social-networking">
-										<div class="social-connect-wrapper">
-											<a href="" class="connect-facebook"></a>
-											<!-- <a href="" class="disconnect disconnect-facebook">Disconnect</a> -->
-										</div>
-										<div class="social-connect-wrapper">
-											<a href="/twitter/login" class="connect-twitter"></a>
-											<!-- <a href="" class="disconnect disconnect-twitter">Disconnect</a> -->
-										</div>
-									</div>
-								{%- endif -%}
-							</div>
-							
-							<div class="bd step submit-account-details">
-								<p>Processing your account details&hellip;</p>
-								<p><img src='/static/images/loader32x32.gif' /></p>
-							</div>
-							
-							<div class="bd step account-details-submitted">
-								<p>Your account details have been updated!</p>
-							</div>
-							
-							<div class="bd step account-details-error">
-								<p>There was an error updating your account details.</p>
-							</div>
-						</div>
-					</div><!--end account-view-->
-					
-					{% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
-  					<div class="resources-view step merlin">
-  						<div class="hd">
-  							<h2><span class="light">My </span>Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span></h2>
-  						</div>
-  						<div class="bd">
-  							<ul class='my-res'>
-  								{% for resource in d.template_data.user_activity.data.resources %}
-  									<li class='clearfix' id='{{ resource.project_resource_id }}'>
-  										<div class='left'>
-  											<div class="thumb">
-  												<a class="change-image"><span>Change Photo</span></a>
-  												{% if resource.image_id > 0 %}
-  												<img width='90' height='90' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" />
-  												{% else %}
-  												<img width='90' height='90' src='/static/images/thumb_genAvatar100.png' alt="" />
-  												{% endif %}
-  											</div>
-  											<h4 class="serif">{{ resource.title }}</h4>
-  											<div class='box res-location mod-inline-edit' location_id='{% if resource.location_id %}{{ resource.location_id }}{% endif %}'>
-  												<div class="editable-content serif">
-  												{% if resource.location_name %}
-  													{{ resource.location_name }}
-  												{% endif %}
-  												</div>
-  												<div class="inline-edit-controls"></div>
-  											</div>
-  										</div>
-  										<div class='right'>
-  											<div class='box res-description mod-inline-edit'>
-  												<span class='section-title'>Mission</span>
-  												<div class="inline-edit-controls"></div>
-  												<p class="editable-content">{{ resource.description }}</p>
-  											</div>
-  											<div class='box res-url mod-inline-edit'>
-  												<span class='section-title'>URL</span>
-  												<div class="inline-edit-controls"></div>
-  												<p class="editable-content">{{ resource.url }}</p>
-  											</div>
-  											<div class='box res-email mod-inline-edit'>
-  												<span class='section-title'>Email</span>
-  												<div class="inline-edit-controls"></div>
-  												<p class="editable-content">{{ resource.contact_email }}</p>
-  											</div>
-  											<div class='box res-addr mod-inline-edit box-half'>
-  												<span class='section-title'>Physical Address</span>
-  												<p class="editable-content">{{ resource.physical_address }}</p>
-  												<div class="inline-edit-controls"></div>
-  											</div>
-  											<div class='box mod-inline-edit res-keywords box-half'>
-  												<span class='section-title'>Keywords</span>
-  												<p class="editable-content">{{ resource.keywords|replace(',',', ') }}</p>
-  												<div class="inline-edit-controls"></div>
-  											</div>
-  										</div>
-  									</li>
-  								{% endfor %}
-  							</ul>
-  						</div>
-  					</div><!--end resources-view-->
-					{% endif %}
-				{% endif %}
-			</div>	
-		</div>
-	</div>
+                            {% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+                                <div class="description mod-inline-edit">
+                                    <div class="editable-content">
+                                        {% if d.template_data.user_activity.data.user.description %}
+                                            {{ d.template_data.user_activity.data.user.description }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="inline-edit-controls"></div>
+                                </div>
+                            {% else %}
+                                {% if d.template_data.user_activity.data.user.description %}
+                                    <div class="description">
+                                        {{ d.template_data.user_activity.data.user.description }}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
 
-	<div class='foothills'>
-	</div>
-	
-	<div class="template-content message-item member-comment">
-		<!--<a class="close" href="#"><span>Close</span></a>-->
-		<div class="thumb">
-			<img width='50' src=" " alt=" " class="avatar"/>
-		</div>
-		<div class="main">
-			<div class="meta meta-top">
-				<cite class="sender"></cite>
-				<cite class="project"><em>from</em> <a class="serif"></a></cite>
-			</div>
-			<blockquote class="excerpt">
-				<p></p>
-			</blockquote>
-			<div class="meta meta-bottom">
-				<cite class="time-since"></cite>
-			</div>
-		</div>
-	</div>
-	
-	{% macro notification_message_template(message_type='') -%}
-		<div class="template-content message-item user-notification {{ message_type }}">
-			<!--<a class="close" href="#"><span>Close</span></a>-->
-			<span class="title"></span>
-			<div class="meta meta-top">
-				<cite class="sender"></cite>
-				<cite class="project"><em>from</em> <a class="serif"></a></cite>
-				<cite class="time-since"></cite>
-			</div>
-		</div>
-	{%- endmacro %}
-	
-	{{ notification_message_template('join-notification') }}
-	{{ notification_message_template('goal-achieved-notification') }}
-	{{ notification_message_template('endorsement-notification') }}
-	
-	<div class="template-content message-item user-notification invite-notification">
-		<!--<a class="close" href="#"><span>Close</span></a>-->
-		<span class="title"></span>
-		<div class="controls">
-			<a href="">Click to see project</a>
-		</div>
-	</div>
-	
-	<div class='template-content modal-content upload-image'>
-		<div class='step'>
-			<h2><strong>Upload</strong> a photo for your account.</h2>
-			<div>
-				<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
-			</div>
-			<div class="file-uploader"></div>
-		</div>
-		<a class='close' href="#"><span>close</span></a>
-	</div>
-	
-	<div class='template-content modal-content upload-resource-image'>
-		<div class='step'>
-			<h2><strong>Upload</strong> a photo for your resource.</h2>
-			<div>
-				<p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
-			</div>
-			<div class="file-uploader"></div>
-		</div>
-		<a class='close' href="#"><span>close</span></a>
-	</div>
-	
-	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-		<div class="template-content modal-content confirm-delete user-delete">
-			<div class="step">
-				<h2><strong>Delete</strong> this User?</h2>
-				<div>
-					<p>You are about to delete this User and all projects owned by this user from the system permanently! <br/>Are you sure?</p>
-				</div>
-				<div class="actions">
-					<a class="submit rounded-button" href="#">Yes, Delete User and Projects</a>
-					<a class="cancel" href="#">No, keep them.</a>
-				</div>
-			</div>
-			<a class='close' href="#"><span>close</span></a>
-		</div>
-		
-		<div class="template-content modal-content confirm-delete remove-resource">
-			<div class="step">
-				<h2><strong>Delete</strong> this Resource?</h2>
-				<div>
-					<p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
-				</div>
-				<div class="actions">
-					<a class="submit rounded-button" href="#">Yes, Delete Resource</a>
-					<a class="cancel" href="#">No, keep it.</a>
-				</div>
-			</div>
-			<a class='close' href="#"><span>close</span></a>
-		</div>
-	{% endif %}
-	
+                <div class="bd">
+                    <ul class="tabs">
+                        <li class="activity unread"><a href="#user-account,activity">Activity <span class="counter">{{ d.template_data.user_activity.data.projects|length + d.template_data.user_activity.data.ideas|length + d.template_data.user_activity.data.resources|length + d.template_data.user_activity.data.endorsed_projects|length }}</span></a></li>
+
+                        {% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+                            <li class="messages"><a href="#user-account,messages">Messages <span class="counter">{{ d.template_data.user.data.num_new_messages }}</span></a></li>
+                            <li class="account"><a href="#user-account,account">Account</a></li>
+                            {% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
+                            <li class="resources"><a href="#user-account,resources">Resources</a></li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+
+                    {% if d.template_data.user and (d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id) %}
+                        <a class="contact rounded-button small fancy-caps">Send <span>a</span> message <span>to</span> {{ d.template_data.user_activity.data.user.name|truncate(16) }}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="east">
+            <div>
+                <div class="activity-view step">
+                    {% if d.template_data and d.template_data.user_activity.data.projects|length > 0 %}
+                    <div class="box my-projects">
+                        <div class="hd">
+                            <h2>
+                                {% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+                                    <span class="light">My</span>
+                                {% else %}
+                                    <span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span>
+                                {% endif %}
+                                Projects <span class="counter">{{ d.template_data.user_activity.data.projects|length }}</span>
+                            </h2>
+                        </div>
+
+                        <div class="bd">
+                            {% for project in d.template_data.user_activity.data.projects %}
+                                <div class='clearfix project-header'>
+                                    <div class="thumb">
+                                        {% if project.image_id > -1  %}
+                                            <img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+                                        {% else %}
+                                            <img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+                                        {% endif %}
+                                        <span class="overlay-tag"></span>
+                                    </div>
+
+                                    <div class="tools">
+                                        <div class="member-content">
+                                            <span class="vertical-align-middle-hack">
+                                                <div class="members is-member">
+                                                    <a href="#show,members">
+                                                        <span class="counter members-counter">{{ project.num_members }}</span> Members
+                                                    </a>
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="main">
+                                        <span class="vertical-align-middle-hack">
+                                        <h1><a href='/project/{{ project.project_id }}'>{{ project.title }}</a></h1>
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div><!-- end my-projects -->
+                    {% endif %}
+
+                    {% if d.template_data and d.template_data.user_activity.data.ideas|length > 0%}
+                    <div class="box my-ideas">
+                        <div class="hd">
+                            <h2>
+                                {% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+                                    <span class="light">My</span>
+                                {% else %}
+                                    <span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span>
+                                {% endif %}
+                                Ideas <span class="counter">{{ d.template_data.user_activity.data.ideas|length }}</span>
+                            </h2>
+                        </div>
+
+                        <div class="bd clearfix">
+                            <ul class="idea-cards">
+                                {% for idea in d.template_data.user_activity.data.ideas %}
+                                    <li class="{% if loop.index % 3 == 0  %}every-third{% endif %}">
+                                        {% if d.template_data and d.template_data.user and d.template_data.user.data.u_id != d.template_data.user_activity.data.user.u_id %}
+                                            <div class="note-card-public-controls">
+                                                {% if d.template_data.user.data.projects|length > 0 %}
+                                                    <a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+                                                {% endif %}
+                                                <span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="note-card">
+                                            <div class="membrane">
+                                                {% if d.template_data and d.template_data.user %}
+                                                    {% if d.template_data.user.is_admin or d.template_data.user.data.u_id == idea.owner.u_id %}
+                                                        <a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+                                                    {% endif %}
+                                                {% endif %}
+                                                <cite class="note-meta-hd">{% if idea.owner %}<strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name|truncate(18) }}</a></strong> said &mdash;{% endif %}</cite>
+                                                <blockquote><p>{{ idea.message|truncate(180) }}</p></blockquote>
+                                                <cite class="note-meta-ft">Posted <strong><span class="time-since">{{ idea.created }}</span></strong> via <strong>{{ idea.submission_type }}</strong></cite>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div><!--end my-ideas-->
+                    {% endif %}
+
+                    {% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 and (d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+                    <div class="box my-resources">
+                        <div class="hd">
+                            <h2>
+                                {% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+                                    <span class="light">My</span>
+                                {% else %}
+                                    <span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span>
+                                {% endif %}
+                                Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span>
+                            </h2>
+                        </div>
+                        <div class="bd">
+                            <table class="resources-list triplewide clearfix">
+                                <tbody>
+                                    {% for resource in d.template_data.user_activity.data.resources %}
+                                        {% if loop.index % 3 == 1 %}
+                                        <tr>
+                                        {% endif %}
+                                            <td {% if resource.is_official %}class="official-resource"{% endif %}>
+                                                {% if d.template_data and d.template_data.user and d.template_data.user.data.projects|length > 0 %}
+                                                    <a class="add-button rounded-button small add-resource" href="#addResource,{{ resource.project_resource_id }}">Add</a>
+                                                {% endif %}
+                                                {% if resource.image_id > 0 %}
+                                                <span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" /></span>
+                                                {% else %}
+                                                <span class="thumb">{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}<a class="close delete-resource" href="#removeResource,{{ resource.project_resource_id }}"><span>Remove</span></a>{% endif %}<img width='35' height='35' src='/static/images/thumb_genAvatar50.png' alt="" /></span>
+                                                {% endif %}
+                                                <span class="resource-name">
+                                                    {% if resource.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
+                                                    <span rel="#organization,{{ resource.link_id }}" class='resource-tooltip_trigger tooltip_trigger'>
+                                                        <span><a target='_blank' href="{{ resource.url }}"><span>{{ resource.title|truncate(25, true) }}</span></a></span>
+                                                    </span>
+                                                </span>
+                                                <div class="added-dialog">
+                                                    <span class="added-header">Added <em>to</em> your project<br /></span>
+                                                    <span class="added-text">We've sent them a link to your project page.</span>
+                                                    <!-- <span class="added-close"></span> -->
+                                                </div>
+                                            </td>
+                                        {% if loop.index % 3 == 0 %}
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div><!--end my-resources-->
+                    {% endif %}
+
+                    <!--
+                    {% if d.template_data and d.template_data.user_activity.data.endorsed_projects|length > 0 %}
+                    <div class="box my-endorsed-projects my-projects">
+                        <div class="hd">
+                            <h2>
+                                {% if d.template_data.user and d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id %}
+                                    <span class="light">My</span>
+                                {% else %}
+                                    <span class="light">{{ d.template_data.user_activity.data.user.name }}'s</span>
+                                {% endif %}
+                                Supported Projects <span class="counter">{{ d.template_data.user_activity.data.endorsed_projects|length }}</span>
+                            </h2>
+                        </div>
+                        <div class="bd">
+
+                            {% for project in d.template_data.user_activity.data.endorsed_projects %}
+
+                                <div class='clearfix project-header'>
+                                    <div class="thumb">
+                                        {% if project.image_id > -1  %}
+                                            <img width='80' src='{{d.template_data.media_root}}images/{{ project.image_id % 10 }}/{{ project.image_id }}.png' alt="" class='proj'/>
+                                        {% else %}
+                                            <img width='80' src="/static/images/thumb_genAvatar100.png" alt="" class="proj"/>
+                                        {% endif %}
+                                        <span class="overlay-tag"></span>
+                                    </div>
+                                    <div class="tools">
+                                        <div class="members">
+                                            <a href="/project/{{ project.project_id }}#show,members">Members <span class="counter">{{ project.num_members }}</span></a>
+                                        </div>
+                                    </div>
+                                    <div class="main">
+                                        <h1><a href="/project/{{ project.project_id }}">{{ project.title }}</a></h1>
+                                        <cite class="meta"><span class="fancy-caps">Created <span>by</span></span> <strong><a href="/useraccount/{{ project.owner.u_id }}">{{ project.owner.name }}</a></strong></cite>
+                                        <div class="sub-ft">
+                                            {% if d.template_data and d.template_data.app_mode != 'beta' %}
+                                                <div class="twitter">
+                                                    <a href="http://twitter.com/share" data-url="http://changeby.us/project/{{ project.project_id }}" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+                                                </div>
+                                                <div class="facebook">
+                                                    <script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+                                                    <fb:like href="http://changeby.us/project/{{ project.project_id }}" send="false" layout="button_count" width="100" show_faces="false"></fb:like>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                    <!-- end my-endorsed-projects -->
+                    {% endif %}
+                </div><!--end activity-view-->
+
+                {% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+                    <div class="messages-view step" >
+                        <div class="box messages">
+                            <div class="hd">
+                                <h2>Messages</h2>
+                            </div>
+                            <div class="bd">
+                                <ol class="message-stack">
+
+                                    {% macro notification_message(message, className='') -%}
+                                        <li class="message-item user-notification {{ className }}">
+                                            <!--<a class="close" href="#"><span>Close</span></a>-->
+                                            <span class="title">{{ message.body }}</span>
+                                            <div class="meta meta-top">
+                                                <cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
+                                                <cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}#show,members" class="serif">{{ message.project_title }}</a></cite>
+                                                <cite class="time-since">{{ message.created }}</cite>
+                                            </div>
+                                        </li>
+                                    {%- endmacro %}
+
+                                    {% for message in d.template_data.user_activity.data.messages %}
+                                        {% if message.message_type == "member_comment" %}
+                                            <li class="message-item member-comment">
+                                                <!--<a class="close" href="#"><span>Close</span></a>-->
+                                                <div class="thumb">
+                                                    {% if message.owner.image_id %}
+                                                        <img width='50' src='{{d.template_data.media_root}}images/{{ message.owner.image_id % 10 }}/{{ message.owner.image_id }}.png' alt="{{ message.owner.name }}" class='avatar'/>
+                                                    {% else %}
+                                                        <img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ message.owner.name }}" class="avatar"/>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="main">
+                                                    <div class="meta meta-top">
+                                                        <cite class="sender"><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></cite>
+                                                        <cite class="project"><em>from</em> <a href="/project/{{ message.project_id }}" class="serif">{{ message.project_title }}</a></cite>
+                                                    </div>
+                                                    <blockquote class="excerpt">
+                                                        <p>{{ message.body }}</p>
+                                                    </blockquote>
+                                                    <div class="meta meta-bottom">
+                                                        <cite class="time-since">{{ message.created }}</cite>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        {% elif message.message_type == "join" %}
+                                            {{ notification_message(message, 'join-notification') }}
+                                        {% elif message.message_type == "invite" %}
+                                            <li class="message-item user-notification invite-notification">
+                                                <!--<a class="close" href="#"><span>Close</span></a>-->
+                                                <span class="title">{{ message.body }}</span>
+
+                                                <div class="controls">
+                                                    <a href="/project/{{ message.project_id }}">Click to see project</a>
+                                                </div>
+                                            </li>
+                                        {% elif message.message_type == "goal_achieved" %}
+                                            {{ notification_message(message, 'goal-achieved-notification') }}
+                                        {% elif message.message_type == "endorsement" %}
+                                            {{ notification_message(message, 'endorsement-notification') }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </ol>
+                            </div>
+
+                            <div class="load-more">
+                                <a href=""><span>Older messages</span></a>
+                            </div>
+                        </div>
+
+                        <div class="box preferences">
+                            <div class="hd">
+                                <h3>Email Preferences</h3>
+                            </div>
+
+                            <div class="bd">
+                                <ul class="checklist">
+                                    <li>
+                                        <input type="radio" name="pref-emails-option" id="pref-emails-daily"/>
+                                        <label for="pref-emails-daily">Email daily digest</label>
+                                    </li>
+                                    <li>
+                                        <input type="radio" name="pref-emails-option" id="pref-no-emails"/>
+                                        <label for="pref-no-emails">No digest emails. You will still receive direct messages from other users.</label>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div><!-- end messages-view -->
+
+                    <div class="account-view password-view step merlin">
+                        <div class="box user-account">
+                            <div class="hd">
+                                <h2>Account</h2>
+                            </div>
+
+                            <div class="bd step edit-account-details">
+                                <form action="" method="POST" class="account-info">
+                                    <div class="user-details">
+                                        <div class="fields">
+                                            <div class="row row-first-name">
+                                                <label>First name</label>
+                                                <input type="text" class="has-been-focused" value="{{ d.template_data.user.data.f_name }}" />
+                                            </div>
+                                            <div class="row row-last-name">
+                                                <label>Last name</label>
+                                                <input type="text" class="has-been-focused" value="{{ d.template_data.user.data.l_name }}" />
+                                            </div>
+                                            <div class="row row-email clearfix">
+                                                <label>Email address</label>
+                                                <input type="text" class="has-been-focused" value="{{ d.template_data.user.data.email }}" />
+                                            </div>
+                                            <div class="row row-hood clearfix">
+                                                <label>Neighborhood</label>
+                                                <input autocomplete='off' type='text' name='location-hood-enter' id='location-hood-enter' class='location-group location-hood-enter has-been-focused' value='{% if d.template_data.user_activity.data.user.location and d.template_data.user_activity.data.user.location_id != -1 %}{{ d.template_data.user_activity.data.user.location }}{% endif %}' {% if d.template_data.user_activity.data.user.location %}location_id='{{ d.template_data.user_activity.data.user.location_id }}'{% endif %}/>
+                                                <div class="location-hood-list" style="display:none"><ul><li></li></ul></div>
+                                            </div>
+                                        </div>
+                                        <div class="">
+                                            <input class="rounded-button info-save-button" type="submit" value="Save Changes"/>
+                                            <a href="#user-account,password" class="change-password">Change Password</a>
+                                        </div>
+
+                                        <div style="clear:both"></div>
+
+                                        <div class="password-info merlin">
+                                            <div class="step hidden"></div>
+                                            <div class="step edit-password-details">
+                                                <div class="row">
+                                                    <label>Old Password</label>
+                                                    <input type="password" class="has-been-focused old-password" />
+                                                </div>
+                                                <div class="row">
+                                                    <label>New Password</label>
+                                                    <input type="password" class="has-been-focused new-password" />
+                                                    <span class="pass-strength"></span>
+                                                </div>
+                                                <div class="row">
+                                                    <label>Confirm Password</label>
+                                                    <input type="password" class="has-been-focused confirm-new-password" />
+                                                </div>
+                                                <div class="controls">
+                                                    <input class="rounded-button password-save-button" type="submit" value="Save"/>
+                                                    <a href="#user-account,account" class="cancel">Cancel</a>
+                                                </div>
+                                            </div>
+                                            <div class="step submit-password-details">
+                                                <p>Changing your password&hellip;</p>
+                                                <p><img src='/static/images/loader32x32.gif' /></p>
+                                            </div>
+                                            <div class="step password-details-submitted">
+                                                <p>Password Changed</p>
+                                            </div>
+                                            <div class="step password-details-error">
+                                                <p>There was an error changing your password.</p>
+                                            </div>
+                                        </div>
+
+                                        <div style="clear:both"></div>
+                                    </div>
+                                </form>
+
+                                {%- if d.template_data.app_mode != 'beta' -%}
+                                    <div class="social-networking">
+                                        <div class="social-connect-wrapper">
+                                            <a href="" class="connect-facebook"></a>
+                                            <!-- <a href="" class="disconnect disconnect-facebook">Disconnect</a> -->
+                                        </div>
+                                        <div class="social-connect-wrapper">
+                                            <a href="/twitter/login" class="connect-twitter"></a>
+                                            <!-- <a href="" class="disconnect disconnect-twitter">Disconnect</a> -->
+                                        </div>
+                                    </div>
+                                {%- endif -%}
+                            </div>
+
+                            <div class="bd step submit-account-details">
+                                <p>Processing your account details&hellip;</p>
+                                <p><img src='/static/images/loader32x32.gif' /></p>
+                            </div>
+
+                            <div class="bd step account-details-submitted">
+                                <p>Your account details have been updated!</p>
+                            </div>
+
+                            <div class="bd step account-details-error">
+                                <p>There was an error updating your account details.</p>
+                            </div>
+                        </div>
+                    </div><!--end account-view-->
+
+                    {% if d.template_data.user_activity.data.resources and d.template_data.user_activity.data.resources > 0 %}
+                    <div class="resources-view step merlin">
+                        <div class="hd">
+                            <h2><span class="light">My </span>Resources <span class="counter">{{ d.template_data.user_activity.data.resources|length }}</span></h2>
+                        </div>
+                        <div class="bd">
+                            <ul class='my-res'>
+                                {% for resource in d.template_data.user_activity.data.resources %}
+                                    <li class='clearfix' id='{{ resource.project_resource_id }}'>
+                                        <div class='left'>
+                                            <div class="thumb">
+                                                <a class="change-image"><span>Change Photo</span></a>
+                                                {% if resource.image_id > 0 %}
+                                                <img width='90' height='90' src='{{d.template_data.media_root}}images/{{ resource.image_id % 10 }}/{{ resource.image_id }}.png' alt="" />
+                                                {% else %}
+                                                <img width='90' height='90' src='/static/images/thumb_genAvatar100.png' alt="" />
+                                                {% endif %}
+                                            </div>
+                                            <h4 class="serif">{{ resource.title }}</h4>
+                                            <div class='box res-location mod-inline-edit' location_id='{% if resource.location_id %}{{ resource.location_id }}{% endif %}'>
+                                                <div class="editable-content serif">
+                                                {% if resource.location_name %}
+                                                    {{ resource.location_name }}
+                                                {% endif %}
+                                                </div>
+                                                <div class="inline-edit-controls"></div>
+                                            </div>
+                                        </div>
+                                        <div class='right'>
+                                            <div class='box res-description mod-inline-edit'>
+                                                <span class='section-title'>Mission</span>
+                                                <div class="inline-edit-controls"></div>
+                                                <p class="editable-content">{{ resource.description }}</p>
+                                            </div>
+                                            <div class='box res-url mod-inline-edit'>
+                                                <span class='section-title'>URL</span>
+                                                <div class="inline-edit-controls"></div>
+                                                <p class="editable-content">{{ resource.url }}</p>
+                                            </div>
+                                            <div class='box res-email mod-inline-edit'>
+                                                <span class='section-title'>Email</span>
+                                                <div class="inline-edit-controls"></div>
+                                                <p class="editable-content">{{ resource.contact_email }}</p>
+                                            </div>
+                                            <div class='box res-addr mod-inline-edit box-half'>
+                                                <span class='section-title'>Physical Address</span>
+                                                <p class="editable-content">{{ resource.physical_address }}</p>
+                                                <div class="inline-edit-controls"></div>
+                                            </div>
+                                            <div class='box mod-inline-edit res-keywords box-half'>
+                                                <span class='section-title'>Keywords</span>
+                                                <p class="editable-content">{{ resource.keywords|replace(',',', ') }}</p>
+                                                <div class="inline-edit-controls"></div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div><!--end resources-view-->
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class='foothills'>
+    </div>
+
+    <div class="template-content message-item member-comment">
+        <!--<a class="close" href="#"><span>Close</span></a>-->
+        <div class="thumb">
+            <img width='50' src=" " alt=" " class="avatar"/>
+        </div>
+        <div class="main">
+            <div class="meta meta-top">
+                <cite class="sender"></cite>
+                <cite class="project"><em>from</em> <a class="serif"></a></cite>
+            </div>
+            <blockquote class="excerpt">
+                <p></p>
+            </blockquote>
+            <div class="meta meta-bottom">
+                <cite class="time-since"></cite>
+            </div>
+        </div>
+    </div>
+
+    {% macro notification_message_template(message_type='') -%}
+        <div class="template-content message-item user-notification {{ message_type }}">
+            <!--<a class="close" href="#"><span>Close</span></a>-->
+            <span class="title"></span>
+            <div class="meta meta-top">
+                <cite class="sender"></cite>
+                <cite class="project"><em>from</em> <a class="serif"></a></cite>
+                <cite class="time-since"></cite>
+            </div>
+        </div>
+    {%- endmacro %}
+
+    {{ notification_message_template('join-notification') }}
+    {{ notification_message_template('goal-achieved-notification') }}
+    {{ notification_message_template('endorsement-notification') }}
+
+    <div class="template-content message-item user-notification invite-notification">
+        <!--<a class="close" href="#"><span>Close</span></a>-->
+        <span class="title"></span>
+        <div class="controls">
+            <a href="">Click to see project</a>
+        </div>
+    </div>
+
+    <div class='template-content modal-content upload-image'>
+        <div class='step'>
+            <h2><strong>Upload</strong> a photo for your account.</h2>
+            <div>
+                <p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+            </div>
+            <div class="file-uploader"></div>
+        </div>
+        <a class='close' href="#"><span>close</span></a>
+    </div>
+
+    <div class='template-content modal-content upload-resource-image'>
+        <div class='step'>
+            <h2><strong>Upload</strong> a photo for your resource.</h2>
+            <div>
+                <p>Photos should be <strong>under 1MB</strong> please. (We also crop photos to <strong>90px by 90px</strong>)</p>
+            </div>
+            <div class="file-uploader"></div>
+        </div>
+        <a class='close' href="#"><span>close</span></a>
+    </div>
+
+    {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+        <div class="template-content modal-content confirm-delete user-delete">
+            <div class="step">
+                <h2><strong>Delete</strong> this User?</h2>
+                <div>
+                    <p>You are about to delete this User and all projects owned by this user from the system permanently! <br/>Are you sure?</p>
+                </div>
+                <div class="actions">
+                    <a class="submit rounded-button" href="#">Yes, Delete User and Projects</a>
+                    <a class="cancel" href="#">No, keep them.</a>
+                </div>
+            </div>
+            <a class='close' href="#"><span>close</span></a>
+        </div>
+
+        <div class="template-content modal-content confirm-delete remove-resource">
+            <div class="step">
+                <h2><strong>Delete</strong> this Resource?</h2>
+                <div>
+                    <p>You are about to delete this Resource from the system permanently! <br/>Are you sure?</p>
+                </div>
+                <div class="actions">
+                    <a class="submit rounded-button" href="#">Yes, Delete Resource</a>
+                    <a class="cancel" href="#">No, keep it.</a>
+                </div>
+            </div>
+            <a class='close' href="#"><span>close</span></a>
+        </div>
+    {% endif %}
+
 </div>
 
 {% endblock continent %}
 
 {% block page_js %}
-	<script type="text/javascript" >
-		{% if d.connected_fb %}
-			app_page.data.facebook_connected = true;
-		{% endif %}
+    <script type="text/javascript" >
+        {% if d.connected_fb %}
+            app_page.data.facebook_connected = true;
+        {% endif %}
 
-		{% if d.connected_tw %}
-			app_page.data.twitter_connected = true;
-		{% endif %}
-	
-		app_page.data.user_activity = {{ d.template_data.user_activity.json }};
-		{% if d.template_data.user %}
-			app_page.data.user = {{ d.template_data.user.json }};
-		{% endif %}
-		
-		{% if d.template_data.user_activity %}
-			app_page.data.contact_modal = {
-				to_u_name: '{{ d.template_data.user_activity.data.user.name }}',
-				to_u_id: {{ d.template_data.user_activity.data.user.u_id }}
-			};
-		{% endif %}
-	</script>
-	
-	<script type="text/javascript" src='/static/js/tc.gam.contact.js'></script>
-	<script type="text/javascript" src='/static/js/pages/useraccount.js'></script>
-	{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-		<script type="text/javascript" src='/static/js/pages/useraccount.admin.js'></script>
-	{% endif %}
-	{% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
-		<script type="text/javascript" src='/static/js/pages/useraccount.editable.js'></script>
-	{% endif %}
-	
-	<!--[if lte IE 8]>
-		<script type="text/javascript">
-			$('.midlands .thumb').hover(
-				function () { tc.jQ('.change-image').addClass('hover'); },
-				function () { tc.jQ('.change-image').removeClass('hover'); }
-			);
-		</script>
-	<![endif]-->
+        {% if d.connected_tw %}
+            app_page.data.twitter_connected = true;
+        {% endif %}
+
+        app_page.data.user_activity = {{ d.template_data.user_activity.json }};
+        {% if d.template_data.user %}
+            app_page.data.user = {{ d.template_data.user.json }};
+        {% endif %}
+
+        {% if d.template_data.user_activity %}
+            app_page.data.contact_modal = {
+                to_u_name: '{{ d.template_data.user_activity.data.user.name }}',
+                to_u_id: {{ d.template_data.user_activity.data.user.u_id }}
+            };
+        {% endif %}
+    </script>
+
+    <script type="text/javascript" src='/static/js/tc.gam.contact.js'></script>
+    <script type="text/javascript" src='/static/js/pages/useraccount.js'></script>
+    {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+        <script type="text/javascript" src='/static/js/pages/useraccount.admin.js'></script>
+    {% endif %}
+    {% if d.template_data.user and (d.template_data.user.data.u_id == d.template_data.user_activity.data.user.u_id) %}
+        <script type="text/javascript" src='/static/js/pages/useraccount.editable.js'></script>
+    {% endif %}
+
+    <!--[if lte IE 8]>
+        <script type="text/javascript">
+            $('.midlands .thumb').hover(
+                function () { tc.jQ('.change-image').addClass('hover'); },
+                function () { tc.jQ('.change-image').removeClass('hover'); }
+            );
+        </script>
+    <![endif]-->
 {% endblock page_js %}
 
