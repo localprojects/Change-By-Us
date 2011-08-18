@@ -78,7 +78,7 @@ class RestController (Controller):
         if real_method == 'PUT':
             return self.PUT(*args, **kwargs)
         elif real_method == 'DELETE':
-            return self.REST_DELETE(*args, **kwargs)
+            return self.DELETE(*args, **kwargs)
         
         # Actually handle the POST.
         return self._BASE_METHOD_HANDLER(['REST_CREATE'], *args, **kwargs)
@@ -205,11 +205,44 @@ class UpdateInstanceMixin (object):
         return self.row2dict(instance)
 
 
+class DeleteInstanceMixin(object):
+    """
+    Derive from this class to add DELETE functionality to a REST controller.
+    
+    """
+    def REST_DELETE(self, *args, **kwargs):
+        Model = self.get_model()
+        session = self.get_session()
+
+        query = session.query(Model)
+        if kwargs:
+            query = query.filter(**kwargs)
+        
+        if args:
+            # If we have any args then assume the last represents the primrary key
+            instance = query.get(args[-1])
+            if instance is None:
+                raise NotFoundError("No results found")
+                
+        else:
+            # Otherwise assume the kwargs uniquely identify the model
+            try:
+                instance = query.one()
+            except NoResultFound:
+                raise NotFoundError("No results found")
+            except MultipleResultsFound:
+                raise NotFoundError("Multiple results found; no single match")
+        
+        session.delete(instance)
+        session.commit()
+        return {}
+
+
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Need
     ordering = models.Need.id
 
 
-class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, RestController):
+class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
     model = models.Need
 
