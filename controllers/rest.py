@@ -136,7 +136,39 @@ class ReadInstanceMixin (object):
         return self.row2dict(instance)
         
 
-class NeedsList (ListInstancesMixin, RestController):
+class CreateInstanceMixin (object):
+    """
+    Derive from this class to add READ functionality to a REST controller.
+    
+    """
+    def REST_CREATE(self, *args, **kwargs):
+        Model = self.get_model()
+        session = self.get_session()
+        
+        # TODO: We want to be able to refer to related objects by their name as
+        #       opposed to by name_id (e.g., ``project=2`` instead of 
+        #       ``project_id=2``), but we have to figure out how to do that in
+        #       SQLAlchemy.
+        #
+        #       The following is the Django version of what I'm talking about,
+        #       for reference.  This comes from djangorestframework.
+        #
+#        # translated 'related_field' kwargs into 'related_field_id'
+#        for related_name in [field.name for field in model._meta.fields if isinstance(field, RelatedField)]:
+#            if kwargs.has_key(related_name):
+#                kwargs[related_name + '_id'] = kwargs[related_name]
+#                del kwargs[related_name]
+        
+        all_kw_args = dict(web.input().items() + kwargs.items())
+        instance = Model(**all_kw_args)
+        session.add(instance)
+        session.commit()
+        
+        # TODO: set status to 201
+        return self.row2dict(instance)
+        
+
+class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Need
     ordering = models.Need.id
 
