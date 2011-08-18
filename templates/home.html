@@ -105,9 +105,11 @@
                         </div>
                     </div>
                     
-                    <div class="photocredit">
-                        Photo: &copy; Julienne Schaer/NYC &amp; Company
-                    </div>
+                    {% if d.config.homepage.photo_credit %}
+                        <div class="photocredit">
+                            {{ d.config.homepage.photo_credit }}
+                        </div>
+                    {% endif %}
                 
                 </div>
                 
@@ -248,7 +250,7 @@
                                             <cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_full_display_name }}</a></cite>
                                         </div>
                                     </td>
-                                    <td class="score">{{ (item.goal_count * 2) + (item.user_count * 5) }}</td>
+                                    <td class="score">{{ (item.user_count * 5) }}</td>
                                 </tr>
                             </tbody>
                         </table>
