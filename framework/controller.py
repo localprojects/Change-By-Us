@@ -120,7 +120,21 @@ class Controller():
             return False
         return True
 
+    def parameters(self):
+        """Gets a ``dict`` of request parameters"""
+        try:
+            if not web.input():
+                return None
+        except TypeError, e:
+            import urlparse
+            querystring = web.ctx.query[1:]
+            params = urlparse.parse_qs(querystring)
+            return params
+        else:
+            return dict(web.input().items())
+    
     def request(self, var):
+        """Gets the value of the request parameter named ``var``"""
         try:
             if not web.input():
                 return None
