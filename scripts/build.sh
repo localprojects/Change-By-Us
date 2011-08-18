@@ -23,5 +23,5 @@ echo ""
 echo "Also make sure migrations scripts are created."
 
 # Release notes
-echo "========= MODELING ============"
+echo "========= UPDATE DOCS ============"
 echo "Make sure the following are up to date: CHANGELOG.txt, UPGRADE.txt, README.txt, INSTALL.txt"
