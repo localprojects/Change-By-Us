@@ -97,10 +97,6 @@ tc.gam.project = function(options) {
             { widget: this.widget }, { app: options.app }),
         'add_link': new tc.gam.project_widgets.add_link(this, this.dom.find('.box.add-link'),
             { widget: this.widget }, { app: options.app }),
-        'goals_main': new tc.gam.project_widgets.goals_main(this, this.dom.find('.box.goals-main'),
-            { widget: this.widget }, { app: options.app }),
-        'goals_add': new tc.gam.project_widgets.goals_add(this, this.dom.find('.box.goals-add'),
-            { widget: this.widget }, { app: options.app }),
         'conversation': new tc.gam.project_widgets.conversation(this, this.dom.find('.box.conversation'),
             { widget: this.widget }, { app: options.app }),
         'members': new tc.gam.project_widgets.members(this, this.dom.find('.box.members'),
@@ -113,32 +109,20 @@ tc.gam.project = function(options) {
             this.dom.find('.box.fresh-ideas'), { widget: this.widget }, { app: options.app });
     }
 
-    // Add goals stack if available
-    if (tc.gam.project_widgets.goals_stack) {
-        this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this, 
-            this.dom.find('.box.goals-stack-holder'), { widget: this.widget }, { app: options.app });
-    }
-
     // Return project page to initial state.
     this.go_home = function (e) {
         if (e) {
-            e.data.project.components.goals_main.show(false);
             e.data.project.components.conversation.show(false);
 
-            if (tc.gam.project_widgets.goals_stack) {
-                e.data.project.components.goals_stack.hide(false);
-            }
             if (tc.gam.project_widgets.members) {
                 e.data.project.components.members.hide(false);
             }
-            e.data.project.components.goals_add.hide(false);
             e.data.project.components.add_link.hide(false);
             e.data.project.components.related_resources.hide(false);
         } else {
-            this.components.goals_main.show(false);
             this.components.conversation.show(false);
         }
-    }
+    };
 
     // Object of handlers.
     this.handlers = {
@@ -147,39 +131,17 @@ tc.gam.project = function(options) {
         widget_show: function (e, d) {
             switch (d.name) {
                 case 'members':
-                    e.data.project.components.goals_main.hide(false);
-                    if (tc.gam.project_widgets.goals_stack) {
-                        e.data.project.components.goals_stack.hide(false);
-                    }
-                    e.data.project.components.goals_add.hide(false);
                     e.data.project.components.conversation.hide(false);
                     e.data.project.components.add_link.hide(false);
                     break;
                     
-                case 'goals_add':
-                    e.data.project.components.goals_main.hide(false);
-                    break;
-                    
-                case 'goals_stack':
-                    e.data.project.components.goals_add.hide(false);
-                    e.data.project.components.goals_main.hide(false);
-                    break;
-                    
                 case 'related_resources':
-                    e.data.project.components.goals_main.hide(false);
-                    if (tc.gam.project_widgets.goals_stack) {
-                        e.data.project.components.goals_stack.hide(false);
-                    }
                     e.data.project.components.members.hide(false);
                     e.data.project.components.conversation.hide(false);
                     e.data.project.components.add_link.hide(false);
                     break;
                     
                 case 'add_link':
-                    e.data.project.components.goals_main.hide(false);
-                    if (tc.gam.project_widgets.goals_stack) {
-                        e.data.project.components.goals_stack.hide(false);
-                    }
                     e.data.project.components.members.hide(false);
                     e.data.project.components.conversation.hide(false);
                     e.data.project.components.related_resources.hide(false);
@@ -191,8 +153,6 @@ tc.gam.project = function(options) {
         widget_hide: function (e, d) {
             switch (d.name) {
                 case 'members':
-                case 'goals_add':
-                case 'goals_stack':
                 case 'related_resources':
                 case 'add_link':
                     this_project.go_home(e);
@@ -236,28 +196,6 @@ tc.gam.project = function(options) {
             }
             e.data.project.components.members.remove_idea(d.id);
         }
-    };
-
-    // Update goals.  (This is believed to be broken)
-    this.update_goals = function () {
-        tc.jQ.ajax({
-            type: 'GET',
-            url: '/project/goals',
-            data: {
-                project_id: me.data.project_id
-            },
-            context: me,
-            dataType: 'text',
-            success: function (data, ts, xhr) {
-                var d;
-                try {
-                    d = tc.jQ.parseJSON(data);
-                } catch (e) {
-                    return;
-                }
-                this.dom.trigger("goals-refresh", [d]);
-            }
-        });
     };
 
     // Bind events.
