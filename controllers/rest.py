@@ -68,9 +68,10 @@ class RestController (Controller):
     def POST(self, *args, **kwargs):
         # Check if something other than POST was desired.
         try:
-            real_method = self.request('_method').toUpper()
+            real_method = self.request('_method') or 'POST'
         except KeyError:
             real_method = 'POST'
+        real_method = real_method.upper()
         
         if real_method == 'PUT':
             return self.PUT(*args, **kwargs)
