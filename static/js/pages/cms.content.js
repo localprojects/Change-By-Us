@@ -42,7 +42,7 @@ app_page.features.push(function(app){
 									}
 								});
 							}
-						})
+						});
 					});
 				}
 			},
@@ -136,14 +136,6 @@ app_page.features.push(function(app){
 					}
 				}
 			},
-			'project-goals':{
-				init:function(merlin,dom){
-					tc.jQ('.sidebar-item.project-goals').addClass('active').siblings().removeClass('active');
-					if(merlin.app.components.warning_pagination){
-						merlin.app.components.warning_pagination.setContentType('goal');
-					}
-				}
-			},
 			'links':{
 				init:function(merlin,dom){
 					tc.jQ('.sidebar-item.links').addClass('active').siblings().removeClass('active');
@@ -161,36 +153,37 @@ app_page.features.push(function(app){
 			e.preventDefault();
 			type = e.target.hash.split('-')[1].split(',')[0];
 			
+			//TODO - simplify this switch statement with the code below,
+			//after doing a security check.
+			//id = type + '_id',
+			//data = {};
+			//data[id] = e.target.hash.split(',')[1];
+			
 			switch(type){
 				case 'idea':
 					data = {
-						idea_id:e.target.hash.split(',')[1]
-					}
+						idea_id:    e.target.hash.split(',')[1]
+					};
 					break;
 				case 'project':
 					data = {
-						project_id:e.target.hash.split(',')[1]
-					}
-					break;
-				case 'goal':
-					data = {
-						goal_id:e.target.hash.split(',')[1]
-					}
+						project_id: e.target.hash.split(',')[1]
+					};
 					break;
 				case 'message':
 					data = {
-						message_id:e.target.hash.split(',')[1]
-					}
+						message_id: e.target.hash.split(',')[1]
+					};
 					break;
 				case 'link':
 					data = {
-						link_id:e.target.hash.split(',')[1]
-					}
+						link_id:    e.target.hash.split(',')[1]
+					};
 					break;
 				case 'resource':
 					data = {
-						resource_id:e.target.hash.split(',')[1]
-					}
+						resource_id: e.target.hash.split(',')[1]
+					};
 					break;
 			}
 			
@@ -232,50 +225,42 @@ app_page.features.push(function(app){
 				case 'idea':
 					data = {
 						idea_id:e.target.hash.split(',')[1]
-					}
+					};
 					modal_values = {
 						item_type_name:'Idea'
-					}
+					};
 					break;
 				case 'project':
 					data = {
 						project_id:e.target.hash.split(',')[1]
-					}
+					};
 					modal_values = {
 						item_type_name:'Project'
-					}
-					break;
-				case 'goal':
-					data = {
-						goal_id:e.target.hash.split(',')[1]
-					}
-					modal_values = {
-						item_type_name:'Goal'
-					}
+					};
 					break;
 				case 'message':
 					data = {
 						message_id:e.target.hash.split(',')[1]
-					}
+					};
 					modal_values = {
 						item_type_name:'Message'
-					}
+					};
 					break;
 				case 'link':
 					data = {
 						link_id:e.target.hash.split(',')[1]
-					}
+					};
 					modal_values = {
 						item_type_name:'Link'
-					}
+					};
 					break;
 				case 'resource':
 					data = {
 						resource_id:e.target.hash.split(',')[1]
-					}
+					};
 					modal_values = {
 						item_type_name:'Resource'
-					}
+					};
 					break;	
 			}
 			
@@ -327,9 +312,6 @@ app_page.features.push(function(app){
 					return;
 				}
 				if(data.flagged_items){
-					if(data.flagged_items.goals || data.flagged_items.goals === 0){
-						tc.jQ('.sidebar-item.project-goals span.count').text(data.flagged_items.goals);
-					}
 					if(data.flagged_items.ideas || data.flagged_items.ideas === 0){
 						tc.jQ('.sidebar-item.ideas span.count').text(data.flagged_items.ideas);
 					}
@@ -396,7 +378,7 @@ app_page.features.push(function(app){
 						var d, temptbody, tempitem;
 						try {
 							d = tc.jQ.parseJSON(data);
-						} catch(e) {current_step
+						} catch(e) {
 							tc.util.log("/admin/resource/getunreviewed: json parsing error", "warn");
 							return;
 						}
@@ -565,7 +547,7 @@ app_page.features.push(function(app){
 						var d, temptbody, tempitem;
 						try {
 							d = tc.jQ.parseJSON(data);
-						} catch(e) {current_step
+						} catch(e) {
 							tc.util.log("/admin/all/getflagged: json parsing error", "warn");
 							return;
 						}
