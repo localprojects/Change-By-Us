@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.models &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.models</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">ForeignKey</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">relationship</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">scoped_session</span><span class="p">,</span> <span class="n">sessionmaker</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.associationproxy</span> <span class="kn">import</span> <span class="n">association_proxy</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&#39;..&#39;</span><span class="p">))</span>
+
+    
+<div class="viewcode-block" id="get_db_config"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.get_db_config">[docs]</a><span class="k">def</span> <span class="nf">get_db_config</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="n">Config</span>
+    <span class="k">return</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;database&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_db_engine"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.get_db_engine">[docs]</a><span class="k">def</span> <span class="nf">get_db_engine</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Gets the SQLAlchemy database engine.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">get_db_config</span><span class="p">()</span>
+    <span class="n">db_conn_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(dbn)s</span><span class="s">://</span><span class="si">%(user)s</span><span class="s">:</span><span class="si">%(password)s</span><span class="s">@</span><span class="si">%(host)s</span><span class="s">/</span><span class="si">%(db)s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">config</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">db_conn_string</span><span class="p">,</span> <span class="n">echo</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">engine</span>
+    
+</div>
+<div class="viewcode-block" id="get_session"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.get_session">[docs]</a><span class="k">def</span> <span class="nf">get_session</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the SQLAlchemy ORM session, which is stored on the thread-global </span>
+<span class="sd">    ``web.ctx`` object.  The object is wrapped so that we can more easily stub</span>
+<span class="sd">    it when necessary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Session</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Session</span><span class="p">()</span>
+<span class="c">#    import web</span>
+<span class="c">#    return web.ctx.orm</span>
+
+
+<span class="c">##</span>
+<span class="c"># HACK: I cannot express how much I dislike calling get_db_engine() here.  It </span>
+<span class="c">#       effectively prevents you from importing this module without loading the</span>
+<span class="c">#       database, and that just ain&#39;t cool.  However, in order to autoload the </span>
+<span class="c">#       existing tables from the database, it appears that I need to link the</span>
+<span class="c">#       Base model declarative class with an engine at create time.  In order</span>
+<span class="c">#       to do that, I need to get the database engine.</span>
+<span class="c">#</span>
+<span class="c"># TODO: Replace the existing autoloaded tables with full declarative table </span>
+<span class="c">#       definitions.  This will (1) relax the need to have Base linked with an</span>
+<span class="c">#       engine at create time, (2) be more explicit, and (3) allow the tables</span>
+<span class="c">#       to be managed by whatever migration system we use with SQLAlchemy, as</span>
+<span class="c">#       opposed to having to keep the table definitions in SQL.</span>
+<span class="c">#</span>
+<span class="c">#       Remember to update main.load_sqla(...) when that change is made.</span>
+<span class="c">#</span></div>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">get_db_engine</span><span class="p">()</span>
+
+<span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Project"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.Project">[docs]</a><span class="k">class</span> <span class="nc">Project</span> <span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;project&#39;</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+</div>
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span> <span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;user&#39;</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="Need"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.Need">[docs]</a><span class="k">class</span> <span class="nc">Need</span> <span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;project_needs&#39;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+    <span class="n">item_needed</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
+    <span class="n">num_needed</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Text</span><span class="p">)</span>
+    
+    <span class="n">project_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;project.project_id&#39;</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">projects</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Project&#39;</span><span class="p">)</span>
+    
+    <span class="n">volunteers</span> <span class="o">=</span> <span class="n">association_proxy</span><span class="p">(</span><span class="s">&#39;need_volunteers&#39;</span><span class="p">,</span> <span class="s">&#39;member&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Volunteer"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.models.Volunteer">[docs]</a><span class="k">class</span> <span class="nc">Volunteer</span> <span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;project_need_volunteers&#39;</span>
+    
+    <span class="n">need_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;project_needs.id&#39;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">member_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;user.user_id&#39;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="n">need</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Need&#39;</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s">&#39;need_volunteers&#39;</span><span class="p">)</span>
+    <span class="n">member</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;User&#39;</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s">&#39;commitments&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
