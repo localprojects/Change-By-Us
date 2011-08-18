@@ -1,4 +1,4 @@
-import web
+from lib import web
 
 from framework.controller import Controller
 from framework.log import log
