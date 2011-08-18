@@ -20,7 +20,7 @@ tc.gam.project_widgets.add_link = function(project,dom,deps,options){
 	
 	this.components = {
 		merlin:null
-	}
+	};
 	
 	this.build_merlin = function(){
 		if(this.components.merlin){
@@ -81,7 +81,6 @@ tc.gam.project_widgets.add_link = function(project,dom,deps,options){
 				},
 				'link-submit':{
 					selector:'.step.submit-link-step',
-					next_step:'goal-info',
 					init:function(merlin,dom){
 						tc.jQ.ajax({
 							type:'POST',
