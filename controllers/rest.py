@@ -94,12 +94,13 @@ class ListInstancesMixin (object):
         Model = self.get_model()
         session = self.get_session()
         
-        try:
-            query = session.query(Model)
-            if hasattr(self, 'ordering'):
-                query = query.order_by(self.ordering)
-        except:
-            query = []
+        query = session.query(Model)
+        
+        all_kw_args = dict(web.input().items() + kwargs.items())
+        if all_kw_args:
+            query = query.filter_by(**all_kw_args)
+        if hasattr(self, 'ordering'):
+            query = query.order_by(self.ordering)
         
         return [self.row2dict(row) for row in query]
         
