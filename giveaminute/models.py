@@ -26,14 +26,14 @@ def get_db_engine():
     return engine
     
 
-def get_session():
+def get_orm():
     """
     Gets the SQLAlchemy ORM session, which is stored on the thread-global 
     ``web.ctx`` object.  The object is wrapped so that we can more easily stub
     it when necessary.
     """
-    Session = scoped_session(sessionmaker(bind=engine))
-    return Session()
+    OrmSession = scoped_session(sessionmaker(bind=engine))
+    return OrmSession()
 #    import web
 #    return web.ctx.orm
 
