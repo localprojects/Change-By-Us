@@ -78,7 +78,7 @@ class Need (Base):
     description = Column(Text)
     
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    projects = relationship('Project')
+    project = relationship('Project')
     
     volunteers = association_proxy('need_volunteers', 'member')
 

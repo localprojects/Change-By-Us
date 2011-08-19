@@ -10,7 +10,7 @@ from framework.task_manager import *
 import framework.util as util
 import giveaminute.user as mUser
 
-class Controller():
+class Controller (object):
 
     _db = None
 

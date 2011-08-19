@@ -16,6 +16,67 @@ class ForbiddenError (Exception):
     pass
 
 
+class ResourceAccessRules(object):
+    """
+    A class used to determine whether a given user can take actions on given
+    objects.
+    
+    """
+    def can_read(self, user, instance):
+        raise NotImplementedError()
+    
+    def can_create(self, user, instance):
+        raise NotImplementedError()
+    
+    def can_update(self, user, instance):
+        raise NotImplementedError()
+    
+    def can_delete(self, user, instance):
+        raise NotImplementedError()
+
+
+class DefaultAccess (ResourceAccessRules):
+    """Read-only access by default"""
+    def can_read(self, user, instance):
+        return True
+    def can_create(self, user, instance):
+        return False
+    def can_update(self, user, instance):
+        return False
+    def can_delete(self, user, instance):
+        return False
+
+
+class NonAdminReadOnly (ResourceAccessRules):
+    def can_read(self, user, instance):
+        return True
+    
+    def is_admin(self, user):
+        return user is not None and user.isAdmin
+    
+    def can_create(self, user, instance):
+        return self.is_admin(user)
+    def can_update(self, user, instance):
+        return self.is_admin(user)
+    def can_delete(self, user, instance):
+        return self.is_admin(user)
+
+
+class NonProjectAdminReadOnly (ResourceAccessRules):
+    def can_read(self, user, instance):
+        return True
+    
+    def is_project_admin(self, user, project):
+        return user is not None and user.isProjectAdmin(project.id)
+    
+    def can_create(self, user, instance):
+        return self.is_project_admin(user, instance.project)
+    def can_update(self, user, instance):
+        return self.is_project_admin(user, instance.project)
+    def can_delete(self, user, instance):
+        return self.is_project_admin(user, instance.project)
+
+
 class RestController (Controller):
     """
     Base controller for REST endpoints.
@@ -29,6 +90,13 @@ class RestController (Controller):
     - ``REST_DELETE
     
     """
+    
+    def get_access_rules(self):
+        if hasattr(self, 'access_rules'):
+            return self.access_rules
+        else:
+            return DefaultAccess()
+    
     def get_model(self):
         return self.model
     
@@ -95,7 +163,10 @@ class RestController (Controller):
     
 
 class ListInstancesMixin (object):
-
+    """
+    Derive from this class to add INDEX functionality to a REST controller.
+    
+    """
     def REST_INDEX(self, *args, **kwargs):
         Model = self.get_model()
         orm = self.get_orm()
@@ -108,7 +179,8 @@ class ListInstancesMixin (object):
         if hasattr(self, 'ordering'):
             query = query.order_by(self.ordering)
         
-        return [self.row2dict(row) for row in query]
+        return [self.row2dict(instance) for instance in query 
+                if self.access_rules.can_read(self.user, instance)]
         
 
 class ReadInstanceMixin (object):
@@ -139,6 +211,9 @@ class ReadInstanceMixin (object):
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
         
+        if not self.access_rules.can_read(self.user, instance):
+            raise ForbiddenError("User cannot retrieve the resource")
+        
         return self.row2dict(instance)
         
 
@@ -167,6 +242,10 @@ class CreateInstanceMixin (object):
         
         all_kw_args = dict(web.input().items() + kwargs.items())
         instance = Model(**all_kw_args)
+
+        if not self.access_rules.can_create(self.user, instance):
+            raise ForbiddenError("User cannot store the resource")
+        
         orm.add(instance)
         orm.commit()
         
@@ -178,6 +257,13 @@ class UpdateInstanceMixin (object):
     Derive from this class to add UPDATE functionality to a REST controller.
     
     """
+    def current_user_can_update(self, instance):
+        """
+        Returns True if the currently authenticated user (or the anonymous user
+        as the case may be) can modify the given model instance object.
+        """
+        return True
+        
     def REST_UPDATE(self, *args, **kwargs):
         Model = self.get_model()
         orm = self.get_orm()
@@ -200,7 +286,10 @@ class UpdateInstanceMixin (object):
                 raise NotFoundError("No results found")
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
-
+        
+        if not current_user_can_update(instance):
+            raise ForbiddenError("Current user cannot modify the resource")
+        
         for (key, val) in self.parameters().iteritems():
             setattr(instance, key, val)
 
@@ -213,7 +302,6 @@ class DeleteInstanceMixin(object):
     Derive from this class to add DELETE functionality to a REST controller.
     
     """
-    
     def REST_DELETE(self, *args, **kwargs):
         Model = self.get_model()
         orm = self.get_orm()
@@ -237,6 +325,9 @@ class DeleteInstanceMixin(object):
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
         
+        if not self.access_rules.can_delete(self.user, instance):
+            raise ForbiddenError("User cannot delete the resource")
+        
         orm.delete(instance)
         orm.commit()
         return
@@ -245,8 +336,10 @@ class DeleteInstanceMixin(object):
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Need
     ordering = models.Need.id
+    access_rules = NonProjectAdminReadOnly()
 
 
 class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
     model = models.Need
+    access_rules = NonProjectAdminReadOnly()
 
