@@ -390,13 +390,13 @@ class Controller (object):
         log.warning("400: %s" % message)
         return web.BadRequest(message)
 
-    def forbidden(self):
-        log.error("403: Forbidden")
-        return web.Forbidden()
+    def forbidden(self, data='Forbidden', headers={}):
+        log.error("403: Forbidden: %s" % data)
+        return web.Forbidden(data, headers)
 
-    def not_found(self):
+    def not_found(self, data='Not found', headers={}):
         log.error("404: Page not found")
-        return web.NotFound()
+        return web.NotFound(data)
 
     def redirect(self, url):
         # Set the user object in case it's been created since we initialized

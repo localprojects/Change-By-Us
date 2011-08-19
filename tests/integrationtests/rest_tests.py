@@ -55,7 +55,6 @@ class NeedsResourcesTests (TestCase):
                 'item_needed': 'basketball players',
                 'num_needed': '5',
                 'description': 'Play on my basketball team',
-            })
+            },
+            status=403)
         
-        self.assertEqual(response.status, 403)
-

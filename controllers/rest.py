@@ -1,3 +1,5 @@
+import json
+
 from lib import web
 
 from framework.controller import Controller
@@ -128,10 +130,14 @@ class RestController (Controller):
             
             return self.no_method()
         
-        except NotFoundError:
-            return self.not_found()
-        except ForbiddenError:
-            return self.forbidden()
+        except NotFoundError, e:
+            data = json.dumps({'error': str(e)})
+            return self.not_found(data)
+        
+        except ForbiddenError, e:
+            headers = {'Content-Type': 'application/json'}
+            data = json.dumps({'error': str(e)})
+            return self.forbidden(data, headers)
         
     
     def GET(self, *args, **kwargs):
