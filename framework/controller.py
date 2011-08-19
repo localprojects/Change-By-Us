@@ -390,6 +390,10 @@ class Controller():
         log.warning("400: %s" % message)
         return web.BadRequest(message)
 
+    def forbidden(self):
+        log.error("403: Forbidden")
+        return web.Forbidden()
+
     def not_found(self):
         log.error("404: Page not found")
         return web.NotFound()

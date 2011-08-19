@@ -12,6 +12,8 @@ class NotFoundError (Exception):
     pass
 class NoMethodError (Exception):
     pass
+class ForbiddenError (Exception):
+    pass
 
 
 class RestController (Controller):
@@ -60,6 +62,8 @@ class RestController (Controller):
         
         except NotFoundError:
             return self.not_found()
+        except ForbiddenError:
+            return self.forbidden()
         
     
     def GET(self, *args, **kwargs):
@@ -166,7 +170,6 @@ class CreateInstanceMixin (object):
         session.add(instance)
         session.commit()
         
-        # TODO: set status to 201
         return self.row2dict(instance)
         
 
@@ -235,7 +238,7 @@ class DeleteInstanceMixin(object):
         
         session.delete(instance)
         session.commit()
-        return {}
+        return
 
 
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
