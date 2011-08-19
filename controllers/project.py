@@ -20,8 +20,6 @@ class Project(Controller):
                 return self.getRelatedResources()
             else:
                 return self.getResourcesAndLinks()
-        elif (action == 'goals'):
-            return self.getGoals()
         elif (action == 'messages'):
             return self.getMessages()
         elif (action == 'featured'):
@@ -53,17 +51,6 @@ class Project(Controller):
                 return self.addResource()
             elif (param0 == 'remove'):
                 return self.removeResource()                
-            else:
-                return self.not_found()
-        elif (action == 'goal'):
-            if (param0 == 'add'):
-                return self.addGoal()
-            elif (param0 == 'active'):
-                return self.featureGoal()
-            elif (param0 == 'accomplish'):
-                return self.accomplishGoal()
-            elif (param0 == 'remove'):
-                return self.removeGoal()
             else:
                 return self.not_found()
         elif (action == 'message'):
@@ -395,52 +382,6 @@ class Project(Controller):
         
         return self.json(obj)
         
-    def addGoal(self):
-        projectId = self.request('project_id')
-        description = self.request('text')
-        timeframeNumber = self.request('timeframe_n')
-        timeframeUnit = self.request('timeframe_unit')
-        userId = self.request('user_id')
-        
-        if (not self.user):
-            log.error("*** goal submitted w/o logged in user")
-            return False
-        else:
-            return mProject.addGoalToProject(self.db, projectId, description, timeframeNumber, timeframeUnit, userId)
-        
-    def featureGoal(self):
-        projectGoalId = self.request('goal_id')
-        
-        if (not projectGoalId):
-            log.error("*** goal feature attempted w/o goal id")
-            return False              
-        else:
-            return mProject.featureProjectGoal(self.db, projectGoalId)
-        
-    def accomplishGoal(self):
-        projectGoalId = self.request('goal_id')
-        
-        if (not projectGoalId):
-            log.error("*** goal accomplish attempted w/o goal id")
-            return False              
-        else:
-            return mProject.accomplishProjectGoal(self.db, projectGoalId)        
-            
-    def removeGoal(self):
-        projectGoalId = self.request('goal_id')
-        
-        if (not projectGoalId):
-            log.error("*** goal remove attempted w/o goal id")
-            return False              
-        else:
-            return mProject.removeProjectGoal(self.db, projectGoalId)                    
-            
-    def getGoals(self):
-        projectId = self.request('project_id')
-        
-        return self.json(mProject.getGoals(self.db, projectId))
-        
-    
     def addMessage(self):
         """
         Add a message to the project discussion stream.
