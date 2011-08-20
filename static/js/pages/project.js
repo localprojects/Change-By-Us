@@ -97,13 +97,8 @@ app_page.features.push(function(app) {
  * handling idea invite action.
  */
 app_page.features.push(function(app) {
-    // Create new project object.
-    app.components.project = new tc.gam.project2({
-        app: app,
-        data: app_page.data.project,
-        project_user: app_page.project_user,
-        dom: tc.jQ('.continent.project')
-    });
+    // Create an object to handle widget visibility events
+    tc.gam.widgetVisibilityHandler();
     
     // Bind "create-image-uploaded" to document to handle uploading
     // and image via AJAX call.  when successful, display new image as the
