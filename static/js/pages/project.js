@@ -98,7 +98,7 @@ app_page.features.push(function(app) {
  */
 app_page.features.push(function(app) {
     // Create new project object.
-    app.components.project = new tc.gam.project({
+    app.components.project = new tc.gam.project2({
         app: app,
         data: app_page.data.project,
         project_user: app_page.project_user,
