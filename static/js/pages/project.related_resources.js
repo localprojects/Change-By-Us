@@ -1,22 +1,21 @@
-if(!tc){ var tc = {}; }
-if(!tc.gam){ tc.gam = {}; }
-if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+var tc = tc || {};
+tc.gam = tc.gam || {};
+tc.gam.project_widgets = tc.gam.project_widgets || {};
 
-tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
-    var widget, data, me;
+tc.gam.project_widgets.related_resources = function(options){
     tc.util.log("project.related_resources");
-    me = this;
-    this.options = tc.jQ.extend({name:'related_resources'},options);
-    this.dom = dom;
-    data = this.options.app.app_page.data;
-    widget = tc.gam.widget(this,project);
-    this.elements = {
+    var dom = options.dom;
+
+    //data = this.options.app.app_page.data;
+
+    var elements = {
         window: tc.jQ(window),
-        resource_counter: this.dom.find(".counter"),
-        resources_table: this.dom.find("table.resources-list"),
-        empty_box: this.dom.find(".empty-state-box")
+        resource_counter: dom.find(".counter"),
+        resources_table: dom.find("table.resources-list"),
+        empty_box: dom.find(".empty-state-box")
     };
-    this.handlers = {
+    
+    var handlers = {
         resources_loaded: function(data, ts, xhr) {
             var d;
             try {
@@ -43,10 +42,9 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
                 type: "POST",
                 dataType: "text",
                 data: {
-                    project_id: e.data.project.data.project_id,
+                    project_id: options.project_data.project_id,
                     project_resource_id: my_id
                 },
-                context: e.data.me,
                 success: function(data, ts, xhr) {
                     if(data == 'False'){
                         tc.util.log("resource add failed");
@@ -60,16 +58,15 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
         }
     };
     
-    function get() {
+    function getRelatedResources() {
         tc.jQ.ajax({
             type: 'GET',
             url: '/project/resources/related',
             data: {
-                project_id: project.data.project_id
+                project_id: options.project_data.project_id
             },
-            context: me,
             dataType:'text',
-            success: me.handlers.resources_loaded
+            success: handlers.resources_loaded
         });
     }
     
@@ -90,13 +87,13 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
 
             if (resource.image_id > 0) {
                 temp += '<span class="thumb">';
-                if (me.options.app.app_page.user && me.options.app.app_page.user.is_admin) {
+                if (options.user && options.user.is_admin) {
                     temp += '<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>';
                 }
                 temp += '<img src="'+media_root+'images/'+(resource.image_id % 10)+'/'+resource.image_id+'.png" width="30" height="30" alt="" /></span>';
             } else {            
                 temp += '<span class="thumb">';
-                if (me.options.app.app_page.user && me.options.app.app_page.user.is_admin) {
+                if (options.user && options.user.is_admin) {
                     temp += '<a class="close" href="#removeOrganization,'+resource.project_resource_id+'"><span>Close</span></a>';
                 }
                 temp += '<img src="/static/images/thumb_genAvatar30.png" width="30" height="30" alt="" /></span>';
@@ -121,22 +118,22 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
         tbody += "</tbody>";
         tbody = tc.jQ(tbody);
         
-        tbody.find("a.add-button").bind("click", {project:project, me:me}, me.handlers.add_resource_click);
+        tbody.find("a.add-button").bind("click", handlers.add_resource_click);
         
-        me.elements.resources_table.empty().append(tbody);
-        me.elements.empty_box.hide();
-        me.elements.resource_counter.text(d.resources.length);
+        elements.resources_table.empty().append(tbody);
+        elements.empty_box.hide();
+        elements.resource_counter.text(d.resources.length);
         
         tc.resource_tooltip({
-            triggers: me.elements.resources_table.find(".tooltip_trigger"),
+            triggers: elements.resources_table.find(".tooltip_trigger"),
             trigger_class:'tooltip_trigger',
             markup_source_element:tc.jQ('#organization-markup-source'),
             get_url: "/project/resource/info"
         });
         
-        me.elements.resources_table.find('.close').unbind('click').bind('click', {project:project, me:me}, function(e){
-            e.data.project.options.app.components.modal.show({
-                app:e.data.project.options.app,
+        elements.resources_table.find('.close').unbind('click').bind('click', function(e){
+            options.app.components.modal.show({
+                app:options.app,
                 source_element:tc.jQ('.modal-content.remove-resource'),
                 submit:function(){
                     tc.jQ.ajax({
@@ -145,7 +142,6 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
                         data:{
                             resource_id: e.target.href.split(',')[1]
                         },
-                        context:e,
                         dataType:'text',
                         success:function(data,ts,xhr){
                             if(data == 'False'){
@@ -164,21 +160,23 @@ tc.gam.project_widgets.related_resources = function(project,dom,deps,options){
     }
     
     function no_resources() {
-        me.elements.resources_table.hide();
-        me.elements.empty_box.show();
-        me.elements.resource_counter.text("0");
+        elements.resources_table.hide();
+        elements.empty_box.show();
+        elements.resource_counter.text("0");
     }
-    
-    get();
-    
-    return {
-        show:function(){
-            widget.show();
-            if((me.dom.offset().top - me.elements.window.scrollTop()) < 0){
-                //me.elements.window.scrollTop(me.dom.offset());
-                me.elements.window.scrollTop(0);
+
+    tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
+        if (options.name === widgetName) {
+            tc.util.log('&&& showing ' + options.name);
+            dom.show();
+            if((dom.offset().top - elements.window.scrollTop()) < 0){
+                elements.window.scrollTop(0);
             }
-        },
-        hide:widget.hide
-    };
+        } else {
+            tc.util.log('&&& hiding ' + options.name);
+            dom.hide();
+        }
+    });
+    
+    getRelatedResources();
 };

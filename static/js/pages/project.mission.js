@@ -1,3 +1,5 @@
+var tc = tc || {};
+tc.gam = tc.gam || {};
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.infopane = function(options){

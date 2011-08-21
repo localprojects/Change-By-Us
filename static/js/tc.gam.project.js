@@ -1,3 +1,5 @@
+tc = tc || {};
+tc.gam = tc.gam || {};
 tc.gam.project = function(app, dom) {
     // Create an object to handle widget visibility events
     tc.gam.widgetVisibilityHandler();
@@ -16,17 +18,17 @@ tc.gam.project = function(app, dom) {
         ),
         'resources': tc.gam.project_widgets.resources(
             tc.jQ.extend(widget_options, { name:'resources', dom: dom.find('.box.resources') })
-        )/*,
-        'related_resources': new tc.gam.project_widgets.related_resources(
-            tc.jQ.extend(widget_options, { dom: dom.find('.box.related-resources') })
         ),
-        'add_link': new tc.gam.project_widgets.add_link(
+        'related_resources': tc.gam.project_widgets.related_resources(
+            tc.jQ.extend(widget_options, { name:'related_resources', dom: dom.find('.box.related-resources') })
+        )/*,
+        'add_link': tc.gam.project_widgets.add_link(
             tc.jQ.extend(widget_options, { dom: dom.find('.box.add-link') })
         ),
-        'conversation': new tc.gam.project_widgets.conversation(
+        'conversation': tc.gam.project_widgets.conversation(
             tc.jQ.extend(widget_options, { dom: dom.find('.box.conversation') })
         ),
-        'members': new tc.gam.project_widgets.members(
+        'members': tc.gam.project_widgets.members(
             tc.jQ.extend(widget_options, { dom: dom.find('.box.members') })
         )*/
     };
