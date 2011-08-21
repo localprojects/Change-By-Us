@@ -10,9 +10,9 @@ tc.gam.project = function(app, dom) {
     };
 
     app.components.project_widgets = {
-        /*'infopane': tc.gam.project_widgets.infopane(
+        'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend(widget_options, { name:'infopane', dom: dom.find('.box.mission') })
-        ),
+        )/*,
         'resources': new tc.gam.project_widgets.resources(
             tc.jQ.extend(widget_options, { dom: dom.find('.box.resources') })
         ),
