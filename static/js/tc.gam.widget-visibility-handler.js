@@ -10,7 +10,7 @@ tc.gam.widgetVisibilityHandler = function(options) {
             action = hash.split(',')[0],
             widget = hash.split(',')[1];
         
-        tc.util.log('&&& hashchange', action, widget);
+        tc.util.log('&&& hashchange: ' + action + ', ' + widget);
             
         self._triggerWidgetVisibilityEvent(action, widget);
     };

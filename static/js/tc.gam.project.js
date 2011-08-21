@@ -6,16 +6,17 @@ tc.gam.project = function(app, dom) {
         app: app,                                   //for merlin
         project_data: app.app_page.data.project,    //project specific data
         user: app.app_page.user,                    //user data
-        project_user: app.app_page.project_user     //project user data?
+        project_user: app.app_page.project_user,    //project user data
+        media_root: app.app_page.media_root         //root directory for images and such
     };
 
     app.components.project_widgets = {
         'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend(widget_options, { name:'infopane', dom: dom.find('.box.mission') })
-        )/*,
-        'resources': new tc.gam.project_widgets.resources(
-            tc.jQ.extend(widget_options, { dom: dom.find('.box.resources') })
         ),
+        'resources': tc.gam.project_widgets.resources(
+            tc.jQ.extend(widget_options, { name:'resources', dom: dom.find('.box.resources') })
+        )/*,
         'related_resources': new tc.gam.project_widgets.related_resources(
             tc.jQ.extend(widget_options, { dom: dom.find('.box.related-resources') })
         ),
