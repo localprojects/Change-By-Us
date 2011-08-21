@@ -7,11 +7,18 @@ tc.gam.widgetVisibilityHandler = function(options) {
     
     self._onHashChange = function(event) {
         var hash = window.location.hash.substring(1, window.location.hash.length),
-            action = hash.split(',')[0],
-            widget = hash.split(',')[1];
-        
-        tc.util.log('&&& hashchange: ' + action + ', ' + widget);
+            action, widget;
             
+        // For project-home hash, fire go_home.
+        if (hash === 'project-home') {
+            action = 'show';
+            widget = 'home';
+        } else {
+            action = hash.split(',')[0];
+            widget = hash.split(',')[1];
+        }
+            
+        tc.util.log('&&& hashchange: ' + action + ', ' + widget);
         self._triggerWidgetVisibilityEvent(action, widget);
     };
     
