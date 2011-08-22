@@ -82,7 +82,7 @@ tc.gam.project_widgets.add_link = function(options) {
                                 if(data == 'False'){
                                     return false;
                                 }
-                                project.dom.trigger('resources-refresh',{type:'link'});
+                                tc.jQ(tc).trigger('resources-refresh',{type:'link'});
                                 window.location.hash = 'project-home';
                             }
                         });
