@@ -43,11 +43,6 @@ class Admin(Controller):
                 return self.getFlaggedMessages()
             else:
                 return self.not_found()
-        elif (action == 'goal'):
-            if (param0 == 'getflagged'):
-                return self.getFlaggedGoals()
-            else:
-                return self.not_found()
         elif (action == 'link'):
             if (param0 == 'getflagged'):
                 return self.getFlaggedLinks()
@@ -126,13 +121,6 @@ class Admin(Controller):
                 return self.deleteItem('project_message', self.request('message_id'))
             elif (param0 == 'approve'):
                 return self.approveItem('project_message', self.request('message_id'))                
-            else:
-                return self.not_found()
-        elif (action == 'goal'):
-            if (param0 == 'delete'):
-                return self.deleteItem('project_goal', self.request('goal_id'))
-            elif (param0 == 'approve'):
-                return self.approveItem('project_goal', self.request('goal_id'))
             else:
                 return self.not_found()
         elif (action == 'link'):
@@ -262,26 +250,6 @@ class Admin(Controller):
                   
         return self.getFlaggedItems(sql)
 
-        
-    def getFlaggedGoals(self):
-        sql = """select p.title as project_title, 
-                         p.project_id,
-                         'goal' as item_type,
-                         pg.project_goal_id as item_id,
-                         pg.description as item_description,
-                         cast(pg.created_datetime as char) as item_created_datetime,
-                         u.first_name as owner_first_name,
-                         u.last_name as owner_last_name,
-                         u.user_id as owner_user_id
-                  from project_goal pg
-                  inner join project p on pg.project_id = p.project_id
-                  inner join user u on u.user_id = pg.user_id
-                  where pg.is_active = 1 and pg.num_flags > 0
-                  order by pg.created_datetime desc
-                  limit $limit offset $offset"""
-                  
-        return self.getFlaggedItems(sql)
-
     def getFlaggedLinks(self):
         sql = """select p.title as project_title, 
                          p.project_id,
@@ -333,13 +301,6 @@ class Admin(Controller):
                   inner join project p on pm.project_id = p.project_id
                   inner join user u on u.user_id = pm.user_id
                   where pm.is_active = 1 and pm.num_flags > 0
-                  union
-                  select 'goals' as flagged_item,
-                         count(pg.project_goal_id) as num
-                  from project_goal pg
-                  inner join project p on pg.project_id = p.project_id
-                  inner join user u on u.user_id = pg.user_id
-                  where pg.is_active = 1 and pg.num_flags > 0
                   union
                   select 'links' as flagged_item,
                          count(pl.project_link_id) as num
@@ -516,7 +477,6 @@ class Admin(Controller):
         if (self.deleteItem('user', userId)):
             self.removeUserFromAllProjects(userId)
             self.deleteProjectsByUser(userId)
-            self.deleteItemsByUser('project_goal', userId)
             self.deleteItemsByUser('project_message', userId)
             self.deleteItemsByUser('idea', userId)
             
