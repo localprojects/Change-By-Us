@@ -1,9 +1,6 @@
 tc = tc || {};
 tc.gam = tc.gam || {};
 tc.gam.project = function(app, dom) {
-    // Create an object to handle widget visibility events
-    tc.gam.widgetVisibilityHandler();
-
     var widget_options = {
         app: app,                                   //for merlin
         project_data: app.app_page.data.project,    //project specific data
@@ -40,4 +37,6 @@ tc.gam.project = function(app, dom) {
         );
     }
 
+    // Create an object to handle widget visibility events
+    tc.gam.widgetVisibilityHandler();
 };
