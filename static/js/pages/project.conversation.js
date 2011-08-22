@@ -598,14 +598,14 @@ tc.gam.project_widgets.conversation = function(options){
 
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if ('home' === widgetName) {
-            tc.util.log('&&& conversation showing ' + options.name);
+            tc.util.log('&&& showing ' + options.name);
             dom.show();
 
             if(components.merlin){
                 components.merlin.show_step('message');
             }
         } else {
-            tc.util.log('&&& conversation hiding ' + options.name);
+            tc.util.log('&&& hiding ' + options.name);
             dom.hide();
         }
     });

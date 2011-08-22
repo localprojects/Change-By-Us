@@ -177,16 +177,4 @@ tc.gam.project_widgets.resources = function(options){
     
     tc.jQ(tc).bind('resources-loaded', handlers.resources_loaded_handler);
     tc.jQ(tc).bind('resources-refresh', handlers.resource_refresh_handler);
-
-    /* TODO determine if this is even needed
-    tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
-        if (options.name === widgetName) {
-            tc.util.log('&&& showing ' + options.name);
-            dom.show();
-        } else {
-            tc.util.log('not hiding ' + options.name + ', that would be silly');
-            //dom.hide();
-        }
-    });
-    */
 };

@@ -164,13 +164,13 @@ tc.gam.project_widgets.related_resources = function(options){
 
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
-            tc.util.log('&&& related_resources showing ' + options.name);
+            tc.util.log('&&& showing ' + options.name);
             dom.show();
             if((dom.offset().top - elements.window.scrollTop()) < 0){
                 elements.window.scrollTop(0);
             }
         } else {
-            tc.util.log('&&& related_resources hiding ' + options.name);
+            tc.util.log('&&& hiding ' + options.name);
             dom.hide();
         }
     });
