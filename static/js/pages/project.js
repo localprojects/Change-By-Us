@@ -97,20 +97,13 @@ app_page.features.push(function(app) {
  * handling idea invite action.
  */
 app_page.features.push(function(app) {
-    // Create new project object.
-    app.components.project = new tc.gam.project({
-        app: app,
-        data: app_page.data.project,
-        project_user: app_page.project_user,
-        dom: tc.jQ('.continent.project')
-    });
-    
+    tc.gam.project(app, tc.jQ('.continent.project'));
+
     // Bind "create-image-uploaded" to document to handle uploading
     // and image via AJAX call.  when successful, display new image as the
     // project image.
     tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded', {
-        app: app, 
-        project: app.components.project
+        app: app
     }, function(e, d) {
         e.data.app.components.modal.hide();
         if (d.responseJSON.thumbnail_id) {
@@ -118,7 +111,7 @@ app_page.features.push(function(app) {
                 type: 'POST',
                 url: '/project/photo',
                 data: {
-                    project_id: e.data.project.data.project_id,
+                    project_id: app_page.data.project.project_id,
                     image_id: d.responseJSON.thumbnail_id
                 },
                 dataType: 'text',
@@ -230,7 +223,7 @@ app_page.features.push(function(app) {
     // Handle idea invites.
     tc.gam.ideas_invite(app, {
         elements: tc.jQ('a.invite'),
-        ref_project_id: app.components.project.data.project_id
+        ref_project_id: app_page.data.project.project_id
     });
 });
 
