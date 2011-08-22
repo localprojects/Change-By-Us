@@ -27,16 +27,9 @@ tc.gam.project = function(app, dom) {
         ),
         'conversation': tc.gam.project_widgets.conversation(
             tc.jQ.extend({ name: 'conversation', dom: dom.find('.box.conversation') }, widget_options)
-        )/*,
+        ),
         'members': tc.gam.project_widgets.members(
-            tc.jQ.extend({ dom: dom.find('.box.members') }, widget_options)
-        )*/
+            tc.jQ.extend({ name: 'members', dom: dom.find('.box.members') }, widget_options)
+        )
     };
-
-    /*
-    app: app,
-    data: app_page.data.project, //change to app_page.data
-    project_user: app_page.project_user,
-    dom: tc.jQ('.continent.project')
-    */
 };

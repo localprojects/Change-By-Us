@@ -1,28 +1,23 @@
-if(!tc){ var tc = {}; }
-if(!tc.gam){ tc.gam = {}; }
-if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+var tc = tc || {};
+tc.gam = tc.gam || {};
+tc.gam.project_widgets = tc.gam.project_widgets || {};
 
-tc.gam.project_widgets.members = function(project,dom,deps,options){
-    var widget, me;
-    tc.util.log("project.members");
-    me = this;
-    this.options = tc.jQ.extend({name:'members'},options);
-    this.project = project;
-    this.dom = dom;
-    widget = tc.gam.widget(this,project);
+tc.gam.project_widgets.members = function(options){
+    tc.util.log('project.members');
+    var dom = options.dom;
     
-    this.handlers = {
+    var handlers = {
         remove_member:function(e){
             e.preventDefault();
             
-            e.data.project.options.app.components.modal.show({
-                app:e.data.project.options.app,
+            options.app.components.modal.show({
+                app:options.app,
                 source_element:tc.jQ('.modal-content.remove-member'),
                 init: function(modal, callback) {
                     var member_name;
-                    member_name = tc.jQ(e.target).prev().find("a").text();
+                    member_name = tc.jQ(e.target).prev().find('a').text();
                     if (member_name) {
-                        modal.options.element.find(".person-name").text(member_name);
+                        modal.options.element.find('.person-name').text(member_name);
                     }
                     if (tc.jQ.isFunction(callback)) {
                         callback(modal);
@@ -33,10 +28,9 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
                         type:'POST',
                         url:'/project/user/remove',
                         data:{
-                            project_id: e.data.me.options.app.app_page.data.project.project_id,
+                            project_id: options.project_data.project_id,
                             user_id: e.target.href.split(',')[1]
                         },
-                        context:e.data.me,
                         dataType:'text',
                         success:function(data,ts,xhr){
                             var n_members;
@@ -44,9 +38,9 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
                                 return false;
                             }
                             
-                            this.dom.find('#member-'+e.target.href.split(',')[1]).remove();
-                            n_members = this.dom.find('.members-stack').children().length;
-                            this.project.dom.find('.members-counter').text(n_members);
+                            dom.find('#member-'+e.target.href.split(',')[1]).remove();
+                            n_members = dom.find('.members-stack').children().length;
+                            dom.find('.members-counter').text(n_members);
                         }
                     });
                 }
@@ -54,19 +48,19 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
         }
     };
     
-    this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_member);
+    dom.find('a.close').unbind('click').bind('click', handlers.remove_member);
     
-    this.components = {
+    var components = {
         email_merlin:null,
         ideas_carousel:null,
-        ideas_pagination: this.dom.find(".ideas-invite .pagination")
+        ideas_pagination: dom.find('.ideas-invite .pagination')
     };
     
-    this.build_email_merlin = function(){
-        if(this.components.email_merlin){
+    var build_email_merlin = function(){
+        if(components.email_merlin){
             return;
         }
-        this.components.email_merlin = new tc.merlin(options.app,{
+        components.email_merlin = new tc.merlin(options.app,{
             name:'email_invite',
             dom:tc.jQ('.email-invite'),
             next_button:tc.jQ('input.email-invite-submit-button'),
@@ -136,20 +130,19 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
         });
     };
     
-    this.build_email_merlin();
+    build_email_merlin();
     
-    this.dom.find('a.flag-idea').bind('click', {project:project}, function(e){
+    dom.find('a.flag-idea').bind('click', function(e){
         e.preventDefault();
         tc.jQ.ajax({
-            type:"POST",
+            type:'POST',
             url:'/idea/flag',
             data:{
                 idea_id:e.target.hash.split(',')[1]
             },
-            context:tc.jQ(e.target),
-            dataType:"text",
+            dataType:'text',
             success: function(data, ts, xhr) {
-                if (data == "False") {
+                if (data == 'False') {
                     return false;
                 }
                 this.parent().text('Flagged');
@@ -157,62 +150,67 @@ tc.gam.project_widgets.members = function(project,dom,deps,options){
         });
     });
     
-    this.components.ideas_carousel = new tc.carousel({
-        element: this.dom.find(".ideas-invite .carousel"),
+    components.ideas_carousel = new tc.carousel({
+        element: dom.find('.ideas-invite .carousel'),
         pagination: {
-            current: this.components.ideas_pagination.find(".cur-index"),
-            total: this.components.ideas_pagination.find(".total")
+            current: components.ideas_pagination.find('.cur-index'),
+            total: components.ideas_pagination.find('.total')
         }
     });
-    if (!this.components.ideas_carousel.is_rendered()) {
-        this.components.ideas_pagination.hide();
+    if (!components.ideas_carousel.is_rendered()) {
+        components.ideas_pagination.hide();
     }
     
-    dom.find('a.remove-idea').bind('click', {project:project, app:options.app}, function(e){
+    dom.find('a.remove-idea').bind('click', function(e){
         e.preventDefault();
         
-        e.data.app.components.modal.show({
-            app:e.data.app,
+        options.app.components.modal.show({
+            app:options.app,
             source_element:tc.jQ('.modal-content.remove-idea'),
             submit:function(){
                 var id;
-                id = e.target.hash.split(",")[1];
+                id = e.target.hash.split(',')[1];
                 tc.jQ.ajax({
                     type:'POST',
                     url:'/idea/remove',
                     data:{
                         idea_id: id
                     },
-                    context: tc.jQ(e.target),
                     dataType:'text',
                     success:function(data,ts,xhr){
                         if(data == 'False'){
                             return false;
                         }
-                        e.data.project.dom.trigger("project-idea-remove", { id: id });
+                        tc.jQ(tc).trigger('project-idea-remove', { id: id });
                     }
                 });
             }
         });
     });
 
-    return {
-        show:function(propagate) {
-            widget.show(propagate);
-            if (me.components.ideas_carousel.has_items() && !me.components.ideas_carousel.is_rendered()) {
-                me.components.ideas_carousel.render();
-                me.components.ideas_pagination.show();
+    tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
+        if (options.name === widgetName) {
+            tc.util.log('&&& add_link showing ' + options.name);
+            dom.show();
+
+            if (components.ideas_carousel.has_items() && !components.ideas_carousel.is_rendered()) {
+                components.ideas_carousel.render();
+                components.ideas_pagination.show();
             }
-            if(me.components.email_merlin){
-                me.components.email_merlin.show_step('email-invite-info');
+            
+            if(components.email_merlin){
+                components.email_merlin.show_step('email-invite-info');
             }
-        },
-        hide:widget.hide,
-        remove_idea: function(id) {
-            if (me.components.ideas_carousel.carousel) {
-                me.components.ideas_carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
-                me.components.ideas_carousel.update_pagination().update_navigation();
-            }
+        } else {
+            tc.util.log('&&& add_link hiding ' + options.name);
+            dom.hide();
         }
-    };
+    });
+    
+    tc.jQ(tc).bind('project-idea-remove', function(event, id) {
+        if (components.ideas_carousel.carousel) {
+            components.ideas_carousel.carousel.getRoot().find('li[rel=idea-'+ id +']').remove();
+            components.ideas_carousel.update_pagination().update_navigation();
+        }
+    });
 };
