@@ -14,22 +14,22 @@ tc.gam.project = function(app, dom) {
 
     app.components.project_widgets = {
         'infopane': tc.gam.project_widgets.infopane(
-            tc.jQ.extend(widget_options, { name:'infopane', dom: dom.find('.box.mission') })
+            tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
         ),
         'resources': tc.gam.project_widgets.resources(
-            tc.jQ.extend(widget_options, { name:'resources', dom: dom.find('.box.resources') })
+            tc.jQ.extend({ name: 'resources', dom: dom.find('.box.resources') }, widget_options)
         ),
         'related_resources': tc.gam.project_widgets.related_resources(
-            tc.jQ.extend(widget_options, { name:'related_resources', dom: dom.find('.box.related-resources') })
-        )/*,
-        'add_link': tc.gam.project_widgets.add_link(
-            tc.jQ.extend(widget_options, { dom: dom.find('.box.add-link') })
+            tc.jQ.extend({ name: 'related_resources', dom: dom.find('.box.related-resources') }, widget_options)
         ),
+        'add_link': tc.gam.project_widgets.add_link(
+            tc.jQ.extend({ name: 'add_link', dom: dom.find('.box.add-link') }, widget_options)
+        )/*,
         'conversation': tc.gam.project_widgets.conversation(
-            tc.jQ.extend(widget_options, { dom: dom.find('.box.conversation') })
+            tc.jQ.extend({ dom: dom.find('.box.conversation') }, widget_options)
         ),
         'members': tc.gam.project_widgets.members(
-            tc.jQ.extend(widget_options, { dom: dom.find('.box.members') })
+            tc.jQ.extend({ dom: dom.find('.box.members') }, widget_options)
         )*/
     };
 

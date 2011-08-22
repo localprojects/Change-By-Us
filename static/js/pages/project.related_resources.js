@@ -4,17 +4,14 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.related_resources = function(options){
     tc.util.log("project.related_resources");
-    var dom = options.dom;
-
-    //data = this.options.app.app_page.data;
-
-    var elements = {
-        window: tc.jQ(window),
-        resource_counter: dom.find(".counter"),
-        resources_table: dom.find("table.resources-list"),
-        empty_box: dom.find(".empty-state-box")
-    };
-    
+    var dom = options.dom,
+        elements = {
+            window: tc.jQ(window),
+            resource_counter: dom.find(".counter"),
+            resources_table: dom.find("table.resources-list"),
+            empty_box: dom.find(".empty-state-box")
+        };
+        
     var handlers = {
         resources_loaded: function(data, ts, xhr) {
             var d;
@@ -167,15 +164,16 @@ tc.gam.project_widgets.related_resources = function(options){
 
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
-            tc.util.log('&&& showing ' + options.name);
+            tc.util.log('&&& related_resources showing ' + options.name);
             dom.show();
             if((dom.offset().top - elements.window.scrollTop()) < 0){
                 elements.window.scrollTop(0);
             }
         } else {
-            tc.util.log('&&& hiding ' + options.name);
+            tc.util.log('&&& related_resources hiding ' + options.name);
             dom.hide();
         }
+        console.log(options);
     });
     
     getRelatedResources();
