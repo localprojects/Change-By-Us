@@ -102,6 +102,7 @@ class Controller (object):
                                                 is_leader = self.user.isLeader)
 
             except Exception, e:
+                log.error('*** Error setting the user')
                 log.error(e)
                 self.session.user_id = None
 
