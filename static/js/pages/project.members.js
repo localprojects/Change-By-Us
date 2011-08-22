@@ -145,7 +145,7 @@ tc.gam.project_widgets.members = function(options){
                 if (data == 'False') {
                     return false;
                 }
-                this.parent().text('Flagged');
+                tc.jQ(e.target).parent().text('Flagged');
             }
         });
     });
@@ -190,7 +190,7 @@ tc.gam.project_widgets.members = function(options){
 
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
-            tc.util.log('&&& add_link showing ' + options.name);
+            tc.util.log('&&& showing ' + options.name);
             dom.show();
 
             if (components.ideas_carousel.has_items() && !components.ideas_carousel.is_rendered()) {
@@ -202,14 +202,14 @@ tc.gam.project_widgets.members = function(options){
                 components.email_merlin.show_step('email-invite-info');
             }
         } else {
-            tc.util.log('&&& add_link hiding ' + options.name);
+            tc.util.log('&&& hiding ' + options.name);
             dom.hide();
         }
     });
     
     tc.jQ(tc).bind('project-idea-remove', function(event, id) {
         if (components.ideas_carousel.carousel) {
-            components.ideas_carousel.carousel.getRoot().find('li[rel=idea-'+ id +']').remove();
+            components.ideas_carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
             components.ideas_carousel.update_pagination().update_navigation();
         }
     });

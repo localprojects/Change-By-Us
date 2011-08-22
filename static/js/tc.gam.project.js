@@ -32,4 +32,12 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'members', dom: dom.find('.box.members') }, widget_options)
         )
     };
+    
+    // Add fresh ideas component if available.
+    if (tc.gam.project_widgets.fresh_ideas) {
+        app.components.related_ideas = tc.gam.project_widgets.fresh_ideas(
+            tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
+        );
+    }
+
 };
