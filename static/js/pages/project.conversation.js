@@ -278,7 +278,7 @@ tc.gam.project_widgets.conversation = function(options){
         media_thumb_click:function(event) {
             var $carousel, 
                 $carouselControls,
-                fileId = parseInt(tc.jQ(this).attr('data-id'), 10);
+                attachmentId = tc.jQ(this).attr('data-id');
             
             event.preventDefault();
 
@@ -303,7 +303,7 @@ tc.gam.project_widgets.conversation = function(options){
                 },
                 dataType:'json',
                 success: function(data, status, xhr) {
-                    var i, selectedIndex = 0, html = '';
+                    var i, imageIndex = 0, selectedIndex = 0, html = '';
                     
                     //show the controls if more than one result
                     if (data.length > 1) {
@@ -317,9 +317,10 @@ tc.gam.project_widgets.conversation = function(options){
                                     '<div class="attachment-desc">' + data[i].body + '</div></li>';
                             
                             //Is this the index that we clicked to open the carousel?
-                            if (data[i].file_id === fileId) {
-                                selectedIndex = i;
+                            if (data[i].attachment.id === attachmentId) {
+                                selectedIndex = imageIndex;
                             }
+                            imageIndex++;
                         }
                     }
 
