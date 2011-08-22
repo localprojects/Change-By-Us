@@ -173,7 +173,6 @@ tc.gam.project_widgets.related_resources = function(options){
             tc.util.log('&&& related_resources hiding ' + options.name);
             dom.hide();
         }
-        console.log(options);
     });
     
     getRelatedResources();

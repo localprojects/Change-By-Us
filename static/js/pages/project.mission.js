@@ -228,6 +228,4 @@ tc.gam.project_widgets.infopane = function(options){
     elements.mission.init( dom.find(".our-mission") );
     elements.location_map.init();
     elements.keywords.init( dom.find(".keywords") );
-
-    //TODO hook up the show/hide event listeners
 };

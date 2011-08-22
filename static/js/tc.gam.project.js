@@ -24,10 +24,10 @@ tc.gam.project = function(app, dom) {
         ),
         'add_link': tc.gam.project_widgets.add_link(
             tc.jQ.extend({ name: 'add_link', dom: dom.find('.box.add-link') }, widget_options)
-        )/*,
-        'conversation': tc.gam.project_widgets.conversation(
-            tc.jQ.extend({ dom: dom.find('.box.conversation') }, widget_options)
         ),
+        'conversation': tc.gam.project_widgets.conversation(
+            tc.jQ.extend({ name: 'conversation', dom: dom.find('.box.conversation') }, widget_options)
+        )/*,
         'members': tc.gam.project_widgets.members(
             tc.jQ.extend({ dom: dom.find('.box.members') }, widget_options)
         )*/

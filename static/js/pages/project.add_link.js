@@ -110,7 +110,5 @@ tc.gam.project_widgets.add_link = function(options) {
             tc.util.log('&&& add_link hiding ' + options.name);
             dom.hide();
         }
-        
-        console.log(options);
     });
 };
