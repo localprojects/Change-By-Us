@@ -1,3 +1,8 @@
+if (window.EnvJasmine){
+    EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.base.js');
+    EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.validate.js');
+}
+
 /**
  * Tests: GAM Validate Tests
  */

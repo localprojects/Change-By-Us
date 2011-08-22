@@ -1,3 +1,9 @@
+if (window.EnvJasmine) {
+    EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.base.js');
+    EnvJasmine.load(EnvJasmine.jsDir + 'tc.util.js');
+    EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.widget-visibility-handler.js');
+}
+
 describe('tc.gam.widget-visibility-handler.js', function () {
     var visHandler = tc.gam.widgetVisibilityHandler();
 
@@ -27,7 +33,5 @@ describe('tc.gam.widget-visibility-handler.js', function () {
             expect(hideListener.mostRecentCall.args[1]).toEqual('hideWidget');
             expect(hideListener).toHaveBeenCalled();
         });
-        
-        
     });
 });
