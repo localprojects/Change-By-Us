@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from framework.log import log
 from framework.config import *
 from framework.emailer import *
+from framework.util import local_utcoffset
 import giveaminute.idea as mIdea
 import giveaminute.messaging as mMessaging
 import helpers.censor as censor
@@ -62,7 +65,6 @@ limit 1"""
         endorsements = self.getEndorsements()
         links = self.getLinks()
         projectResources = self.getResources()
-        goals = self.getGoals()
         messages = self.getMessages()
         relatedIdeas = self.getRelatedIdeas()
 
@@ -87,7 +89,6 @@ limit 1"""
                                 members = dict(items = members),
                                 resources = dict(links = dict(items = links),
                                                 organizations = dict(items = projectResources)),
-                                goals = dict(items = goals),
                                 messages = dict(n_returned = len(messages),
                                                 offset = 0,
                                                 total = len(messages),
@@ -161,9 +162,6 @@ limit 1"""
 
         return ideas
 
-    def getGoals(self):
-        return getGoals(self.db, self.id)
-
     def getMessages(self):
         return getMessages(self.db, self.id, 10, 0)
 
@@ -212,7 +210,7 @@ def message(id,
     A ``dict`` with keys:
 
     - ``message_id`` -- Primary key
-    - ``message_type`` -- ``'join'``, ``'goal_achieved'``,  ``'endorsement'``,
+    - ``message_type`` -- ``'join'``,  ``'endorsement'``,
       ``'member_comment'``, or ``'admin_comment'``
     - ``file_id`` -- The primary key of the attachment, if any
     - ``owner`` -- The user that owns the message
@@ -231,15 +229,13 @@ def message(id,
     attachmentObj = smallAttachment(attachmentMediaType, 
                                     attachmentMediaId, 
                                     attachmentTitle)
-
-    #something for goals here
-
+    
     return dict(message_id = id,
                 message_type = type,
                 file_id = attachmentId,
                 owner = smallUserDisplay(userId, name, imageId),
                 body = message,
-                created = str(createdDatetime),
+                created = str(createdDatetime - timedelta(hours=util.local_utcoffset())),
                 idea = ideaObj,
                 attachment = attachmentObj,
                 project_id = projectId,
@@ -361,15 +357,6 @@ def idea(id, description, userId, firstName, lastName, createdDatetime, submissi
                 owner = smallUser(userId, firstName, lastName, None),
                 created = str(createdDatetime),
                 submission_type = submissionType)
-
-def goal(id, description, isFeatured, isAccomplished, time_n, time_unit, userId, displayName, imageId, createdDatetime):
-    return dict(goal_id = id,
-                text = description,
-                active = isFeatured,
-                accomplished = isAccomplished,
-                timeframe = "%s %s" % (str(time_n), time_unit),
-                owner = smallUserDisplay(userId, displayName, imageId),
-                created_datetime = str(createdDatetime))
 
 ## END FORMATTING FUNCTIONS
 
@@ -1024,8 +1011,6 @@ def getLeaderboardProjects(db, limit = 10, offset = 0):
                       u.user_id as owner_user_id,
                       u.affiliation as owner_affiliation,
                       u.group_membership_bitmask as owner_group_membership_bitmask,
-                      (select count(*) from project_goal pg where pg.project_id = p.project_id and pg.is_accomplished = 1 and pg.is_active)
-                        as goal_count,
                       (select count(*) from project__user pu where pu.project_id = p.project_id)
                         as user_count
                 from project p
@@ -1033,7 +1018,7 @@ def getLeaderboardProjects(db, limit = 10, offset = 0):
                 inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1
                 inner join user u on u.user_id = o.user_id and u.is_active = 1
                 where p.is_active = 1
-                order by (goal_count * 2) + (user_count * 5) desc
+                order by (user_count * 5) desc
                 limit $limit offset $offset"""
 
         data = list(db.query(sql, {'limit':limit, 'offset':offset}))
@@ -1043,87 +1028,7 @@ def getLeaderboardProjects(db, limit = 10, offset = 0):
 
     return data
 
-def addGoalToProject(db, projectId, description, timeframeNumber, timeframeUnit, userId):
-    try:
-        # censor behavior
-        numFlags = censor.badwords(db, description)
-        isActive = 0 if numFlags == 2 else 1
-
-        db.insert('project_goal', project_id = projectId,
-                                    description = description,
-                                    time_frame_numeric = int(timeframeNumber),
-                                    time_frame_unit = timeframeUnit,
-                                    user_id = userId,
-                                    created_datetime = None,
-                                    num_flags = numFlags,
-                                    is_active = isActive)
-
-        return True;
-    except Exception, e:
-        log.info("*** problem adding goal to project")
-        log.error(e)
-        return False
-
-def featureProjectGoal(db, projectGoalId):
-    # TODO should put rollback/commit here
-    try:
-        sqlupdate1 = """update project_goal g1, project_goal g2 set g1.is_featured = 0
-                where g1.project_id = g2.project_id and g2.project_goal_id = $id"""
-        db.query(sqlupdate1, {'id':projectGoalId})
-
-        sqlupdate2 = "update project_goal set is_featured = 1 where project_goal_id = $id"
-        db.query(sqlupdate2, {'id':projectGoalId})
-
-        return True
-    except Exception, e:
-        log.info("*** problem featuring goal")
-        log.error(e)
-        return False
-
-def accomplishProjectGoal(db, projectGoalId):
-    try:
-        sql = "update project_goal set is_accomplished = 1 where project_goal_id = $id and is_accomplished = 0"
-
-        num_updated = db.query(sql, {'id':projectGoalId})
-
-        if (num_updated > 0):
-            sql = "select project_id, description, user_id from project_goal where project_goal_id = $id limit 1"
-            data = list(db.query(sql, {'id':projectGoalId}))
-
-            if (len(data) > 0):
-                message = "We completed our goal! '%s'" % data[0].description
-
-                if (not addMessage(db,
-                                    data[0].project_id,
-                                    message,
-                                    'goal_achieved',
-                                    data[0].user_id,
-                                    None,
-                                    projectGoalId)):
-                    log.warning("*** couldn't create goal accomplished message for project goal id = %s" % projectGoalId)
-            else:
-                log.warning("*** ")
-        else:
-            log.warning("*** ")
-
-        return True
-    except Exception, e:
-        log.info("*** problem accomplishing goal")
-        log.error(e)
-        return False
-
-def removeProjectGoal(db, projectGoalId):
-    try:
-        sql = "update project_goal set is_active = 0 where project_goal_id = $id"
-        db.query(sql, {'id':projectGoalId})
-
-        return True
-    except Exception, e:
-        log.info("*** problem removing goal")
-        log.error(e)
-        return False
-
-def addMessage(db, projectId, message, message_type, userId = None, ideaId = None,  projectGoalId = None, attachmentId = None):
+def addMessage(db, projectId, message, message_type, userId = None, ideaId = None, attachmentId = None):
     """
     Insert a new record into the project_message table.  Return true if
     successful.  Otherwise, if any exceptions arise, log and return false.
@@ -1139,7 +1044,6 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
                                     user_id = userId,
                                     idea_id = ideaId,
                                     file_id = attachmentId,
-                                    project_goal_id = projectGoalId,
                                     message_type  = message_type,
                                     num_flags = numFlags,
                                     is_active = isActive)
@@ -1160,38 +1064,6 @@ def removeMessage(db, messageId):
         log.error(e)
         return False
 
-
-def getGoals(db, projectId):
-    goals = []
-
-    sql = """select g.project_goal_id, g.description, g.time_frame_numeric, g.time_frame_unit, g.is_accomplished, g.is_featured,
-                  u.user_id, u.first_name, u.last_name, u.affiliation, u.group_membership_bitmask, u.image_id, g.created_datetime
-            from project_goal g
-            inner join user u on u.user_id = g.user_id
-            inner join project__user pu on pu.user_id = g.user_id and pu.project_id = g.project_id
-            where g.project_id = $id and g.is_active = 1"""
-
-    try:
-        data = list(db.query(sql, {'id':projectId}))
-
-        if len(data) > 0:
-            for item in data:
-                goals.append(goal(item.project_goal_id,
-                                  item.description,
-                                  bool(item.is_featured),
-                                  bool(item.is_accomplished),
-                                  item.time_frame_numeric,
-                                  item.time_frame_unit,
-                                  item.user_id,
-                                  userNameDisplay(item.first_name, item.last_name, item.affiliation, isFullLastName(item.group_membership_bitmask)),
-                                  item.image_id,
-                                  item.created_datetime))
-    except Exception, e:
-        log.info("*** couldn't get goals")
-        log.error(e)
-
-    return goals
-
 def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
     """
     Return a list of dictionaries with data representing project messages
@@ -1201,7 +1073,7 @@ def getMessages(db, projectId, limit = 10, offset = 0, filterBy = None):
     """
     messages = []
 
-    if (filterBy not in ['member_comment','admin_comment','goal_achieved','join','endorsement']):
+    if (filterBy not in ['member_comment','admin_comment','join','endorsement']):
         filterBy = None
 
     try:

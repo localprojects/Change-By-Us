@@ -291,29 +291,6 @@ CREATE TABLE `project_endorsement` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `project_goal`
---
-
-DROP TABLE IF EXISTS `project_goal`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `project_goal` (
-  `project_goal_id` int(11) NOT NULL AUTO_INCREMENT,
-  `project_id` int(11) NOT NULL,
-  `description` varchar(255) NOT NULL,
-  `time_frame_numeric` int(11) DEFAULT NULL,
-  `time_frame_unit` enum('day','week','month') DEFAULT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `is_accomplished` tinyint(1) NOT NULL DEFAULT '0',
-  `num_flags` smallint(6) NOT NULL DEFAULT '0',
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_datetime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`project_goal_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `project_invite`
 --
 
@@ -381,9 +358,8 @@ CREATE TABLE `project_message` (
   `project_message_id` int(11) NOT NULL AUTO_INCREMENT,
   `project_id` int(11) NOT NULL,
   `message` varchar(255) DEFAULT NULL,
-  `message_type` enum('member_comment','admin_comment','goal_achieved','join','endorsement') DEFAULT NULL,
+  `message_type` enum('member_comment','admin_comment','join','endorsement') DEFAULT NULL,
   `idea_id` int(11) DEFAULT NULL,
-  `project_goal_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `num_flags` smallint(6) NOT NULL DEFAULT '0',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',

@@ -221,10 +221,6 @@
 												template = generate_notification(message, "join-notification");
 												break;
 												
-											case "goal_achieved":
-												template = generate_notification(message, "goal-achieved-notification");
-												break;
-											
 											case "endorsement":
 												template = generate_notification(message, "endorsement-notification");
 												break;

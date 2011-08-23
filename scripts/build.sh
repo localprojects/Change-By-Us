@@ -18,10 +18,10 @@ rm -r modules
 # Models.sql reminder
 echo "========= MODELING ============"
 echo "Ensure that the models.sql file is up to date with something similar to:"
-echo "mysqldump --no-data -u USER_NAME -p DB_NAME | sed 's/\(.*ENGINE.*AUTO_INCREMENT=\).*/\10;/g' > sql/models-temp.sql"
+echo "mysqldump --no-data -u USER_NAME -p DB_NAME | sed 's/\(.*ENGINE.*AUTO_INCREMENT=\).*/\10;/g' > sql/models.sql"
 echo ""
 echo "Also make sure migrations scripts are created."
 
 # Release notes
-echo "========= MODELING ============"
+echo "========= UPDATE DOCS ============"
 echo "Make sure the following are up to date: CHANGELOG.txt, UPGRADE.txt, README.txt, INSTALL.txt"

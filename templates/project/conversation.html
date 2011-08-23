@@ -17,7 +17,6 @@
                         <option selected='true' value='all'>All Messages</option>
                         <option value='member_comment'>Member Comments</option>
                         <option value='admin_comment'>Admin Comments</option>
-                        <option value='goal_achieved'>Goal Achieved</option>
                         <option value='join'>Join</option>
                         <option value='endorsement'>Endorsement</option>
                     </select>
@@ -102,9 +101,9 @@
                                 {% else %}
                                     {% if message.attachment %}
                                         {% if message.attachment.type == 'file' %}
-                                            <a data-id="{{ message.file_id }}" class="file-thumb file" href="{{ message.attachment.url }}" target="_blank"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
+                                            <a data-id="{{ message.attachment.id }}" class="file-thumb file" href="{{ message.attachment.url }}" target="_blank"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
                                         {% else %}
-                                            <a data-id="{{ message.file_id }}" class="file-thumb media" href="javascript:void(0);"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
+                                            <a data-id="{{ message.attachment.id }}" class="file-thumb media" href="javascript:void(0);"><img src="{{ message.attachment.medium_thumb_url }}" alt="{{ message.attachment.title }}"></a>
                                         {% endif %}
                                     {% endif %}
                                     <blockquote class="serif">
@@ -117,8 +116,6 @@
                         <span class="aside">
                             {% if message.message_type == 'join' %}
                                 <cite class="meta-hd"><strong><a href="/useraccount/{{ message.owner.u_id }}">{{ message.owner.name }}</a></strong> joined the project!</cite>
-                            {% elif message.message_type == 'goal_achieved' %}
-
                             {% elif message.message_type == 'endorsement' %}
 
                             {% elif message.message_type == 'member_comment' or message.message_type == 'admin_comment' %}
@@ -205,11 +202,6 @@
             <cite class="meta-ft">Just Now&hellip;</cite>
         </span>
     </div>
-</div>
-
-<div class='template-content modal-content add-message-no-user'>
-    <p>You must <a href='/join'>register</a> or <a href='/login'>login</a> with {{ d.config.site.name }} in order to add a goal to this project.</p>
-    <a class='close' href="#"><span>close</span></a>
 </div>
 
 <div class="template-content modal-content confirm-delete remove-message">

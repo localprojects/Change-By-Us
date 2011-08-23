@@ -2748,277 +2748,47 @@ tc.inlineLocationEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, 
 
 
 /******************** Begin ./static/js/tc.gam.project.js  ********************/
-/**
- * File: Project
- * This file provides the main logic, event handling, and
- * widget container for the Project page and features.
- *
- * Filename:
- * tc.game.project.js
- * 
- * Dependencies:
- * - tc.gam.base.js
- * - tc.utils.js
- * - tc.gam.app.js
- */
-
-/**
- * Variable: tc.gam.project_widgets
- * Container for project widgets.
- */
-tc.gam.project_widgets = tc.gam.project_widgets || {};
-
-/**
- * Function: tc.gam.widget
- * Widget object to extend other widgets.  Specifically
- * this adds a show and hide function for each widget.
- *
- * Parameters:
- * inheritor - {Object} Object to add functionality to.
- * project - {Object} Project object for DOM use?
- *
- * Returns:
- * {Object} Original inheritor object passed in with new
- * properties.
- */
-tc.gam.widget = function (inheritor, project) {
-    if (!inheritor) {
-        return;
-    }
-
-    inheritor.show = function (propagate) {
-        if (inheritor.dom) {
-            inheritor.dom.show();
-        }
-        if (propagate !== false) {
-            project.dom.trigger('project-widget-show', {
-                name: inheritor.options.name
-            });
-        }
+tc = tc || {};
+tc.gam = tc.gam || {};
+tc.gam.project = function(app, dom) {
+    var widget_options = {
+        app: app,                                   //for merlin
+        project_data: app.app_page.data.project,    //project specific data
+        user: app.app_page.user,                    //user data
+        project_user: app.app_page.project_user,    //project user data
+        media_root: app.app_page.media_root         //root directory for images and such
     };
 
-    inheritor.hide = function (propagate) {
-        if (inheritor.dom) {
-            inheritor.dom.hide();
-        }
-        if (propagate !== false) {
-            project.dom.trigger('project-widget-hide', {
-                name: inheritor.options.name
-            });
-        }
+    app.components.project_widgets = {
+        'infopane': tc.gam.project_widgets.infopane(
+            tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
+        ),
+        'resources': tc.gam.project_widgets.resources(
+            tc.jQ.extend({ name: 'resources', dom: dom.find('.box.resources') }, widget_options)
+        ),
+        'related_resources': tc.gam.project_widgets.related_resources(
+            tc.jQ.extend({ name: 'related_resources', dom: dom.find('.box.related-resources') }, widget_options)
+        ),
+        'add_link': tc.gam.project_widgets.add_link(
+            tc.jQ.extend({ name: 'add_link', dom: dom.find('.box.add-link') }, widget_options)
+        ),
+        'conversation': tc.gam.project_widgets.conversation(
+            tc.jQ.extend({ name: 'conversation', dom: dom.find('.box.conversation') }, widget_options)
+        ),
+        'members': tc.gam.project_widgets.members(
+            tc.jQ.extend({ name: 'members', dom: dom.find('.box.members') }, widget_options)
+        )
     };
-
-    return inheritor;
-};
-
-/**
- * Function: tc.gam.project
- * Project object that handles overarching logic of project.
- *
- * Parameters:
- * options - {Object} Object of options
- */
-tc.gam.project = function(options) {
-    var hash_onload;
-    var me = this;
-    var this_project = this;
-
-    // Combine options (this is currently unnecessary).
-    this.options = tc.jQ.extend({}, options);
-
-    // Define local properties.
-    this.dom = this.options.dom;
-    this.event_data = {
-        project: this
-    };
-    this.data = this.options.data;
-    this.widget = new tc.gam.widget(null, this);
-
-    // Get hash location.
-    hash_onload = window.location.hash;
-
-    // Components of the project interface.
-    this.components = {
-        'infopane': new tc.gam.project_widgets.infopane(this, this.dom.find('.box.mission'),
-            { widget: this.widget }, { app: options.app }),
-        'resources': new tc.gam.project_widgets.resources(this, this.dom.find('.box.resources'),
-            { widget: this.widget }, { app: options.app }),
-        'related_resources': new tc.gam.project_widgets.related_resources(this, this.dom.find('.box.related-resources'),
-            { widget: this.widget }, { app: options.app }),
-        'add_link': new tc.gam.project_widgets.add_link(this, this.dom.find('.box.add-link'),
-            { widget: this.widget }, { app: options.app }),
-        'goals_main': new tc.gam.project_widgets.goals_main(this, this.dom.find('.box.goals-main'),
-            { widget: this.widget }, { app: options.app }),
-        'goals_add': new tc.gam.project_widgets.goals_add(this, this.dom.find('.box.goals-add'),
-            { widget: this.widget }, { app: options.app }),
-        'conversation': new tc.gam.project_widgets.conversation(this, this.dom.find('.box.conversation'),
-            { widget: this.widget }, { app: options.app }),
-        'members': new tc.gam.project_widgets.members(this, this.dom.find('.box.members'),
-            { widget: this.widget }, { app: options.app })
-    };
-
+    
     // Add fresh ideas component if available.
     if (tc.gam.project_widgets.fresh_ideas) {
-        this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,
-            this.dom.find('.box.fresh-ideas'), { widget: this.widget }, { app: options.app });
+        app.components.related_ideas = tc.gam.project_widgets.fresh_ideas(
+            tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
+        );
     }
 
-    // Add goals stack if available
-    if (tc.gam.project_widgets.goals_stack) {
-        this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this, 
-            this.dom.find('.box.goals-stack-holder'), { widget: this.widget }, { app: options.app });
-    }
-
-    // Return project page to initial state.
-    this.go_home = function (e) {
-        if (e) {
-            e.data.project.components.goals_main.show(false);
-            e.data.project.components.conversation.show(false);
-
-            if (tc.gam.project_widgets.goals_stack) {
-                e.data.project.components.goals_stack.hide(false);
-            }
-            if (tc.gam.project_widgets.members) {
-                e.data.project.components.members.hide(false);
-            }
-            e.data.project.components.goals_add.hide(false);
-            e.data.project.components.add_link.hide(false);
-            e.data.project.components.related_resources.hide(false);
-        } else {
-            this.components.goals_main.show(false);
-            this.components.conversation.show(false);
-        }
-    }
-
-    // Object of handlers.
-    this.handlers = {
-        // This function shows a specific widget, more specficially
-        // it hides the other widgets.
-        widget_show: function (e, d) {
-            switch (d.name) {
-                case 'members':
-                    e.data.project.components.goals_main.hide(false);
-                    if (tc.gam.project_widgets.goals_stack) {
-                        e.data.project.components.goals_stack.hide(false);
-                    }
-                    e.data.project.components.goals_add.hide(false);
-                    e.data.project.components.conversation.hide(false);
-                    e.data.project.components.add_link.hide(false);
-                    break;
-                    
-                case 'goals_add':
-                    e.data.project.components.goals_main.hide(false);
-                    break;
-                    
-                case 'goals_stack':
-                    e.data.project.components.goals_add.hide(false);
-                    e.data.project.components.goals_main.hide(false);
-                    break;
-                    
-                case 'related_resources':
-                    e.data.project.components.goals_main.hide(false);
-                    if (tc.gam.project_widgets.goals_stack) {
-                        e.data.project.components.goals_stack.hide(false);
-                    }
-                    e.data.project.components.members.hide(false);
-                    e.data.project.components.conversation.hide(false);
-                    e.data.project.components.add_link.hide(false);
-                    break;
-                    
-                case 'add_link':
-                    e.data.project.components.goals_main.hide(false);
-                    if (tc.gam.project_widgets.goals_stack) {
-                        e.data.project.components.goals_stack.hide(false);
-                    }
-                    e.data.project.components.members.hide(false);
-                    e.data.project.components.conversation.hide(false);
-                    e.data.project.components.related_resources.hide(false);
-                    break;
-            }
-        },
-        
-        // Hide widget.  This just uses the go_home function in all cases.
-        widget_hide: function (e, d) {
-            switch (d.name) {
-                case 'members':
-                case 'goals_add':
-                case 'goals_stack':
-                case 'related_resources':
-                case 'add_link':
-                    this_project.go_home(e);
-                    break;
-                }
-        },
-        
-        // Hash change event.
-        hashchange: function (e) {
-            var hash = window.location.hash.substring(1, window.location.hash.length);
-            
-            // For project-home hash, fire go_home.
-            if (hash == 'project-home') {
-                e.preventDefault();
-                this_project.go_home(e);
-                return;
-            }
-            
-            // Handle the format of (show|hide),component-id
-            switch (hash.split(',')[0]) {
-                case 'show':
-                    e.preventDefault();
-                    if (e.data.project.components[hash.split(',')[1]]) {
-                        e.data.project.components[hash.split(',')[1]].show();
-                    }
-                    break;
-                    
-                case 'hide':
-                    e.preventDefault();
-                    if (e.data.project.components[hash.split(',')[1]]) {
-                        e.data.project.components[hash.split(',')[1]].hide();
-                    }
-                    break;
-                }
-        },
-        
-        // Remove idea event.
-        idea_remove: function (e, d) {
-            if (e.data.project.components.related_ideas) {
-                e.data.project.components.related_ideas.remove_idea(d.id);
-            }
-            e.data.project.components.members.remove_idea(d.id);
-        }
-    };
-
-    // Update goals.  (This is believed to be broken)
-    this.update_goals = function () {
-        tc.jQ.ajax({
-            type: 'GET',
-            url: '/project/goals',
-            data: {
-                project_id: me.data.project_id
-            },
-            context: me,
-            dataType: 'text',
-            success: function (data, ts, xhr) {
-                var d;
-                try {
-                    d = tc.jQ.parseJSON(data);
-                } catch (e) {
-                    return;
-                }
-                this.dom.trigger("goals-refresh", [d]);
-            }
-        });
-    };
-
-    // Bind events.
-    tc.jQ(window).bind('hashchange', this.event_data, this.handlers.hashchange);
-    this.dom.bind('project-widget-show', this.event_data, this.handlers.widget_show);
-    this.dom.bind('project-widget-hide', this.event_data, this.handlers.widget_hide);
-    this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
-
-    // Fire off hashchange event.
-    window.location.hash = hash_onload;
-    tc.jQ(window).trigger('hashchange');
+    // Create an object to handle widget visibility events
+    tc.gam.widgetVisibilityHandler();
 };
 /********************   End ./static/js/tc.gam.project.js  ********************/
 

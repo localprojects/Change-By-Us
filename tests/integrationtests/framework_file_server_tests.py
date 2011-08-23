@@ -9,7 +9,8 @@ class S3FileServerTests (TestCase):
     
     def test_S3Upload(self):
         class MyDB:
-            pass
+            def query(self, *args, **kwargs):
+                return []
         db = MyDB()
         
         fs = file_server.S3FileServer(db)
@@ -21,7 +22,7 @@ class S3FileServerTests (TestCase):
         db = main.sessionDB()
         id = fs.add(db, "This is file data", "myapp")
         
-        self.assertEqual(id, 'This is file data')
+        self.assert_(id.endswith('This is file data'))
     
     
 
