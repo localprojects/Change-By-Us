@@ -101,7 +101,7 @@
             <ul class="project-tabs">
                 <li><a href="#" class="project-tab project-home current">Home</a></li>
                 <li><a href="#" class="project-tab project-needs">Needs</a></li>
-                <li><a href="#" class="project-tab project-events">Events</a></li>
+                <!-- li><a href="#" class="project-tab project-events">Events</a></li -->
                 <li><a href="#" class="project-tab project-discussions">Discussions</a></li>
             </ul>
         </div>
@@ -117,21 +117,23 @@
                 </div>
             {% endif %}
 
+            {% include 'project/related_resources.html' %}
+            {% include 'project/add_link.html' %}
+            {% include 'project/members.html' %}
+
             <div class="project-sections">
                 <div class="project-section project-home current">
-                    {% include 'project/related_resources.html' %}
-                    {% include 'project/add_link.html' %}
-                    {% include 'project/conversation.html' %}
-                    {% include 'project/members.html' %}
+                    {% include 'project/home.html' %}
                 </div>
                 <div class="project-section project-needs">
-                    <h2>Needs</h2>
+                    {% include 'project/needs.html' %}
                 </div>
+                <!--
                 <div class="project-section project-events">
-                    <h2>Events</h2>
                 </div>
+                -->
                 <div class="project-section project-discussions">
-                    <h2>Discussions</h2>
+                    {% include 'project/conversation.html' %}
                 </div>
             </div>
         </div>
