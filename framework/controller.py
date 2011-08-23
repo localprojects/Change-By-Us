@@ -10,7 +10,7 @@ from framework.task_manager import *
 import framework.util as util
 import giveaminute.user as mUser
 
-class Controller():
+class Controller (object):
 
     _db = None
 
@@ -102,6 +102,7 @@ class Controller():
                                                 is_leader = self.user.isLeader)
 
             except Exception, e:
+                log.error('*** Error setting the user')
                 log.error(e)
                 self.session.user_id = None
 
@@ -120,7 +121,21 @@ class Controller():
             return False
         return True
 
+    def parameters(self):
+        """Gets a ``dict`` of request parameters"""
+        try:
+            if not web.input():
+                return None
+        except TypeError, e:
+            import urlparse
+            querystring = web.ctx.query[1:]
+            params = urlparse.parse_qs(querystring)
+            return params
+        else:
+            return dict(web.input().items())
+    
     def request(self, var):
+        """Gets the value of the request parameter named ``var``"""
         try:
             if not web.input():
                 return None
@@ -376,9 +391,13 @@ class Controller():
         log.warning("400: %s" % message)
         return web.BadRequest(message)
 
-    def not_found(self):
+    def forbidden(self, data='Forbidden', headers={}):
+        log.error("403: Forbidden: %s" % data)
+        return web.Forbidden(data, headers)
+
+    def not_found(self, data='Not found', headers={}):
         log.error("404: Page not found")
-        return web.NotFound()
+        return web.NotFound(data)
 
     def redirect(self, url):
         # Set the user object in case it's been created since we initialized
@@ -387,6 +406,10 @@ class Controller():
         log.info("303: Redirecting to " + url)
 
         return web.SeeOther(url)
+    
+    def no_method(self):
+        log.error("405: Method not Allowed")
+        return web.NoMethod()
 
     def refresh(self):
         url = web.ctx.path
