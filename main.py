@@ -28,7 +28,7 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             
             # RESTufl Resources
             r'/rest/v1/needs/', 'controllers.rest.NeedsList',
-            r'/rest/v1/needs/(?P<need_id>\d+)/', 'controllers.rest.NeedInstance',
+            r'/rest/v1/needs/(?P<id>\d+)/', 'controllers.rest.NeedInstance',
             
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
             
