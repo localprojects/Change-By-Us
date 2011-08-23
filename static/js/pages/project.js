@@ -203,7 +203,7 @@ app_page.features.push(function(app) {
                     type: 'POST',
                     url: '/project/leave',
                     data: {
-                        project_id: t.attr('href').split(',')[1]
+                        project_id: app.app_page.data.project.project_id
                     },
                     context: app,
                     dataType: 'text',
