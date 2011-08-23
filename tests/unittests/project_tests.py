@@ -1,4 +1,5 @@
 from unittest2 import TestCase
+from datetime import datetime, timedelta
 from paste.fixture import TestApp
 from lib import web
 
@@ -80,4 +81,16 @@ class FileUploadTest (TestCase):
         
         controller.uploadFile()
         self.assertEqual(createProject.S3FileServer.call_count, 1)
+
+
+from giveaminute.project import message
+class Test_MessageObjectFactory (TestCase):
+    def test_converts_datetime_without_timezone_to_utc(self):
+        localnow = datetime.now()
+        utcnow = datetime.utcnow()
+        tz_offset = int((localnow - utcnow).total_seconds() / 60 / 60)
         
+        m = message(id=None, type='my type', message='my message', createdDatetime=datetime(2011, 8, 22, 18, 16, 45) + timedelta(hours=tz_offset), userId=None, name=None, imageId=None)
+        
+        self.assertEqual(m['created'], '2011-08-22 18:16:45')
+

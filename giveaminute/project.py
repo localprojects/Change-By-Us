@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from framework.log import log
 from framework.config import *
 from framework.emailer import *
+from framework.util import local_utcoffset
 import giveaminute.idea as mIdea
 import giveaminute.messaging as mMessaging
 import helpers.censor as censor
@@ -226,13 +229,13 @@ def message(id,
     attachmentObj = smallAttachment(attachmentMediaType, 
                                     attachmentMediaId, 
                                     attachmentTitle)
-
+    
     return dict(message_id = id,
                 message_type = type,
                 file_id = attachmentId,
                 owner = smallUserDisplay(userId, name, imageId),
                 body = message,
-                created = str(createdDatetime),
+                created = str(createdDatetime - timedelta(hours=util.local_utcoffset())),
                 idea = ideaObj,
                 attachment = attachmentObj,
                 project_id = projectId,
