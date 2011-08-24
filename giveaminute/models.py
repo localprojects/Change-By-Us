@@ -32,7 +32,7 @@ def get_orm():
     ``web.ctx`` object.  The object is wrapped so that we can more easily stub
     it when necessary.
     """
-    OrmSession = scoped_session(sessionmaker(bind=engine))
+    OrmSession = scoped_session(sessionmaker(bind=engine, expire_on_commit=False))
     return OrmSession()
 #    import web
 #    return web.ctx.orm

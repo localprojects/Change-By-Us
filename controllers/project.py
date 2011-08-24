@@ -82,7 +82,15 @@ class Project(Controller):
             return self.updateDescription()
         else:
             return self.not_found()
-        
+    
+    __orm = None
+    @property
+    def orm(self):
+        if self.__orm is None:
+            from giveaminute.models import get_orm
+            self.__orm = get_orm()
+        return self.__orm
+    
     def showProject(self, projectId):
         """The main project detail view controller."""
         if (projectId):
