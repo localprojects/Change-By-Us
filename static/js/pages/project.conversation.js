@@ -598,7 +598,7 @@ tc.gam.project_widgets.conversation = function(options){
     init();
 
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
-        if ('home' === widgetName) {
+        if (options.name === widgetName) {
             tc.util.log('&&& showing ' + options.name);
             dom.show();
 

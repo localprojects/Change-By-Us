@@ -99,10 +99,10 @@
             {% endif %}
 
             <ul class="project-tabs">
-                <li><a href="#" class="project-tab project-home current">Home</a></li>
-                <li><a href="#" class="project-tab project-needs">Needs</a></li>
-                <!-- li><a href="#" class="project-tab project-events">Events</a></li -->
-                <li><a href="#" class="project-tab project-discussions">Discussions</a></li>
+                <li><a href="#show,home" class="project-tab home current">Home</a></li>
+                <li><a href="#show,needs" class="project-tab needs">Needs</a></li>
+                <!-- li><a href="#show,events" class="project-tab events">Events</a></li -->
+                <li><a href="#show,conversation" class="project-tab conversation">Discussions</a></li>
             </ul>
         </div>
 
@@ -117,24 +117,19 @@
                 </div>
             {% endif %}
 
-            {% include 'project/related_resources.html' %}
-            {% include 'project/add_link.html' %}
-            {% include 'project/members.html' %}
 
             <div class="project-sections">
-                <div class="project-section project-home current">
-                    {% include 'project/home.html' %}
-                </div>
-                <div class="project-section project-needs">
-                    {% include 'project/needs.html' %}
-                </div>
+                {% include 'project/home.html' %}
+                {% include 'project/needs.html' %}
                 <!--
                 <div class="project-section project-events">
                 </div>
                 -->
-                <div class="project-section project-discussions">
-                    {% include 'project/conversation.html' %}
-                </div>
+                {% include 'project/conversation.html' %}
+
+                {% include 'project/related_resources.html' %}
+                {% include 'project/add_link.html' %}
+                {% include 'project/members.html' %}
             </div>
         </div>
         <div class="west">
@@ -289,6 +284,7 @@
     <script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
     <script type='text/javascript' src="/static/js/tc.gam.widget-visibility-handler.js"></script>
     <script type='text/javascript' src="/static/js/pages/project.js"></script>
+    <script type='text/javascript' src="/static/js/pages/project.tabs.js"></script>
     {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
         <script type='text/javascript' src="/static/js/pages/project.admin.js"></script>
     {% endif %}
