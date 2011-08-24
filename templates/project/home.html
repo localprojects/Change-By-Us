@@ -1,0 +1,43 @@
+<div class="box project-section home">
+{% include 'project/need.html' %}
+
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Discussion
+            </span>
+        </h2>
+    </div>
+    <ol class="comment-stack">
+        {% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+            
+            {% with num_messages_to_show = 2 %}
+            {% for message in d.template_data.project.data.info.messages['items'] %}
+                {% if loop.index <= num_messages_to_show %}
+                    {% include "project/conversation_message.html" %}
+                {% endif %}
+            {% endfor %}
+            {% endwith %}
+            
+        {% else %}
+            {% if not d.template_data.project.data.info.messages['total'] > 0 %}
+                <li class="admin-default-message">
+                    <div class="membrane">
+                        <div class="thumb">
+                            <img src="/static/images/thumb_genAvatar.jpg" alt=" " class="avatar"/>
+                        </div>
+                        <div class="main">
+                            <cite class="meta-hd"><strong>Administrator</strong> says</cite>
+                            <blockquote class="serif">
+                                <p>Hey &ndash; welcome to {{ d.config.site.name }}! I&#39;m an administrator of the site. If there is anything we can help you with, please email us at <span class="nospam infomail"></span></p>
+                            </blockquote>
+                        </div>
+                    </div>
+                </li>
+            {% endif %}
+        {% endif %}
+    </ol>
+</div>
+
+<script src="/static/js/pages/project.home.js"></script>
+
