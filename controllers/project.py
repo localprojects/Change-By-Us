@@ -25,7 +25,7 @@ class Project(Controller):
         elif (action == 'featured'):
             return self.getFeaturedProjects()
         elif (action == 'small'):
-            return self.getProject()   
+            return self.getProjectData()   
         elif (action == 'rss'):
             return self.showConversationRSS(param0)
         else:
@@ -90,6 +90,11 @@ class Project(Controller):
             from giveaminute.models import get_orm
             self.__orm = get_orm()
         return self.__orm
+        
+    def getProject(self, project_id):
+        from giveaminute.models import Project as ProjectSqla
+        project = self.orm.query(ProjectSqla).get(project_id)
+        return project
     
     def showProject(self, projectId):
         """The main project detail view controller."""
@@ -102,7 +107,11 @@ class Project(Controller):
                 project_user = self.getProjectUser(projectId)  
                 self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
                 
-                self.template_data['project'] = dict(json = json.dumps(projDictionary), data = projDictionary)
+                project_proxy = self.getProject(projectId)
+                project_proxy.json = json.dumps(projDictionary)
+                project_proxy.data = projDictionary
+                
+                self.template_data['project'] = project_proxy
             
                 return self.render('project')
             else:
@@ -447,7 +456,7 @@ class Project(Controller):
         return self.json(projects)
             
         
-    def getProject(self):
+    def getProjectData(self):
         projectId = self.request('project_id')
     
         project = mProject.Project(self.db, projectId)

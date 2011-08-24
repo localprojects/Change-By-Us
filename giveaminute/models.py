@@ -63,6 +63,9 @@ class Project (Base):
     __tablename__ = 'project'
     __table_args__ = {'autoload': True}
 
+    needs = relationship('Need', backref='project')
+
+
 class User (Base):
     __tablename__ = 'user'
     __table_args__ = {'autoload': True}
@@ -78,7 +81,6 @@ class Need (Base):
     description = Column(Text)
     
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    project = relationship('Project')
     
     volunteers = association_proxy('need_volunteers', 'member')
 
