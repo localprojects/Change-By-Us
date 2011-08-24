@@ -13,23 +13,37 @@
     </div>
 
   <div class="bd clearfix">
-    <a href="#" class="vol-title serif">We need <span class="vol-need"><span class="vol-count">10</span> volunteer ushers</span> for our gallery opening on August 28th</a>
+    <a href="#" class="vol-title serif">
+        We need <span class="vol-need"><span class="vol-count">{{ need.num_needed }}</span> volunteer {{ need.item_needed }}</span>
+        {% if need.reason %} for {{ need.reason }}{% endif %} 
+        {% if need.datetime %} on {{ need.datetime }}{% endif %}
+    </a>
+    
     <div class="volunteer-body">
-      <p class="serif">You'll be greeting people at the door, passing out the artwork index as well as helping
-      with cleanup after! There are already a bunch of people helping out and it would be a
-      great opportunity if you are new to the city and are involved in the artistic community!</p>
+      <p class="serif">{{ need.description }}</p>
+      
       <span>Who's helping</span>
       <div class="volunteers">
-        <img class="vol-first" src="/static/images/thumb_pshepard.jpg"></img>
-        <span class="vol-desc"><span>Devin O.</span> and 9 others volunteered.</span>
-        <div class="vol-avatars">
-          <img src="/static/images/thumb_mbloomberg.jpg"></img>
-          <img src="/static/images/thumb_ryaro.jpg"></img>
-          <img src="/static/images/thumb_akeys.jpg"></img>
-          <img src="/static/images/thumb_sgoldsmith.jpg"></img>
-          <a href="#" class="sub fancy-caps"><span>E-mail</span> the<br>
-            volunteer list</a>
-        </div>
+      
+        {% for volunteer in need.volunteers %}
+          {% if loop.first %}
+            <img class="vol-first" src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer.name }}"></img>
+            <span class="vol-desc"><span>{{ volunteer.name }}</span> and {{ need.volunteers|length - 1 }} others volunteered.</span>
+            
+            <div class="vol-avatars">
+          {% else %}
+            {% if loop.index <= 5 %}
+              <img src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer.name }}"></img>
+            {% endif %}
+          {% endif %}
+          
+          {% if loop.last %}
+            </div>
+          {% endif %}
+        {% endfor %}
+        
+        <a href="#" class="sub fancy-caps"><span>E-mail</span> the<br>
+          volunteer list</a>
       </div>
     </div>
     <div class="volunteer-details serif">
@@ -37,16 +51,21 @@
       <a href="#" class="help-link">I can help</a>
       <div class="time-detail">
         <span>We'll need you at<br>
-          <span class="time">6:30pm</span> <span class="">for</span> <span class="time-length">5 hrs</span></span>
+          <span class="time">{{ need.datetime }}</span> 
+          {% if need.duration %}
+            <span class="">for</span> <span class="time-length">{{ need.duration }} hrs</span></span>
+          {% endif %}
       </div>
-      <div class="location">We'll need you to go to
-        <ul>
-          <li class="location-name">CultureFix</li>
-          <li class="location-addr">9 Clinton Street</li>
-          <li class="location-city">New York, NY 1002</li>
-        </ul>
-        <a href="#" class="rounded-button small">Map it</a>
-      </div>
+      {% if need.address %}
+        <div class="location">We'll need you to go to
+          <ul>
+            <li class="location-name">{{ need.address.name }}</li>
+            <li class="location-addr">{{ need.address.street }}</li>
+            <li class="location-city">{{ need.address.city }}</li>
+          </ul>
+          <a href="#" class="rounded-button small">Map it</a>
+        </div>
+      {% endif %}
     </div>
 
         <div class="empty-state-box" style="display:none;">
