@@ -1,10 +1,20 @@
 tc.gam.widgetVisibilityHandler = function(options) {
-    var self = {},
-        currentHash = window.location.hash,
-        previousHash;
+    var self = {
+        currentHash: window.location.hash,
+        previousHash: null
+    };
+    
+    self._setHash = function(hash) {
+        //This will trigger the 'hashchange' event because the hash is different
+        window.location.hash = hash;
+    };
+    
+    self._getHash = function() {
+        return window.location.hash.substring(1, window.location.hash.length);
+    };
     
     self._goHome = function() {
-        window.location.hash = 'show,home';
+        self._setHash('show,home');
     };
     
     self._triggerWidgetVisibilityEvent = function(action, widget) {
@@ -13,16 +23,15 @@ tc.gam.widgetVisibilityHandler = function(options) {
     
     self._onHashChange = function(event) {
         var action, widget;
-        previousHash = currentHash;
-        currentHash = window.location.hash.substring(1, window.location.hash.length);
+        self.previousHash = self.currentHash;
+        self.currentHash = self._getHash();
             
-        // For project-home hash, fire go_home.
-        tc.util.log('&&& hashchange: ' + currentHash);
-        if (!currentHash || currentHash === 'project-home') {
+        // For project-home hash, fire goHome.
+        if (!self.currentHash || self.currentHash === 'project-home') {
             self._goHome();
         } else {
-            action = currentHash.split(',')[0];
-            widget = currentHash.split(',')[1];
+            action = self.currentHash.split(',')[0];
+            widget = self.currentHash.split(',')[1];
         }
         
         tc.util.log('&&& hashchange: ' + action + ', ' + widget);
@@ -36,8 +45,8 @@ tc.gam.widgetVisibilityHandler = function(options) {
     var init = function() {
         bindEvents();
         
-        if (currentHash) {
-            window.location.hash = currentHash;
+        if (self.currentHash) {
+            self._setHash(self.currentHash);
         } else {
             self._goHome();
         }
