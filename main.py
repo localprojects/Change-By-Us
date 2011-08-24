@@ -62,26 +62,31 @@ if __name__ == "__main__":
     if Config.get('email').get('smtp') and Config.get('email').get('aws_ses'):
         import boto
 
-        c = boto.connect_ses(
-          aws_access_key_id     = Config.get('email').get('aws_ses').get('access_key_id'),
-          aws_secret_access_key = Config.get('email').get('aws_ses').get('secret_access_key'))
-
-        # TODO: Need to add proper exception handling or at least error reporting!
-        # Use raw_email since this allows for attachments
-        sendQuota = c.get_send_quota()["GetSendQuotaResponse"]["GetSendQuotaResult"]
-        # Check if we're close to the smtp quota. 10 seems like a good number
-        sentLast24Hours = sendQuota.get('SentLast24Hours') 
-        if sentLast24Hours is None:
-            sentLast24Hours = 0
-        sentLast24Hours = int(float(sentLast24Hours))
-        max24HourSend = sendQuota.get('Max24HourSend')
-        if max24HourSend is None:
-            max24HourSend = 0
-        max24HourSend = int(float(max24HourSend))
-        if sentLast24Hours >= max24HourSend- 10:
-            enable_smtp()
-        else:
-            enable_aws_ses()
+        try:
+            c = boto.connect_ses(
+              aws_access_key_id     = Config.get('email').get('aws_ses').get('access_key_id'),
+              aws_secret_access_key = Config.get('email').get('aws_ses').get('secret_access_key'))
+    
+            # TODO: Need to add proper exception handling or at least error reporting!
+            # Use raw_email since this allows for attachments
+            sendQuota = c.get_send_quota()["GetSendQuotaResponse"]["GetSendQuotaResult"]
+            # Check if we're close to the smtp quota. 10 seems like a good number
+            sentLast24Hours = sendQuota.get('SentLast24Hours') 
+            if sentLast24Hours is None:
+                sentLast24Hours = 0
+            sentLast24Hours = int(float(sentLast24Hours))
+            max24HourSend = sendQuota.get('Max24HourSend')
+            if max24HourSend is None:
+                max24HourSend = 0
+            max24HourSend = int(float(max24HourSend))
+            if sentLast24Hours >= max24HourSend- 10:
+                enable_smtp()
+            else:
+                enable_aws_ses()
+                
+        except Exception, e:
+            log.info(e)
+            raise
         
     # Set the email configurations:
     elif Config.get('email').get('smtp'):

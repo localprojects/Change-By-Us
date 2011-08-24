@@ -548,9 +548,12 @@ where pm.message_type='member_comment'
             recipients = currentDigest.get('recipients').split(',')
 
             if self.Config.get('dev'):
-                body += "Recipients are: " + currentDigest.get('recipients') + "\n\n"
-                recipients = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
+                admins = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
+                recipients.extend(admins)
+                body += "Recipients are: %s\n" % ','.join(recipients)
 
+            recipients = ','.join(recipients)
+            logging.info('Digest recipients: %s' % recipients)
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
             
             if (digest.get('digest_id')):
