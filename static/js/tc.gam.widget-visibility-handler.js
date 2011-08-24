@@ -5,8 +5,12 @@ tc.gam.widgetVisibilityHandler = function(options) {
     };
     
     self._setHash = function(hash) {
-        //This will trigger the 'hashchange' event because the hash is different
-        window.location.hash = hash;
+        if (hash === self.currentHash) {
+            tc.jQ(window).trigger('hashchange');
+        } else {
+            //This will trigger the 'hashchange' event because the hash is different
+            window.location.hash = hash;
+        }
     };
     
     self._getHash = function() {

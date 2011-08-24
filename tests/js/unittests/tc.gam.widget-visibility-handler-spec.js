@@ -5,7 +5,11 @@ if (window.EnvJasmine) {
 }
 
 describe('tc.gam.widget-visibility-handler.js', function () {
-    var visHandler = tc.gam.widgetVisibilityHandler();
+    var visHandler;
+
+    beforeEach(function() {
+        visHandler = tc.gam.widgetVisibilityHandler();
+    });
 
     describe('_triggerWidgetVisibilityEvent)', function () {
         it('triggers show-project-widget on testWidget', function() {
@@ -42,6 +46,17 @@ describe('tc.gam.widget-visibility-handler.js', function () {
     });
     
     describe('_onHashChange)', function () {
+        it('sets currentHash to the value of whatever the hash was just changed to', function() {
+            window.location.hash = 'foo';
+            visHandler._onHashChange();
+            expect(visHandler.currentHash).toEqual('foo');
+
+            window.location.hash = 'bar';
+            visHandler._onHashChange();
+            expect(visHandler.previousHash).toEqual('foo');
+            expect(visHandler.currentHash).toEqual('bar');
+        });
+
         it('redirects a falsey hash to "show,home"', function() {
             visHandler._setHash('');
             visHandler._onHashChange();
