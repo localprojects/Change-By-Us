@@ -25,6 +25,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from optparse import OptionParser, IndentedHelpFormatter  # for command-line menu
 import time     # for sleeping
+import re
 
 # Assuming we start in the scripts folder, we need
 # to traverse up for everything in our project
@@ -116,6 +117,7 @@ class Mailable():
         web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
 
     def htmlify(self, body):
+        body = re.sub('\n', '<br/>\n', body)
         return "<html><head></head><body>%s</body></html>" % body 
     
     def sendEmail(self, to=None, recipients=None, subject=None, body=None):
@@ -550,7 +552,7 @@ where pm.message_type='member_comment'
             if self.Config.get('dev'):
                 admins = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
                 recipients.extend(admins)
-                body += "\n\n Development Information:\nRecipients are: %s\n" % ', '.join(recipients)
+                body += "\n\nDevelopment Information:\nRecipients are: %s\n" % ', '.join(recipients)
 
             logging.info('Digest recipients: %s' % recipients)
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
