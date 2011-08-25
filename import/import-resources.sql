@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Aug 25, 2011 at 01:48 PM
+-- Generation Time: Aug 25, 2011 at 02:09 PM
 -- Server version: 5.1.44
 -- PHP Version: 5.3.2
 
@@ -16,7 +16,7 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `project_resource`
+-- Table structure for table `import_project_resource`
 --
 
 DROP TABLE IF EXISTS `import_project_resource`;
@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `import_project_resource` (
   `created_datetime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `external_id` int(11) NOT NULL,
+  `neighborhood` text NOT NULL,
   PRIMARY KEY (`project_resource_id`),
   FULLTEXT KEY `title` (`title`,`description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
