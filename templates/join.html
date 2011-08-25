@@ -8,8 +8,8 @@
 <div class='continent register'>
 	<div class='headlands clearfix'>
 		<div class='west'>
-			<h1>{{ d.config.site.name }} is a place to make your city better.</h1>
-			<h3>Share your ideas. Build projects. Make a change.</h3>
+			<h1>{{ d.config.site.name }} is a place to make your community better.</h1>
+			<h3>Share ideas. Do projects. Make it happen.</h3>
 		</div>
 		<div class='east'>
 			<div class='box'>
@@ -29,10 +29,10 @@
 			</div>
 		</div>
 	</div>
-	
+
 	<div class='midlands'>
 		<form class='merlin' action='/register' method='POST'>
-			
+
 			<div class='step start clearfix' style='display:none;' >
 				<p>Create a login using <strong>Facebook</strong> or <strong>Twitter</strong></p>
 				{% if d.template_data.app_mode != 'beta' %}
@@ -43,15 +43,15 @@
 				{% endif %}
 				<p><a class='step_link' href='#user-info'>Click Here</a> <span class="italic">if you want to create a login without Facebook or Twitter</span></p>
 			</div><!--end step-->
-			
+
 			<div class='step facebook-login-preprocess clearfix spinner-message ' style='display:none;'>
 				<p class="west">Connecting to Facebook...</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
-			
+
 			<div class='step user-info clearfix' style='display:none;' >
-				<p>{{ d.config.site.name }} uses real names. <a href='/tou#names' class='real-names'>Read Why</a>.</p>
-				
+				<p>{{ d.config.site.name }} uses real names.</p>
+
 				<div class="west">
 					<div class="row">
 						<label for='f_name'>First name</label>
@@ -75,21 +75,21 @@
 						<input style='display:none;' name='main_text' class='main_text' />
 					</div>
 				</div>
-				
+
 				<div class="east">
 					<input type='checkbox' name='tos-user-info' id='tos-user-info' class='tos-user-info' value='1' />
 					<label class="tos-user-info-label" for='tos-user-info'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms of Use</a></label>
-					
+
 					<div class="row invite-row" {% if d.template_data.app_mode != 'beta' %}style='display:none;'{% endif %}>
 						<label for='invite-code'>Invite code</label>
 						<input value='' type='text' name='invite-code' id='invite-code' class='invite-code' tabindex='4'/>
 					</div>
 				</div>
 			</div><!--end step-->
-			
+
 			<div class='step twitter-step clearfix ' style='display:none;'>
 				<p><strong>Enter your email to get updates from {{ d.config.site.name }} projects.</strong></p>
-				
+
 				<div class="west">
 					<div class="row">
 						<label for='f_name'>First name</label>
@@ -111,30 +111,30 @@
 						<span class="email-error" style='display:none;'>Please enter a valid email address</span>
 					</div>
 				</div>
-				
+
 				<div class="east">
 					<input type='checkbox' name='tos-user-info-twitter' id='tos-user-info-twitter' class='tos-user-info' value='1' />
 					<label class="tos-user-info-label" for='tos-user-info-twitter'>I have read and accept the<br />the <a href='/tou' target='_blank' class='toc-link'>Terms of Use</a></label>
-					
+
 				</div>
-				
+
 			</div><!--end step-->
-			
+
 			<div class='step email-lookup clearfix spinner-message ' style='display:none;'>
 				<p class="west">Verifying account information...</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
-			
+
 			<div class='step email-step clearfix ' style='display:none;'>
 				<!--<p><strong>Enter your email to get updates from {{ d.config.site.name }} projects.</strong></p>
-				
+
 				<div class="fields">
 					<input type='text' name='email-alt' id='email-alt' class='email-alt'/>
 					<div class="row row-error">
 						<span class="email-error" style='display: none'>Please enter a valid email address</span>
 					</div>
 				</div>-->
-				
+
 				<div class="fields">
 					<!--<div class="row">
 						<label for='invite-code-fb'>Invite code</label>
@@ -145,9 +145,9 @@
 						<label class="tos-email-label" for='tos-email'><span class="message">I accept and have read the <a href='/tou' target='_blank'>Terms of Use</a></span></label>
 					</div>
 				</div>
-				
+
 			</div><!--end step-->
-			
+
 			<div class='step sms-lookup clearfix ' style='display:none;'>
 				<div class='west'>
 					<p>Did you text your ideas to {{ d.config.site.name }}?  Enter your phone number to link them to your profile.</p>
@@ -164,62 +164,62 @@
 					<label class="no_sms_label" for='no_sms'>I didn't text any ideas.</label>
 				</div>
 			</div><!--end step-->
-			
+
 			<div class='step sms-process clearfix spinner-message ' style='display:none;'>
 				<p class="west">Finding SMS submissions...</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
-			
+
 			<div class='step sms-results clearfix ' style='display:none;'>
 				<p><strong>We found <span class='n_ideas'>X</span> ideas from your phone number.</strong></p>
 				<p>We'll add these to your profile and any others you send from that number.</p>
 			</div><!--end step-->
-			
+
 			<div class='step sms-no-results clearfix ' style='display:none;'>
 				<p>We couldn't find any ideas sent from</p>
 				<p class='phone-num'>(XXX) XXX-XXXX</p>
 			</div><!--end step-->
-			
+
 			<div class='step sms-already-used clearfix ' style='display:none;'>
 				<p>The number</p>
 				<p class='phone-num'>(XXX) XXX-XXXX</p>
 				<p>is already associated with an account.</p>
 			</div><!--end step-->
-			
+
 			<div class='step email-authentication-process clearfix spinner-message' style='display:none;'>
 				<p class="west">Sending Email validation message...</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
-			
+
 			<div class='step email-authentication-email-send-success clearfix' style='display:none;'>
 				<p>Thanks! You're almost there.</p>
 				<p>We sent an email to <strong class='email'>&nbsp;</strong>&nbsp;in order to verify your account.</p>
 				<p>Click on the link provided in the e-mail address to complete your registration.</p>
 			</div><!--end step-->
-			
+
 			<div class='step email-authentication-email-send-error clearfix' style='display:none;'>
 				<p class="west">There was a problem authenticating your email.</p>
 			</div><!--end step-->
-				
+
 			<div class='step email-authentication-success clearfix' style='display:none;'>
 				<p>Awesome! You're a member!</p>
 				<p>Thank you for verifying your e-mail address.</p>
 				<p>Please wait while we redirect you home.</p>
 			</div><!--end step-->
-			
+
 			<div class='step email-already-used clearfix' style='display:none;'>
 				<p class="west">An account using that email already exists on {{ d.config.site.name }}. To recover your password, please click <a href='/login#forgot-password'>here</a>.</p>
 			</div><!--end step-->
-			
+
 			<div class='step email-authentication-error clearfix' style='display:none;'>
 				<p class="west">There was a problem authenticating your email.</p>
 			</div><!--end step-->
-			
+
 			<div class='step finish clearfix spinner-message ' style='display:none;'>
 				<p class="west">Thank you for joining.</p>
 				<img class="loading" src='/static/images/loader32x32.gif' />
 			</div><!--end step-->
-			
+
 			<div class='step error clearfix ' style='display:none;'>
 				<p class="west">There was a problem creating your account.</p>
 			</div><!--end step-->
@@ -243,11 +243,11 @@
 {% block page_js %}
 <script type='text/javascript'>
 	app_page.data.app_mode = '{{d.template_data.app_mode}}';
-	
+
 	app_page.data.first_join_step = 'start';
 	app_page.data.sms_next_step = 'email-authentication-process';
 	app_page.data.account_create_url = '/join';
-	
+
 	{% if d.new_account_via_twitter %}
 		app_page.data.first_join_step = 'twitter-login';
 		app_page.data.sms_next_step = 'finish';

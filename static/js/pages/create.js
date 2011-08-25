@@ -353,7 +353,7 @@
 				'add-resource-process':{
 					title:'Add a resource.',
 					supress_hash:true,
-					sub_title:'When you add a resource, we\'ll email them a link<br />to your project page. If they''re able to help, they\'ll<br />get in touch.',
+					sub_title:'When you add a resource, we will email them an<br />introduction and link to your project!',
 					progress_selector:'.4',
 					selector:'.step.add-resource-process',
 					prev_step:'check',
@@ -387,7 +387,7 @@
 				},
 				'add':{
 					title:'Add a resource.',
-					sub_title:'When you add a resource, we\'ll email them a link<br />to your project page. If they''re able to help, they\'ll<br />get in touch.',
+					sub_title:'When you add a resource, we will email them an<br />introduction and link to your project!',
 					progress_selector:'.4',
 					selector:'.step.add',
 					prev_step:'check',
@@ -511,7 +511,7 @@
 				},
 				'add-noresources':{
 					title:'Add a resource.',
-					sub_title:'When you add a resource, we\'ll email them a link<br />to your project page. If they''re able to help, they\'ll<br />get in touch.',
+					sub_title:'When you add a resource, we will email them an<br />introduction and link to your project!',
 					progress_selector:'.4',
 					selector:'.step.add-noresources',
 					prev_step:'check',
