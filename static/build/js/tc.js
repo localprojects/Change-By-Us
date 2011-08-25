@@ -2246,7 +2246,7 @@ tc.locationDropdown.validator = function(merlin,elements){
 	elements.filter('.location-hood-enter').siblings('.error').show();
 	return {
 		valid:false,
-		errors:['Please enter a neighborhood or borough.']
+		errors:['Please enter a neighborhood.']
 	};
 };
 
