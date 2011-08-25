@@ -1,6 +1,6 @@
 {% if d.template_data.project_user.data.is_member %}
 <div class="box fresh-ideas">
-	<p class="hint">Check out some new ideas related to your project!</p>
+	<p class="hint">Check out a few ideas related to your project!</p>
 	<div class="hd clearfix">
 		<h2>
 			<span>
@@ -18,11 +18,11 @@
 							{% for idea in d.template_data.project.data.info.related_ideas['items'] %}
 								<li rel="idea-{{ idea.idea_id }}">
 									<div class="note-card-public-controls">
-										
+
 										{% if not(d.template_data.user and (d.template_data.user.data.u_id == idea.owner.u_id)) %}
 											<a class="invite rounded-button small" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
 										{% endif %}
-										
+
 										<span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
 									</div>
 									<div class="note-card">
@@ -50,12 +50,12 @@
 					<span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
 				</div>
 			</div>
-		
+
 			<div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
 				<!--<a class="close remove-idea" href="#"><span>Close</span></a>-->
 				<p>No similar ideas found.</p>
 			</div>
-		
+
 		</div>
 	</div>
 </div>

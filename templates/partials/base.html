@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class='universe'>
 <head class='heavens'>
-        <title>{{ d.config.site.name }} | {% block title %}Home{% endblock %}</title>
+        <title>{{ d.config.site.name }} | {% block title %}{{ _('Home') }}{% endblock %}</title>
 
         {% if d.config.htaccess %}
             <!-- Always force IE9 rendering engine & Chrome Frame; -->
@@ -38,6 +38,7 @@
             <link rel="stylesheet" href="/static/css/tc.gam.fontfaces.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.main.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/project/conversation.css" type="text/css" media="screen" />
+            <link rel="stylesheet" href="/static/css/project/needs.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.search.map.css" type="text/css" media="screen" />
             <link rel="stylesheet" href="/static/css/tc.gam.project.css" type="text/css" media="screen" />
         {% else %}
@@ -141,19 +142,19 @@
                         </li>
 
                         <li class="news-about">
-                            <a href="{{ d.config.blog_host }}">News</a>
-                            <a href="/about">About</a>
+                            <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
+                            <a href="/about">{{ _('About') }}</a>
                         </li>
 
                         <li class="divider"></li>
 
                         <li class="userland">
                           <!-- User account actions -->
-                            <div class="join"><a href="/join">Join</a></div>
-                            <div class="login"><a href="/login">Login</a></div>
+                            <div class="join"><a href="/join">{{ _('Join') }}</a></div>
+                            <div class="login"><a href="/login">{{ _('Login') }}</a></div>
                             <div class="username">
                                 <a href="/useraccount#user-account,account">
-                                  <span class="unbold">Hi, </span>
+                                  <span class="unbold">{{ _('Hi') }}, </span>
                                   {%- if d.template_data and d.template_data.user -%}
                                     {%- if d.template_data.user.data.f_name -%}
                                       {{ d.template_data.user.data.f_name|truncate(12, true) }}
@@ -165,8 +166,8 @@
 
                                 <div class="dropdown no-js">
                                     <div class="membrane">
-                                        <a href="/useraccount#user-account,account">Account</a>
-                                        <a href="#logout">Log out</a>
+                                        <a href="/useraccount#user-account,account">{{ _('Account') }}</a>
+                                        <a href="#logout">{{ _('Log out') }}</a>
                                     </div>
                                 </div>
                             </div>
@@ -184,7 +185,7 @@
 
                             <!-- Projects -->
                             <div class='myprojects'>
-                                <a href='/useraccount'><span class="unbold">My </span>Projects</a>
+                                <a href='/useraccount'>{{ _('<span class="unbold">My </span>Projects') }}</a>
                                 <div class="dropdown no-js">
                                     <div class="membrane">
                                         {% if d.template_data and d.template_data.user %}
@@ -193,7 +194,7 @@
                                                     <a href="/project/{{ project.project_id }}">{{ project.title }}</a>
                                                 {% endfor %}
                                             {% else %}
-                                                    <a href="/create" style="min-width: 130px; text-align: center"><em>Create a project!</em></a>
+                                                    <a href="/create" style="min-width: 130px; text-align: center"><em>{{ _('Create a project!') }}</em></a>
                                             {% endif %}
                                         {% endif %}
                                     </div>
@@ -212,10 +213,10 @@
                         {% if d.app_mode == 'beta' %}
                           <li class="splashland"><!-- .splashland can be deleted after beta period is over -->
                         <div class="join">
-                          <span class="fancy-caps">Have <span>an</span> invite code?</span><a href='/join'>Sign Up</a>
+                          <span class="fancy-caps">{{ _('Have <span>an</span> invite code?') }}</span><a href='/join'>{{ _('Sign Up') }}</a>
                         </div>
                         <div class='login'>
-                          <a href='/login'>Login</a>
+                          <a href='/login'>{{ _('Login') }}</a>
                         </div>
                           </li>
                         {% endif %}
@@ -224,8 +225,8 @@
                     <!-- Administration bar -->
                     {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
                         <ul class="adminbar">
-                            <li class="content"><a href="/cms/content">Content</a></li>
-                            <li class="admin-settings"><a href="/cms/admin">Admin Settings</a></li>
+                            <li class="content"><a href="/cms/content">{{ _('Content') }}</a></li>
+                            <li class="admin-settings"><a href="/cms/admin">{{ _('Admin Settings') }}</a></li>
                             {% block project_admin %}{% endblock %}
                         </ul>
                     {% endif %}
@@ -249,10 +250,10 @@
         <div class='seafloor'>
           <!-- List of supporters -->
             <div class='box logos clearfix'>
-                <span class="supported fancy-caps">Developed <span>by</span></span>
+                <span class="supported fancy-caps">{{ _('Developed <span>by</span>') }}</span>
                 <a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
                 <a href='http://codeoframerica.org' target='_blank'><img src='/static/images/footer-cfa.png' alt='Code for America' /></a>
-                <span class="supported fancy-caps">Supported <span>by</span></span>
+                <span class="supported fancy-caps">{{ _('Supported <span>by</span>') }}</span>
                 <a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
                 <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
                 <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>
@@ -262,11 +263,11 @@
             <div class='west'>
                 <div class="box">
                     <ul class="sitemap">
-                        <li><a href='/about'>About {{ d.config.site.name }}</a></li>
-                        <li><a href='{{ d.config.blog_host }}'>News</a></li>
-                        <li><a href='/tou#community-policy'>Community Policy</a></li>
-                        <li class="sitemap-tou"><a href='/tou'>Terms of Use</a></li>
-                        <li><a href='/tou#privacy'>Privacy Policy</a></li>
+                        <li><a href='/about'>{{ _('About') }} {{ d.config.site.name }}</a></li>
+                        <li><a href='{{ d.config.blog_host }}'>{{ _('News') }}</a></li>
+                        <li><a href='/tou#community-policy'>{{ _('Community Policy') }}</a></li>
+                        <li class="sitemap-tou"><a href='/tou'>{{ _('Terms of Use') }}</a></li>
+                        <li><a href='/tou#privacy'>{{ _('Privacy Policy') }}</a></li>
                     </ul>
 
                     <div class="search generic-search clearfix">
@@ -275,17 +276,17 @@
                             <input type='submit' id='ft-search-btn' class='ft-search-btn' value='Search' />
                         </form>
                     </div>
-                    <a href="/feedback" class="feedback-button rounded-button small">Contact Us</a>
+                    <a href="/feedback" class="feedback-button rounded-button small">{{ _('Contact Us') }}</a>
                 </div>
             </div>
 
             <!-- Credits -->
             <div class='east'>
                 <div class='box'>
-                    <p class="fancy-caps">Design <span>and</span> Development</p>
-                    <p>&copy; 2011 <strong><a href="http://localprojects.net/">Local Projects, LLC.</a></strong><br />All rights reserved.</p>
+                    <p class="fancy-caps">{{ _('Design <span>and</span> Development') }}</p>
+                    <p>&copy; 2011 <strong><a href="http://localprojects.net/">Local Projects, LLC.</a></strong><br />{{ _('All rights reserved.')}}</p>
                     <p><br /></p>
-                    <p>&copy; 2011 <strong><a href="http://codeforamerica.org/">Code for America</a></strong><br />All rights reserved.</p>
+                    <p>&copy; 2011 <strong><a href="http://codeforamerica.org/">Code for America</a></strong><br />{{ _('All rights reserved.') }}</p>
                 </div>
             </div>
         </div>

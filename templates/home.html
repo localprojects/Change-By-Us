@@ -6,11 +6,11 @@
 {% block continent %}
 <div class='continent home'>
     <div class='headlands'>
-        <span class="hey {{ d.config.site.city_id }}"><span>Hey {{ d.config.site.city }}!</span></span>
-        
+        <span class="hey {{ d.config.site.city_id }}"><span>{{ _('Hey %(city)s!')|format(city=d.config.site.city) }}</span></span>
+
         <div class='splash-container merlin'>
             <div class='splash-background'></div>
-            
+
             <div class='splash'>
                 <div class="splash-inner first">
 
@@ -23,40 +23,40 @@
                                   {{ d.config.homepage.question }}
                                 </span>
                             </div>
-                            
+
                             <span class="more-info after-idea-message" style='display:none;'>
-                Thanks for your idea<br /><span class="sm">We need just a little more information.</span>
+                {{ _('Thanks for your idea') }}<br /><span class="sm">{{ _('We need just a few more details.') }}</span>
                             </span>
                             <span class="thanks after-idea-message" style='display:none;'>
-                Thanks for your idea<br /><span class="sm">Please wait while we process your idea!</span>
+                {{ _('Thanks for your idea') }}<br /><span class="sm">{{ _('Please wait while we process your idea!') }}</span>
               </span>
                         </div>
-                        
+
                         <div class="step-info step" style='display:none;'>
                             <div class="info-input clearfix">
                                 <div class="box box-info box-info-email">
-                                    <span class="col-head">Your email?</span>
+                                    <span class="col-head">{{ _('Your email?') }}</span>
                                     <input value='{% if d.template_data.user and d.template_data.user.data.email %}{{ d.template_data.user.data.email }}{% endif %}' type='text' name='email' id='email' class='email'/>
-                                    
+
                                     <div class="email-info">
-                                        <p class="email-error">Please enter a valid email address</p>
-                                        <p>We will never send spam or sell your email address.</p> 
-                                        <p><em>See our <a href="/tou" class='toc-link'>privacy policy</a> for more details.</em></p>
+                                        <p class="email-error">{{ _('Please enter a valid email address') }}</p>
+                                        <p>{{ _('We will never send spam or sell your email address.') }}</p>
+                                        <p><em>{{ _('See our <a href="/tou" class="toc-link">privacy policy</a> for more details.') }}</em></p>
                                     </div>
                                 </div>
-                                
+
                                 <div class="box box-info box-info-hood">
-                                    <span class="col-head">Your idea is for...</span>
+                                    <span class="col-head">{{ _('Your idea is for...') }}</span>
                                     <div class="row row-1 clearfix">
                                         <input type='radio' name='location-check' id='location-city' class='location-city location-group styled'/>
-                                        <label class="location-city-label" for='location-city'>The city</label>
+                                        <label class="location-city-label" for='location-city'>{{ _('The city') }}</label>
                                     </div>
-                                    
+
                                     <div class="row row-2 clearfix">
                                         <input type='radio' name='location-check' id='location-hood' class='location-hood location-group styled'/>
-                                        <label class="location-hood-label" for='location-hood'>A neighborhood or borough</label>
+                                        <label class="location-hood-label" for='location-hood'>{{ _('A neighborhood') }}</label>
                                     </div>
-                                    
+
                                     <div class="row row-3">
                                         <input type='text' name='location-hood-enter' id='location-hood-enter' class='location-hood-enter location-group'/>
                                         <div class="location-hood-list">
@@ -64,21 +64,21 @@
                                                 <li></li>
                                             </ul>
                                         </div>
-                                        <span class="error">Please enter a neighborhood or borough.</span>
+                                        <span class="error">{{ _('Please enter a neighborhood.') }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                
+
                         <div class="step idea-processing" style="display:none"></div>
                     </div>
-                    
+
                     <!-- Projects -->
                     <div class="projects-pane">
                         <div class="project-cards">
                             <div class="membrane">
-                                <a class="rounded-button small west" href="/search#ideas">See more ideas <span class="sm-arrow-forward"></span></a>
-                                <h3>New Ideas</h3>
+                                <a class="rounded-button small west" href="/search#ideas">{{ _('See more ideas') }} <span class="sm-arrow-forward"></span></a>
+                                <h3>{{ _('New Ideas') }}</h3>
                                 <div class="small-note-area">
                                     {% for idea in d.template_data.all_ideas.data %}
                                         <div class="small-note">
@@ -86,13 +86,13 @@
                                                 <div class="note-meta-hd" {% if not idea.name %}style="display:none"{% endif %}>
                                                     <strong>{% if idea.name %}{{ idea.name }}{% endif %}</strong> <em>said</em> &mdash;
                                                 </div>
-                                                
+
                                                 <blockquote><p>{{ idea.text|truncate(140) }}</p></blockquote>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 </div>
-                                
+
                                 <div class="social-networking">
                                     {% if d.template_data and d.template_data.app_mode != 'beta' %}
                                     <div class="facebook">
@@ -100,58 +100,57 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                                
+
                             </div>
                         </div>
                     </div>
-                    
+
                     {% if d.config.homepage.photo_credit %}
                         <div class="photocredit">
                             {{ d.config.homepage.photo_credit }}
                         </div>
                     {% endif %}
-                
+
                 </div>
-                
+
                 <!-- Turn idea into a Project -->
                 <div class="splash-inner">
                     <!-- after idea is posted step -->
-                
+
                     <div class="top-pane related-processing step-three">
                         <div class="console">
                             <span class="console-message">
-                                Turn ideas into solutions.
-                                Join a project. Or start your own.
+                                {{ _('Make that idea happen. Join a project, or start your own.') }}
                             </span>
                         </div>
                     </div>
-                
+
                     <div class="projects-pane step-three found">
                         <div class="box related-projects">
                             <div class="hd">
-                                <h2>Related Projects</h2>
+                                <h2>{{ _('Related Projects') }}</h2>
                             </div>
                             <div class="bd">
                                 <ul class="projects-list">
                                 </ul>
-                                
-                                <a href="/search" class="see-more more-projects more-projects-related">See more projects <em>near</em> you &rarr;</a>
+
+                                <a href="/search" class="see-more more-projects more-projects-related">{{ _('See more projects <em>near</em> you') }} &rarr;</a>
                             </div>
                         </div>
                         <div class="box citywide-projects">
                             <div class="hd">
-                                <h2>Citywide Projects</h2>
+                                <h2>{{ _('Citywide Projects') }}</h2>
                             </div>
-                            
+
                             <div class="bd">
                                 <ul class="projects-list">
                                 </ul>
-                                <a href="/search#projects" class="see-more more-projects">See more citywide projects &rarr;</a>
+                                <a href="/search#projects" class="see-more more-projects">{{ _('See more citywide projects') }} &rarr;</a>
                             </div>
                         </div>
-                        
+
                         <div class="controls">
-                            <a href="/search#projects" class="rounded-button">Browse All</a><span>or</span><a href="/create" class="rounded-button">Start Your Own</a>
+                            <a href="/search#projects" class="rounded-button">{{ _('Browse All') }}</a><span>{{ _('or') }}</span><a href="/create" class="rounded-button">{{ _('Start Your Own') }}</a>
                         </div>
                     </div>
 
@@ -159,76 +158,76 @@
                     <div class="projects-pane not-found" style="display:none" >
                         <div class="box no-related-projects">
                             <div class="hd">
-                                <h2>No projects found!</h2>
-                                <p>We didn't find any projects based on your idea or location.  But don't stop there.</p>
+                                <h2>{{ _('No projects found!') }}</h2>
+                                <p>{{ _('We didn&#39;t find any projects based on your idea or location.  But don&#39;t stop there.') }}</p>
                             </div>
                             <div class="bd">
                                 <div class="row clearfix">
-                                    <p>Search for projects that interest you:</p>
-                                    <a href="/search#projects" class="rounded-button">Browse All</a>
+                                    <p>{{ _('Search for projects that interest you:') }}</p>
+                                    <a href="/search#projects" class="rounded-button">{{ _('Browse All') }}</a>
                                 </div>
-                                
+
                                 <div class="row clearfix">
-                                    <p class="center"><em>or</em></p>
+                                    <p class="center"><em>{{ _('or') }}</em></p>
                                 </div>
-                                
+
                                 <div class="row clearfix">
-                                    <p>Take the lead, and begin a project today.</p>
-                                    <a href="/create" class="rounded-button">Start Your Own</a>
+                                    <p>{{ _('Take the lead, and begin a project today.') }}</p>
+                                    <a href="/create" class="rounded-button">{{ _('Start Your Own') }}</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Card in hand -->
             <div class="note-card-pane color3">
                 <div class="membrane">
                     <div class="note-card-splash" style="display:none">
                         <!-- Content loaded here by js when hovering on a .small-note -->
                     </div>
-                    
+
                     <div class="note-card-submit-idea">
-                        <span class="hd serif">My idea is:</span>
+                        <span class="hd serif">{{ _('My idea is:') }}</span>
                         <textarea class="idea"></textarea>
                         <span class="charlimit idea">0/175</span>
                         <input type='text' name='main_text' class='main_text' style='display:none;' />
                         <div class="disabler" style="display:none"></div>
                     </div>
                 </div>
-                
+
                 <div class="primary-action">
                     <a class="ca-btn" href="#">
-                        <span>Post</span>
+                        <span>{{ _('Post') }}</span>
                     </a>
                 </div>
             </div>
-            
+
             <!-- Hand -->
             <div class="hand">
                 <div class="oops" style="display:none;">
-                    <span>Oops! Please limit your idea to 175 characters.</span>
+                    <span>{{ _('Oops! Please limit your idea to 175 characters.') }}</span>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Mid content -->
     <div class='midlands clearfix'>
         <div class="box box-mission">
-            <h1>{{ _('<strong>%(site_name)s</strong> is a place to share ideas, create projects, discover resources, and make our city better.')|format(site_name=d.config.site.name) }}</h1>
+            <h1>{{ _('<strong>%(site_name)s</strong> helps you share ideas, start projects, connect with resources, and make your community better.')|format(site_name=d.config.site.name) }}</h1>
         </div>
-        
+
         <div class="box box-project">
-            <a href="/search#projects" class="ca-btn"><span>Browse and join projects</span></a>
-            <h1><strong>Put your ideas into action:</strong></h1>
-            <h2><a href="/search#projects">Join a project</a>. Or <a href="/create">start your own project</a>.</h2>
+            <a href="/search#projects" class="ca-btn"><span>{{ _('Browse and join projects') }}</span></a>
+            <h1><strong>{{ _('Make something good happen:') }}</strong></h1>
+            <h2>{{ _('<a href="/search#projects">Join a project</a> or <a href="/create">Start your own project</a>.') }}</h2>
         </div>
-        
+
         {% if d.template_data.homepage_is_display_leaderboard %}
             <div class="box box-leaderboard">
-                <h3>Top <strong>{{ d.template_data.leaderboard|length }} Projects</strong><a href="/leaderboard" class="leaderboard-link">See the leaderboard</a></h3>
+                <h3>{{ _('Top <strong>%(length)s Projects</strong>')|format(length=d.template_data.leaderboard|length) }}<a href="/leaderboard" class="leaderboard-link">{{ _('See the leaderboard') }}</a></h3>
                 <ol class="leaderboard">
                     {% for item in d.template_data.leaderboard %}
                     <li {% if loop.index is even %}class="every-other"{% endif %}>
@@ -247,7 +246,7 @@
                                         </div>
                                         <div class='main'>
                                             <h1><a href="/project/{{ item.project_id }}">{{ item.title|truncate(45) }}</a></h1>
-                                            <cite class="meta"><em>Created by</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_full_display_name }}</a></cite>
+                                            <cite class="meta"><em>{{ _('Created by') }}</em> <a href="/useraccount/{{ item.owner_user_id }}">{{ item.owner_full_display_name }}</a></cite>
                                         </div>
                                     </td>
                                     <td class="score">{{ (item.user_count * 5) }}</td>
@@ -264,10 +263,10 @@
                 <div style="clear:both"></div>
             </div>
         {% endif %}
-        
+
         {% if d.homepage_is_display_featured_projects %}
             <div class="box box-leaderboard">
-                <h3>Featured <strong>Projects</strong></h3>
+                <h3>{{ _('Featured <strong>Projects</strong>') }}</h3>
                 <ol class="leaderboard">
                     {% for item in d.template_data.featured_projects %}
                     <li {% if loop.index is even %}class="every-other"{% endif %}>
@@ -302,12 +301,12 @@
                 <div style="clear:both"></div>
             </div>
         {% endif %}
-        
+
         <!-- Who is listening? -->
         {% if d.config.homepage.who_is_listening %}
           <div class="box box-whoslistening">
-              <h1><strong>Who's listening?</strong></h1>
-              <h2>A network of leaders from across the city is ready to read <a href="/search#ideas">ideas</a>, follow <a href="/search#projects">projects</a>, and connect online.</h2>
+              <h1><strong>{{ _('Who&#39;s listening?') }}</strong></h1>
+              <h2>{{ _('A network of city leaders is ready to hear your <a href="/search#ideas">ideas</a> and provide guidance for your <a href="/search#projects">projects</a>.') }}</h2>
               <ul class="clearfix">
                   <li>
                       <img src="/static/images/thumb_lshepherd.jpg" alt="" width="200" height="150" />
@@ -323,23 +322,23 @@
                       <img src="/static/images/thumb_dshabazz.jpg" alt="" width="200" height="150" />
                       <p class="name">Diallo Shabazz</p>
                       <p class="job">Director of Green Career Development, Solar One</p>
-                  </li>                
+                  </li>
                   <li class="every-fourth">
                       <img src="/static/images/thumb_cholloway.jpg" alt="" width="200" height="150" />
                       <p class="name">Cas Holloway</p>
                       <p class="job">Commissioner, NYC Department of Environmental Protection</p>
                   </li>
               </ul>
-              
+
               <div style="clear:both"></div>
           </div>
     {% endif %}
-        
+
         {% if d.config.homepage.news %}
           <div class="box box-news">
-              <h1><strong>Recent News</strong></h1>
-              <h2>Find out what's happening on {{ d.config.site.name }}.</h2>
-              
+              <h1><strong>{{ _('Recent News') }}</strong></h1>
+              <h2>{{ _('Find out what&#39;s happening on %(site_name)s.')|format(site_name=d.config.site.name) }}</h2>
+
               <ul>
                   {% for item in d.template_data.news %}
                       {% if loop.index <= 3 %}
@@ -347,12 +346,12 @@
                           <span class="date">{{ item.datetime }}</span>
                           <span class="title serif">{{ item.title }}</span>
                           <span class="excerpt serif">{{ item.text }}</span>
-                          <a href="{{ item.link }}" class="rounded-button small">Read more <span class="sm-arrow-forward"></span></a>
+                          <a href="{{ item.link }}" class="rounded-button small">{{ _('Read more') }} <span class="sm-arrow-forward"></span></a>
                       </li>
                       {% endif %}
                   {% endfor %}
               </ul>
-              
+
               <div style="clear:both"></div>
           </div>
         {% endif %}
@@ -361,14 +360,14 @@
   <!-- Not sure what this is used for -->
     <div class='foothills'>
     </div>
-    
+
     <!-- Terms of use -->
     <div class='template-content modal-content toc'>
-        <h2><strong>Terms of Use</strong></h2>
+        <h2><strong>{{ _('Terms of Use') }}</strong></h2>
         <div class="scroll-pane">
             {% include 'partials/toc.html' %}
         </div>
-        <a class='close' href="#"><span>close</span></a>
+        <a class='close' href="#"><span>{{ _('close') }}</span></a>
     </div>
 </div>
 {% endblock continent %}

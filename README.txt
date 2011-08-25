@@ -1,4 +1,4 @@
-# Change by Us #
+# Change by Us # 
 
 "Change by Us aims to invite ideas for civic solutions, intelligently form project groups, and effectively connect groups with resources to bring their ideas to life."
 

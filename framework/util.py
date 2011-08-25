@@ -1,5 +1,5 @@
 # generally try not to import things up here
-import re, base64, string, urlparse
+import re, base64, string, urlparse, datetime
 from framework.log import log
 
 def try_f(f, data, default=None):
@@ -385,6 +385,17 @@ def deobfuscate(token):
         if token[i].isdigit():
             numbers.append(token[i])
     return "".join(numbers)
+
+def local_utcoffset(localtime=datetime.datetime.now(), 
+                    utctime=datetime.datetime.utcnow()):
+    """
+    Returns the utcoffset between the localtime and utctime parameters. If the
+    default parameters are left alone, the result will be the utcoffset of the
+    computer's time zone.
+    """
+    seconds = (localtime - utctime).total_seconds()
+    hours = int(round(seconds / 60 / 60))
+    return hours
 
 def format_time(seconds):
     """
