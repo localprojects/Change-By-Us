@@ -1,7 +1,9 @@
-import helpers.sms as sms
-from framework.emailer import *
+import helpers.sms
+#from framework.emailer import *
+from framework.emailer import Emailer
 from framework.log import log
-from framework.config import *
+#from framework.config import *
+from framework.config import Config
 
 ## EMAIL FUNCTIONS
 
@@ -255,7 +257,7 @@ def sendSMSConfirmation(db, phone):
     if (not isPhoneStopped(db, phone)):
         message = "Thanks for adding your idea to changeby.us Visit %smobile to browse and join projects related to your idea." % Config.get('default_host')
         
-        return sms.send(phone, message)
+        return helpers.sms.send(phone, message)
     else:
         return False
     
@@ -266,7 +268,7 @@ def sendSMSInvite(db, phone, projectId):
         if (not isPhoneStopped(db, phone)):
             link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
             message = "You've been invited to a project on changeby.us. Visit %s to see the project. Reply 'STOP' to stop changeby.us messages." % link        
-            return sms.send(phone, message)
+            return helpers.sms.send(phone, message)
         else:
             return False    
     except Exception, e:

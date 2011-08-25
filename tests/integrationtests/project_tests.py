@@ -36,6 +36,7 @@ class Test_ProjectController_showProject (WebPySetupMixin, TestCase):
         
         controller = ProjectController()
         controller.render = Mock()
+        controller.getProject = Mock(return_value=Mock())
         
         controller.showProject(1)
         
@@ -46,6 +47,9 @@ class Test_ProjectController_showProject (WebPySetupMixin, TestCase):
     def sets_the_project_in_the_template_data_as_an_object_with_a_needs_iterable(self):
         controller = ProjectController()
         controller.render = Mock()
+        project = Mock()
+        project.needs = []
+        controller.getProject = Mock(return_value=project)
         
         controller.showProject(1)
         

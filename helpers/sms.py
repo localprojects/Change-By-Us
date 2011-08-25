@@ -3,17 +3,20 @@ from framework import util
 from lib import twilio
 from lib import web
 from framework.log import log
-from framework.config import *
-from framework.controller import *
+#from framework.config import *
+from framework.config import Config
+#from framework.controller import *
+import framework.controller
+import framework.task_manager
 
 def reply(user, message):    
     
     message = clean(message)
     try:
-        message_id = Controller.get_db().insert("messages", user_id=user.id, message=message, sms=1, outgoing=1, status="queued")        
+        message_id = framework.controller.Controller.get_db().insert("messages", user_id=user.id, message=message, sms=1, outgoing=1, status="queued")        
     except Exception, e:
         log.error(e) 
-    Tasks().add(tube='sms', data={'user': user, 'message_id': message_id, 'message': message}, timeout=10)                   
+    framework.task_manager.Tasks().add(tube='sms', data={'user': user, 'message_id': message_id, 'message': message}, timeout=10)                   
     web.header("Content-Type", "text/plain")    
     return ''
 

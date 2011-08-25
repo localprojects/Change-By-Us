@@ -4,9 +4,11 @@ import helpers.custom_filters as custom_filters
 from lib.web.contrib.template import render_jinja
 from lib import web
 from framework.log import log
-from framework.config import *
-from framework.session_holder import *
-from framework.task_manager import *
+#from framework.config import *
+from framework.config import Config
+#from framework.session_holder import *
+from framework.session_holder import SessionHolder
+#from framework.task_manager import *
 import framework.util as util
 import giveaminute.user as mUser
 
