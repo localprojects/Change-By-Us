@@ -550,7 +550,7 @@ where pm.message_type='member_comment'
             if self.Config.get('dev'):
                 admins = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
                 recipients.extend(admins)
-                body += "Recipients are: %s\n" % ','.join(recipients)
+                body += "\n\n Development Information:\nRecipients are: %s\n" % ', '.join(recipients)
 
             logging.info('Digest recipients: %s' % recipients)
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
