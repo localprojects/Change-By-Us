@@ -238,7 +238,7 @@
 						location:{
 							selector:'.location-group',
 							validators:tc.locationDropdown.validator,
-							hint:'Start typing neighborhood or borough...'
+							hint:'Start typing a neighborhood'
 						}
 					},
 					init:function(merlin,dom){
