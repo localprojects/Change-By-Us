@@ -232,7 +232,9 @@ class Controller (object):
 
         # Set up template and Jinja
         template_values['template_name'] = template_name
-        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', extensions=['jinja2.ext.i18n'])
+        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', 
+            extensions=['jinja2.ext.i18n',
+                        'jinja2.ext.with_',])
         renderer._lookup.filters.update(custom_filters.filters)
 
         # Install the translation
