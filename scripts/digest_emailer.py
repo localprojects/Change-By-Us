@@ -124,7 +124,7 @@ class Mailable():
             try:
                 retval = Emailer.send(addresses=to,
                             subject=subject,
-                            text=body,
+                            text=None,
                             html=self.htmlify(body),
                             from_name = self.MailerSettings.get('FromName'),
                             from_address = self.MailerSettings.get('FromEmail'),
