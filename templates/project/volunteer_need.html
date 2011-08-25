@@ -26,20 +26,22 @@
       <div class="volunteers">
       
         {% for volunteer in need.volunteers %}
-          {% if loop.first %}
-            <img class="vol-first" src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer.name }}"></img>
-            <span class="vol-desc"><span>{{ volunteer.name }}</span> and {{ need.volunteers|length - 1 }} others volunteered.</span>
-            
-            <div class="vol-avatars">
-          {% else %}
-            {% if loop.index <= 5 %}
-              <img src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer.name }}"></img>
+          {% with volunteer_name = volunteer|display_name(need.project) %}
+            {% if loop.first %}
+              <img class="vol-first" src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+              <span class="vol-desc"><span>{{ volunteer_name }}</span> and {{ need.volunteers|length - 1 }} others volunteered.</span>
+              
+              <div class="vol-avatars">
+            {% else %}
+              {% if loop.index <= 5 %}
+                <img src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+              {% endif %}
             {% endif %}
-          {% endif %}
-          
-          {% if loop.last %}
-            </div>
-          {% endif %}
+            
+            {% if loop.last %}
+              </div>
+            {% endif %}
+          {% endwith %}
         {% endfor %}
         
         <a href="#" class="sub fancy-caps"><span>E-mail</span> the<br>
