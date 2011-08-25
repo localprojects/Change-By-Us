@@ -1,4 +1,5 @@
 from fabric.api import *
+from fabric.contrib import files as files
 import os
 import time
 import re
@@ -19,10 +20,21 @@ CAVEATS AND NOTES:
       The short syntax does not return the correct value for success, and this causes scripts to fail
     * ROLES (and other decorators) MUST be on the parent function. 
       Running a child function through a decorator just won't work due to some fabric stupidity!
+
+TODO:
+    * Easy way to install pip/pear/cpan packages when RHEL does not have them:
+        * easy_install-2.6 install pip
+        * pip-2.6 install pyyaml
     
 ------------------------------
 COOKBOOK:
 ------------------------------
+    The general format of a command is:
+        fab --config=<rcfile> <environment> <tasks ...>
+
+    Setup the initial system with prerequisites
+        fab --config=rcfile.dev dev setup_system
+
     A quick way to get the initial system setup
         fab --config=rcfile.demo demo setup_application deploy_configurations bundle_code deploy
 
@@ -57,6 +69,8 @@ COOKBOOK:
         fab --config=rcfile.dev dev setup_db_backup
         
 """
+# GLOBALS
+DEBUG = True
 
 # Expand user home paths if necessary, which is only relevant to some variables
 env.local_path = os.path.expanduser(env.local_path)
@@ -64,6 +78,11 @@ env.key_filename = os.path.expanduser(env.key_filename)
 
 # We need to make the hosts into a list
 env.hosts = env.hosts.split(',')
+
+# Interpolate the local_path if necessary
+env.local_path = env.local_path % env
+if not env.get('home_path'):
+    env.home_path = "/home"
 
 # Roles for different targets clusters
 env.roledefs = {
@@ -78,6 +97,7 @@ env.vars = {}
 #   filename        : post-interpolated filename on the remote host
 #   templatename    : name of the template file that interpolation is performed on
 #   path:           : path on the remote host to store filename to
+# CAVEAT: Don't link anything into the web/ path unless you want it visible to the public!
 # [ {'filename':'config.yaml', 'templatename':'config.yaml.sample', 'path':'etc'} ]
 env.config_files = [ {'filename':'config.yaml', 'path': '', 'templatename': 'config.yaml.tmpl'} ]
 
@@ -103,6 +123,14 @@ env.packages = {'rhel5': {
                     'additional_commands':['a2enmod php5', 'a2enmod headers'] }
                 }
 
+# Protected folders are those under .htaccess control, and are always relative to the document root
+env.protected_folders = []
+
+# Template paths will be interpolated. This is any folder that contains a 
+# template file, but in addition to the etc_path folder. SO DO NOT ADD
+# etc_path to this list!
+env.template_paths = []
+
 
 #----- Decorator(s) -----
 def common_config(func):
@@ -121,7 +149,7 @@ def common_config(func):
         
         # Now load all the configurations that were dependent on the caller's var-space
         if env.get('deploy_to') is None:
-            env.deploy_to = '/home/%(user)s' % env # The base path should always be the logged-in user
+            env.deploy_to = '%(home_path)s/%(user)s' % env # The base path should always be the logged-in user
             
         env.deploy_to = env.deploy_to % env
 
@@ -167,13 +195,12 @@ def common_config(func):
 
 def get_remote_host_info():
     """
-    Determine the remote host's OS, and based on this set some
-    environment options so that we can easily move forward
+    Determine the remote host's OS, and based on this set environment options
     """
     # We do this as sudo_as() since it's part of initial setup and the 
     # app user may not yet exist
     uname = sudo_as('uname -a')
-    print "Uname is %s" % uname
+    debug("Uname is %s" % uname)
     
     # TODO; add support for getting the exact target version
     # ver = run('more /etc/issue')
@@ -187,16 +214,19 @@ def get_remote_host_info():
     else:
         raise Exception("Cannot proceed with platform %s. This platform is currently not supported" % uname)
     
-    print "Remote host is %s" % env.os_name
+    debug("Remote host is %s" % env.os_name)
 
 #----- /decorator(s) -----
 
 #----- Utility Functions -----
-def sudo_as(cmd, **kwargs):
+def sudo_as(cmd):
+    """
+    Perform sudo as a higher-rights user
+    """
     temp_user = env.user
     env.user = env.sudo_as
-    print "sudoing command %s as user %s" % (cmd, env.sudo_as)
-    resp = sudo(cmd, **kwargs)
+    debug("sudoing command %s as user %s" % (cmd, env.sudo_as))
+    resp = sudo(cmd)
     env.user = temp_user
     return resp
      
@@ -209,11 +239,11 @@ def sudo_as(cmd, **kwargs):
 @common_config
 def live():
     """
-    Work on demo environment
+    Work on live environment
     """
     if env.rcfile is None:
         env.rcfile = 'rcfile.%s' % env.settings
-        print "Using default rcfile since one was not provided with --config option:" % env.rcfile
+        debug("Using default rcfile since one was not provided with --config option:" % env.rcfile)
 
 @common_config
 def demo():
@@ -222,7 +252,7 @@ def demo():
     """
     if env.rcfile is None:
         env.rcfile = 'rcfile.%s' % env.settings
-        print "Using default rcfile since one was not provided with --config option:" % env.rcfile
+        debug("Using default rcfile since one was not provided with --config option:" % env.rcfile)
 
 @common_config
 def dev():
@@ -231,28 +261,36 @@ def dev():
     """
     if env.rcfile is None:
         env.rcfile = 'rcfile.%s' % env.settings
-        print "Using default rcfile since one was not provided with --config option:" % env.rcfile
+        debug("Using default rcfile since one was not provided with --config option:" % env.rcfile)
+
+def dump_env():
+    """
+    Test function for dumping all current environment variables
+    """
+    for key in env.keys():
+        debug("%s => %s" % (key, env.get(key)))
 
 #------------------------------------------------
 # Create Configuration files from rcfile
 #------------------------------------------------
-def create_config_yaml():
+def create_config_files():
+    """
+    Create configuration files from templates, as defined in the env.config_files option
+    """
     if not os.path.exists(env.rcfile):
         raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
 
     for item in env.config_files:
         if not os.path.exists(item.get('local_config_template')):
             raise Exception("Unable to find configuration template file (%s) to create config from" % item.get('local_config_template'))
-        else:
-            print("Interpolating %s => %s" % (item.get('local_config_template'), item.get('local_config_file')))
-            
+        
         infile = open(item.get('local_config_template'), 'r')
         outfile = open(item.get('local_config_file'), 'w')
         outfile.write(infile.read() % env)
         outfile.close()
         infile.close()
 
-def upload_config_yaml():
+def upload_config_files():
     " Upload the interpolated config.yaml to the target servers"
     for item in env.config_files:
         put(item.get('local_config_file'), env.shared_path)
@@ -272,24 +310,28 @@ def upload_webserver_conf():
 @roles('web')
 def deploy_configurations():
     """
-    Interpolate configuration templates into the final config files and deploy to target hosts
-    Deploy config.yaml and other webserver-related configurations 
+    Interpolate templates into final config files and deploy to targets
     """
-    # create_config_yaml()
-    # upload_config_yaml()
-
+    # create_config_files()
+    # upload_config_files()
+    
     _upload_interpolated_files(_interpolate_templates())
-    # create_webserver_conf()
-    # upload_webserver_conf()
-    stop_webserver()
-    start_webserver()
+    restart_webserver()
     
 #---- /create-config-files ----------------------
 
-#----- CRON related tasks -----    
+#----- CONFIGURATION related tasks -----    
 
+def create_local_configs():
+    """
+    Create all configuration files in the local environment. Useful only for development.
+    """
+    create_config_files()
+    _interpolate_templates()
+    
 def _interpolate_templates():
-    """ Translate the cron file template into a "real" cron file.
+    """
+    Translate the templates into a "real" files.
     
     Should never be called directly, since the purpose of this function is
     to perform the first step of cron-file deployment
@@ -298,49 +340,90 @@ def _interpolate_templates():
         raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
 
     interpolated_files = []
-    # Get a list of all template files in /etc/ that we needt o interpolate
-    for root, dirs, files in os.walk(env.local_etc_path):
-        for name in files:
-            infilename = os.path.join(root, name)
-            if re.search('.tmpl$', infilename):
-                print "Processing template file %s" % infilename
+    # Get a list of all template files in /etc/ that we need to interpolate
+    template_paths = []
+    template_paths.extend(env.template_paths)
+    template_paths.append(env.local_etc_path)
+
+    for template_path in template_paths:        
+        for root, dirs, files in os.walk(template_path):
+            for name in files:
+                infilename = os.path.join(root, name)
+                if re.search('.tmpl$', infilename):
+                    debug("Processing template file %s" % infilename)
                 
-                outfilename = os.path.splitext(infilename)[0]
-                infile = open(infilename, 'r')
-                outfile = open(outfilename, 'w')
-                outfile.write(infile.read() % env)
-                outfile.close()
-                infile.close()
-                interpolated_files.append(outfilename)
+                    outfilename = os.path.splitext(infilename)[0]
+                    infile = open(infilename, 'r')
+                    outfile = open(outfilename, 'w')
+                    try:
+                        outfile.write(infile.read() % env)
+                    except TypeError, e:
+                        if re.search("not enough arguments for format string", e[0]):
+                            # We can safely ignore this since it means that there's nothing to interpolate
+                            print e[0]
+                            print "Continuing by using the template file (%s) as the target (ie no interpolation)" % infilename
+                            # Remember that we have to go back to the top due to read() being at eof
+                            infile.seek(0)
+                            outfile.write(infile.read())
+                        else:
+                            raise
+                        
+                    outfile.close()
+                    infile.close()
+                    interpolated_files.append(outfilename)
                 
     return interpolated_files
 
 def _upload_interpolated_files(files):
-    """ Uploads cron files after interpolation 
+    """ 
+    Uploads cron files after interpolation 
     
     Expects to have interpolation run initially, so this function should 
     not be called directly.
     """
+    # Get a list of all template files in /etc/ that we need to interpolate
+    template_paths = []
+    template_paths.extend(env.template_paths)
+    template_paths.append(env.local_etc_path)
+
     for filename in files:
-        print "filename to search for is %s" % filename
+        env.temp = None
         if not re.search('.tmpl$', filename):
-            # TODO: This is a bit sketchy to do hard-coded 'etc' check, but 
-            # we can't split on the entire path either!
-            # Get the relative path to the interpolated etc file with 
-            env.temp = filename.split('etc')[1]
+            # Get the relative path to the interpolated file. The template
+            # is either at etc/... or current/...
+            for tmplpath in template_paths:
+                if re.search(tmplpath, filename):
+                    if re.match(env.local_etc_path, tmplpath):
+                        env.temp = filename.split(env.local_etc_path)[1]
+                    elif re.match(env.local_path, tmplpath):
+                        # We want everything except the local_path
+                        env.temp = filename.split(env.local_path)[1]
+                    else:
+                        raise Exception("Unknown root path - not etc or local_path. Please check your configs!")
+                    
+                    # Now that we found something, we can move on    
+                    break
+                    
             base = [x for x in env.temp.split('/') if x is not None and x != '']
-            temp_path = list(base)
-            temp_path.insert(0, env.etc_path)
+            temp_path = list(base)  # redundant, but helps
+            # Template file are either in the etc/ or under the current/
+            if re.match(env.local_etc_path, filename):
+                temp_path.insert(0, env.etc_path)
+            elif re.match(env.local_path, filename):
+                temp_path.insert(0, env.current_path)
+            
             remote_path = os.path.join(*temp_path[:-1])
             remote_file = os.path.join(*temp_path)
+            # debug("remote_path: %s; remote_file: %s" % (remote_path, remote_file))
+            
             run('mkdir -p %s' % remote_path)
             put(filename, remote_file)
             # sudo_as('chgrp %s %s' % (env.webserver_group, remote_file))
         
-            if re.match('/cron', env.temp):
+            if re.match('/cron', env.temp) or re.match('/logrotate.d', env.temp):
                 # Set the cron script to be executable
                 run('chmod +x %s' % remote_file)
-                
+
                 # Symlink the cron job to the correct place
                 temp_path = list(base)
                 temp_path.insert(0, '/etc')
@@ -350,7 +433,7 @@ def _upload_interpolated_files(files):
                 sudo_as('if [ -d %s ];then if [ ! -e %s ];then sudo ln -snf %s %s; else echo "Target file already exists! Will not overwrite"; fi; else echo "Target path is incorrect"; fi' % (abs_etc_path, abs_etc_file, remote_file, abs_etc_file))
                 
 
-#----- /CRON related tasks -----
+#----- /configuration related tasks -----
 
 """
 Branches
@@ -378,7 +461,9 @@ SETUP AND INITIALIZATION TASKS
 """
 @roles('web')
 def setup_system():
-    """ Set up a new system """
+    """ 
+    Set up a new system with all pre-requisites and a target user context
+    """
     # Install pre-requisites with package manager
     install_requirements()
     # Create user and target paths as necessary
@@ -391,8 +476,6 @@ def setup_system():
 def setup_application():
     """
     Set up the application path and all the application specific things
-
-    Does NOT perform the functions of deploy().
     """
     require('settings', provided_by=[dev, demo])
     # require('branch', provided_by=[stable, master, branch])
@@ -420,8 +503,9 @@ def setup_directories():
 SCM and Code related functions
 """
 def bundle_code():
-    # Set the timestamp for the release here, and it'll be available to the environment
-    "Bundling Code"
+    """
+    Pull the latest code from the SCM and bundle for deployment
+    """
     env.release = time.strftime('%Y%m%d%H%M%S')
 
     # We want the parent paths to the temporary location ...
@@ -435,12 +519,14 @@ def bundle_code():
         "Create an archive from the current Git master branch and upload it"
         local('git clone --depth 0 %(repository)s %(tmp_path)s' % env)
         local('cd %(tmp_path)s && git pull origin %(branch)s && git checkout %(branch)s' % env)
-        local('cd %(tmp_path)s && git rev-parse %(branch)s > REVISION.TXT' % env)
+        local('cd %(tmp_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
         env.release = local('cd %(tmp_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
         local('cd %(tmp_path)s && git archive --format=tar %(branch)s > %(tmp_path)s/%(release)s.tar' % env)
+        local('cd %(tmp_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == "git-svn":
         # Get repo information and store it to REVISION.txt
         local('cd %(repository)s && git svn info > %(tmp_path)s/REVISION.txt' % env)
+        local('cd %(tmp_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == 'svn':
         local('svn export %(repository)s/%(branch)s %(tmp_path)s' % env)
         local('svn info %(repository)s/%(branch)s > %(tmp_path)s/REVISION.txt' % env)
@@ -458,27 +544,30 @@ def bundle_code():
     # Don't delete the local copy in case we need to debug - that will be done on the next cycle
 
 def upload_and_explode_code_bundle():
-    "Upload the local tarball of latest code to the target host"
+    """
+    Upload the local tarball of latest code to the target host
+    """
     put('%(tmp_path)s/%(release)s.tar.gz' % env, '%(app_path)s/releases/' % env)
-    run('cd %(app_path)s/releases/ && mkdir -p %(release)s && tar -xvf %(release)s.tar.gz -C %(release)s && if [ -e %(release)s.tar.gz ];then rm -rf %(release)s.tar.gz; fi' % env)
+    
+    with settings(warn_only=True):
+        result = run('cd %(app_path)s/releases/ && mkdir -p %(release)s && tar -xvf %(release)s.tar.gz -C %(release)s && if [ -e %(release)s.tar.gz ];then rm -rf %(release)s.tar.gz; fi' % env)
+    if result.failed:
+        print "Ignoring as though everything is good"
     sudo_as('chgrp -R %(webuser)s %(app_path)s/releases/%(release)s' % env)
 
 def symlink_current_release():
-    "Symlink our current release, and also symlink config.yaml to the shared config"
+    """
+    Symlink the current release, and also symlink all shared configuration files (from env.config_files)
+    """
     require('release', provided_by=[deploy_webapp, setup_application])
+    # if exists('%(app_path)s/previous' % env):
     run('if [ -e %(app_path)s/previous ];then rm %(app_path)s/previous; fi; if [ -e %(app_path)s/current ];then mv %(app_path)s/current %(app_path)s/previous; fi' % env)
     # Link the shared config file into the current configuration
-    
     for item in env.config_files:
-        run('rm -f %s' % (os.path.join(env.app_path, 'releases', env.release, item.get('path'), item.get('filename'))))
-        # TODO:
-        # This needs some help
-        run('ln -s %s %s' % (os.path.join(env.app_path, 'etc', item.get('filename')), os.path.join(env.app_path, 'releases', env.release, item.get('path'), item.get('filename'))))
+        run('rm -f %s/releases/%s/%s/%s' % (env.app_path, env.release, item.get('path'), item.get('filename')))
+        run('ln -nsf %s %s' % (os.path.join(env.app_path, 'etc', item.get('filename')), os.path.join(env.app_path, 'releases', env.release, item.get('path'), item.get('filename'))))
 
-        # run('rm -f %(app_path)s/releases/%(release)s/%(config_path)s/%(config_filename)s;\
-        #     ln -s %(app_path)s/shared/%(config_filename)s %(app_path)s/releases/%(release)s/%(config_path)s/%(config_filename)s' % env)
-
-    run('ln -s %s %s' % (os.path.join(env.app_path, 'releases', env.release), os.path.join(env.app_path, 'current')))
+    run('ln -s %(app_path)s/releases/%(release)s %(app_path)s/current' % env)
 
 def install_requirements():
     """
@@ -496,11 +585,12 @@ def install_requirements():
     
 def install_rhel5_packages():
     """
-    Install the required packages using yum. We can assume that security and other "core"
-    system updates have already been applied. So no need to run "yum update"
+    Install the required packages using yum. 
+    We can assume that security and other "core" system updates have already been applied. So no need to run "yum update"
     """
     # First install the IUS Community repo to get RHEL5 up to date with the newer requirements
     sudo_as('cd /tmp && rm -f *.rpm*')  # initial cleanup
+    print "Checking if wget is installed. Ignore any errors here ..."
     with settings(warn_only=True):
         result = sudo_as('wget')
     if result.failed:
@@ -566,12 +656,17 @@ def create_app_context():
     """
     Create the user context under which the application will run
     """
+    env.tmpuser = env.user
     try:
-        sudo_as('useradd -d %(home_path)s/%(user)s -m %(user)s && mkdir %(home_path)s/%(user)s/.ssh/ && cp ~/.ssh/authorized_keys %(home_path)s/%(user)s/.ssh/ && chown -R %(user)s:%(user)s %(home_path)s/%(user)s/.ssh' % env)
-        sudo_as('chmod 755 %(home_path)s/%(user)s && chgrp -R %(webuser)s %(home_path)s/%(user)s' % env)
+        sudo_as('useradd -d %(home_path)s/%(tmpuser)s -m %(tmpuser)s' % env)
     except SystemExit:
         print "WARNING: Failed to create app context since it probably already exists. Continuing."
 
+    try:
+        sudo_as('mkdir %(home_path)s/%(tmpuser)s/.ssh/ && cp ~/.ssh/authorized_keys %(home_path)s/%(tmpuser)s/.ssh/ && chown -R %(tmpuser)s %(home_path)s/%(tmpuser)s/.ssh' % env)
+        sudo_as('chmod 755 %(home_path)s/%(tmpuser)s && chgrp -R %(webuser)s %(home_path)s/%(tmpuser)s' % env)
+    except:
+        print "WARNING: something failed in copying SSH keys into user %(tmpuser)s context" % env
     return True
     
 def check_system():
@@ -603,8 +698,6 @@ def deploy_assets_to_s3():
 def deploy_webapp():
     """
     Deploy the latest version of the site to the server and restart Apache2.
-
-    Does not perform the functions of load_new_data().
     """
     # require('settings', provided_by=[production, staging])
     # require('branch', provided_by=[stable, master, branch])
@@ -613,10 +706,6 @@ def deploy_webapp():
     #    maintenance_up()
 
     upload_and_explode_code_bundle()
-    if env.get('upload_only'):
-        # This indicates that we don't want to update current
-        # or restart the web server, so bail at this point
-        return
 
     # Restart the web server with the latest code
     stop_webserver()
@@ -624,69 +713,69 @@ def deploy_webapp():
     # maintenance_down()
     start_webserver()
 
-    # checkout_latest()
-    # gzip_assets()
-    # deploy_to_s3()
-    # refresh_widgets()
-    # maintenance_down()
+@roles('web')
+def deploy_app():
+    """
+    Deploy the latest application bundle, and symlink current. But do NOT restart the web server
+    
+    NOTE: The reason this is not called by deploy_webapp is due to lack of decorator
+    inheritance is Fabric, so roles will not pass down
+    """
+    upload_and_explode_code_bundle()
+    symlink_current_release()
 
-def maintenance_up():
-    """
-    Execute maintenance configuration.
-    """
-    # sudo('cp %(repository)s/%(application)s/configs/%(settings)s/%(application)s_maintenance %(apache_config_path)s' % env)
-    # reboot()
-    pass
-
-def maintenance_down():
-    """
-    Reinstall the normal site configuration.
-    """
-    # install_apache_conf()
-    # reboot()
-    pass
-
+"""
+WebServer related tasks
+"""
 def stop_webserver():
-    """
-    Stop the webserver. Note that some web servers allow for command-line definition
-    of the configuration file to use. Others don't
+    """ Stop the webserver. 
+    Note that some web servers allow for command-line definition of the configuration file to use. Others don't
     """
     _webserver_do('stop')
     
 def start_webserver():
+    """ Start the webserver """
     _webserver_do('start')
     
 def restart_webserver():
+    """Restart the webserver """
     _webserver_do('restart')
     
 def _webserver_do(action=''):
     """
-    Act on the webserver (start, stop, restart, etc).
+    Helper function to perform an action on the webserver (start, stop, restart, etc).
     """
     params = {}
     params['webserver'] = env.webserver
     params['action'] = action
     params['app_path'] = env.app_path
     
-    if env.webserver == 'lighttpd':
-        # Keep in mind that this has to be configured for the new lighttpd init script
-        # Also, because of the way /etc/init.d/lighttpd works, we need to ensure theres no
-        # shell (ie bash -l -c) or pseudo-terminal 
-        sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params, shell=False, pty=False)
-    elif env.webserver == 'apache':
-        if env.os_name == 'rhel5':
-            sudo_as('/usr/sbin/apachectl %(action)s' % params)
-        elif env.os_name == 'ubuntu10':
-            sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
-                        
-def secure_webserver():
+    try:
+        if env.webserver == 'lighttpd':
+            # Keep in mind that this has to be configured for the new lighttpd init script
+        	# Also, because of the way /etc/init.d/lighttpd works, we need to ensure theres no
+	        # shell (ie bash -l -c) or pseudo-terminal 
+	        sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params, shell=False, pty=False)
+        elif env.webserver == 'apache':
+	        if env.os_name == 'rhel5':
+	            sudo_as('/usr/sbin/apachectl %(action)s' % params)
+	        elif env.os_name == 'ubuntu10':
+	            sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
+
+    except Exception, e:
+        print "Got exception %s", e
+        print "Continuing with the assumption that we don't mind."
+        
+def secure_website():
     """
-    Apply htaccess (basicAuth) to the web server
+    Apply htaccess (basicAuth) to folders defined by env.protected_folders
     """
     if env.webserver == 'apache':
         # Symlink the .htaccess file to the webserver root
-        run('ln -s %(etc_path)s/%(webserver)s/htaccess %(webserver_docroot)s/.htaccess' % env)
-        run ('if [ ! -e %(etc_path)s/htpasswd ];then htpasswd -b -c %(etc_path)s/htpasswd %(webserver_auth_user)s %(weberver_auth_password)s; fi' % env)
+        run ('if [ ! -e %(etc_path)s/htpasswd ];then touch %(etc_path)s/htpasswd; fi && htpasswd -b %(etc_path)s/htpasswd %(webserver_auth_user)s %(webserver_auth_password)s ' % env)
+        for path in env.get('protected_folders'):
+            env.temp = path
+            run('ln -snf %(etc_path)s/%(webserver)s/htaccess %(webserver_docroot)s/%(temp)s/.htaccess' % env)
     else:
         raise "Cannot set security parameters for webserver %(webserver)s yet. Please contact the developer." % env
         
@@ -783,20 +872,34 @@ def echo_host():
     run('echo %(settings)s; echo %(hosts)s' % env)
 
 @roles('web')
-def debug_dump_env():
+def test():
     """
-    Dump all the environment variables
+    Test and dump the rcfile
     """
     print "Testing the rcfile"
     for item in env.keys():
         print "%s => %s" % (item, env.get(item))
 
+@roles('web')
+def disable_cron():
+    """
+    Remove all cron tasks from the system
+    """
+    for root, dirs, files in os.walk(env.local_etc_path):
+        for name in files:
+            infilename = os.path.join(root, name)
+            if re.search('.tmpl$', infilename) and re.search('cron', infilename):
+                cronfile = os.path.splitext(infilename)[0]
+                cronfile = cronfile.split('etc')[1]
+                if cronfile[0] == '/':
+                    cronfile = cronfile[1:]
+                sudo_as('rm -f %s' % os.path.join('/etc', cronfile))
 
 """
 EC2 AND CLOUD-RELATED TASKS
 """
 # EC2 bundling, scaling and other such tasks
-def put_ec2_credentials_for_bundling():
+def _put_ec2_credentials_for_bundling():
     pass
 
 def bundle_and_save_image():
@@ -823,3 +926,9 @@ def mount_ephemeral_storage():
     sudo_as("if [ ! $(mount | grep -i 'mnt') ];then mkfs.ext3 /dev/sdf && mount /dev/sdf /mnt; mkdir -p /mnt/%(application)s/var; chmod -R a+rw /mnt/%(application)s; fi" % env)
     run('mkdir -p %(script_working_path)s' % env)
     
+def debug(msg=None):
+    """
+    Print the input message based on the current DEBUG status
+    """
+    if DEBUG:
+        print msg
