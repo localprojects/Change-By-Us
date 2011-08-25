@@ -16,6 +16,11 @@ app_page.features.push(function(app){
 		$t.addClass('has-been-clicked').siblings().addClass('cannot-be-clicked');
 	});
 	
+	tc.jQ('.toc-link').bind('click',function(e){
+	    window.open(tc.jQ(this).attr('href'));
+	    return false;
+	})
+	
 	app.components.merlin = new tc.merlin(app,{
 		dom:tc.jQ('form.merlin'),
 		progress_element:tc.jQ('.merlin-progress'),
@@ -396,7 +401,7 @@ app_page.features.push(function(app){
 				prev_step:null,
 				next_step:null,
 				init:function(merlin,dom){
-					dom.find('strong.email').text(merlin.options.data.email);
+				    tc.jQ('strong.email').text(merlin.options.data.email);
 					tc.jQ.ajax({
 						type:'POST',
 						url:merlin.app.app_page.data.account_create_url,

@@ -48,7 +48,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 			out.find('blockquote.serif').before('<div class="note-card">\
 				<cite class="note-meta-hd"></cite>\
 				<blockquote>\
-					<p class="message-test">&nbsp;</p>\
+					<p class="message-test">'+d.idea.text+'</p>\
 				</blockquote>\
 				<cite class="note-meta-ft"></cite>\
 			</div>');
@@ -176,6 +176,7 @@ tc.gam.project_widgets.conversation = function(project,dom,deps,options){
 					}
 					for(i in d){
 						this.elements.message_stack.append(this.generate_message(d[i]));
+						e.data.me.runtime_data.offset++;
 					}
 					this.dom.find('a.close').unbind('click').bind('click', {project:project,me:this}, this.handlers.remove_comment);
 					this.dom.find('.message-text').each(this.handlers.handle_message_body);

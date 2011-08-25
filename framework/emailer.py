@@ -209,4 +209,12 @@ def send_email_via_ses(addresses, subject, text, html=None, attachment=None, fro
             raise NotImplementedError, 'SES does not currently allow ' + \
                                        'messages with attachments.'
 
-    return sesConn.send_raw_email(sender, message.as_string(), destinations=addresses)                                           
+    # send_raw does not seem to support bcc or cc,
+    # So let's force all our emails to go out as HTML
+    return sesConn.send_email(sender, subject,
+                              text or html,
+                              addresses, cc, bcc,
+                              format='html')
+
+    # TODO: Fix the send_raw_email() so it support bcc and cc correctly!
+    # return sesConn.send_raw_email(sender, message.as_string(), destinations=addresses)                                           
