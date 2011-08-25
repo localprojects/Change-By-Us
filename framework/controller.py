@@ -1,3 +1,4 @@
+import os
 import yaml, memcache, json, gettext, locale
 from cgi import escape
 import helpers.custom_filters as custom_filters
