@@ -1,12 +1,15 @@
+import os
 from datetime import timedelta
 
+from framework import util
 from framework.log import log
-from framework.config import *
-from framework.emailer import *
+#from framework.config import *
+from framework.config import Config
+#from framework.emailer import *
 from framework.util import local_utcoffset
-import giveaminute.idea as mIdea
-import giveaminute.messaging as mMessaging
-import helpers.censor as censor
+import giveaminute.idea
+import giveaminute.messaging
+import helpers.censor
 
 class Project():
     def __init__(self, db, projectId):
@@ -155,7 +158,7 @@ limit 1"""
         ideas = []
 
         try:
-            ideas = mIdea.searchIdeas(self.db, self.data.keywords.split(), self.data.location_id, excludeProjectId = self.id)
+            ideas = giveaminute.idea.searchIdeas(self.db, self.data.keywords.split(), self.data.location_id, excludeProjectId = self.id)
         except Exception, e:
             log.info("*** couldn't get related")
             log.error(e)
@@ -365,7 +368,7 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
 
     try:
         # censor behavior
-        numFlags = censor.badwords(db, ' '.join([title, description, keywords]))
+        numFlags = helpers.censor.badwords(db, ' '.join([title, description, keywords]))
 
         isActive = 0 if numFlags == 2 else 1
 
@@ -462,7 +465,7 @@ def updateProjectImage(db, projectId, imageId):
 def updateProjectDescription(db, projectId, description):
     try:
         # censor behavior
-        numFlags = censor.badwords(db, description)
+        numFlags = helpers.censor.badwords(db, description)
         isActive = 0 if numFlags == 2 else 1
 
         if (numFlags == 2):
@@ -582,7 +585,7 @@ def removeUserFromAllProjects(db, userId):
 def addKeywords(db, projectId, newKeywords):
     try:
        # censor behavior
-        numFlags = censor.badwords(db, ' '.join(newKeywords))
+        numFlags = helpers.censor.badwords(db, ' '.join(newKeywords))
 
         if (numFlags == 2):
             return False
@@ -669,7 +672,7 @@ def removeResourceFromProject(db, projectId, projectResourceId):
 def addLinkToProject(db, projectId, title, url):
     try:
         # censor behavior
-        numFlags = censor.badwords(db, title)
+        numFlags = helpers.censor.badwords(db, title)
         isActive = 0 if numFlags == 2 else 1
 
         db.insert('project_link', project_id = projectId,
@@ -1036,7 +1039,7 @@ def addMessage(db, projectId, message, message_type, userId = None, ideaId = Non
     """
     try:
         # censor behavior
-        numFlags = censor.badwords(db, message)
+        numFlags = helpers.censor.badwords(db, message)
         isActive = 0 if numFlags == 2 else 1
 
         db.insert('project_message', project_id = projectId,
@@ -1199,7 +1202,7 @@ def findInviteByPhone(db, phone):
 def inviteByIdea(db, projectId, ideaId, message, inviterUser):
     if (createInviteRecord(db, projectId, message, inviterUser.id, ideaId)):
         try:
-            idea = mIdea.Idea(db, ideaId)
+            idea = giveaminute.idea.Idea(db, ideaId)
             project = Project(db, projectId)
 
             # IF message is not attached to a user account AND
@@ -1212,12 +1215,12 @@ def inviteByIdea(db, projectId, ideaId, message, inviterUser):
                 idea.data.submission_type == 'sms' and
                 idea.data.phone):
                 if (len(findInviteByPhone(db, idea.data.phone)) == 1):
-                    return mMessaging.sendSMSInvite(db, idea.data.phone, projectId)
+                    return giveaminute.messaging.sendSMSInvite(db, idea.data.phone, projectId)
                 else:
                     log.info("*** phone number %s already received an invite" % idea.data.phone)
                     return True
             else:
-                return mMessaging.emailInvite(idea.data.email,
+                return giveaminute.messaging.emailInvite(idea.data.email,
                                               userNameDisplay(inviterUser.firstName,
                                                               inviterUser.lastName,
                                                               inviterUser.affiliation,
@@ -1240,7 +1243,7 @@ def inviteByEmail(db, projectId, emails, message, inviterUser):
 
         for email in emails:
             if (createInviteRecord(db, projectId, message, inviterUser.id, None, email)):
-               if (not mMessaging.emailInvite(email,
+               if (not giveaminute.messaging.emailInvite(email,
                                           userNameDisplay(inviterUser.firstName,
                                                               inviterUser.lastName,
                                                               inviterUser.affiliation,
