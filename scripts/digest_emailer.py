@@ -120,22 +120,28 @@ class Mailable():
         body = re.sub('\n', '<br/>\n', body)
         return "<html><head></head><body>%s</body></html>" % body 
     
-    def sendEmail(self, to=None, recipients=None, subject=None, body=None):
+    def sendEmail(self, to=None, recipients=None, subject=None, body=None, maxRetries=10):
         complete = False
+        failNum = 0
+        
         while not complete:
-            try:
-                retval = Emailer.send(addresses=to,
-                            subject=subject,
-                            text=None,
-                            html=self.htmlify(body),
-                            from_name = self.MailerSettings.get('FromName'),
-                            from_address = self.MailerSettings.get('FromEmail'),
-                            bcc=recipients)
-                complete = True
-            except:
-                # Most probably we got an SES error, which means we should wait and retry
-                time.sleep(1)
-                pass
+            complete = Emailer.send(addresses=to,
+                        subject=subject,
+                        text=None,
+                        html=self.htmlify(body),
+                        from_name = self.MailerSettings.get('FromName'),
+                        from_address = self.MailerSettings.get('FromEmail'),
+                        bcc=recipients)
+
+            if (not complete):
+                if (failNum < maxRetries):
+                    failNum += 1
+                    
+                    # Most probably we got an SES error, which means we should wait and retry
+                    time.sleep(1)
+                    pass
+                else:
+                    logging.error("Failed to send digest email '%s'. Quit after %s tries." % (subject, str(maxRetries)))
         
 
         
@@ -492,6 +498,7 @@ order by pu.project_id, u.created_datetime desc
             currentDigest['body'] = body
 
         # Store it for later consumption
+        logging.info('Created digests (in DB) for %s projects' % len(digests.keys()))
         self.Digests = digests
         return True
 
@@ -538,6 +545,11 @@ where pm.message_type='member_comment'
         Email out all the digests that we find, based on what's in self.Digests
         self.Digests should be an array of all the digests that need to be sent out
         """
+        if (self.Config.get('email').get('digest').get('max_retries')):
+            maxRetries = int(self.Config.get('email').get('digest').get('max_retries'))
+        else:
+            maxRetries = 10        
+        
         for digest in self.Digests:
             currentDigest = None
             if type(digest) == dict:
@@ -555,7 +567,7 @@ where pm.message_type='member_comment'
                 body += "\n\nDevelopment Information:\nRecipients are: %s\n" % ', '.join(recipients)
 
             logging.info('Digest recipients: %s' % recipients)
-            self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
+            self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body, maxRetries=maxRetries)
             
             if (digest.get('digest_id')):
                 # Means that we've been called from a database record
