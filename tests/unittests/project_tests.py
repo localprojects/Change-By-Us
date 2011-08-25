@@ -1,4 +1,5 @@
 from unittest2 import TestCase
+from nose.tools import *
 from datetime import datetime, timedelta
 from paste.fixture import TestApp
 from lib import web

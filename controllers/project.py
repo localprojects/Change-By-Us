@@ -83,13 +83,14 @@ class Project(Controller):
         else:
             return self.not_found()
     
-    __orm = None
     @property
     def orm(self):
+        """An active orm session for the controller."""
         if self.__orm is None:
             from giveaminute.models import get_orm
             self.__orm = get_orm()
         return self.__orm
+    __orm = None
         
     def getProject(self, project_id):
         from giveaminute.models import Project as ProjectSqla
@@ -112,7 +113,9 @@ class Project(Controller):
                 project_proxy.data = projDictionary
                 
                 self.template_data['project'] = project_proxy
-            
+                
+                import giveaminute.filters as gam_filters
+                gam_filters.register_filters()
                 return self.render('project')
             else:
                 return self.not_found()
