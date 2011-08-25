@@ -67,8 +67,8 @@
 					selector:'.step.start',
 					prev_step:null,
 					next_step:'location',
-					title:'Turn ideas into solutions.',
-					sub_title:'<strong>' + (app.app_page.data.user ? app.app_page.data.user.f_name : 'Hey') + ', </strong> let\'s get started. The first step is to create a project.',
+					title:'Turn an idea into a project.',
+					sub_title:'<strong>' + (app.app_page.data.user ? app.app_page.data.user.f_name : 'Hey') + ', </strong> let\'s get started with some basic details.',
 					use_for_history:true,
 					step_data:{
 						timer:null
@@ -231,7 +231,7 @@
 					prev_step:'start',
 					next_step:'check-projects-process',
 					title:'Turn ideas into solutions',
-					sub_title:'We want to connect you with people<br />and resources in your area!',
+					sub_title:'Get found by other people, resources,<br />and other projects in your area.',
 					use_for_history:true,
 					step_data:{},
 					inputs:{
@@ -260,8 +260,8 @@
 				},
 				'check-projects-process':{
 					supress_hash:true,
-					title:'Let&rsquo;s check for similar projects.',
-					sub_title:'Starting something new is great, but there<br />may already be a project you\'d like to join. <br />Take a look at these others.',
+					title:'Let\'s have a look for similar projects.',
+					sub_title:'Starting something new is great, but there<br />may also be a great project to join up with.',
 					progress_selector:'.3',
 					selector:'.step.check-projects-process',
 					prev_step:'location',
@@ -294,8 +294,8 @@
 					}
 				},
 				'check-projects':{
-					title:'Let\'s check for similar projects.',
-					sub_title:'Starting something new is great, but there<br />may already be a project you\'d like to join. <br />Take a look at these others.',
+					title:'Let\'s have a look for similar projects.',
+					sub_title:'Starting something new is great, but there<br />may also be a great project to join up with.',
 					progress_selector:'.3',
 					selector:'.step.check',
 					prev_step:'location',
@@ -343,8 +343,8 @@
 					}
 				},
 				'check-nosimilar':{
-					title:'Let\'s check for similar projects.',
-					sub_title:'Starting something new is great, but there<br />may already be a project you\'d like to join. <br />Take a look at these others.',
+					title:'Let\'s have a look for similar projects.',
+					sub_title:'Starting something new is great, but there<br />may also be a great project to join up with.',
 					progress_selector:'.3',
 					selector:'.step.check-nosimilar',
 					prev_step:'location',
@@ -353,7 +353,7 @@
 				'add-resource-process':{
 					title:'Add a resource.',
 					supress_hash:true,
-					sub_title:'When you add a resource, we\'ll send them a link <br />to your project page. If they\'re able to help, they\'ll <br />send you a message.',
+					sub_title:'When you add a resource, we\'ll email them a link<br />to your project page. If they''re able to help, they\'ll<br />get in touch.',
 					progress_selector:'.4',
 					selector:'.step.add-resource-process',
 					prev_step:'check',
@@ -387,7 +387,7 @@
 				},
 				'add':{
 					title:'Add a resource.',
-					sub_title:'When you add a resource, we\'ll send them a link <br />to your project page. If they\'re able to help, they\'ll <br />send you a message.',
+					sub_title:'When you add a resource, we\'ll email them a link<br />to your project page. If they''re able to help, they\'ll<br />get in touch.',
 					progress_selector:'.4',
 					selector:'.step.add',
 					prev_step:'check',
@@ -511,7 +511,7 @@
 				},
 				'add-noresources':{
 					title:'Add a resource.',
-					sub_title:'When you add a resource, we\'ll send them a link <br />to your project page. If they\'re able to help, they\'ll <br />send you a message.',
+					sub_title:'When you add a resource, we\'ll email them a link<br />to your project page. If they''re able to help, they\'ll<br />get in touch.',
 					progress_selector:'.4',
 					selector:'.step.add-noresources',
 					prev_step:'check',
