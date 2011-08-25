@@ -161,7 +161,11 @@ def common_config(func):
         # The scratch/work space for putting temporary stuff while we deploy from local dev
         env.tmp_path = "/tmp/%(application)s/releases" % env
         env.app_path = '%(deploy_to)s/%(application)s' % env
+        
         env.current_path = "%(app_path)s/current" % env
+        env.previous_path = "%(app_path)s/previous" % env
+        env.next_path = "%(app_path)s/next" % env
+        
         env.shared_path = "%(app_path)s/shared" % env
         env.run_path = "%(app_path)s/var/run" % env
 
@@ -561,13 +565,13 @@ def symlink_current_release():
     """
     require('release', provided_by=[deploy_webapp, setup_application])
     # if exists('%(app_path)s/previous' % env):
-    run('if [ -e %(app_path)s/previous ];then rm %(app_path)s/previous; fi; if [ -e %(app_path)s/current ];then mv %(app_path)s/current %(app_path)s/previous; fi' % env)
+    run('if [ -e %(previous_path)s ];then rm %(previous_path)s; fi; if [ -e %(current_path)s ];then mv %(current_path)s %(previous_path)s; fi' % env)
     # Link the shared config file into the current configuration
     for item in env.config_files:
         run('rm -f %s/releases/%s/%s/%s' % (env.app_path, env.release, item.get('path'), item.get('filename')))
         run('ln -nsf %s %s' % (os.path.join(env.app_path, 'etc', item.get('filename')), os.path.join(env.app_path, 'releases', env.release, item.get('path'), item.get('filename'))))
 
-    run('ln -s %(app_path)s/releases/%(release)s %(app_path)s/current' % env)
+    run('ln -s %(app_path)s/releases/%(release)s %(current_path)s' % env)
 
 def install_requirements():
     """
@@ -782,26 +786,22 @@ def secure_website():
 """
 Rollback deployed code tasks
 """
-def rollback(commit_id):
+def rollback(commit_id=None):
     """
     Rolls back to specified git/svn commit hash or tag or timestamp.
-    Deployments should be to timestamp-commitTag
+    Deployments should be to timestamp-commitTag.
+    If commit_id is not provided, move current to next and previous to current
 
-    There is NO guarantee we have committed a valid dataset for an arbitrary
-    commit hash.
+    Obviously there is NO guarantee we have deployed this commit-hash!
     """
-#    require('settings', provided_by=[production, staging])
-#    require('branch', provided_by=[master, branch])
-#
-#    maintenance_up()
-#    checkout_latest()
-#    git_reset(commit_id)
-#    gzip_assets()
-#    deploy_to_s3()
-#    refresh_widgets()
-#    maintenance_down()
-    pass
+    if commit_id is not None:
+        raise Exception('Rolling back to a specific commit-id is not yet supported')
+    
+    run('if [ [ -e %(previous_path)s ] && [ -e %(current_path)s ] ];then mv %(current_path)s %(next_path)s && mv %(previous_path)s %(current_path)s; fi' % env)
 
+    stop_webserver()
+    start_webserver()
+    
 """
 Database Related Tasks 
 """
