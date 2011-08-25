@@ -552,7 +552,6 @@ where pm.message_type='member_comment'
                 recipients.extend(admins)
                 body += "Recipients are: %s\n" % ','.join(recipients)
 
-            recipients = ','.join(recipients)
             logging.info('Digest recipients: %s' % recipients)
             self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
             
