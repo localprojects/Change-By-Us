@@ -130,10 +130,11 @@ class Mailable():
                             from_address = self.MailerSettings.get('FromEmail'),
                             bcc=recipients)
                 complete = True
-            except:
+            except Exception, e:
                 # Most probably we got an SES error, which means we should wait and retry
+                logging.error(e)
                 time.sleep(1)
-                pass
+                continue
         
 
         
@@ -490,6 +491,7 @@ order by pu.project_id, u.created_datetime desc
             currentDigest['body'] = body
 
         # Store it for later consumption
+        logging.info('Created digests (in DB) for %s projects' % len(digests.keys()))
         self.Digests = digests
         return True
 
