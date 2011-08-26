@@ -56,6 +56,9 @@ class Controller (object):
         #set media root
         self.template_data['media_root'] = Config.get('media')['root']
 
+        #set city-specific map options
+        self.template_data['map'] = Config.get('map')
+
         # user
         self.setUserObject()
 
@@ -133,7 +136,7 @@ class Controller (object):
             return params
         else:
             return dict(web.input().items())
-    
+
     def request(self, var):
         """Gets the value of the request parameter named ``var``"""
         try:
@@ -232,7 +235,7 @@ class Controller (object):
 
         # Set up template and Jinja
         template_values['template_name'] = template_name
-        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/', 
+        renderer = render_jinja(os.path.dirname(__file__) + '/../templates/',
             extensions=['jinja2.ext.i18n',
                         'jinja2.ext.with_',])
         renderer._lookup.filters.update(custom_filters.filters)
@@ -240,14 +243,14 @@ class Controller (object):
         # Install the translation
         translation = self.get_gettext_translation(self.get_language())
         renderer._lookup.install_gettext_translations(translation)
-        
+
         # Insert HTML for the language chooser
         curr_lang = self.get_language()
         all_langs = self.get_supported_languages()
 
         template_values['language'] = {"current": curr_lang, "list":
                 all_langs.iteritems()}
-        
+
         template_values['language_selector'] = self.choice_list(
             all_langs, curr_lang)
 
@@ -266,27 +269,27 @@ class Controller (object):
         Gets the language that has been set by the user, first checking the
         querystring and then the session. The session variable is set before
         the value is returned.
-        
+
         """
         lang = ""
         if (self.request('lang')):
             lang = self.request('lang')
         elif hasattr(self.session, 'lang') and self.session.lang is not None:
             lang = self.session.lang
-        
-        # TODO: As a last resort, we should check for the user's language in 
-        #       their browser settings.  This is available from the request 
-        #       header Accept-Language, and is available to the controller 
+
+        # TODO: As a last resort, we should check for the user's language in
+        #       their browser settings.  This is available from the request
+        #       header Accept-Language, and is available to the controller
         #       through web.ctx.environ.get('HTTP_ACCEPT_LANGUAGE').
         #
-        #       For more info, see 
+        #       For more info, see
         #       http://www.w3.org/International/questions/qa-accept-lang-locales
         #                                                      - MP 2011-07-27
 
         self.session.lang = lang
         return lang
-    
-    
+
+
     def get_i18n_dir(self):
         """Return the path to the directory with the locale files"""
         cur_dir = os.path.abspath(os.path.dirname(__file__))
@@ -294,21 +297,21 @@ class Controller (object):
         # i18n directory.
         locale_dir = os.path.join(cur_dir, '..', 'i18n')
         return locale_dir
-    
-    
+
+
     def get_supported_languages(self):
         """
         Find the language files available in the translations directory. Returns
         a dictionary which has language codes as keys, and human-readable
         language names as values.
-        
+
         """
         try:
             enabled_langs = Config.get('lang')
         except KeyError:
             enabled_langs = {}
         return enabled_langs
-        
+
 
     def get_gettext_translation(self, locale_id):
         """
@@ -317,7 +320,7 @@ class Controller (object):
         # i18n directory.
         locale_dir = self.get_i18n_dir()
 
-        # Look in the translaton for the locale_id in locale_dir. Fallback to the 
+        # Look in the translaton for the locale_id in locale_dir. Fallback to the
         # default text if not found.
         return gettext.translation('messages', locale_dir, [locale_id], fallback=True)
 
@@ -345,18 +348,18 @@ class Controller (object):
         log.info("200: text/html")
 
         return doc
-    
+
     def choice_list(self, options, selected_option=None):
         """Return an options list."""
         select_tag = '<select>'
-        
+
         for value, label in options.iteritems():
             checked = ' selected="selected"' if value == selected_option else ''
             select_tag += '<option value="%s"%s>%s</option>' \
                           % (value, checked, label)
         select_tag += '</select>'
         return select_tag
-        
+
 
     def text(self, string):
         web.header("Content-Type", "text/plain")
@@ -408,7 +411,7 @@ class Controller (object):
         log.info("303: Redirecting to " + url)
 
         return web.SeeOther(url)
-    
+
     def no_method(self):
         log.error("405: Method not Allowed")
         return web.NoMethod()
