@@ -9,30 +9,37 @@ class DbFixturesMixin (object):
     fixtures = []
     
     def setUp(self):
+        Config.load()
+        
+        # Use the test_db, so that you don't blow stuff away.
+        db_config = Config.get('database')
+        if 'test_db' in db_config and db_config['test_db']:
+            db_config['db'] = db_config['test_db']
+        
         # Grab a database connection
         self.db = main.sessionDB()
-        self.installDb(self.db)
-        self.loadDbFixtures(self.db, *self.fixtures)
+        self.install_db_structure(self.db)
+        self.load_db_fixtures(self.db, *self.fixtures)
         
-#        # HACK: We kept getting db.printing inexplicably set to True, so patch
-#        # it to be False here.
-#        _real_db_execute = web.db.DB._db_execute
-#        def _db_execute(self, cur, sql_query):
-#            self.printing = False
-#            return _real_db_execute(self, cur, sql_query)
-#        web.db.DB._db_execute = _db_execute
+        # HACK: We kept getting db.printing inexplicably set to True, so patch
+        # it to be False here.
+        _real_db_execute = web.db.DB._db_execute
+        def _db_execute(self, cur, sql_query):
+            self.printing = False
+            return _real_db_execute(self, cur, sql_query)
+        web.db.DB._db_execute = _db_execute
     
         super(DbFixturesMixin, self).setUp()
         
-    def runSql(self, db, sql):
+    def run_sql(self, db, sql):
         db.query(sql)
     
-    def installDb(self, db):
+    def install_db_structure(self, db):
         models_sql = open('/home/mjumbewu/Programming/cfa/cbu/sql/models.sql').read()
         for sql_statement in models_sql.split(';'):
             db.query(sql_statement)
         
-    def loadDbFixtures(self, db, *fixtures):
+    def load_db_fixtures(self, db, *fixtures):
         for fixture in fixtures:
             fixture_sql = open('/home/mjumbewu/Programming/cfa/cbu/tests/integrationtests/sql/' + fixture).read()
             for sql_statement in fixture_sql.split(';'):
@@ -68,7 +75,6 @@ class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
         super(AppSetupMixin, self).setUp()
         
         # Set the dev flag in Config to False.
-        Config.load()
         Config.data['dev'] = False
         
         # Set up the routes
@@ -77,4 +83,5 @@ class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
         
         # Finally, create a test app
         self.app = TestApp(app.wsgifunc())
+
 

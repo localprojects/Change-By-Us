@@ -6,6 +6,7 @@ from mock import Mock
 #from giveaminute.project import Project as ProjectGam
 from controllers.project import Project as ProjectController
 from controllers.project import mProject
+
 class Test_ProjectController_showProject (WebPySetupMixin, TestCase):
     
     def setUp(self):

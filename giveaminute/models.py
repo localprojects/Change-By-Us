@@ -1,11 +1,11 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
-
 
 if __name__ == '__main__':
     import sys
@@ -56,7 +56,38 @@ def get_orm():
 #
 engine = get_db_engine()
 
-Base = declarative_base(engine)
+
+class Base (object):
+    @classmethod
+    def get_or_create(cls, orm, **kwargs):
+        """will reraise sqlalchemy.orm.exc.MultipleResultsFound"""
+        try:
+            return orm.query(cls).filter_by(**kwargs).one()
+        except NoResultFound:
+            obj = cls(**kwargs)
+            orm.add(obj)
+            return obj
+        
+Base = declarative_base(engine, cls=Base)
+
+
+class User (Base):
+    __tablename__ = 'user'
+    __table_args__ = {'autoload': True}
+
+    def join(self, project):
+        return project.project_members.append(ProjectMember(member=self))
+
+
+class ProjectMember (Base):
+    __tablename__ = 'project__user'
+    __table_args__ = {'autoload': True}
+
+    user_id = Column(ForeignKey('user.user_id'), primary_key=True)
+    project_id = Column(ForeignKey('project.project_id'), primary_key=True)
+    
+    member = relationship('User', backref='memberships',
+        primaryjoin='ProjectMember.user_id==User.user_id')
 
 
 class Project (Base):
@@ -64,11 +95,19 @@ class Project (Base):
     __table_args__ = {'autoload': True}
 
     needs = relationship('Need', backref='project')
+    project_members = relationship('ProjectMember', 
+        primaryjoin='Project.project_id==ProjectMember.project_id')
+    
+    members = association_proxy('project_members', 'member')
 
 
-class User (Base):
-    __tablename__ = 'user'
-    __table_args__ = {'autoload': True}
+class Place (Base):
+    __tablename__ = 'project_place'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(256))
+    street = Column(String(256))
+    city = Column(String(256))
 
 
 class Need (Base):
@@ -76,13 +115,27 @@ class Need (Base):
 
     id = Column(Integer, primary_key=True)
     type = Column(String(10))
-    item_needed = Column(String(64))
-    num_needed = Column(Integer)
+    request = Column(String(64))
+    quantity = Column(Integer)
     description = Column(Text)
-    
+    address_id = Column(ForeignKey('project_place.id'))
+    date = Column(Date())
+    time = Column(String(32))
+    duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
     
+    address = relationship('Place')
+    
     volunteers = association_proxy('need_volunteers', 'member')
+    
+    def reason(self):
+        """
+        'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
+        
+        This is the reason.
+        
+        """
+        return ''
 
 
 class Volunteer (Base):
