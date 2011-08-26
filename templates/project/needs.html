@@ -5,14 +5,20 @@
                 Needs <span class="counter"></span>
             </span>
         </h2>
+        {% if
+            (d.template_data.project_user.data.is_member) or
+            (d.template_data.project_user.data.is_project_admin) or
+            (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+            (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
         <div class="actions">
-            <a href="#show,needs" class="back fancy-caps">
-                <span>See More</span>
+            <a href="#show,needs" class="add fancy-caps">
+                <span>Add Need</span>
             </a>
         </div>
+        {% endif %}
     </div>
 
-    
+
     <ol class="need-stack">
         {% for need in d.template_data.project.needs %}
             {% include "project/volunteer_need.html" %}
