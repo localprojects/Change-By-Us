@@ -111,7 +111,7 @@ class Place (Base):
 
 
 class Need (Base):
-    __tablename__ = 'project_needs'
+    __tablename__ = 'project_need'
 
     id = Column(Integer, primary_key=True)
     type = Column(String(10))
@@ -139,9 +139,9 @@ class Need (Base):
 
 
 class Volunteer (Base):
-    __tablename__ = 'project_need_volunteers'
+    __tablename__ = 'project_need_volunteer'
     
-    need_id = Column(ForeignKey('project_needs.id'), primary_key=True)
+    need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
     
     need = relationship('Need', backref='need_volunteers')
