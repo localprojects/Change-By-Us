@@ -1,7 +1,20 @@
 <div class="box project-section home">
-    {% for need in d.template_data.project.needs %}
-        {% include "project/volunteer_need.html" %}
-    {% endfor %}
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Needs
+            </span>
+        </h2>
+    </div>
+    <ol class="need-stack">
+        {% with num_messages_to_show = 1 %}
+            {% for need in d.template_data.project.needs %}
+                {% if loop.index <= num_messages_to_show %}
+                    {% include "project/volunteer_need.html" %}
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
+    </ol>
 
     <div class="hd clearfix">
         <h2>
