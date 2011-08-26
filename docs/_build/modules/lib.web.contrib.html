@@ -45,8 +45,54 @@
             
   <div class="section" id="contrib-package">
 <h1>contrib Package<a class="headerlink" href="#contrib-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="template-module">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">template</span></tt> Module<a class="headerlink" href="#template-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-lib.web.contrib.template">
+<span id="template-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">template</span></tt> Module<a class="headerlink" href="#module-lib.web.contrib.template" title="Permalink to this headline">¶</a></h2>
+<p>Interface to various templating engines.</p>
+<dl class="class">
+<dt id="lib.web.contrib.template.render_cheetah">
+<em class="property">class </em><tt class="descclassname">lib.web.contrib.template.</tt><tt class="descname">render_cheetah</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="../_modules/lib/web/contrib/template.html#render_cheetah"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.web.contrib.template.render_cheetah" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rendering interface to Cheetah Templates.</p>
+<p>Example:</p>
+<blockquote>
+<div>render = render_cheetah(&#8216;templates&#8217;)
+render.hello(name=&#8221;cheetah&#8221;)</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.web.contrib.template.render_genshi">
+<em class="property">class </em><tt class="descclassname">lib.web.contrib.template.</tt><tt class="descname">render_genshi</tt><big>(</big><em>*a</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/lib/web/contrib/template.html#render_genshi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.web.contrib.template.render_genshi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rendering interface genshi templates.
+Example:</p>
+<p>for xml/html templates.</p>
+<blockquote>
+<div>render = render_genshi([&#8216;templates/&#8217;])
+render.hello(name=&#8217;genshi&#8217;)</div></blockquote>
+<p>For text templates:</p>
+<blockquote>
+<div>render = render_genshi([&#8216;templates/&#8217;], type=&#8217;text&#8217;)
+render.hello(name=&#8217;genshi&#8217;)</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.web.contrib.template.render_mako">
+<em class="property">class </em><tt class="descclassname">lib.web.contrib.template.</tt><tt class="descname">render_mako</tt><big>(</big><em>*a</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/lib/web/contrib/template.html#render_mako"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.web.contrib.template.render_mako" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rendering interface to Mako Templates.</p>
+<p>Example:</p>
+<blockquote>
+<div>render = render_mako(directories=[&#8216;templates&#8217;])
+render.hello(name=&#8221;mako&#8221;)</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.web.contrib.template.cache">
+<em class="property">class </em><tt class="descclassname">lib.web.contrib.template.</tt><tt class="descname">cache</tt><big>(</big><em>render</em><big>)</big><a class="reference internal" href="../_modules/lib/web/contrib/template.html#cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.web.contrib.template.cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cache for any rendering interface.</p>
+<p>Example:</p>
+<blockquote>
+<div>render = cache(render_cheetah(&#8220;templates/&#8221;))
+render.hello(name=&#8217;cache&#8217;)</div></blockquote>
+</dd></dl>
+
 </div>
 </div>
 
@@ -59,7 +105,7 @@
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">contrib Package</a><ul>
-<li><a class="reference internal" href="#template-module"><tt class="docutils literal"><span class="pre">template</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-lib.web.contrib.template"><tt class="docutils literal"><span class="pre">template</span></tt> Module</a></li>
 </ul>
 </li>
 </ul>
