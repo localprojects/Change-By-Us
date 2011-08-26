@@ -1,5 +1,6 @@
 from unittest2 import TestCase
 from paste.fixture import TestApp
+from nose.tools import *
 from lib import web
 from mock import Mock
 
