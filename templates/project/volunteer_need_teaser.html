@@ -1,0 +1,58 @@
+<li class="box need" data-id="{{ need.id }}">
+    <div class="bd clearfix">
+        <div class="vol-title serif">
+            We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.num_needed }}</span> volunteer {{ need.item_needed }}</a>
+            {% if need.reason %} for {{ need.reason }}{% endif %}
+            {% if need.datetime %} on {{ need.datetime }}{% endif %}
+        </div>
+
+        <div class="volunteer-body">
+            <p class="serif">
+                {{ need.description|truncate(130) }}
+                {% if need.description|length > 130 %}
+                    <a href="#show,need-detail,{{ need.id }}" class="read-more">Read More</a>
+                {% endif%}
+            </p>
+            {% if need.volunteers|length > 0 %}
+            <div class="volunteers teaser">
+                <div class="vol-avatars teaser">
+                    {% for volunteer in need.volunteers %}
+                        {% with volunteer_name = volunteer|display_name %}
+                        {% if loop.index <= 5 %}
+                            <a href="/useraccount/{{ volunteer.user_id }}">
+                            {% if volunteer.avatar_path %}
+                                <img src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+                            {% else %}
+                                <img src="/static/images/thumb_genAvatar.jpg" alt="{{ volunteer_name }}"></img>
+                            {% endif%}
+                            </a>
+                        {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="volunteer-details serif">
+            <div class="status"></div>
+            <a href="#" class="help-link">I can help</a>
+        </div>
+
+        <!--
+        <div class="vol-recent-comment serif">
+            <img src="/static/images/thumb_sgoldsmith.jpg"></img>
+            <div class="comment">We still really need people for this if anyone can help. It'll be fun and it's just one night.</div>
+            <div class="author">
+                <span>Alexandra M.</span><br>
+                3 hours ago
+            </div>
+        </div>
+        -->
+
+        <div class="empty-state-box" style="display:none;">
+            <!--<a class="close" href="#"><span>Close</span></a>-->
+            <p>No needs found.</p>
+        </div>
+    </div>
+</li>

@@ -5,12 +5,17 @@
                 Needs
             </span>
         </h2>
+        <div class="actions">
+            <a href="#show,needs" class="forward fancy-caps">
+                <span>See More</span>
+            </a>
+        </div>
     </div>
     <ol class="need-stack">
         {% with num_messages_to_show = 1 %}
             {% for need in d.template_data.project.needs %}
                 {% if loop.index <= num_messages_to_show %}
-                    {% include "project/volunteer_need.html" %}
+                    {% include "project/volunteer_need_teaser.html" %}
                 {% endif %}
             {% endfor %}
         {% endwith %}
@@ -25,7 +30,7 @@
     </div>
     <ol class="comment-stack">
         {% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
-            
+
             {% with num_messages_to_show = 2 %}
             {% for message in d.template_data.project.data.info.messages['items'] %}
                 {% if loop.index <= num_messages_to_show %}
@@ -33,7 +38,7 @@
                 {% endif %}
             {% endfor %}
             {% endwith %}
-            
+
         {% else %}
             {% if not d.template_data.project.data.info.messages['total'] > 0 %}
                 <li class="admin-default-message">

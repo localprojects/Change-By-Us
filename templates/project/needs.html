@@ -5,19 +5,59 @@
                 Needs <span class="counter"></span>
             </span>
         </h2>
+        {% if
+            (d.template_data.project_user.data.is_member) or
+            (d.template_data.project_user.data.is_project_admin) or
+            (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+            (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
         <div class="actions">
-            <a href="#show,needs" class="back fancy-caps">
-                <span>See More</span>
+            <a href="#show,add-need" class="add fancy-caps">
+                <span>Add Need</span>
             </a>
         </div>
+        {% endif %}
     </div>
 
-    
+
     <ol class="need-stack">
         {% for need in d.template_data.project.needs %}
-            {% include "project/volunteer_need.html" %}
+            {% include "project/volunteer_need_teaser.html" %}
         {% endfor %}
     </ol>
+
+
+    {% raw %}
+    <script id="add_vol_need_tmpl" type="text/html">
+        <h2>We'd love it if you could help!</h2>
+        <div class="section">
+            <input type="checkbox" name="add-volunteer-need" id="add-volunteer-need" class="hiddenCheckbox has-prettycheckbox not-valid" value="1">
+            <label class="prettyCheckbox checkbox" for="add-volunteer-need">
+                <span class="holderWrap" style="width: 20px; height: 20px;">
+                    <span class="holder" style="width: 20px;"></span>
+                </span>
+                <strong>YES</strong>, I can help {{ need_request }}
+
+                {{#has_reason}}
+                    for {{ need_reason }}
+                {{/has_reason}}
+
+                {{#has_datetime}}
+                    on {{ need_datetime }}
+                {{/has_datetime}}
+            </label>
+        </div>
+        <div class="section">
+            <label for="add-volunteer-need-msg">Add a message</label>
+            <textarea cols="20" rows="6" name="add-volunteer-need-msg" id="add-volunteer-need-msg" class=""></textarea>
+        </div>
+        <div class="actions">
+            <a class="submit rounded-button" href="#">Send</a>
+        </div>
+        <a class='close' href="#"><span>close</span></a>
+    </script>
+    {% endraw %}
+
+    <div class="template-content modal-content add-volunteer-need"></div>
 </div>
 
 <script src="/static/js/pages/project.needs.js"></script>
