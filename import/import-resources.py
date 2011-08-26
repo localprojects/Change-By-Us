@@ -30,22 +30,17 @@ if __name__ == "__main__":
         try:
             image_path = './import/data/import-resources-images/%s.jpg' % row.external_id
             if os.path.exists(image_path):
-            
                 # Open file
                 source = open('./import/data/import-resources-images/%s.jpg' % row.external_id, 'rb')
                 # Save file (does not work)
-                image_id = ImageServer.add(db, source.read(), 'import', max_size=None, grayscale=False, mirror=True, thumb_max_size=None)
+                image_id = ImageServer.add(db, source.read(), 'giveaminute', max_size=None, grayscale=False, mirror=True, thumb_max_size=None)
                 # Close file
                 source.close()
                 
                 print image_id
-                
-                # For now, just delete for testing purposes.
-                ImageServer.remove(db, 'import', image_id)
             else:
                 print 'Not Exists: %s' % image_path
             
-        
         except Exception, e:
             print e
         
@@ -53,11 +48,10 @@ if __name__ == "__main__":
         # Determine location
         
         
-        
         # Create project resource.
-        if image_id:
+        if (image_id):
             try:
-                resource_id = self.db.insert('project_resource', 
+                resource_id = db.insert('project_resource', 
                     title = row.title,
                     description = row.description,
                     physical_address = row.physical_address,
@@ -69,12 +63,12 @@ if __name__ == "__main__":
                     contact_name = row.contact_name,
                     contact_email = row.contact_email,
                     created_datetime = None,
-                    image_id = image_id,
-                    is_hidden = 1
+                    image_id = str(image_id)
                 )
                 print 'Imported: %s' % resource_id
             
             except Exception, e:
+                ImageServer.remove(db, 'giveaminute', image_id)
                 print e
     
     
