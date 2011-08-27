@@ -375,9 +375,6 @@ class RestController (Controller):
     def get_model(self):
         return self.model
     
-    def get_orm(self):
-        return models.get_orm()
-    
     def row2dict(self, row):
         d = {}
         for columnName in row.__table__.columns.keys():
@@ -452,7 +449,7 @@ class ListInstancesMixin (object):
     """
     def REST_INDEX(self, *args, **kwargs):
         Model = self.get_model()
-        orm = self.get_orm()
+        orm = self.orm
         
         query = orm.query(Model)
         
@@ -473,7 +470,7 @@ class ReadInstanceMixin (object):
     """
     def REST_READ(self, *args, **kwargs):
         Model = self.get_model()
-        orm = self.get_orm()
+        orm = self.orm
         
         query = orm.query(Model)
         if kwargs:
@@ -507,7 +504,7 @@ class CreateInstanceMixin (object):
     """
     def REST_CREATE(self, *args, **kwargs):
         Model = self.get_model()
-        orm = self.get_orm()
+        orm = self.orm
         
         # TODO: We want to be able to refer to related objects by their name as
         #       opposed to by name_id (e.g., ``project=2`` instead of 
@@ -550,7 +547,7 @@ class UpdateInstanceMixin (object):
         
     def REST_UPDATE(self, *args, **kwargs):
         Model = self.get_model()
-        orm = self.get_orm()
+        orm = self.orm
         
         query = orm.query(Model)
         if kwargs:
@@ -588,7 +585,7 @@ class DeleteInstanceMixin(object):
     """
     def REST_DELETE(self, *args, **kwargs):
         Model = self.get_model()
-        orm = self.get_orm()
+        orm = self.orm
 
         query = orm.query(Model)
         if kwargs:
