@@ -3,14 +3,13 @@
 import os, sys
 from os import environ
 
-from sqlalchemy.orm import scoped_session, sessionmaker
-
 from framework.log import log
+from framework.orm_holder import OrmHolder
 from framework.session_holder import *
 from framework.task_manager import *
 from framework.image_server import *
 
-from giveaminute import models
+#from giveaminute import models
 
 sys.path.append("lib/")
 from lib import web
@@ -64,23 +63,22 @@ def load_sqla(handler):
     # TODO: This should be `engine = models.get_db_engine()`.  See the note in
     #       giveaminute.models for more information.
     #
-    engine = models.engine
-    
     log.debug("*** Loading the ORM")
-    web.ctx.orm = scoped_session(sessionmaker(bind=engine))
+    orm = OrmHolder().orm
+    
     try:
         return handler()
     except web.HTTPError:
-       web.ctx.orm.commit()
+       orm.commit()
        raise
     except:
-        web.ctx.orm.rollback()
+        orm.rollback()
         raise
     finally:
-        web.ctx.orm.commit()
+        orm.commit()
         # If the above alone doesn't work, uncomment 
         # the following line:
-        #web.ctx.orm.expunge_all() 
+        #orm.expunge_all() 
 
 #def cmd_show_quota():
 #    ses = boto.connect_ses()
