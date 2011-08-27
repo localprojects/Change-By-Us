@@ -59,6 +59,7 @@ class WebPySetupMixin (object):
         import StringIO
         web.ctx.env = {'wsgi.input': StringIO.StringIO(),
                        'REQUEST_METHOD': ''}
+        web.ctx.headers = []
         
         super(WebPySetupMixin, self).setUp()
         
@@ -72,7 +73,9 @@ class WebPySetupMixin (object):
 
 class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
     def setUp(self):
-        super(AppSetupMixin, self).setUp()
+        DbFixturesMixin.setUp(self)
+        WebPySetupMixin.setUp(self)
+#        super(AppSetupMixin, self).setUp()
         
         # Set the dev flag in Config to False.
         Config.data['dev'] = False

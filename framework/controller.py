@@ -7,6 +7,7 @@ from lib import web
 from framework.log import log
 #from framework.config import *
 from framework.config import Config
+from framework.orm_holder import OrmHolder
 #from framework.session_holder import *
 from framework.session_holder import SessionHolder
 #from framework.task_manager import *
@@ -16,7 +17,13 @@ import giveaminute.user as mUser
 class Controller (object):
 
     _db = None
-
+    
+    @property
+    def orm(self):
+        """An active orm session for the controller."""
+        return OrmHolder().orm
+    
+    
     @classmethod
     def get_db(cls):
         # settings = Config.get('database')

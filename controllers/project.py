@@ -83,15 +83,6 @@ class Project(Controller):
         else:
             return self.not_found()
     
-    @property
-    def orm(self):
-        """An active orm session for the controller."""
-        if self.__orm is None:
-            from giveaminute.models import get_orm
-            self.__orm = get_orm()
-        return self.__orm
-    __orm = None
-        
     def getProject(self, project_id):
         from giveaminute.models import Project as ProjectSqla
         project = self.orm.query(ProjectSqla).get(project_id)
