@@ -96,12 +96,11 @@ class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
     
     @istest
-    def should_return_a_reasonable_string_representation_of_a_need(self):
+    def should_return_a_need(self):
         controller = NeedInstance()
         response = controller.REST_READ(1)
         
-        assert isinstance(response, dict)
-        assert response
+        assert_equal(response.__class__.__name__, 'Need')
     
     @istest
     def should_not_raise_NotFoundError(self):
