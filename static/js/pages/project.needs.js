@@ -26,6 +26,19 @@ tc.gam.project_widgets.needs = function(options) {
      */
     var volunteer = function(need, message) {
         console.log('User', options.user, 'has volunteered for', need, 'with message', message);
+        
+        tc.jQ.ajax({
+            url: '/rest/v1/needs/'+need.id+'/volunteers/',
+            data: { member_id: options.user.u_id },
+            dataType: 'json',
+            type: 'POST',
+            success: function(data, status, xhr) {
+                console.log(data);
+            },
+            failure: function(xhr, status, error) {
+                console.log('error', arguments);
+            }
+        });
     };
     
     /**
