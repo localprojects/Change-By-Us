@@ -24,7 +24,7 @@ tc.gam.project_widgets.needs = function(options) {
      * Function: volunteer
      * The user can volunteer for a specific need.
      */
-    var volunteer = function(need, message) {
+    var volunteer = function(need, message, callback) {
         console.log('User', options.user, 'has volunteered for', need, 'with message', message);
         
         tc.jQ.ajax({
@@ -33,10 +33,7 @@ tc.gam.project_widgets.needs = function(options) {
             dataType: 'json',
             type: 'POST',
             success: function(data, status, xhr) {
-                console.log(data);
-            },
-            failure: function(xhr, status, error) {
-                console.log('error', arguments);
+                callback(data);
             }
         });
     };
@@ -95,16 +92,14 @@ tc.gam.project_widgets.needs = function(options) {
                         }
                     },
                     init:function(merlin, dom) {
-                        console.log('^^^^^^^^^^^^^^^^^^^^^^^', merlin, dom);
-                        
                         merlin.options.next_button.click(function(event) {
                             var $this = tc.jQ(this),
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
                                 
                             if (!$this.hasClass('disabled')) {
-                                volunteer(need, message);
-                            } else {
-                                console.log('nottttttttttttt sending');
+                                volunteer(need, message, function(){
+                                    options.app.components.modal.hide();
+                                });
                             }
                         });
                     }
