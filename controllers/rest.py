@@ -391,6 +391,9 @@ class RestController (Controller):
 
         - NotFoundError: return a 404 response
         """
+        if self.user:
+            self.user = self.orm.query(models.User).get(self.user.id)
+
         try:
             for verb in allowed_verbs:
                 if hasattr(self, verb):
@@ -521,6 +524,14 @@ class CreateInstanceMixin (object):
 #                del kwargs[related_name]
 
         all_kw_args = dict(web.input().items() + kwargs.items())
+
+        # HACK: This is a hack.  We kept getting a test file name being passed
+        # in as one of the query parameters.  Wierd.
+        for kw in all_kw_args:
+            if kw.endswith('.py'):
+                del all_kw_args[kw]
+                break
+
         instance = Model(**all_kw_args)
 
         if not self.access_rules.can_create(self.user, instance):
@@ -645,7 +656,7 @@ class NeedVolunteerList (CreateInstanceMixin, RestController):
     access_rules = NonProjectMemberReadOnly()
 
     def REST_CREATE(self, *args, **kwargs):
-        kwargs['need_id'] = args[0]
+        kwargs['need'] = self.orm.query(models.Need).get(args[0])
         response = super(NeedVolunteerList, self).REST_CREATE(**kwargs)
 
         return response
