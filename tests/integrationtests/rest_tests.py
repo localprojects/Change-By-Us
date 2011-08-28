@@ -15,6 +15,8 @@ from controllers.rest import Serializer
 from controllers.rest import NeedInstance
 from controllers.rest import NotFoundError
 from controllers.rest import NonProjectMemberReadOnly
+from controllers.rest import NeedVolunteerList
+from controllers.rest import RestController
 
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
     fixtures = ['test_data.sql']
@@ -111,6 +113,48 @@ class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
             response = controller.REST_READ(1)
         except NotFoundError:
             ok_(False)
+
+
+class Test_NeedVolunteersRestEndpoint_POST (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_return_forbidden_when_no_user_is_logged_in(self):
+        response = self.app.post('/rest/v1/needs/2/volunteers/',
+            params={
+                'member_id':u'1'
+            }, status=403)
+
+
+class Test_NeedVolunteersList_REST_CREATE (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_create_a_new_volunteer_when_user_is_member_of_needs_project(self):
+        from giveaminute.models import *
+        cont = NeedVolunteerList()
+        cont.user = cont.orm.query(User).get(1)
+
+        web.ctx.env['REQUEST_METHOD'] = 'GET'
+        web.ctx.env['SCRIPT_NAME'] = ''
+        obj = cont.REST_CREATE(u'2', member_id=u'1')
+        assert isinstance(obj, dict)
+        print obj
+
+
+class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    def test_that_it_sets_the_user_to_an_sqlalchemy_object_if_its_a_gam_object(self):
+        import giveaminute.models
+        import giveaminute.user
+
+        cont = RestController()
+        cont.user = giveaminute.user.User(cont.db, 1)
+
+        cont._BASE_METHOD_HANDLER([])
+
+        assert_is_instance(cont.user, giveaminute.models.User)
 
 
 class Test_NonProjectMemberReadOnly_IsMember(AppSetupMixin, TestCase):
