@@ -15,13 +15,13 @@
         {% for volunteer in need.volunteers %}
           {% with volunteer_name = volunteer|display_name %}
             {% if loop.first %}
-              <img class="vol-first" src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+              <img class="vol-first" src="{{ d.template.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
               <span class="vol-desc"><span>{{ volunteer_name }}</span> and {{ need.volunteers|length - 1 }} others volunteered.</span>
 
               <div class="vol-avatars">
             {% else %}
               {% if loop.index <= 5 %}
-                <img src="{{ MEDIA_ROOT }}/{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+                <img src="{{ d.template.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
               {% endif %}
             {% endif %}
 
