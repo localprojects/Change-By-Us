@@ -14,6 +14,7 @@ import main
 from controllers.rest import Serializer
 from controllers.rest import NeedInstance
 from controllers.rest import NotFoundError
+from controllers.rest import NonProjectMemberReadOnly
 
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
     fixtures = ['test_data.sql']
@@ -117,14 +118,15 @@ class Test_NonProjectMemberReadOnly_IsMember(AppSetupMixin, TestCase):
 
     @istest
     def should_return_true_if_user_is_member(self):
+        from framework.orm_holder import OrmHolder
         from giveaminute.models import *
 
-        user = self.orm.query(User).get(1)
-        project = self.orm.query(Project).get(1)
-        vol = Volunteer(member=user, project=project)
+        orm = OrmHolder().orm
+        user = orm.query(User).get(1)
+        project = orm.query(Project).get(1)
         rules = NonProjectMemberReadOnly()
 
-        assert rules.is_member(user, vol)
+        assert rules.is_member(user, project)
 
 
 class Test_Serializer_serialize (AppSetupMixin, TestCase):
