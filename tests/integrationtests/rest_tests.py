@@ -17,26 +17,26 @@ from controllers.rest import NotFoundError
 
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
     fixtures = ['test_data.sql']
-    
+
     def test_AnonymousUserNotAllowedToCreateNeeds(self):
         # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
         # more about testing with Paste.
-        
+
         class FakeDict (dict):
             def __getattr__(self, key):
                 if key in self:
                     return self[key]
                 else:
                     raise AttributeError(key)
-            
+
             def __setattr__(self, key, value):
                 self[key] = value
                 return value
-        
+
         session = FakeDict()
         SessionHolder.get_session = Mock(return_value=session)
-        
-        response = self.app.post('/rest/v1/needs/', 
+
+        response = self.app.post('/rest/v1/needs/',
             params={
                 'type': 'volunteer',
                 'request': 'basketball players',
@@ -45,26 +45,26 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
                 'project_id': 0,
             },
             status=403)
-    
+
 #    def test_AdminUserAllowedToCreateNeeds(self):
 #        # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
 #        # more about testing with Paste.
-#        
+#
 #        class FakeDict (dict):
 #            def __getattr__(self, key):
 #                if key in self:
 #                    return self[key]
 #                else:
 #                    raise AttributeError(key)
-#            
+#
 #            def __setattr__(self, key, value):
 #                self[key] = value
 #                return value
-#        
+#
 #        session = FakeDict(user_id=3)
 #        SessionHolder.get_session = Mock(return_value=session)
-#        
-#        response = self.app.post('/rest/v1/needs/', 
+#
+#        response = self.app.post('/rest/v1/needs/',
 #            params={
 #                'type': 'volunteer',
 #                'request': 'basketball players',
@@ -79,46 +79,61 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
 #                'project_id': 0,
 #            },
 #            status=200)
-    
+
 class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
-    
+
     @istest
     def should_return_a_reasonable_representation_of_a_need(self):
         # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
         # more about testing with Paste.
-        
+
         response = self.app.get('/rest/v1/needs/1/', status=200)
         assert_in('"date": "2011-08-31"', response)
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
-    
+
     @istest
     def should_return_a_need(self):
         controller = NeedInstance()
         response = controller.REST_READ(1)
-        
+
         assert_equal(response.__class__.__name__, 'Need')
-    
+
     @istest
     def should_not_raise_NotFoundError(self):
         controller = NeedInstance()
-        
+
         try:
             response = controller.REST_READ(1)
         except NotFoundError:
             ok_(False)
-    
+
+
+class Test_NonProjectMemberReadOnly_IsMember(AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_return_true_if_user_is_member(self):
+        from giveaminute.models import *
+
+        user = self.orm.query(User).get(1)
+        project = self.orm.query(Project).get(1)
+        vol = Volunteer(member=user, project=project)
+        rules = NonProjectMemberReadOnly()
+
+        assert rules.is_member(user, vol)
+
 
 class Test_Serializer_serialize (AppSetupMixin, TestCase):
-    
+
     @istest
     def dates_are_converted_to_iso_strings(self):
         import datetime
-        
+
         serializer = Serializer()
         serialized = serializer.serialize(datetime.date(2011,8,2))
-        
+
         assert_equal(serialized, '2011-08-02')

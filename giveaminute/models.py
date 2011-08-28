@@ -28,7 +28,7 @@ class Base (object):
             obj = cls(**kwargs)
             orm.add(obj)
             return obj
-    
+
 Base = declarative_base(cls=Base)
 
 
@@ -36,7 +36,7 @@ class User (Base):
     __tablename__ = 'user'
 
     id = Column('user_id', Integer, primary_key=True)
-    
+
     email = Column(String(100), nullable=False, unique=True)
     phone = Column(String(10), default=None, unique=True)
     user_key = Column(String(10), nullable=False)
@@ -56,7 +56,7 @@ class User (Base):
     is_active = Column(Boolean, nullable=False, default=True)
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-    
+
     def join(self, project):
         orm = OrmHandler().orm
         membership = orm.query(ProjectMember).filter_by(member=self, project=project)
@@ -71,10 +71,10 @@ class ProjectMember (Base):
 
     user_id = Column(ForeignKey('user.user_id'), primary_key=True)
     project_id = Column(ForeignKey('project.project_id'), primary_key=True)
-    
+
     is_project_admin = Column(Boolean, nullable=False, default=False)
     created_datetime = Column(DateTime, nullable=False, default=datetime.now)
-    
+
     member = relationship('User', backref='memberships',
         primaryjoin='ProjectMember.user_id==User.id')
 
@@ -84,7 +84,7 @@ class Project (Base):
     id = Column('project_id', Integer, primary_key=True)
     title = Column(String(100), nullable=False)
     description = Column(String(255))
-    
+
     image_id = Column(Integer)  # Should be foreign key
     location_id = Column(Integer)  # Should be foreign key
     keywords = Column(Text)
@@ -94,22 +94,22 @@ class Project (Base):
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
     organization = Column(String(255), default=None)
-    
+
     # Not sure whether declarative can take care of MySQL FULLTEXT keys.  Might
     # need to do an alter table:
     #
     # FULLTEXT KEY `title` (`title`,`description`)
 
     needs = relationship('Need', backref='project')
-    project_members = relationship('ProjectMember', 
+    project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
-    
+
     members = association_proxy('project_members', 'member')
 
 
 class Place (Base):
     __tablename__ = 'project_place'
-    
+
     id = Column(Integer, primary_key=True)
     name = Column(String(256))
     street = Column(String(256))
@@ -129,27 +129,27 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    
+
     address = relationship('Place')
-    
+
     volunteers = association_proxy('need_volunteers', 'member')
-    
+
     def reason(self):
         """
         'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
-        
+
         This is the reason.
-        
+
         """
         return ''
 
 
 class Volunteer (Base):
     __tablename__ = 'project_need_volunteer'
-    
+
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
-    
+
     need = relationship('Need', backref='need_volunteers')
     member = relationship('User', backref='commitments')
 
@@ -158,9 +158,9 @@ if __name__ == '__main__':
     import sys
     import os
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    
+
     from framework.orm_holder import OrmHolder
-    
+
     oh = OrmHolder()
     config = oh.get_db_config()
     engine = oh.get_db_engine(config)
