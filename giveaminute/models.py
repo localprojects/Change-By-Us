@@ -57,6 +57,10 @@ class User (Base):
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
+    @property
+    def avatar_path(self):
+        return 'images/%s/%s.png' % (str(self.id)[-1], self.id)
+
     def join(self, project):
         orm = OrmHandler().orm
         membership = orm.query(ProjectMember).filter_by(member=self, project=project)

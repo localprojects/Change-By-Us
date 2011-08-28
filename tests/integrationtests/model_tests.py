@@ -6,7 +6,9 @@ import mixins
 
 from datetime import datetime
 from datetime import timedelta
+from framework.orm_holder import OrmHolder
 from giveaminute.project import addMessage
+from giveaminute.models import *
 
 class Test_StoredMessage_CreatedDateTime (mixins.AppSetupMixin, TestCase):
     def test_is_returned_from_the_db_in_local_time(self):
@@ -25,9 +27,6 @@ class Test_Volunteer (mixins.AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
 
     def test_makes_associated_need_accessible_when_it_is_created(self):
-        from framework.orm_holder import OrmHolder
-        from giveaminute.models import *
-
         orm = OrmHolder().orm
         vol = Volunteer()
         vol.need_id=2 #orm.query(Need).get(2)
@@ -35,7 +34,17 @@ class Test_Volunteer (mixins.AppSetupMixin, TestCase):
         orm.add(vol)
         orm.commit()
 
-#        vol = orm.query(Volunteer).get((2,1))
-
         assert_equal(vol.need_id, 2)
         assert vol.need is not None
+
+
+class Test_User_avatarPath (mixins.AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    def test_returns_the_supposed_path_to_the_users_avatar_image_on_the_media_root(self):
+        orm = OrmHolder().orm
+        user = orm.query(User).get(1)
+
+        path = user.avatar_path
+
+        assert_equal(path, 'images/1/1.png')
