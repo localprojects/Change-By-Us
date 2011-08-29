@@ -22,6 +22,21 @@ tc.gam.project_widgets.needs = function(options) {
         );
     };
     
+    var updateNeed = function(need_id) {
+        var $needContainer = tc.jQ('.need[data-id|="'+need_id+'"]'),
+            $volCount = $needContainer.find('.volunteer-count strong'),
+            $progress = $needContainer.find('.progress'),
+            $avatars = $needContainer.find('.vol-avatars');
+        
+        getNeedDetails(need_id, function(need) {
+            var i = 0, MAX = 5, avatar_html = '';
+            $volCount.text(need.volunteers.length);
+            $progress.width($progress.parent().width() * need.volunteers.length / parseInt(need.quantity, 10));
+
+            //TODO: Update the avatars
+        });
+    };
+    
     /**
      * Function: volunteer
      * The user can volunteer for a specific need.
@@ -104,6 +119,7 @@ tc.gam.project_widgets.needs = function(options) {
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
                                     modal.hide();
+                                    updateNeed(data.need_id);
                                 });
                             }
                         });
