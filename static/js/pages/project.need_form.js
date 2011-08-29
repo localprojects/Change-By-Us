@@ -28,6 +28,45 @@ tc.gam.project_widgets.need_form = function(options) {
                             selector: '#vol-quantity',
                             validators: ['required', 'numeric'],
                             hint:'Qty'
+                        },
+                        'vol-job': {
+                            selector: '#vol-job',
+                            validators: ['required', 'max-100'],
+                            hint:'Job Title - DJ, Cashier, etc'
+                        },
+                        'vol-desc': {
+                          selector: '#vol-desc',
+                          validators: ['required', 'max-200'],
+                          hint:'Write a brief description of the volunteer tasks and skills.',
+                          counter:{
+                            selector:'.charlimit.title',
+                            limit:200
+                          }
+                        },
+                        'vol-hours': {
+                          selector: '#vol-hours',
+                          validators: ['required', 'numeric'],
+                          hint:''
+                        },
+                        'vol-street': {
+                          selector: '#vol-street',
+                          validators: ['required'],
+                          hint:'Address'
+                        },
+                        'vol-month': {
+                          selector: '#vol-month',
+                          validators: ['required'],
+                          hint:'Month'
+                        },
+                        'vol-day': {
+                          selector: '#vol-day',
+                          validators: ['required'],
+                          hint:'Day'
+                        },
+                        'vol-time': {
+                          selector: '#vol-time',
+                          validators: ['required'],
+                          hint:'Time'
                         }
                     },
                     init:function(merlin, dom) {
