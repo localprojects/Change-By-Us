@@ -201,7 +201,7 @@ tc.gam.project_widgets.needs = function(options) {
             } else {
                 modal.show({
                     app:options.app,
-                    source_element:tc.jQ('.modal-content.join-no-user')
+                    source_element:tc.jQ('.modal-content.volunteer-no-member')
                 });
             }
         });
