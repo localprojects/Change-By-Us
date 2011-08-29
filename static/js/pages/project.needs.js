@@ -29,11 +29,14 @@ tc.gam.project_widgets.needs = function(options) {
             $avatars = $needContainer.find('.vol-avatars');
         
         getNeedDetails(need_id, function(need) {
-            var i = 0, MAX = 5, avatar_html = '';
+            var $avatar_html, MAX = 5;
             $volCount.text(need.volunteers.length);
             $progress.width($progress.parent().width() * need.volunteers.length / parseInt(need.quantity, 10));
-
-            //TODO: Update the avatars
+            $avatar_html = ich.need_vol_avatars({
+                volunteers: need.volunteers.slice(0, MAX)
+            });
+            
+            $avatars.html($avatar_html);
         });
     };
     
