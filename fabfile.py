@@ -185,6 +185,11 @@ def common_config(func):
         env.local_etc_path = '%(local_path)s/etc' % env
 
         # Todo: these might need to be moved to a common location
+        for conf in env.config_files:
+            conf['local_config_template'] = '%s/%s' % (env.local_etc_path, conf.get('templatename'))
+            conf['local_config_file'] = '%s/%s/%s' % (env.local_path, conf.get('path'), conf.get('filename'))
+
+        # Todo: these might need to be moved to a common location
         # for conf in env.config_files:
         #    conf['local_config_template'] = '%s/%s' % (env.local_etc_path, conf.get('templatename'))
         #    conf['local_config_file'] = '%s/%s/%s' % (env.local_path, conf.get('path'), conf.get('filename'))
