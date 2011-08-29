@@ -16,6 +16,9 @@ tc.gam.project = function(app, dom) {
         'needs': tc.gam.project_widgets.needs(
             tc.jQ.extend({ name: 'needs', dom: dom.find('.project-section.needs') }, widget_options)
         ),
+        'need-form': tc.gam.project_widgets.needs(
+            tc.jQ.extend({ name: 'need-form', dom: dom.find('.project-section.need-form') }, widget_options)
+        ),
         'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
         ),
