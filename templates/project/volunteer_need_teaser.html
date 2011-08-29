@@ -19,7 +19,7 @@
                     {% for volunteer in need.volunteers %}
                         {% with volunteer_name = volunteer|display_name %}
                         {% if loop.index <= 5 %}
-                            <a href="/useraccount/{{ volunteer.user_id }}">
+                            <a href="/useraccount/{{ volunteer.id }}">
                             {% if volunteer.avatar_path %}
                                 <img src="{{ d.template_data.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
                             {% else %}
@@ -37,6 +37,8 @@
         <div class="volunteer-details serif">
             <div class="volunteer-count">We have <strong>{{ need.volunteers|length }}</strong> volunteers</div>
             <div class="progress-wrapper"><div class="progress" style="width:{{ 150 * need.volunteers|length / need.quantity }}px;"><div class="progress-pin"></div></div></div>
+
+            {# Volunteer button state #}
 
             {% if d.sqla_user in need.volunteers %}
                 <a href="#" class="help-link">I am helping</a>
