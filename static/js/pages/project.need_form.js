@@ -6,6 +6,43 @@ tc.gam.project_widgets.need_form = function(options) {
     tc.util.log('project.needs');
     var dom = options.dom;
 
+    /**
+     * Function: initMerlin
+     * Initialize the merlin object for validation of the modal dialog.
+     */
+    var initMerlin = function(need) {
+        var merlin;
+
+        //We are using merlin only for the built-in validation in this case.
+        merlin =  new tc.merlin(options.app, {
+            name:'need_form',
+            dom:tc.jQ('.add-need.merlin'),
+            next_button:tc.jQ('a.need-submit'),
+            first_step:'need_form',
+            use_hashchange:false,
+            steps: {
+                'need_form': {
+                    selector: '.step.add-need-step',
+                    inputs: {
+                        'vol-quantity': {
+                            selector: '#vol-quantity',
+                            validators: ['required', 'numeric'],
+                            hint:'Qty'
+                        }
+                    },
+                    init:function(merlin, dom) {
+                        merlin.options.next_button.click(function(event) {
+                            console.log('next');
+                        });
+                    }
+                }
+            }
+        });
+
+        merlin.show_step('need_form');
+    };
+
+
     var mergeTemplate = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getDate()) : ''; },
@@ -23,12 +60,14 @@ tc.gam.project_widgets.need_form = function(options) {
                 if (callback) {
                     callback();
                 }
+                initMerlin();
             });
         } else {
             mergeTemplate();
             if (callback) {
                 callback();
             }
+            initMerlin();
         }
     };
 
