@@ -650,6 +650,22 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
+    def get_address_dict(self, need_dict):
+        address_id = need_dict['address_id']
+        if address_id:
+            address = self.orm.query(models.Place).get(address_id)
+            address_dict = super(NeedInstance, self).row2dict(address)
+        else:
+            address_dict = None
+
+        return address_dict
+
+    def row2dict(self, need):
+        need_dict = super(NeedInstance, self).row2dict(need)
+        need_dict['address'] = self.get_address_dict(need_dict)
+
+        return need_dict
+
 
 class NeedVolunteerList (CreateInstanceMixin, RestController):
     model = models.Volunteer

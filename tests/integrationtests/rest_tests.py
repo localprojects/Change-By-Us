@@ -94,16 +94,22 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         response = self.app.get('/rest/v1/needs/1/', status=200)
         assert_in('"date": "2011-08-31"', response)
 
+    @istest
+    def should_include_the_address_object_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+        print response
+        assert_in('"address": {"city": "Oakland, CA 94609", "street": "563 46th St.", "id": "1", "name": "Frugal 4 House"}', response)
+
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
 
     @istest
-    def should_return_a_need(self):
+    def should_return_a_dictionary(self):
         controller = NeedInstance()
         response = controller.REST_READ(1)
 
-        assert_equal(response.__class__.__name__, 'Need')
+        assert_equal(response.__class__.__name__, 'dict')
 
     @istest
     def should_not_raise_NotFoundError(self):
