@@ -650,14 +650,28 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
+    def place2dict(self, place):
+        place_dict = super(NeedInstance, self).row2dict(place)
+        return place_dict
+
+    def user2dict(self, user):
+        user_dict = super(NeedInstance, self).row2dict(user)
+
+        # Add in some of that non-orm goodness
+        user_dict['avatar_path'] = user.avatar_path
+
+        # Remove sensitive information
+        del user_dict['password']
+        del user_dict['salt']
+
+        return user_dict
+
     def row2dict(self, need):
         need_dict = super(NeedInstance, self).row2dict(need)
-        need_dict['address'] = super(NeedInstance, self).row2dict(need.address)
+        need_dict['address'] = self.place2dict(need.address)
         need_dict['volunteers'] = [
-            super(NeedInstance, self).row2dict(volunteer)
+            self.user2dict(volunteer)
             for volunteer in need.volunteers]
-#        need_dict['address'] = self.get_address_dict(need_dict)
-#        need_dict['volunteers'] = self.get_volunteers_list(
 
         return need_dict
 

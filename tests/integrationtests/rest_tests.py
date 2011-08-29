@@ -116,10 +116,23 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_in('"address": {"city": "Oakland, CA 94609", "street": "563 46th St.", "id": "1", "name": "Frugal 4 House"}', response)
 
     @istest
-    def should_include_the_colunteers_in_the_return_value(self):
+    def should_include_the_volunteers_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
         print 'response:', response
         assert_in('"volunteers": [{', response)
+
+    @istest
+    def should_include_the_volunteer_avatars_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+        print 'response:', response
+        assert_in('"avatar_path": "', response)
+
+    @istest
+    def should_not_include_the_volunteer_passwords_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+        print 'response:', response
+        assert_not_in('"password": "', response)
+        assert_not_in('"salt": "', response)
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
