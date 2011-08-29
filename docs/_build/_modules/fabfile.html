@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>fabfile &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for fabfile</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Fabric&#39;s own fabfile.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">with_statement</span>
+
+<span class="kn">import</span> <span class="nn">nose</span>
+
+<span class="kn">from</span> <span class="nn">fabric.api</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c"># Need to import this as fabric.version for reload() purposes</span>
+<span class="kn">import</span> <span class="nn">fabric.version</span>
+<span class="c"># But nothing is stopping us from making a convenient binding!</span>
+<span class="n">_version</span> <span class="o">=</span> <span class="n">fabric</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">get_version</span>
+
+
+<span class="kn">import</span> <span class="nn">docs</span>
+
+
+<span class="nd">@task</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run all unit tests and doctests.</span>
+
+<span class="sd">    Specify string argument ``args`` for additional args to ``nosetests``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">default_args</span> <span class="o">=</span> <span class="s">&quot;-sv --with-doctest --nologcapture --with-color&quot;</span>
+    <span class="n">default_args</span> <span class="o">+=</span> <span class="p">(</span><span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">args</span><span class="p">)</span> <span class="k">if</span> <span class="n">args</span> <span class="k">else</span> <span class="s">&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nose</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">default_args</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">SystemExit</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="s">&quot;Nose encountered an error; you may be missing newly added test dependencies. Try running &#39;pip install -r requirements.txt&#39;.&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="code_version_is_tagged"><a class="viewcode-back" href="../modules/fabfile.html#fabfile.code_version_is_tagged">[docs]</a><span class="k">def</span> <span class="nf">code_version_is_tagged</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">local</span><span class="p">(</span><span class="s">&#39;git tag | egrep &quot;^</span><span class="si">%s</span><span class="s">$&quot;&#39;</span> <span class="o">%</span> <span class="n">_version</span><span class="p">(</span><span class="s">&#39;short&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="update_code_version"><a class="viewcode-back" href="../modules/fabfile.html#fabfile.update_code_version">[docs]</a><span class="k">def</span> <span class="nf">update_code_version</span><span class="p">(</span><span class="n">force</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Update version data structure in-code and commit that change to git.</span>
+
+<span class="sd">    Normally, if the version file has not been modified, we abort assuming the</span>
+<span class="sd">    user quit without saving. Specify ``force=yes`` to override this.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version_file</span> <span class="o">=</span> <span class="s">&quot;fabric/version.py&quot;</span>
+    <span class="nb">raw_input</span><span class="p">(</span><span class="s">&quot;Work has been done since last tag, version update is needed. Hit Enter to load version info in your editor: &quot;</span><span class="p">)</span>
+    <span class="n">local</span><span class="p">(</span><span class="s">&quot;$EDITOR </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">version_file</span><span class="p">)</span>
+    <span class="c"># Try to detect whether user bailed out of the edit</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">local</span><span class="p">(</span><span class="s">&quot;git diff -- </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">version_file</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="s">&quot;You seem to have aborted the file edit, so I&#39;m aborting too.&quot;</span><span class="p">)</span>
+    <span class="c"># Reload version module to get new version</span>
+    <span class="nb">reload</span><span class="p">(</span><span class="n">fabric</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+    <span class="c"># Commit the version update</span>
+    <span class="n">local</span><span class="p">(</span><span class="s">&quot;git add </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">version_file</span><span class="p">)</span>
+    <span class="n">local</span><span class="p">(</span><span class="s">&quot;git commit -m </span><span class="se">\&quot;</span><span class="s">Cut </span><span class="si">%s</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">_version</span><span class="p">(</span><span class="s">&#39;verbose&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="commits_since_tag"><a class="viewcode-back" href="../modules/fabfile.html#fabfile.commits_since_tag">[docs]</a><span class="k">def</span> <span class="nf">commits_since_tag</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Has any work been done since the last tag?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">local</span><span class="p">(</span><span class="s">&quot;git log </span><span class="si">%s</span><span class="s">..&quot;</span> <span class="o">%</span> <span class="n">_version</span><span class="p">(</span><span class="s">&#39;short&#39;</span><span class="p">))</span>
+
+</div>
+<span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">tag</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="s">&#39;no&#39;</span><span class="p">,</span> <span class="n">push</span><span class="o">=</span><span class="s">&#39;no&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tag a new release.</span>
+
+<span class="sd">    Normally, if a Git tag exists matching the current version, and no Git</span>
+<span class="sd">    commits appear after that tag, we abort assuming the user is making a</span>
+<span class="sd">    mistake or forgot to commit their work.</span>
+
+<span class="sd">    To override this -- i.e. to re-tag and re-upload -- specify ``force=yes``.</span>
+<span class="sd">    We assume you know what you&#39;re doing if you use this.</span>
+
+<span class="sd">    By default we do not push the tag remotely; specify ``push=yes`` to force a</span>
+<span class="sd">    ``git push origin &lt;tag&gt;``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">force</span> <span class="o">=</span> <span class="n">force</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;yes&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">settings</span><span class="p">(</span><span class="n">warn_only</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="c"># Does the current in-code version exist as a Git tag already?</span>
+        <span class="c"># If so, this means we haven&#39;t updated the in-code version specifier</span>
+        <span class="c"># yet, and need to do so.</span>
+        <span class="k">if</span> <span class="n">code_version_is_tagged</span><span class="p">():</span>
+            <span class="c"># That is, if any work has been done since. Sanity check!</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">commits_since_tag</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+                <span class="n">abort</span><span class="p">(</span><span class="s">&quot;No work done since last tag!&quot;</span><span class="p">)</span>
+            <span class="c"># Open editor, update version, commit that change to Git.</span>
+            <span class="n">update_code_version</span><span class="p">(</span><span class="n">force</span><span class="p">)</span>
+        <span class="c"># If the tag doesn&#39;t exist, the user has already updated version info</span>
+        <span class="c"># and we can just move on.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Version has already been updated, no need to edit...&quot;</span><span class="p">)</span>
+        <span class="c"># At this point, we&#39;ve incremented the in-code version and just need to</span>
+        <span class="c"># tag it in Git.</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s">&#39;f&#39;</span> <span class="k">if</span> <span class="n">force</span> <span class="k">else</span> <span class="s">&#39;&#39;</span>
+        <span class="n">local</span><span class="p">(</span><span class="s">&quot;git tag -</span><span class="si">%s</span><span class="s">am </span><span class="se">\&quot;</span><span class="s">Fabric </span><span class="si">%s</span><span class="se">\&quot;</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">f</span><span class="p">,</span>
+            <span class="n">_version</span><span class="p">(</span><span class="s">&#39;verbose&#39;</span><span class="p">),</span>
+            <span class="n">_version</span><span class="p">(</span><span class="s">&#39;short&#39;</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="c"># And push to the central server, if we were told to</span>
+        <span class="k">if</span> <span class="n">push</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;yes&#39;</span><span class="p">]:</span>
+            <span class="n">local</span><span class="p">(</span><span class="s">&quot;git push origin </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">_version</span><span class="p">(</span><span class="s">&#39;short&#39;</span><span class="p">))</span>
+
+
+<span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build (but don&#39;t upload) via setup.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local</span><span class="p">(</span><span class="s">&#39;python setup.py sdist&#39;</span><span class="p">)</span>
+
+
+<span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">upload</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build, register and upload to PyPI</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local</span><span class="p">(</span><span class="s">&#39;python setup.py sdist register upload&#39;</span><span class="p">)</span>
+
+
+<span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">release</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="s">&#39;no&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tag/push, build, upload new version and build/upload documentation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tag</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span> <span class="n">push</span><span class="o">=</span><span class="s">&#39;yes&#39;</span><span class="p">)</span>
+    <span class="n">upload</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

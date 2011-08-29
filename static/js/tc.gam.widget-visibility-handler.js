@@ -21,8 +21,8 @@ tc.gam.widgetVisibilityHandler = function(options) {
         self._setHash('show,home');
     };
     
-    self._triggerWidgetVisibilityEvent = function(action, widget) {
-        tc.jQ(tc).trigger(action + '-project-widget', [widget]);
+    self._triggerWidgetVisibilityEvent = function(action, widget, id) {
+        tc.jQ(tc).trigger(action + '-project-widget', [widget, id]);
     };
     
     self._onHashChange = function(event) {
@@ -36,10 +36,11 @@ tc.gam.widgetVisibilityHandler = function(options) {
         } else {
             action = self.currentHash.split(',')[0];
             widget = self.currentHash.split(',')[1];
+            id = self.currentHash.split(',')[2];
         }
         
         tc.util.log('&&& hashchange: ' + action + ', ' + widget);
-        self._triggerWidgetVisibilityEvent(action, widget);
+        self._triggerWidgetVisibilityEvent(action, widget, id);
     };
     
     var bindEvents = function() {

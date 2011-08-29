@@ -1,28 +1,24 @@
 from unittest import TestCase
+from nose.tools import *
+
 from lib import web
 from mock import Mock
 
 import main
+import mixins
+from   mixins import DbFixturesMixin
 import framework.file_server as file_server
 
-class S3FileServerTests (TestCase):
+class Test_S3FileServer_add (DbFixturesMixin, TestCase):
     
-    def test_S3Upload(self):
-        class MyDB:
-            def query(self, *args, **kwargs):
-                return []
-        db = MyDB()
-        
+    @istest
+    def successfully_uploads_a_file_with_the_given_data(self):
+        db = self.db
         fs = file_server.S3FileServer(db)
         
-        # This should test S3 uploading, not the DB.
-        fs.addDbRecord = Mock(return_value=3)
-        fs.removeDbRecord = Mock()
-        
-        db = main.sessionDB()
         id = fs.add(db, "This is file data", "myapp")
         
-        self.assert_(id.endswith('This is file data'))
+        assert id.endswith('This is file data')
     
     
 

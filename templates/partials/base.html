@@ -89,6 +89,13 @@
             app_page.data.info_addr = { name:'info', domain:'{{ d.config.email.common_domain }}' };
             app_page.data.media_root = '{{d.template_data.media_root}}';
 
+            app_page.data.map = {
+                center_lat: {{ d.template_data.map['center_lat'] }},
+                center_lon: {{ d.template_data.map['center_lon'] }}
+            };
+            
+            console.log('##########', app_page.data.map);
+            
             // for tooltip only
             var media_root = '{{d.template_data.media_root}}';
 
@@ -334,6 +341,7 @@
         <script type="text/javascript" src="/static/js/libs/prettyCheckboxes.js"></script>
         <script type="text/javascript" src="/static/js/libs/prettyDate.js"></script>
         <script type="text/javascript" src="/static/js/libs/jqdropdown.js"></script>
+        <script type="text/javascript" src="/static/js/libs/icanhaz/ICanHaz.min.js"></script>
     {% else %}
         <script type="text/javascript" src="/static/build/js/libs.js"></script>
     {% endif %}
