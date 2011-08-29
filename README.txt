@@ -132,6 +132,12 @@ available task, run:
     fab --list
 
 Some of the more common sets of tasks are below.
+* Create all the configurations locally, for development purposes:
+    fab --config=/path/to/rcfile.developer-name dev \
+        create_local_configs
+  This will manufacture the config files for you to be able to run the system on your
+  local environment, assuming that your local web server points to your source folder.
+
 * Standard deployment of branch defined in rcfile, with webserver restart:
     fab --config=/path/to/rcfile.demo demo \
         bundle_code deploy_webapp deploy_configurations
