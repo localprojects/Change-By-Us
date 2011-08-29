@@ -200,11 +200,12 @@ def emailIdeaConfirmation(email, responseEmail, locationId):
     subject = "Thanks for submitting an idea to Change by Us!"
     searchLink = "%ssearch?location_id=%s" % (host, locationId)
     createLink = "%screate" % host
+    respondLink = "%sfeedback" % host
     
     body = Emailer.render('email/idea_confirmation',
                         {'search_link':searchLink,
                          'create_link':createLink,
-                         'response_email':emailAccount['from_email']},
+                         'respond_link':respondLink},
                         suffix = 'txt')
                         
     try:
