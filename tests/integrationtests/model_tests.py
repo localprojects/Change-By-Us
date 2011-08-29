@@ -56,3 +56,25 @@ class Test_User_avatarPath (mixins.AppSetupMixin, TestCase):
         path = user.avatar_path
 
         assert_is_none(path)
+
+
+class Test_Project_admins (mixins.AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    def test_contains_the_project_admin_users(self):
+        orm = OrmHolder().orm
+        project = orm.query(Project).get(1)
+        user = orm.query(User).get(1)
+
+        admins = project.admins
+
+        assert_in(user, admins)
+
+    def test_does_not_contain_non_admin_users(self):
+        orm = OrmHolder().orm
+        project = orm.query(Project).get(1)
+        user = orm.query(User).get(3)
+
+        admins = project.admins
+
+        assert_not_in(user, admins)

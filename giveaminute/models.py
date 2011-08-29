@@ -111,6 +111,12 @@ class Project (Base):
 
     members = association_proxy('project_members', 'member')
 
+    @property
+    def admins(self):
+        for pm in self.project_members:
+            if pm.is_project_admin:
+                yield pm.member
+
 
 class Place (Base):
     __tablename__ = 'project_place'
