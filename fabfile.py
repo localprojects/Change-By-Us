@@ -530,6 +530,8 @@ def bundle_code():
         local('cd %(tmp_path)s && git pull origin %(branch)s && git checkout %(branch)s' % env)
         local('cd %(tmp_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
         env.release = local('cd %(tmp_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
+        # To be safe, remove any newline characters
+        env.release = re.sub('[\r\n]', '', env.release)
         local('cd %(tmp_path)s && git archive --format=tar %(branch)s > %(tmp_path)s/%(release)s.tar' % env)
         local('cd %(tmp_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == "git-svn":
