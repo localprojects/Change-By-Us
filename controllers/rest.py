@@ -377,7 +377,7 @@ class RestController (Controller):
 
     def row2dict(self, row):
         d = {}
-        for columnName in row.__table__.columns.keys():
+        for columnName in row.__mapper__.columns.keys():
             d[columnName] = getattr(row, columnName)
 
         return d
@@ -650,19 +650,14 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
-    def get_address_dict(self, need_dict):
-        address_id = need_dict['address_id']
-        if address_id:
-            address = self.orm.query(models.Place).get(address_id)
-            address_dict = super(NeedInstance, self).row2dict(address)
-        else:
-            address_dict = None
-
-        return address_dict
-
     def row2dict(self, need):
         need_dict = super(NeedInstance, self).row2dict(need)
-        need_dict['address'] = self.get_address_dict(need_dict)
+        need_dict['address'] = super(NeedInstance, self).row2dict(need.address)
+        need_dict['volunteers'] = [
+            super(NeedInstance, self).row2dict(volunteer)
+            for volunteer in need.volunteers]
+#        need_dict['address'] = self.get_address_dict(need_dict)
+#        need_dict['volunteers'] = self.get_volunteers_list(
 
         return need_dict
 

@@ -18,6 +18,21 @@ from controllers.rest import NonProjectMemberReadOnly
 from controllers.rest import NeedVolunteerList
 from controllers.rest import RestController
 
+class Test_RestController_row2dict (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_return_user_object_dict_with_mapper_names_instead_of_table_names(self):
+        from giveaminute.models import *
+        cont = RestController()
+        user = cont.orm.query(User).get(1)
+
+        result = cont.row2dict(user)
+
+        assert_in('id', result)
+        assert_not_in('user_id', result)
+
+
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
     fixtures = ['test_data.sql']
 
@@ -97,8 +112,14 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     @istest
     def should_include_the_address_object_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/2/', status=200)
-        print response
+        print 'response:', response
         assert_in('"address": {"city": "Oakland, CA 94609", "street": "563 46th St.", "id": "1", "name": "Frugal 4 House"}', response)
+
+    @istest
+    def should_include_the_colunteers_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+        print 'response:', response
+        assert_in('"volunteers": [{', response)
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
