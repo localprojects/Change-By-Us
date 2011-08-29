@@ -4,30 +4,30 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.needs = function(options) {
     tc.util.log('project.needs');
-    var dom = options.dom, 
+    var dom = options.dom,
         modal = options.app.components.modal,
         merlin;
-    
+
     /**
      * Function: isProjectMember
      * Is the user a member of this project?
      * TODO: find a common place for this to live.
      */
     var isProjectMember = function() {
-        return ( 
-            (options.project_user.is_member) || 
-            (options.project_user.is_project_admin) || 
+        return (
+            (options.project_user.is_member) ||
+            (options.project_user.is_project_admin) ||
             (options.user && options.user.is_admin) ||
-            (options.user && options.user.is_leader) 
+            (options.user && options.user.is_leader)
         );
     };
-    
+
     var updateNeed = function(need_id) {
         var $needContainer = tc.jQ('.need[data-id|="'+need_id+'"]'),
             $volCount = $needContainer.find('.volunteer-count strong'),
             $progress = $needContainer.find('.progress'),
             $avatars = $needContainer.find('.vol-avatars');
-        
+
         getNeedDetails(need_id, function(need) {
             var i = 0, MAX = 5, avatar_html = '';
             $volCount.text(need.volunteers.length);
@@ -36,36 +36,51 @@ tc.gam.project_widgets.needs = function(options) {
             //TODO: Update the avatars
         });
     };
-    
+
     /**
      * Function: volunteer
      * The user can volunteer for a specific need.
      */
     var volunteer = function(need, message, callback) {
         var $error_msg = modal.options.element.find('.error-msg').hide();
-        
+
         tc.jQ.ajax({
             url: '/rest/v1/needs/'+need.id+'/volunteers/',
             data: { member_id: options.user.u_id },
             dataType: 'json',
             type: 'POST',
-            success: function(data, status, xhr) {
-                callback(data);
+            success: function(volunteer_data, status, xhr) {
+
+                tc.jQ.ajax({
+                    url: '/directmsg',
+                    type: 'POST',
+                    data: {
+                        message: message,
+                        to_user_id: options.project_data.info.owner.u_id
+                    },
+                    success: function(message_data, status, xhr) {
+                        callback(volunteer_data);
+                    },
+                    error: function(xhr, status, error) {
+                        $error_msg.show();
+                    }
+                });
+
             },
             error: function(xhr, status, error) {
                 $error_msg.show();
             }
         });
     };
-    
+
     /**
      * Function: initMerlin
      * Initialize the merlin object for validation of the modal dialog.
      */
     var initMerlin = function(need) {
         var merlin;
-        
-        //Please note that this is very tricky due to the fact that the 
+
+        //Please note that this is very tricky due to the fact that the
         //content of the modal is actually being cloned by the modal widget.
         //This means that there are duplicate elements in the DOM, even
         //ids. This means you should be very specific and careful with your
@@ -78,9 +93,9 @@ tc.gam.project_widgets.needs = function(options) {
         modal.options.element.find('.volunteer-agree-section input').attr('id', 'unique-volunteer-agree');
         modal.options.element.find('.volunteer-agree-section label').attr('for', 'unique-volunteer-agree');
         modal.options.element.find('input[type=checkbox]').prettyCheckboxes();
-        
+
         //We are using merlin only for the built-in validation in this case.
-        
+
         merlin =  new tc.merlin(options.app, {
             name:'volunteer',
             dom:modal.options.element.find('.user-volunteer-modal.merlin'),
@@ -115,7 +130,7 @@ tc.gam.project_widgets.needs = function(options) {
                         merlin.options.next_button.click(function(event) {
                             var $this = tc.jQ(this),
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
-                                
+
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
                                     modal.hide();
@@ -127,10 +142,10 @@ tc.gam.project_widgets.needs = function(options) {
                 }
             }
         });
-        
+
         merlin.show_step('volunteer_agree');
     };
-    
+
     /**
      * Function: getNeedDetails
      * Fetch the detail for a given need_id
@@ -146,7 +161,7 @@ tc.gam.project_widgets.needs = function(options) {
             }
         });
     };
-    
+
     /**
      * Function: showModal
      * Show the volunteer modal to the user
@@ -154,7 +169,7 @@ tc.gam.project_widgets.needs = function(options) {
     var showModal = function(need) {
         //use ICanHaz to fill in the modal content template
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
-            h = ich.add_vol_need_tmpl({ 
+            h = ich.add_vol_need_tmpl({
                 need_request: need.request,
                 need_datetime: need.datetime,
                 need_reason: need.reason,
@@ -163,22 +178,22 @@ tc.gam.project_widgets.needs = function(options) {
             });
 
         $needDetailsContent.html(h);
-        
+
         //NOTE: the source_element gets cloned here, so be careful
         //binding events!
         modal.show({
             app:options.app,
             source_element:tc.jQ('.template-content.user-volunteer-modal')
         });
-        
+
         initMerlin(need);
     };
-    
+
     /**
      * Function: bindEvents
      * Bind events for this widget
      */
-    var bindEvents = function() {        
+    var bindEvents = function() {
         tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
             if (options.name === widgetName) {
                 tc.util.log('&&& showing ' + options.name);
@@ -188,11 +203,11 @@ tc.gam.project_widgets.needs = function(options) {
                 dom.hide();
             }
         });
-        
+
         tc.jQ('.help-link').click(function(event) {
             event.preventDefault();
             var need_id = tc.jQ(this).parents('li.need').attr('data-id');
-            
+
             if (isProjectMember()) {
                 getNeedDetails(need_id, showModal);
             } else {
@@ -203,6 +218,6 @@ tc.gam.project_widgets.needs = function(options) {
             }
         });
     };
-    
+
     bindEvents();
 };
