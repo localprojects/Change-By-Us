@@ -18,7 +18,7 @@ from controllers.rest import NonProjectMemberReadOnly
 from controllers.rest import NeedVolunteerList
 from controllers.rest import RestController
 
-class Test_RestController_row2dict (AppSetupMixin, TestCase):
+class Test_RestController_instanceToDict (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
 
     @istest
@@ -27,7 +27,7 @@ class Test_RestController_row2dict (AppSetupMixin, TestCase):
         cont = RestController()
         user = cont.orm.query(User).get(1)
 
-        result = cont.row2dict(user)
+        result = cont.instance_to_dict(user)
 
         assert_in('id', result)
         assert_not_in('user_id', result)
@@ -36,52 +36,24 @@ class Test_RestController_row2dict (AppSetupMixin, TestCase):
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
     fixtures = ['test_data.sql']
 
-    def test_AnonymousUserNotAllowedToCreateNeeds(self):
-        # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
-        # more about testing with Paste.
-
-        class FakeDict (dict):
-            def __getattr__(self, key):
-                if key in self:
-                    return self[key]
-                else:
-                    raise AttributeError(key)
-
-            def __setattr__(self, key, value):
-                self[key] = value
-                return value
-
-        session = FakeDict()
-        SessionHolder.get_session = Mock(return_value=session)
-
-        response = self.app.post('/rest/v1/needs/',
-            params={
-                'type': 'volunteer',
-                'request': 'basketball players',
-                'quantity': '5',
-                'description': 'Play on my basketball team',
-                'project_id': 0,
-            },
-            status=403)
-
-#    def test_AdminUserAllowedToCreateNeeds(self):
+#    @istest
+#    def should_not_allow_anonymous_user_to_create_needs(self):
 #        # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
 #        # more about testing with Paste.
-#
-#        class FakeDict (dict):
-#            def __getattr__(self, key):
-#                if key in self:
-#                    return self[key]
-#                else:
-#                    raise AttributeError(key)
-#
-#            def __setattr__(self, key, value):
-#                self[key] = value
-#                return value
-#
-#        session = FakeDict(user_id=3)
-#        SessionHolder.get_session = Mock(return_value=session)
-#
+#        response = self.app.post('/rest/v1/needs/',
+#            params={
+#                'type': 'volunteer',
+#                'request': 'basketball players',
+#                'quantity': '5',
+#                'description': 'Play on my basketball team',
+#                'project_id': 0,
+#            },
+#            status=403)
+
+#    @istest
+#    def should_allow_admin_user_to_create_needs(self):
+#        self.login(user_id=3)
+
 #        response = self.app.post('/rest/v1/needs/',
 #            params={
 #                'type': 'volunteer',
@@ -103,34 +75,27 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
 
     @istest
     def should_return_a_reasonable_representation_of_a_need(self):
-        # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
-        # more about testing with Paste.
-
         response = self.app.get('/rest/v1/needs/1/', status=200)
         assert_in('"date": "2011-08-31"', response)
 
     @istest
     def should_include_the_address_object_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/2/', status=200)
-        print 'response:', response
         assert_in('"address": {"city": "Oakland, CA 94609", "street": "563 46th St.", "id": "1", "name": "Frugal 4 House"}', response)
 
     @istest
     def should_include_the_volunteers_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        print 'response:', response
         assert_in('"volunteers": [{', response)
 
     @istest
     def should_include_the_volunteer_avatars_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        print 'response:', response
         assert_in('"avatar_path": "', response)
 
     @istest
     def should_not_include_the_volunteer_passwords_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        print 'response:', response
         assert_not_in('"password": "', response)
         assert_not_in('"salt": "', response)
 
@@ -164,6 +129,25 @@ class Test_NeedVolunteersRestEndpoint_POST (AppSetupMixin, TestCase):
             params={
                 'member_id':u'1'
             }, status=403)
+
+#    @istest
+#    def should_(self):
+#        self.login(user_id=3)
+#        response = self.app.post('/rest/v1/needs/',
+#            params={
+#                'type': 'volunteer',
+#                'request': 'basketball players',
+#                'quantity': '5',
+#                'description': 'Play on my basketball team',
+#                'address[name]': 'Code for America',
+#                'address[street]': '85 2nd St.',
+#                'address[city]': 'San Francisco, CA 94105',
+#                'date': 'August 10, 2011',
+#                'time': 'early afternoon',
+#                'duration': 'a couple hours',
+#                'project_id': 0,
+#            },
+#            status=200)
 
 
 class Test_NeedVolunteersList_REST_CREATE (AppSetupMixin, TestCase):

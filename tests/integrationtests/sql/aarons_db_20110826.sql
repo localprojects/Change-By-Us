@@ -880,7 +880,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'','aaron@codeforamerica.org','e03807c64b6081f243adcc2027dd3696','LCp4dxrN6G',NULL,'Aaron','Ogle',NULL,1,0,NULL,NULL,1,0,'digest','2011-08-26 17:30:54',1,'2011-08-26 01:18:43','2011-08-26 17:30:54');
+INSERT INTO `user` VALUES (1,'','aaron@codeforamerica.org','e03807c64b6081f243adcc2027dd3696','LCp4dxrN6G',NULL,'Aaron','Ogle',NULL,1,0,NULL,NULL,15,0,'digest','2011-08-26 17:30:54',1,'2011-08-26 01:18:43','2011-08-26 17:30:54');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 

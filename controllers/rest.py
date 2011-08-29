@@ -375,12 +375,27 @@ class RestController (Controller):
     def get_model(self):
         return self.model
 
-    def row2dict(self, row):
+    def instance_to_dict(self, row):
+        if row is None: return None
+
         d = {}
         for columnName in row.__mapper__.columns.keys():
             d[columnName] = getattr(row, columnName)
 
         return d
+
+    def replace_gam_user_with_sqla_user(self):
+        if self.user:
+            self.user = self.orm.query(models.User).get(self.user.id)
+
+    def do_HTTP_verb(self, verb, *args, **kwargs):
+        method_handler = getattr(self, verb)
+        response_data = method_handler(*args, **kwargs)
+
+        serializer = self.get_serializer()
+        response_data = serializer.serialize_model(response_data)
+
+        return response_data
 
     def _BASE_METHOD_HANDLER(self, allowed_verbs, *args, **kwargs):
         """
@@ -391,18 +406,12 @@ class RestController (Controller):
 
         - NotFoundError: return a 404 response
         """
-        if self.user:
-            self.user = self.orm.query(models.User).get(self.user.id)
+        self.replace_gam_user_with_sqla_user()
 
         try:
             for verb in allowed_verbs:
                 if hasattr(self, verb):
-                    method_handler = getattr(self, verb)
-                    response_data = method_handler(*args, **kwargs)
-
-                    serializer = self.get_serializer()
-                    response_data = serializer.serialize_model(response_data)
-
+                    response_data = self.do_HTTP_verb(verb, *args, **kwargs)
                     return self.json(response_data)
 
             return self.no_method()
@@ -462,7 +471,7 @@ class ListInstancesMixin (object):
         if hasattr(self, 'ordering'):
             query = query.order_by(self.ordering)
 
-        return [self.row2dict(instance) for instance in query
+        return [self.instance_to_dict(instance) for instance in query
                 if self.access_rules.can_read(self.user, instance)]
 
 
@@ -497,7 +506,7 @@ class ReadInstanceMixin (object):
         if not self.access_rules.can_read(self.user, instance):
             raise ForbiddenError("User cannot retrieve the resource")
 
-        return self.row2dict(instance)
+        return self.instance_to_dict(instance)
 
 
 class CreateInstanceMixin (object):
@@ -541,7 +550,7 @@ class CreateInstanceMixin (object):
         orm.add(instance)
         orm.commit()
 
-        return self.row2dict(instance)
+        return self.instance_to_dict(instance)
 
 
 class UpdateInstanceMixin (object):
@@ -586,7 +595,7 @@ class UpdateInstanceMixin (object):
             setattr(instance, key, val)
 
         orm.commit()
-        return self.row2dict(instance)
+        return self.instance_to_dict(instance)
 
 
 class DeleteInstanceMixin(object):
@@ -651,11 +660,11 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     access_rules = NonProjectAdminReadOnly()
 
     def place2dict(self, place):
-        place_dict = super(NeedInstance, self).row2dict(place)
+        place_dict = super(NeedInstance, self).instance_to_dict(place)
         return place_dict
 
     def user2dict(self, user):
-        user_dict = super(NeedInstance, self).row2dict(user)
+        user_dict = super(NeedInstance, self).instance_to_dict(user)
 
         # Add in some of that non-orm goodness
         user_dict['avatar_path'] = user.avatar_path
@@ -666,8 +675,8 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
         return user_dict
 
-    def row2dict(self, need):
-        need_dict = super(NeedInstance, self).row2dict(need)
+    def instance_to_dict(self, need):
+        need_dict = super(NeedInstance, self).instance_to_dict(need)
         need_dict['address'] = self.place2dict(need.address)
         need_dict['volunteers'] = [
             self.user2dict(volunteer)

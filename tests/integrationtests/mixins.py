@@ -1,5 +1,6 @@
 from paste.fixture import TestApp
 from lib import web
+from mock import Mock
 
 from framework.config import Config
 from framework.session_holder import SessionHolder
@@ -86,3 +87,29 @@ class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
 
         # Finally, create a test app
         self.app = TestApp(app.wsgifunc())
+
+        class ObjectDict (dict):
+            def __getattr__(self, key):
+                if key in self:
+                    return self[key]
+                else:
+                    raise AttributeError(key)
+
+            def __setattr__(self, key, value):
+                self[key] = value
+                return value
+
+        self.session = ObjectDict()
+        SessionHolder.get_session = Mock(return_value=self.session)
+
+
+    def tearDown(self):
+        self.logout()
+        super(AppSetupMixin, self).tearDown()
+
+    def logout(self):
+        self.session.user_id = None
+        self.session.user = None
+
+    def login(self, user_id):
+        self.session.user_id = user_id
