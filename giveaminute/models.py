@@ -59,7 +59,8 @@ class User (Base):
 
     @property
     def avatar_path(self):
-        return 'images/%s/%s.png' % (str(self.id)[-1], self.id)
+        if self.image_id:
+            return 'images/%s/%s.png' % (str(self.image_id)[-1], self.image_id)
 
     def join(self, project):
         orm = OrmHandler().orm

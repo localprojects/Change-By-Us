@@ -43,8 +43,16 @@ class Test_User_avatarPath (mixins.AppSetupMixin, TestCase):
 
     def test_returns_the_supposed_path_to_the_users_avatar_image_on_the_media_root(self):
         orm = OrmHolder().orm
-        user = orm.query(User).get(1)
+        user = orm.query(User).get(3)
 
         path = user.avatar_path
 
         assert_equal(path, 'images/1/1.png')
+
+    def test_returns_None_if_user_has_no_avatar_set(self):
+        orm = OrmHolder().orm
+        user = orm.query(User).get(2)
+
+        path = user.avatar_path
+
+        assert_is_none(path)
