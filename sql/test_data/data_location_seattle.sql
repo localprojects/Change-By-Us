@@ -17,7 +17,7 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- Dumping data for table `location`
 --
 
-INSERT INTO `location` (`location_id`, `name`, `lat`, `lon`, `borough`, `address`, `city`, `state`) VALUES(1, 'Citywide', 47.606210, -122.332071, '', 'Seattle, WA, USA', 'Seattle', 'WA');
+INSERT INTO `location` (`location_id`, `name`, `lat`, `lon`, `borough`, `address`, `city`, `state`) VALUES(-1, 'Citywide', 47.606210, -122.332071, '', 'Seattle, WA, USA', 'Seattle', 'WA');
 INSERT INTO `location` (`location_id`, `name`, `lat`, `lon`, `borough`, `address`, `city`, `state`) VALUES(2, 'North Seattle', 47.717020, -122.300934, '', 'North Seattle, Seattle, WA, USA', 'Seattle', 'WA');
 INSERT INTO `location` (`location_id`, `name`, `lat`, `lon`, `borough`, `address`, `city`, `state`) VALUES(3, 'Broadview', 47.720748, -122.367532, '', 'Broadview, Seattle, WA, USA', 'Seattle', 'WA');
 INSERT INTO `location` (`location_id`, `name`, `lat`, `lon`, `borough`, `address`, `city`, `state`) VALUES(4, 'Bitter Lake', 47.726000, -122.351000, '', 'Bitter Lake, Seattle, WA 98133, USA', 'Seattle', 'WA');
