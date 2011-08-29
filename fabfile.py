@@ -228,14 +228,14 @@ def get_remote_host_info():
 #----- /decorator(s) -----
 
 #----- Utility Functions -----
-def sudo_as(cmd):
+def sudo_as(cmd, **kwargs):
     """
     Perform sudo as a higher-rights user
     """
     temp_user = env.user
     env.user = env.sudo_as
     debug("sudoing command %s as user %s" % (cmd, env.sudo_as))
-    resp = sudo(cmd)
+    resp = sudo(cmd, **kwargs)
     env.user = temp_user
     return resp
      
