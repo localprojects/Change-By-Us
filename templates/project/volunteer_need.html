@@ -21,7 +21,13 @@
               <div class="vol-avatars">
             {% else %}
               {% if loop.index <= 5 %}
-                <img src="{{ d.template.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+                  <a href="/useraccount/{{ volunteer.id }}">
+                  {% if volunteer.avatar_path %}
+                      <img src="{{ d.template_data.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+                  {% else %}
+                      <img src="/static/images/thumb_genAvatar.jpg" alt="{{ volunteer_name }}"></img>
+                  {% endif%}
+                  </a>
               {% endif %}
             {% endif %}
 

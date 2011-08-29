@@ -4,7 +4,9 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.needs = function(options) {
     tc.util.log('project.needs');
-    var dom = options.dom, merlin;
+    var dom = options.dom, 
+        modal = options.app.components.modal,
+        merlin;
     
     /**
      * Function: isProjectMember
@@ -25,7 +27,7 @@ tc.gam.project_widgets.needs = function(options) {
      * The user can volunteer for a specific need.
      */
     var volunteer = function(need, message, callback) {
-        console.log('User', options.user, 'has volunteered for', need, 'with message', message);
+        var $error_msg = modal.options.element.find('.error-msg').hide();
         
         tc.jQ.ajax({
             url: '/rest/v1/needs/'+need.id+'/volunteers/',
@@ -34,6 +36,9 @@ tc.gam.project_widgets.needs = function(options) {
             type: 'POST',
             success: function(data, status, xhr) {
                 callback(data);
+            },
+            error: function(xhr, status, error) {
+                $error_msg.show();
             }
         });
     };
@@ -55,16 +60,16 @@ tc.gam.project_widgets.needs = function(options) {
 
         //Make the Pretty Checkbox elements relative to the #modal have
         //ids that you unique from the template.
-        tc.jQ('#modal .volunteer-agree-section input').attr('id', 'unique-volunteer-agree');
-        tc.jQ('#modal .volunteer-agree-section label').attr('for', 'unique-volunteer-agree');
-        tc.jQ('#modal input[type=checkbox]').prettyCheckboxes();
+        modal.options.element.find('.volunteer-agree-section input').attr('id', 'unique-volunteer-agree');
+        modal.options.element.find('.volunteer-agree-section label').attr('for', 'unique-volunteer-agree');
+        modal.options.element.find('input[type=checkbox]').prettyCheckboxes();
         
         //We are using merlin only for the built-in validation in this case.
         
         merlin =  new tc.merlin(options.app, {
             name:'volunteer',
-            dom:tc.jQ('#modal .user-volunteer-modal.merlin'),
-            next_button:tc.jQ('#modal .user-volunteer-modal.merlin a.send'),
+            dom:modal.options.element.find('.user-volunteer-modal.merlin'),
+            next_button:modal.options.element.find('.user-volunteer-modal.merlin a.send'),
             first_step:'volunteer_agree',
             use_hashchange:false,
             steps: {
@@ -97,8 +102,8 @@ tc.gam.project_widgets.needs = function(options) {
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
                                 
                             if (!$this.hasClass('disabled')) {
-                                volunteer(need, message, function(){
-                                    options.app.components.modal.hide();
+                                volunteer(need, message, function(data){
+                                    modal.hide();
                                 });
                             }
                         });
@@ -145,7 +150,7 @@ tc.gam.project_widgets.needs = function(options) {
         
         //NOTE: the source_element gets cloned here, so be careful
         //binding events!
-        options.app.components.modal.show({
+        modal.show({
             app:options.app,
             source_element:tc.jQ('.template-content.user-volunteer-modal')
         });
@@ -175,7 +180,7 @@ tc.gam.project_widgets.needs = function(options) {
             if (isProjectMember()) {
                 getNeedDetails(need_id, showModal);
             } else {
-                options.app.components.modal.show({
+                modal.show({
                     app:options.app,
                     source_element:tc.jQ('.modal-content.join-no-user')
                 });
