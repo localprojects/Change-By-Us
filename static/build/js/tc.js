@@ -2246,7 +2246,7 @@ tc.locationDropdown.validator = function(merlin,elements){
 	elements.filter('.location-hood-enter').siblings('.error').show();
 	return {
 		valid:false,
-		errors:['Please enter a neighborhood or borough.']
+		errors:['Please enter a neighborhood.']
 	};
 };
 
@@ -2760,6 +2760,12 @@ tc.gam.project = function(app, dom) {
     };
 
     app.components.project_widgets = {
+        'home': tc.gam.project_widgets.home(
+            tc.jQ.extend({ name: 'home', dom: dom.find('.project-section.home') }, widget_options)
+        ),
+        'needs': tc.gam.project_widgets.needs(
+            tc.jQ.extend({ name: 'needs', dom: dom.find('.project-section.needs') }, widget_options)
+        ),
         'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
         ),
@@ -2767,16 +2773,16 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'resources', dom: dom.find('.box.resources') }, widget_options)
         ),
         'related_resources': tc.gam.project_widgets.related_resources(
-            tc.jQ.extend({ name: 'related_resources', dom: dom.find('.box.related-resources') }, widget_options)
+            tc.jQ.extend({ name: 'related_resources', dom: dom.find('.project-section.related-resources') }, widget_options)
         ),
         'add_link': tc.gam.project_widgets.add_link(
-            tc.jQ.extend({ name: 'add_link', dom: dom.find('.box.add-link') }, widget_options)
+            tc.jQ.extend({ name: 'add_link', dom: dom.find('.project-section.add-link') }, widget_options)
         ),
         'conversation': tc.gam.project_widgets.conversation(
-            tc.jQ.extend({ name: 'conversation', dom: dom.find('.box.conversation') }, widget_options)
+            tc.jQ.extend({ name: 'conversation', dom: dom.find('.project-section.conversation') }, widget_options)
         ),
         'members': tc.gam.project_widgets.members(
-            tc.jQ.extend({ name: 'members', dom: dom.find('.box.members') }, widget_options)
+            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.members') }, widget_options)
         )
     };
     
@@ -2786,6 +2792,10 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
         );
     }
+    
+    tc.gam.project_widgets.project_tabs(
+        tc.jQ.extend({ name: 'project_tabs', dom: dom.find('.project-tabs') }, widget_options)
+    );
 
     // Create an object to handle widget visibility events
     tc.gam.widgetVisibilityHandler();

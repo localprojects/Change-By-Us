@@ -393,7 +393,7 @@ app_page.features.push(function(app){
 					selector:'#map-view',
 					init:function(merlin,dom){
 						google.maps.event.trigger(map, 'resize');
-						map.setCenter(brooklyn);
+						map.setCenter(map_center);
 						tc.jQ('ul.tabs .tab-list').removeClass('active');
 						tc.jQ('ul.tabs .tab-map').addClass('active');
 					}

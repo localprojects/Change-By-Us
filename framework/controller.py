@@ -67,6 +67,9 @@ class Controller (object):
         #set media root
         self.template_data['media_root'] = Config.get('media')['root']
 
+        #set city-specific map options
+        self.template_data['map'] = Config.get('map')
+
         # user
         self.setUserObject()
 
