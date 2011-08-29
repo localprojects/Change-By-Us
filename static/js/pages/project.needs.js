@@ -33,7 +33,9 @@ tc.gam.project_widgets.needs = function(options) {
             $volCount.text(need.volunteers.length);
             $progress.width($progress.parent().width() * need.volunteers.length / parseInt(need.quantity, 10));
             $avatar_html = ich.need_vol_avatars({
-                volunteers: need.volunteers.slice(0, MAX)
+                volunteers: need.volunteers.slice(0, MAX),
+                use_avatar: function() { return this.avatar_path; },
+                use_generic: function() { return !this.avatar_path; }
             });
             
             $avatars.html($avatar_html);
