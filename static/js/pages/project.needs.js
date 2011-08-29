@@ -26,12 +26,24 @@ tc.gam.project_widgets.needs = function(options) {
         var $needContainer = tc.jQ('.need[data-id|="'+need_id+'"]'),
             $volCount = $needContainer.find('.volunteer-count strong'),
             $progress = $needContainer.find('.progress'),
-            $avatars = $needContainer.find('.vol-avatars');
+            $avatars = $needContainer.find('.vol-avatars'),
+            $helpLink = $needContainer.find('.help-link');
 
         getNeedDetails(need_id, function(need) {
-            var $avatar_html, MAX = 5;
+            var $avatar_html, 
+                MAX = 5, 
+                quantityNum = parseInt(need.quantity, 10);
+            
             $volCount.text(need.volunteers.length);
-            $progress.width($progress.parent().width() * need.volunteers.length / parseInt(need.quantity, 10));
+            $progress.width($progress.parent().width() * need.volunteers.length / quantityNum);
+            
+            $helpLink.removeClass('active');
+            if (quantityNum === need.volunteers.length) {
+                $helpLink.addClass('complete').text('Complete!');
+            } else {
+                $helpLink.addClass('in-process').text('I am helping');
+            }
+            
             $avatar_html = ich.need_vol_avatars({
                 volunteers: need.volunteers.slice(0, MAX),
                 use_avatar: function() { return this.avatar_path; },
@@ -209,17 +221,20 @@ tc.gam.project_widgets.needs = function(options) {
             }
         });
 
-        tc.jQ('.help-link').click(function(event) {
+        tc.jQ('.help-link').live('click', function(event) {
             event.preventDefault();
-            var need_id = tc.jQ(this).parents('li.need').attr('data-id');
+            var $this = tc.jQ(this),
+                need_id = $this.parents('li.need').attr('data-id');
 
-            if (isProjectMember()) {
-                getNeedDetails(need_id, showModal);
-            } else {
-                modal.show({
-                    app:options.app,
-                    source_element:tc.jQ('.modal-content.volunteer-no-member')
-                });
+            if ($this.hasClass('active')) {
+                if (isProjectMember()) {
+                    getNeedDetails(need_id, showModal);
+                } else {
+                    modal.show({
+                        app:options.app,
+                        source_element:tc.jQ('.modal-content.volunteer-no-member')
+                    });
+                }
             }
         });
     };
