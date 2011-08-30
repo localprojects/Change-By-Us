@@ -10,7 +10,7 @@ tc.gam.project_widgets.need_form = function(options) {
      * Function: initMerlin
      * Initialize the merlin object for validation of the modal dialog.
      */
-    var initMerlin = function(need) {
+    var initMerlin = function(need_id) {
         var merlin;
 
         //We are using merlin only for the built-in validation in this case.
@@ -81,6 +81,9 @@ tc.gam.project_widgets.need_form = function(options) {
                           hint:'Time'
                         }
                     },
+                    init:function(merlin,dom) {
+                      console.log(merlin.app.app_page.data);
+                    },
                     finish:function(merlin, dom) {
                       var d = new Date();
                       var needDate = d.getFullYear()
@@ -102,20 +105,20 @@ tc.gam.project_widgets.need_form = function(options) {
                 'need-submit':{
                   selector:'.step.submit-need-step',
                   init:function(merlin,dom){
-                    tc.jQ.ajax({
-                      type:'POST',
-                      url:'/rest/v1/needs/',
-                      data:merlin.options.data,
-                      context:merlin,
-                      dataType:'text',
-                      success:function(data,ts,xhr){
-                        if(data == 'False'){
-                          return false;
-                        }
-                        window.location.hash = 'show,needs';
-                        window.reload();
+                    var need_data = merlin.options.data;
+
+                    var success = function(data,tx,xhr){
+                      if(data == 'False'){
+                        return false;
                       }
-                    });
+                      window.location.hash = 'show,needs';
+                      window.location.reload();
+                    };
+                    if (need_id === undefined) {
+                      tc.gam.project_data.createNeed(need_data, success);
+                    } else {
+                      tc.gam.project_data.updateNeed(need_id, need_data, success);
+                    }
                   }
                 }
             }
@@ -142,7 +145,7 @@ tc.gam.project_widgets.need_form = function(options) {
                 if (callback) {
                     callback();
                 }
-                initMerlin();
+                initMerlin(need_id);
             });
         } else {
             mergeTemplate();
