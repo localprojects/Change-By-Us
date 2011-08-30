@@ -71,15 +71,15 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
     def can_read(self, user, instance):
         return True
 
-    def is_project_admin(self, user, project_id):
-        return user is not None and (user.isProjectAdmin(project_id) or user.isAdmin)
+    def is_project_admin(self, user, project):
+        return (user is not None) and ((user in project.members) or user.is_site_admin)
 
     def can_create(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
     def can_update(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
     def can_delete(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
 
 
 def _field_to_tuple(field):
@@ -537,19 +537,19 @@ class CreateInstanceMixin (object):
         # HACK: This is a hack.  We kept getting a test file name being passed
         # in as one of the query parameters.  Wierd.
         for kw in all_kw_args:
-            if kw.endswith('.py'):
+            if kw.startswith('tests/'):
                 del all_kw_args[kw]
                 break
 
         instance = Model(**all_kw_args)
+        orm.add(instance)
+        orm.flush()
 
         if not self.access_rules.can_create(self.user, instance):
             orm.rollback()
             raise ForbiddenError("User cannot store the resource")
 
-        orm.add(instance)
         orm.commit()
-
         return self.instance_to_dict(instance)
 
 
@@ -588,10 +588,11 @@ class UpdateInstanceMixin (object):
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
 
-        if not current_user_can_update(instance):
+        if not self.access_rules.can_update(self.user, instance):
             raise ForbiddenError("Current user cannot modify the resource")
 
         for (key, val) in self.parameters().iteritems():
+            if key == '_method': continue
             setattr(instance, key, val)
 
         orm.commit()
@@ -659,10 +660,6 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
-    def place2dict(self, place):
-        place_dict = super(NeedInstance, self).instance_to_dict(place)
-        return place_dict
-
     def user2dict(self, user):
         user_dict = super(NeedInstance, self).instance_to_dict(user)
 
@@ -677,7 +674,6 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
     def instance_to_dict(self, need):
         need_dict = super(NeedInstance, self).instance_to_dict(need)
-        need_dict['address'] = self.place2dict(need.address)
         need_dict['volunteers'] = [
             self.user2dict(volunteer)
             for volunteer in need.volunteers]

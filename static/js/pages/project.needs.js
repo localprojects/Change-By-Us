@@ -29,7 +29,7 @@ tc.gam.project_widgets.needs = function(options) {
             $avatars = $needContainer.find('.vol-avatars'),
             $helpLink = $needContainer.find('.help-link');
 
-        getNeedDetails(need_id, function(need) {
+        tc.gam.project_data.getNeedDetails(need_id, function(need) {
             var $avatar_html, 
                 MAX = 5, 
                 quantityNum = parseInt(need.quantity, 10);
@@ -164,22 +164,6 @@ tc.gam.project_widgets.needs = function(options) {
     };
 
     /**
-     * Function: getNeedDetails
-     * Fetch the detail for a given need_id
-     */
-    var getNeedDetails = function(need_id, callback) {
-        tc.jQ.ajax({
-            url:'/rest/v1/needs/' + need_id + '/',
-            dataType:'json',
-            success:function(need_details, ts, xhr) {
-                if (callback) {
-                    callback(need_details);
-                }
-            }
-        });
-    };
-
-    /**
      * Function: showModal
      * Show the volunteer modal to the user
      */
@@ -228,7 +212,7 @@ tc.gam.project_widgets.needs = function(options) {
 
             if ($this.hasClass('active')) {
                 if (isProjectMember()) {
-                    getNeedDetails(need_id, showModal);
+                    tc.gam.project_data.getNeedDetails(need_id, showModal);
                 } else {
                     modal.show({
                         app:options.app,

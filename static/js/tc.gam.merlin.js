@@ -397,10 +397,6 @@ tc.merlin.prototype.show_step = function(step, force) {
     // Handle the inputs and go through them.
     if (this.current_step.inputs && !this.current_step.has_been_initialized) {
         for (i in this.current_step.inputs) {
-            temp_e_data = tc.jQ.extend({}, this.event_data, {
-                input: this.current_step.inputs[i]
-            });
-            
             // Use input DOM if step DOM is not available
             if (!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector) {
                 this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
@@ -408,6 +404,16 @@ tc.merlin.prototype.show_step = function(step, force) {
                     tc.util.dump(this.current_step.inputs[i].selector);
                 }
             }
+            
+            // If the value attribute is populated, then save it on the input object in case its needed
+            if (this.current_step.inputs[i].dom.val()) {
+                this.current_step.inputs[i].default_val = this.current_step.inputs[i].dom.val();
+            }
+            
+            // Create a temp event data object
+            temp_e_data = tc.jQ.extend({}, this.event_data, {
+                input: this.current_step.inputs[i]
+            });
             
             // Handle text input counters.
             if (this.current_step.inputs[i].counter && !this.current_step.inputs[i].counter.dom) {
@@ -423,8 +429,8 @@ tc.merlin.prototype.show_step = function(step, force) {
                     merlin: this,
                     input: this.current_step.inputs[i]
                 }).each(function (i, j) {
-                    var $j;
-                    $j = tc.jQ(j);
+                    var $j = tc.jQ(j);
+                    
                     if ($j.data().input.hint || ($j.data().input.hint === "")) {
                         j.value = $j.data().input.hint;
                     }

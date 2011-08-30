@@ -34,41 +34,64 @@ class Test_RestController_instanceToDict (AppSetupMixin, TestCase):
 
 
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
-    fixtures = ['test_data.sql']
+    fixtures = ['aarons_db_20110826.sql']
 
-#    @istest
-#    def should_not_allow_anonymous_user_to_create_needs(self):
-#        # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
-#        # more about testing with Paste.
-#        response = self.app.post('/rest/v1/needs/',
-#            params={
-#                'type': 'volunteer',
-#                'request': 'basketball players',
-#                'quantity': '5',
-#                'description': 'Play on my basketball team',
-#                'project_id': 0,
-#            },
-#            status=403)
+    @istest
+    def should_not_allow_anonymous_user_to_create_needs(self):
+        # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
+        # more about testing with Paste.
+        response = self.app.post('/rest/v1/needs/',
+            params={
+                'type': 'volunteer',
+                'request': 'basketball players',
+                'quantity': '5',
+                'description': 'Play on my basketball team',
+                'project_id': 1,
+            },
+            status=403)
 
-#    @istest
-#    def should_allow_admin_user_to_create_needs(self):
-#        self.login(user_id=3)
+    @istest
+    def should_allow_admin_user_to_update_needs(self):
+        self.login(user_id=3)
 
-#        response = self.app.post('/rest/v1/needs/',
-#            params={
-#                'type': 'volunteer',
-#                'request': 'basketball players',
-#                'quantity': '5',
-#                'description': 'Play on my basketball team',
-#                'address[name]': 'Code for America',
-#                'address[street]': '85 2nd St.',
-#                'address[city]': 'San Francisco, CA 94105',
-#                'date': 'August 10, 2011',
-#                'time': 'early afternoon',
-#                'duration': 'a couple hours',
-#                'project_id': 0,
-#            },
-#            status=200)
+        response = self.app.post('/rest/v1/needs/1/',
+            params={
+                '_method': 'PUT',
+                'type': 'volunteer',
+                'request': 'basketball players',
+                'quantity': '5',
+                'description': 'Play on my basketball team',
+                'address': 'Code for America, 85 2nd St., San Francisco, CA 94105',
+                'date': 'August 10, 2011',
+                'time': 'early afternoon',
+                'duration': 'a couple hours',
+                'project_id': 1,
+            },
+            status=200)
+
+        assert '"quantity": "5"' in response
+        assert '"id": "1"' in response
+
+    @istest
+    def should_allow_admin_user_to_create_needs(self):
+        self.login(user_id=3)
+
+        response = self.app.post('/rest/v1/needs/',
+            params={
+                'type': 'volunteer',
+                'request': 'basketball players',
+                'quantity': '5',
+                'description': 'Play on my basketball team',
+                'address': 'Code for America, 85 2nd St., San Francisco, CA 94105',
+                'date': 'August 10, 2011',
+                'time': 'early afternoon',
+                'duration': 'a couple hours',
+                'project_id': 1,
+            },
+            status=200)
+
+        print response
+        assert '"quantity": "5"' in response
 
 class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
@@ -81,7 +104,7 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     @istest
     def should_include_the_address_object_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/2/', status=200)
-        assert_in('"address": {"city": "Oakland, CA 94609", "street": "563 46th St.", "id": "1", "name": "Frugal 4 House"}', response)
+        assert_in('"address": "Frugal 4 House, 563 46th St., Oakland, CA 94609"', response)
 
     @istest
     def should_include_the_volunteers_in_the_return_value(self):

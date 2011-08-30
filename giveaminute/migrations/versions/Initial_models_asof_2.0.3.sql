@@ -19,7 +19,6 @@
 -- Table structure for table `badwords`
 --
 
-DROP TABLE IF EXISTS `badwords`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `badwords` (
@@ -44,7 +43,6 @@ UNLOCK TABLES;
 -- Table structure for table `beta_invite_code`
 --
 
-DROP TABLE IF EXISTS `beta_invite_code`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `beta_invite_code` (
@@ -68,7 +66,6 @@ UNLOCK TABLES;
 -- Table structure for table `beta_invite_request`
 --
 
-DROP TABLE IF EXISTS `beta_invite_request`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `beta_invite_request` (
@@ -93,7 +90,6 @@ UNLOCK TABLES;
 -- Table structure for table `direct_message`
 --
 
-DROP TABLE IF EXISTS `direct_message`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `direct_message` (
@@ -119,7 +115,6 @@ UNLOCK TABLES;
 -- Table structure for table `facebook_user`
 --
 
-DROP TABLE IF EXISTS `facebook_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `facebook_user` (
@@ -143,7 +138,6 @@ UNLOCK TABLES;
 -- Table structure for table `featured_project`
 --
 
-DROP TABLE IF EXISTS `featured_project`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `featured_project` (
@@ -167,7 +161,6 @@ UNLOCK TABLES;
 -- Table structure for table `idea`
 --
 
-DROP TABLE IF EXISTS `idea`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `idea` (
@@ -201,7 +194,6 @@ UNLOCK TABLES;
 -- Table structure for table `images`
 --
 
-DROP TABLE IF EXISTS `images`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `images` (
@@ -228,7 +220,6 @@ UNLOCK TABLES;
 -- Table structure for table `keyword`
 --
 
-DROP TABLE IF EXISTS `keyword`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `keyword` (
@@ -251,7 +242,6 @@ UNLOCK TABLES;
 -- Table structure for table `location`
 --
 
-DROP TABLE IF EXISTS `location`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `location` (
@@ -280,7 +270,6 @@ UNLOCK TABLES;
 -- Table structure for table `project`
 --
 
-DROP TABLE IF EXISTS `project`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project` (
@@ -314,7 +303,6 @@ UNLOCK TABLES;
 -- Table structure for table `project__idea`
 --
 
-DROP TABLE IF EXISTS `project__idea`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project__idea` (
@@ -338,7 +326,6 @@ UNLOCK TABLES;
 -- Table structure for table `project__project_resource`
 --
 
-DROP TABLE IF EXISTS `project__project_resource`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project__project_resource` (
@@ -362,7 +349,6 @@ UNLOCK TABLES;
 -- Table structure for table `project__user`
 --
 
-DROP TABLE IF EXISTS `project__user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project__user` (
@@ -387,7 +373,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_endorsement`
 --
 
-DROP TABLE IF EXISTS `project_endorsement`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_endorsement` (
@@ -411,7 +396,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_goal`
 --
 
-DROP TABLE IF EXISTS `project_goal`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_goal` (
@@ -443,7 +427,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_invite`
 --
 
-DROP TABLE IF EXISTS `project_invite`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_invite` (
@@ -473,7 +456,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_leader`
 --
 
-DROP TABLE IF EXISTS `project_leader`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_leader` (
@@ -498,7 +480,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_link`
 --
 
-DROP TABLE IF EXISTS `project_link`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_link` (
@@ -527,7 +508,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_message`
 --
 
-DROP TABLE IF EXISTS `project_message`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_message` (
@@ -558,7 +538,6 @@ UNLOCK TABLES;
 -- Table structure for table `project_resource`
 --
 
-DROP TABLE IF EXISTS `project_resource`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_resource` (
@@ -598,7 +577,6 @@ UNLOCK TABLES;
 -- Table structure for table `site_feedback`
 --
 
-DROP TABLE IF EXISTS `site_feedback`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `site_feedback` (
@@ -628,7 +606,6 @@ UNLOCK TABLES;
 -- Table structure for table `sms_stopped_phone`
 --
 
-DROP TABLE IF EXISTS `sms_stopped_phone`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sms_stopped_phone` (
@@ -651,7 +628,6 @@ UNLOCK TABLES;
 -- Table structure for table `tasks`
 --
 
-DROP TABLE IF EXISTS `tasks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tasks` (
@@ -678,7 +654,6 @@ UNLOCK TABLES;
 -- Table structure for table `twitter_user`
 --
 
-DROP TABLE IF EXISTS `twitter_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `twitter_user` (
@@ -703,7 +678,6 @@ UNLOCK TABLES;
 -- Table structure for table `unauthenticated_user`
 --
 
-DROP TABLE IF EXISTS `unauthenticated_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `unauthenticated_user` (
@@ -732,7 +706,6 @@ UNLOCK TABLES;
 -- Table structure for table `user`
 --
 
-DROP TABLE IF EXISTS `user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user` (
@@ -775,7 +748,6 @@ UNLOCK TABLES;
 -- Table structure for table `user__user_group`
 --
 
-DROP TABLE IF EXISTS `user__user_group`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user__user_group` (
@@ -799,7 +771,6 @@ UNLOCK TABLES;
 -- Table structure for table `user_group`
 --
 
-DROP TABLE IF EXISTS `user_group`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_group` (
@@ -825,7 +796,6 @@ UNLOCK TABLES;
 -- Table structure for table `web_session`
 --
 
-DROP TABLE IF EXISTS `web_session`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `web_session` (
@@ -850,7 +820,6 @@ UNLOCK TABLES;
 -- Table structure for table `files`
 --
 
-DROP TABLE IF EXISTS `files`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `files` (
