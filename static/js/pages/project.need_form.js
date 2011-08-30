@@ -81,8 +81,15 @@ tc.gam.project_widgets.need_form = function(options) {
                           hint:'Time'
                         }
                     },
-                    init:function(merlin,dom) {
-                      console.log(merlin.app.app_page.data);
+                    init:function(merlin, dom) {
+                        if (need_id) {
+                            tc.jQ.each(merlin.current_step.inputs, function(key, input) {
+                                if (input.default_val) {
+                                    input.dom.val(input.default_val);
+                                }
+                            });
+                            merlin.validate(true);
+                        }
                     },
                     finish:function(merlin, dom) {
                       var d = new Date();
