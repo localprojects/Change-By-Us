@@ -27,20 +27,26 @@ def sessionDB():
     return web.database(dbn=config['dbn'], user=config['user'], pw=config['password'], db=config['db'], host=config['host'])
 
 def enable_smtp():
-    smtp_config = Config.get('email').get('smtp')
-    web.webapi.config.smtp_server = smtp_config.get('host')
-    web.webapi.config.smtp_port = smtp_config.get('port')
-    web.webapi.config.smtp_starttls = smtp_config.get('starttls')
-    web.webapi.config.smtp_username = smtp_config.get('username')
-    web.webapi.config.smtp_password = smtp_config.get('password')
-
+    try:
+        smtp_config = Config.get('email').get('smtp')
+        web.webapi.config.email_engine = 'smtp'
+        web.webapi.config.smtp_server = smtp_config.get('host')
+        web.webapi.config.smtp_port = smtp_config.get('port')
+        web.webapi.config.smtp_starttls = smtp_config.get('starttls')
+        web.webapi.config.smtp_username = smtp_config.get('username')
+        web.webapi.config.smtp_password = smtp_config.get('password')
+    except Exception, e:
+        log.info("ERROR: Exception when loading SMTP: %s" % e)
+        
 def enable_aws_ses():
     # AWS SES config
-    ses_config = Config.get('email').get('aws_ses')
-    web.webapi.config.email_engine = 'aws'
-    web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
-    web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
-    
+    try:
+        ses_config = Config.get('email').get('aws_ses')
+        web.webapi.config.email_engine = 'aws'
+        web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
+        web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
+    except Exception, e:
+        log.info("ERROR: Exception when loading SES: %s" % e)
 
 #def cmd_show_quota():
 #    ses = boto.connect_ses()
@@ -95,6 +101,12 @@ if __name__ == "__main__":
     elif Config.get('email').get('aws_ses'):
         enable_aws_ses()
 
+    if web.webapi.config.email_engine not in ['aws', 'smtp']:
+        try:
+            raise Exception("ERROR: No valid email engine has been configured. Please check your configurations")
+        except Exception, e:
+            log.info(e)
+    
     app = web.application(ROUTES, globals())
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
