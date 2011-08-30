@@ -17,6 +17,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
 
+from framework import util
+
 
 class Base (object):
     @classmethod
@@ -56,6 +58,10 @@ class User (Base):
     is_active = Column(Boolean, nullable=False, default=True)
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+    @property
+    def is_site_admin(self):
+        return util.getBit(self.group_membership_bitmask, 1)
 
     @property
     def avatar_path(self):

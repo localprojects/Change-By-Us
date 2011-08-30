@@ -71,15 +71,15 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
     def can_read(self, user, instance):
         return True
 
-    def is_project_admin(self, user, project_id):
-        return user is not None and (user.isProjectAdmin(project_id) or user.isAdmin)
+    def is_project_admin(self, user, project):
+        return (user is not None) and ((user in project.members) or user.is_site_admin)
 
     def can_create(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
     def can_update(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
     def can_delete(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
 
 
 def _field_to_tuple(field):
@@ -542,6 +542,8 @@ class CreateInstanceMixin (object):
                 break
 
         instance = Model(**all_kw_args)
+        orm.add(instance)
+        orm.flush()
 
         if not self.access_rules.can_create(self.user, instance):
             orm.rollback()
