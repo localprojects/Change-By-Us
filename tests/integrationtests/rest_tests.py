@@ -34,7 +34,7 @@ class Test_RestController_instanceToDict (AppSetupMixin, TestCase):
 
 
 class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
-    fixtures = ['test_data.sql']
+    fixtures = ['aarons_db_20110826.sql']
 
     @istest
     def should_not_allow_anonymous_user_to_create_needs(self):
@@ -49,6 +49,28 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
                 'project_id': 1,
             },
             status=403)
+
+    @istest
+    def should_allow_admin_user_to_update_needs(self):
+        self.login(user_id=3)
+
+        response = self.app.post('/rest/v1/needs/1/',
+            params={
+                '_method': 'PUT',
+                'type': 'volunteer',
+                'request': 'basketball players',
+                'quantity': '5',
+                'description': 'Play on my basketball team',
+                'address': 'Code for America, 85 2nd St., San Francisco, CA 94105',
+                'date': 'August 10, 2011',
+                'time': 'early afternoon',
+                'duration': 'a couple hours',
+                'project_id': 1,
+            },
+            status=200)
+
+        assert '"quantity": "5"' in response
+        assert '"id": "1"' in response
 
     @istest
     def should_allow_admin_user_to_create_needs(self):
@@ -67,6 +89,9 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
                 'project_id': 1,
             },
             status=200)
+
+        print response
+        assert '"quantity": "5"' in response
 
 class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']

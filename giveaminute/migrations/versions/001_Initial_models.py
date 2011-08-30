@@ -6,17 +6,13 @@ def upgrade(migrate_engine):
     # to your metadata
 
     import os
-    # Uncomment the following lines if you do not yet have a database to set up.
-    # If you run this migration, it will blow away the data currently contained
-    # in your database and start new.
-    #
-#    with open(os.path.join(os.path.dirname(__file__), 'Initial_models_asof_2.0.3.sql')) as initial_file:
-#        sql = initial_file.read()
-#        migrate_engine.execute(sql)
+    with open(os.path.join(os.path.dirname(__file__), 'Initial_models_asof_2.0.3.sql')) as initial_file:
+        sql = initial_file.read()
+        migrate_engine.execute(sql)
 
-#    with open(os.path.join(os.path.dirname(__file__), 'Initial_models_original_migrations.sql')) as old_migrations_file:
-#        sql = old_migrations_file.read()
-#        migrate_engine.execute(sql)
+    with open(os.path.join(os.path.dirname(__file__), 'Initial_models_original_migrations.sql')) as old_migrations_file:
+        sql = old_migrations_file.read()
+        migrate_engine.execute(sql)
 
     meta = MetaData(migrate_engine)
 

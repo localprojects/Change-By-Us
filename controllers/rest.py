@@ -549,9 +549,7 @@ class CreateInstanceMixin (object):
             orm.rollback()
             raise ForbiddenError("User cannot store the resource")
 
-        orm.add(instance)
         orm.commit()
-
         return self.instance_to_dict(instance)
 
 
@@ -590,10 +588,11 @@ class UpdateInstanceMixin (object):
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
 
-        if not current_user_can_update(instance):
+        if not self.access_rules.can_update(self.user, instance):
             raise ForbiddenError("Current user cannot modify the resource")
 
         for (key, val) in self.parameters().iteritems():
+            if key == '_method': continue
             setattr(instance, key, val)
 
         orm.commit()
