@@ -537,7 +537,7 @@ class CreateInstanceMixin (object):
         # HACK: This is a hack.  We kept getting a test file name being passed
         # in as one of the query parameters.  Wierd.
         for kw in all_kw_args:
-            if kw.endswith('.py'):
+            if kw.startswith('tests/'):
                 del all_kw_args[kw]
                 break
 
