@@ -20,6 +20,42 @@ tc.gam.project_data = {
                 }
             }
         });
+    },
+    createNeed: function(need_data, success, error) {
+      tc.jQ.ajax({
+        type:'POST',
+        url:'/rest/v1/needs/',
+        data:need_data,
+        dataType:'text',
+        success:function(data, status, xhr) {
+          if (success) {
+            success(data, status, xhr);
+          }
+        },
+        error:function(xhr, status, error){
+          if (error) {
+            error(xhr, status, error);
+          }
+        }
+      });
+    },
+    updateNeed: function(need_id, need_data, success, error) {
+      tc.jQ.ajax({
+        type:'PUT',
+        url:'/rest/v1/needs/' + need_id + '/',
+        data:need_data,
+        dataType:'text',
+        success:function(data, status, xhr) {
+          if (success) {
+            success(data, status, xhr);
+          }
+        },
+        error:function(xhr, status, error){
+          if (error) {
+            error(xhr, status, error);
+          }
+        }
+      });
     }
 };
 
