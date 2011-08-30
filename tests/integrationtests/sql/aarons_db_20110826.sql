@@ -594,13 +594,12 @@ CREATE TABLE `project_need` (
   `quantity` int(11) DEFAULT NULL,
   `description` text,
   `project_id` int(11) NOT NULL,
-  `address_id` int(11) DEFAULT NULL,
+  `address` varchar(256) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `time` varchar(32) DEFAULT NULL,
   `duration` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `project_id` (`project_id`),
-  KEY `address_id` (`address_id`)
+  KEY `project_id` (`project_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -610,7 +609,7 @@ CREATE TABLE `project_need` (
 
 LOCK TABLES `project_need` WRITE;
 /*!40000 ALTER TABLE `project_need` DISABLE KEYS */;
-INSERT INTO `project_need` VALUES (1,'volunteer','gardeners',5,'to garden and pull weeds and stuff. to garden and pull weeds and stuff. to garden and pull weeds and stuff. the quick brown fox jumped over the lazy dog.',1,1,'2011-08-31','11:00 am','6'),(2,'volunteer','hula hoopers',100,'to hula hoop like it\'s 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, and 2011.',1,1,'2011-08-26','morning','3'),(3,'volunteer','hackers',20,'to help Mjumbe, Aaron, and Tyler finish the needs feature by 8/26/2011',1,3,'2011-09-05','9:00pm','4'),(4,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL);
+INSERT INTO `project_need` VALUES (1,'volunteer','gardeners',5,'to garden and pull weeds and stuff. to garden and pull weeds and stuff. to garden and pull weeds and stuff. the quick brown fox jumped over the lazy dog.',1,'Code for America, 85 2nd St., San Francisco, CA 94105','2011-08-31','11:00 am','6'),(2,'volunteer','hula hoopers',100,'to hula hoop like it\'s 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, and 2011.',1,'Frugal 4 House, 563 46th St., Oakland, CA 94609','2011-08-26','morning','3'),(3,'volunteer','hackers',20,'to help Mjumbe, Aaron, and Tyler finish the needs feature by 8/26/2011',1,'The White House, 1600 Pennsylvania Ave., Washington, D.C.','2011-09-05','9:00pm','4'),(4,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `project_need` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -637,32 +636,6 @@ LOCK TABLES `project_need_volunteer` WRITE;
 /*!40000 ALTER TABLE `project_need_volunteer` DISABLE KEYS */;
 INSERT INTO `project_need_volunteer` VALUES (1,1),(3,1);
 /*!40000 ALTER TABLE `project_need_volunteer` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `project_place`
---
-
-DROP TABLE IF EXISTS `project_place`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `project_place` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(256) DEFAULT NULL,
-  `street` varchar(256) DEFAULT NULL,
-  `city` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `project_place`
---
-
-LOCK TABLES `project_place` WRITE;
-/*!40000 ALTER TABLE `project_place` DISABLE KEYS */;
-INSERT INTO `project_place` VALUES (1,'Frugal 4 House','563 46th St.','Oakland, CA 94609'),(2,'The White House','1600 Pennsylvania Ave.','Washington, D.C.'),(3,'Code for America','85 2nd St.','San Francisco, CA 94105');
-/*!40000 ALTER TABLE `project_place` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

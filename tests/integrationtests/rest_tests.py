@@ -60,7 +60,7 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
                 'request': 'basketball players',
                 'quantity': '5',
                 'description': 'Play on my basketball team',
-#                'address': 'Code for America, 85 2nd St., San Francisco, CA 94105',
+                'address': 'Code for America, 85 2nd St., San Francisco, CA 94105',
                 'date': 'August 10, 2011',
                 'time': 'early afternoon',
                 'duration': 'a couple hours',
@@ -79,7 +79,7 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     @istest
     def should_include_the_address_object_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/2/', status=200)
-        assert_in('"address": {"city": "Oakland, CA 94609", "street": "563 46th St.", "id": "1", "name": "Frugal 4 House"}', response)
+        assert_in('"address": "Frugal 4 House, 563 46th St., Oakland, CA 94609"', response)
 
     @istest
     def should_include_the_volunteers_in_the_return_value(self):

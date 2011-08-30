@@ -661,10 +661,6 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
-    def place2dict(self, place):
-        place_dict = super(NeedInstance, self).instance_to_dict(place)
-        return place_dict
-
     def user2dict(self, user):
         user_dict = super(NeedInstance, self).instance_to_dict(user)
 
@@ -679,7 +675,6 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
     def instance_to_dict(self, need):
         need_dict = super(NeedInstance, self).instance_to_dict(need)
-        need_dict['address'] = self.place2dict(need.address)
         need_dict['volunteers'] = [
             self.user2dict(volunteer)
             for volunteer in need.volunteers]

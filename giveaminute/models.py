@@ -118,15 +118,6 @@ class Project (Base):
     members = association_proxy('project_members', 'member')
 
 
-class Place (Base):
-    __tablename__ = 'project_place'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(256))
-    street = Column(String(256))
-    city = Column(String(256))
-
-
 class Need (Base):
     __tablename__ = 'project_need'
 
@@ -135,13 +126,11 @@ class Need (Base):
     request = Column(String(64))
     quantity = Column(Integer)
     description = Column(Text)
-    address_id = Column(ForeignKey('project_place.id'))
+    address = Column(String(256))
     date = Column(Date())
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-
-    address = relationship('Place')
 
     volunteers = association_proxy('need_volunteers', 'member')
 
