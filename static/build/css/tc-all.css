@@ -1457,7 +1457,8 @@ a.forward:hover > span {
 }
 
 a.back.fancy-caps > span,
-a.forward.fancy-caps > span {
+a.forward.fancy-caps > span,
+a.add.fancy-caps > span {
     font-style: normal;
     text-transform: uppercase;
 }
@@ -2266,7 +2267,6 @@ OTHER GLOBAL ELEMENTS
 
 .modal-content h2 {
     padding: 0 0 15px;
-    text-transform: uppercase;
 }
 
 .modal-content h3 {
@@ -3472,40 +3472,6 @@ span.vertical-align-middle-hack {
     display:block;
 }
 
-/* Start old tools style * /
-
-.project-header .tools .join-project {
-    background-image: url("../images/button_join_plain.png");
-    height: 94px;
-    margin: 0 0 10px 15px;
-    width: 118px;
-}
-
-.project-header .tools .members {
-    background: url(../images/icon_members.png) center left no-repeat transparent;
-    font-size: 18px;
-    line-height: 1;
-    padding: 0 0 10px 50px;
-    text-transform: uppercase;
-}
-
-.project-header .tools .members > a {
-    display: block;
-    padding-top: 10px;
-}
-
-.project-header .tools .members .counter {
-    font-size: 12px;
-    position: relative;
-    top: -2px;
-}
-
-.project-header .tools .control {
-    margin-left: 50px
-}
-
-/* End old tools style */
-
 .project-header .main {
     overflow: hidden;
     line-height:100px;
@@ -3599,6 +3565,10 @@ span.vertical-align-middle-hack {
 }
 
 /* Project page section headers */
+.project .midlands .east .project-sections div.project-section {
+    display:none;
+}
+
 .project .midlands .box > .hd {
     background-color: #EDECEB;
     border-top: 1px solid #E6E6E3;
@@ -3618,7 +3588,11 @@ span.vertical-align-middle-hack {
 }
 
 .project .midlands .east .box > .hd {
-    width: 640px;
+    width: 620px;
+}
+
+.project .midlands .east .main-section.box > .hd {
+    border-top: 3px solid #555046;
 }
 
 some_nowhitespace {
@@ -3665,7 +3639,9 @@ some_nowhitespace {
     text-transform: uppercase;
 }
 
-.project .midlands .box .actions a.back {
+.project .midlands .box .actions a.back,
+.project .midlands .box .actions a.forward,
+.project .midlands .box .actions a.add {
     font-size: 16px;
     text-decoration: none;
 }
@@ -4891,7 +4867,6 @@ some_nowhitespace {
 .continent.home .headlands .splash .projects-pane.not-found {
     background: rgb(255, 255, 255);
     background: rgba(255, 255, 255, 0.70);
-    background-color: transparent;
 }
 
 .continent.home .projects-pane.step-three .citywide-projects.single {
@@ -8612,9 +8587,9 @@ div.dev-util li a:hover {
 CONVErSATION SECTION
 ----------------------------------------------------------- */
 /* Layout the tabs */
-.conversation-input { display:inline-block; vertical-align: top; border-left: 1px solid #E6E4E1; width: 350px; }
+.conversation-input { display:inline-block; vertical-align: top; border-left: 1px solid #E6E4E1; width: 425px; }
 .conversation-tabs-wrapper { display:inline-block; padding-right:2px; }
-.conversation-input-wrapper { background-color: white; width: 438px; padding: 6px 15px 3px 6px; margin 0 30px 0 0; border: 1px solid #E6E4E1; }
+.conversation-input-wrapper { background-color: white; width: 510px; padding: 6px 15px 3px 6px; margin 0 30px 0 0; border: 1px solid #E6E4E1; }
 
 /* Set up the background sprites for the tabs */
 .conversation-tabs a { display: block; width: 32px; height: 32px; overflow: hidden; }
@@ -8646,6 +8621,13 @@ CONVErSATION SECTION
 
 .message.step .hint { clear: both; }
 
+div.continent textarea.message-input:hover,
+div.continent textarea.message-input:focus {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
 /* conversation */
 .conversation-controls { position:relative; width:100%; padding:0 0 25px; }
 .conversation-controls .rss-btn { position:absolute; bottom:-8px; right:0; padding:0 8px 0 15px; font-weight:bold; font-size:9px; color:#e06420; background-color:#f3f2f0; }
@@ -8653,7 +8635,7 @@ CONVErSATION SECTION
 .conversation-controls .filters select { visibility:hidden; }
 
 .conversation-controls .conversation-input-wrapper { float:left; position:relative; }
-.conversation-controls .conversation-input-wrapper textarea { display:block; width:327px; height:30px; padding: 0; margin: 0; line-height:1.3; border: none; }
+.conversation-controls .conversation-input-wrapper textarea { display:block; width:425px; height:30px; padding: 0; margin: 0; line-height:1.3; border: none; }
 .conversation-controls .conversation-input-wrapper p.hint { padding:5px 0 0 15px; clear:left; }
 
 .conversation-controls .primary-action { float:right; width:100px; }
@@ -8818,6 +8800,417 @@ CONVErSATION SECTION
 
 
 /********************   End ./static/css/project/conversation.css ********************/
+
+
+/******************** Begin ./static/css/project/needs.css ********************/
+/* ---------------------------------------------------------
+CONVErSATION SECTION
+----------------------------------------------------------- */
+.need a.need-edit {
+    float:right;
+    color:red;
+    text-transform:uppercase;
+    font-style:italic;
+    font-weight:bold;
+    font-size:10px;
+}
+
+.need .bd {
+  background-color: #FFF9DB;
+  padding-bottom: 10px !important;
+}
+
+.need .bd > a {
+  display:block;
+  float:left;
+}
+
+.volunteer-body {
+  width: 425px;
+}
+
+.volunteer-body > span {
+  font-size: 14px;
+}
+
+.vol-need {
+  background-color: #FBEC99;
+}
+
+.vol-title {
+  float: left;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 10px;
+}
+
+.volunteer-body {
+  float:left;
+  margin-right: 25px;
+  margin-left: 10px;
+}
+
+.volunteer-body p {
+  margin-bottom: 20px;
+}
+
+.volunteer-body p .read-more {
+  background: url(../../images/control_readmore.png) 62px 7px no-repeat #55504b;
+  color: #FFF8DD;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: bold;
+  padding:3px 15px 3px 3px;
+}
+
+.volunteer-details {
+  width: 150px;
+  float:left;
+}
+
+.volunteer-details .volunteer-count {
+    text-align:right;
+    font-size:11px;
+    font-family:"ff-din-web-1","ff-din-web-2","Franklin Gothic Medium",Helvetica,Arial,sans-serif;
+}
+
+.volunteer-details .progress-wrapper {
+    height:10px;
+    width:150px;
+    margin:5px 0 10px;
+    background: #f5ecc9;
+}
+
+.volunteer-details .progress-wrapper .progress {
+    height:10px;
+    width:0px;
+    background: #d6ceab;
+    position:relative;
+}
+
+.volunteer-details .progress-wrapper .progress-pin {
+    position:absolute;
+    right:-2px;
+    top:-5px;
+    width:5px;
+    height:15px;
+    background: url(../../images/status-pin_small.png) 0px 0px no-repeat;
+}
+
+.volunteer-details .help-link {
+  line-height: 50px;
+  width:150px;
+  font-size: 22px;
+  display: block;
+  font-family: "ff-din-web-1","ff-din-web-2", "Franklin Gothic Medium", Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+
+.volunteer-details .help-link.active {
+    background-color: #f0c61e;
+    border: 1px solid #dbb51d;
+    color: #55504b;
+}
+
+.volunteer-details .help-link.active:hover {
+    background-color: #ffc300;
+    border: 1px solid #cfab1b;
+    color: #6B5800;
+}
+
+.volunteer-details .help-link.in-process {
+  background-color: #f0aa1f;
+  border: 1px solid #a67005;
+  color: #55504b;
+  cursor:default;
+}
+
+.volunteer-details .help-link.complete {
+  background-color: #6b580c;
+  border: 1px solid #6b580c;
+  color: #6B5800;
+  cursor:default;
+}
+
+.volunteer-details .time-detail {
+  border-bottom: 1px solid #FFEC87;
+  border-top: 1px solid #FFEC87;
+  margin-top: 15px;
+  padding: 10px 0 10px 0;
+}
+
+.volunteer-details .time-detail .time, .volunteer-details .time-detail .time-length {
+  font-weight:bold;
+}
+
+.volunteer-details .location {
+  padding-top: 10px;
+}
+
+.volunteer-details .location a {
+  display: block;
+  float: left;
+  background-color: #F0EACC;
+  margin-top: 5px;
+}
+
+.volunteer-details .location li {
+  font-weight:bold;
+}
+
+.volunteers {
+  background-color: #F2ECCE;
+  padding: 20px;
+  height: 60px;
+  margin-top: 10px;
+}
+
+.volunteers.teaser {
+  height: 30px;
+  width: 175px;
+  padding: 10px 20px 10px 20px;
+}
+
+.vol-first, .vol-first span, .vol-avatars {
+  float: left;
+  display: block;
+}
+
+.vol-desc span {
+  font-weight:bold;
+}
+
+.vol-first {
+ width: 40px;
+ height: 40px;
+ margin-right: 10px;
+ border: 1px solid #C7C7C6;
+}
+
+.vol-avatars {
+  margin-top: 10px;
+}
+
+.vol-avatars.teaser {
+  margin-top: 0;
+  font-size:16px;
+  line-height:30px;
+}
+
+.vol-avatars .sub {
+  float: right;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.15px;
+  line-height: 12px;
+  padding-left: 10px;
+  margin-top: 3px;
+}
+
+.vol-avatars img {
+  width: 30px;
+  height: 30px;
+  margin-right: 3px;
+  float:left;
+  border: 1px solid #C7C7C6;
+}
+
+.vol-recent-comment {
+  float: left;
+  width 425px;
+  background-color: #F2ECCE;
+  margin-top: 20px;
+  margin-left: 10px;
+  padding: 20px;
+}
+
+.vol-recent-comment .comment, .vol-recent-comment .author {
+  float:left;
+}
+
+.vol-recent-comment .comment {
+  width: 390px;
+  margin-left: 10px;
+}
+
+.vol-recent-comment img {
+  width: 30px;
+  height: 30px;
+  float:left;
+  border: 1px solid #C7C7C6;
+}
+
+.vol-recent-comment .author {
+  border-left: solid 1px #DED7BA;
+  margin-left:20px;
+  padding-left: 20px;
+}
+
+.vol-recent-comment .author > span {
+  font-weight: bold;
+}
+
+.modal-content.user-volunteer-modal .section {
+    margin:10px 0;
+}
+
+.modal-content.user-volunteer-modal .section textarea {
+    width:520px;
+    height:115px;
+}
+
+.modal-content.user-volunteer-modal .section label.list {
+    float: none;
+}
+
+.modal-content.user-volunteer-modal .charlimit {
+    float:right;
+}
+
+.modal-content.user-volunteer-modal .error-msg {
+    float:left;
+    display:none;
+}
+
+.project .midlands .bd.add-need {
+  padding: 0;
+}
+
+.add-need-step {
+  background-color: #FFF9DB;
+  margin-top: 10px;
+  border: 1px solid #EFEEA5;
+  padding: 20px 15px 20px 15px;
+}
+
+.need-submit {
+  background-color: #F2C900;
+  border: 1px solid #E7D14D;
+  color: #6B5800;
+  line-height: 50px;
+  width:150px;
+  font-size: 22px;
+  display: block;
+  font-family: "ff-din-web-1","ff-din-web-2", "Franklin Gothic Medium", Helvetica, Arial, sans-serif;
+  text-align: center;
+  float: right;
+}
+
+.need-submit.disabled {
+  background-color: #F2DF81;
+  color: #AF9D43;
+}
+
+.add-need .fields .row.vol-cont {
+  font-size: 26px;
+  font-weight: bold;
+  padding-bottom: 15px;
+}
+
+.add-need .fields .row {
+  width: 608px;
+  float:left;
+  margin: 0;
+}
+
+.add-need .form-pane p {
+  float:left;
+}
+
+.desc-cont p, time-cont p {
+  font-size: 14px;
+}
+
+.add-need .charlimit {
+  float: right;
+  margin-top: 5px;
+}
+
+.add-need input, .add-need textarea {
+  background-color: #F5EFC7;
+  border-color: #E8E19B;
+}
+
+.add-need .fields .row.vol-address {
+  border-top: 2px solid #F8E47B;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+#vol-quantity {
+  width: 40px;
+  margin: 0 5px 0 5px;
+}
+
+#vol-job{
+  margin: 0 0 0 5px;
+  width: 265px;
+}
+
+.row .desc-cont {
+  width: 418px;
+  float: left;
+}
+
+.row .time-cont {
+  width: 149px;
+  float: left;
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 1px solid #F4F0D0;
+}
+
+.row .time-cont label {
+  margin-top: 29px;
+  font-size: 18px;
+  margin-left: 10px;
+  display: block;
+  float: left;
+}
+
+.add-need .row.vol-address p.madlib {
+  margin: 15px 10px 0 10px;
+  font-size: 18px;
+}
+
+#vol-desc {
+  height: 56px;
+  width: 400px;
+  float:left;
+  margin-top: 10px;
+}
+
+#vol-hours {
+  width: 20px;
+  margin-top: 23px;
+}
+
+.row .addr-cont {
+  width: 400px;
+}
+
+.add-need .row.vol-address input {
+  margin-top: 10px;
+}
+
+#vol-street {
+  width: 250px;
+}
+
+#vol-month {
+  width: 150px;
+  margin-right: 10px;
+}
+
+#vol-day {
+  width: 60px;
+}
+
+#vol-time {
+  width: 80px;
+}
+
+/********************   End ./static/css/project/needs.css ********************/
 
 
 /******************** Begin ./static/css/fileuploader.css  ********************/
@@ -9027,11 +9420,12 @@ div.headlands.project-header {
 .project-navigation ul li a {
     font-size: 1.3em;
     vertical-align: middle;
+    padding-top: 10px;
 }
 
 .project-navigation ul li a.current {
     background-color: #e5e5e3;
-    border-top: 3px solid #55504B;
+    border-top: 5px solid #55504B;
     padding-top: 5px;
 }
 
@@ -9056,5 +9450,6 @@ div.headlands.project-header {
 .project-navigation div.google-plus div {
     width: 75px !important;
 }
+
 /********************   End ./static/css/tc.gam.project.css ********************/
 

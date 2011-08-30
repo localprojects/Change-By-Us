@@ -6,7 +6,7 @@ var min_marker_size = 20;	// px
 var marker_ratio = (max_marker_size - min_marker_size) / max_score;
 
 var map;
-var brooklyn = new google.maps.LatLng(40.6743890, -73.9455);
+var map_center = new google.maps.LatLng(app_page.data.map.center_lat, app_page.data.map.center_lon);
 var ib;
 var currentMarker;
 
@@ -18,7 +18,7 @@ function initialize(app) {
 	
 	var mapOptions = {
 		zoom: 11,
-		center: brooklyn,
+		center: map_center,
 		minZoom: 11,
 		maxZoom: 15,
 		disableDefaultUI: true,

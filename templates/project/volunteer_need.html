@@ -1,0 +1,73 @@
+<li class="box need" data-id="{{ need.id }}">
+  <div class="bd clearfix">
+    <div class="vol-title serif">
+        We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.num_needed }}</span> volunteer {{ need.item_needed }}</a>
+        {% if need.reason %} for {{ need.reason }}{% endif %}
+        {% if need.datetime %} on {{ need.datetime }}{% endif %}
+    </div>
+
+    <div class="volunteer-body">
+      <p class="serif">{{ need.description }}</p>
+
+      <span>Who's helping</span>
+      <div class="volunteers">
+
+        {% for volunteer in need.volunteers %}
+          {% with volunteer_name = volunteer|display_name %}
+            {% if loop.first %}
+              <img class="vol-first" src="{{ d.template.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+              <span class="vol-desc"><span>{{ volunteer_name }}</span> and {{ need.volunteers|length - 1 }} others volunteered.</span>
+
+              <div class="vol-avatars">
+            {% else %}
+              {% if loop.index <= 5 %}
+                  <a href="/useraccount/{{ volunteer.id }}">
+                  {% if volunteer.avatar_path %}
+                      <img src="{{ d.template_data.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+                  {% else %}
+                      <img src="/static/images/thumb_genAvatar.jpg" alt="{{ volunteer_name }}"></img>
+                  {% endif%}
+                  </a>
+              {% endif %}
+            {% endif %}
+
+            {% if loop.last %}
+              </div>
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+
+        <a href="#" class="sub fancy-caps"><span>E-mail</span> the<br>
+          volunteer list</a>
+      </div>
+    </div>
+    <div class="volunteer-details serif">
+      <div class="volunteer-count">We have <strong>{{ need.volunteers|length }}</strong> volunteers</div>
+      <div class="progress-wrapper"><div class="progress" style="width:{{ 150 * need.volunteers|length / need.quantity }}px;"><div class="progress-pin"></div></div></div>
+      <a href="#" class="help-link">I can help</a>
+      <div class="time-detail">
+        <span>We'll need you at<br>
+          <span class="time">{{ need.datetime }}</span>
+          {% if need.duration %}
+            <span class="">for</span> <span class="time-length">{{ need.duration }} hrs</span></span>
+          {% endif %}
+      </div>
+      {% if need.address %}
+        <div class="location">We'll need you to go to
+          <ul>
+            <li class="location-name">{{ need.address.name }}</li>
+            <li class="location-addr">{{ need.address.street }}</li>
+            <li class="location-city">{{ need.address.city }}</li>
+          </ul>
+          <a href="#" class="rounded-button small">Map it</a>
+        </div>
+      {% endif %}
+    </div>
+
+        <div class="empty-state-box" style="display:none;">
+            <!--<a class="close" href="#"><span>Close</span></a>-->
+            <p>No needs found.</p>
+        </div>
+
+    </div>
+</li>

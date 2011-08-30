@@ -95,7 +95,7 @@ class Admin(Controller):
                 return self.setUserOncall()
             else:
                 return self.not_found()
-        elif (action == 'blacklist'):
+        elif (action == 'blocklist'):
             return self.updateBlacklist()
         elif (action == 'idea'):
             if (param0 == 'delete'):

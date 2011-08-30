@@ -12,7 +12,7 @@ describe('tc.gam.widget-visibility-handler.js', function () {
     });
 
     describe('_triggerWidgetVisibilityEvent)', function () {
-        it('triggers show-project-widget on testWidget', function() {
+        it('triggers show-project-widget for widget name and id', function() {
             var showListener = jasmine.createSpy();
             
             $(tc).bind('show-project-widget', showListener);
@@ -20,8 +20,20 @@ describe('tc.gam.widget-visibility-handler.js', function () {
             visHandler._triggerWidgetVisibilityEvent('eat', 'widget');
             expect(showListener).not.toHaveBeenCalled();
 
+            visHandler._triggerWidgetVisibilityEvent('show', 'widget', 'food');
+            expect(showListener.mostRecentCall.args[1]).toEqual('widget');
+            expect(showListener.mostRecentCall.args[2]).toEqual('food');
+            expect(showListener).toHaveBeenCalled();
+        });
+
+        it('triggers show-project-widget for widget name and won\'t break without an id', function() {
+            var showListener = jasmine.createSpy();
+            
+            $(tc).bind('show-project-widget', showListener);
+            
             visHandler._triggerWidgetVisibilityEvent('show', 'widget');
             expect(showListener.mostRecentCall.args[1]).toEqual('widget');
+            expect(showListener.mostRecentCall.args[2]).toEqual(undefined);
             expect(showListener).toHaveBeenCalled();
         });
     });

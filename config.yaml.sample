@@ -16,7 +16,7 @@
 #
 # dev -- Yes or No (what does this affect?)
 # app_mode -- If 'beta', the site will be in private beta mode.  Set
-#             to anything else to get out of beta mode.  This is 
+#             to anything else to get out of beta mode.  This is
 #             currently handled by the __init__ of the Controller
 #             class.
 # app_env  -- Environment, available are (??):
@@ -46,7 +46,7 @@ blog_host: %(blog_host)s
 # Site settings
 #--------------------------------------------------------------------
 # Various site settings
-# 
+#
 # name      -- the site name, like "Change by Us NYC"
 # city      -- the city name, like "NYC"
 # city_id   -- and identifier for the city, like "nyc"
@@ -57,6 +57,15 @@ site:
     city: %(site_city)s
     city_id: %(site_city_id)s
     full_city: %(site_full_city)s
+
+# Map Settings
+#--------------------------------------------------------------------
+# City specific map settings
+#
+#--------------------------------------------------------------------
+map:
+    center_lat: %(center_lat)s
+    center_lon: %(center_lon)s
 
 # Enabled languages
 #--------------------------------------------------------------------
@@ -79,8 +88,8 @@ lang:
 #                     currently the content is not configurable.
 # postboard_bg     -- Path to image to use for background.  The default
 #                     NYC one is: /static/images/bg_home_wider.jpg
-# top_left_tag_bg  -- Path to image to use for top left tag background.  
-#                     The default NYC one is: 
+# top_left_tag_bg  -- Path to image to use for top left tag background.
+#                     The default NYC one is:
 #                     /static/images/button_heyNYC_old.png
 # photo_credit     -- String to put in as photo credit for home page
 #                     image.  Leave blank for none.  Also, escape
@@ -107,6 +116,7 @@ homepage:
 database:
     dbn: mysql
     db: %(database_db)s
+    test_db: %(database_test)s
     user: %(database_user)s
     password: %(database_password)s
     host: %(database_host)s
@@ -134,9 +144,9 @@ beanstalk:
 #--------------------------------------------------------------------
 media:
     isS3mirror: True
-    root: %(media_root)s 
+    root: %(media_root)s
     file_path: 'data/files'
-    
+
 
 # Static files settings
 #--------------------------------------------------------------------
@@ -146,8 +156,8 @@ media:
 #                      /static/
 #--------------------------------------------------------------------
 staticfiles:
-    root: %(staticfiles_root)s 
-    
+    root: %(staticfiles_root)s
+
 
 # Email settings
 #--------------------------------------------------------------------
@@ -161,33 +171,33 @@ email:
 
     # This needs to be an email address that has been validated by SES
     # run ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -l
-    # and 
+    # and
     # ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -v <EMAIL>
     from_email: %(email_from_email)s
     from_name: %(email_from_name)s
-    
+
     # address for non-responsive messaging, such as person-to-person emails
     from_noreplies_email: %(email_from_noreplies_email)s
     from_noreplies_name: %(email_from_noreplies_name)s
-    
+
     digest:
         # Log settings for digest_emailer.py
         log_file: %(digest_log_file)s
         log_level: %(digest_log_level)s
-        
+
         # Digest email prefix is for the Digest email subject line
         digest_subject_prefix: %(digest_subject_prefix)s
-        
+
         # The email to which we should send digest messages during test/dev testing
         # so that we don't spam live users.
         # Used by the digest_emailer.py script, if 'dev' == Yes | True
         digest_debug_recipients: %(digest_debug_recipients)s
-    
-    # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if 
+
+    # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if
     # the aws send quota is close then we switch over to SMTP. This is handled in code.
     # To just use SMTP, simply comment out the aws_ses section below.
-    
-    # SMTP specific configuration. 
+
+    # SMTP specific configuration.
     smtp:
         host: %(email_smtp_host)s
         port: %(email_smtp_port)s
@@ -195,14 +205,14 @@ email:
         password: %(email_smtp_password)s
         # Generally TLS is necessary for gmail. So set it here
         starttls: True
-  
+
     # Amazon SES
     # TODO: merge this with the AWS root config
     # TODO: add the quota limit
     # aws_ses:
     #    access_key_id: %(aws_ses_access_key_id)s
     #    secret_access_key: %(aws_ses_secret_access_key)s
-      
+
 
 # Services
 #--------------------------------------------------------------------
@@ -233,7 +243,7 @@ aws:
 media:
     isS3mirror: True
     root: %(media_root)s
-    
+
 aws:
     access_key_id: %(aws_access_key_id)s
     secret_access_key: %(aws_secret_access_key)s
