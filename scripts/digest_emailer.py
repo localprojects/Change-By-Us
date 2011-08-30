@@ -352,7 +352,7 @@ select
     u.last_name,
     u.image_id,
     u.email_notification,
-    u.created_datetime,
+    pu.created_datetime,
     pu.project_id
 from user u 
 join project__user as pu on u.user_id = pu.user_id
