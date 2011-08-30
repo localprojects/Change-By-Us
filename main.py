@@ -55,7 +55,7 @@ def enable_aws_ses():
 #    sendQuota = ses.get_send_quota()["GetSendQuotaResponse"]["GetSendQuotaResult"]
 #    return sendQuota
 
-if __name__ == "__main__":
+def main():
     web.config.logfile = Config.get('logfile')
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
     if Config.get('dev'):
@@ -112,4 +112,11 @@ if __name__ == "__main__":
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
     app.run()
-    
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception, e:
+        log.info("ERROR: %s" % e)
+            

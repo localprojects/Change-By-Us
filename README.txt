@@ -178,4 +178,12 @@ Solution:
   This is invariably due to an AWS configuration issue. Either the key or the secret are wrong, or
   incorrectly configured in the config file.
 
+-------------------------------------------------
+VIRTUALENV SETUP
+-------------------------------------------------
+Reference: http://www.doughellmann.com/docs/virtualenvwrapper/install.html
 
+	easy_install pip
+	pip install virtualenvwrapper
+	mkvirtualenv cbu
+	pip -E cbu install --use-mirrors <packages>
