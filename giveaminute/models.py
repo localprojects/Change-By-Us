@@ -12,6 +12,7 @@ from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.orm.exc import NoResultFound
 
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -30,6 +31,7 @@ class Base (object):
             obj = cls(**kwargs)
             orm.add(obj)
             return obj
+
 
 Base = declarative_base(cls=Base)
 
@@ -59,6 +61,11 @@ class User (Base):
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
+    commitments = relationship('Volunteer', cascade='all, delete, delete-orphan')
+    memberships = relationship('ProjectMember', primaryjoin='ProjectMember.user_id==User.id', cascade='all, delete, delete-orphan')
+
+    projects = association_proxy('memberships', 'project')
+
     @property
     def is_site_admin(self):
         return util.getBit(self.group_membership_bitmask, 1)
@@ -68,13 +75,35 @@ class User (Base):
         if self.image_id:
             return 'images/%s/%s.png' % (str(self.image_id)[-1], self.image_id)
 
-    def join(self, project):
-        orm = OrmHandler().orm
-        membership = orm.query(ProjectMember).filter_by(member=self, project=project)
-        if membership:
-            return membership[0]
-        else:
-            return project.project_members.append(ProjectMember(member=self))
+    def join(self, project, is_admin=False):
+        if project not in self.projects:
+            membership = ProjectMember()
+            membership.member = self
+            membership.project = project
+            membership.is_project_admin = is_admin
+            self.memberships.append(membership)
+            return True
+        return False
+
+    def leave(self, project):
+        for membership in self.memberships:
+            if membership.project == project:
+                self.unvolunteer_from_all_for(project)
+                self.memberships.remove(membership)
+                return True
+        return False
+
+    def unvolunteer_from(self, need):
+        for commitment in self.commitments:
+            if commitment.need == need:
+                self.commitments.remove(commitment)
+                return True
+        return False
+
+    def unvolunteer_from_all_for(self, project):
+        for need in project.needs:
+            if self in need.volunteers:
+                self.unvolunteer_from(need)
 
 
 class ProjectMember (Base):
@@ -86,7 +115,7 @@ class ProjectMember (Base):
     is_project_admin = Column(Boolean, nullable=False, default=False)
     created_datetime = Column(DateTime, nullable=False, default=datetime.now)
 
-    member = relationship('User', backref='memberships',
+    member = relationship('User',
         primaryjoin='ProjectMember.user_id==User.id')
 
 class Project (Base):
@@ -116,6 +145,12 @@ class Project (Base):
         primaryjoin='Project.id==ProjectMember.project_id')
 
     members = association_proxy('project_members', 'member')
+
+    @property
+    def admins(self):
+        for pm in self.project_members:
+            if pm.is_project_admin:
+                yield pm.member
 
 
 class Need (Base):
@@ -151,7 +186,7 @@ class Volunteer (Base):
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
 
     need = relationship('Need', backref='need_volunteers')
-    member = relationship('User', backref='commitments')
+    member = relationship('User')
 
 
 if __name__ == '__main__':
