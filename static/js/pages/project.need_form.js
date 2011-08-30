@@ -130,8 +130,8 @@ tc.gam.project_widgets.need_form = function(options) {
 
     var mergeTemplate = function(need_details) {
         var new_details = tc.jQ.extend(true, {
-                day: function() { return this.date ? (new Date(this.date).getDate()) : ''; },
-                month: function() { return this.date ? (new Date(this.date).getMonth()+1) : ''; }
+                day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
+                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
             }, need_details),
             $html = ich.need_form_tmpl(new_details);
             
