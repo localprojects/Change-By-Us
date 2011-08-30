@@ -113,7 +113,7 @@ tc.validate = function(element, validators) {
     var valid = true;
     var required = false;
     var errors = [];
-    var empty, value, i, tempvalue, tempelement, j;
+    var empty, value, num_val, i, tempvalue, tempelement, j;
     
     // Accept either selector or jQuery element.
     if (!element instanceof tc.jQ) {
@@ -136,18 +136,36 @@ tc.validate = function(element, validators) {
         // Check min.
         if (validators[i].substring(0, 3) == 'min') {
             value = tc.validator_utils.val_escape_hints(element);
-            if (value.length < (validators[i].split('-')[1] * 1.0)) {
-                valid = false;
-                errors.push("Too short.");
+            num_val = parseFloat(value);
+            
+            if (isNaN(num_val)) {
+                if (value.length < (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too short.");
+                }
+            } else {
+                if (value < (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too small.");
+                }
             }
             continue;
         }
         // check max.
         if (validators[i].substring(0, 3) == 'max') {
             value = tc.validator_utils.val_escape_hints(element);
-            if (value.length > (validators[i].split('-')[1] * 1.0)) {
-                valid = false;
-                errors.push("Too long.");
+            num_val = parseFloat(value);
+            
+            if (isNaN(num_val)) {
+                if (value.length > (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too long.");
+                }
+            } else {
+                if (value > (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too big.");
+                }
             }
             continue;
         }
@@ -247,7 +265,7 @@ tc.validate = function(element, validators) {
             case 'numeric':
                 if (isNaN(Number(value))) {
                     valid = false;
-                    errors.push('Not a number.')
+                    errors.push('Not a number.');
                 }
                 break;
                 
@@ -255,7 +273,7 @@ tc.validate = function(element, validators) {
             case 'selected':
                 if (value == '-1') {
                     valid = false;
-                    errors.push('Must select a value.')
+                    errors.push('Must select a value.');
                 }
                 break;
             }
@@ -268,7 +286,7 @@ tc.validate = function(element, validators) {
 
     // Handle if validity.
     if (valid) {
-        element.removeClass('not-valid')
+        element.removeClass('not-valid');
         if (required || tc.jQ.trim(value).length) {
             element.addClass('valid');
         }
@@ -280,7 +298,7 @@ tc.validate = function(element, validators) {
         return {
             valid: false,
             errors: errors
-        }
+        };
     }
 };
 
