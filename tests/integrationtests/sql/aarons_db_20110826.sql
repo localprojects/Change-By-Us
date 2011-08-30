@@ -437,7 +437,8 @@ CREATE TABLE `project__user` (
 
 LOCK TABLES `project__user` WRITE;
 /*!40000 ALTER TABLE `project__user` DISABLE KEYS */;
-INSERT INTO `project__user` VALUES (1,1,1,'2011-08-26 01:32:28');
+INSERT INTO `project__user` VALUES (1,1,1,'2011-08-26 01:32:28'),
+                                   (1,2,0,'2011-08-26 01:32:28');
 /*!40000 ALTER TABLE `project__user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -635,7 +636,7 @@ CREATE TABLE `project_need_volunteer` (
 
 LOCK TABLES `project_need_volunteer` WRITE;
 /*!40000 ALTER TABLE `project_need_volunteer` DISABLE KEYS */;
-INSERT INTO `project_need_volunteer` VALUES (1,1),(3,1);
+INSERT INTO `project_need_volunteer` VALUES (1,1),(3,1),(1,2);
 /*!40000 ALTER TABLE `project_need_volunteer` ENABLE KEYS */;
 UNLOCK TABLES;
 
