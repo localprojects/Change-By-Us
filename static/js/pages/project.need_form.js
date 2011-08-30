@@ -20,21 +20,33 @@ tc.gam.project_widgets.need_form = function(options) {
             next_button:tc.jQ('a.need-submit'),
             first_step:'need_form',
             use_hashchange:false,
+            data: {
+              type:'volunteer',
+              request:null,
+              quantity:null,
+              description:null,
+              date:null,
+              time:null,
+              duration:null,
+              project_id:null,
+              address:null
+            },
             steps: {
                 'need_form': {
                     selector: '.step.add-need-step',
+                    next_step:'need-submit',
                     inputs: {
-                        'vol-quantity': {
+                        'quantity': {
                             selector: '#vol-quantity',
                             validators: ['required', 'numeric'],
                             hint:'Qty'
                         },
-                        'vol-job': {
+                        'request': {
                             selector: '#vol-job',
                             validators: ['required', 'max-100'],
                             hint:'Job Title - DJ, Cashier, etc'
                         },
-                        'vol-desc': {
+                        'description': {
                           selector: '#vol-desc',
                           validators: ['required', 'max-200'],
                           hint:'Write a brief description of the volunteer tasks and skills.',
@@ -43,37 +55,68 @@ tc.gam.project_widgets.need_form = function(options) {
                             limit:200
                           }
                         },
-                        'vol-hours': {
+                        'duration': {
                           selector: '#vol-hours',
                           validators: ['required', 'numeric'],
                           hint:''
                         },
-                        'vol-street': {
+                        'address': {
                           selector: '#vol-street',
                           validators: ['required'],
                           hint:'Address'
                         },
-                        'vol-month': {
+                        'month': {
                           selector: '#vol-month',
                           validators: ['required'],
                           hint:'Month'
                         },
-                        'vol-day': {
+                        'day': {
                           selector: '#vol-day',
                           validators: ['required'],
                           hint:'Day'
                         },
-                        'vol-time': {
+                        'time': {
                           selector: '#vol-time',
                           validators: ['required'],
                           hint:'Time'
                         }
                     },
-                    init:function(merlin, dom) {
-                        merlin.options.next_button.click(function(event) {
-                            console.log('next');
-                        });
+                    finish:function(merlin, dom) {
+                      var d = new Date();
+                      var needDate = d.getFullYear()
+                              + '-' + merlin.current_step.inputs.month.dom.val()
+                              + '-' + merlin.current_step.inputs.day.dom.val();
+                      merlin.options.data = tc.jQ.extend(merlin.options.data,{
+                        type:'volunteer',
+                        request:merlin.current_step.inputs.request.dom.val(),
+                        quantity:merlin.current_step.inputs.quantity.dom.val(),
+                        description:merlin.current_step.inputs.description.dom.val(),
+                        date:needDate,
+                        time:merlin.current_step.inputs.time.dom.val(),
+                        duration:merlin.current_step.inputs.duration.dom.val(),
+                        project_id:merlin.app.app_page.data.project.project_id,
+                        address:merlin.current_step.inputs.address.dom.val()
+                      });
                     }
+                },
+                'need-submit':{
+                  selector:'.step.submit-need-step',
+                  init:function(merlin,dom){
+                    tc.jQ.ajax({
+                      type:'POST',
+                      url:'/rest/v1/needs/',
+                      data:merlin.options.data,
+                      context:merlin,
+                      dataType:'text',
+                      success:function(data,ts,xhr){
+                        if(data == 'False'){
+                          return false;
+                        }
+                        window.location.hash = 'show,needs';
+                        window.reload();
+                      }
+                    });
+                  }
                 }
             }
         });
