@@ -91,9 +91,9 @@ if __name__ == "__main__":
                 enable_aws_ses()
                 
         except Exception, e:
-           log.info(e)
-           log.info("ERROR: Email falling back to SMTP")
-           enable_smtp()
+            log.info(e)
+            log.info("ERROR: Email falling back to SMTP")
+            enable_smtp()
         
     # Set the email configurations:
     elif Config.get('email').get('smtp'):
