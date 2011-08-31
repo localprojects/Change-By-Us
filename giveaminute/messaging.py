@@ -223,7 +223,8 @@ def emailUnauthenticatedUser(email, authGuid):
     subject = "Please authenticate your account"
     link = "%sjoin/auth/%s" % (Config.get('default_host'), authGuid)
     template_values = {
-        'link': link
+        'link': link,
+        'config': Config.get_all()
     }
     
     # Render email body.
