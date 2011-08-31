@@ -207,6 +207,7 @@ tc.gam.project_widgets.needs = function(options) {
 
         tc.jQ('.help-link').live('click', function(event) {
             event.preventDefault();
+            
             var $this = tc.jQ(this),
                 need_id = $this.parents('li.need').attr('data-id');
 

@@ -14,7 +14,7 @@ tc.gam.project_widgets.need_detail = function(options) {
             }, need_details),
             $html = ich.need_detail_tmpl(new_details);
             
-        dom.find('.need-detail-cont').html($html);
+        dom.find('.need-stack').html($html);
     };
 
     var initDetailTmpl = function(need_id, callback) {
