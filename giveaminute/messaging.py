@@ -1,31 +1,54 @@
+"""
+Module to handle general messaging, though mostly emailing.
+Emailing templates can be found in templates/email.
+
+"""
 import helpers.sms
-#from framework.emailer import *
 from framework.emailer import Emailer
 from framework.log import log
-#from framework.config import *
 from framework.config import Config
 
-## EMAIL FUNCTIONS
+#from framework.config import *
+#from framework.emailer import *
 
-# send email to invited users
+
 def emailInvite(email, inviterName, projectId, title, description, message = None):
+    """
+    Send invitation email.  Using template: project_invite
+        
+    @type   email: string
+    @param  email: Email address to send to
+    
+    @rtype: *
+    @returns: Emailer send response.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "You've been invited by %s to join a project" % inviterName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
-    body = Emailer.render('email/project_invite', 
-                          {'inviter':inviterName, 'title':title, 'description':description, 'link': link, 'message':message}, 
-                          suffix = 'txt')     
+    template_values = {
+        'inviter': inviterName,
+        'title':title,
+        'description':description,
+        'link': link,
+        'message':message
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/project_invite', template_values, suffix = 'txt')     
+    
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject,  body, from_name = emailAccount['from_name'], 
+            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send invite email")
         log.error(e)
         return False
         
+
 # email project admins when new user joins
 def emailProjectJoin(email, projectId, title, userId, userName):
     emailAccount = Config.get('email')
@@ -180,21 +203,36 @@ def directMessageUser(db, toUserId, toName, toEmail, fromUserId, fromName, messa
         log.error(e)
         return False
         
-# email unauthenticated users
+        
+        
 def emailUnauthenticatedUser(email, authGuid):
+    """
+    Send unauthenticated user a link to authenticate.  Using 
+    template: project_invite
+        
+    @type   email: string
+    @param  email: Email address to send to
+    
+    @rtype: *
+    @returns: Emailer send response.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "Please authenticate your account"
     link = "%sjoin/auth/%s" % (Config.get('default_host'), authGuid)
-    body = Emailer.render('email/auth_user',
-                        {'link':link},
-                        suffix = 'txt')
-                        
+    template_values = {
+        'link': link
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/auth_user', template_values, suffix = 'txt')
+            
+    # Send email.            
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send authenticate user email")
         log.error(e)
