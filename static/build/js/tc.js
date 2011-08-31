@@ -2790,7 +2790,10 @@ tc.gam.project = function(app, dom) {
         'needs': tc.gam.project_widgets.needs(
             tc.jQ.extend({ name: 'needs', dom: dom.find('.project-section.needs') }, widget_options)
         ),
-        'need-form': tc.gam.project_widgets.need_form(
+        'need-detail': tc.gam.project_widgets.needs(
+            tc.jQ.extend({ name: 'need-detail', dom: dom.find('.project-section.need-detail') }, widget_options)
+        ),
+       'need-form': tc.gam.project_widgets.need_form(
             tc.jQ.extend({ name: 'need-form', dom: dom.find('.project-section.need-form') }, widget_options)
         ),
         'infopane': tc.gam.project_widgets.infopane(
@@ -2827,6 +2830,7 @@ tc.gam.project = function(app, dom) {
     // Create an object to handle widget visibility events
     tc.gam.widgetVisibilityHandler();
 };
+
 /********************   End ./static/js/tc.gam.project.js  ********************/
 
 
