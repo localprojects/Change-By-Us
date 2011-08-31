@@ -170,6 +170,11 @@ class Need (Base):
     volunteers = association_proxy('need_volunteers', 'member')
 
     @property
+    def display_date(self):
+        """Returns dates that end in '1st' or '22nd' and the like."""
+        return util.make_pretty_date(self.date)
+
+    @property
     def reason(self):
         """'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
             This is the reason."""

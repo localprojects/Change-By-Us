@@ -655,28 +655,12 @@ class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     ordering = models.Need.id
     access_rules = NonProjectAdminReadOnly()
 
-    def make_pretty_date(self, raw_date):
-        display_date = raw_date.strftime('%B %d')
-
-        if display_date[-2] == '1':
-            display_date += 'th'
-        elif display_date[-1] == '1':
-            display_date += 'st'
-        elif display_date[-1] == '2':
-            display_date += 'nd'
-        elif display_date[-1] == '3':
-            display_date += 'rd'
-        else:
-            display_date += 'th'
-
-        return display_date
-
     def instance_to_dict(self, need):
         need_dict = super(NeedsList, self).instance_to_dict(need)
 
         raw_date = need_dict['date']
         if raw_date:
-            need_dict['display_date'] = self.make_pretty_date(raw_date)
+            need_dict['display_date'] = need.display_date
 
         return need_dict
 
@@ -703,22 +687,6 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
         return user_dict
 
-    def make_pretty_date(self, raw_date):
-        display_date = raw_date.strftime('%B %d')
-
-        if display_date[-2] == '1':
-            display_date += 'th'
-        elif display_date[-1] == '1':
-            display_date += 'st'
-        elif display_date[-1] == '2':
-            display_date += 'nd'
-        elif display_date[-1] == '3':
-            display_date += 'rd'
-        else:
-            display_date += 'th'
-
-        return display_date
-
     def instance_to_dict(self, need):
         need_dict = super(NeedInstance, self).instance_to_dict(need)
         need_dict['volunteers'] = [
@@ -727,7 +695,7 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
         raw_date = need_dict['date']
         if raw_date:
-            need_dict['display_date'] = self.make_pretty_date(raw_date)
+            need_dict['display_date'] = need.display_date
 
         return need_dict
 
