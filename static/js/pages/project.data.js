@@ -14,9 +14,9 @@ tc.gam.project_data = {
                     success(data, status, xhr);
                 }
             },
-            error:function(xhr, status, error){
+            error:function(xhr, status, errorThrown){
                 if (error) {
-                    error(xhr, status, error);
+                    error(xhr, status, errorThrown);
                 }
             }
         });
@@ -32,9 +32,9 @@ tc.gam.project_data = {
             success(data, status, xhr);
           }
         },
-        error:function(xhr, status, error){
+        error:function(xhr, status, errorThrown){
           if (error) {
-            error(xhr, status, error);
+            error(xhr, status, errorThrown);
           }
         }
       });
@@ -50,9 +50,9 @@ tc.gam.project_data = {
             success(data, status, xhr);
           }
         },
-        error:function(xhr, status, error){
+        error:function(xhr, status, errorThrown){
           if (error) {
-            error(xhr, status, error);
+            error(xhr, status, errorThrown);
           }
         }
       });

@@ -6,7 +6,8 @@ tc.gam.project_widgets.needs = function(options) {
     tc.util.log('project.needs');
     var dom = options.dom,
         modal = options.app.components.modal,
-        merlin;
+        merlin,
+        MAX_AVATARS = 5;
 
     /**
      * Function: isProjectMember
@@ -22,36 +23,67 @@ tc.gam.project_widgets.needs = function(options) {
         );
     };
 
-    var updateNeed = function(need_id) {
-        var $needContainer = tc.jQ('.need[data-id|="'+need_id+'"]'),
+    var mergeDetailTemplate = function(need_details) {
+        var new_details = tc.jQ.extend(true, {
+                day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
+                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
+            }, need_details),
+            $html;
+        
+        //Special cases for the first volunteer
+        new_details.has_first = need_details.volunteers.length > 0;
+        if (new_details.has_first) {
+            new_details.first_vol = need_details.volunteers[0];
+            new_details.volunteers = need_details.volunteers.slice(1, MAX_AVATARS+1);
+            new_details.vol_count_minus_one = need_details.volunteers.length-1;
+            new_details.avatar = function() { return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; };
+        }
+        
+        $html = ich.need_detail_tmpl(new_details);
+        dom.find('.need-stack').html($html);
+        
+        updateNeed(need_details);
+    };
+    
+    var isVolunteer = function(id, volunteers) {
+        var i;
+        for (i=0; i<volunteers.length; i++) {
+            if (parseInt(volunteers[i].id, 10) === id) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    var updateNeed = function(need) {
+        var $needContainer = dom.find('.need[data-id|="'+need.id+'"]'),
             $volCount = $needContainer.find('.volunteer-count strong'),
             $progress = $needContainer.find('.progress'),
             $avatars = $needContainer.find('.vol-avatars'),
-            $helpLink = $needContainer.find('.help-link');
-
-        tc.gam.project_data.getNeedDetails(need_id, function(need) {
-            var $avatar_html, 
-                MAX = 5, 
-                quantityNum = parseInt(need.quantity, 10);
-            
-            $volCount.text(need.volunteers.length);
-            $progress.width($progress.parent().width() * need.volunteers.length / quantityNum);
-            
-            $helpLink.removeClass('active');
-            if (quantityNum === need.volunteers.length) {
-                $helpLink.addClass('complete').text('Complete!');
-            } else {
+            $helpLink = $needContainer.find('.help-link'),
+            $avatar_html, 
+            quantityNum = parseInt(need.quantity, 10);
+        
+        $volCount.text(need.volunteers.length);
+        $progress.width($progress.parent().width() * need.volunteers.length / quantityNum);
+        
+        $helpLink.removeClass('active in-process complete');
+        if (quantityNum === need.volunteers.length) {
+            $helpLink.addClass('complete').text('Complete!');
+        } else {
+            if (isVolunteer(options.user.u_id, need.volunteers)) {
                 $helpLink.addClass('in-process').text('I am helping');
+            } else {
+                $helpLink.addClass('active').text('I can help');
             }
-            
-            $avatar_html = ich.need_vol_avatars({
-                volunteers: need.volunteers.slice(0, MAX),
-                use_avatar: function() { return this.avatar_path; },
-                use_generic: function() { return !this.avatar_path; }
-            });
-            
-            $avatars.html($avatar_html);
+        }
+        
+        $avatar_html = ich.need_vol_avatars({
+            volunteers: need.volunteers.slice(0, MAX_AVATARS),
+            avatar: function() {return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; }
         });
+        
+        $avatars.html($avatar_html);
     };
 
     /**
@@ -67,7 +99,6 @@ tc.gam.project_widgets.needs = function(options) {
             dataType: 'json',
             type: 'POST',
             success: function(volunteer_data, status, xhr) {
-
                 tc.jQ.ajax({
                     url: '/directmsg',
                     type: 'POST',
@@ -151,7 +182,7 @@ tc.gam.project_widgets.needs = function(options) {
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
                                     modal.hide();
-                                    updateNeed(data.need_id);
+                                    tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
                                 });
                             }
                         });
@@ -172,10 +203,10 @@ tc.gam.project_widgets.needs = function(options) {
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
             h = ich.add_vol_need_tmpl({
                 need_request: need.request,
-                need_datetime: need.datetime,
+                need_date: need.date,
                 need_reason: need.reason,
                 has_reason: function() { if (need.reason) return true; else return false; },
-                has_datetime: function() { if (need.datetime) return true; else return false; }
+                has_date: function() { if (need.date) return true; else return false; }
             });
 
         $needDetailsContent.html(h);
@@ -195,18 +226,29 @@ tc.gam.project_widgets.needs = function(options) {
      * Bind events for this widget
      */
     var bindEvents = function() {
-        tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
+        tc.jQ(tc).bind('show-project-widget', function(event, widgetName, id) {
             if (options.name === widgetName) {
                 tc.util.log('&&& showing ' + options.name);
-                dom.show();
+
+                //We're going to show one need in detail, so go fetch
+                //the details and setup the template
+                if (id) {
+                    tc.gam.project_data.getNeedDetails(id, function(need_details) {
+                        mergeDetailTemplate(need_details);
+                        dom.show();
+                    });
+                } else {
+                    dom.show();
+                }
             } else {
                 tc.util.log('&&& hiding ' + options.name);
                 dom.hide();
             }
         });
 
-        tc.jQ('.help-link').live('click', function(event) {
+        dom.find('.help-link').live('click', function(event) {
             event.preventDefault();
+            
             var $this = tc.jQ(this),
                 need_id = $this.parents('li.need').attr('data-id');
 
