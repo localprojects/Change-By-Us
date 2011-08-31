@@ -492,7 +492,7 @@ tc.validate = function(element, validators) {
     var valid = true;
     var required = false;
     var errors = [];
-    var empty, value, i, tempvalue, tempelement, j;
+    var empty, value, num_val, i, tempvalue, tempelement, j;
     
     // Accept either selector or jQuery element.
     if (!element instanceof tc.jQ) {
@@ -515,18 +515,36 @@ tc.validate = function(element, validators) {
         // Check min.
         if (validators[i].substring(0, 3) == 'min') {
             value = tc.validator_utils.val_escape_hints(element);
-            if (value.length < (validators[i].split('-')[1] * 1.0)) {
-                valid = false;
-                errors.push("Too short.");
+            num_val = parseFloat(value);
+            
+            if (isNaN(num_val)) {
+                if (value.length < (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too short.");
+                }
+            } else {
+                if (value < (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too small.");
+                }
             }
             continue;
         }
         // check max.
         if (validators[i].substring(0, 3) == 'max') {
             value = tc.validator_utils.val_escape_hints(element);
-            if (value.length > (validators[i].split('-')[1] * 1.0)) {
-                valid = false;
-                errors.push("Too long.");
+            num_val = parseFloat(value);
+            
+            if (isNaN(num_val)) {
+                if (value.length > (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too long.");
+                }
+            } else {
+                if (value > (validators[i].split('-')[1] * 1.0)) {
+                    valid = false;
+                    errors.push("Too big.");
+                }
             }
             continue;
         }
@@ -626,7 +644,7 @@ tc.validate = function(element, validators) {
             case 'numeric':
                 if (isNaN(Number(value))) {
                     valid = false;
-                    errors.push('Not a number.')
+                    errors.push('Not a number.');
                 }
                 break;
                 
@@ -634,7 +652,7 @@ tc.validate = function(element, validators) {
             case 'selected':
                 if (value == '-1') {
                     valid = false;
-                    errors.push('Must select a value.')
+                    errors.push('Must select a value.');
                 }
                 break;
             }
@@ -647,7 +665,7 @@ tc.validate = function(element, validators) {
 
     // Handle if validity.
     if (valid) {
-        element.removeClass('not-valid')
+        element.removeClass('not-valid');
         if (required || tc.jQ.trim(value).length) {
             element.addClass('valid');
         }
@@ -659,7 +677,7 @@ tc.validate = function(element, validators) {
         return {
             valid: false,
             errors: errors
-        }
+        };
     }
 };
 
@@ -1208,10 +1226,6 @@ tc.merlin.prototype.show_step = function(step, force) {
     // Handle the inputs and go through them.
     if (this.current_step.inputs && !this.current_step.has_been_initialized) {
         for (i in this.current_step.inputs) {
-            temp_e_data = tc.jQ.extend({}, this.event_data, {
-                input: this.current_step.inputs[i]
-            });
-            
             // Use input DOM if step DOM is not available
             if (!this.current_step.inputs[i].dom && this.current_step.inputs[i].selector) {
                 this.current_step.inputs[i].dom = this.current_step.dom.find(this.current_step.inputs[i].selector);
@@ -1219,6 +1233,16 @@ tc.merlin.prototype.show_step = function(step, force) {
                     tc.util.dump(this.current_step.inputs[i].selector);
                 }
             }
+            
+            // If the value attribute is populated, then save it on the input object in case its needed
+            if (this.current_step.inputs[i].dom.val()) {
+                this.current_step.inputs[i].default_val = this.current_step.inputs[i].dom.val();
+            }
+            
+            // Create a temp event data object
+            temp_e_data = tc.jQ.extend({}, this.event_data, {
+                input: this.current_step.inputs[i]
+            });
             
             // Handle text input counters.
             if (this.current_step.inputs[i].counter && !this.current_step.inputs[i].counter.dom) {
@@ -1234,8 +1258,8 @@ tc.merlin.prototype.show_step = function(step, force) {
                     merlin: this,
                     input: this.current_step.inputs[i]
                 }).each(function (i, j) {
-                    var $j;
-                    $j = tc.jQ(j);
+                    var $j = tc.jQ(j);
+                    
                     if ($j.data().input.hint || ($j.data().input.hint === "")) {
                         j.value = $j.data().input.hint;
                     }
@@ -2765,6 +2789,9 @@ tc.gam.project = function(app, dom) {
         ),
         'needs': tc.gam.project_widgets.needs(
             tc.jQ.extend({ name: 'needs', dom: dom.find('.project-section.needs') }, widget_options)
+        ),
+        'need-form': tc.gam.project_widgets.need_form(
+            tc.jQ.extend({ name: 'need-form', dom: dom.find('.project-section.need-form') }, widget_options)
         ),
         'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)

@@ -9,8 +9,8 @@
     <div class="bd clearfix">
         <div class="vol-title serif">
             We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a>
-            {% if need.reason() %} for {{ need.reason() }}{% endif %}
-            {% if need.datetime %} on {{ need.datetime }}{% endif %}
+            {% if need.reason %} for {{ need.reason }}{% endif %}
+            {% if need.display_date %} on {{ need.display_date }}{% endif %}
         </div>
 
         <div class="volunteer-body">
@@ -20,25 +20,27 @@
                     <a href="#show,need-detail,{{ need.id }}" class="read-more">Read More</a>
                 {% endif%}
             </p>
-            {% if need.volunteers|length > 0 %}
             <div class="volunteers teaser">
                 <div class="vol-avatars teaser">
-                    {% for volunteer in need.volunteers %}
-                        {% with volunteer_name = volunteer|display_name %}
-                        {% if loop.index <= 5 %}
-                            <a href="/useraccount/{{ volunteer.id }}">
-                            {% if volunteer.avatar_path %}
-                                <img src="{{ d.template_data.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
-                            {% else %}
-                                <img src="/static/images/thumb_genAvatar.jpg" alt="{{ volunteer_name }}"></img>
-                            {% endif%}
-                            </a>
-                        {% endif %}
-                        {% endwith %}
-                    {% endfor %}
+                    {% if need.volunteers|length > 0 %}
+                        {% for volunteer in need.volunteers %}
+                            {% with volunteer_name = volunteer|display_name %}
+                            {% if loop.index <= 5 %}
+                                <a href="/useraccount/{{ volunteer.id }}">
+                                {% if volunteer.avatar_path %}
+                                    <img src="{{ d.template_data.media_root }}{{ volunteer.avatar_path }}" alt="{{ volunteer_name }}"></img>
+                                {% else %}
+                                    <img src="/static/images/thumb_genAvatar.jpg" alt="{{ volunteer_name }}"></img>
+                                {% endif%}
+                                </a>
+                            {% endif %}
+                            {% endwith %}
+                        {% endfor %}
+                    {% else %}
+                        Be the first to volunteer!
+                    {% endif %}
                 </div>
             </div>
-            {% endif %}
         </div>
 
         <div class="volunteer-details serif">
