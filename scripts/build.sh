@@ -2,7 +2,7 @@
 
 # Compress client side resources
 echo "========= MINIFY JS AND CSS ============"
-python scripts/minifier/minifier.py -v -c scripts/minifier.conf
+python scripts/minifier/minifier.py -v -c scripts/minifier.conf --force
 
 # Build JS docs
 echo "========= JS DOCS ============"
