@@ -356,7 +356,7 @@ select
     pu.project_id
 from user u 
 join project__user as pu on u.user_id = pu.user_id
-where u.created_datetime between $fromDate and $toDate
+where pu.created_datetime between $fromDate and $toDate
 order by pu.project_id, u.created_datetime desc
 """
         params = {'fromDate':self.FromDate, 'toDate':self.ToDate}
@@ -455,7 +455,7 @@ order by pu.project_id, u.created_datetime desc
 
         resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
-        member_profile_url = "%s/useraccount/" % base_url
+        member_profile_url = "%suseraccount/" % base_url
         digests = {}
         for projId in resp.keys():
             # Ignore all empty projects, and projects that have no recipients
@@ -470,11 +470,11 @@ order by pu.project_id, u.created_datetime desc
 
             digests[projId]['recipients'] = resp[projId].get('recipients')
             digests[projId]['title'] = resp[projId].get('title')
-            digests[projId]['link'] = "<a href='%s/project/%s'>%s</a>" % (self.Config.get('default_host'), projId, resp[projId].get('title'))
+            digests[projId]['link'] = "<a href='%sproject/%s'>%s</a>" % (self.Config.get('default_host'), projId, resp[projId].get('title'))
 
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
                 for user in resp[projId].get('members'):
-                    username = (user.first_name + ' ' + user.last_name[1] + '.').title()
+                    username = (user.first_name + ' ' + user.last_name[0] + '.').title()
                     digests[projId]['members'].append("<a href='%s%s'>%s</a>" % (member_profile_url, user.user_id, username))
             
             if resp[projId].get('messages') is not None and len(resp[projId].get('messages')) > 0:
