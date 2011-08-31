@@ -1,4 +1,16 @@
 <div class="box main-section project-section need-detail">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Needs
+            </span>
+        </h2>
+        <div class="actions">
+            <a href="#show,needs" class="back fancy-caps">
+                <span>Go Back</span>
+            </a>
+        </div>
+    </div>
     <ol class="need-stack"></ol>
 </div>
 
@@ -8,6 +20,8 @@
   <div class="bd clearfix need-detail-cont">
     <div class="vol-title serif">
         We need <a href="#show,need-detail,{{id}}" class="vol-need"><span class="vol-count">{{quantity}}</span> volunteer {{request}}</a>
+        {{#reason}} for {{reason}}{{/reason}}
+        {{#display_date}} on {{display_date}}{{/display_date}}
     </div>
 
     <div class="volunteer-body">
@@ -15,9 +29,17 @@
 
       <span>Who&#39;s helping</span>
       <div class="volunteers">
-
-        <a href="#" class="sub fancy-caps"><span>E-mail</span> the<br>
-          volunteer list</a>
+          {{#has_first}}
+            {{#first_vol}}
+            <a href="/useraccount/{{id}}" title="{{ display_name }}"><img class="vol-first" src="{{ avatar }}" alt="{{ display_name }}"></img></a>
+            <div class="vol-desc"><span>{{ display_name }}</span> and 
+            {{/first_vol}}
+                {{ vol_count_minus_one }} others volunteered.
+            </div>
+            
+          {{/has_first}}
+          <div class="vol-avatars"></div>
+          <!--<a href="#" class="sub fancy-caps"><span>E-mail</span> the<br>volunteer list</a>-->
       </div>
     </div>
     <div class="volunteer-details serif">
@@ -33,13 +55,10 @@
           <ul>
             <li class="location-name">{{address}}</li>
           </ul>
-          <a href="#" class="rounded-button small">Map it</a>
+          <a href="http://maps.google.com/maps?q={{address}}" target="_blank" class="rounded-button small">Map it</a>
         </div>
     </div>
   </div>
 </li>
 </script>
 {% endraw %}
-
-
-<script type='text/javascript' src="/static/js/pages/project.need_detail.js"></script>
