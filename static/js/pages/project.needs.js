@@ -6,7 +6,8 @@ tc.gam.project_widgets.needs = function(options) {
     tc.util.log('project.needs');
     var dom = options.dom,
         modal = options.app.components.modal,
-        merlin;
+        merlin,
+        MAX_AVATARS = 5;
 
     /**
      * Function: isProjectMember
@@ -23,18 +24,18 @@ tc.gam.project_widgets.needs = function(options) {
     };
 
     var mergeDetailTemplate = function(need_details) {
-        var MAX = 5,
-            new_details = tc.jQ.extend(true, {
+        var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
                 month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
             }, need_details),
             $html;
         
+        //Special cases for the first volunteer
         new_details.has_first = need_details.volunteers.length > 0;
         if (new_details.has_first) {
-            new_details.first_vol = need_details.volunteers.shift();
-            new_details.volunteers = need_details.volunteers.slice(0, MAX);
-            new_details.vol_count_minus_one = need_details.volunteers.length;
+            new_details.first_vol = need_details.volunteers[0];
+            new_details.volunteers = need_details.volunteers.slice(1, MAX_AVATARS+1);
+            new_details.vol_count_minus_one = need_details.volunteers.length-1;
             new_details.avatar = function() { return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; };
         }
         
@@ -51,7 +52,6 @@ tc.gam.project_widgets.needs = function(options) {
             $avatars = $needContainer.find('.vol-avatars'),
             $helpLink = $needContainer.find('.help-link'),
             $avatar_html, 
-            MAX = 5, 
             quantityNum = parseInt(need.quantity, 10);
         
         $volCount.text(need.volunteers.length);
@@ -65,7 +65,7 @@ tc.gam.project_widgets.needs = function(options) {
         }
         
         $avatar_html = ich.need_vol_avatars({
-            volunteers: need.volunteers.slice(0, MAX),
+            volunteers: need.volunteers.slice(0, MAX_AVATARS),
             avatar: function() {return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; }
         });
         
