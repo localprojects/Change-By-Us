@@ -17,10 +17,11 @@ rm -r modules
 
 # Models.sql reminder
 echo "========= MODELING ============"
-echo "Ensure that the models.sql file is up to date with something similar to:"
-echo "mysqldump --no-data -u USER_NAME -p DB_NAME | sed 's/\(.*ENGINE.*AUTO_INCREMENT=\).*/\10;/g' > sql/models.sql"
+echo "Ensure that the models.sql file is up to date, and that all the migration"
+echo "scripts are working.  See 'Regenerating models.sql' on the wiki at"
+echo "https://github.com/codeforamerica/cbu/wiki/Data-and-Schema-Migrations for"
+echo "instructions on how to do this."
 echo ""
-echo "Also make sure migrations scripts are created."
 
 # Release notes
 echo "========= UPDATE DOCS ============"
