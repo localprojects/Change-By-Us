@@ -131,8 +131,17 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         response = self.app.get('/rest/v1/needs/1/', status=200)
 
         response_dict = json.loads(response.body)
-        assert_not_in("password", response_dict)
-        assert_not_in("salt", response_dict)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_not_in("password", volunteer_dict)
+            assert_not_in("salt", volunteer_dict)
+
+    @istest
+    def should_include_a_display_name_for_each_user_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_in("display_name", volunteer_dict)
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
