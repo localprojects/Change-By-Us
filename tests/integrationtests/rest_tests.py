@@ -1,3 +1,4 @@
+import json
 from unittest2 import TestCase
 from paste.fixture import TestApp
 from nose.tools import *
@@ -90,7 +91,6 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
             },
             status=200)
 
-        print response
         assert '"quantity": "5"' in response
 
 class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
@@ -99,28 +99,49 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     @istest
     def should_return_a_reasonable_representation_of_a_need(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        assert_in('"date": "2011-08-31"', response)
+
+        response_dict = json.loads(response.body)
+        assert_equal(response_dict["request"], "gardeners")
 
     @istest
     def should_include_the_address_object_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/2/', status=200)
-        assert_in('"address": "Frugal 4 House, 563 46th St., Oakland, CA 94609"', response)
+
+        response_dict = json.loads(response.body)
+        assert_equal(response_dict["address"], "Frugal 4 House, 563 46th St., Oakland, CA 94609")
 
     @istest
     def should_include_the_volunteers_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        assert_in('"volunteers": [{', response)
+
+        response_dict = json.loads(response.body)
+        assert_in("volunteers", response_dict)
+        assert_equal(len(response_dict['volunteers']), 2)
 
     @istest
     def should_include_the_volunteer_avatars_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        assert_in('"avatar_path": "', response)
+
+        response_dict = json.loads(response.body)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_in("avatar_path", volunteer_dict)
 
     @istest
     def should_not_include_the_volunteer_passwords_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
-        assert_not_in('"password": "', response)
-        assert_not_in('"salt": "', response)
+
+        response_dict = json.loads(response.body)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_not_in("password", volunteer_dict)
+            assert_not_in("salt", volunteer_dict)
+
+    @istest
+    def should_include_a_display_name_for_each_user_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_in("display_name", volunteer_dict)
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
@@ -186,7 +207,6 @@ class Test_NeedVolunteersList_REST_CREATE (AppSetupMixin, TestCase):
         web.ctx.env['SCRIPT_NAME'] = ''
         obj = cont.REST_CREATE(u'2', member_id=u'1')
         assert isinstance(obj, dict)
-        print obj
 
 
 class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):

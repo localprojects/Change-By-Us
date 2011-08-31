@@ -661,10 +661,16 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
     access_rules = NonProjectAdminReadOnly()
 
     def user2dict(self, user):
+        from giveaminute.project import userNameDisplay
+        from giveaminute.project import isFullLastName
+
         user_dict = super(NeedInstance, self).instance_to_dict(user)
 
         # Add in some of that non-orm goodness
         user_dict['avatar_path'] = user.avatar_path
+        user_dict['display_name'] = userNameDisplay(
+            user.first_name, user.last_name, user.affiliation,
+            isFullLastName(user.group_membership_bitmask))
 
         # Remove sensitive information
         del user_dict['password']

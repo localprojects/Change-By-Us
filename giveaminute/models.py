@@ -169,13 +169,11 @@ class Need (Base):
 
     volunteers = association_proxy('need_volunteers', 'member')
 
+    @property
     def reason(self):
-        """
-        'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
-
-        This is the reason.
-
-        """
+        """'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
+            This is the reason."""
+        # TODO: We need a way of constructing the reason.
         return ''
 
 
