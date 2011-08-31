@@ -44,6 +44,16 @@ tc.gam.project_widgets.needs = function(options) {
         
         updateNeed(need_details);
     };
+    
+    var isVolunteer = function(id, volunteers) {
+        var i;
+        for (i=0; i<volunteers.length; i++) {
+            if (parseInt(volunteers[i].id, 10) === id) {
+                return true;
+            }
+        }
+        return false;
+    };
 
     var updateNeed = function(need) {
         var $needContainer = dom.find('.need[data-id|="'+need.id+'"]'),
@@ -57,11 +67,15 @@ tc.gam.project_widgets.needs = function(options) {
         $volCount.text(need.volunteers.length);
         $progress.width($progress.parent().width() * need.volunteers.length / quantityNum);
         
-        $helpLink.removeClass('active');
+        $helpLink.removeClass('active in-process complete');
         if (quantityNum === need.volunteers.length) {
             $helpLink.addClass('complete').text('Complete!');
         } else {
-            $helpLink.addClass('in-process').text('I am helping');
+            if (isVolunteer(options.user.u_id, need.volunteers)) {
+                $helpLink.addClass('in-process').text('I am helping');
+            } else {
+                $helpLink.addClass('active').text('I can help');
+            }
         }
         
         $avatar_html = ich.need_vol_avatars({
@@ -168,7 +182,7 @@ tc.gam.project_widgets.needs = function(options) {
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
                                     modal.hide();
-                                    updateNeed(data.need_id);
+                                    tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
                                 });
                             }
                         });
@@ -232,7 +246,7 @@ tc.gam.project_widgets.needs = function(options) {
             }
         });
 
-        tc.jQ('.help-link').live('click', function(event) {
+        dom.find('.help-link').live('click', function(event) {
             event.preventDefault();
             
             var $this = tc.jQ(this),
