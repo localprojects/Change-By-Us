@@ -111,6 +111,13 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(response_dict["address"], "Frugal 4 House, 563 46th St., Oakland, CA 94609")
 
     @istest
+    def should_include_a_pretty_date_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_equal(response_dict["display_date"], "August 26th")
+
+    @istest
     def should_include_the_volunteers_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
 

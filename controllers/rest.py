@@ -684,6 +684,25 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
             self.user2dict(volunteer)
             for volunteer in need.volunteers]
 
+        raw_date = need_dict['date']
+        if raw_date:
+            display_date = raw_date.strftime('%B %d')
+
+            if display_date[-2] == '1':
+                display_date += 'th'
+            elif display_date[-1] == '0':
+                display_date += 'th'
+            elif display_date[-1] == '1':
+                display_date += 'st'
+            elif display_date[-1] == '2':
+                display_date += 'nd'
+            elif display_date[-1] == '3':
+                display_date += 'rd'
+            else:
+                display_date += 'th'
+
+            need_dict['display_date'] = display_date
+
         return need_dict
 
 
