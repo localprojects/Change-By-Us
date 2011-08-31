@@ -352,7 +352,7 @@ select
     u.last_name,
     u.image_id,
     u.email_notification,
-    u.created_datetime,
+    pu.created_datetime,
     pu.project_id
 from user u 
 join project__user as pu on u.user_id = pu.user_id
@@ -455,7 +455,7 @@ order by pu.project_id, u.created_datetime desc
 
         resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
-        member_profile_url = "%s/member/#" % base_url
+        member_profile_url = "%s/useraccount/" % base_url
         digests = {}
         for projId in resp.keys():
             # Ignore all empty projects, and projects that have no recipients
