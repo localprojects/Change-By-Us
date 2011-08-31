@@ -203,7 +203,7 @@ def message(id,
     Construct and return a dictionary consisting of the data related to a
     message, given by the parameters.  This data is usually pulled off of
     several database tables with keys linking back to a message_id.
-    
+
     NOTE: It is recommended to specify all of these as keyword arguments, not
           positional. If the model changes, the positions of the arguments may
           as well.
@@ -229,10 +229,10 @@ def message(id,
     else:
         ideaObj = None
 
-    attachmentObj = smallAttachment(attachmentMediaType, 
-                                    attachmentMediaId, 
+    attachmentObj = smallAttachment(attachmentMediaType,
+                                    attachmentMediaId,
                                     attachmentTitle)
-    
+
     return dict(message_id = id,
                 message_type = type,
                 file_id = attachmentId,
@@ -565,9 +565,16 @@ def getProjectLocation(db, projectId):
         return None
 
 def removeUserFromProject(db, projectId, userId):
+    from giveaminute import models
+    from framework.orm_holder import OrmHolder
+
     try:
-        db.delete('project__user', where = "project_id = $projectId and user_id = $userId", vars = {'projectId':projectId, 'userId':userId})
-        return True
+        orm = OrmHolder().orm
+
+        user = orm.query(models.User).get(userId)
+        project = orm.query(models.Project).get(projectId)
+
+        return user.leave(project)
     except Exception, e:
         log.info("*** couldn't remove user from project")
         log.error(e)

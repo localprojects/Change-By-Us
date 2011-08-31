@@ -11,7 +11,7 @@
             (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
             (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
         <div class="actions">
-            <a href="#show,add-need" class="add fancy-caps">
+            <a href="#show,need-form" class="add fancy-caps">
                 <span>Add Need</span>
             </a>
         </div>
@@ -22,6 +22,8 @@
     <ol class="need-stack">
         {% for need in d.template_data.project.needs %}
             {% include "project/volunteer_need_teaser.html" %}
+        {% else %}
+            {% include "project/empty_needs_list.html" %}
         {% endfor %}
     </ol>
 
@@ -35,25 +37,20 @@
             for {{ need_reason }}
         {{/has_reason}}
 
-        {{#has_datetime}}
-            on {{ need_datetime }}
-        {{/has_datetime}}
+        {{#has_date}}
+            on {{ need_date }}
+        {{/has_date}}
         </span>
     </script>
-    {% endraw %}
 
     <script id="need_vol_avatars" type="text/html">
-        {{ '{{#volunteers}}' }}
-        <a href="/useraccount/{{ '{{id}}' }}">
-            {{ '{{#use_avatar}}' }}
-            <img src="{{ d.template_data.media_root }}{{ '{{avatar_path}}' }}"></img>
-            {{ '{{/use_avatar}}' }}
-            {{ '{{#use_generic}}' }}
-            <img src="/static/images/thumb_genAvatar.jpg"></img>
-            {{ '{{/use_generic}}' }}
+        {{#volunteers}}
+        <a href="/useraccount/{{id}}" title="{{display_name}}">
+            <img src="{{avatar}}" alt="{{display_name}}"></img>
         </a>
-        {{ '{{/volunteers}}' }}
+        {{/volunteers}}
     </script>
+    {% endraw %}
 
     <div class="template-content modal-content user-volunteer-modal merlin">
         <div class="step user-volunteer">
@@ -79,5 +76,8 @@
         </div>
     </div>
 </div>
+
+{% include 'project/need_form.html' %}
+{% include 'project/volunteer_need.html' %}
 
 <script src="/static/js/pages/project.needs.js"></script>

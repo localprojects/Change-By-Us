@@ -71,15 +71,15 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
     def can_read(self, user, instance):
         return True
 
-    def is_project_admin(self, user, project_id):
-        return user is not None and (user.isProjectAdmin(project_id) or user.isAdmin)
+    def is_project_admin(self, user, project):
+        return (user is not None) and ((user in project.members) or user.is_site_admin)
 
     def can_create(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
     def can_update(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
     def can_delete(self, user, instance):
-        return self.is_project_admin(user, instance.project_id)
+        return self.is_project_admin(user, instance.project)
 
 
 def _field_to_tuple(field):
@@ -393,7 +393,7 @@ class RestController (Controller):
         response_data = method_handler(*args, **kwargs)
 
         serializer = self.get_serializer()
-        response_data = serializer.serialize_model(response_data)
+        response_data = serializer.serialize(response_data)
 
         return response_data
 
@@ -537,19 +537,19 @@ class CreateInstanceMixin (object):
         # HACK: This is a hack.  We kept getting a test file name being passed
         # in as one of the query parameters.  Wierd.
         for kw in all_kw_args:
-            if kw.endswith('.py'):
+            if kw.startswith('tests/'):
                 del all_kw_args[kw]
                 break
 
         instance = Model(**all_kw_args)
+        orm.add(instance)
+        orm.flush()
 
         if not self.access_rules.can_create(self.user, instance):
             orm.rollback()
             raise ForbiddenError("User cannot store the resource")
 
-        orm.add(instance)
         orm.commit()
-
         return self.instance_to_dict(instance)
 
 
@@ -588,10 +588,11 @@ class UpdateInstanceMixin (object):
             except MultipleResultsFound:
                 raise NotFoundError("Multiple results found; no single match")
 
-        if not current_user_can_update(instance):
+        if not self.access_rules.can_update(self.user, instance):
             raise ForbiddenError("Current user cannot modify the resource")
 
         for (key, val) in self.parameters().iteritems():
+            if key == '_method': continue
             setattr(instance, key, val)
 
         orm.commit()
@@ -654,20 +655,31 @@ class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     ordering = models.Need.id
     access_rules = NonProjectAdminReadOnly()
 
+    def instance_to_dict(self, need):
+        need_dict = super(NeedsList, self).instance_to_dict(need)
+
+        raw_date = need_dict['date']
+        if raw_date:
+            need_dict['display_date'] = need.display_date
+
+        return need_dict
+
 
 class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
-    def place2dict(self, place):
-        place_dict = super(NeedInstance, self).instance_to_dict(place)
-        return place_dict
-
     def user2dict(self, user):
+        from giveaminute.project import userNameDisplay
+        from giveaminute.project import isFullLastName
+
         user_dict = super(NeedInstance, self).instance_to_dict(user)
 
         # Add in some of that non-orm goodness
         user_dict['avatar_path'] = user.avatar_path
+        user_dict['display_name'] = userNameDisplay(
+            user.first_name, user.last_name, user.affiliation,
+            isFullLastName(user.group_membership_bitmask))
 
         # Remove sensitive information
         del user_dict['password']
@@ -677,10 +689,13 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
     def instance_to_dict(self, need):
         need_dict = super(NeedInstance, self).instance_to_dict(need)
-        need_dict['address'] = self.place2dict(need.address)
         need_dict['volunteers'] = [
             self.user2dict(volunteer)
             for volunteer in need.volunteers]
+
+        raw_date = need_dict['date']
+        if raw_date:
+            need_dict['display_date'] = need.display_date
 
         return need_dict
 
