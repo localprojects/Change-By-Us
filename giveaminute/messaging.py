@@ -18,9 +18,10 @@ def emailInvite(email, inviterName, projectId, title, description, message = Non
         
     @type   email: string
     @param  email: Email address to send to
+    ...
     
-    @rtype: *
-    @returns: Emailer send response.
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
     
     """
     
@@ -33,7 +34,8 @@ def emailInvite(email, inviterName, projectId, title, description, message = Non
         'title':title,
         'description':description,
         'link': link,
-        'message':message
+        'message': message,
+        'config': Config.get_all()
     }
     
     # Render email body.
@@ -49,166 +51,283 @@ def emailInvite(email, inviterName, projectId, title, description, message = Non
         return False
         
 
-# email project admins when new user joins
 def emailProjectJoin(email, projectId, title, userId, userName):
+    """
+    Email project admins when new user joins.  Using template: project_join
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     defaultUrl = Config.get('default_host')
     subject = "A new member %s has joined your project %s" % (userName, title)
     userLink = "%suseraccount/%s" % (defaultUrl, str(userId))
     memberLink = "%sproject/%s#show,members" % (defaultUrl, str(projectId))
-    body = Emailer.render('email/project_join',
-                        {'title':title, 'user_name':userName, 'user_link':userLink, 'member_link':memberLink},
-                        suffix = 'txt')
-                        
+    template_values = {
+        'title': title,
+        'user_name': userName,
+        'user_link': userLink,
+        'member_link': memberLink,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/project_join', template_values, suffix = 'txt')
+         
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
     except Exception, e:
         log.info("*** couldn't send join email")
         log.error(e)
         return False
 
-# email project admins about endorsements        
+      
 def emailProjectEndorsement(email, title, leaderName):
+    """
+    Email project admins about endorsements.  Using template: project_endorsement
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "%s liked your project!" % leaderName
-    body = Emailer.render('email/project_endorsement',
-                        {'title':title, 'leader_name':leaderName},
-                        suffix = 'txt')
-
+    template_values = {
+        'title': title,
+        'leader_name': leaderName,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/project_endorsement', template_values, suffix = 'txt')
+         
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
     except Exception, e:
         log.info("*** couldn't send endorsement email")
         log.error(e)
         return False
 
-# email resource contacts on resource add        
+        
 def emailResourceNotification(email, projectId, title, description, resourceName):
-    # if dev, don't email resources
+    """
+    Email resource contacts on resource add.  Using template: resource_notification
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # If dev, don't email resources
     if (Config.get('dev')):
+        log.info("*** body = %s" % body)
         return True
-
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "A project on Changeby.us has added %s as a resource" % resourceName
     link = "%sproject/%s" % (Config.get('default_host'), str(projectId))
-    body = Emailer.render('email/resource_notification',
-                        {'title':title, 'description':description, 'resource_name':resourceName, 'link':link},
-                        suffix = 'txt')
+    template_values = {
+        'title': title,
+        'description': description,
+        'resource_name': resourceName,
+        'link': link,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/resource_notification', template_values, suffix = 'txt')
 
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
     except Exception, e:
         log.info("*** couldn't send resource notification email")
         log.error(e)
         return False
-
-    ### WE DON'T WANT TO SEND THESE YET
-    log.info("*** pretend we sent a notification email to %s" % email)
-    log.info("*** body = %s" % body)
-    return True
       
-# email resource owner on approval
+
 def emailResourceApproval(email, title):
+    """
+    Email resource owner on approval.  Using template: resource_approval
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "Your resource has been approved"
-    body = Emailer.render('email/resource_approval',
-                        {'link':Config.get('default_host'),
-                        'title':title},
-                        suffix = 'txt')
+    template_values = {
+        'link': Config.get('default_host'),
+        'title': title,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/resource_approval', template_values, suffix = 'txt')
+
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])  
     except Exception, e:
         log.info("*** couldn't send resource approval email")
         log.error(e)
         return False
         
-# email deleted users
+
 def emailAccountDeactivation(email):
+    """
+    Email deleted users.  Using template: account_deactivation
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "Your account has been deactivated"
     link = "%stou" % Config.get('default_host')
-    body = Emailer.render('email/account_deactivation',
-                        {'link':link},
-                        suffix = 'txt')
+    template_values = {
+        'link': link,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/account_deactivation', template_values, suffix = 'txt')
+
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
     except Exception, e:
         log.info("*** couldn't send account deactivation email")
         log.error(e)
         return False
 
+
 def emailTempPassword(email, password):
+    """
+    Email temporary password.  Using template: forgot_password
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     subject = "Your password has been reset"
     link = "%slogin" % Config.get('default_host')
-    body = Emailer.render('email/forgot_password',
-                        {'password':password, 'link':link},
-                        suffix = 'txt')
+    link = "%stou" % Config.get('default_host')
+    template_values = {
+        'password': password,
+        'link': link,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/forgot_password', template_values, suffix = 'txt')
+
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
     except Exception, e:
         log.info("*** couldn't send forgot password email")
         log.error(e)
         return False
-        
+
+
 def directMessageUser(db, toUserId, toName, toEmail, fromUserId, fromName, message):
-    emailAccount = Config.get('email')
+    """
+    Email user about direct message.  Using template: direct_message
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
     
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
+    emailAccount = Config.get('email')
     #email = "%s <%s>" % (toName, toEmail)
     email = toEmail
     subject = "Change By Us message from %s" % fromName
     link = "%suseraccount/%s" % (Config.get('default_host'), fromUserId)
-    body = Emailer.render('email/direct_message',
-                        {'name':fromName, 'message':message, 'link':link},
-                        suffix = 'txt')
+    template_values = {
+        'name': fromName,
+        'message': message,
+        'link': link,
+        'config': Config.get_all()
+    }
+    
+    # Render email body.
+    body = Emailer.render('email/direct_message', template_values, suffix = 'txt')
 
+    # Send email.
     try:
-        isSent = Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_noreplies_name'],
-                            from_address = emailAccount['from_noreplies_email'])  
+        isSent = Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
                                                        
         if (isSent):
             db.insert('direct_message', message = message, to_user_id = toUserId, from_user_id = fromUserId)
+            return True
         else:
             log.info("*** couldn't log direct message")
+            # Not sure if best to return False
+            return False
 
     except Exception, e:
         log.info("*** couldn't send direct message email")
         log.error(e)
         return False
         
-        
-        
+
 def emailUnauthenticatedUser(email, authGuid):
     """
     Send unauthenticated user a link to authenticate.  Using 
-    template: project_invite
+    template: auth_user
         
     @type   email: string
     @param  email: Email address to send to
@@ -240,30 +359,44 @@ def emailUnauthenticatedUser(email, authGuid):
         return False
 
         
-# email upon idea submission
 def emailIdeaConfirmation(email, responseEmail, locationId):
+    """
+    Email upon idea submission.  Using template: idea_confirmation
+        
+    @type   email: string
+    @param  email: Email address to send to
+    ...
+    
+    @rtype: Boolean
+    @returns: Whether emailer was successful or not.
+    
+    """
+    
+    # Create values for template.
     emailAccount = Config.get('email')
     host = Config.get('default_host')
     subject = "Thanks for submitting an idea to Change by Us!"
     searchLink = "%ssearch?location_id=%s" % (host, locationId)
     createLink = "%screate" % host
+    template_values = {
+        'search_link': searchLink,
+        'create_link': createLink,
+        'response_email': emailAccount['from_email'],
+        'config': Config.get_all()
+    }
     
-    body = Emailer.render('email/idea_confirmation',
-                        {'search_link':searchLink,
-                         'create_link':createLink,
-                         'response_email':emailAccount['from_email']},
-                        suffix = 'txt')
-                        
+    # Render email body.
+    body = Emailer.render('email/idea_confirmation', template_values, suffix = 'txt')
+
+    # Send email.
     try:
-        return Emailer.send(email, 
-                            subject, 
-                            body,
-                            from_name = emailAccount['from_name'],
-                            from_address = emailAccount['from_email'])  
+        return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
+            from_address = emailAccount['from_email'])
     except Exception, e:
         log.info("*** couldn't send authenticate user email")
         log.error(e)
         return False
+
 
 ### SMS FUNCTIONS
         
