@@ -18,7 +18,8 @@ tc.gam.project_widgets.conversation = function(options){
             fileUploader: 'new',              //The file state: new, successful, unsuccessful, needsreset
             messages: {}                      //The message by widget id
         },
-        carouselWidget;
+        carouselWidget,
+        self = {};
     
     tc.util.dump(options);
 
@@ -610,4 +611,6 @@ tc.gam.project_widgets.conversation = function(options){
             dom.hide();
         }
     });
+    
+    return self;
 };

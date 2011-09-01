@@ -7,7 +7,8 @@ tc.gam.project_widgets.needs = function(options) {
     var dom = options.dom,
         modal = options.app.components.modal,
         merlin,
-        MAX_AVATARS = 5;
+        MAX_AVATARS = 5,
+        self = {};
 
     /**
      * Function: isProjectMember
@@ -45,10 +46,10 @@ tc.gam.project_widgets.needs = function(options) {
         updateNeed(need_details);
     };
     
-    var isVolunteer = function(id, volunteers) {
+    self.isVolunteer = function(id, volunteers) {
         var i;
         for (i=0; i<volunteers.length; i++) {
-            if (parseInt(volunteers[i].id, 10) === id) {
+            if (parseInt(volunteers[i].id, 10) === parseInt(id, 10)) {
                 return true;
             }
         }
@@ -201,13 +202,7 @@ tc.gam.project_widgets.needs = function(options) {
     var showModal = function(need) {
         //use ICanHaz to fill in the modal content template
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
-            h = ich.add_vol_need_tmpl({
-                need_request: need.request,
-                need_date: need.date,
-                need_reason: need.reason,
-                has_reason: function() { if (need.reason) return true; else return false; },
-                has_date: function() { if (need.date) return true; else return false; }
-            });
+            h = ich.add_vol_need_tmpl(need);
 
         $needDetailsContent.html(h);
 
@@ -266,4 +261,6 @@ tc.gam.project_widgets.needs = function(options) {
     };
 
     bindEvents();
+    
+    return self;
 };
