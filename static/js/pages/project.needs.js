@@ -46,10 +46,10 @@ tc.gam.project_widgets.needs = function(options) {
         updateNeed(need_details);
     };
     
-    var isVolunteer = function(id, volunteers) {
+    self.isVolunteer = function(id, volunteers) {
         var i;
         for (i=0; i<volunteers.length; i++) {
-            if (parseInt(volunteers[i].id, 10) === id) {
+            if (parseInt(volunteers[i].id, 10) === parseInt(id, 10)) {
                 return true;
             }
         }
