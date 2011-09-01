@@ -447,11 +447,17 @@
 			});
 		</script>
 		
-		{% if d.template_data.app_env and d.template_data.app_env == 'live' %}
+		{% if d.template_data.app_env %} 
 			<script type="text/javascript">
 				
 				var _gaq = _gaq || [];
-				_gaq.push(['_setAccount', 'UA-22834983-1']);
+				{% if d.template_data.app_env == 'dev' %}
+					_gaq.push(['_setAccount', 'UA-24554791-3']);
+				{% elif d.template_data.app_env == 'demo' %}
+					_gaq.push(['_setAccount', 'UA-24554791-2']);
+				{% elif d.template_data.app_env == 'live' %}
+					_gaq.push(['_setAccount', 'UA-22834983-1']);
+				{% endif %}
 				_gaq.push(['_trackPageview']);
 				
 				(function() {
