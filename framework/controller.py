@@ -70,6 +70,9 @@ class Controller (object):
         #set city-specific map options
         self.template_data['map'] = Config.get('map')
 
+        #set the supported features
+        self.template_data['features'] = Config.get('features')
+
         # user
         self.setUserObject()
 

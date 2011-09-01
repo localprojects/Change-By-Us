@@ -39,6 +39,8 @@ class CreateProject(Controller):
     def newProject(self):
         if (self.request('main_text')): return False
 
+        supported_features = Config.get('features')
+
         if (self.user):
             owner_user_id = self.user.id
             title = self.request('title')
@@ -48,7 +50,7 @@ class CreateProject(Controller):
             imageId = self.request('image')
             keywords = [word.strip() for word in self.request('keywords').split(',')] if not util.strNullOrEmpty(self.request('keywords')) else []
             resourceIds = self.request('resources').split(',')
-            isOfficial = self.user.isAdmin
+            isOfficial = self.user.isAdmin and supported_features.get('is_official_supported')
 
             projectId = mProject.createProject(self.db, owner_user_id, title, description, ' '.join(keywords), locationId, imageId, isOfficial, organization)
 
@@ -144,7 +146,7 @@ class CreateProject(Controller):
             data = web.input()['qqfile']
         else:
             data = web.data()
-        
+
         imageId = ImageServer.add(self.db, data, 'giveaminute', [100, 100])
 
         return imageId
