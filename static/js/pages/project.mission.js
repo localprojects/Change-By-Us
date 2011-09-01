@@ -5,7 +5,8 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 tc.gam.project_widgets.infopane = function(options){
     tc.util.log("project.infopane");
     var dom = options.dom,
-        is_editable = false;
+        is_editable = false,
+        self = {};
         
     if(options.project_user.is_project_admin || (options.user && options.user.is_admin)){
         is_editable = true;
@@ -228,4 +229,6 @@ tc.gam.project_widgets.infopane = function(options){
     elements.mission.init( dom.find(".our-mission") );
     elements.location_map.init();
     elements.keywords.init( dom.find(".keywords") );
+    
+    return self;
 };

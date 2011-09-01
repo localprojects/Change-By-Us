@@ -4,7 +4,8 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.home = function(options) {
     tc.util.log('project.home');
-    var dom = options.dom;
+    var dom = options.dom,
+        self = {};
     
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
@@ -15,4 +16,6 @@ tc.gam.project_widgets.home = function(options) {
             dom.hide();
         }
     });
+    
+    return self;
 };

@@ -10,7 +10,8 @@ tc.gam.project_widgets.add_link = function(options) {
         },
         components = {
             merlin:null
-        };
+        },
+        self = {};
     
     var build_merlin = function(){
         if(components.merlin){
@@ -111,4 +112,6 @@ tc.gam.project_widgets.add_link = function(options) {
             dom.hide();
         }
     });
+    
+    return self;
 };

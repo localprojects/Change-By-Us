@@ -7,7 +7,8 @@ tc.gam.project_widgets.needs = function(options) {
     var dom = options.dom,
         modal = options.app.components.modal,
         merlin,
-        MAX_AVATARS = 5;
+        MAX_AVATARS = 5,
+        self = {};
 
     /**
      * Function: isProjectMember
@@ -266,4 +267,6 @@ tc.gam.project_widgets.needs = function(options) {
     };
 
     bindEvents();
+    
+    return self;
 };

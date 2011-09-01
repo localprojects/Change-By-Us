@@ -17,7 +17,8 @@ tc.gam.project_widgets.resources = function(options){
         },
         components = {
             tooltips:null
-        };
+        },
+        self = {};
         
     var handlers = {
         resource_refresh_handler:function(e,d){
@@ -177,4 +178,6 @@ tc.gam.project_widgets.resources = function(options){
     
     tc.jQ(tc).bind('resources-loaded', handlers.resources_loaded_handler);
     tc.jQ(tc).bind('resources-refresh', handlers.resource_refresh_handler);
+    
+    return self;
 };

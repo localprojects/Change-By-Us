@@ -4,7 +4,8 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.members = function(options){
     tc.util.log('project.members');
-    var dom = options.dom;
+    var dom = options.dom,
+        self = {};
     
     var handlers = {
         remove_member:function(e){
@@ -213,4 +214,6 @@ tc.gam.project_widgets.members = function(options){
             components.ideas_carousel.update_pagination().update_navigation();
         }
     });
+    
+    return self;
 };
