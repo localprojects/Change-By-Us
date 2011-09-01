@@ -202,13 +202,7 @@ tc.gam.project_widgets.needs = function(options) {
     var showModal = function(need) {
         //use ICanHaz to fill in the modal content template
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
-            h = ich.add_vol_need_tmpl({
-                need_request: need.request,
-                need_date: need.date,
-                need_reason: need.reason,
-                has_reason: function() { if (need.reason) return true; else return false; },
-                has_date: function() { if (need.date) return true; else return false; }
-            });
+            h = ich.add_vol_need_tmpl(need);
 
         $needDetailsContent.html(h);
 
