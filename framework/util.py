@@ -386,6 +386,16 @@ def deobfuscate(token):
             numbers.append(token[i])
     return "".join(numbers)
 
+def total_seconds(timedelta):
+    """
+    Return the total number of seconds in a datetime.timedelta object. This is a
+    reimplementation of timedelta.total_seconds(), which is new in Python 2.7.
+    This version is not as accurate as it disregards microseconds (they're
+    unnecessary in this context).
+    """
+    seconds = timedelta.seconds + (timedelta.days * 24 * 60 * 60)
+    return seconds
+
 def local_utcoffset(localtime=datetime.datetime.now(),
                     utctime=datetime.datetime.utcnow()):
     """
@@ -393,8 +403,8 @@ def local_utcoffset(localtime=datetime.datetime.now(),
     default parameters are left alone, the result will be the utcoffset of the
     computer's time zone.
     """
-    seconds = (localtime - utctime).total_seconds()
-    hours = int(round(seconds / 60 / 60))
+    seconds = total_seconds(localtime - utctime)
+    hours = int(round(float(seconds) / 60 / 60))
     return hours
 
 def format_time(seconds):

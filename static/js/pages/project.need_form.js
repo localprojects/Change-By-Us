@@ -3,8 +3,9 @@ tc.gam = tc.gam || {};
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.need_form = function(options) {
-    tc.util.log('project.needs');
-    var dom = options.dom;
+    tc.util.log('project.need_form');
+    var dom = options.dom,
+        self = {};
 
     /**
      * Function: initMerlin
@@ -184,4 +185,5 @@ tc.gam.project_widgets.need_form = function(options) {
     };
 
     bindEvents();
+    return self;
 };
