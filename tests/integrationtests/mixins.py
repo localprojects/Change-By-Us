@@ -112,6 +112,7 @@ class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
                 return value
 
         self.session = ObjectDict()
+        self.session.session_id = 1
         SessionHolder.get_session = Mock(return_value=self.session)
 
 
