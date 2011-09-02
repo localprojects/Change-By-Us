@@ -23,7 +23,8 @@ describe('project.needs.js', function () {
             //user data
             user: {
                 is_admin: false,
-                is_leader: false
+                is_leader: false,
+                u_id: 5
             },
             //project user data
             project_user: {
@@ -57,9 +58,13 @@ describe('project.needs.js', function () {
     });
 
     describe('_isVolunteer', function () {
+        var vols;
+        
+        beforeEach(function(){
+            vols = [{ id: '1'}, { id: 2} ];
+        });
+        
         it('returns true if the user is in a list of volunteers', function() {
-            var vols = [{ id: '1'}, { id: 2} ];
-
             expect(need_widget._isVolunteer(1, vols)).toEqual(true);
             expect(need_widget._isVolunteer('1', vols)).toEqual(true);
             expect(need_widget._isVolunteer(2, vols)).toEqual(true);
@@ -67,10 +72,13 @@ describe('project.needs.js', function () {
         });
 
         it('returns false if the user is not in a list of volunteers', function() {
-            var vols = [{ id: '1'}, { id: 2} ];
+            var not_defined;
 
             expect(need_widget._isVolunteer(3, vols)).toEqual(false);
             expect(need_widget._isVolunteer('3', vols)).toEqual(false);
+            
+            expect(need_widget._isVolunteer(not_defined, vols)).toEqual(false);
+            expect(need_widget._isVolunteer(null, vols)).toEqual(false);
         });
     });
     
@@ -123,15 +131,19 @@ describe('project.needs.js', function () {
 
 
     describe('_getVolunteerButtonConfig', function () {
-        var vols = [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
+        var vols, not_defined;
+        
+        beforeEach(function() {
+            vols = [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
                     {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
                     {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}]; 
+        });
         
         it('returns "I am helping" if the user is one of the volunteers', function() {
             expect(need_widget._getVolunteerButtonConfig(5, vols, 1)).toEqual({cssClass: 'in-process', text: 'I am helping'});
         });
         
-        it('returns "I can helping" if the user is not one of the volunteers and more volunteers are needed', function() {
+        it('returns "I can help" if the user is not one of the volunteers and more volunteers are needed', function() {
             expect(need_widget._getVolunteerButtonConfig(5, vols, 6)).toEqual({cssClass: 'active', text: 'I can help'});
         });
 
@@ -142,8 +154,15 @@ describe('project.needs.js', function () {
         it('returns "I am helping" if the user is one of the volunteers, even if no more volunteers are needed', function() {
             expect(need_widget._getVolunteerButtonConfig(3, vols, 1)).toEqual({cssClass: 'in-process', text: 'I am helping'});
         });
-    });
+        
+        it('returns "Complete!" if no more volunteers are needed and no user is logged in', function() {
+            expect(need_widget._getVolunteerButtonConfig(3, vols, not_defined)).toEqual({cssClass: 'complete', text: 'Complete!'});
+        });
 
+        it('returns "I can help" if more volunteers are needed and no user is logged in', function() {
+            expect(need_widget._getVolunteerButtonConfig(5, vols, null)).toEqual({cssClass: 'active', text: 'I can help'});
+        });
+    });
 
     describe('_getProgressElementWidth', function () {
         it('gets the width of the progress element', function() {
@@ -168,5 +187,17 @@ describe('project.needs.js', function () {
             
             expect($container.find('.volunteer-count strong').text()).toEqual('3');
         });
+    });
+    
+    describe('_getUserId', function () {
+        it('gets the user id if it exists', function() {
+            expect(need_widget._getUserId()).toEqual(5);
+        });
+        
+        it('return null if the user id does not exists', function() {
+            need_widget = tc.gam.project_widgets.needs(tc.jQ.extend(true, mock_options, { user: null }) );
+            expect(need_widget._getUserId()).toEqual(null);
+        });
+
     });
 });
