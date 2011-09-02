@@ -76,6 +76,7 @@ tc.gam.project_widgets.needs = function(options) {
         return max_width * cur_vol_count / vols_needed;
     };
     
+    //TODO: Add test
     self._updateVolunteerProgress = function($container, need) {
         var $volCount = $container.find('.volunteer-count strong'),
             $progress = $container.find('.progress'),
@@ -85,6 +86,7 @@ tc.gam.project_widgets.needs = function(options) {
         $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
     };
     
+    //TODO: Add test
     self._updateVolunteerButton = function($container, need) {
         var $helpLink = $container.find('.help-link'),
             quantityNum = parseInt(need.quantity, 10),
@@ -96,6 +98,7 @@ tc.gam.project_widgets.needs = function(options) {
             .text(buttonConfig.text);
     };
     
+    //TODO: Add test
     self._updateSmallAvatars = function($container, need) {
         var $avatars = $container.find('.vol-avatars'),
             $avatar_html;
@@ -109,7 +112,7 @@ tc.gam.project_widgets.needs = function(options) {
     };
     
     var updateNeed = function(need) {
-        var $needContainer = dom.find('.need[data-id|="'+need.id+'"]');
+        var $needContainer = tc.jQ('.need[data-id|="'+need.id+'"]');
         
         self._updateVolunteerProgress($needContainer, need);
         self._updateVolunteerButton($needContainer, need);
@@ -275,7 +278,7 @@ tc.gam.project_widgets.needs = function(options) {
             }
         });
 
-        dom.find('.help-link').live('click', function(event) {
+        tc.jQ('.help-link').die('click').live('click', function(event) {
             event.preventDefault();
             
             var $this = tc.jQ(this),
