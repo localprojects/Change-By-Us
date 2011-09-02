@@ -24,12 +24,11 @@ tc.gam.project_widgets.needs = function(options) {
         );
     };
 
-    var mergeDetailTemplate = function(need_details) {
+    self._getDetailTemplateData = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
                 month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
-            }, need_details),
-            $html;
+            }, need_details);
         
         //Special cases for the first volunteer
         new_details.has_first = need_details.volunteers.length > 0;
@@ -40,13 +39,18 @@ tc.gam.project_widgets.needs = function(options) {
             new_details.avatar = function() { return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; };
         }
         
-        $html = ich.need_detail_tmpl(new_details);
-        dom.find('.need-stack').html($html);
+        return new_details;
+    };
+
+    var mergeDetailTemplate = function(need_details) {
+        var new_details = self._getDetailTemplateData(need_details),
+            $html = ich.need_detail_tmpl(new_details);
         
+        dom.find('.need-stack').html($html);
         updateNeed(need_details);
     };
     
-    self.isVolunteer = function(id, volunteers) {
+    self._isVolunteer = function(id, volunteers) {
         var i;
         for (i=0; i<volunteers.length; i++) {
             if (parseInt(volunteers[i].id, 10) === parseInt(id, 10)) {
@@ -55,7 +59,23 @@ tc.gam.project_widgets.needs = function(options) {
         }
         return false;
     };
-
+    
+    self._getVolunteerButtonConfig = function(vols_needed, volunteers, user_id) {
+        if (self._isVolunteer(user_id, volunteers)) {
+            return { cssClass: 'in-process', text: 'I am helping'};
+        } else {
+            if (vols_needed !== volunteers.length) {
+                return { cssClass: 'active', text: 'I can help'};
+            } else {
+                return { cssClass: 'complete', text: 'Complete!'};
+            }
+        }
+    };
+    
+    self._getProgressElementWidth = function(max_width, cur_vol_count, vols_needed) {
+        return max_width * cur_vol_count / vols_needed;
+    };
+    
     var updateNeed = function(need) {
         var $needContainer = dom.find('.need[data-id|="'+need.id+'"]'),
             $volCount = $needContainer.find('.volunteer-count strong'),
@@ -63,21 +83,16 @@ tc.gam.project_widgets.needs = function(options) {
             $avatars = $needContainer.find('.vol-avatars'),
             $helpLink = $needContainer.find('.help-link'),
             $avatar_html, 
-            quantityNum = parseInt(need.quantity, 10);
+            quantityNum = parseInt(need.quantity, 10),
+            buttonConfig = self._getVolunteerButtonConfig(quantityNum, need.volunteers, options.user.u_id);
         
         $volCount.text(need.volunteers.length);
-        $progress.width($progress.parent().width() * need.volunteers.length / quantityNum);
+        $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
         
-        $helpLink.removeClass('active in-process complete');
-        if (quantityNum === need.volunteers.length) {
-            $helpLink.addClass('complete').text('Complete!');
-        } else {
-            if (isVolunteer(options.user.u_id, need.volunteers)) {
-                $helpLink.addClass('in-process').text('I am helping');
-            } else {
-                $helpLink.addClass('active').text('I can help');
-            }
-        }
+        $helpLink
+            .removeClass('active in-process complete')
+            .addClass(buttonConfig.cssClass)
+            .text(buttonConfig.text);
         
         $avatar_html = ich.need_vol_avatars({
             volunteers: need.volunteers.slice(0, MAX_AVATARS),
@@ -182,8 +197,8 @@ tc.gam.project_widgets.needs = function(options) {
 
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
-                                    modal.hide();
                                     tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
+                                    modal.hide();
                                 });
                             }
                         });
