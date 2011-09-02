@@ -34,7 +34,23 @@ describe('project.needs.js', function () {
             media_root: 'http://cbumedia.com',
             dom: tc.jQ('body'),
             name: 'test'
-        };
+        },
+        mock_need = {
+            "display_date": "August 31st", 
+            "project_id": "3", 
+            "description": "test stuff", 
+            "address": "Code for America", 
+            "request": "testers", 
+            "date": "2011-08-31", 
+            "time": "9:00pm", 
+            "duration": "50", 
+            "volunteers": [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
+                           {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
+                           {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}], 
+            "type": "volunteer", 
+            "id": "5", 
+            "quantity": "6"
+        };;
 
     beforeEach(function() {
         need_widget = tc.gam.project_widgets.needs(mock_options);
@@ -62,22 +78,7 @@ describe('project.needs.js', function () {
         var raw_need_details;
         
         beforeEach(function(){
-            raw_need_details = {
-                "display_date": "August 31st", 
-                "project_id": "3", 
-                "description": "test stuff", 
-                "address": "Code for America", 
-                "request": "testers", 
-                "date": "2011-08-31", 
-                "time": "9:00pm", 
-                "duration": "50", 
-                "volunteers": [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
-                               {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
-                               {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}], 
-                "type": "volunteer", 
-                "id": "5", 
-                "quantity": "1"
-            };
+            raw_need_details = mock_need;
         });
         
         it('creates a "day" template function', function() {
@@ -147,6 +148,25 @@ describe('project.needs.js', function () {
     describe('_getProgressElementWidth', function () {
         it('gets the width of the progress element', function() {
             expect(need_widget._getProgressElementWidth(100, 1, 4)).toEqual(25);
+        });
+    });
+    
+    describe('_updateVolunteerProgress', function () {
+        var $container, need;
+        beforeEach(function(){
+            $container = tc.jQ('<div class="volunteer-details"> \
+                <div class="volunteer-count">We have <strong>0</strong> volunteers</div> \
+                <div class="progress-wrapper"><div class="progress"><div class="progress-pin"></div></div></div> \
+                <a class="help-link active" href="#">I can help</a> \
+                </div>'
+            );
+            need = mock_need;
+        });
+        
+        it('sets the number of people who have volunteered', function() {
+            need_widget._updateVolunteerProgress($container, need);
+            
+            expect($container.find('.volunteer-count strong').text()).toEqual('3');
         });
     });
 });
