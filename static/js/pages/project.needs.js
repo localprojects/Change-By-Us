@@ -76,30 +76,44 @@ tc.gam.project_widgets.needs = function(options) {
         return max_width * cur_vol_count / vols_needed;
     };
     
-    var updateNeed = function(need) {
-        var $needContainer = dom.find('.need[data-id|="'+need.id+'"]'),
-            $volCount = $needContainer.find('.volunteer-count strong'),
-            $progress = $needContainer.find('.progress'),
-            $avatars = $needContainer.find('.vol-avatars'),
-            $helpLink = $needContainer.find('.help-link'),
-            $avatar_html, 
-            quantityNum = parseInt(need.quantity, 10),
-            buttonConfig = self._getVolunteerButtonConfig(quantityNum, need.volunteers, options.user.u_id);
-        
+    self._updateVolunteerProgress = function($container, need) {
+        var $volCount = $container.find('.volunteer-count strong'),
+            $progress = $container.find('.progress'),
+            quantityNum = parseInt(need.quantity, 10);
+
         $volCount.text(need.volunteers.length);
         $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
-        
+    };
+    
+    self._updateVolunteerButton = function($container, need) {
+        var $helpLink = $container.find('.help-link'),
+            quantityNum = parseInt(need.quantity, 10),
+            buttonConfig = self._getVolunteerButtonConfig(quantityNum, need.volunteers, options.user.u_id);
+
         $helpLink
             .removeClass('active in-process complete')
             .addClass(buttonConfig.cssClass)
             .text(buttonConfig.text);
+    };
+    
+    self._updateSmallAvatars = function($container, need) {
+        var $avatars = $container.find('.vol-avatars'),
+            $avatar_html;
         
         $avatar_html = ich.need_vol_avatars({
             volunteers: need.volunteers.slice(0, MAX_AVATARS),
             avatar: function() {return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; }
         });
-        
+
         $avatars.html($avatar_html);
+    };
+    
+    var updateNeed = function(need) {
+        var $needContainer = dom.find('.need[data-id|="'+need.id+'"]');
+        
+        self._updateVolunteerProgress($needContainer, need);
+        self._updateVolunteerButton($needContainer, need);
+        self._updateSmallAvatars($needContainer, need);
     };
 
     /**
@@ -197,7 +211,11 @@ tc.gam.project_widgets.needs = function(options) {
 
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
-                                    tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
+                                    if (self.need_id) {
+                                        tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
+                                    } else {
+                                        tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
+                                    }
                                     modal.hide();
                                 });
                             }
@@ -243,7 +261,8 @@ tc.gam.project_widgets.needs = function(options) {
                 //We're going to show one need in detail, so go fetch
                 //the details and setup the template
                 if (id) {
-                    tc.gam.project_data.getNeedDetails(id, function(need_details) {
+                    self.need_id = id;
+                    tc.gam.project_data.getNeedDetails(self.need_id, function(need_details) {
                         mergeDetailTemplate(need_details);
                         dom.show();
                     });
