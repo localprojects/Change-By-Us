@@ -125,7 +125,6 @@ INSERT INTO `keyword` VALUES('safety', '2011-09-01 12:00:00');
 INSERT INTO `keyword` VALUES('sanitation', '2011-09-01 12:00:00');
 INSERT INTO `keyword` VALUES('seniors', '2011-09-01 12:00:00');
 INSERT INTO `keyword` VALUES('social-action', '2011-09-01 12:00:00');
-INSERT INTO `keyword` VALUES('social-justice', '2011-09-01 12:00:00');
 INSERT INTO `keyword` VALUES('space', '2011-09-01 12:00:00');
 INSERT INTO `keyword` VALUES('speaker', '2011-09-01 12:00:00');
 INSERT INTO `keyword` VALUES('statistics', '2011-09-01 12:00:00');
