@@ -23,3 +23,15 @@ class Test_Controller_setUserObject (AppSetupMixin, TestCase):
         response = self.app.get('/', status=200)
         assert_not_in('internal server error', response.body)
 
+
+class Test_Controller_sqlaUser (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_not_choke_when_the_user_id_is_None(self):
+        self.login(None)
+        cont = Controller()
+        user = cont.sqla_user
+        
+        assert_is_none(user)
+
