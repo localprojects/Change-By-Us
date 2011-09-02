@@ -417,8 +417,12 @@ app_page.features.push(function(app){
 							if(d[i].image_id != -1 && d[i].image_id != 'null' && d[i].image_id){
 								tempitem.find('div.west').prepend('<img src="'+this.app_page.media_root+'images/'+ d[i].image_id % 10 +'/'+ d[i].image_id +'.png"></img>');
 							}
-							tempitem.find('div.west').append('<input type="checkbox" name="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" class="mark-official-checkbox" id="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" />');
-							tempitem.find('div.west').append('<label for="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'">Official</label>');
+							
+							//Only show the checkbox if official resources are supported
+							if (e.data.app.app_page.data.supported_features.is_official_supported) {
+						    	tempitem.find('div.west').append('<input type="checkbox" name="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" class="mark-official-checkbox" id="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'" />');
+    							tempitem.find('div.west').append('<label for="mark-official-checkbox-'+(this.components.resources_pagination.data.offset+i)+'">Official</label>');
+    						}
 							
 							if(d[i].contact_name && d[i].contact_name.length) {  
 								tempitem.find('div.west').append('<p><strong>Name:</strong> '+d[i].contact_name+'</p>');

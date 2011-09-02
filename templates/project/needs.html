@@ -31,15 +31,15 @@
     {% raw %}
     <script id="add_vol_need_tmpl" type="text/html">
         <span>
-        <strong>YES</strong>, I can help {{ need_request }}
+        <strong>YES</strong>, I can help {{ request }}
 
-        {{#has_reason}}
-            for {{ need_reason }}
-        {{/has_reason}}
+        {{#reason}}
+            for {{ reason }}
+        {{/reason}}
 
-        {{#has_date}}
-            on {{ need_date }}
-        {{/has_date}}
+        {{#display_date}}
+            on {{ display_date }}
+        {{/display_date}}
         </span>
     </script>
 
@@ -48,6 +48,9 @@
         <a href="/useraccount/{{id}}" title="{{display_name}}">
             <img src="{{avatar}}" alt="{{display_name}}"></img>
         </a>
+        {{/volunteers}}
+        {{^volunteers}}
+        <span>Be the first to volunteer!</span>
         {{/volunteers}}
     </script>
     {% endraw %}
