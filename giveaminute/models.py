@@ -192,6 +192,16 @@ class Volunteer (Base):
     member = relationship('User')
 
 
+class CommunityLeader (Base):
+    __tablename__ = 'community_leader'
+
+    id = Column(Integer, primary_key=True)
+    display_name = Column(String(256))
+    title = Column(String(256))
+    image_path = Column(String(256))
+    order = Column(Integer)
+
+
 if __name__ == '__main__':
     import sys
     import os

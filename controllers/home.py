@@ -121,13 +121,19 @@ class Home(Controller):
 
         news = self.getNewsItems()
 
-        if (bool(features['is_display_leaderboard'])):
+        if (bool(features.get('is_display_leaderboard'))):
             leaderboardProjects = mProject.getLeaderboardProjects(self.db, 6)
             self.template_data['leaderboard'] = leaderboardProjects
 
-        if (bool(features['is_display_featured_projects'])):
+        if (bool(features.get('is_display_featured_projects'))):
             featuredProjects = mProject.getFeaturedProjects(self.db, 6)
             self.template_data['featured_projects'] = featuredProjects
+
+        if (bool(features.get('is_community_leaders_displayed'))):
+            community_leaders = self.orm.query(models.CommunityLeader) \
+                .order_by('`order`') \
+                .all()
+            self.template_data['community_leaders'] = community_leaders
 
         self.template_data['locations'] = locations
         self.template_data['all_ideas'] = allIdeas
@@ -515,4 +521,3 @@ class Home(Controller):
         else:
             log.error("*** direct message missing to user_id or message")
             return False
-
