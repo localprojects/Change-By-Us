@@ -124,7 +124,7 @@ tc.gam.project_widgets.need_form = function(options) {
                     finish:function(merlin, dom) {
                       var d = new Date();
                       var needDate = d.getFullYear()
-                              + '-' + merlin.current_step.inputs.month.dom.val()
+                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val())+1)
                               + '-' + merlin.current_step.inputs.day.dom.val();
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         type:'volunteer',
