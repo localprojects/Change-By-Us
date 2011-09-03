@@ -45,7 +45,7 @@ http://www.opensource.org/licenses/mit-license.php
 		if ( defaultOption && defaultOption !== '' ) {
 			selectedLabel = defaultOption;
 		} else {
-			selectedLabel = $dropdown.find('option[selected="selected"]').text() || $dropdown.find('option:eq(0)').text();
+			selectedLabel = $dropdown.find('option[selected]').text() || $dropdown.find('option:eq(0)').text();
 		}
 		
 		// Append the toggle hyperlink to the new DropDown container
