@@ -82,14 +82,28 @@ tc.gam.project_widgets.need_form = function(options) {
                         }
                     },
                     init:function(merlin, dom) {
-                        if (need_id) {
-                            tc.jQ.each(merlin.current_step.inputs, function(key, input) {
-                                if (input.default_val) {
-                                    input.dom.val(input.default_val);
-                                }
-                            });
-                            merlin.validate(true);
+                      // Set up the fancy jqDropDown for month
+                      tc.jQ('#vol-month').jqDropDown({
+                        toggleBtnName:'ddSelect',
+                        optionListName:'ddSelectOptions',
+                        containerName:'ddSelectContainer',
+                        optionChanged: function() {
+                          if ($('#vol-month').val() === 'Month') {
+                            $('.ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
+                          } else {
+                            $('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+                          }
                         }
+                      });
+
+                      if (need_id) {
+                        tc.jQ.each(merlin.current_step.inputs, function(key, input) {
+                          if (input.default_val) {
+                            input.dom.val(input.default_val);
+                          }
+                        });
+                        merlin.validate(true);
+                      }
                     },
                     finish:function(merlin, dom) {
                       var d = new Date();
