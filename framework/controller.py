@@ -70,6 +70,9 @@ class Controller (object):
         #set city-specific map options
         self.template_data['map'] = Config.get('map')
 
+        #set the supported features
+        self.template_data['features'] = Config.get('features')
+
         # user
         self.setUserObject()
 
@@ -112,7 +115,7 @@ class Controller (object):
 
     def setUserObject(self):
         self.user = None
-        if hasattr(self.session, 'user_id'):
+        if hasattr(self.session, 'user_id') and self.session.user_id is not None:
             # todo would like to move gam-specific user attrs out of controller module
             try:
                 self.user = mUser.User(self.db, self.session['user_id'])

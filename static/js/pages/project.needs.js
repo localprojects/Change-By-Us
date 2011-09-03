@@ -7,7 +7,8 @@ tc.gam.project_widgets.needs = function(options) {
     var dom = options.dom,
         modal = options.app.components.modal,
         merlin,
-        MAX_AVATARS = 5;
+        MAX_AVATARS = 5,
+        self = {};
 
     /**
      * Function: isProjectMember
@@ -22,13 +23,19 @@ tc.gam.project_widgets.needs = function(options) {
             (options.user && options.user.is_leader)
         );
     };
+    
+    self._getUserId = function() {
+        if (options.user && options.user.u_id) {
+            return options.user.u_id;
+        }
+        return null;
+    };
 
-    var mergeDetailTemplate = function(need_details) {
+    self._getDetailTemplateData = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
                 month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
-            }, need_details),
-            $html;
+            }, need_details);
         
         //Special cases for the first volunteer
         new_details.has_first = need_details.volunteers.length > 0;
@@ -39,51 +46,83 @@ tc.gam.project_widgets.needs = function(options) {
             new_details.avatar = function() { return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; };
         }
         
-        $html = ich.need_detail_tmpl(new_details);
-        dom.find('.need-stack').html($html);
+        return new_details;
+    };
+
+    var mergeDetailTemplate = function(need_details) {
+        var new_details = self._getDetailTemplateData(need_details),
+            $html = ich.need_detail_tmpl(new_details);
         
+        dom.find('.need-stack').html($html);
         updateNeed(need_details);
     };
     
-    var isVolunteer = function(id, volunteers) {
+    self._isVolunteer = function(id, volunteers) {
         var i;
         for (i=0; i<volunteers.length; i++) {
-            if (parseInt(volunteers[i].id, 10) === id) {
+            if (parseInt(volunteers[i].id, 10) === parseInt(id, 10)) {
                 return true;
             }
         }
         return false;
     };
-
-    var updateNeed = function(need) {
-        var $needContainer = dom.find('.need[data-id|="'+need.id+'"]'),
-            $volCount = $needContainer.find('.volunteer-count strong'),
-            $progress = $needContainer.find('.progress'),
-            $avatars = $needContainer.find('.vol-avatars'),
-            $helpLink = $needContainer.find('.help-link'),
-            $avatar_html, 
-            quantityNum = parseInt(need.quantity, 10);
-        
-        $volCount.text(need.volunteers.length);
-        $progress.width($progress.parent().width() * need.volunteers.length / quantityNum);
-        
-        $helpLink.removeClass('active in-process complete');
-        if (quantityNum === need.volunteers.length) {
-            $helpLink.addClass('complete').text('Complete!');
+    
+    self._getVolunteerButtonConfig = function(vols_needed, volunteers, user_id) {
+        if (self._isVolunteer(user_id, volunteers)) {
+            return { cssClass: 'in-process', text: 'I am helping'};
         } else {
-            if (isVolunteer(options.user.u_id, need.volunteers)) {
-                $helpLink.addClass('in-process').text('I am helping');
+            if (vols_needed !== volunteers.length) {
+                return { cssClass: 'active', text: 'I can help'};
             } else {
-                $helpLink.addClass('active').text('I can help');
+                return { cssClass: 'complete', text: 'Complete!'};
             }
         }
+    };
+    
+
+    self._getProgressElementWidth = function(max_width, cur_vol_count, vols_needed) {
+        return max_width * cur_vol_count / vols_needed;
+    };
+    
+
+    self._updateVolunteerProgress = function($container, need) {
+        var $volCount = $container.find('.volunteer-count strong'),
+            $progress = $container.find('.progress'),
+            quantityNum = parseInt(need.quantity, 10);
+
+        $volCount.text(need.volunteers.length);
+        $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
+    };
+    
+    self._updateVolunteerButton = function($container, need) {
+        var $helpLink = $container.find('.help-link'),
+            quantityNum = parseInt(need.quantity, 10),
+            buttonConfig = self._getVolunteerButtonConfig(quantityNum, need.volunteers, self._getUserId());
+
+        $helpLink
+            .removeClass('active in-process complete')
+            .addClass(buttonConfig.cssClass)
+            .text(buttonConfig.text);
+    };
+    
+    self._updateSmallAvatars = function($container, need) {
+        var $avatars = $container.find('.vol-avatars'),
+            $avatar_html;
         
         $avatar_html = ich.need_vol_avatars({
             volunteers: need.volunteers.slice(0, MAX_AVATARS),
             avatar: function() {return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; }
         });
-        
+
         $avatars.html($avatar_html);
+    };
+    
+    var updateNeed = function(need) {
+        var $needContainer = tc.jQ('.need[data-id|="'+need.id+'"]');
+        
+        self._updateVolunteerProgress($needContainer, need);
+        self._updateVolunteerButton($needContainer, need);
+        self._updateSmallAvatars($needContainer, need);
     };
 
     /**
@@ -95,7 +134,7 @@ tc.gam.project_widgets.needs = function(options) {
 
         tc.jQ.ajax({
             url: '/rest/v1/needs/'+need.id+'/volunteers/',
-            data: { member_id: options.user.u_id },
+            data: { member_id: self._getUserId() },
             dataType: 'json',
             type: 'POST',
             success: function(volunteer_data, status, xhr) {
@@ -181,8 +220,12 @@ tc.gam.project_widgets.needs = function(options) {
 
                             if (!$this.hasClass('disabled')) {
                                 volunteer(need, message, function(data){
+                                    if (self.need_id) {
+                                        tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
+                                    } else {
+                                        tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
+                                    }
                                     modal.hide();
-                                    tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
                                 });
                             }
                         });
@@ -201,13 +244,7 @@ tc.gam.project_widgets.needs = function(options) {
     var showModal = function(need) {
         //use ICanHaz to fill in the modal content template
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
-            h = ich.add_vol_need_tmpl({
-                need_request: need.request,
-                need_date: need.date,
-                need_reason: need.reason,
-                has_reason: function() { if (need.reason) return true; else return false; },
-                has_date: function() { if (need.date) return true; else return false; }
-            });
+            h = ich.add_vol_need_tmpl(need);
 
         $needDetailsContent.html(h);
 
@@ -233,7 +270,8 @@ tc.gam.project_widgets.needs = function(options) {
                 //We're going to show one need in detail, so go fetch
                 //the details and setup the template
                 if (id) {
-                    tc.gam.project_data.getNeedDetails(id, function(need_details) {
+                    self.need_id = id;
+                    tc.gam.project_data.getNeedDetails(self.need_id, function(need_details) {
                         mergeDetailTemplate(need_details);
                         dom.show();
                     });
@@ -246,7 +284,7 @@ tc.gam.project_widgets.needs = function(options) {
             }
         });
 
-        dom.find('.help-link').live('click', function(event) {
+        tc.jQ('.help-link').die('click').live('click', function(event) {
             event.preventDefault();
             
             var $this = tc.jQ(this),
@@ -266,4 +304,6 @@ tc.gam.project_widgets.needs = function(options) {
     };
 
     bindEvents();
+    
+    return self;
 };

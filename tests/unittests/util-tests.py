@@ -238,12 +238,19 @@ class UtilTests (unittest.TestCase):
         l = [[1, 2], ["a", "b"], [(3,), (4,)]]
         self.assertEqual(util.flatten(l), [1, 2, "a", "b", 3, 4])
 
-    def test_localUtcoffset_returns_the_difference_in_hours_between_local_time_and_utc(self):
+    def test_localUtcoffset_returns_a_negative_difference_in_hours_between_local_time_and_utc(self):
         localtime = datetime.datetime(2011, 8, 22, 18, 54, 23, 456)
         utctime = datetime.datetime(2011, 8, 23, 2, 54, 23, 567)
 
         local_utcoffset = util.local_utcoffset(localtime, utctime)
         self.assertEqual(local_utcoffset, -8)
+
+    def test_localUtcoffset_returns_a_positive_difference_in_hours_between_local_time_and_utc(self):
+        localtime = datetime.datetime(2011, 8, 23, 10, 54, 23, 456)
+        utctime = datetime.datetime(2011, 8, 23, 2, 54, 23, 567)
+
+        local_utcoffset = util.local_utcoffset(localtime, utctime)
+        self.assertEqual(local_utcoffset, 8)
 
 
 class Test_date_prettifiter (unittest.TestCase):
