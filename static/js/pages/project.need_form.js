@@ -138,7 +138,19 @@ tc.gam.project_widgets.need_form = function(options) {
     var mergeTemplate = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
-                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
+                monthOpts: function() { 
+                  var needDate = this.date ? (new Date(this.date).getUTCMonth()) : '';
+                  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                  var options = '';
+                  for (var i = 0; i < months.length; i++) {
+                    if (i === needDate) {
+                      options += '<option value="' + i + '" selected>' + months[i] + '</option>';
+                    } else {
+                      options += '<option value="' + i + '">' + months[i] + '</option>';
+                    }
+                  }
+                  return options;
+                }
             }, need_details),
             $html = ich.need_form_tmpl(new_details);
             
