@@ -73,6 +73,7 @@ http://www.opensource.org/licenses/mit-license.php
 					// An option from the list was clicked
 					if( $target.parents().filter($optList).length ) {
 						$toggleLink.data( 'index', $optList.find('li').index( $target.parent() ) ).focus();
+            SelectRelatedOpt($dropdown, $target);
 						UpdateValue( $toggleLink, $target, settings );
 					} 
 					
@@ -230,6 +231,7 @@ http://www.opensource.org/licenses/mit-license.php
 				
 				$selectedOption = $optList.find('li:eq(' + $this.data( 'index') + ') a:eq(0)');
 				$selectedOption.addClass('selected');
+        SelectRelatedOpt($dropdown, $selectedOption);
 				UpdateValue( $this, $selectedOption, settings );
 			} else {
 				// Prevent the default hyperlink behavior and stops delegation on event from the body;
@@ -238,7 +240,20 @@ http://www.opensource.org/licenses/mit-license.php
 			}
 		});
 	};
-	
+
+  // Select the associated option in the hidden list for form submit purpose
+  function SelectRelatedOpt($dropdown, $target) {
+    var selOptVal = $target.attr('rel') || $target.text();
+
+    $dropdown.find('option').each(function() {
+      var $this = $(this);
+
+      if($this.val() === selOptVal || $this.text() === selOptVal ) {
+        $this.trigger('select').attr('selected', true);
+      }
+
+    });
+  }
 	
 	// Update the text value of the toggle hyperlink
 	function UpdateValue( $target, $elem, settings ) {
