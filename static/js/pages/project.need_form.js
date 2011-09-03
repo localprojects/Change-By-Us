@@ -67,7 +67,23 @@ tc.gam.project_widgets.need_form = function(options) {
                         },
                         'month': {
                           selector: '#vol-month',
-                          validators: ['required'],
+                          validators: function(input, element, step, submit) {
+
+                            if (submit) {
+                              $('.ddSelect').addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
+                            }
+
+                            if ($(element).val() === 'Month') {
+                              $('.ddSelect').addClass('not-valid').removeClass('valid');
+                              return {
+                                valid: false,
+                                errors: ['Must select a month.']
+                              }
+                            } else {
+                              $('.ddSelect').addClass('valid').removeClass('not-valid');
+                              return {valid: true}
+                            }
+                          },
                           hint:'Month'
                         },
                         'day': {
