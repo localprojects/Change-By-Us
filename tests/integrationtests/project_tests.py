@@ -24,6 +24,7 @@ class Test_ProjectController_showProject (AppSetupMixin, TestCase):
 
     def tearDown(self):
         mProject.Project = self.real_GamProject
+        super(Test_ProjectController_showProject, self).tearDown()
 
 
     @istest
