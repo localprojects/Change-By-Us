@@ -538,7 +538,7 @@ tc.merlin.prototype.validate = function(on_submit) {
         
         // If validators is a function, call that, otherwise use tc.validate()
         if (tc.jQ.isFunction(this.current_step.inputs[i].validators)) {
-            temp_valid = this.current_step.inputs[i].validators(this, this.current_step.inputs[i].dom, this.current_step);
+            temp_valid = this.current_step.inputs[i].validators(this, this.current_step.inputs[i].dom, this.current_step, on_submit);
         } else {
             temp_valid = tc.validate(this.current_step.inputs[i].dom, this.current_step.inputs[i].validators);
         }

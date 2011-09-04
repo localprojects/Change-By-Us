@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.1.54, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: cbu
+-- Host: localhost    Database: cbu_blank
 -- ------------------------------------------------------
 -- Server version	5.1.54-1ubuntu4
 
@@ -956,4 +956,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-09-02 14:59:57
+-- Dump completed on 2011-09-04  3:13:03
