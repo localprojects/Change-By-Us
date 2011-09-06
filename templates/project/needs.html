@@ -31,31 +31,29 @@
     {% raw %}
     <script id="add_vol_need_tmpl" type="text/html">
         <span>
-        <strong>YES</strong>, I can help {{ need_request }}
+        <strong>YES</strong>, I can help {{ request }}
 
-        {{#has_reason}}
-            for {{ need_reason }}
-        {{/has_reason}}
+        {{#reason}}
+            for {{ reason }}
+        {{/reason}}
 
-        {{#has_datetime}}
-            on {{ need_datetime }}
-        {{/has_datetime}}
+        {{#display_date}}
+            on {{ display_date }}
+        {{/display_date}}
         </span>
     </script>
-    {% endraw %}
 
     <script id="need_vol_avatars" type="text/html">
-        {{ '{{#volunteers}}' }}
-        <a href="/useraccount/{{ '{{id}}' }}">
-            {{ '{{#use_avatar}}' }}
-            <img src="{{ d.template_data.media_root }}{{ '{{avatar_path}}' }}"></img>
-            {{ '{{/use_avatar}}' }}
-            {{ '{{#use_generic}}' }}
-            <img src="/static/images/thumb_genAvatar.jpg"></img>
-            {{ '{{/use_generic}}' }}
+        {{#volunteers}}
+        <a href="/useraccount/{{id}}" title="{{display_name}}">
+            <img src="{{avatar}}" alt="{{display_name}}"></img>
         </a>
-        {{ '{{/volunteers}}' }}
+        {{/volunteers}}
+        {{^volunteers}}
+        <span>Be the first to volunteer!</span>
+        {{/volunteers}}
     </script>
+    {% endraw %}
 
     <div class="template-content modal-content user-volunteer-modal merlin">
         <div class="step user-volunteer">
@@ -81,5 +79,8 @@
         </div>
     </div>
 </div>
+
+{% include 'project/need_form.html' %}
+{% include 'project/volunteer_need.html' %}
 
 <script src="/static/js/pages/project.needs.js"></script>

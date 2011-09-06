@@ -3,8 +3,9 @@ tc.gam = tc.gam || {};
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.need_form = function(options) {
-    tc.util.log('project.needs');
-    var dom = options.dom;
+    tc.util.log('project.need_form');
+    var dom = options.dom,
+        self = {};
 
     /**
      * Function: initMerlin
@@ -67,7 +68,23 @@ tc.gam.project_widgets.need_form = function(options) {
                         },
                         'month': {
                           selector: '#vol-month',
-                          validators: ['required'],
+                          validators: function(input, element, step, submit) {
+
+                            if (submit) {
+                              $('.ddSelect').addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
+                            }
+
+                            if ($(element).val() === 'Month') {
+                              $('.ddSelect').addClass('not-valid').removeClass('valid');
+                              return {
+                                valid: false,
+                                errors: ['Must select a month.']
+                              }
+                            } else {
+                              $('.ddSelect').addClass('valid').removeClass('not-valid');
+                              return {valid: true}
+                            }
+                          },
                           hint:'Month'
                         },
                         'day': {
@@ -82,19 +99,33 @@ tc.gam.project_widgets.need_form = function(options) {
                         }
                     },
                     init:function(merlin, dom) {
-                        if (need_id) {
-                            tc.jQ.each(merlin.current_step.inputs, function(key, input) {
-                                if (input.default_val) {
-                                    input.dom.val(input.default_val);
-                                }
-                            });
-                            merlin.validate(true);
+                      // Set up the fancy jqDropDown for month
+                      tc.jQ('#vol-month').jqDropDown({
+                        toggleBtnName:'ddSelect',
+                        optionListName:'ddSelectOptions',
+                        containerName:'ddSelectContainer',
+                        optionChanged: function() {
+                          if ($('#vol-month').val() === 'Month') {
+                            $('.ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
+                          } else {
+                            $('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+                          }
                         }
+                      });
+
+                      if (need_id) {
+                        tc.jQ.each(merlin.current_step.inputs, function(key, input) {
+                          if (input.default_val) {
+                            input.dom.val(input.default_val);
+                          }
+                        });
+                        merlin.validate(true);
+                      }
                     },
                     finish:function(merlin, dom) {
                       var d = new Date();
                       var needDate = d.getFullYear()
-                              + '-' + merlin.current_step.inputs.month.dom.val()
+                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val())+1)
                               + '-' + merlin.current_step.inputs.day.dom.val();
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         type:'volunteer',
@@ -138,7 +169,19 @@ tc.gam.project_widgets.need_form = function(options) {
     var mergeTemplate = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
-                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
+                monthOpts: function() { 
+                  var needDate = this.date ? (new Date(this.date).getUTCMonth()) : '';
+                  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                  var options = '';
+                  for (var i = 0; i < months.length; i++) {
+                    if (i === needDate) {
+                      options += '<option value="' + i + '" selected>' + months[i] + '</option>';
+                    } else {
+                      options += '<option value="' + i + '">' + months[i] + '</option>';
+                    }
+                  }
+                  return options;
+                }
             }, need_details),
             $html = ich.need_form_tmpl(new_details);
             
@@ -184,4 +227,5 @@ tc.gam.project_widgets.need_form = function(options) {
     };
 
     bindEvents();
+    return self;
 };

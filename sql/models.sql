@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.44, for apple-darwin8.11.1 (i386)
+-- MySQL dump 10.13  Distrib 5.1.54, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: cbu
+-- Host: localhost    Database: cbu_blank
 -- ------------------------------------------------------
--- Server version	5.1.44
+-- Server version	5.1.54-1ubuntu4
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -30,8 +30,17 @@ CREATE TABLE `attachments` (
   `media_id` varchar(64) DEFAULT NULL COMMENT 'The id of the media relative to its type (e.g., the Youtube ID, or uploaded file id, ...)',
   `type` varchar(64) NOT NULL DEFAULT 'file',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM AUTO_INCREMENT=72 DEFAULT CHARSET=latin1 COMMENT='Comment attachment descriptions';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `attachments`
+--
+
+LOCK TABLES `attachments` WRITE;
+/*!40000 ALTER TABLE `attachments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `attachments` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `badwords`
@@ -46,8 +55,17 @@ CREATE TABLE `badwords` (
   `warn_words` text,
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `badwords`
+--
+
+LOCK TABLES `badwords` WRITE;
+/*!40000 ALTER TABLE `badwords` DISABLE KEYS */;
+/*!40000 ALTER TABLE `badwords` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `beta_invite_code`
@@ -65,6 +83,15 @@ CREATE TABLE `beta_invite_code` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `beta_invite_code`
+--
+
+LOCK TABLES `beta_invite_code` WRITE;
+/*!40000 ALTER TABLE `beta_invite_code` DISABLE KEYS */;
+/*!40000 ALTER TABLE `beta_invite_code` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `beta_invite_request`
 --
 
@@ -79,6 +106,41 @@ CREATE TABLE `beta_invite_request` (
   PRIMARY KEY (`beta_invite_request_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `beta_invite_request`
+--
+
+LOCK TABLES `beta_invite_request` WRITE;
+/*!40000 ALTER TABLE `beta_invite_request` DISABLE KEYS */;
+/*!40000 ALTER TABLE `beta_invite_request` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `community_leader`
+--
+
+DROP TABLE IF EXISTS `community_leader`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `community_leader` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `display_name` varchar(256) DEFAULT NULL,
+  `title` varchar(256) DEFAULT NULL,
+  `image_path` varchar(256) DEFAULT NULL,
+  `order` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `community_leader`
+--
+
+LOCK TABLES `community_leader` WRITE;
+/*!40000 ALTER TABLE `community_leader` DISABLE KEYS */;
+/*!40000 ALTER TABLE `community_leader` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `direct_message`
@@ -98,6 +160,15 @@ CREATE TABLE `direct_message` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `direct_message`
+--
+
+LOCK TABLES `direct_message` WRITE;
+/*!40000 ALTER TABLE `direct_message` DISABLE KEYS */;
+/*!40000 ALTER TABLE `direct_message` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `facebook_user`
 --
 
@@ -113,6 +184,15 @@ CREATE TABLE `facebook_user` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `facebook_user`
+--
+
+LOCK TABLES `facebook_user` WRITE;
+/*!40000 ALTER TABLE `facebook_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `facebook_user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `featured_project`
 --
 
@@ -126,6 +206,15 @@ CREATE TABLE `featured_project` (
   PRIMARY KEY (`ordinal`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `featured_project`
+--
+
+LOCK TABLES `featured_project` WRITE;
+/*!40000 ALTER TABLE `featured_project` DISABLE KEYS */;
+/*!40000 ALTER TABLE `featured_project` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `idea`
@@ -149,8 +238,17 @@ CREATE TABLE `idea` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`idea_id`),
   FULLTEXT KEY `description` (`description`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `idea`
+--
+
+LOCK TABLES `idea` WRITE;
+/*!40000 ALTER TABLE `idea` DISABLE KEYS */;
+/*!40000 ALTER TABLE `idea` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `images`
@@ -167,8 +265,17 @@ CREATE TABLE `images` (
   PRIMARY KEY (`id`),
   KEY `app` (`app`),
   KEY `mirrored` (`mirrored`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `images`
+--
+
+LOCK TABLES `images` WRITE;
+/*!40000 ALTER TABLE `images` DISABLE KEYS */;
+/*!40000 ALTER TABLE `images` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `keyword`
@@ -183,6 +290,15 @@ CREATE TABLE `keyword` (
   PRIMARY KEY (`keyword`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `keyword`
+--
+
+LOCK TABLES `keyword` WRITE;
+/*!40000 ALTER TABLE `keyword` DISABLE KEYS */;
+/*!40000 ALTER TABLE `keyword` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `location`
@@ -203,6 +319,40 @@ CREATE TABLE `location` (
   PRIMARY KEY (`location_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `location`
+--
+
+LOCK TABLES `location` WRITE;
+/*!40000 ALTER TABLE `location` DISABLE KEYS */;
+/*!40000 ALTER TABLE `location` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `migrate_version`
+--
+
+DROP TABLE IF EXISTS `migrate_version`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `migrate_version` (
+  `repository_id` varchar(250) NOT NULL,
+  `repository_path` text,
+  `version` int(11) DEFAULT NULL,
+  PRIMARY KEY (`repository_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migrate_version`
+--
+
+LOCK TABLES `migrate_version` WRITE;
+/*!40000 ALTER TABLE `migrate_version` DISABLE KEYS */;
+INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',4);
+/*!40000 ALTER TABLE `migrate_version` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project`
@@ -226,8 +376,17 @@ CREATE TABLE `project` (
   `organization` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   FULLTEXT KEY `title` (`title`,`description`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project`
+--
+
+LOCK TABLES `project` WRITE;
+/*!40000 ALTER TABLE `project` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project__idea`
@@ -245,6 +404,15 @@ CREATE TABLE `project__idea` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `project__idea`
+--
+
+LOCK TABLES `project__idea` WRITE;
+/*!40000 ALTER TABLE `project__idea` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project__idea` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `project__project_resource`
 --
 
@@ -258,6 +426,15 @@ CREATE TABLE `project__project_resource` (
   PRIMARY KEY (`project_id`,`project_resource_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project__project_resource`
+--
+
+LOCK TABLES `project__project_resource` WRITE;
+/*!40000 ALTER TABLE `project__project_resource` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project__project_resource` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project__user`
@@ -276,6 +453,15 @@ CREATE TABLE `project__user` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `project__user`
+--
+
+LOCK TABLES `project__user` WRITE;
+/*!40000 ALTER TABLE `project__user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project__user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `project_endorsement`
 --
 
@@ -289,6 +475,15 @@ CREATE TABLE `project_endorsement` (
   PRIMARY KEY (`project_id`,`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project_endorsement`
+--
+
+LOCK TABLES `project_endorsement` WRITE;
+/*!40000 ALTER TABLE `project_endorsement` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_endorsement` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project_invite`
@@ -312,6 +507,15 @@ CREATE TABLE `project_invite` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `project_invite`
+--
+
+LOCK TABLES `project_invite` WRITE;
+/*!40000 ALTER TABLE `project_invite` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_invite` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `project_leader`
 --
 
@@ -326,6 +530,15 @@ CREATE TABLE `project_leader` (
   PRIMARY KEY (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project_leader`
+--
+
+LOCK TABLES `project_leader` WRITE;
+/*!40000 ALTER TABLE `project_leader` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_leader` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project_link`
@@ -344,8 +557,17 @@ CREATE TABLE `project_link` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_link_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project_link`
+--
+
+LOCK TABLES `project_link` WRITE;
+/*!40000 ALTER TABLE `project_link` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_link` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project_message`
@@ -366,17 +588,58 @@ CREATE TABLE `project_message` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `file_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`project_message_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `project_need_volunteers`
+-- Dumping data for table `project_message`
 --
 
-DROP TABLE IF EXISTS `project_need_volunteers`;
+LOCK TABLES `project_message` WRITE;
+/*!40000 ALTER TABLE `project_message` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_message` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `project_need`
+--
+
+DROP TABLE IF EXISTS `project_need`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `project_need_volunteers` (
+CREATE TABLE `project_need` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` varchar(10) DEFAULT NULL,
+  `request` varchar(64) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  `description` text,
+  `project_id` int(11) NOT NULL,
+  `date` date DEFAULT NULL,
+  `time` varchar(32) DEFAULT NULL,
+  `duration` varchar(64) DEFAULT NULL,
+  `address` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `project_id` (`project_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project_need`
+--
+
+LOCK TABLES `project_need` WRITE;
+/*!40000 ALTER TABLE `project_need` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_need` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `project_need_volunteer`
+--
+
+DROP TABLE IF EXISTS `project_need_volunteer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_need_volunteer` (
   `need_id` int(11) NOT NULL,
   `member_id` int(11) NOT NULL,
   PRIMARY KEY (`need_id`,`member_id`),
@@ -385,23 +648,13 @@ CREATE TABLE `project_need_volunteers` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `project_needs`
+-- Dumping data for table `project_need_volunteer`
 --
 
-DROP TABLE IF EXISTS `project_needs`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `project_needs` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `type` varchar(10) DEFAULT NULL,
-  `item_needed` varchar(64) DEFAULT NULL,
-  `num_needed` int(11) DEFAULT NULL,
-  `description` text,
-  `project_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `project_id` (`project_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+LOCK TABLES `project_need_volunteer` WRITE;
+/*!40000 ALTER TABLE `project_need_volunteer` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_need_volunteer` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `project_resource`
@@ -435,6 +688,15 @@ CREATE TABLE `project_resource` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `project_resource`
+--
+
+LOCK TABLES `project_resource` WRITE;
+/*!40000 ALTER TABLE `project_resource` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_resource` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `site_feedback`
 --
 
@@ -456,6 +718,15 @@ CREATE TABLE `site_feedback` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `site_feedback`
+--
+
+LOCK TABLES `site_feedback` WRITE;
+/*!40000 ALTER TABLE `site_feedback` DISABLE KEYS */;
+/*!40000 ALTER TABLE `site_feedback` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sms_stopped_phone`
 --
 
@@ -468,6 +739,15 @@ CREATE TABLE `sms_stopped_phone` (
   PRIMARY KEY (`phone`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sms_stopped_phone`
+--
+
+LOCK TABLES `sms_stopped_phone` WRITE;
+/*!40000 ALTER TABLE `sms_stopped_phone` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sms_stopped_phone` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `tasks`
@@ -484,8 +764,17 @@ CREATE TABLE `tasks` (
   `frequency` varchar(20) DEFAULT NULL,
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`task_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tasks`
+--
+
+LOCK TABLES `tasks` WRITE;
+/*!40000 ALTER TABLE `tasks` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tasks` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `twitter_user`
@@ -502,6 +791,15 @@ CREATE TABLE `twitter_user` (
   UNIQUE KEY `twitter_id` (`twitter_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `twitter_user`
+--
+
+LOCK TABLES `twitter_user` WRITE;
+/*!40000 ALTER TABLE `twitter_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `twitter_user` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `unauthenticated_user`
@@ -522,6 +820,15 @@ CREATE TABLE `unauthenticated_user` (
   PRIMARY KEY (`auth_guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `unauthenticated_user`
+--
+
+LOCK TABLES `unauthenticated_user` WRITE;
+/*!40000 ALTER TABLE `unauthenticated_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `unauthenticated_user` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `user`
@@ -554,8 +861,17 @@ CREATE TABLE `user` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `phone` (`phone`)
-) ENGINE=MyISAM AUTO_INCREMENT=0;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user`
+--
+
+LOCK TABLES `user` WRITE;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `user__user_group`
@@ -571,6 +887,15 @@ CREATE TABLE `user__user_group` (
   PRIMARY KEY (`user_id`,`user_group_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user__user_group`
+--
+
+LOCK TABLES `user__user_group` WRITE;
+/*!40000 ALTER TABLE `user__user_group` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user__user_group` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `user_group`
@@ -590,6 +915,15 @@ CREATE TABLE `user_group` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `user_group`
+--
+
+LOCK TABLES `user_group` WRITE;
+/*!40000 ALTER TABLE `user_group` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_group` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `web_session`
 --
 
@@ -603,6 +937,15 @@ CREATE TABLE `web_session` (
   UNIQUE KEY `session_id` (`session_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `web_session`
+--
+
+LOCK TABLES `web_session` WRITE;
+/*!40000 ALTER TABLE `web_session` DISABLE KEYS */;
+/*!40000 ALTER TABLE `web_session` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -613,4 +956,4 @@ CREATE TABLE `web_session` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-08-17 15:26:14
+-- Dump completed on 2011-09-04  3:13:03

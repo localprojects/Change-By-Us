@@ -169,13 +169,16 @@ class Need (Base):
 
     volunteers = association_proxy('need_volunteers', 'member')
 
+    @property
+    def display_date(self):
+        """Returns dates that end in '1st' or '22nd' and the like."""
+        return util.make_pretty_date(self.date)
+
+    @property
     def reason(self):
-        """
-        'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
-
-        This is the reason.
-
-        """
+        """'We need {{ quantity }} volunteer {{ request }} for {{ reason }}.'
+            This is the reason."""
+        # TODO: We need a way of constructing the reason.
         return ''
 
 
@@ -187,6 +190,16 @@ class Volunteer (Base):
 
     need = relationship('Need', backref='need_volunteers')
     member = relationship('User')
+
+
+class CommunityLeader (Base):
+    __tablename__ = 'community_leader'
+
+    id = Column(Integer, primary_key=True)
+    display_name = Column(String(256))
+    title = Column(String(256))
+    image_path = Column(String(256))
+    order = Column(Integer)
 
 
 if __name__ == '__main__':

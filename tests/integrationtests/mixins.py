@@ -1,3 +1,5 @@
+import os
+import sys
 from paste.fixture import TestApp
 from lib import web
 from mock import Mock
@@ -36,13 +38,15 @@ class DbFixturesMixin (object):
         db.query(sql)
 
     def install_db_structure(self, db):
-        models_sql = open('/home/mjumbewu/Programming/cfa/cbu/sql/models.sql').read()
+        curdir = os.path.dirname(__file__)
+        models_sql = open(os.path.join(curdir, '../../sql/models.sql')).read()
         for sql_statement in models_sql.split(';'):
             db.query(sql_statement)
 
     def load_db_fixtures(self, db, *fixtures):
+        curdir = os.path.dirname(__file__)
         for fixture in fixtures:
-            fixture_sql = open('/home/mjumbewu/Programming/cfa/cbu/tests/integrationtests/sql/' + fixture).read()
+            fixture_sql = open(os.path.join(curdir, 'sql', fixture)).read()
             for sql_statement in fixture_sql.split(';'):
                 db.query(sql_statement)
 
@@ -62,12 +66,20 @@ class WebPySetupMixin (object):
                        'REQUEST_METHOD': ''}
         web.ctx.headers = []
 
+        # If we don't clear out the args, they're going to creep into the web
+        # context as input parameters.
+        self.__args = sys.argv
+        sys.argv = []
+
         super(WebPySetupMixin, self).setUp()
 
     def tearDown(self):
         # Dont leave the web context dirty for the next test.
         from lib.web import utils
+        print '***clearnign?'
         utils.ThreadedDict.clear_all()
+
+        sys.argv = self.__args
 
         super(WebPySetupMixin, self).tearDown()
 
@@ -100,11 +112,15 @@ class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
                 return value
 
         self.session = ObjectDict()
+        self.session.session_id = 1
+
+        self.__real_get_session = SessionHolder.get_session
         SessionHolder.get_session = Mock(return_value=self.session)
 
 
     def tearDown(self):
         self.logout()
+        SessionHolder.get_session = self.__real_get_session
         super(AppSetupMixin, self).tearDown()
 
     def logout(self):

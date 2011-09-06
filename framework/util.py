@@ -386,15 +386,25 @@ def deobfuscate(token):
             numbers.append(token[i])
     return "".join(numbers)
 
-def local_utcoffset(localtime=datetime.datetime.now(), 
+def total_seconds(timedelta):
+    """
+    Return the total number of seconds in a datetime.timedelta object. This is a
+    reimplementation of timedelta.total_seconds(), which is new in Python 2.7.
+    This version is not as accurate as it disregards microseconds (they're
+    unnecessary in this context).
+    """
+    seconds = timedelta.seconds + (timedelta.days * 24 * 60 * 60)
+    return seconds
+
+def local_utcoffset(localtime=datetime.datetime.now(),
                     utctime=datetime.datetime.utcnow()):
     """
     Returns the utcoffset between the localtime and utctime parameters. If the
     default parameters are left alone, the result will be the utcoffset of the
     computer's time zone.
     """
-    seconds = (localtime - utctime).total_seconds()
-    hours = int(round(seconds / 60 / 60))
+    seconds = total_seconds(localtime - utctime)
+    hours = int(round(float(seconds) / 60 / 60))
     return hours
 
 def format_time(seconds):
@@ -516,7 +526,7 @@ def get_fake_session(controller):
         log.warning("--> get_fake_session: key path (%s) doesnt exist" % path)
         return {}
     try:
-        raw = open(path).read()	
+        raw = open(path).read()
         pickled = base64.decodestring(raw)
         fake_session = pickle.loads(pickled)
     except Exception, e:
@@ -620,10 +630,32 @@ def flatten(l, ltypes=(list, tuple)):
                 l[i:i + 1] = l[i]
         i += 1
     return ltype(l)
-    
+
 def getBit(i, index):
     return ((i & (1 << index)) != 0)
 
 def setBit(i, index):
     mask = 1 << index
     return(i | mask)
+
+def make_pretty_date(raw_date):
+    """Returns dates that end in '1st' or '22nd' and the like."""
+    display_date = raw_date.strftime('%B %d')
+
+    # Get rid of the 0 in single-digit days (e.g. "May 02" -> "May 2")
+    if display_date[-2] == '0':
+        display_date = display_date[:-2] + display_date[-1]
+
+    # Add on the suffix
+    if display_date[-2] == '1':
+        display_date += 'th'
+    elif display_date[-1] == '1':
+        display_date += 'st'
+    elif display_date[-1] == '2':
+        display_date += 'nd'
+    elif display_date[-1] == '3':
+        display_date += 'rd'
+    else:
+        display_date += 'th'
+
+    return display_date

@@ -93,9 +93,9 @@
                 center_lat: {{ d.template_data.map['center_lat'] }},
                 center_lon: {{ d.template_data.map['center_lon'] }}
             };
-            
-            console.log('##########', app_page.data.map);
-            
+
+            app_page.data.supported_features = {{d.template_data.features|json}};
+
             // for tooltip only
             var media_root = '{{d.template_data.media_root}}';
 
@@ -125,7 +125,11 @@
                   <!-- Main navigation -->
                     <ul class="navbar clearfix">
                         <li class="home {{ d.config.site.city_id }}">
-                            <a href="/"><span>{{ d.config.site.name }}</span></a>
+                            <a href="/"><span>{{ d.config.site.name }}</span>
+                                {% if d.app_mode in ('beta', 'live-beta') %}
+                                    <img class="site-beta-label" src="/static/images/button_beta.png" alt="Beta">
+                                {% endif %}
+                            </a>
                         </li>
 
                         <li class="lang">
@@ -149,7 +153,9 @@
                         </li>
 
                         <li class="news-about">
-                            <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
+                            {% if d.config.blog_host %}
+                                <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
+                            {% endif %}
                             <a href="/about">{{ _('About') }}</a>
                         </li>
 
@@ -263,7 +269,7 @@
                 <span class="supported fancy-caps">{{ _('Supported <span>by</span>') }}</span>
                 <a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
                 <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
-                <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>
+<!--                <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>-->
             </div>
 
             <!-- Basic links and search -->
@@ -271,7 +277,9 @@
                 <div class="box">
                     <ul class="sitemap">
                         <li><a href='/about'>{{ _('About') }} {{ d.config.site.name }}</a></li>
-                        <li><a href='{{ d.config.blog_host }}'>{{ _('News') }}</a></li>
+                        {% if d.config.blog_host %}
+                            <li><a href='{{ d.config.blog_host }}'>{{ _('News') }}</a></li>
+                        {% endif %}
                         <li><a href='/tou#community-policy'>{{ _('Community Policy') }}</a></li>
                         <li class="sitemap-tou"><a href='/tou'>{{ _('Terms of Use') }}</a></li>
                         <li><a href='/tou#privacy'>{{ _('Privacy Policy') }}</a></li>
@@ -470,6 +478,27 @@
             document.getElementById('fb-root').appendChild(e);
         }());
     </script>
+
+    {% if d.template_data.features['is_feedback_form_available'] %}
+        <script type="text/javascript" charset="utf-8">
+            var is_ssl = ("https:" == document.location.protocol);
+            var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
+            document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+
+        <script type="text/javascript" charset="utf-8">
+            var feedback_widget_options = {};
+
+            feedback_widget_options.display = "overlay";
+            feedback_widget_options.company = "{{ d.config.getsatisfaction.company }}";
+            feedback_widget_options.placement = "left";
+            feedback_widget_options.color = "#23211F";
+            feedback_widget_options.style = "idea";
+            feedback_widget_options.product = "{{ d.config.getsatisfaction.product }}";
+            feedback_widget_options.limit = "3";
+            var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
+        </script>
+    {% endif %}
 
     {% block javascript_footer %}{% endblock %}
 
