@@ -89,7 +89,7 @@ tc.gam.project_widgets.need_form = function(options) {
                         },
                         'day': {
                           selector: '#vol-day',
-                          validators: ['required'],
+                          validators: ['required', 'numeric'],
                           hint:'Day'
                         },
                         'time': {
