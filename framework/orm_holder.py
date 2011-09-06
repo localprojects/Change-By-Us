@@ -13,11 +13,11 @@ class OrmHolder (object):
         it when necessary.
         """
         from lib import web
-        if not hasattr(web.ctx, 'orm') or web.ctx.orm is None:
+        if not hasattr(web.config, 'orm') or web.config.orm is None:
             config = self.get_db_config()
             engine = self.get_db_engine(config)
-            web.ctx.orm = self.get_orm(engine)
-        return web.ctx.orm
+            web.config.orm = self.get_orm(engine)
+        return web.config.orm
 
 
     def get_db_config(self):
