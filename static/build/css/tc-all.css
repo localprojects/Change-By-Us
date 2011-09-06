@@ -1035,7 +1035,8 @@ button {
 
 input[type="text"],
 input[type="password"],
-textarea {
+textarea,
+a.ddSelect {
     background-color: #fff;
     border: 1px solid #b9b8b6;
     color: #A8A6A3;
@@ -1057,7 +1058,8 @@ input[type="submit"],
 input[type="text"],
 input[type="password"],
 button,
-textarea {
+textarea,
+a.ddSelect {
     -khtml-border-radius: 2px;
     -moz-border-radius: 2px;
     -moz-transition: 75ms ease-in;
@@ -1070,7 +1072,8 @@ textarea {
 }
 
 div.continent input[type="text"],
-div.continent input[type="password"] {
+div.continent input[type="password"],
+div.continent a.ddSelect {
     height: 28px
 }
 
@@ -1094,7 +1097,9 @@ div.continent button:focus,
 div.continent button:hover,
 div.seafloor input:hover,
 div.seafloor input:focus,
-.rounded-button:hover {
+.rounded-button:hover,
+div.continent a.ddSelect:hover,
+div.continent a.ddtoggle:focus {
     -moz-box-shadow: 1px 1px 4px #cfcecc;
     -webkit-box-shadow: 1px 1px 4px #cfcecc;
     box-shadow: 1px 1px 4px #cfcecc;
@@ -1350,14 +1355,17 @@ some_nowhitespace {
 /* validation styles */
 
 div.continent input.has-been-focused.valid,
-div.continent textarea.has-been-focused.valid {
+div.continent textarea.has-been-focused.valid,
+div.continent a.ddSelect.has-been-focused.valid {
     border-color: #52b312
 }
 
 div.continent input.has-been-focused.not-valid.has-w-submit,
 div.continent textarea.has-been-focused.not-valid.has-attempted-submit,
 div.continent input.has-attempted-submit.not-valid,
-div.continent textarea.has-attempted-submit.not-valid {
+div.continent textarea.has-attempted-submit.not-valid,
+div.continent a.ddSelect.has-been-focused.not-valid.has-w-submit,
+div.continent a.ddSelect.has-attempted-submit.not-valid {
     border-color: #d95c5c
 }
 
@@ -1618,7 +1626,7 @@ a.login-twitter span {
     color: #fff !important;
 }
 
-.ddToggle {
+.ddToggle, .ddSelect {
     -khtml-border-radius: 2px;
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
@@ -1634,7 +1642,7 @@ a.login-twitter span {
     z-index: 1;
 }
 
-.ddToggle span {
+.ddToggle span, .ddSelect span {
     /* The dropdown arrow in the toggle box */
     background: url(../images/control_expandArrow_sprite.png) 0px 0px no-repeat;
     display: block;
@@ -2045,7 +2053,8 @@ MERLIN          |     `  /   `.
 
 .merlin input[type="text"],
 .merlin input[type="password"],
-.merlin textarea {
+.merlin textarea,
+.merlin a.ddSelect {
     float: left
 }
 
@@ -8880,7 +8889,7 @@ CONVErSATION SECTION
 }
 
 .volunteer-body p .read-more {
-  background: url(../../images/control_readmore.png) 62px 7px no-repeat #55504b;
+  background: url(../../images/control_readmore.png) 95% 50% no-repeat #55504b;
   color: #FFF8DD;
   text-transform: uppercase;
   font-size: 10px;
@@ -9126,6 +9135,10 @@ CONVErSATION SECTION
   color: #AF9D43;
 }
 
+.add-need-step .form-pane {
+  overflow: visible;
+}
+
 .add-need .fields .row.vol-cont {
   font-size: 26px;
   font-weight: bold;
@@ -9151,7 +9164,9 @@ CONVErSATION SECTION
   margin-top: 5px;
 }
 
-.add-need input, .add-need textarea {
+.add-need input,
+.add-need textarea,
+.add-need a.ddSelect {
   background-color: #F5EFC7;
   border-color: #E8E19B;
 }
@@ -9228,11 +9243,101 @@ CONVErSATION SECTION
 
 #vol-day {
   width: 60px;
+  margin-left: 10px;
 }
 
 #vol-time {
   width: 80px;
 }
+
+/* dropdown */
+
+.ddSelectContainer {
+  position: relative;
+  float:left;
+  margin-top:10px;
+}
+
+.ddSelectContainer,
+.ddSelectContainer a {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.ddSelectContainer a {
+    cursor: default;
+    display: block;
+    text-decoration: none;
+}
+
+.ddSelectOptions {
+    -khtml-border-radius: 2px;
+    -moz-border-radius: 2px;
+    -moz-box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    -webkit-border-radius: 2px;
+    -webkit-box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    /* The dropdown option list */
+    background-color: #fff;
+    border: 1px solid #E8E19B;
+    border-radius: 2px;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    left: 0;
+    list-style-type: none;
+    margin: 0;
+    max-width: 378px;
+    padding: 0;
+    position: absolute;
+    top: -1px;
+    z-index: 999;
+}
+
+.ddSelectOptions li a {
+    background-color: #F5EEC7 !important;
+    cursor: pointer;
+    padding: 9px 8px 7px;
+}
+
+.ddSelectOptions li:first-child a {
+    cursor: default;
+    font-style: italic;
+    color: #A8A6A3 !important;
+}
+
+.ddSelectContainer  a.selected {
+    background-color: #FAEB9A !important;
+}
+
+ .ddSelect {
+    -khtml-border-radius: 2px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    /* The dropdown toggle button */
+    background-color: #fff;
+    border: 1px solid #b9b8b6;
+    border-radius: 2px;
+    display: block;
+    height: 22px;
+    max-width: 362px;
+    padding: 10px 8px 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.ddSelectContainer .ddSelect {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
+.ddSelectContainer .ddSelect.has-been-focused.valid {
+  color: #55504b;
+  font-family: "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, Times, Times New Roman, serif;
+  font-style: normal;
+}
+
+.ddSelect:hover span {
+    background-position: 0 -6px
+}
+
 
 /********************   End ./static/css/project/needs.css ********************/
 

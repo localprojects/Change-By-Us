@@ -112,11 +112,15 @@ class AppSetupMixin (DbFixturesMixin, WebPySetupMixin):
                 return value
 
         self.session = ObjectDict()
+        self.session.session_id = 1
+
+        self.__real_get_session = SessionHolder.get_session
         SessionHolder.get_session = Mock(return_value=self.session)
 
 
     def tearDown(self):
         self.logout()
+        SessionHolder.get_session = self.__real_get_session
         super(AppSetupMixin, self).tearDown()
 
     def logout(self):

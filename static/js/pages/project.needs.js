@@ -23,6 +23,13 @@ tc.gam.project_widgets.needs = function(options) {
             (options.user && options.user.is_leader)
         );
     };
+    
+    self._getUserId = function() {
+        if (options.user && options.user.u_id) {
+            return options.user.u_id;
+        }
+        return null;
+    };
 
     self._getDetailTemplateData = function(need_details) {
         var new_details = tc.jQ.extend(true, {
@@ -90,7 +97,7 @@ tc.gam.project_widgets.needs = function(options) {
     self._updateVolunteerButton = function($container, need) {
         var $helpLink = $container.find('.help-link'),
             quantityNum = parseInt(need.quantity, 10),
-            buttonConfig = self._getVolunteerButtonConfig(quantityNum, need.volunteers, options.user.u_id);
+            buttonConfig = self._getVolunteerButtonConfig(quantityNum, need.volunteers, self._getUserId());
 
         $helpLink
             .removeClass('active in-process complete')
@@ -127,7 +134,7 @@ tc.gam.project_widgets.needs = function(options) {
 
         tc.jQ.ajax({
             url: '/rest/v1/needs/'+need.id+'/volunteers/',
-            data: { member_id: options.user.u_id },
+            data: { member_id: self._getUserId() },
             dataType: 'json',
             type: 'POST',
             success: function(volunteer_data, status, xhr) {

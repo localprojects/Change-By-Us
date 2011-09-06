@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.1.54, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: cbu
+-- Host: localhost    Database: cbu_blank
 -- ------------------------------------------------------
 -- Server version	5.1.54-1ubuntu4
 
@@ -114,6 +114,32 @@ CREATE TABLE `beta_invite_request` (
 LOCK TABLES `beta_invite_request` WRITE;
 /*!40000 ALTER TABLE `beta_invite_request` DISABLE KEYS */;
 /*!40000 ALTER TABLE `beta_invite_request` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `community_leader`
+--
+
+DROP TABLE IF EXISTS `community_leader`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `community_leader` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `display_name` varchar(256) DEFAULT NULL,
+  `title` varchar(256) DEFAULT NULL,
+  `image_path` varchar(256) DEFAULT NULL,
+  `order` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `community_leader`
+--
+
+LOCK TABLES `community_leader` WRITE;
+/*!40000 ALTER TABLE `community_leader` DISABLE KEYS */;
+/*!40000 ALTER TABLE `community_leader` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -324,7 +350,7 @@ CREATE TABLE `migrate_version` (
 
 LOCK TABLES `migrate_version` WRITE;
 /*!40000 ALTER TABLE `migrate_version` DISABLE KEYS */;
-INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',3);
+INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',4);
 /*!40000 ALTER TABLE `migrate_version` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -588,10 +614,10 @@ CREATE TABLE `project_need` (
   `quantity` int(11) DEFAULT NULL,
   `description` text,
   `project_id` int(11) NOT NULL,
-  `address` varchar(256) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `time` varchar(32) DEFAULT NULL,
   `duration` varchar(64) DEFAULT NULL,
+  `address` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `project_id` (`project_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -930,4 +956,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-08-30 14:21:56
+-- Dump completed on 2011-09-04  3:13:03
