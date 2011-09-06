@@ -77,7 +77,7 @@
 						title:{
 							selector:'input.name',
 							validators:['max-50','min-3','required'],
-							hint:'e.g. More Trees in NYC',
+							hint:'e.g. More Greenways Downtown',
 							counter:{
 								selector:'.charlimit.title',
 								limit:50
