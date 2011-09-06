@@ -153,7 +153,9 @@
                         </li>
 
                         <li class="news-about">
-                            <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
+                            {% if d.config.blog_host %}
+                                <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
+                            {% endif %}
                             <a href="/about">{{ _('About') }}</a>
                         </li>
 
@@ -275,7 +277,9 @@
                 <div class="box">
                     <ul class="sitemap">
                         <li><a href='/about'>{{ _('About') }} {{ d.config.site.name }}</a></li>
-                        <li><a href='{{ d.config.blog_host }}'>{{ _('News') }}</a></li>
+                        {% if d.config.blog_host %}
+                            <li><a href='{{ d.config.blog_host }}'>{{ _('News') }}</a></li>
+                        {% endif %}
                         <li><a href='/tou#community-policy'>{{ _('Community Policy') }}</a></li>
                         <li class="sitemap-tou"><a href='/tou'>{{ _('Terms of Use') }}</a></li>
                         <li><a href='/tou#privacy'>{{ _('Privacy Policy') }}</a></li>
