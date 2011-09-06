@@ -237,7 +237,7 @@
 									}
 									
 									tc.jQ(".user-account-nav img.avatar").attr('src',app.app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');	
-									window.location.reload(true);
+									//window.location.reload(true);
 								}
 							});
 						}
