@@ -141,6 +141,7 @@ class Mailable():
                     time.sleep(1)
                     pass
                 else:
+                    complete = True
                     logging.error("Failed to send digest email '%s'. Quit after %s tries." % (subject, str(maxRetries)))
         
 
