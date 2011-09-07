@@ -143,6 +143,10 @@ class Mailable():
                 else:
                     complete = True
                     logging.error("Failed to send digest email '%s'. Quit after %s tries." % (subject, str(maxRetries)))
+                    
+                    return False
+        
+        return True
         
 
         
@@ -567,9 +571,9 @@ where pm.message_type='member_comment'
                 body += "\n\nDevelopment Information:\nRecipients are: %s\n" % ', '.join(recipients)
 
             logging.info('Digest recipients: %s' % recipients)
-            self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body, maxRetries=maxRetries)
+            isSent = self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body, maxRetries=maxRetries)
             
-            if (digest.get('digest_id')):
+            if (digest.get('digest_id') and isSent):
                 # Means that we've been called from a database record
                 # could also have done digest.__class__.__name__ == 'Storage'
                 self.setDigestAsSent(digest.digest_id)
