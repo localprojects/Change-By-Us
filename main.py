@@ -63,22 +63,32 @@ def load_sqla(handler):
     # TODO: This should be `engine = models.get_db_engine()`.  See the note in
     #       giveaminute.models for more information.
     #
-    log.debug("*** Loading the ORM")
-    orm = OrmHolder().orm
+    class OrmContextManager (object):
+        def __enter__(self):
+            log.debug("*** Loading the ORM")
+            self.orm = OrmHolder().orm
+            return self.orm
 
-    try:
-        return handler()
-    except web.HTTPError:
-       orm.commit()
-       raise
-    except:
-        orm.rollback()
-        raise
-    finally:
-        orm.commit()
-        # If the above alone doesn't work, uncomment
-        # the following line:
-        #orm.expunge_all()
+        def __exit__(self, e_type=None, e_val=None, e_tb=None):
+            if e_type == web.HTTPError:
+                log.debug("*** web.HTTPError with the ORM")
+                orm.commit()
+            elif e_type:
+                log.debug("*** Other exception with the ORM")
+                self.orm.rollback()
+            else:
+                log.debug("*** Finishing up with the ORM")
+                self.orm.commit()
+#            log.debug("*** Closing the ORM")
+#            log.debug("*** Closed?: %r" % self.orm.connection().closed)
+#            self.orm.close()
+#            self.orm.connection().close()
+#            log.debug("*** Closed?: %r" % self.orm.connection().closed)
+
+    with OrmContextManager() as orm:
+        result = handler()
+
+    return result
 
 #def cmd_show_quota():
 #    ses = boto.connect_ses()
@@ -144,6 +154,5 @@ if __name__ == "__main__":
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
-#    app.add_processor(load_sqla)
+    app.add_processor(load_sqla)
     app.run()
-

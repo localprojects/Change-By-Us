@@ -393,7 +393,7 @@ class RestController (Controller):
         response_data = method_handler(*args, **kwargs)
 
         serializer = self.get_serializer()
-        response_data = serializer.serialize_model(response_data)
+        response_data = serializer.serialize(response_data)
 
         return response_data
 
@@ -655,16 +655,31 @@ class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     ordering = models.Need.id
     access_rules = NonProjectAdminReadOnly()
 
+    def instance_to_dict(self, need):
+        need_dict = super(NeedsList, self).instance_to_dict(need)
+
+        raw_date = need_dict['date']
+        if raw_date:
+            need_dict['display_date'] = need.display_date
+
+        return need_dict
+
 
 class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
     model = models.Need
     access_rules = NonProjectAdminReadOnly()
 
     def user2dict(self, user):
+        from giveaminute.project import userNameDisplay
+        from giveaminute.project import isFullLastName
+
         user_dict = super(NeedInstance, self).instance_to_dict(user)
 
         # Add in some of that non-orm goodness
         user_dict['avatar_path'] = user.avatar_path
+        user_dict['display_name'] = userNameDisplay(
+            user.first_name, user.last_name, user.affiliation,
+            isFullLastName(user.group_membership_bitmask))
 
         # Remove sensitive information
         del user_dict['password']
@@ -677,6 +692,10 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
         need_dict['volunteers'] = [
             self.user2dict(volunteer)
             for volunteer in need.volunteers]
+
+        raw_date = need_dict['date']
+        if raw_date:
+            need_dict['display_date'] = need.display_date
 
         return need_dict
 

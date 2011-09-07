@@ -1367,7 +1367,7 @@ tc.merlin.prototype.validate = function(on_submit) {
         
         // If validators is a function, call that, otherwise use tc.validate()
         if (tc.jQ.isFunction(this.current_step.inputs[i].validators)) {
-            temp_valid = this.current_step.inputs[i].validators(this, this.current_step.inputs[i].dom, this.current_step);
+            temp_valid = this.current_step.inputs[i].validators(this, this.current_step.inputs[i].dom, this.current_step, on_submit);
         } else {
             temp_valid = tc.validate(this.current_step.inputs[i].dom, this.current_step.inputs[i].validators);
         }
@@ -1589,6 +1589,7 @@ tc.merlin.prototype.handlers.invalid = function (e, d) {
         e.data.me.options.next_button.removeClass('enabled').addClass('disabled');
     }
 };
+
 /********************   End ./static/js/tc.gam.merlin.js   ********************/
 
 
@@ -2790,7 +2791,10 @@ tc.gam.project = function(app, dom) {
         'needs': tc.gam.project_widgets.needs(
             tc.jQ.extend({ name: 'needs', dom: dom.find('.project-section.needs') }, widget_options)
         ),
-        'need-form': tc.gam.project_widgets.need_form(
+        'need-detail': tc.gam.project_widgets.needs(
+            tc.jQ.extend({ name: 'need-detail', dom: dom.find('.project-section.need-detail') }, widget_options)
+        ),
+       'need-form': tc.gam.project_widgets.need_form(
             tc.jQ.extend({ name: 'need-form', dom: dom.find('.project-section.need-form') }, widget_options)
         ),
         'infopane': tc.gam.project_widgets.infopane(
@@ -2827,6 +2831,7 @@ tc.gam.project = function(app, dom) {
     // Create an object to handle widget visibility events
     tc.gam.widgetVisibilityHandler();
 };
+
 /********************   End ./static/js/tc.gam.project.js  ********************/
 
 

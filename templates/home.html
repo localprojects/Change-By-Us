@@ -225,7 +225,7 @@
             <h2>{{ _('<a href="/search#projects">Join a project</a> or <a href="/create">Start your own project</a>.') }}</h2>
         </div>
 
-        {% if d.template_data.homepage_is_display_leaderboard %}
+        {% if d.template_data.features_is_display_leaderboard %}
             <div class="box box-leaderboard">
                 <h3>{{ _('Top <strong>%(length)s Projects</strong>')|format(length=d.template_data.leaderboard|length) }}<a href="/leaderboard" class="leaderboard-link">{{ _('See the leaderboard') }}</a></h3>
                 <ol class="leaderboard">
@@ -264,7 +264,7 @@
             </div>
         {% endif %}
 
-        {% if d.homepage_is_display_featured_projects %}
+        {% if d.features_is_display_featured_projects %}
             <div class="box box-leaderboard">
                 <h3>{{ _('Featured <strong>Projects</strong>') }}</h3>
                 <ol class="leaderboard">
@@ -303,36 +303,23 @@
         {% endif %}
 
         <!-- Who is listening? -->
-        {% if d.config.homepage.who_is_listening %}
+        {% if d.config.features.is_community_leaders_displayed %}
           <div class="box box-whoslistening">
               <h1><strong>{{ _('Who&#39;s listening?') }}</strong></h1>
               <h2>{{ _('A network of city leaders is ready to hear your <a href="/search#ideas">ideas</a> and provide guidance for your <a href="/search#projects">projects</a>.') }}</h2>
               <ul class="clearfix">
+                {% for community_leader in d.template_data.community_leaders %}
                   <li>
-                      <img src="/static/images/thumb_lshepherd.jpg" alt="" width="200" height="150" />
-                      <p class="name">Lisbeth Shepherd</p>
-                      <p class="job">Founder &amp; Executive Director, Green City Force Corps</p>
+                      <img src="/static/{{ community_leader.image_path }}" alt="{{ community_leader.display_name|e }}" width="200" height="150" />
+                      <p class="name">{{ community_leader.display_name|e }}</p>
+                      <p class="job">{{ community_leader.title|e }}</p>
                   </li>
-                  <li>
-                      <img src="/static/images/thumb_sgoldsmith.jpg" alt="" width="200" height="150" />
-                      <p class="name">Stephen Goldsmith</p>
-                      <p class="job">Deputy Mayor for Operations,<br />The City of New York</p>
-                  </li>
-                  <li>
-                      <img src="/static/images/thumb_dshabazz.jpg" alt="" width="200" height="150" />
-                      <p class="name">Diallo Shabazz</p>
-                      <p class="job">Director of Green Career Development, Solar One</p>
-                  </li>
-                  <li class="every-fourth">
-                      <img src="/static/images/thumb_cholloway.jpg" alt="" width="200" height="150" />
-                      <p class="name">Cas Holloway</p>
-                      <p class="job">Commissioner, NYC Department of Environmental Protection</p>
-                  </li>
+                {% endfor %}
               </ul>
 
               <div style="clear:both"></div>
           </div>
-    {% endif %}
+        {% endif %}
 
         {% if d.config.homepage.news %}
           <div class="box box-news">
@@ -369,6 +356,18 @@
         </div>
         <a class='close' href="#"><span>{{ _('close') }}</span></a>
     </div>
+
+    <div class="template-content modal-content beta-splash">
+        <h1>It's a Beta!</h1>
+        <div>
+            <p><strong>What does that mean?</strong><br />
+            Think of it as walking into an active construction site. Features may break while we're working.<p>
+            <p>If you have any questions, thoughts or concerns, email us at <span class="nospam infomail"></span>.
+                You can also follow us on Twitter at <a href="http://twitter.com/#!/changebyus">@changebyus</a> for updates, and thanks for stopping by.</p>
+        </div>
+
+        <a class='close' href="#"><span>close</span></a>
+    </div>
 </div>
 {% endblock continent %}
 
@@ -379,6 +378,7 @@
         {% endif %}
     </script>
     <script type="text/javascript" src='/static/js/pages/home.js'></script>
+    {% if d.template_data.features['is_show_beta_splash'] %}
+        <script type="text/javascript" src='/static/js/pages/beta_splash.js'></script>
+    {% endif %}
 {% endblock page_js %}
-
-

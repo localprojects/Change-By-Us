@@ -10,7 +10,8 @@ tc.gam.project_widgets.related_resources = function(options){
             resource_counter: dom.find(".counter"),
             resources_table: dom.find("table.resources-list"),
             empty_box: dom.find(".empty-state-box")
-        };
+        },
+        self = {};
         
     var handlers = {
         resources_loaded: function(data, ts, xhr) {
@@ -176,4 +177,6 @@ tc.gam.project_widgets.related_resources = function(options){
     });
     
     getRelatedResources();
+    
+    return self;
 };

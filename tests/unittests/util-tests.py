@@ -1,6 +1,7 @@
 import unittest, sys, os, re
 import datetime
 import mock
+from nose.tools import *
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 import framework.util as util
@@ -113,7 +114,7 @@ class UtilTests (unittest.TestCase):
         self.assertEqual(util.singlespace("  a very   spacey sentence    "), " a very spacey sentence ")
 
     def test_remove_linebreaks(self):
-        s = """ a  spacey   
+        s = """ a  spacey
         sentence   on many lines  """
         self.assertEqual(util.singlespace(s), " a spacey sentence on many lines ")
 
@@ -237,13 +238,47 @@ class UtilTests (unittest.TestCase):
         l = [[1, 2], ["a", "b"], [(3,), (4,)]]
         self.assertEqual(util.flatten(l), [1, 2, "a", "b", 3, 4])
 
-    def test_localUtcoffset_returns_the_difference_in_hours_between_local_time_and_utc(self):
+    def test_localUtcoffset_returns_a_negative_difference_in_hours_between_local_time_and_utc(self):
         localtime = datetime.datetime(2011, 8, 22, 18, 54, 23, 456)
         utctime = datetime.datetime(2011, 8, 23, 2, 54, 23, 567)
-        
+
         local_utcoffset = util.local_utcoffset(localtime, utctime)
         self.assertEqual(local_utcoffset, -8)
 
+    def test_localUtcoffset_returns_a_positive_difference_in_hours_between_local_time_and_utc(self):
+        localtime = datetime.datetime(2011, 8, 23, 10, 54, 23, 456)
+        utctime = datetime.datetime(2011, 8, 23, 2, 54, 23, 567)
 
-if __name__ == "__main__":
-    unittest.main()
+        local_utcoffset = util.local_utcoffset(localtime, utctime)
+        self.assertEqual(local_utcoffset, 8)
+
+
+class Test_date_prettifiter (unittest.TestCase):
+
+    @istest
+    def should_append_th_to_teens(self):
+        from datetime import date
+        result = util.make_pretty_date(date(2011, 12, 11))
+        assert_equal(result[-4:], '11th')
+        result = util.make_pretty_date(date(2011, 12, 12))
+        assert_equal(result[-4:], '12th')
+        result = util.make_pretty_date(date(2011, 12, 13))
+        assert_equal(result[-4:], '13th')
+
+    @istest
+    def should_append_st_to_ones(self):
+        from datetime import date
+        result = util.make_pretty_date(date(2011, 12, 1))
+        assert_equal(result[-4:], ' 1st')
+        result = util.make_pretty_date(date(2011, 12, 21))
+        assert_equal(result[-4:], '21st')
+        result = util.make_pretty_date(date(2011, 12, 31))
+        assert_equal(result[-4:], '31st')
+
+    @istest
+    def should_append_st_to_twos(self):
+        from datetime import date
+        result = util.make_pretty_date(date(2011, 12, 2))
+        assert_equal(result[-3:], '2nd')
+        result = util.make_pretty_date(date(2011, 12, 22))
+        assert_equal(result[-4:], '22nd')

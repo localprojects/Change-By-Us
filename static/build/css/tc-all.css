@@ -455,6 +455,11 @@ ul.navbar li.home {
     width: 210px;
 }
 
+ul.navbar li.home img.site-beta-label {
+    margin-left: 163px;
+    margin-top: -8px;
+}
+
 ul.navbar li.home.nyc {
     background: url(../images/changebyus-lockup-nyc-smaller.png) 0 10px no-repeat transparent;
     width: 225px;
@@ -1030,7 +1035,8 @@ button {
 
 input[type="text"],
 input[type="password"],
-textarea {
+textarea,
+a.ddSelect {
     background-color: #fff;
     border: 1px solid #b9b8b6;
     color: #A8A6A3;
@@ -1052,7 +1058,8 @@ input[type="submit"],
 input[type="text"],
 input[type="password"],
 button,
-textarea {
+textarea,
+a.ddSelect {
     -khtml-border-radius: 2px;
     -moz-border-radius: 2px;
     -moz-transition: 75ms ease-in;
@@ -1065,7 +1072,8 @@ textarea {
 }
 
 div.continent input[type="text"],
-div.continent input[type="password"] {
+div.continent input[type="password"],
+div.continent a.ddSelect {
     height: 28px
 }
 
@@ -1089,7 +1097,9 @@ div.continent button:focus,
 div.continent button:hover,
 div.seafloor input:hover,
 div.seafloor input:focus,
-.rounded-button:hover {
+.rounded-button:hover,
+div.continent a.ddSelect:hover,
+div.continent a.ddtoggle:focus {
     -moz-box-shadow: 1px 1px 4px #cfcecc;
     -webkit-box-shadow: 1px 1px 4px #cfcecc;
     box-shadow: 1px 1px 4px #cfcecc;
@@ -1345,14 +1355,17 @@ some_nowhitespace {
 /* validation styles */
 
 div.continent input.has-been-focused.valid,
-div.continent textarea.has-been-focused.valid {
+div.continent textarea.has-been-focused.valid,
+div.continent a.ddSelect.has-been-focused.valid {
     border-color: #52b312
 }
 
 div.continent input.has-been-focused.not-valid.has-w-submit,
 div.continent textarea.has-been-focused.not-valid.has-attempted-submit,
 div.continent input.has-attempted-submit.not-valid,
-div.continent textarea.has-attempted-submit.not-valid {
+div.continent textarea.has-attempted-submit.not-valid,
+div.continent a.ddSelect.has-been-focused.not-valid.has-w-submit,
+div.continent a.ddSelect.has-attempted-submit.not-valid {
     border-color: #d95c5c
 }
 
@@ -1613,7 +1626,7 @@ a.login-twitter span {
     color: #fff !important;
 }
 
-.ddToggle {
+.ddToggle, .ddSelect {
     -khtml-border-radius: 2px;
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
@@ -1629,7 +1642,7 @@ a.login-twitter span {
     z-index: 1;
 }
 
-.ddToggle span {
+.ddToggle span, .ddSelect span {
     /* The dropdown arrow in the toggle box */
     background: url(../images/control_expandArrow_sprite.png) 0px 0px no-repeat;
     display: block;
@@ -2040,7 +2053,8 @@ MERLIN          |     `  /   `.
 
 .merlin input[type="text"],
 .merlin input[type="password"],
-.merlin textarea {
+.merlin textarea,
+.merlin a.ddSelect {
     float: left
 }
 
@@ -2420,6 +2434,27 @@ some_nowhitespace {
     margin-top: 0;
 }
 
+/* Beta splash specific modal styles */
+.modal-content.beta-splash {
+    padding:50px 75px 50px 75px;
+}
+
+.modal-content.beta-splash h1 {
+    font-size:60px;
+    color:#e06320;
+    padding-bottom:20px;
+}
+
+.modal-content.beta-splash p {
+    line-height:1.7em;
+}
+
+.modal-content.beta-splash a {
+    color:#e06320;
+}
+
+/* File uploader */
+
 .file-uploader {
     top: 9px;
     left: 108px;
@@ -2515,24 +2550,32 @@ some_nowhitespace {
 }
 
 .members-empty {
-    left: 24px;
-    padding-top: 15px;
-    position: relative;
-    position: relative;
-    top: -52px;
-    width: 525px;
+    line-height: 18px;
+    position: absolute;
+    right: 160px;
+    top: 20px;
+    width: 210px;
+    -khtml-opacity: 0.8;
+    -moz-opacity: 0.8;
+    filter: alpha(opacity=80);
+    opacity: 0.8;
 }
 
-.members-empty .tail {
-    background: url(../images/tooltip_emptyTail.png) top right no-repeat transparent;
-    display: block;
-    height: 16px;
+.members-empty:after{
+    content: '';
     position: absolute;
-    right: 20px;
-    top: 0;
-    width: 128px;
-    z-index: 5;
+    width: 0;
+    height: 0;
+    right: -23px;
+    top: 18px;
+    border: 12px solid;
+    border-color: transparent transparent transparent #D1FDB9;
 }
+
+.members-empty .empty-state-box.big p {
+    font-size: 14px
+}
+
 
 .members-empty .empty-state-box {
     margin-top: 0
@@ -3796,7 +3839,7 @@ some_nowhitespace {
 
 .endorse-button > span > span {
     position: relative;
-    top: 13px;
+    top: 5px;
 }
 
 /* mission --> location */
@@ -7854,6 +7897,7 @@ div.continent.search-results .results-box .hd h2 {
     text-transform: uppercase;
 }
 
+.similar-project .control > a,
 div.continent.search-results .results-box .hd .control a {
     color: #a6a5a4;
     font-size: 11px;
@@ -7864,6 +7908,7 @@ div.continent.search-results .results-box .hd .control a {
     margin-top: 8px;
 }
 
+.similar-project .control > a:hover,
 div.continent.search-results .results-box .hd .control a:hover {
     color: #55504b
 }
@@ -8255,6 +8300,7 @@ div.continent.search-results .results-box .pagination-controls {
 
 }
 
+.similar-project .control > a,
 div.continent.search-results .results-box .pagination-controls .control > a {
     display: inline;
     float: none;
@@ -8642,6 +8688,15 @@ div.continent textarea.message-input:focus {
 .conversation-controls .primary-action button { font-size:18px; padding:3px 5px; margin:1px 0 5px 5px; }
 .conversation-controls .primary-action .ca-btn { margin:-10px 0 0; width:107px; height:76px; background-image:url("../../images/button_postActive_2.png"); }
 
+.conversation-controls .primary-action .ca-btn.disabled {
+    -khtml-opacity: 0.7;
+    -moz-opacity: 0.7;
+    cursor: default;
+    filter: alpha(opacity=70);
+    opacity: 0.7;
+}
+
+
 .conversation-media-modal { padding:30px 90px; height:410px; }
 .conversation-media-modal .carousel { height:100%; }
 .conversation-media-modal .carousel-controls { display:block; width:60px; padding:42px 0 0; text-align:center; text-transform:uppercase; font-size:13px; font-weight:bold; color:#cccbc8; background-position:top center; }
@@ -8855,7 +8910,7 @@ CONVErSATION SECTION
 }
 
 .volunteer-body p .read-more {
-  background: url(../../images/control_readmore.png) 62px 7px no-repeat #55504b;
+  background: url(../../images/control_readmore.png) 95% 50% no-repeat #55504b;
   color: #FFF8DD;
   text-transform: uppercase;
   font-size: 10px;
@@ -8928,7 +8983,7 @@ CONVErSATION SECTION
 .volunteer-details .help-link.complete {
   background-color: #6b580c;
   border: 1px solid #6b580c;
-  color: #6B5800;
+  color: #f0c61e;
   cursor:default;
 }
 
@@ -8971,7 +9026,7 @@ CONVErSATION SECTION
   padding: 10px 20px 10px 20px;
 }
 
-.vol-first, .vol-first span, .vol-avatars {
+.vol-first {
   float: left;
   display: block;
 }
@@ -8981,17 +9036,13 @@ CONVErSATION SECTION
 }
 
 .vol-first {
- width: 40px;
- height: 40px;
+ width: 50px;
+ height: 50px;
  margin-right: 10px;
  border: 1px solid #C7C7C6;
 }
 
 .vol-avatars {
-  margin-top: 10px;
-}
-
-.vol-avatars.teaser {
   margin-top: 0;
   font-size:16px;
   line-height:30px;
@@ -9013,6 +9064,10 @@ CONVErSATION SECTION
   margin-right: 3px;
   float:left;
   border: 1px solid #C7C7C6;
+}
+
+.need-detail .vol-avatars a:first-child {
+    display:none;
 }
 
 .vol-recent-comment {
@@ -9101,6 +9156,10 @@ CONVErSATION SECTION
   color: #AF9D43;
 }
 
+.add-need-step .form-pane {
+  overflow: visible;
+}
+
 .add-need .fields .row.vol-cont {
   font-size: 26px;
   font-weight: bold;
@@ -9117,7 +9176,11 @@ CONVErSATION SECTION
   float:left;
 }
 
-.desc-cont p, time-cont p {
+.add-need .time-cont p {
+  width: 140px;
+}
+
+.desc-cont p {
   font-size: 14px;
 }
 
@@ -9126,7 +9189,9 @@ CONVErSATION SECTION
   margin-top: 5px;
 }
 
-.add-need input, .add-need textarea {
+.add-need input,
+.add-need textarea,
+.add-need a.ddSelect {
   background-color: #F5EFC7;
   border-color: #E8E19B;
 }
@@ -9176,7 +9241,6 @@ CONVErSATION SECTION
 #vol-desc {
   height: 56px;
   width: 400px;
-  float:left;
   margin-top: 10px;
 }
 
@@ -9204,11 +9268,101 @@ CONVErSATION SECTION
 
 #vol-day {
   width: 60px;
+  margin-left: 10px;
 }
 
 #vol-time {
   width: 80px;
 }
+
+/* dropdown */
+
+.ddSelectContainer {
+  position: relative;
+  float:left;
+  margin-top:10px;
+}
+
+.ddSelectContainer,
+.ddSelectContainer a {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.ddSelectContainer a {
+    cursor: default;
+    display: block;
+    text-decoration: none;
+}
+
+.ddSelectOptions {
+    -khtml-border-radius: 2px;
+    -moz-border-radius: 2px;
+    -moz-box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    -webkit-border-radius: 2px;
+    -webkit-box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    /* The dropdown option list */
+    background-color: #fff;
+    border: 1px solid #E8E19B;
+    border-radius: 2px;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    left: 0;
+    list-style-type: none;
+    margin: 0;
+    max-width: 378px;
+    padding: 0;
+    position: absolute;
+    top: -1px;
+    z-index: 999;
+}
+
+.ddSelectOptions li a {
+    background-color: #F5EEC7 !important;
+    cursor: pointer;
+    padding: 9px 8px 7px;
+}
+
+.ddSelectOptions li:first-child a {
+    cursor: default;
+    font-style: italic;
+    color: #A8A6A3 !important;
+}
+
+.ddSelectContainer  a.selected {
+    background-color: #FAEB9A !important;
+}
+
+ .ddSelect {
+    -khtml-border-radius: 2px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    /* The dropdown toggle button */
+    background-color: #fff;
+    border: 1px solid #b9b8b6;
+    border-radius: 2px;
+    display: block;
+    height: 22px;
+    max-width: 362px;
+    padding: 10px 8px 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.ddSelectContainer .ddSelect {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
+.ddSelectContainer .ddSelect.has-been-focused.valid {
+  color: #55504b;
+  font-family: "ff-meta-serif-web-pro-1","ff-meta-serif-web-pro-2", Georgia, Times, Times New Roman, serif;
+  font-style: normal;
+}
+
+.ddSelect:hover span {
+    background-position: 0 -6px
+}
+
 
 /********************   End ./static/css/project/needs.css ********************/
 
