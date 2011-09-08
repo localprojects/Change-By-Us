@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <style type="text/css">
+            * { font-family: arial, helvetica, sans-serif; }
+            p, h1, h2, h3 { color:#000000; }
+        </style>
+    </head>
+    <body>
+        <h1><a href="{{ baseUrl }}project/{{ digest.project_id }}">{{ digest.title }}</a></h1>        
+        <h3>Change by Us Project Update</h3>
+        {%- if digest.active_goal_description -%}
+        <h2>Active goal:</h2>
+        <p>
+            <em>{{ digest.active_goal_description }}</em>
+        </p>
+        {%- endif -%}
+        
+        {%- if digest.members and digest.members|length > 0 -%}
+        <h2>New Members:</h2>
+        <p>
+            Welcome to our new members! <br/>
+            We now have a total of {{ digest.num_members }} members (<a href="{{ baseUrl }}project/{{ digest.project_id }}#show,members">see all</a>).
+        </p>
+        {%- for member in digest.members -%}
+        <p>
+            <a href="{{ baseUrl }}useraccount/{{ member.user_id }}">{{ member.first_name|title }} {{ member.last_name[0]|title }}.</a><br/>
+            joined {{ member.created_datetime.strftime('%m/%d') }}
+        </p>
+        {%- endfor -%}
+        {%- endif -%}
+
+        {%- if digest.messages and digest.messages|length > 0 -%}
+        <h2>Recent Messages:</h2>   
+        {%- for message in digest.messages -%}
+        <p>
+            <a href="{{ baseUrl }}useraccount/{{ message.user_id }}">{{ message.first_name|title }} {{ message.last_name[0]|title }}.</a> <em>on {{ message.created_datetime.strftime('%m/%d/%Y at %I:%M %p') }} wrote:</em><br/>
+            "{{ message.message }}"
+        </p>
+        {%- endfor -%}    
+        {%- endif -%}
+
+        <p>*********************</p>
+        <p>
+            <small>You are subscribed to this update because you are a member of <a href="{{ baseUrl }}project/{{ digest.project_id }}">{{ digest.title }}</a>, a project on <a href="{{ baseUrl }}">Change by Us</a>. News digests only come when there is new news and there is only one per day. If you'd like to unsubscribe, you can change your message preferences on <a href="{{ baseUrl }}useraccount">your account page</a>.</small>
+        </p>
+        <p>
+            <small>&#9829; Thank you for using <a href="{{ baseUrl }}">Change by Us</a> - if you have any questions or need help, please contact us at <a href="mailto:{{ contactEmail }}">{{ contactEmail }}</a>.</small>
+        </p>
+    </body>
+</html>

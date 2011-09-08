@@ -185,6 +185,11 @@ def common_config(func):
         env.local_etc_path = '%(local_path)s/etc' % env
 
         # Todo: these might need to be moved to a common location
+        for conf in env.config_files:
+            conf['local_config_template'] = '%s/%s' % (env.local_etc_path, conf.get('templatename'))
+            conf['local_config_file'] = '%s/%s/%s' % (env.local_path, conf.get('path'), conf.get('filename'))
+
+        # Todo: these might need to be moved to a common location
         # for conf in env.config_files:
         #    conf['local_config_template'] = '%s/%s' % (env.local_etc_path, conf.get('templatename'))
         #    conf['local_config_file'] = '%s/%s/%s' % (env.local_path, conf.get('path'), conf.get('filename'))
@@ -223,14 +228,14 @@ def get_remote_host_info():
 #----- /decorator(s) -----
 
 #----- Utility Functions -----
-def sudo_as(cmd):
+def sudo_as(cmd, **kwargs):
     """
     Perform sudo as a higher-rights user
     """
     temp_user = env.user
     env.user = env.sudo_as
     debug("sudoing command %s as user %s" % (cmd, env.sudo_as))
-    resp = sudo(cmd)
+    resp = sudo(cmd, **kwargs)
     env.user = temp_user
     return resp
      
@@ -525,6 +530,8 @@ def bundle_code():
         local('cd %(tmp_path)s && git pull origin %(branch)s && git checkout %(branch)s' % env)
         local('cd %(tmp_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
         env.release = local('cd %(tmp_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
+        # To be safe, remove any newline characters
+        env.release = re.sub('[\r\n]', '', env.release)
         local('cd %(tmp_path)s && git archive --format=tar %(branch)s > %(tmp_path)s/%(release)s.tar' % env)
         local('cd %(tmp_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == "git-svn":
