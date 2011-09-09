@@ -40,6 +40,7 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/rest/v1/needs/', 'controllers.rest.NeedsList',
             r'/rest/v1/needs/(?P<id>\d+)/', 'controllers.rest.NeedInstance',
             r'/rest/v1/needs/(?P<need_id>\d+)/volunteers/', 'controllers.rest.NeedVolunteerList',
+            
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
             
 
