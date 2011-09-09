@@ -185,7 +185,7 @@ class Controller (object):
 
         return var
 
-    def render(self, template_name, template_values=None, suffix="html", content_type = "text/html"):
+    def render(self, template_name, template_values=None, suffix="html", content_type = "text/html", status="200 OK"):
         """
         Custom renderer for Change by Us templates.
 
@@ -274,8 +274,11 @@ class Controller (object):
         web.header("Content-Type", content_type)
 
         # Debug data.
-        log.info("200: %s (%s)" % (content_type, template_name))
+        log.info("%s: %s (%s)" % (status, content_type, template_name))
         log.info("*** session  = %s" % self.session)
+        
+        # Set status
+        web.ctx.status = status
 
         # Return template and data.
         return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
@@ -414,11 +417,11 @@ class Controller (object):
 
     def forbidden(self, data='Forbidden', headers={}):
         log.error("403: Forbidden: %s" % data)
-        return web.Forbidden(data, headers)
+        return self.render('error', { 'error_code': 403, 'error_message': 'Forbidden.' }, status='403 Forbidden')
 
     def not_found(self, data='Not found', headers={}):
         log.error("404: Page not found")
-        return self.render('error', { 'error_code': 404, 'error_message': 'Not found.' })
+        return self.render('error', { 'error_code': 404, 'error_message': 'Not found.' }, status='404 Not Found')
 
     def redirect(self, url):
         # Set the user object in case it's been created since we initialized
