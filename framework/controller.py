@@ -437,3 +437,7 @@ class Controller (object):
         url = web.ctx.path
         log.info("303: Redirecting to " + url + " (refresh)")
         return web.SeeOther(url)
+
+    def internal_error(self):
+        log.error("500: Internal Server Error")
+        return self.render('error', { 'error_code': 500, 'error_message': 'Internal server error.' }, status='500 Internal Server Error')

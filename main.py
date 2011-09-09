@@ -186,11 +186,5 @@ if __name__ == "__main__":
     # Load SQL?
     app.add_processor(load_sqla)
     
-    def notfound(data):
-        log.info('WTFWTFWTFWTWFFWTWFWFWT')
-        return web.NotFound("Sorry, the page you were looking for was not found.")
-
-    app.NotFound = notfound
-    
     # Finally, run the web.py app!
     app.run()
