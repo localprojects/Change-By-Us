@@ -40,6 +40,7 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/rest/v1/needs/', 'controllers.rest.NeedsList',
             r'/rest/v1/needs/(?P<id>\d+)/', 'controllers.rest.NeedInstance',
             r'/rest/v1/needs/(?P<need_id>\d+)/volunteers/', 'controllers.rest.NeedVolunteerList',
+            
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
             
 
@@ -182,7 +183,7 @@ if __name__ == "__main__":
     # Handle sessions in the database.
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
-    # Load SQL?
+    # Load SQLAlchemy
     app.add_processor(load_sqla)
     
     # Finally, run the web.py app!
