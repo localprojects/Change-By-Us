@@ -203,7 +203,6 @@ class Controller (object):
 
         """
         if template_values is None:
-
             template_values = {}
 
         # Set the user object in case it's been created since we initialized.
@@ -215,14 +214,8 @@ class Controller (object):
 
         config['base_url'] = Config.base_url()
         for key in config:
-
-            log.debug("--- Config: handling key %r" % key)
             if type(config[key]) is dict:
-
-                log.debug("--- Config: key %r is a dictionary: %r" % (key, config[key]))
                 for param in config[key]:
-
-                    log.debug("--- Config: setting %s_%s to %r" % (key, param, config[key][param]))
                     template_values["%s_%s" % (key, param)] = config[key][param]
             else:
                 template_values[key] = config[key]
@@ -425,7 +418,7 @@ class Controller (object):
 
     def not_found(self, data='Not found', headers={}):
         log.error("404: Page not found")
-        return web.NotFound(data)
+        return self.render('error', { 'error_code': 404, 'error_message': 'Not found.' })
 
     def redirect(self, url):
         # Set the user object in case it's been created since we initialized
