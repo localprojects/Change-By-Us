@@ -216,11 +216,21 @@
                         </li>
 
                         <li class="search">
-                            <form action='/search' method='GET'>
-                                <input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
-                                <input type='text' name='main_text' style='display:none;'></input>
-                                <input type='submit' value='' class='searchInput' />
-                            </form>
+                            <div class='search-button'>
+                                <a href='/search'>{{ _('Search') }}</a>
+                                <div class="dropdown no-js">
+                                    <div class="membrane">
+                                        <form action='/search' method='GET'>
+                                            <input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
+                                            <input type='text' name='main_text' style='display:none;'></input>
+                                            <input type='submit' value='' class='searchInput' />
+                                        </form>
+
+                                        <div class="browse">Browse <a href="search#projects">projects</a>, <a href="search#resources">ideas</a>, and <a href="search#ideas">resources</a></div>
+                                        <div class="browse-tags">Trees (123), Organic (100), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90), Etc (90)</div>
+                                    </div>
+                                </div>
+                            </div>
                         </li>
 
                         {% if d.app_mode == 'beta' %}

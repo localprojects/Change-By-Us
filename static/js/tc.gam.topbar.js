@@ -20,7 +20,7 @@ tc.top_bar = function(element, options) {
                 }
             );
         } else {
-            element.find(".username, .myprojects, .lang-selector").mouseenter(function () {
+            element.find(".username, .myprojects, .lang-selector, .search-button").mouseenter(function () {
                 if( $.browser.msie && $.browser.version < 8 ) {
                     tc.jQ(this).children(".dropdown").stop(true, true).fadeIn(o.slideSpeed);
                 } else {
