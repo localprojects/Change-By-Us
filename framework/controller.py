@@ -409,11 +409,11 @@ class Controller (object):
 
     def error(self, message):
         log.error("400: %s" % message)
-        return web.BadRequest(message)
+        return self.render('error', { 'error_code': 400, 'error_message': message }, status='400 %s' % message)
 
     def warning(self, message):
         log.warning("400: %s" % message)
-        return web.BadRequest(message)
+        return self.render('error', { 'error_code': 400, 'error_message': message }, status='400 %s' % message)
 
     def forbidden(self, data='Forbidden', headers={}):
         log.error("403: Forbidden: %s" % data)
@@ -426,14 +426,12 @@ class Controller (object):
     def redirect(self, url):
         # Set the user object in case it's been created since we initialized
         self.setUserObject()
-
         log.info("303: Redirecting to " + url)
-
         return web.SeeOther(url)
 
     def no_method(self):
         log.error("405: Method not Allowed")
-        return web.NoMethod()
+        return self.render('error', { 'error_code': 405, 'error_message': 'Method not Allowed.' }, status='405 Method not Allowed')
 
     def refresh(self):
         url = web.ctx.path
