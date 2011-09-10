@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Main module for the Change by Us application.  This is 
+Main module for the Change by Us application.  This is
 where the magic begins.  Routes are set here, database
 connection initialized, web.py application started.
 
@@ -40,9 +40,11 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/rest/v1/needs/', 'controllers.rest.NeedsList',
             r'/rest/v1/needs/(?P<id>\d+)/', 'controllers.rest.NeedInstance',
             r'/rest/v1/needs/(?P<need_id>\d+)/volunteers/', 'controllers.rest.NeedVolunteerList',
-            
+
+            r'/rest/v1/keywords/', 'controllers.rest.PopularKeywordList',
+
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
-            
+
 
 def sessionDB():
     """
@@ -52,7 +54,7 @@ def sessionDB():
     """
     config = Config.get('database')
     return web.database(dbn=config['dbn'], user=config['user'], pw=config['password'], db=config['db'], host=config['host'])
-    
+
 
 def enable_smtp():
     """
@@ -117,12 +119,12 @@ def load_sqla(handler):
 # then starts the web.py application.
 if __name__ == "__main__":
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
-    
+
     # Handle debug logging, dependent on dev mode.
     if Config.get('dev'):
         web.config.debug = True
     log.info("Debug: %s" % web.config.debug)
-    
+
     # Define cookie name for application.  GAM is for Give a Minute
     # which is the old name for this application.
     web.config.session_parameters['cookie_name'] = 'gam'
@@ -145,12 +147,12 @@ if __name__ == "__main__":
         sentLast24Hours = sendQuota.get('SentLast24Hours')
         if sentLast24Hours is None:
             sentLast24Hours = 0
-            
+
         sentLast24Hours = int(float(sentLast24Hours))
         max24HourSend = sendQuota.get('Max24HourSend')
         if max24HourSend is None:
             max24HourSend = 0
-            
+
         max24HourSend = int(float(max24HourSend))
         if sentLast24Hours >= max24HourSend- 10:
             enable_smtp()
@@ -177,7 +179,7 @@ if __name__ == "__main__":
 
     # Create web.py app with defined routes.
     app = web.application(NEW_ROUTES, globals())
-    
+
     # Create database session object.
     db = sessionDB()
     # Handle sessions in the database.
@@ -185,6 +187,6 @@ if __name__ == "__main__":
 
     # Load SQLAlchemy
     app.add_processor(load_sqla)
-    
+
     # Finally, run the web.py app!
     app.run()
