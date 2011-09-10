@@ -1,6 +1,6 @@
 import inspect
 import json
-from collections import Counter
+from helpers.Counter import Counter
 
 from lib import web
 
