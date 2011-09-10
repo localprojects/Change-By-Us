@@ -185,7 +185,7 @@ class Controller (object):
 
         return var
 
-    def render(self, template_name, template_values=None, suffix="html", content_type = "text/html"):
+    def render(self, template_name, template_values=None, suffix="html", content_type = "text/html", status="200 OK"):
         """
         Custom renderer for Change by Us templates.
 
@@ -203,7 +203,6 @@ class Controller (object):
 
         """
         if template_values is None:
-
             template_values = {}
 
         # Set the user object in case it's been created since we initialized.
@@ -215,14 +214,8 @@ class Controller (object):
 
         config['base_url'] = Config.base_url()
         for key in config:
-
-            log.debug("--- Config: handling key %r" % key)
             if type(config[key]) is dict:
-
-                log.debug("--- Config: key %r is a dictionary: %r" % (key, config[key]))
                 for param in config[key]:
-
-                    log.debug("--- Config: setting %s_%s to %r" % (key, param, config[key][param]))
                     template_values["%s_%s" % (key, param)] = config[key][param]
             else:
                 template_values[key] = config[key]
@@ -281,8 +274,11 @@ class Controller (object):
         web.header("Content-Type", content_type)
 
         # Debug data.
-        log.info("200: %s (%s)" % (content_type, template_name))
+        log.info("%s: %s (%s)" % (status, content_type, template_name))
         log.info("*** session  = %s" % self.session)
+        
+        # Set status
+        web.ctx.status = status
 
         # Return template and data.
         return (renderer[template_name + "." + suffix](dict(d=template_values))).encode('utf-8')
@@ -413,33 +409,35 @@ class Controller (object):
 
     def error(self, message):
         log.error("400: %s" % message)
-        return web.BadRequest(message)
+        return self.render('error', { 'error_code': 400, 'error_message': message }, status='400 %s' % message)
 
     def warning(self, message):
         log.warning("400: %s" % message)
-        return web.BadRequest(message)
+        return self.render('error', { 'error_code': 400, 'error_message': message }, status='400 %s' % message)
 
     def forbidden(self, data='Forbidden', headers={}):
         log.error("403: Forbidden: %s" % data)
-        return web.Forbidden(data, headers)
+        return self.render('error', { 'error_code': 403, 'error_message': 'Forbidden.' }, status='403 Forbidden')
 
     def not_found(self, data='Not found', headers={}):
         log.error("404: Page not found")
-        return web.NotFound(data)
+        return self.render('error', { 'error_code': 404, 'error_message': 'Not found.' }, status='404 Not Found')
 
     def redirect(self, url):
         # Set the user object in case it's been created since we initialized
         self.setUserObject()
-
         log.info("303: Redirecting to " + url)
-
         return web.SeeOther(url)
 
     def no_method(self):
         log.error("405: Method not Allowed")
-        return web.NoMethod()
+        return self.render('error', { 'error_code': 405, 'error_message': 'Method not Allowed.' }, status='405 Method not Allowed')
 
     def refresh(self):
         url = web.ctx.path
         log.info("303: Redirecting to " + url + " (refresh)")
         return web.SeeOther(url)
+
+    def internal_error(self):
+        log.error("500: Internal Server Error")
+        return self.render('error', { 'error_code': 500, 'error_message': 'Internal server error.' }, status='500 Internal Server Error')

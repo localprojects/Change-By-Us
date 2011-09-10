@@ -216,11 +216,21 @@
                         </li>
 
                         <li class="search">
-                            <form action='/search' method='GET'>
-                                <input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
-                                <input type='text' name='main_text' style='display:none;'></input>
-                                <input type='submit' value='' class='searchInput' />
-                            </form>
+                            <div class='search-button'>
+                                <a href='/search'>{{ _('Search') }}</a>
+                                <div class="dropdown no-js">
+                                    <div class="membrane">
+                                        <form action='/search' method='GET'>
+                                            <input type='text' name='terms' value="{% if d.template_data and d.template_data.search_terms %}{{ d.template_data.search_terms }}{% endif %}" />
+                                            <input type='text' name='main_text' style='display:none;'></input>
+                                            <input type='submit' value='' class='searchInput' />
+                                        </form>
+
+                                        <div class="browse">{{ _('Browse <a href="search#projects">projects</a>, <a href="search#resources">ideas</a>, and <a href="search#ideas">resources</a>') }}</div>
+                                        <div class="browse-tags serif"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </li>
 
                         {% if d.app_mode == 'beta' %}
@@ -263,9 +273,10 @@
         <div class='seafloor'>
           <!-- List of supporters -->
             <div class='box logos clearfix'>
-                <span class="supported fancy-caps">{{ _('Developed <span>by</span>') }}</span>
+                <span class="supported fancy-caps">{{ _('Created <span>by</span>') }}</span>
                 <a href='http://www.localprojects.net' target='_blank'><img src='/static/images/footer-localprojects.png' alt='Local Projects' /></a>
-                <a href='http://codeoframerica.org' target='_blank'><img src='/static/images/footer-cfa.png' alt='Code for America' /></a>
+                <a href='http://www.ceosforcities.org/' target='_blank'><img src='/static/images/footer-ceosforcities.png' alt='CEOs For Cities' /></a>
+                <a href='http://codeforamerica.org' target='_blank'><img src='/static/images/footer-cfa.png' alt='Code for America' /></a>
                 <span class="supported fancy-caps">{{ _('Supported <span>by</span>') }}</span>
                 <a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
                 <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>

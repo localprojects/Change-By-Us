@@ -309,7 +309,7 @@
               <h2>{{ _('A network of city leaders is ready to hear your <a href="/search#ideas">ideas</a> and provide guidance for your <a href="/search#projects">projects</a>.') }}</h2>
               <ul class="clearfix">
                 {% for community_leader in d.template_data.community_leaders %}
-                  <li>
+                  <li {% if loop.index % 4 == 0 %}class="every-fourth"{% endif %}>
                       <img src="/static/{{ community_leader.image_path }}" alt="{{ community_leader.display_name|e }}" width="200" height="150" />
                       <p class="name">{{ community_leader.display_name|e }}</p>
                       <p class="job">{{ community_leader.title|e }}</p>
