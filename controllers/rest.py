@@ -726,6 +726,6 @@ class PopularKeywordList (ListInstancesMixin, RestController):
             keywords = project_dict['keywords'].strip().split()
             keyword_counter.update(keywords)
 
-        keyword_counter = [ {key:value} for key, value in keyword_counter.most_common(10) ]
+        keyword_counter = [ {'name':key, 'count':value} for key, value in keyword_counter.most_common(10) ]
 
         return keyword_counter
