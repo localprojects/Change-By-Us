@@ -56,6 +56,21 @@ tc.gam.project_data = {
           }
         }
       });
+    },
+    deleteNeed: function(need_id, success, error) {
+        tc.jQ.ajax({
+            type:'DELETE',
+            url:'/rest/v1/needs/' + need_id + '/',
+            success:function(data,ts,xhr){
+                if (success) {
+                    success(data, status, xhr);
+                }
+            },
+            error:function(xhr, status, errorThrown) {
+                if (error) {
+                    error(xhr, status, errorThrown);
+                }
+            }
+        });
     }
 };
-
