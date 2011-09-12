@@ -21,15 +21,21 @@
                 <h3>Project Leader</h3>
             </div>
 
-            <div class="thumb-wrapper">
-                <div class="thumb">
-                    <img width="50" src="https://s3.amazonaws.com/cbu-seattle-staging/data/files/images/1/21.png" alt="">
-                </div>
+            {% for admin in d.template_data.project.admins %}
+                {% if loop.first %}
+                <div class="thumb-wrapper">
+                    <div class="thumb">
+                        <a href='/useraccount/{{ admin.id }}'>
+                        <img width="50" src="{{ d.template_data.media_root }}{{ admin.avatar_path }}" alt="{{ admin.display_name }}">
+                        </a>
+                    </div>
 
-                <span class="vertical-align-middle-hack thumb-description">
-                    <span class="serif">Created by <br/> <strong><a href='/useraccount/{{ d.template_data.project.data.info.owner.u_id }}'>{{ d.template_data.project.data.info.owner.name }}</a></strong></span>
-                </span>
-            </div>
+                    <span class="vertical-align-middle-hack thumb-description">
+                        <span class="serif">Created by <br/> <strong><a href='/useraccount/{{ admin.id }}'>{{ admin.display_name }}</a></strong></span>
+                    </span>
+                </div>
+                {% endif %}
+            {% endfor %}
         </div>
 
         <div class="our-mission">
