@@ -4,9 +4,29 @@ tc.top_bar = function(element, options) {
     var o = tc.jQ.extend({
         slideSpeed: 250,
         fadeSpeed: 200
-    }, options);
+    }, options),
+    self = {};
     
     tc.jQ('div.dropdown').removeClass('no-js');
+    
+    var getPopularTags = function(success) {
+        tc.jQ.ajax({
+            url:'/rest/v1/keywords/',
+            dataType:'json',
+            cache:true,
+            success:function(data, status, xhr) {
+                if (success) {
+                    success(data, status, xhr);
+                }
+            }
+        });
+    };
+    
+    self._getTagsMarkup = function(tagsList) {
+        return tc.jQ.map(tagsList, function(tag, i) {
+          return '<a href="/search?terms=' + tag.name + '">' + tag.name + '</a> (' + tag.count + ')';
+        }).join(', ');
+    };
     
     function init() {
         if (isiPad === true) {
@@ -20,7 +40,7 @@ tc.top_bar = function(element, options) {
                 }
             );
         } else {
-            element.find(".username, .myprojects, .lang-selector").mouseenter(function () {
+            element.find(".username, .myprojects, .lang-selector, .search-button").mouseenter(function () {
                 if( $.browser.msie && $.browser.version < 8 ) {
                     tc.jQ(this).children(".dropdown").stop(true, true).fadeIn(o.slideSpeed);
                 } else {
@@ -32,8 +52,13 @@ tc.top_bar = function(element, options) {
                 tc.jQ(this).children("a").toggleClass("opened");
             });
         };
+        
+        getPopularTags(function(data) {
+            var markup = self._getTagsMarkup(data);
+            tc.jQ('.browse-tags').html(markup);
+        });
     }
     
     init();
-    return {};
+    return self;
 };

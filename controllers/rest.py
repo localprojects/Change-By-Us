@@ -1,5 +1,6 @@
 import inspect
 import json
+from helpers.Counter import Counter
 
 from lib import web
 
@@ -384,6 +385,10 @@ class RestController (Controller):
 
         return d
 
+    def query_to_list(self, query):
+        return [self.instance_to_dict(instance) for instance in query
+                if self.access_rules.can_read(self.user, instance)]
+
     def replace_gam_user_with_sqla_user(self):
         if self.user:
             self.user = self.orm.query(models.User).get(self.user.id)
@@ -471,8 +476,7 @@ class ListInstancesMixin (object):
         if hasattr(self, 'ordering'):
             query = query.order_by(self.ordering)
 
-        return [self.instance_to_dict(instance) for instance in query
-                if self.access_rules.can_read(self.user, instance)]
+        return self.query_to_list(query)
 
 
 class ReadInstanceMixin (object):
@@ -709,3 +713,19 @@ class NeedVolunteerList (CreateInstanceMixin, RestController):
         response = super(NeedVolunteerList, self).REST_CREATE(**kwargs)
 
         return response
+
+class PopularKeywordList (ListInstancesMixin, RestController):
+    model = models.Project
+    access_rules = DefaultAccess()
+
+    def query_to_list(self, query):
+        project_list = super(PopularKeywordList, self).query_to_list(query)
+
+        keyword_counter = Counter()
+        for project_dict in project_list:
+            keywords = project_dict['keywords'].strip().split()
+            keyword_counter.update(keywords)
+
+        keyword_counter = [ {'name':key, 'count':value} for key, value in keyword_counter.most_common(10) ]
+
+        return keyword_counter
