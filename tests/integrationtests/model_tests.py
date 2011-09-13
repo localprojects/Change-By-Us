@@ -157,3 +157,23 @@ class Test_GamProject_removeUserFromProject (mixins.AppSetupMixin, TestCase):
         orm.commit()
 
         assert_not_in(user, need.volunteers)
+
+
+class Test_Need_delete (mixins.AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_be_able_to_delete_need_with_volunteers (self):
+        orm = OrmHolder().orm
+        need = orm.query(Need).get(1)
+        assert len(need.volunteers) > 0
+
+        try:
+            orm.delete(need)
+
+        except AssertionError, e:
+            # If the orm has a problem deleting the need, it will raise an
+            # AssertionError
+            ok_(False, 'AssertionError raised: %r' % (e,))
+
+        ok_(True)
