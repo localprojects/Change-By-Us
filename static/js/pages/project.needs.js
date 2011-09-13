@@ -299,6 +299,22 @@ tc.gam.project_widgets.needs = function(options) {
                 }
             }
         });
+
+        tc.jQ('a.need-delete').die('click').live('click', function(event) {
+            event.preventDefault();
+            options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.modal-content.remove-need'),
+                submit: function(){
+                    tc.gam.project_data.deleteNeed(event.target.href.split(',')[1],
+                                                   function(data, status, xhr) {
+                                                       if(data == 'False'){return false;}
+                                                       window.location.hash = 'show,needs';
+                                                       window.location.reload();
+                                                   });
+                }
+            });
+        });
     };
 
     bindEvents();
