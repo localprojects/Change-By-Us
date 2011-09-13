@@ -77,12 +77,11 @@ class User (Base):
 
     @property
     def display_name(self):
-        from giveaminute.project import userNameDisplay
-        from giveaminute.project import isFullLastName
+        from giveaminute import project
 
-        return userNameDisplay(
+        return project.userNameDisplay(
             self.first_name, self.last_name, self.affiliation,
-            isFullLastName(self.group_membership_bitmask))
+            project.isFullLastName(self.group_membership_bitmask))
 
     def join(self, project, is_admin=False):
         if project not in self.projects:
