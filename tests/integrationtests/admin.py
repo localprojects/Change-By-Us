@@ -34,7 +34,17 @@ class Test_anonymous_user_admin (AppSetupMixin, TestCase):
         # Check to see if the user was created even though the response
         # returned a redirect (303).
         results = db.query("select user_id from user where email = 'jsmith@example.com'")
-        assert_equal(len(results),0)
+        assert_equal(len(results), 0)
+
+    @istest
+    def should_not_allow_anonymous_user_access_to_admin(self):
+        response = self.app.get('/cms/admin', status=303)
+        response = self.app.get('/admin/admin', status=303)
+
+        # Loose check to make sure we do not have a full
+        # HTML page.
+        assert len(response.body) < 50
+        
         
 class Test_admin_user_admin (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']

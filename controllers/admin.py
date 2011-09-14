@@ -10,9 +10,13 @@ import json
 
 class Admin(Controller):
     def GET(self, action = None, param0 = None, param1 = None):
-        self.require_login("/login", True)
+        is_admin = self.require_login("/login", True)
+        
+        # Check if admin first.
+        if (is_admin != True):
+            return self.redirect("/login")
 
-        if (action == 'admin'):
+        elif (action == 'admin'):
             return self.showAdmin()
         elif (action == 'content'):
             return self.showContent()
