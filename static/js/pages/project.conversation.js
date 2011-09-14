@@ -167,7 +167,7 @@ tc.gam.project_widgets.conversation = function(options){
         },
         construct_links:function(text){
             var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return text.replace(exp,"<a target='_blank' href='$1'>$1</a>"); 
+        return text.replace(exp,"<a target='_blank' href='$1'>$1</a>");
         },
         handle_message_body:function(i,j){
             var message, exp;
