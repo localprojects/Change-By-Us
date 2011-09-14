@@ -56,7 +56,14 @@ class Home(Controller):
         elif (action == 'beta'):
             return self.showBeta()
         else:
-            return self.render(action)
+            # This is the default for all pages.  We should check
+            # if there is a matching template, and if not, throw
+            # a 404.
+            template = os.path.dirname(__file__) + '/../templates/' + action + '.html'
+            if not os.path.exists(template):
+                return self.not_found()
+            else:
+                return self.render(action)
 
 
     def POST(self, action=None, param0=None):

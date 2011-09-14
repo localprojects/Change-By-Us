@@ -23,7 +23,7 @@ tc.gam.project_widgets.needs = function(options) {
             (options.user && options.user.is_leader)
         );
     };
-    
+
     self._getUserId = function() {
         if (options.user && options.user.u_id) {
             return options.user.u_id;
@@ -36,7 +36,7 @@ tc.gam.project_widgets.needs = function(options) {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
                 month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
             }, need_details);
-        
+
         //Special cases for the first volunteer
         new_details.has_first = need_details.volunteers.length > 0;
         if (new_details.has_first) {
@@ -45,18 +45,18 @@ tc.gam.project_widgets.needs = function(options) {
             new_details.vol_count_minus_one = need_details.volunteers.length-1;
             new_details.avatar = function() { return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; };
         }
-        
+
         return new_details;
     };
 
     var mergeDetailTemplate = function(need_details) {
         var new_details = self._getDetailTemplateData(need_details),
             $html = ich.need_detail_tmpl(new_details);
-        
+
         dom.find('.need-stack').html($html);
         updateNeed(need_details);
     };
-    
+
     self._isVolunteer = function(id, volunteers) {
         var i;
         for (i=0; i<volunteers.length; i++) {
@@ -66,7 +66,7 @@ tc.gam.project_widgets.needs = function(options) {
         }
         return false;
     };
-    
+
     self._getVolunteerButtonConfig = function(vols_needed, volunteers, user_id) {
         if (self._isVolunteer(user_id, volunteers)) {
             return { cssClass: 'in-process', text: 'I am helping'};
@@ -78,12 +78,10 @@ tc.gam.project_widgets.needs = function(options) {
             }
         }
     };
-    
 
     self._getProgressElementWidth = function(max_width, cur_vol_count, vols_needed) {
         return max_width * cur_vol_count / vols_needed;
     };
-    
 
     self._updateVolunteerProgress = function($container, need) {
         var $volCount = $container.find('.volunteer-count strong'),
@@ -93,7 +91,7 @@ tc.gam.project_widgets.needs = function(options) {
         $volCount.text(need.volunteers.length);
         $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
     };
-    
+
     self._updateVolunteerButton = function($container, need) {
         var $helpLink = $container.find('.help-link'),
             quantityNum = parseInt(need.quantity, 10),
@@ -104,11 +102,11 @@ tc.gam.project_widgets.needs = function(options) {
             .addClass(buttonConfig.cssClass)
             .text(buttonConfig.text);
     };
-    
+
     self._updateSmallAvatars = function($container, need) {
         var $avatars = $container.find('.vol-avatars'),
             $avatar_html;
-        
+
         $avatar_html = ich.need_vol_avatars({
             volunteers: need.volunteers.slice(0, MAX_AVATARS),
             avatar: function() {return this.avatar_path ? (options.media_root + this.avatar_path) : '/static/images/thumb_genAvatar.jpg'; }
@@ -116,10 +114,10 @@ tc.gam.project_widgets.needs = function(options) {
 
         $avatars.html($avatar_html);
     };
-    
+
     var updateNeed = function(need) {
         var $needContainer = tc.jQ('.need[data-id|="'+need.id+'"]');
-        
+
         self._updateVolunteerProgress($needContainer, need);
         self._updateVolunteerButton($needContainer, need);
         self._updateSmallAvatars($needContainer, need);
@@ -286,7 +284,7 @@ tc.gam.project_widgets.needs = function(options) {
 
         tc.jQ('.help-link').die('click').live('click', function(event) {
             event.preventDefault();
-            
+
             var $this = tc.jQ(this),
                 need_id = $this.parents('li.need').attr('data-id');
 
@@ -301,9 +299,25 @@ tc.gam.project_widgets.needs = function(options) {
                 }
             }
         });
+
+        tc.jQ('a.need-delete').die('click').live('click', function(event) {
+            event.preventDefault();
+            options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.modal-content.remove-need'),
+                submit: function(){
+                    tc.gam.project_data.deleteNeed(event.target.href.split(',')[1],
+                                                   function(data, status, xhr) {
+                                                       if(data == 'False'){return false;}
+                                                       window.location.hash = 'show,needs';
+                                                       window.location.reload();
+                                                   });
+                }
+            });
+        });
     };
 
     bindEvents();
-    
+
     return self;
 };

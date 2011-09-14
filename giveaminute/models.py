@@ -75,6 +75,14 @@ class User (Base):
         if self.image_id:
             return 'images/%s/%s.png' % (str(self.image_id)[-1], self.image_id)
 
+    @property
+    def display_name(self):
+        from giveaminute import project
+
+        return project.userNameDisplay(
+            self.first_name, self.last_name, self.affiliation,
+            project.isFullLastName(self.group_membership_bitmask))
+
     def join(self, project, is_admin=False):
         if project not in self.projects:
             membership = ProjectMember()
@@ -167,6 +175,7 @@ class Need (Base):
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
 
+    need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')
 
     @property
@@ -188,7 +197,7 @@ class Volunteer (Base):
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
 
-    need = relationship('Need', backref='need_volunteers')
+    need = relationship('Need')
     member = relationship('User')
 
 

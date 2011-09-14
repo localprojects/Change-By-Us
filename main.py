@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
-import os, sys
+"""
+Main module for the Change by Us application.  This is
+where the magic begins.  Routes are set here, database
+connection initialized, web.py application started.
+
+"""
+
+import os
+import sys
 from os import environ
 
 from framework.log import log
@@ -11,9 +19,12 @@ from framework.image_server import *
 
 #from giveaminute import models
 
+# Due to the fact that we are utilizing some custom
+# libraries, we add the lib path for import.
 sys.path.append("lib/")
 from lib import web
 
+# Define all the routes for the applications
 ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/cms/?([^/.]*)', 'controllers.admin.Admin',
             r'/create/?([^/.]*)', 'controllers.createProject.CreateProject',
@@ -29,13 +40,27 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/rest/v1/needs/', 'controllers.rest.NeedsList',
             r'/rest/v1/needs/(?P<id>\d+)/', 'controllers.rest.NeedInstance',
             r'/rest/v1/needs/(?P<need_id>\d+)/volunteers/', 'controllers.rest.NeedVolunteerList',
+
+            r'/rest/v1/keywords/', 'controllers.rest.PopularKeywordList',
+
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
 
+
 def sessionDB():
+    """
+    Gets the session database object.  Database object is based from
+    web.py's database handling.  This utilizes values found in the
+    config.yaml file.
+    """
     config = Config.get('database')
     return web.database(dbn=config['dbn'], user=config['user'], pw=config['password'], db=config['db'], host=config['host'])
 
+
 def enable_smtp():
+    """
+    Enable SMTP support for the web.py email handling.  This
+    uses config values found in config.yaml.
+    """
     smtp_config = Config.get('email').get('smtp')
     web.webapi.config.smtp_server = smtp_config.get('host')
     web.webapi.config.smtp_port = smtp_config.get('port')
@@ -43,8 +68,12 @@ def enable_smtp():
     web.webapi.config.smtp_username = smtp_config.get('username')
     web.webapi.config.smtp_password = smtp_config.get('password')
 
+
 def enable_aws_ses():
-    # AWS SES config
+    """
+    Enable AWS SES support for the web.py email handling.  This
+    uses config values found in config.yaml.
+    """
     ses_config = Config.get('email').get('aws_ses')
     web.webapi.config.email_engine = 'aws'
     web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
@@ -79,34 +108,31 @@ def load_sqla(handler):
             else:
                 log.debug("*** Finishing up with the ORM")
                 self.orm.commit()
-#            log.debug("*** Closing the ORM")
-#            log.debug("*** Closed?: %r" % self.orm.connection().closed)
-#            self.orm.close()
-#            self.orm.connection().close()
-#            log.debug("*** Closed?: %r" % self.orm.connection().closed)
 
     with OrmContextManager() as orm:
         result = handler()
 
     return result
 
-#def cmd_show_quota():
-#    ses = boto.connect_ses()
-#    args.verbose= True
-#
-#    sendQuota = ses.get_send_quota()["GetSendQuotaResponse"]["GetSendQuotaResult"]
-#    return sendQuota
 
+# Main logic for the CBU application.  Does some basic configuration,
+# then starts the web.py application.
 if __name__ == "__main__":
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
+
+    # Handle debug logging, dependent on dev mode.
     if Config.get('dev'):
         web.config.debug = True
     log.info("Debug: %s" % web.config.debug)
+
+    # Define cookie name for application.  GAM is for Give a Minute
+    # which is the old name for this application.
     web.config.session_parameters['cookie_name'] = 'gam'
 
-
-    # TODO:
-    # Start with SES and fall-back to SMTP if both are enabled
+    # Email handling.  Determine which email method is appropriate.
+    # Start with SES and fall-back to SMTP if both are enabled.
+    # If both SES and SMTP config options are not available, web.py
+    # uses sendmail by default.
     if Config.get('email').get('smtp') and Config.get('email').get('aws_ses'):
         import boto
 
@@ -121,26 +147,28 @@ if __name__ == "__main__":
         sentLast24Hours = sendQuota.get('SentLast24Hours')
         if sentLast24Hours is None:
             sentLast24Hours = 0
+
         sentLast24Hours = int(float(sentLast24Hours))
         max24HourSend = sendQuota.get('Max24HourSend')
         if max24HourSend is None:
             max24HourSend = 0
+
         max24HourSend = int(float(max24HourSend))
         if sentLast24Hours >= max24HourSend- 10:
             enable_smtp()
         else:
             enable_aws_ses()
 
-    # Set the email configurations:
+    # Enable the appropriate method if configured.
     elif Config.get('email').get('smtp'):
         enable_smtp()
 
     elif Config.get('email').get('aws_ses'):
         enable_aws_ses()
 
+    # Add blitz.io route.  We put into new var because of an odd behaviors
+    # where a changed ROUTES is not handled correctly.
     try:
-        # Add blitz.io route.  We put into new var because of an odd behaviors
-        # where a changed ROUTES is not handled correctly.
         if Config.get('blitz_io').get('route') and Config.get('app_env') != 'live':
             blitz_route = r'/%s/?([^/.]*)' % Config.get('blitz_io').get('route')
             NEW_ROUTES = (blitz_route, 'controllers.blitz.Blitz') + ROUTES
@@ -151,8 +179,14 @@ if __name__ == "__main__":
 
     # Create web.py app with defined routes.
     app = web.application(NEW_ROUTES, globals())
+
+    # Create database session object.
     db = sessionDB()
+    # Handle sessions in the database.
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
+    # Load SQLAlchemy
     app.add_processor(load_sqla)
+
+    # Finally, run the web.py app!
     app.run()

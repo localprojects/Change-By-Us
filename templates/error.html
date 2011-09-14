@@ -1,0 +1,25 @@
+{% extends "./partials/base.html" %}
+
+{% block title %} Oops
+    {% if d.error_code %}
+        ({{ d.error_code }}: {{ d.error_message }})
+    {% endif %}
+{% endblock title %}
+
+{% block continent %}
+
+<div class='continent fourhundredfour'>
+    <h3>{{ _('Things change. Cities, people, web addresses.') }}<br />
+    {{ _('If you think something is broken, please let us know <a href="/feedback">here</a>.') }}</h3>
+    
+    {% if d.error_code %}
+        <p>Error: <strong>{{ d.error_code }}</strong> {{ d.error_message }}</p>
+        <p><br /></p>
+        <p><br /></p>
+        <p><br /></p>
+    {% endif %}
+    
+    <a class="rounded-button" href="javascript: history.go(-1)">&larr; {{ _('GO BACK <span class="lowercase">to</span> WHERE YOU WERE') }}</a>
+</div>
+
+{% endblock continent %}

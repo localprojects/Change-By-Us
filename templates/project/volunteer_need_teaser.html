@@ -13,6 +13,13 @@
             {% if need.display_date %} on {{ need.display_date }}{% endif %}
         </div>
 
+        {% if
+          (d.template_data.project_user.data.is_project_admin) or
+          (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+          (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+          <a href="#removeNeed,{{ need.id }}" class="need-delete" title="Delete this need">Delete</a>
+        {% endif %}
+
         <div class="volunteer-body">
             <p class="serif">
                 {{ need.description|truncate(130) }}
@@ -24,7 +31,7 @@
                 <div class="vol-avatars teaser">
                     {% if need.volunteers|length > 0 %}
                         {% for volunteer in need.volunteers %}
-                            {% with volunteer_name = volunteer|display_name %}
+                            {% with volunteer_name = volunteer.display_name %}
                             {% if loop.index <= 5 %}
                                 <a href="/useraccount/{{ volunteer.id }}">
                                 {% if volunteer.avatar_path %}
