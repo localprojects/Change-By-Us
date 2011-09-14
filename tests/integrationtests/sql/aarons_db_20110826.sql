@@ -528,6 +528,7 @@ LOCK TABLES `user` WRITE;
 INSERT INTO `user` VALUES (1,'','aaron@codeforamerica.org','e03807c64b6081f243adcc2027dd3696','LCp4dxrN6G',NULL,'Aaron','Ogle',NULL,1,0,NULL,NULL,15,0,'digest','2011-08-26 17:30:54',1,'2011-08-26 01:18:43','2011-08-26 17:30:54'),
     (3,'','billj@codeforamerica.org','e03807c64b6081f243adcc2027dd3696','LCp4dxrN6G',NULL,'Billy','Jean',NULL,1,0,NULL,NULL,2,0,'digest','2011-08-26 17:30:54',1,'2011-08-26 01:18:43','2011-08-26 17:30:54'),
     (2,'','mjumbe@codeforamerica.org','e03807c64b6081f243adcc2027dd3696','LCp4dxrN6G',NULL,'Mjumbe','Poe',NULL,NULL,0,NULL,NULL,1,0,'digest','2011-08-26 17:30:54',1,'2011-08-26 01:18:43','2011-08-26 17:30:54');
+INSERT INTO `user` VALUES(4, '', 'testing@codeforamerica.org', '1ce1ffab7b313447cc2ae68e4660d066', '7LCSKH8FYq', NULL, 'CfA', 'Testing', NULL, NULL, NULL, NULL, NULL, 2, 0, 'digest', '2011-09-13 16:18:14', 1, '2011-09-13 16:17:21', '2011-09-13 16:18:14');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 

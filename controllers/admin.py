@@ -82,11 +82,21 @@ class Admin(Controller):
             return self.not_found()
 
     def POST(self, action = None, param0 = None, param1 = None):
-        self.require_login("/login", True)
-
-        if (action == 'user'):
+        is_admin = self.require_login("/login", True)
+        
+        # Check if admin first.
+        if (is_admin != True):
+            return self.redirect("/login")
+            
+        # User actions.
+        elif (action == 'user'):
             if (param0 == 'add'):
-                return self.addUser()
+                # AddUser returns new user ID or false
+                added = self.addUser()
+                if (added != False):
+                    return self.text(added)
+                else:
+                    return false
             elif (param0 == 'delete'):
                 return self.deleteUser()
             elif (param0 == 'setrole'):

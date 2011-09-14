@@ -35,3 +35,26 @@ class Test_anonymous_user_admin (AppSetupMixin, TestCase):
         # returned a redirect (303).
         results = db.query("select user_id from user where email = 'jsmith@example.com'")
         assert_equal(len(results),0)
+        
+class Test_admin_user_admin (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_allow_admin_user_to_create_user(self):
+        self.login(user_id=3)
+        
+        response = self.app.post('/admin/user/add',
+            params={
+                'f_name': 'Jane',
+                'l_name': 'Doe',
+                'email': 'jdoe@example.com',
+                'password': 'password',
+                'role': '1',
+                'affiliation': '',
+            },
+            status=200)
+        
+        # Check to see if the user was created
+        db = main.sessionDB()
+        results = db.query("select user_id from user where email = 'jdoe@example.com'")
+        assert_equal(len(results), 1)
