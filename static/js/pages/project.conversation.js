@@ -121,6 +121,7 @@ tc.gam.project_widgets.conversation = function(options){
         
         //add message body, text dependent on message type      
         $out.find('blockquote.serif p').html(handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
+        handlers.embed_media();
         $out.attr('id','message-'+d.message_id);
         $out.find('.meta-ft').text(d.created).time_since();;
         $out.find('a.close').attr('href','#remove,'+d.message_id);
@@ -167,12 +168,20 @@ tc.gam.project_widgets.conversation = function(options){
         },
         construct_links:function(text){
             var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return text.replace(exp,"<a target='_blank' href='$1'>$1</a>");
+        return text.replace(exp,"<a target='_blank' class='oembed' href='$1'>$1</a>");
+        },
+        embed_media:function() {
+          tc.jQ('.oembed').oembed(null,{
+            embedMethod: 'fill',
+            maxWidth: '360',
+            maxHeight: '262'
+          });
         },
         handle_message_body:function(i,j){
             var message, exp;
             message = tc.jQ(j);
             message.html(handlers.construct_links(message.text())); 
+            handlers.embed_media();
         },
         change_message_filter:function(e,d){
             var t = tc.jQ(e.target);
@@ -374,6 +383,7 @@ tc.gam.project_widgets.conversation = function(options){
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-text').html(handlers.construct_links(data.message));
+        handlers.embed_media();
         
         if (data.attachment && data.attachment.medium_thumb_url) {
             $thumb = markup.find('.file-thumb')
