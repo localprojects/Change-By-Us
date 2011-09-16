@@ -235,10 +235,12 @@ class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):
         import giveaminute.models
         import giveaminute.user
 
-        cont = RestController()
-        cont.user = giveaminute.user.User(cont.db, 1)
+        self.login(user_id=1)
 
-        cont._BASE_METHOD_HANDLER([])
+        cont = RestController()
+        cont.REST_FAKE = lambda: None
+
+        cont._BASE_METHOD_HANDLER(['REST_FAKE'])
 
         assert_is_instance(cont.user, giveaminute.models.User)
 
