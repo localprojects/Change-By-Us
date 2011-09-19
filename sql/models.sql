@@ -350,7 +350,7 @@ CREATE TABLE `migrate_version` (
 
 LOCK TABLES `migrate_version` WRITE;
 /*!40000 ALTER TABLE `migrate_version` DISABLE KEYS */;
-INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',4);
+INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',5);
 /*!40000 ALTER TABLE `migrate_version` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -486,6 +486,34 @@ LOCK TABLES `project_endorsement` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `project_event`
+--
+
+DROP TABLE IF EXISTS `project_event`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_event` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(256) DEFAULT NULL,
+  `details` text,
+  `rsvp_url` varchar(2048) DEFAULT NULL,
+  `start_datetime` datetime DEFAULT NULL,
+  `end_datetime` datetime DEFAULT NULL,
+  `address` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project_event`
+--
+
+LOCK TABLES `project_event` WRITE;
+/*!40000 ALTER TABLE `project_event` DISABLE KEYS */;
+/*!40000 ALTER TABLE `project_event` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `project_invite`
 --
 
@@ -618,8 +646,10 @@ CREATE TABLE `project_need` (
   `time` varchar(32) DEFAULT NULL,
   `duration` varchar(64) DEFAULT NULL,
   `address` varchar(256) DEFAULT NULL,
+  `event_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `project_id` (`project_id`)
+  KEY `project_id` (`project_id`),
+  KEY `event_id` (`event_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -956,4 +986,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-09-04  3:13:03
+-- Dump completed on 2011-09-15 19:30:05
