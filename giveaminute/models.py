@@ -218,7 +218,7 @@ class Event (Base):
     __tablename__ = 'project_event'
 
     id = Column(Integer, primary_key=True)
-    project_id = Column(ForeignKey('project.project_id')
+    project_id = Column(ForeignKey('project.project_id'))
     name = Column(String(256))
     details = Column(Text)
     rsvp_url = Column(String(2048))
