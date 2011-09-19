@@ -7,6 +7,8 @@ def upgrade(migrate_engine):
 
     meta = MetaData(migrate_engine)
 
+    projects = Table('project', meta, autoload=True)
+
     # Create the events table
     events = Table('project_event', meta,
         Column('id', Integer, primary_key=True),
@@ -16,6 +18,7 @@ def upgrade(migrate_engine):
         Column('start_datetime', DateTime),
         Column('end_datetime', DateTime),
         Column('address', String(256)),
+        Column('project_id', Integer, ForeignKey('project.project_id'))
     )
     events.create()
 
