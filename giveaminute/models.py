@@ -149,6 +149,7 @@ class Project (Base):
     # FULLTEXT KEY `title` (`title`,`description`)
 
     needs = relationship('Need', backref='project')
+    events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
 
@@ -217,6 +218,7 @@ class Event (Base):
     __tablename__ = 'project_event'
 
     id = Column(Integer, primary_key=True)
+    project_id = Column(ForeignKey('project.project_id'))
     name = Column(String(256))
     details = Column(Text)
     rsvp_url = Column(String(2048))
@@ -224,6 +226,7 @@ class Event (Base):
     end_datetime = Column(DateTime)
     address = Column(String(256))
 
+    project = relationship('Project')
     needs = relationship('Need')
 
 
