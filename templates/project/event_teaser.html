@@ -1,0 +1,61 @@
+<li class="box event" data-id="{{ event.id }}">
+    {% if
+        (d.template_data.project_user.data.is_project_admin) or
+        (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+        (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+        <a href="#show,event-form,{{ event.id }}" class="event-edit">Edit This</a>
+    {% endif %}
+
+    <div class="bd clearfix">
+        <div class="event_datetime">
+            <span class="month">{{ event.start_datetime|datetime('%b') }}</span>
+            <span class="day">{{ event.start_datetime.day }}</span>
+            <span class="time">{{ event.start_datetime|datetime('%I:%M%p') }}</span>
+        </div>
+
+        <div class="event-title serif">
+            Gallery Opening
+        </div>
+
+        <div class="event-loc-title serif">
+            at <a href="#">CultureFix NYC</a>
+        </div>
+
+        {% if
+          (d.template_data.project_user.data.is_project_admin) or
+          (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+          (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+          <a href="#removeEvent,{{ event.id }}" class="event-delete" title="Delete this event">Delete</a>
+        {% endif %}
+
+        <div class="event-body">
+            <p class="serif">
+                {{ event.description|truncate(130) }}
+                {% if event.description|length > 130 %}
+                    <a href="#show,event-detail,{{ event.id }}" class="read-more">Read More</a>
+                {% endif%}
+                Exhibit planned from September 6th - 18th 2011. Want to get involved? Get in touch!
+            </p>
+        </div>
+
+        <div class="event-details serif">
+            <a href="#" class="help-link in-process">RSVP <span class="rsvp-site">on <a href="#">Eventbrite</a></span></a>
+        </div>
+
+        <!--
+        <div class="vol-recent-comment serif">
+            <img src="/static/images/thumb_sgoldsmith.jpg"></img>
+            <div class="comment">We still really need people for this if anyone can help. It'll be fun and it's just one night.</div>
+            <div class="author">
+                <span>Alexandra M.</span><br>
+                3 hours ago
+            </div>
+        </div>
+        -->
+
+        <div class="empty-state-box" style="display:none;">
+            <!--<a class="close" href="#"><span>Close</span></a>-->
+            <p>No events found.</p>
+        </div>
+    </div>
+</li>
