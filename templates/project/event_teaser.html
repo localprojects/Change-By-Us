@@ -13,33 +13,35 @@
             <span class="time">{{ event.start_datetime|neattime }}</span>
         </div>
 
-        <div class="event-title serif">
-            <a href="#show,event-detail,{{ event.id }}">{{ event.name }}</a>
-        </div>
-
-        <div class="event-loc-title serif">
-            at <a href="#">{{ event.address }}</a>
-        </div>
-
-        {% if
-          (d.template_data.project_user.data.is_project_admin) or
-          (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
-          (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
-          <a href="#removeEvent,{{ event.id }}" class="event-delete" title="Delete this event">Delete</a>
-        {% endif %}
-
         <div class="event-body">
-            <p class="serif">
-                {{ event.description|truncate(130) }}
-                {% if event.description|length > 130 %}
-                    <a href="#show,event-detail,{{ event.id }}" class="read-more">Read More</a>
-                {% endif%}
-                Exhibit planned from September 6th - 18th 2011. Want to get involved? Get in touch!
-            </p>
+            <div class="event-title serif">
+                <a href="#show,event-detail,{{ event.id }}">{{ event.name }}</a>
+            </div>
+
+            <div class="event-loc-title serif">
+                at <a href="#">{{ event.address }}</a>
+            </div>
+{#
+            {% if
+              (d.template_data.project_user.data.is_project_admin) or
+              (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+              (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+              <a href="#removeEvent,{{ event.id }}" class="event-delete" title="Delete this event">Delete</a>
+            {% endif %}
+#}
+            <div class="event-description">
+                <p class="serif">
+                    {{ event.description|truncate(130) }}
+                    {% if event.description|length > 130 %}
+                        <a href="#show,event-detail,{{ event.id }}" class="read-more">Read More</a>
+                    {% endif%}
+                    Exhibit planned from September 6th - 18th 2011. Want to get involved? Get in touch!
+                </p>
+            </div>
         </div>
 
-        <div class="event-details serif">
-            <a href="#" class="help-link in-process">RSVP <span class="rsvp-site">on <a href="#">Eventbrite</a></span></a>
+        <div class="event-rsvp serif">
+            <a href="#" class="rsvp-link">RSVP <span class="rsvp-site">on <span class="rsvp-site-name">Eventbrite</span></span></a>
         </div>
 
         <!--
