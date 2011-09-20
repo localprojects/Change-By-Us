@@ -1,24 +1,24 @@
 <li class="box event" data-id="{{ event.id }}">
-    {% if
+{#    {% if
         (d.template_data.project_user.data.is_project_admin) or
         (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
         (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
         <a href="#show,event-form,{{ event.id }}" class="event-edit">Edit This</a>
     {% endif %}
-
+#}
     <div class="bd clearfix">
-        <div class="event_datetime">
+        <div class="event-datetime">
             <span class="month">{{ event.start_datetime|datetime('%b') }}</span>
             <span class="day">{{ event.start_datetime.day }}</span>
-            <span class="time">{{ event.start_datetime|datetime('%I:%M%p') }}</span>
+            <span class="time">{{ event.start_datetime|neattime }}</span>
         </div>
 
         <div class="event-title serif">
-            Gallery Opening
+            <a href="#show,event-detail,{{ event.id }}">{{ event.name }}</a>
         </div>
 
         <div class="event-loc-title serif">
-            at <a href="#">CultureFix NYC</a>
+            at <a href="#">{{ event.address }}</a>
         </div>
 
         {% if
