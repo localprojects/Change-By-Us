@@ -14,4 +14,12 @@ def urlencode(s):
 def json_filter(data):
     return json.dumps(data)
 
-filters = {'strslice': strslice, 'urlencode': urlencode, 'json':json_filter }
+def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
+    return value.strftime(format)
+
+filters = {
+    'strslice': strslice,
+    'urlencode': urlencode,
+    'json': json_filter,
+    'datetime': datetimeformat,
+}
