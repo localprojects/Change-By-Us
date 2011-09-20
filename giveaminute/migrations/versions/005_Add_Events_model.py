@@ -18,7 +18,19 @@ def upgrade(migrate_engine):
         Column('start_datetime', DateTime),
         Column('end_datetime', DateTime),
         Column('address', String(256)),
-        Column('project_id', Integer, ForeignKey('project.project_id'))
+        Column('project_id', Integer, ForeignKey('project.project_id')),
+
+        # For the sake of sanity, use MyISAM as the engine for MySQL.  All of
+        # the tables should use a consistent engine.  It doesn't matter which,
+        # as long as it's InnoDB or MyISAM.  Your install of MySQL has one of
+        # them set as default.  When the models.sql file is dumped, MySQL will
+        # also specify the engine for each table (there doesn't appear to be an
+        # option to turn this behavior off).  This means that, if we don't
+        # specify the engine in the migrations, in an installation with a
+        # different default engine, migrations may potentially fail.  So, To be
+        # just specify the engine.
+
+        mysql_engine='MyISAM',
     )
     events.create()
 
