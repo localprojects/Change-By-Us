@@ -1,0 +1,72 @@
+<div class="box main-section project-section event-form">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Create a new event
+            </span>
+        </h2>
+        <div class="actions">
+            <a href="#show,events" class="back fancy-caps">
+                <span>Go Back</span>
+            </a>
+        </div>
+    </div>
+
+    <div>
+      <a href="#" class="submit event-submit">Submit</a>
+      <br style="clear:both;" />
+    </div>
+    <div class="bd clearfix merlin add-event">
+        <div class='step add-event-step clearfix'></div>
+
+        <div class='step submit-event-step spinner-message'>
+            <p>Thank you for submitting a link!</p>
+            <p><img src='/static/images/loader32x32.gif' /></p>
+        </div>
+    </div>
+</div>
+
+{% raw %}
+<script id="event_form_tmpl" type="text/html">
+    <form action="#">
+      <div class="fields serif">
+        <div class="long-row">
+          <div class="title">The name of the event is:</div>
+          <input name="event-name" id="event-name" type="text" value="{{name}}" />
+        </div>
+        <div class="long-row">
+          <div class="title"><span>A few details about the event:</span><span class="charlimit title">200</span></div>
+          <textarea name="event-desc" id="event-desc">{{description}}</textarea>
+        </div>
+        <div class="long-row optional">
+          <div class="title">Link to the event on Facebook, Eventbrite or elsewhere:</div>
+          <input name="event-url" id="event-url" type="text" value="{{url}}" />
+        </div>
+        <div class="row">
+          <div class="title">The name of the event is:</div>
+          <select id="event-month">
+            <option value="Month">Month</option>
+            {{{monthOpts}}}
+          </select>
+          <input name="event-day" id="event-day"value="{{day}}" type="text" />
+          <select id="event-year">
+            {{{yearOpts}}}
+          </select>
+        </div>
+
+        <div class="row vol-address">
+          <input name="vol-time" id="vol-time" value="{{time}}" type="text" />
+
+
+          <div class="addr-cont">
+            <p>We will need them to come to...</p>
+            <input name="vol-street" id="vol-street" value="{{address}}" type="text" />
+            <p class="madlib">on</p>
+          </div>
+        </div>
+      </div>
+    </form>
+</script>
+{% endraw %}
+
+<script type='text/javascript' src="/static/js/pages/project.event_form.js"></script>
