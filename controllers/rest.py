@@ -16,8 +16,12 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 class NotFoundError (Exception):
     pass
+
+
 class NoMethodError (Exception):
     pass
+
+
 class ForbiddenError (Exception):
     pass
 
@@ -45,10 +49,13 @@ class DefaultAccess (ResourceAccessRules):
     """Read-only access by default"""
     def can_read(self, user, instance):
         return True
+
     def can_create(self, user, instance):
         return False
+
     def can_update(self, user, instance):
         return False
+
     def can_delete(self, user, instance):
         return False
 
@@ -62,8 +69,10 @@ class NonAdminReadOnly (ResourceAccessRules):
 
     def can_create(self, user, instance, orm=None):
         return self.is_admin(user)
+
     def can_update(self, user, instance):
         return self.is_admin(user)
+
     def can_delete(self, user, instance):
         return self.is_admin(user)
 
@@ -73,7 +82,8 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
         return True
 
     def is_project_admin(self, user, project):
-        return (user is not None) and ((user in project.members) or user.is_site_admin)
+        return (user is not None) and ((user in project.members)
+                                       or user.is_site_admin)
 
     def can_create(self, user, instance, orm=None):
         if instance.project is None and instance.project_id is not None and orm:
@@ -85,6 +95,7 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
 
     def can_update(self, user, instance):
         return self.is_project_admin(user, instance.project)
+
     def can_delete(self, user, instance):
         return self.is_project_admin(user, instance.project)
 
@@ -97,11 +108,13 @@ def _field_to_tuple(field):
         return (field[0], field[1])
     return (field, None)
 
+
 def _fields_to_list(fields):
     """
     Return a list of field names.
     """
     return [_field_to_tuple(field)[0] for field in fields or ()]
+
 
 def _fields_to_dict(fields):
     """
@@ -156,11 +169,9 @@ class Serializer(object):
     The maximum depth to serialize to, or `None`.
     """
 
-
     def __init__(self, depth=None, stack=[], **kwargs):
         self.depth = depth or self.depth
         self.stack = stack
-
 
     def get_fields(self, obj):
         """
@@ -181,7 +192,6 @@ class Serializer(object):
 
         return fields
 
-
     def get_default_fields(self, obj):
         """
         Return the default list of field names/keys for a model instance/dict.
@@ -192,7 +202,6 @@ class Serializer(object):
 #            return [field.name for field in opts.fields + opts.many_to_many]
 #        else:
         return obj.keys()
-
 
     def get_related_serializer(self, key):
         info = _fields_to_dict(self.fields).get(key, None)
@@ -223,14 +232,12 @@ class Serializer(object):
         # Otherwise use `related_serializer` or fall back to `Serializer`
         return getattr(self, 'related_serializer') or Serializer
 
-
     def serialize_key(self, key):
         """
         Keys serialize to their string value,
         unless they exist in the `rename` dict.
         """
         return self.rename.get(safestr(key), safestr(key))
-
 
     def serialize_val(self, key, obj):
         """
@@ -253,7 +260,6 @@ class Serializer(object):
 
         return related_serializer(depth=depth, stack=stack).serialize(obj)
 
-
     def serialize_max_depth(self, obj):
         """
         Determine how objects should be serialized once `depth` is exceeded.
@@ -261,14 +267,12 @@ class Serializer(object):
         """
         raise _SkipField
 
-
     def serialize_recursion(self, obj):
         """
         Determine how objects should be serialized if recursion occurs.
         The default behavior is to ignore the field.
         """
         raise _SkipField
-
 
     def serialize_model(self, instance):
         """
@@ -300,13 +304,11 @@ class Serializer(object):
 
         return data
 
-
     def serialize_iter(self, obj):
         """
         Convert iterables into a serializable representation.
         """
         return [self.serialize(item) for item in obj]
-
 
     def serialize_func(self, obj):
         """
@@ -314,20 +316,17 @@ class Serializer(object):
         """
         return self.serialize(obj())
 
-
     def serialize_manager(self, obj):
         """
         Convert a model manager into a serializable representation.
         """
         return self.serialize_iter(obj.all())
 
-
     def serialize_fallback(self, obj):
         """
         Convert any unhandled object into a serializable representation.
         """
         return safeuni(obj)
-
 
     def serialize(self, obj):
         """
@@ -337,7 +336,7 @@ class Serializer(object):
         if isinstance(obj, (dict, models.Base)):
             # Model instances & dictionaries
             return self.serialize_model(obj)
-        elif isinstance(obj, (tuple, list, set)): # What are query types in sqlalchemy?
+        elif isinstance(obj, (tuple, list, set)):
             # basic iterables
             return self.serialize_iter(obj)
         elif inspect.isfunction(obj) and not inspect.getargspec(obj)[0]:
@@ -383,7 +382,8 @@ class RestController (Controller):
         return self.model
 
     def instance_to_dict(self, row):
-        if row is None: return None
+        if row is None:
+            return None
 
         d = {}
         for columnName in row.__mapper__.columns.keys():
@@ -436,11 +436,11 @@ class RestController (Controller):
             data = json.dumps({'error': str(e)})
             return self.forbidden(data, headers)
 
-
     def GET(self, *args, **kwargs):
         # NOTE: As they're handled here, the READ and INDEX cases are mutually
         #       exclusive; an endpoint should have only one behavior anyway.
-        return self._BASE_METHOD_HANDLER(['REST_INDEX','REST_READ'], *args, **kwargs)
+        return self._BASE_METHOD_HANDLER(
+            ['REST_INDEX', 'REST_READ'], *args, **kwargs)
 
     def POST(self, *args, **kwargs):
         # Check if something other than POST was desired.
@@ -600,7 +600,8 @@ class UpdateInstanceMixin (object):
             raise ForbiddenError("Current user cannot modify the resource")
 
         for (key, val) in self.parameters().iteritems():
-            if key == '_method': continue
+            if key == '_method':
+                continue
             setattr(instance, key, val)
 
         orm.commit()
@@ -652,8 +653,10 @@ class NonProjectMemberReadOnly (ResourceAccessRules):
 
     def can_create(self, user, instance, orm=None):
         return self.is_member(user, instance.need.project)
+
     def can_update(self, user, instance):
         return False
+
     def can_delete(self, user, instance):
         return False
 
@@ -718,6 +721,7 @@ class NeedVolunteerList (CreateInstanceMixin, RestController):
 
         return response
 
+
 class PopularKeywordList (ListInstancesMixin, RestController):
     model = models.Project
     access_rules = DefaultAccess()
@@ -730,6 +734,7 @@ class PopularKeywordList (ListInstancesMixin, RestController):
             keywords = project_dict['keywords'].strip().split()
             keyword_counter.update(keywords)
 
-        keyword_counter = [ {'name':key, 'count':value} for key, value in keyword_counter.most_common(10) ]
+        keyword_counter = [{'name':key, 'count':value}
+                           for key, value in keyword_counter.most_common(10)]
 
         return keyword_counter
