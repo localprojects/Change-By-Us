@@ -1,4 +1,4 @@
-<li class="box event" data-id="{{ event.id }}">
+<li class="event" data-id="{{ event.id }}">
 {#    {% if
         (d.template_data.project_user.data.is_project_admin) or
         (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
@@ -40,8 +40,15 @@
             </div>
         </div>
 
-        <div class="event-rsvp serif">
+        <div class="event-rsvp">
             <a href="#" class="rsvp-link">RSVP <span class="rsvp-site">on <span class="rsvp-site-name">Eventbrite</span></span></a>
+
+            {% if event.needs|length > 0 %}
+                {% with need=event.needs[0] %}
+                    <span class="event-need serif">We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a></span>
+                    <span class="more-event-needs"><a href="#show,event-needs">Show all needs for this event</a></span>
+                {% endwith %}
+            {% endif %}
         </div>
 
         <!--
