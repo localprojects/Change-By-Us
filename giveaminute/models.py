@@ -202,6 +202,10 @@ class Volunteer (Base):
 
     need = relationship('Need')
     member = relationship('User')
+    
+    @property
+    def project(self):
+        return self.need.project
 
 
 class CommunityLeader (Base):

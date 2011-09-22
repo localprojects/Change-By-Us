@@ -26,6 +26,10 @@ class ForbiddenError (Exception):
     pass
 
 
+class BadRequest (Exception):
+    pass
+
+
 class ResourceAccessRules(object):
     """
     A class used to determine whether a given user can take actions on given
@@ -90,6 +94,9 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
             project = orm.query(models.Project).get(instance.project_id)
         else:
             project = instance.project
+
+        if project is None:
+            raise BadRequest('Project with ID %r not found' % instance.project_id)
 
         return self.is_project_admin(user, project)
 
@@ -436,6 +443,11 @@ class RestController (Controller):
             data = json.dumps({'error': str(e)})
             return self.forbidden(data, headers)
 
+        except BadRequest, e:
+            headers = {'Content-Type': 'application/json'}
+            data = json.dumps({'error': str(e)})
+            return self.error(data, headers)
+
     def GET(self, *args, **kwargs):
         # NOTE: As they're handled here, the READ and INDEX cases are mutually
         #       exclusive; an endpoint should have only one behavior anyway.
@@ -644,23 +656,6 @@ class DeleteInstanceMixin(object):
         return
 
 
-class NonProjectMemberReadOnly (ResourceAccessRules):
-    def can_read(self, user, instance):
-        return True
-
-    def is_member(self, user, project):
-        return user is not None and project.id in [member.project_id for member in user.memberships]
-
-    def can_create(self, user, instance, orm=None):
-        return self.is_member(user, instance.need.project)
-
-    def can_update(self, user, instance):
-        return False
-
-    def can_delete(self, user, instance):
-        return False
-
-
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Need
     ordering = models.Need.id
@@ -711,6 +706,23 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
         return need_dict
 
 
+class NonProjectMemberReadOnly (ResourceAccessRules):
+    def can_read(self, user, instance):
+        return True
+
+    def is_member(self, user, project):
+        return user is not None and project.id in [member.project_id for member in user.memberships]
+
+    def can_create(self, user, instance, orm=None):
+        return self.is_member(user, instance.project)
+
+    def can_update(self, user, instance):
+        return False
+
+    def can_delete(self, user, instance):
+        return False
+
+
 class NeedVolunteerList (CreateInstanceMixin, RestController):
     model = models.Volunteer
     access_rules = NonProjectMemberReadOnly()
@@ -742,9 +754,9 @@ class PopularKeywordList (ListInstancesMixin, RestController):
 
 class EventList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Event
-    access_rules = NonProjectMemberReadOnly()
+    access_rules = NonProjectAdminReadOnly()
 
 
 class EventInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
     model = models.Event
-    access_rules = NonProjectMemberReadOnly()
+    access_rules = NonProjectAdminReadOnly()

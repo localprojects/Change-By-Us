@@ -12,10 +12,12 @@ from framework.config import Config
 from framework.session_holder import SessionHolder
 import main
 
+from controllers.rest import BadRequest
 from controllers.rest import ForbiddenError
 from controllers.rest import NeedInstance
 from controllers.rest import NotFoundError
 from controllers.rest import NonProjectMemberReadOnly
+from controllers.rest import NonProjectAdminReadOnly
 from controllers.rest import NeedVolunteerList
 from controllers.rest import RestController
 from controllers.rest import Serializer
@@ -196,6 +198,33 @@ class Test_EventsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(response_dict[0]["address"], "CultureFix NYC")
 
 
+class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_allow_admin_to_create_a_new_event_when_given_valid_input(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/',
+            params={
+                'name': 'Another Opening',
+                'start_datetime': '2011-08-12 12:00:00',
+                'address': '85 2nd St., San Francisco CA 94105',
+                'project_id': 1,
+            }, status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+
+        assert_equal(num_events+1, len(orm.query(Event).all()))
+
+
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
 
@@ -321,3 +350,23 @@ class Test_Serializer_serialize (AppSetupMixin, TestCase):
         serialized = serializer.serialize(datetime.date(2011,8,2))
 
         assert_equal(serialized, '2011-08-02')
+
+
+class Test_NonProjectAdminReadOnly_canCreate (AppSetupMixin, TestCase):
+
+    @istest
+    def raises_a_BadRequest_error_when_instance_refers_to_a_nonexistant_project (self):
+        from framework.orm_holder import OrmHolder
+        orm = OrmHolder().orm
+        user = Mock()
+        instance = Mock()
+        instance.project = None
+        instance.project_id = 55
+
+        access_rules = NonProjectAdminReadOnly()
+
+        try:
+            access_rules.can_create(user, instance, orm)
+            ok_(False)
+        except BadRequest:
+            pass
