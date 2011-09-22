@@ -72,5 +72,41 @@ tc.gam.project_data = {
                 }
             }
         });
+    },
+    createEvent: function(data, success, error) {
+      tc.jQ.ajax({
+        type:'POST',
+        url:'/rest/v1/events/',
+        data:data,
+        dataType:'text',
+        success:function(data, status, xhr) {
+          if (success) {
+            success(data, status, xhr);
+          }
+        },
+        error:function(xhr, status, errorThrown){
+          if (error) {
+            error(xhr, status, errorThrown);
+          }
+        }
+      });
+    },
+    updateEvent: function(id, data, success, error) {
+      tc.jQ.ajax({
+        type:'PUT',
+        url:'/rest/v1/events/' + id + '/',
+        data:data,
+        dataType:'text',
+        success:function(data, status, xhr) {
+          if (success) {
+            success(data, status, xhr);
+          }
+        },
+        error:function(xhr, status, errorThrown){
+          if (error) {
+            error(xhr, status, errorThrown);
+          }
+        }
+      });
     }
 };

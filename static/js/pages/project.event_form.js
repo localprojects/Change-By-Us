@@ -7,6 +7,29 @@ tc.gam.project_widgets.event_form = function(options) {
     var dom = options.dom,
         self = {};
 
+
+    var initDropDown = function(id, defaultVal) {
+      tc.jQ('#' + id).jqDropDown({
+        toggleBtnName:'ddSelect',
+        optionListName:'ddSelectOptions',
+        containerName:'dd-' + id,
+        optionChanged: function() {
+          if ($('#' + id).val() === defaultVal) {
+            $('.dd-' + id + ' .ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
+          } else {
+            $('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+          }
+        }
+      });
+      
+      tc.jQ('.dd-' + id).addClass('ddSelectContainer');
+      
+      if (!defaultVal) {
+        tc.jQ('.dd-' + id).addClass('ddNoDefault');
+        tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+      }
+    };
+
     /**
      * Function: initMerlin
      * Initialize the merlin object for validation of the modal dialog.
@@ -21,17 +44,7 @@ tc.gam.project_widgets.event_form = function(options) {
             next_button:tc.jQ('a.event-submit'),
             first_step:'event_form',
             use_hashchange:false,
-            data: {
-              type:'volunteer',
-              request:null,
-              quantity:null,
-              description:null,
-              date:null,
-              time:null,
-              duration:null,
-              project_id:null,
-              address:null
-            },
+            data: {},
             steps: {
                 'event_form': {
                     selector: '.step.add-event-step',
@@ -49,26 +62,12 @@ tc.gam.project_widgets.event_form = function(options) {
                             limit:200
                           }
                         },
+                        'rsvp_url': {
+                            selector: '#event-url',
+                            validators: ['url']
+                        },
                         'month': {
-                          selector: '#event-month',
-                          validators: function(input, element, step, submit) {
-
-                            if (submit) {
-                              $('.ddSelect').addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
-                            }
-
-                            if ($(element).val() === 'Month') {
-                              $('.ddSelect').addClass('not-valid').removeClass('valid');
-                              return {
-                                valid: false,
-                                errors: ['Must select a month.']
-                              };
-                            } else {
-                              $('.ddSelect').addClass('valid').removeClass('not-valid');
-                              return {valid: true};
-                            };
-                          },
-                          hint:'Month'
+                          selector: '#event-month'
                         },
                         'day': {
                           selector: '#event-day',
@@ -89,9 +88,12 @@ tc.gam.project_widgets.event_form = function(options) {
                           hint:'Minute'
                         },
                         'meridiem': {
-                          selector: '#event-meridiem'
+                          selector: '#event-meridiem',
+                          validators: function(input, element, step, submit) {
+                            return {valid: true};
+                          }
                         },
-                        'location': {
+                        'address': {
                           selector: '#event-street',
                           validators: ['required'],
                           hint:'Street Address'
@@ -99,37 +101,12 @@ tc.gam.project_widgets.event_form = function(options) {
                     },
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
-                      tc.jQ('#event-month').jqDropDown({
-                        toggleBtnName:'ddSelect',
-                        optionListName:'ddSelectOptions',
-                        containerName:'ddSelectContainer',
-                        optionChanged: function() {
-                          if ($('#vol-month').val() === 'Month') {
-                            $('.ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
-                          } else {
-                            $('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
-                          }
-                        }
-                      });
-
-                      tc.jQ('#event-year').jqDropDown({
-                        toggleBtnName:'ddSelect',
-                        optionListName:'ddSelectOptions',
-                        containerName:'ddSelectContainer'
-                      });
                       
-                      tc.jQ('#event-meridiem').jqDropDown({
-                        toggleBtnName:'ddSelect',
-                        optionListName:'ddSelectOptions',
-                        containerName:'ddSelectContainer'
-                      });
-
-                      tc.jQ('#event-needs').jqDropDown({
-                        toggleBtnName:'ddSelect',
-                        optionListName:'ddSelectOptions',
-                        containerName:'ddSelectContainer'
-                      });
-
+                      initDropDown('event-month');
+                      initDropDown('event-year');
+                      initDropDown('event-meridiem');
+                      initDropDown('event-needs', 'Volunteer Needs');
+                      
                       if (event_id) {
                         tc.jQ.each(merlin.current_step.inputs, function(key, input) {
                           if (input.default_val) {
@@ -141,19 +118,21 @@ tc.gam.project_widgets.event_form = function(options) {
                     },
                     finish:function(merlin, dom) {
                       var d = new Date();
-                      var eventDate = d.getFullYear()
+                      var eventDate = merlin.current_step.inputs.year.dom.val()
                               + '-' + (parseInt(merlin.current_step.inputs.month.dom.val(), 10)+1)
-                              + '-' + merlin.current_step.inputs.day.dom.val();
+                              + '-' + merlin.current_step.inputs.day.dom.val()
+                              + ' ' + merlin.current_step.inputs.hour.dom.val()
+                              + ':' + merlin.current_step.inputs.minute.dom.val()
+                              + ' ' + merlin.current_step.inputs.meridiem.dom.val();
+                              
+
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
-                        type:'volunteer',
-                        request:merlin.current_step.inputs.request.dom.val(),
-                        quantity:merlin.current_step.inputs.quantity.dom.val(),
-                        description:merlin.current_step.inputs.description.dom.val(),
-                        date:eventDate,
-                        time:merlin.current_step.inputs.time.dom.val(),
-                        duration:merlin.current_step.inputs.duration.dom.val(),
-                        project_id:merlin.app.app_page.data.project.project_id,
-                        address:merlin.current_step.inputs.address.dom.val()
+                        name:merlin.current_step.inputs.name.dom.val(),
+                        details:merlin.current_step.inputs.details.dom.val(),
+                        rsvp_url:merlin.current_step.inputs.rsvp_url.dom.val(),
+                        start_datetime:eventDate,
+                        address:merlin.current_step.inputs.address.dom.val(),
+                        project_id:merlin.app.app_page.data.project.project_id
                       });
                     }
                 },
@@ -170,9 +149,9 @@ tc.gam.project_widgets.event_form = function(options) {
                       window.location.reload();
                     };
                     if (event_id === undefined) {
-                      tc.gam.project_data.createNeed(event_data, success);
+                      tc.gam.project_data.createEvent(event_data, success);
                     } else {
-                      tc.gam.project_data.updateNeed(event_id, event_data, success);
+                      tc.gam.project_data.updateEvent(event_id, event_data, success);
                     }
                   }
                 }
@@ -187,7 +166,7 @@ tc.gam.project_widgets.event_form = function(options) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
                 monthOpts: function() { 
-                  var eventDate = this.date ? (new Date(this.date).getUTCMonth()) : '';
+                  var eventDate = this.date ? (new Date(this.date).getUTCMonth()) : (new Date().getUTCMonth());
                   var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
                   var options = '';
                   for (var i = 0; i < months.length; i++) {
@@ -224,7 +203,7 @@ tc.gam.project_widgets.event_form = function(options) {
                     return options;
                 },
                 needOpts: function() {
-                  var options = '<option value="">Volunteer needs</option>';
+                  var options = '';
                   
                   return options;
                 }
