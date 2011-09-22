@@ -38,11 +38,19 @@ htaccess: %(htaccess)s
 
 # Locations
 #--------------------------------------------------------------------
-# These are settings are around URLs and locations.
+# These are settings are around URL locations.
 #
+# default_host   -- The URL of the site.  URLs are formed from this
+#                   value.  Example: http://google.com/
+# blog_host      -- The URL of a blog of news links.  This can be
+#                   any URL, and will be the URL for the News link.
+# blog_host_feed -- This is the JSON feed that has the News items
+#                   in them.  Used to display news on the home page.
+#                   Ensure that homepage.news is on to see items.
 #--------------------------------------------------------------------
 default_host: %(default_host)s
 blog_host: %(blog_host)s
+blog_host_feed: %(blog_host)s
 
 
 # Site settings
@@ -105,7 +113,7 @@ features:
 # who_is_listening -- Yes or No.  Enable this feature on homepage;
 #                     currently the content is not configurable.
 # news             -- Yes or No.  Enable this feature on homepage;
-#                     currently the content is not configurable.
+#                     See blog_host_feed as well.
 # postboard_bg     -- Path to image to use for background.  The default
 #                     NYC one is: /static/images/bg_home_wider.jpg
 # top_left_tag_bg  -- Path to image to use for top left tag background.
@@ -265,11 +273,6 @@ aws:
 media:
     isS3mirror: True
     root: %(media_root)s
-
-aws:
-    access_key_id: %(aws_access_key_id)s
-    secret_access_key: %(aws_secret_access_key)s
-    bucket: %(s3_bucket)s
 
 # Typekit key is the name of the JS file, like http://use.typekit.com/XXXXXX.js
 typekit:

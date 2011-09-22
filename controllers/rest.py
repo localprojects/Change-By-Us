@@ -31,7 +31,7 @@ class ResourceAccessRules(object):
     def can_read(self, user, instance):
         raise NotImplementedError()
 
-    def can_create(self, user, instance):
+    def can_create(self, user, instance, orm=None):
         raise NotImplementedError()
 
     def can_update(self, user, instance):
@@ -60,7 +60,7 @@ class NonAdminReadOnly (ResourceAccessRules):
     def is_admin(self, user):
         return user is not None and user.isAdmin
 
-    def can_create(self, user, instance):
+    def can_create(self, user, instance, orm=None):
         return self.is_admin(user)
     def can_update(self, user, instance):
         return self.is_admin(user)
@@ -75,8 +75,14 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
     def is_project_admin(self, user, project):
         return (user is not None) and ((user in project.members) or user.is_site_admin)
 
-    def can_create(self, user, instance):
-        return self.is_project_admin(user, instance.project)
+    def can_create(self, user, instance, orm=None):
+        if instance.project is None and instance.project_id is not None and orm:
+            project = orm.query(models.Project).get(instance.project_id)
+        else:
+            project = instance.project
+
+        return self.is_project_admin(user, project)
+
     def can_update(self, user, instance):
         return self.is_project_admin(user, instance.project)
     def can_delete(self, user, instance):
@@ -546,13 +552,11 @@ class CreateInstanceMixin (object):
                 break
 
         instance = Model(**all_kw_args)
-        orm.add(instance)
-        orm.flush()
 
-        if not self.access_rules.can_create(self.user, instance):
-            orm.rollback()
+        if not self.access_rules.can_create(self.user, instance, orm=orm):
             raise ForbiddenError("User cannot store the resource")
 
+        orm.add(instance)
         orm.commit()
         return self.instance_to_dict(instance)
 
@@ -646,7 +650,7 @@ class NonProjectMemberReadOnly (ResourceAccessRules):
     def is_member(self, user, project):
         return user is not None and project.id in [member.project_id for member in user.memberships]
 
-    def can_create(self, user, instance):
+    def can_create(self, user, instance, orm=None):
         return self.is_member(user, instance.need.project)
     def can_update(self, user, instance):
         return False

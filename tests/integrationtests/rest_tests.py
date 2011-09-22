@@ -12,12 +12,13 @@ from framework.config import Config
 from framework.session_holder import SessionHolder
 import main
 
-from controllers.rest import Serializer
+from controllers.rest import ForbiddenError
 from controllers.rest import NeedInstance
 from controllers.rest import NotFoundError
 from controllers.rest import NonProjectMemberReadOnly
 from controllers.rest import NeedVolunteerList
 from controllers.rest import RestController
+from controllers.rest import Serializer
 
 class Test_RestController_instanceToDict (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
@@ -41,6 +42,12 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
     def should_not_allow_anonymous_user_to_create_needs(self):
         # Check out http://webpy.org/cookbook/testing_with_paste_and_nose for
         # more about testing with Paste.
+        from giveaminute.models import Need
+        from framework.orm_holder import OrmHolder
+
+        orm = OrmHolder().orm
+        orig_needs = len(orm.query(Need).all())
+
         response = self.app.post('/rest/v1/needs/',
             params={
                 'type': 'volunteer',
@@ -50,6 +57,9 @@ class Test_Needs_REST_endpoint (AppSetupMixin, TestCase):
                 'project_id': 1,
             },
             status=403)
+
+        final_needs = len(orm.query(Need).all())
+        assert_equal(orig_needs, final_needs)
 
     @istest
     def should_allow_admin_user_to_update_needs(self):
@@ -218,7 +228,7 @@ class Test_NeedVolunteersList_REST_CREATE (AppSetupMixin, TestCase):
 
     @istest
     def should_create_a_new_volunteer_when_user_is_member_of_needs_project(self):
-        from giveaminute.models import *
+        from giveaminute.models import User
         cont = NeedVolunteerList()
         cont.user = cont.orm.query(User).get(1)
 
@@ -226,6 +236,23 @@ class Test_NeedVolunteersList_REST_CREATE (AppSetupMixin, TestCase):
         web.ctx.env['SCRIPT_NAME'] = ''
         obj = cont.REST_CREATE(u'2', member_id=u'1')
         assert isinstance(obj, dict)
+
+    @istest
+    def should_not_allow_anonymous_user_to_create_volunteers(self):
+        from giveaminute.models import User, Volunteer
+        cont = NeedVolunteerList()
+        orig_needs = len(cont.orm.query(Volunteer).all())
+
+        web.ctx.env['REQUEST_METHOD'] = 'GET'
+        web.ctx.env['SCRIPT_NAME'] = ''
+
+        try:
+            obj = cont.REST_CREATE(u'2', member_id=u'1')
+        except ForbiddenError:
+            final_needs = len(cont.orm.query(Volunteer).all())
+            assert_equal(orig_needs, final_needs)
+        else:
+            ok_(False)
 
 
 class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):
@@ -235,10 +262,12 @@ class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):
         import giveaminute.models
         import giveaminute.user
 
-        cont = RestController()
-        cont.user = giveaminute.user.User(cont.db, 1)
+        self.login(user_id=1)
 
-        cont._BASE_METHOD_HANDLER([])
+        cont = RestController()
+        cont.REST_FAKE = lambda: None
+
+        cont._BASE_METHOD_HANDLER(['REST_FAKE'])
 
         assert_is_instance(cont.user, giveaminute.models.User)
 
@@ -249,7 +278,7 @@ class Test_NonProjectMemberReadOnly_IsMember(AppSetupMixin, TestCase):
     @istest
     def should_return_true_if_user_is_member(self):
         from framework.orm_holder import OrmHolder
-        from giveaminute.models import *
+        from giveaminute.models import Project, User
 
         orm = OrmHolder().orm
         user = orm.query(User).get(1)

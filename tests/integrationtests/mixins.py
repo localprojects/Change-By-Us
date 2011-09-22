@@ -60,6 +60,7 @@ class WebPySetupMixin (object):
         # TODO: Clean up this initialization
         web.ctx.method = ''
         web.ctx.path = ''
+        web.ctx.fullpath = ''
         web.ctx.home = 'http://localhost:8080/test'
         import StringIO
         web.ctx.env = {'wsgi.input': '',
