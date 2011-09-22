@@ -500,7 +500,9 @@ CREATE TABLE `project_event` (
   `start_datetime` datetime DEFAULT NULL,
   `end_datetime` datetime DEFAULT NULL,
   `address` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `project_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `project_id` (`project_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -986,4 +988,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-09-15 19:30:05
+-- Dump completed on 2011-09-22 12:43:15
