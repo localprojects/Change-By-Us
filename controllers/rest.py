@@ -738,3 +738,13 @@ class PopularKeywordList (ListInstancesMixin, RestController):
                            for key, value in keyword_counter.most_common(10)]
 
         return keyword_counter
+
+
+class EventList (ListInstanceMixin, CreateInstanceMixin, RestController):
+    model = models.Event
+    acess_rules = NonProjectMemberReadOnly()
+
+
+class EventInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
+    model = models.Event
+    acess_rules = NonProjectMemberReadOnly()
