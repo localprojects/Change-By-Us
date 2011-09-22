@@ -43,6 +43,9 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
 
             r'/rest/v1/keywords/', 'controllers.rest.PopularKeywordList',
 
+            r'/rest/v1/events/', 'controllers.rest.EventsList',
+            r'/rest/v1/events/(?P<id>\d+)/', 'controllers.rest.EventInstance',
+            
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
 
 
