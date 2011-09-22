@@ -740,7 +740,7 @@ class PopularKeywordList (ListInstancesMixin, RestController):
         return keyword_counter
 
 
-class EventList (ListInstanceMixin, CreateInstanceMixin, RestController):
+class EventList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Event
     acess_rules = NonProjectMemberReadOnly()
 
