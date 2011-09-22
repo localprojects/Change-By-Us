@@ -78,10 +78,23 @@ tc.gam.project_widgets.event_form = function(options) {
                         'year': {
                           selector: '#event-year'
                         },
-                        'time': {
-                          selector: '#vol-time',
+                        'hour': {
+                          selector: '#event-hour',
+                          validators: ['required', 'numeric'],
+                          hint:'Hour'
+                        },
+                        'minute': {
+                          selector: '#event-minute',
+                          validators: ['required', 'numeric'],
+                          hint:'Minute'
+                        },
+                        'meridiem': {
+                          selector: '#event-meridiem'
+                        },
+                        'location': {
+                          selector: '#event-street',
                           validators: ['required'],
-                          hint:'Time'
+                          hint:'Street Address'
                         }
                     },
                     init:function(merlin, dom) {
@@ -100,6 +113,18 @@ tc.gam.project_widgets.event_form = function(options) {
                       });
 
                       tc.jQ('#event-year').jqDropDown({
+                        toggleBtnName:'ddSelect',
+                        optionListName:'ddSelectOptions',
+                        containerName:'ddSelectContainer'
+                      });
+                      
+                      tc.jQ('#event-meridiem').jqDropDown({
+                        toggleBtnName:'ddSelect',
+                        optionListName:'ddSelectOptions',
+                        containerName:'ddSelectContainer'
+                      });
+
+                      tc.jQ('#event-needs').jqDropDown({
                         toggleBtnName:'ddSelect',
                         optionListName:'ddSelectOptions',
                         containerName:'ddSelectContainer'
@@ -188,7 +213,22 @@ tc.gam.project_widgets.event_form = function(options) {
                       }
                     }
                     return options;
+                },
+                meridiemOpts: function() {
+                    var isPM = this.date ? (new Date(this.date).getUTCHours()) >= 11 : false,
+                        options = '';
+                        
+                    options += '<option value="AM" ' + (isPM ? '' : 'selected') + '>AM</option>';
+                    options += '<option value="PM" ' + (!isPM ? '' : 'selected') + '>PM</option>';
+
+                    return options;
+                },
+                needOpts: function() {
+                  var options = '<option value="">Volunteer needs</option>';
+                  
+                  return options;
                 }
+
             }, event_details),
             $html = ich.event_form_tmpl(new_details);
             

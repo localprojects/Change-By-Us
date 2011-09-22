@@ -30,40 +30,63 @@
 <script id="event_form_tmpl" type="text/html">
     <form action="#">
       <div class="fields serif">
-        <div class="long-row">
+        <div class="wide row">
           <div class="title">The name of the event is:</div>
-          <input name="event-name" id="event-name" type="text" value="{{name}}" />
+          <input name="event-name" id="event-name" type="text" value="{{name}}"  class="long-input"/>
         </div>
-        <div class="long-row">
+        <div class="wide row">
           <div class="title"><span>A few details about the event:</span><span class="charlimit title">200</span></div>
-          <textarea name="event-desc" id="event-desc">{{description}}</textarea>
+          <textarea name="event-desc" id="event-desc" class="long-input">{{description}}</textarea>
         </div>
-        <div class="long-row optional">
+        <div class="wide row optional">
           <div class="title">Link to the event on Facebook, Eventbrite or elsewhere:</div>
-          <input name="event-url" id="event-url" type="text" value="{{url}}" />
+          <input name="event-url" id="event-url" type="text" value="{{url}}"  class="long-input"/>
         </div>
-        <div class="row">
+        <div class="wide row datetime">
           <div class="title">The name of the event is:</div>
-          <select id="event-month">
-            <option value="Month">Month</option>
-            {{{monthOpts}}}
-          </select>
-          <input name="event-day" id="event-day"value="{{day}}" type="text" />
-          <select id="event-year">
-            {{{yearOpts}}}
-          </select>
-        </div>
-
-        <div class="row vol-address">
-          <input name="vol-time" id="vol-time" value="{{time}}" type="text" />
-
-
-          <div class="addr-cont">
-            <p>We will need them to come to...</p>
-            <input name="vol-street" id="vol-street" value="{{address}}" type="text" />
-            <p class="madlib">on</p>
+          <div class="event-left">
+            <select id="event-month">
+              <option value="Month">Month</option>
+              {{{monthOpts}}}
+            </select>
+            <input name="event-day" id="event-day"value="{{day}}" type="text" />
+            <select id="event-year">
+              {{{yearOpts}}}
+            </select>
+          </div>
+          <div class="event-right">
+            <input name="event-hour" id="event-hour" value="{{hour}}" type="text" />
+            <span class="time-delim">:</span>
+            <input name="event-minute" id="event-minute" value="{{minute}}" type="text" />
+            <select id="event-meridiem">
+              {{{meridiemOpts}}}
+            </select>
           </div>
         </div>
+
+        <div class="row wide inline">
+          <div class="title">It will take place at:</div>
+          <div class="event-right">
+            <input name="event-street" id="event-street" type="text" value="{{address}}" />
+          </div>
+          <div class="clearfix"></div>
+        </div>
+
+        <div class="row wide inline needs">
+          <div class="title">Link a need:</div>
+          <div class="event-right">
+            <select id="event-needs">
+              {{{needOpts}}}
+            </select>
+          </div>
+          <a href="javascript:void(0)" class="attach-need">+</a>
+          <div class="tip">You can always come back and link needs later</div>
+        </div>
+
+        <div class="row wide needs-list">
+          <ul><li>Need Title<a href="#" class="unlink-need"></a></li><li>Another Need Title<a href="#" class="unlink-need"></a></li></ul>
+        </div>
+
       </div>
     </form>
 </script>
