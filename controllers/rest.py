@@ -742,9 +742,9 @@ class PopularKeywordList (ListInstancesMixin, RestController):
 
 class EventList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Event
-    acess_rules = NonProjectMemberReadOnly()
+    access_rules = NonProjectMemberReadOnly()
 
 
 class EventInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
     model = models.Event
-    acess_rules = NonProjectMemberReadOnly()
+    access_rules = NonProjectMemberReadOnly()

@@ -173,6 +173,29 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
             assert_in("display_name", volunteer_dict)
 
 
+class Test_EventsRestEndpoint_GET (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_return_a_reasonable_representation_of_an_event(self):
+        response = self.app.get('/rest/v1/events/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_equal(response_dict["name"], "Gallery Opening")
+        assert_equal(response_dict["start_datetime"], "2011-09-06 19:00:00")
+        assert_equal(response_dict["address"], "CultureFix NYC")
+
+    @istest
+    def should_return_a_list_of_events(self):
+        response = self.app.get('/rest/v1/events/', status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+        assert_equal(response_dict[0]["name"], "Gallery Opening")
+        assert_equal(response_dict[0]["start_datetime"], "2011-09-06 19:00:00")
+        assert_equal(response_dict[0]["address"], "CultureFix NYC")
+
+
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
 
