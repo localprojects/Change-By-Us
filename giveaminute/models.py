@@ -238,6 +238,9 @@ class Event (Base):
         """The name of the service providing RSVP for the event"""
         url = self.rsvp_url
 
+        if url is None:
+            return None
+
         # For now the list of supported sites/URLs is hardcoded.  In the future
         # we might want to try to be more clever.
         if 'facebook.com' in url[:24].lower():

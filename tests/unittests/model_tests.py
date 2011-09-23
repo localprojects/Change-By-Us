@@ -78,3 +78,10 @@ class Test_Event_rsvpServiceName (TestCase):
         for url in urls:
             event.rsvp_url = url
             assert_is_none(event.rsvp_service_name)
+
+    @istest
+    def returns_None_if_event_has_no_rsvpUrl(self):
+        event = Event()
+        event.rsvp_url = None
+
+        assert_is_none(event.rsvp_service_name)
