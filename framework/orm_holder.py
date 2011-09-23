@@ -1,3 +1,4 @@
+from lib import web
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -12,13 +13,20 @@ class OrmHolder (object):
         ``web.ctx`` object.  The object is wrapped so that we can more easily stub
         it when necessary.
         """
-        from lib import web
-        if not hasattr(web.config, 'orm') or web.config.orm is None:
+        if self.is_invalid:
             config = self.get_db_config()
             engine = self.get_db_engine(config)
             web.config.orm = self.get_orm(engine)
         return web.config.orm
 
+    @property
+    def is_invalid(self):
+        """A flag denoting that the ORM session needs to be [re]loaded"""
+        return not hasattr(web.config, 'orm') or web.config.orm is None
+
+    @classmethod
+    def invalidate(cls):
+        web.config.orm = None
 
     def get_db_config(self):
         """Pulls the database config information from the config.yaml file."""
