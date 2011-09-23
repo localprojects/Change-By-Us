@@ -81,7 +81,18 @@ class NonAdminReadOnly (ResourceAccessRules):
         return self.is_admin(user)
 
 
-class NonProjectAdminReadOnly (ResourceAccessRules):
+class ProjectBasedAccessRulesMixin (object):
+    def get_project(self, instance, orm=None):
+        project = instance.project
+        if project is None and orm is not None:
+            project = orm.query(models.Project).get(instance.project_id)
+        if project is None:
+            raise BadRequest('Project with ID %r not found' %
+                             instance.project_id)
+        return project
+
+
+class NonProjectAdminReadOnly (ProjectBasedAccessRulesMixin, ResourceAccessRules):
     def can_read(self, user, instance):
         return True
 
@@ -90,21 +101,35 @@ class NonProjectAdminReadOnly (ResourceAccessRules):
                                        or user.is_site_admin)
 
     def can_create(self, user, instance, orm=None):
-        if instance.project is None and instance.project_id is not None and orm:
-            project = orm.query(models.Project).get(instance.project_id)
-        else:
-            project = instance.project
-
-        if project is None:
-            raise BadRequest('Project with ID %r not found' % instance.project_id)
-
+        project = self.get_project(instance, orm)
         return self.is_project_admin(user, project)
 
     def can_update(self, user, instance):
-        return self.is_project_admin(user, instance.project)
+        project = self.get_project(instance)
+        return self.is_project_admin(user, project)
 
     def can_delete(self, user, instance):
-        return self.is_project_admin(user, instance.project)
+        project = self.get_project(instance)
+        return self.is_project_admin(user, project)
+
+
+class NonProjectMemberReadOnly (ProjectBasedAccessRulesMixin, ResourceAccessRules):
+    def can_read(self, user, instance):
+        return True
+
+    def is_member(self, user, project):
+        return user is not None and \
+               project.id in [member.project_id for member in user.memberships]
+
+    def can_create(self, user, instance, orm=None):
+        project = self.get_project(instance, orm)
+        return self.is_member(user, project)
+
+    def can_update(self, user, instance):
+        return False
+
+    def can_delete(self, user, instance):
+        return False
 
 
 def _field_to_tuple(field):
@@ -706,26 +731,22 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
         return need_dict
 
 
-class NonProjectMemberReadOnly (ResourceAccessRules):
-    def can_read(self, user, instance):
-        return True
+class NonProjectMemberReadOnly_ForNeedVolunteer (NonProjectMemberReadOnly):
+    def get_project(self, volunteer, orm):
+        need = volunteer.need
+        if need is None:
+            need_id = volunteer.need_id
+            need = self.orm.query(models.Need).get(need_id)
+        if need is None:
+            raise BadRequest('Need with ID %r not found' %
+                             volunteer.need_id)
 
-    def is_member(self, user, project):
-        return user is not None and project.id in [member.project_id for member in user.memberships]
-
-    def can_create(self, user, instance, orm=None):
-        return self.is_member(user, instance.project)
-
-    def can_update(self, user, instance):
-        return False
-
-    def can_delete(self, user, instance):
-        return False
+        return need.project
 
 
 class NeedVolunteerList (CreateInstanceMixin, RestController):
     model = models.Volunteer
-    access_rules = NonProjectMemberReadOnly()
+    access_rules = NonProjectMemberReadOnly_ForNeedVolunteer()
 
     def REST_CREATE(self, *args, **kwargs):
         kwargs['need'] = self.orm.query(models.Need).get(args[0])
