@@ -7,13 +7,19 @@ tc.gam.project_widgets.event_form = function(options) {
     var dom = options.dom,
         self = {};
 
-
+    //Helper function to make the jqDropDown plugin more robust
+    //since you can't set multiple classes at a time.
+    //  id - the selector for the select element, also used to
+    //       identify the generated markup
+    //  defaultVal - Used to identify the unselectable default value
     var initDropDown = function(id, defaultVal) {
+      //Apply jqDropDown to our select element
       tc.jQ('#' + id).jqDropDown({
         toggleBtnName:'ddSelect',
         optionListName:'ddSelectOptions',
         containerName:'dd-' + id,
         optionChanged: function() {
+          //This is not valid if we select the default
           if ($('#' + id).val() === defaultVal) {
             $('.dd-' + id + ' .ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
           } else {
@@ -22,12 +28,19 @@ tc.gam.project_widgets.event_form = function(options) {
         }
       });
       
+      //Add the default container css class (important, common styles on this guy)
       tc.jQ('.dd-' + id).addClass('ddSelectContainer');
       
+      //There's no default value, something is always selected, so it's always valid
       if (!defaultVal) {
         tc.jQ('.dd-' + id).addClass('ddNoDefault');
         tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
       }
+    };
+    
+    self._makeDateString = function(c) {
+      var hour = (parseInt(c.hour, 10) % 12) + (c.meridiem === 'PM' ? 12 : 0);
+      return [c.year, '-', c.month, '-', c.day, ' ', hour, ':', c.minute].join('');
     };
 
     /**
@@ -101,7 +114,6 @@ tc.gam.project_widgets.event_form = function(options) {
                     },
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
-                      
                       initDropDown('event-month');
                       initDropDown('event-year');
                       initDropDown('event-meridiem');
@@ -118,19 +130,20 @@ tc.gam.project_widgets.event_form = function(options) {
                     },
                     finish:function(merlin, dom) {
                       var d = new Date();
-                      var eventDate = merlin.current_step.inputs.year.dom.val()
-                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val(), 10)+1)
-                              + '-' + merlin.current_step.inputs.day.dom.val()
-                              + ' ' + merlin.current_step.inputs.hour.dom.val()
-                              + ':' + merlin.current_step.inputs.minute.dom.val()
-                              + ' ' + merlin.current_step.inputs.meridiem.dom.val();
-                              
-
+                      var dateConfig = {
+                        year: merlin.current_step.inputs.year.dom.val(),
+                        month: (parseInt(merlin.current_step.inputs.month.dom.val(), 10)+1),
+                        day: merlin.current_step.inputs.day.dom.val(),
+                        hour: merlin.current_step.inputs.hour.dom.val(),
+                        minute: merlin.current_step.inputs.minute.dom.val(),
+                        meridiem: merlin.current_step.inputs.meridiem.dom.val()
+                      };
+                      
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         name:merlin.current_step.inputs.name.dom.val(),
                         details:merlin.current_step.inputs.details.dom.val(),
                         rsvp_url:merlin.current_step.inputs.rsvp_url.dom.val(),
-                        start_datetime:eventDate,
+                        start_datetime:self._makeDateString(dateConfig),
                         address:merlin.current_step.inputs.address.dom.val(),
                         project_id:merlin.app.app_page.data.project.project_id
                       });
@@ -186,9 +199,9 @@ tc.gam.project_widgets.event_form = function(options) {
                         
                     for (var i = 0; i < years.length; i++) {
                       if (years[i] === eventYear) {
-                        options += '<option value="' + i + '" selected>' + years[i] + '</option>';
+                        options += '<option value="' + years[i] + '" selected>' + years[i] + '</option>';
                       } else {
-                        options += '<option value="' + i + '">' + years[i] + '</option>';
+                        options += '<option value="' + years[i] + '">' + years[i] + '</option>';
                       }
                     }
                     return options;
