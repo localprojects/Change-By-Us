@@ -250,6 +250,26 @@ class Event (Base):
         if 'eventbrite.com' in url[:26].lower():
             return 'Eventbrite'
 
+    @property
+    def start_year(self):
+        return self.start_datetime.year
+
+    @property
+    def start_month(self):
+        return self.start_datetime.month
+
+    @property
+    def start_day(self):
+        return self.start_datetime.day
+
+    @property
+    def start_hour(self):
+        return self.start_datetime.hour
+
+    @property
+    def start_minute(self):
+        return self.start_datetime.minute
+
 
 if __name__ == '__main__':
     import sys

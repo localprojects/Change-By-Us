@@ -735,6 +735,13 @@ class NeedModelRestController (RestController):
 
         event_dict = super(NeedModelRestController, self).instance_to_dict(event)
 
+        if event:
+            event_dict['start_year'] = event.start_year
+            event_dict['start_month'] = event.start_year
+            event_dict['start_day'] = event.start_year
+            event_dict['start_hour'] = event.start_year
+            event_dict['start_minute'] = event.start_year
+
         return event_dict
 
     def instance_to_dict(self, need):
@@ -869,6 +876,12 @@ class EventModelRestController (RestController):
         event_dict['needs'] = [
             self.need_to_dict(need)
             for need in event.needs]
+
+        event_dict['start_year'] = event.start_year
+        event_dict['start_month'] = event.start_month
+        event_dict['start_day'] = event.start_day
+        event_dict['start_hour'] = event.start_hour
+        event_dict['start_minute'] = event.start_minute
 
         return event_dict
 
