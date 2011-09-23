@@ -123,6 +123,22 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(response_dict["address"], "Frugal 4 House, 563 46th St., Oakland, CA 94609")
 
     @istest
+    def should_include_event_information_if_available(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_in('event', response_dict)
+        assert_equal(response_dict['event']['name'], "Gallery Opening")
+
+    @istest
+    def should_set_an_event_parameter_to_None_if_none_is_linked(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_in('event', response_dict)
+        assert_is_none(response_dict['event'])
+
+    @istest
     def should_include_a_pretty_date_in_the_list(self):
         response = self.app.get('/rest/v1/needs/', status=200)
 
@@ -195,6 +211,8 @@ class Test_EventsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(response_dict["start_datetime"], "2011-09-06 19:00:00")
         assert_equal(response_dict["address"], "CultureFix NYC")
         assert_equal(response_dict["rsvp_service_name"], "Eventbrite")
+        assert_equal(len(response_dict["needs"]), 1)
+        assert_equal(int(response_dict["needs"][0]["id"]), 2)
 
     @istest
     def should_return_a_list_of_events(self):

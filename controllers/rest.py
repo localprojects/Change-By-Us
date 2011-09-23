@@ -723,7 +723,12 @@ class NeedModelRestController (RestController):
         return user_dict
 
     def event_to_dict(self, event):
-        pass
+        """Convert an event instance in the context of being linked with a need
+           to a dictionary"""
+
+        event_dict = super(NeedModelRestController, self).instance_to_dict(event)
+
+        return event_dict
 
     def instance_to_dict(self, need):
         """Convert a need instance to a dictionary"""
@@ -733,6 +738,8 @@ class NeedModelRestController (RestController):
         need_dict['volunteers'] = [
             self.user_to_dict(volunteer)
             for volunteer in need.volunteers]
+
+        need_dict['event'] = self.event_to_dict(need.event)
 
         raw_date = need_dict['date']
         if raw_date:
@@ -809,19 +816,52 @@ class EventModelRestController (RestController):
     model = models.Event
     access_rules = NonProjectAdminReadOnly()
 
+    def user_to_dict(self, user):
+        """Convert a user instance in the context of being a need volunteer to
+           a dictionary"""
+
+        from giveaminute.project import userNameDisplay
+        from giveaminute.project import isFullLastName
+
+        user_dict = super(EventModelRestController, self).instance_to_dict(user)
+
+        # Add in some of that non-orm goodness
+        user_dict['avatar_path'] = user.avatar_path
+        user_dict['display_name'] = userNameDisplay(
+            user.first_name, user.last_name, user.affiliation,
+            isFullLastName(user.group_membership_bitmask))
+
+        # Remove sensitive information
+        del user_dict['password']
+        del user_dict['salt']
+
+        return user_dict
+
+    def need_to_dict(self, need):
+        """Convert a need instance to a dictionary"""
+
+        need_dict = super(EventModelRestController, self).instance_to_dict(need)
+
+        need_dict['volunteers'] = [
+            self.user_to_dict(volunteer)
+            for volunteer in need.volunteers]
+
+        raw_date = need_dict['date']
+        if raw_date:
+            need_dict['display_date'] = need.display_date
+
+        return need_dict
+
     def instance_to_dict(self, event):
         """Convert an event instance to a dictionary"""
 
         event_dict = super(EventModelRestController, self).instance_to_dict(event)
 
         event_dict['rsvp_service_name'] = event.rsvp_service_name
-#        event_dict['rsvp_service_name'] = [
-#            self.user_to_dict(volunteer)
-#            for volunteer in need.volunteers]
 
-#        raw_date = need_dict['date']
-#        if raw_date:
-#            need_dict['display_date'] = need.display_date
+        event_dict['needs'] = [
+            self.need_to_dict(need)
+            for need in event.needs]
 
         return event_dict
 
