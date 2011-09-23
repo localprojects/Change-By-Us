@@ -202,7 +202,7 @@ class Volunteer (Base):
 
     need = relationship('Need')
     member = relationship('User')
-    
+
     @property
     def project(self):
         return self.need.project
@@ -232,6 +232,10 @@ class Event (Base):
 
     project = relationship('Project')
     needs = relationship('Need')
+
+    @property
+    def rsvp_service_name(self):
+        pass
 
 
 

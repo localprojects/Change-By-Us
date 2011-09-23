@@ -27,7 +27,7 @@ class Test_RestController_instanceToDict (AppSetupMixin, TestCase):
 
     @istest
     def should_return_user_object_dict_with_mapper_names_instead_of_table_names(self):
-        from giveaminute.models import *
+        from giveaminute.models import User
         cont = RestController()
         user = cont.orm.query(User).get(1)
 
@@ -125,6 +125,19 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
     @istest
     def should_include_a_pretty_date_in_the_list(self):
         response = self.app.get('/rest/v1/needs/', status=200)
+
+        response_list = json.loads(response.body)
+        for need_dict in response_list:
+            print need_dict["display_date"]
+            if need_dict["display_date"] == "August 26th":
+                ok_(True)
+                return
+        ok_(False)
+
+    @istest
+    def should_include_a_pretty_date_in_the_list2(self):
+        """TODO: RENAME ME TO SOMETHING USEFUL"""
+        response = self.app.get('/rest/v1/needs/?description=boo', status=200)
 
         response_list = json.loads(response.body)
         for need_dict in response_list:
@@ -324,6 +337,10 @@ class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):
         cont._BASE_METHOD_HANDLER(['REST_FAKE'])
 
         assert_is_instance(cont.user, giveaminute.models.User)
+
+    def test_that_it_doesnt_let_a_paramter_starting_with_underscore_through(self):
+        cont = RestController()
+        assert_equal(cont.get_model_params(**{'arg1':1, 'arg2':2, '_arg3':3}), {'arg1':1, 'arg2':2})
 
 
 class Test_NonProjectMemberReadOnly_IsMember(AppSetupMixin, TestCase):

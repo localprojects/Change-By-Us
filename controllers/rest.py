@@ -431,14 +431,19 @@ class RestController (Controller):
         if self.user:
             self.user = self.orm.query(models.User).get(self.user.id)
 
-    def do_HTTP_verb(self, verb, *args, **kwargs):
-        method_handler = getattr(self, verb)
+    def get_model_params(self, **kwargs):
+        all_kwargs = {}
 
         # Get rid of things that start with underscore (_).  Things like jQuery
         # will use this prefix for special variables.  You shouldn't.
-        for key, var in kwargs.items():
-            if key.startswith('_'):
-                del kwargs[key]
+        for key, val in kwargs.items():
+            if not key.startswith('_'):
+                all_kwargs[key] = val
+
+        return all_kwargs
+
+    def do_HTTP_verb(self, verb, *args, **kwargs):
+        method_handler = getattr(self, verb)
 
         response_data = method_handler(*args, **kwargs)
 
@@ -520,9 +525,9 @@ class ListInstancesMixin (object):
 
         query = orm.query(Model)
 
-        all_kw_args = dict(web.input().items() + kwargs.items())
-        if all_kw_args:
-            query = query.filter_by(**all_kw_args)
+        model_params = self.get_model_params(**kwargs)
+        if model_params:
+            query = query.filter_by(**model_params)
         if hasattr(self, 'ordering'):
             query = query.order_by(self.ordering)
 
@@ -539,8 +544,9 @@ class ReadInstanceMixin (object):
         orm = self.orm
 
         query = orm.query(Model)
-        if kwargs:
-            query = query.filter(**kwargs)
+        model_params = self.get_model_params(**kwargs)
+        if model_params:
+            query = query.filter_by(**model_params)
 
         if args:
             # If we have any none kwargs then assume the last represents the primrary key
@@ -586,16 +592,9 @@ class CreateInstanceMixin (object):
 #                kwargs[related_name + '_id'] = kwargs[related_name]
 #                del kwargs[related_name]
 
-        all_kw_args = dict(web.input().items() + kwargs.items())
-
-        # HACK: This is a hack.  We kept getting a test file name being passed
-        # in as one of the query parameters.  Wierd.
-        for kw in all_kw_args:
-            if kw.startswith('tests/'):
-                del all_kw_args[kw]
-                break
-
-        instance = Model(**all_kw_args)
+        model_params = self.get_model_params(**dict(kwargs.items() +
+                                                    web.input().items()))
+        instance = Model(**model_params)
 
         if not self.access_rules.can_create(self.user, instance, orm=orm):
             raise ForbiddenError("User cannot store the resource")
@@ -621,9 +620,10 @@ class UpdateInstanceMixin (object):
         Model = self.get_model()
         orm = self.orm
 
+        model_params = self.get_model_params(**kwargs)
         query = orm.query(Model)
-        if kwargs:
-            query = query.filter(**kwargs)
+        if model_params:
+            query = query.filter_by(**model_params)
 
         if args:
             # If we have any args then assume the last represents the primrary key
@@ -661,9 +661,10 @@ class DeleteInstanceMixin(object):
         Model = self.get_model()
         orm = self.orm
 
+        model_params = self.get_model_params(**kwargs)
         query = orm.query(Model)
-        if kwargs:
-            query = query.filter(**kwargs)
+        if model_params:
+            query = query.filter_by(**model_params)
 
         if args:
             # If we have any args then assume the last represents the primrary key
