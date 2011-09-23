@@ -45,7 +45,7 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
 
             r'/rest/v1/events/', 'controllers.rest.EventList',
             r'/rest/v1/events/(?P<id>\d+)/', 'controllers.rest.EventInstance',
-            
+
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
 
 
@@ -104,10 +104,12 @@ def load_sqla(handler):
         def __exit__(self, e_type=None, e_val=None, e_tb=None):
             if e_type == web.HTTPError:
                 log.debug("*** web.HTTPError with the ORM")
+                log.warning(e_tb)
                 orm.commit()
             elif e_type:
                 log.debug("*** Other exception with the ORM")
-                self.orm.rollback()
+                log.error(e_tb)
+                OrmHolder.invalidate()
             else:
                 log.debug("*** Finishing up with the ORM")
                 self.orm.commit()

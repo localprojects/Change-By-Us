@@ -284,7 +284,7 @@ class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
         assert_equal(set([int(need_dict['id']) for need_dict in response_dict['needs']]), set([1,3]))
 
     @istest
-    def should_change_the_needs_if_none_is_specified(self):
+    def should_not_change_the_needs_if_none_is_specified(self):
         # Login as an admin user
         self.login(1)
 
@@ -301,6 +301,98 @@ class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
         print response
 
         assert_equal([int(need_dict['id']) for need_dict in response_dict['needs']], [2])
+
+    @istest
+    def should_not_change_the_event_if_not_logged_in(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'name': 'Changed name'
+            }, status=403)
+
+        print response
+
+        assert_equal(orm.query(Event).get(1).name, 'Gallery Opening')
+
+    @istest
+    def should_not_change_the_event_if_not_admin(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+
+        # login as not admin
+        self.login(2)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'name': 'Changed name'
+            }, status=403)
+
+        print response
+
+        assert_equal(orm.query(Event).get(1).name, 'Gallery Opening')
+
+    @istest
+    def should_delete_the_event_if_method_is_delete(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'DELETE',
+            }, status=200)
+
+        print response
+
+        assert_equal(num_events-1, len(orm.query(Event).all()))
+        assert_not_in(1, [event.id for event in orm.query(Event).all()])
+
+    @istest
+    def should_not_delete_the_event_if_not_logged_in(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'DELETE',
+            }, status=403)
+
+        print response
+
+        assert_equal(num_events, len(orm.query(Event).all()))
+        assert_in(1, [event.id for event in orm.query(Event).all()])
+
+    @istest
+    def should_not_delete_the_event_if_not_admin(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # login as not admin
+        self.login(2)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'DELETE',
+            }, status=403)
+
+        print response
+
+        assert_equal(num_events, len(orm.query(Event).all()))
+        assert_in(1, [event.id for event in orm.query(Event).all()])
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
