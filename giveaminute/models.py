@@ -235,8 +235,17 @@ class Event (Base):
 
     @property
     def rsvp_service_name(self):
-        pass
+        """The name of the service providing RSVP for the event"""
+        url = self.rsvp_url
 
+        # For now the list of supported sites/URLs is hardcoded.  In the future
+        # we might want to try to be more clever.
+        if 'facebook.com' in url[:24].lower():
+            return 'Facebook'
+        if 'meetup.com' in url[:22].lower():
+            return 'Meetup'
+        if 'eventbrite.com' in url[:26].lower():
+            return 'Eventbrite'
 
 
 if __name__ == '__main__':
