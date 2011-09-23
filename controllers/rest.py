@@ -736,7 +736,7 @@ class NonProjectMemberReadOnly_ForNeedVolunteer (NonProjectMemberReadOnly):
         need = volunteer.need
         if need is None:
             need_id = volunteer.need_id
-            need = self.orm.query(models.Need).get(need_id)
+            need = orm.query(models.Need).get(need_id)
         if need is None:
             raise BadRequest('Need with ID %r not found' %
                              volunteer.need_id)
@@ -749,7 +749,9 @@ class NeedVolunteerList (CreateInstanceMixin, RestController):
     access_rules = NonProjectMemberReadOnly_ForNeedVolunteer()
 
     def REST_CREATE(self, *args, **kwargs):
-        kwargs['need'] = self.orm.query(models.Need).get(args[0])
+        # The need id is going to be passed in as a positional argument, so we
+        # have to intercept it and convert it to a keyword.
+        kwargs['need_id'] = args[0]
         response = super(NeedVolunteerList, self).REST_CREATE(**kwargs)
 
         return response
