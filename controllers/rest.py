@@ -689,30 +689,25 @@ class DeleteInstanceMixin(object):
         return
 
 
-class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
+#
+# Needs
+#
+
+class NeedModelRestController (RestController):
+    """Base RestController class for Need-model endpoints"""
+
     model = models.Need
     ordering = models.Need.id
     access_rules = NonProjectAdminReadOnly()
 
-    def instance_to_dict(self, need):
-        need_dict = super(NeedsList, self).instance_to_dict(need)
+    def user_to_dict(self, user):
+        """Convert a user instance in the context of being a need volunteer to
+           a dictionary"""
 
-        raw_date = need_dict['date']
-        if raw_date:
-            need_dict['display_date'] = need.display_date
-
-        return need_dict
-
-
-class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
-    model = models.Need
-    access_rules = NonProjectAdminReadOnly()
-
-    def user2dict(self, user):
         from giveaminute.project import userNameDisplay
         from giveaminute.project import isFullLastName
 
-        user_dict = super(NeedInstance, self).instance_to_dict(user)
+        user_dict = super(NeedModelRestController, self).instance_to_dict(user)
 
         # Add in some of that non-orm goodness
         user_dict['avatar_path'] = user.avatar_path
@@ -727,9 +722,12 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
         return user_dict
 
     def instance_to_dict(self, need):
-        need_dict = super(NeedInstance, self).instance_to_dict(need)
+        """Convert a need instance to a dictionary"""
+
+        need_dict = super(NeedModelRestController, self).instance_to_dict(need)
+
         need_dict['volunteers'] = [
-            self.user2dict(volunteer)
+            self.user_to_dict(volunteer)
             for volunteer in need.volunteers]
 
         raw_date = need_dict['date']
@@ -738,6 +736,18 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
         return need_dict
 
+
+class NeedsList (ListInstancesMixin, CreateInstanceMixin, NeedModelRestController):
+    pass
+
+
+class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, NeedModelRestController):
+    pass
+
+
+#
+# Volunteer-based endpoints
+#
 
 class NonProjectMemberReadOnly_ForNeedVolunteer (NonProjectMemberReadOnly):
     def get_project(self, volunteer, orm):
@@ -765,6 +775,10 @@ class NeedVolunteerList (CreateInstanceMixin, RestController):
         return response
 
 
+#
+# Keyword-based endpoints
+#
+
 class PopularKeywordList (ListInstancesMixin, RestController):
     model = models.Project
     access_rules = DefaultAccess()
@@ -782,6 +796,10 @@ class PopularKeywordList (ListInstancesMixin, RestController):
 
         return keyword_counter
 
+
+#
+# Event-based endpoints
+#
 
 class EventList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Event
