@@ -433,6 +433,13 @@ class RestController (Controller):
 
     def do_HTTP_verb(self, verb, *args, **kwargs):
         method_handler = getattr(self, verb)
+
+        # Get rid of things that start with underscore (_).  Things like jQuery
+        # will use this prefix for special variables.  You shouldn't.
+        for key, var in kwargs.items():
+            if key.startswith('_'):
+                del kwargs[key]
+
         response_data = method_handler(*args, **kwargs)
 
         serializer = self.get_serializer()
@@ -637,7 +644,7 @@ class UpdateInstanceMixin (object):
             raise ForbiddenError("Current user cannot modify the resource")
 
         for (key, val) in self.parameters().iteritems():
-            if key == '_method':
+            if key.startswith('_'):
                 continue
             setattr(instance, key, val)
 
