@@ -214,6 +214,13 @@ class Test_EventsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(len(response_dict["needs"]), 1)
         assert_equal(int(response_dict["needs"][0]["id"]), 2)
 
+        # Has split up start date
+        assert_equal(int(response_dict['start_year']), 2011)
+        assert_equal(int(response_dict['start_month']), 9)
+        assert_equal(int(response_dict['start_day']), 6)
+        assert_equal(int(response_dict['start_hour']), 19)
+        assert_equal(int(response_dict['start_minute']), 0)
+
     @istest
     def should_return_a_list_of_events(self):
         response = self.app.get('/rest/v1/events/', status=200)
