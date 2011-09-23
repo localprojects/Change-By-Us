@@ -112,6 +112,9 @@ tc.gam.project_widgets.event_form = function(options) {
                           selector: '#event-street',
                           validators: ['required'],
                           hint:'Street Address'
+                        },
+                        'need_list': {
+                          selector: '.linked-needs-list'
                         }
                     },
                     init:function(merlin, dom) {
@@ -141,13 +144,18 @@ tc.gam.project_widgets.event_form = function(options) {
                         meridiem: merlin.current_step.inputs.meridiem.dom.val()
                       };
                       
+                      console.log(merlin.current_step.inputs.need_list.dom);
+                      
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         name:merlin.current_step.inputs.name.dom.val(),
                         details:merlin.current_step.inputs.details.dom.val(),
                         rsvp_url:merlin.current_step.inputs.rsvp_url.dom.val(),
                         start_datetime:self._makeDateString(dateConfig),
                         address:merlin.current_step.inputs.address.dom.val(),
-                        project_id:merlin.app.app_page.data.project.project_id
+                        project_id:merlin.app.app_page.data.project.project_id,
+                        need_ids: tc.jQ.map(merlin.current_step.inputs.need_list.dom.find('li'), function(li, i) {
+                          return tc.jQ(li).attr('data-id');
+                        })
                       });
                     }
                 },
@@ -338,7 +346,7 @@ tc.gam.project_widgets.event_form = function(options) {
         
         tc.jQ('.unlink-need').live('click', function(e) {
           e.preventDefault();
-          self._unlinkNeed(tc.jQ(this).attr('data-id'), event_id, cached_needs);
+          self._unlinkNeed(tc.jQ(this).parent('li').attr('data-id'), event_id, cached_needs);
           updateLinkedNeeds(tc.jQ('form.event-form'), cached_needs, event_id);
         });
         
