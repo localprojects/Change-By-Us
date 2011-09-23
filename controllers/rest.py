@@ -427,6 +427,18 @@ class RestController (Controller):
         return [self.instance_to_dict(instance) for instance in query
                 if self.access_rules.can_read(self.user, instance)]
 
+    def dict_to_instance(self, data, instance=None):
+        if instance is None:
+            Model = self.get_model()
+            instance = Model()
+
+        for (key, val) in data.iteritems():
+            if key.startswith('_'):
+                continue
+            setattr(instance, key, val)
+
+        return instance
+
     def replace_gam_user_with_sqla_user(self):
         if self.user:
             self.user = self.orm.query(models.User).get(self.user.id)
@@ -525,8 +537,9 @@ class ListInstancesMixin (object):
 
         query = orm.query(Model)
 
+        params = self.parameters() or {}
         model_params = self.get_model_params(**dict(kwargs.items() +
-                                                    web.input().items()))
+                                                    params.items()))
         if model_params:
             query = query.filter_by(**model_params)
         if hasattr(self, 'ordering'):
@@ -593,9 +606,10 @@ class CreateInstanceMixin (object):
 #                kwargs[related_name + '_id'] = kwargs[related_name]
 #                del kwargs[related_name]
 
+        params = self.parameters() or {}
         model_params = self.get_model_params(**dict(kwargs.items() +
-                                                    web.input().items()))
-        instance = Model(**model_params)
+                                                    params.items()))
+        instance = self.dict_to_instance(model_params)
 
         if not self.access_rules.can_create(self.user, instance, orm=orm):
             raise ForbiddenError("User cannot store the resource")
@@ -610,21 +624,14 @@ class UpdateInstanceMixin (object):
     Derive from this class to add UPDATE functionality to a REST controller.
 
     """
-    def current_user_can_update(self, instance):
-        """
-        Returns True if the currently authenticated user (or the anonymous user
-        as the case may be) can modify the given model instance object.
-        """
-        return True
-
     def REST_UPDATE(self, *args, **kwargs):
         Model = self.get_model()
         orm = self.orm
 
-        model_params = self.get_model_params(**kwargs)
+        model_search_params = self.get_model_params(**kwargs)
         query = orm.query(Model)
-        if model_params:
-            query = query.filter_by(**model_params)
+        if model_search_params:
+            query = query.filter_by(**model_search_params)
 
         if args:
             # If we have any args then assume the last represents the primrary key
@@ -644,10 +651,10 @@ class UpdateInstanceMixin (object):
         if not self.access_rules.can_update(self.user, instance):
             raise ForbiddenError("Current user cannot modify the resource")
 
-        for (key, val) in self.parameters().iteritems():
-            if key.startswith('_'):
-                continue
-            setattr(instance, key, val)
+        params = self.parameters() or {}
+        model_params = self.get_model_params(**dict(kwargs.items() +
+                                                    params.items()))
+        instance = self.dict_to_instance(model_params, instance)
 
         orm.commit()
         return self.instance_to_dict(instance)
@@ -864,6 +871,20 @@ class EventModelRestController (RestController):
             for need in event.needs]
 
         return event_dict
+
+    def dict_to_instance(self, data, event=None):
+        need_ids = []
+        if 'need_ids[]' in data:
+            need_ids = data.pop('need_ids[]')
+            data['needs'] = []
+
+        event = super(EventModelRestController, self).dict_to_instance(data, event)
+
+        for need_id in need_ids:
+            need = self.orm.query(models.Need).get(need_id)
+            event.needs.append(need)
+
+        return event
 
 
 class EventList (ListInstancesMixin, CreateInstanceMixin, EventModelRestController):

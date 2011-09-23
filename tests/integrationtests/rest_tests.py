@@ -244,7 +244,8 @@ class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
                 'start_datetime': '2011-08-12 12:00:00',
                 'address': '85 2nd St., San Francisco CA 94105',
                 'project_id': 1,
-                'start_datetime': '2011-6-07 12:30'
+                'start_datetime': '2011-6-07 12:30',
+                'need_ids[]':[1,3]
             }, status=200)
 
         response_dict = json.loads(response.body)
@@ -252,6 +253,54 @@ class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
 
         assert_equal(num_events+1, len(orm.query(Event).all()))
         assert_equal(response_dict['start_datetime'], '2011-06-07 12:30:00')
+        assert_equal(set([int(need_dict['id']) for need_dict in response_dict['needs']]), set([1,3]))
+
+    @istest
+    def should_allow_admin_to_update_an_event_when_given_valid_input(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'start_datetime': '2011-08-12 12:00:00',
+                'address': '85 2nd St., San Francisco CA 94105',
+                'project_id': 1,
+                'start_datetime': '2011-6-07 12:30',
+                'need_ids[]':[1,3]
+            }, status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+
+        assert_equal(num_events, len(orm.query(Event).all()))
+        assert_equal(response_dict['name'], 'Gallery Opening')
+        assert_equal(response_dict['start_datetime'], '2011-06-07 12:30:00')
+        assert_equal(set([int(need_dict['id']) for need_dict in response_dict['needs']]), set([1,3]))
+
+    @istest
+    def should_change_the_needs_if_none_is_specified(self):
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'start_datetime': '2011-08-12 12:00:00',
+                'address': '85 2nd St., San Francisco CA 94105',
+                'project_id': 1,
+                'start_datetime': '2011-6-07 12:30',
+            }, status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+
+        assert_equal([int(need_dict['id']) for need_dict in response_dict['needs']], [2])
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
