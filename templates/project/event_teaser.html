@@ -41,7 +41,7 @@
             </div>
 
             <div class="event-rsvp">
-                <a href="#" class="rsvp-link">RSVP <span class="rsvp-site">on <span class="rsvp-site-name">Eventbrite</span></span></a>
+                <a href="{{ event.rsvp_url }}" class="rsvp-link">RSVP{% if event.rsvp_service_name %} <span class="rsvp-site">on <span class="rsvp-site-name">{{ event.rsvp_service_name }}</span></span>{% endif %}</a>
 
                 {% if event.needs|length > 0 %}
                     {% with need=event.needs[0] %}
