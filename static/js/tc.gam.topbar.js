@@ -13,7 +13,6 @@ tc.top_bar = function(element, options) {
         tc.jQ.ajax({
             url:'/rest/v1/keywords/',
             dataType:'json',
-            cache:true,
             success:function(data, status, xhr) {
                 if (success) {
                     success(data, status, xhr);

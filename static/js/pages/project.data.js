@@ -21,6 +21,22 @@ tc.gam.project_data = {
             }
         });
     },
+    getNeeds: function(success, error) {
+        tc.jQ.ajax({
+            url:'/rest/v1/needs/',
+            dataType:'json',
+            success:function(data, status, xhr) {
+                if (success) {
+                    success(data, status, xhr);
+                }
+            },
+            error:function(xhr, status, errorThrown){
+                if (error) {
+                    error(xhr, status, errorThrown);
+                }
+            }
+        });
+    },
     createNeed: function(need_data, success, error) {
       tc.jQ.ajax({
         type:'POST',
@@ -108,5 +124,21 @@ tc.gam.project_data = {
           }
         }
       });
+    },
+    getEventDetails: function(id, success, error) {
+        tc.jQ.ajax({
+            url:'/rest/v1/events/' + id + '/',
+            dataType:'json',
+            success:function(data, status, xhr) {
+                if (success) {
+                    success(data, status, xhr);
+                }
+            },
+            error:function(xhr, status, errorThrown){
+                if (error) {
+                    error(xhr, status, errorThrown);
+                }
+            }
+        });
     }
 };
