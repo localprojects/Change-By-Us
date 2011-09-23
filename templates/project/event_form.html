@@ -28,19 +28,19 @@
 
 {% raw %}
 <script id="event_form_tmpl" type="text/html">
-    <form action="#">
-      <div class="fields serif">
+    <form action="#" class="event-form">
+      <div class="event-form fields serif">
         <div class="wide row">
           <div class="title">The name of the event is:</div>
           <input name="event-name" id="event-name" type="text" value="{{name}}"  class="long-input"/>
         </div>
         <div class="wide row">
           <div class="title"><span>A few details about the event:</span><span class="charlimit title">200</span></div>
-          <textarea name="event-desc" id="event-desc" class="long-input">{{description}}</textarea>
+          <textarea name="event-desc" id="event-desc" class="long-input">{{details}}</textarea>
         </div>
         <div class="wide row optional">
           <div class="title">Link to the event on Facebook, Eventbrite or elsewhere:</div>
-          <input name="event-url" id="event-url" type="text" value="{{url}}"  class="long-input"/>
+          <input name="event-url" id="event-url" type="text" value="{{rsvp_url}}"  class="long-input"/>
         </div>
         <div class="wide row datetime">
           <div class="title">The name of the event is:</div>
@@ -75,19 +75,30 @@
           <div class="title">Link a need:</div>
           <div class="event-right">
             <select id="event-needs">
-              {{{needOpts}}}
             </select>
           </div>
           <a href="javascript:void(0)" class="attach-need">+</a>
           <div class="tip">You can always come back and link needs later</div>
         </div>
 
-        <div class="row wide needs-list">
-          <ul><li>Need Title<a href="#" class="unlink-need"></a></li><li>Another Need Title<a href="#" class="unlink-need"></a></li></ul>
-        </div>
-
+        <div class="row wide linked-needs-list"></div>
       </div>
     </form>
+</script>
+
+<script id="linked_event_needs_tmpl" type="text/html">
+  <ul>
+    {{#linked_needs}}
+      <li>{{name}}<a href="#" data-id="{{id}}" class="unlink-need"></a></li>
+    {{/linked_needs}}
+  </ul>
+</script>
+
+<script id="unlinked_event_needs_tmpl" type="text/html">
+  <option value="">Volunteer needs</option>
+  {{#unlinked_needs}}
+    <option value="{{id}}">{{name}}</option>
+  {{/unlinked_needs}}
 </script>
 {% endraw %}
 

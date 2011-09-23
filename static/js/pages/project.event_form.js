@@ -5,6 +5,8 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 tc.gam.project_widgets.event_form = function(options) {
     tc.util.log('project.event_form');
     var dom = options.dom,
+        cached_needs = [],
+        event_id = -1,
         self = {};
 
     //Helper function to make the jqDropDown plugin more robust
@@ -174,62 +176,118 @@ tc.gam.project_widgets.event_form = function(options) {
         merlin.show_step('event_form');
     };
 
+    var updateLinkedNeeds = function($target, needs, event_id) {
+      var linked_needs = tc.jQ.map(needs, function(obj, i) {
+          if (parseInt(obj.event_id, 10) === parseInt(event_id, 10)) {
+            return {name: obj.request, id: obj.id };
+          }
+        }),
+        $need_list = ich.linked_event_needs_tmpl({ linked_needs:linked_needs });
+        
+      $target.find('.linked-needs-list').html($need_list);
+    };
+
+    var updateUnlinkedNeeds = function($target, needs, event_id) {
+      var unlinked_needs = tc.jQ.map(needs, function(obj, i) {
+          if (!obj.event_id || (parseInt(obj.event_id, 10) === parseInt(event_id, 10))) {
+            return {name: obj.request, id: obj.id };
+          }
+        }),
+        $need_list = ich.unlinked_event_needs_tmpl({ unlinked_needs: unlinked_needs });
+        
+      $target.find('#event-needs').html($need_list);
+    };
 
     var mergeTemplate = function(event_details) {
-        var new_details = tc.jQ.extend(true, {
-                day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
-                monthOpts: function() { 
-                  var eventDate = this.date ? (new Date(this.date).getUTCMonth()) : (new Date().getUTCMonth());
-                  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-                  var options = '';
-                  for (var i = 0; i < months.length; i++) {
-                    if (i === eventDate) {
-                      options += '<option value="' + i + '" selected>' + months[i] + '</option>';
-                    } else {
-                      options += '<option value="' + i + '">' + months[i] + '</option>';
-                    }
-                  }
-                  return options;
-                },
-                yearOpts: function() {
-                    var eventYear = this.date ? (new Date(this.date).getUTCYear()) : '',
-                        year = (new Date()).getUTCFullYear(),
-                        years = [year, year+1, year+2, year+3],
-                        options = '';
-                        
-                    for (var i = 0; i < years.length; i++) {
-                      if (years[i] === eventYear) {
-                        options += '<option value="' + years[i] + '" selected>' + years[i] + '</option>';
-                      } else {
-                        options += '<option value="' + years[i] + '">' + years[i] + '</option>';
-                      }
-                    }
-                    return options;
-                },
-                meridiemOpts: function() {
-                    var isPM = this.date ? (new Date(this.date).getUTCHours()) >= 11 : false,
-                        options = '';
-                        
-                    options += '<option value="AM" ' + (isPM ? '' : 'selected') + '>AM</option>';
-                    options += '<option value="PM" ' + (!isPM ? '' : 'selected') + '>PM</option>';
+      var new_details = tc.jQ.extend(true, {
+        day: function() { return this.start_datetime ? (new Date(this.start_datetime).getUTCDate()) : ''; },
+        hour: function() { return this.start_datetime ? (new Date(this.start_datetime).getUTCHours()) : ''; },
+        minute: function() { return this.start_datetime ? (new Date(this.start_datetime).getUTCMinutes()) : ''; },
+        monthOpts: function() { 
+          var eventDate = this.start_datetime ? (new Date(this.start_datetime).getUTCMonth()) : (new Date().getUTCMonth());
+          var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+          var options = '';
+          for (var i = 0; i < months.length; i++) {
+            if (i === eventDate) {
+              options += '<option value="' + i + '" selected>' + months[i] + '</option>';
+            } else {
+              options += '<option value="' + i + '">' + months[i] + '</option>';
+            }
+          }
+          return options;
+        },
+        yearOpts: function() {
+            var eventYear = this.start_datetime ? (new Date(this.start_datetime).getUTCFullYear()) : '',
+                year = (new Date()).getUTCFullYear(),
+                years = [year, year+1, year+2, year+3],
+                options = '';
+                
+            for (var i = 0; i < years.length; i++) {
+              if (years[i] === eventYear) {
+                options += '<option value="' + years[i] + '" selected>' + years[i] + '</option>';
+              } else {
+                options += '<option value="' + years[i] + '">' + years[i] + '</option>';
+              }
+            }
+            return options;
+        },
+        meridiemOpts: function() {
+            var isPM = this.start_datetime ? (new Date(this.start_datetime).getUTCHours()) >= 11 : false,
+                options = '';
+                
+            options += '<option value="AM" ' + (isPM ? '' : 'selected') + '>AM</option>';
+            options += '<option value="PM" ' + (!isPM ? '' : 'selected') + '>PM</option>';
 
-                    return options;
-                },
-                needOpts: function() {
-                  var options = '';
-                  
-                  return options;
-                }
+            return options;
+        },
+        needOpts: function() {
+          var options = '';
+          
+          return options;
+        }}, event_details),
+        $html = ich.event_form_tmpl(new_details);
 
-            }, event_details),
-            $html = ich.event_form_tmpl(new_details);
-            
-        dom.find('.add-event-step').html($html);
+      updateLinkedNeeds($html, cached_needs, event_id);
+      updateUnlinkedNeeds($html, cached_needs, event_id);
+      dom.find('.add-event-step').html($html);
+    };
+    
+    self._getNeedIndex = function(need_id, needs) {
+      var i;
+      need_id = parseInt(need_id, 10);
+      
+      for(i=0; i<needs.length; i++) {
+        if (parseInt(needs[i].id, 10) === need_id) {
+          return i;
+        }
+      }
+      
+      return -1;
+    };
+    
+    self._linkNeed = function(need_id, event_id, needs) {
+      var i = self._getNeedIndex(need_id, needs);
+      
+      if (!needs[i].event_id) {
+        needs[i].event_id = event_id;
+      }
+    };
+    
+    self._unlinkNeed = function(need_id, event_id, needs) {
+      var i = self._getNeedIndex(need_id, needs);
+      event_id = parseInt(event_id, 10);
+      
+      if (parseInt(needs[i].event_id, 10) === event_id) {
+        needs[i].event_id = null;
+      }
     };
 
     var initForm = function(event_id, callback) {
+      tc.gam.project_data.getNeeds(function(needs) {
+        cached_needs = needs;
+        
         if (event_id) {
-            tc.gam.project_data.getNeedDetails(event_id, function(data){
+            tc.gam.project_data.getEventDetails(event_id, function(data){
                 mergeTemplate(data);
                 if (callback) {
                     callback();
@@ -243,6 +301,7 @@ tc.gam.project_widgets.event_form = function(options) {
             }
             initMerlin();
         }
+      });
     };
 
     /**
@@ -254,6 +313,10 @@ tc.gam.project_widgets.event_form = function(options) {
             if (options.name === widgetName) {
                 tc.util.log('&&& showing ' + options.name);
                 
+                if (id) {
+                  event_id = id;
+                }
+                
                 initForm(id, function(){
                     dom.show();
                 });
@@ -263,6 +326,22 @@ tc.gam.project_widgets.event_form = function(options) {
                 dom.hide();
             }
         });
+        
+        tc.jQ('.attach-need').live('click', function() {
+          var need_id = tc.jQ('#event-needs').val();
+          
+          if (need_id) {
+            self._linkNeed(need_id, event_id, cached_needs);
+            updateLinkedNeeds(tc.jQ('form.event-form'), cached_needs, event_id);
+          }
+        });
+        
+        tc.jQ('.unlink-need').live('click', function(e) {
+          e.preventDefault();
+          self._unlinkNeed(tc.jQ(this).attr('data-id'), event_id, cached_needs);
+          updateLinkedNeeds(tc.jQ('form.event-form'), cached_needs, event_id);
+        });
+        
     };
 
     bindEvents();
