@@ -97,7 +97,7 @@ class NonProjectAdminReadOnly (ProjectBasedAccessRulesMixin, ResourceAccessRules
         return True
 
     def is_project_admin(self, user, project):
-        return (user is not None) and ((user in project.members)
+        return (user is not None) and (user in project.admins
                                        or user.is_site_admin)
 
     def can_create(self, user, instance, orm=None):
