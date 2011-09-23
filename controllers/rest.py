@@ -525,7 +525,8 @@ class ListInstancesMixin (object):
 
         query = orm.query(Model)
 
-        model_params = self.get_model_params(**kwargs)
+        model_params = self.get_model_params(**dict(kwargs.items() +
+                                                    web.input().items()))
         if model_params:
             query = query.filter_by(**model_params)
         if hasattr(self, 'ordering'):
@@ -721,6 +722,9 @@ class NeedModelRestController (RestController):
 
         return user_dict
 
+    def event_to_dict(self, event):
+        pass
+
     def instance_to_dict(self, need):
         """Convert a need instance to a dictionary"""
 
@@ -801,11 +805,30 @@ class PopularKeywordList (ListInstancesMixin, RestController):
 # Event-based endpoints
 #
 
-class EventList (ListInstancesMixin, CreateInstanceMixin, RestController):
+class EventModelRestController (RestController):
     model = models.Event
     access_rules = NonProjectAdminReadOnly()
 
+    def instance_to_dict(self, event):
+        """Convert an event instance to a dictionary"""
 
-class EventInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
-    model = models.Event
-    access_rules = NonProjectAdminReadOnly()
+        event_dict = super(EventModelRestController, self).instance_to_dict(event)
+
+        event_dict['rsvp_service_name'] = event.rsvp_service_name
+#        event_dict['rsvp_service_name'] = [
+#            self.user_to_dict(volunteer)
+#            for volunteer in need.volunteers]
+
+#        raw_date = need_dict['date']
+#        if raw_date:
+#            need_dict['display_date'] = need.display_date
+
+        return event_dict
+
+
+class EventList (ListInstancesMixin, CreateInstanceMixin, EventModelRestController):
+    pass
+
+
+class EventInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, EventModelRestController):
+    pass

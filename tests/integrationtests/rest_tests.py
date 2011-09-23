@@ -135,17 +135,12 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         ok_(False)
 
     @istest
-    def should_include_a_pretty_date_in_the_list2(self):
-        """TODO: RENAME ME TO SOMETHING USEFUL"""
-        response = self.app.get('/rest/v1/needs/?description=boo', status=200)
+    def should_filter_needs_by_query_parameters(self):
+        response = self.app.get('/rest/v1/needs/?event_id=1', status=200)
 
         response_list = json.loads(response.body)
-        for need_dict in response_list:
-            print need_dict["display_date"]
-            if need_dict["display_date"] == "August 26th":
-                ok_(True)
-                return
-        ok_(False)
+        assert_equal(len(response_list), 1)
+        assert_equal(int(response_list[0]['id']), 2)
 
     @istest
     def should_include_a_pretty_date_in_the_return_value(self):
@@ -199,6 +194,7 @@ class Test_EventsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(response_dict["name"], "Gallery Opening")
         assert_equal(response_dict["start_datetime"], "2011-09-06 19:00:00")
         assert_equal(response_dict["address"], "CultureFix NYC")
+        assert_equal(response_dict["rsvp_service_name"], "Eventbrite")
 
     @istest
     def should_return_a_list_of_events(self):
