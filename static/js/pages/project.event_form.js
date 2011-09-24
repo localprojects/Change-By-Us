@@ -212,15 +212,15 @@ tc.gam.project_widgets.event_form = function(options) {
     //Merge the need form template to include default values, if any.
     var mergeTemplate = function(event_details) {
       var new_details = tc.jQ.extend(true, {
-        day: function() { return this.start_datetime ? (new Date(this.start_datetime).getUTCDate()) : ''; },
-        hour: function() { return this.start_datetime ? (new Date(this.start_datetime).getUTCHours()) : ''; },
-        minute: function() { return this.start_datetime ? (new Date(this.start_datetime).getUTCMinutes()) : ''; },
+        twelve_hour: function() {
+          return this.start_hour % 12;
+        },
         monthOpts: function() { 
-          var eventDate = this.start_datetime ? (new Date(this.start_datetime).getUTCMonth()) : (new Date().getUTCMonth());
-          var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-          var options = '';
+          var months = ['January','February','March','April','May','June','July','August','September','October','November','December'],
+              options = '';
+          
           for (var i = 0; i < months.length; i++) {
-            if (i === eventDate) {
+            if (i === this.start_month) {
               options += '<option value="' + i + '" selected>' + months[i] + '</option>';
             } else {
               options += '<option value="' + i + '">' + months[i] + '</option>';
@@ -229,13 +229,12 @@ tc.gam.project_widgets.event_form = function(options) {
           return options;
         },
         yearOpts: function() {
-            var eventYear = this.start_datetime ? (new Date(this.start_datetime).getUTCFullYear()) : '',
-                year = (new Date()).getUTCFullYear(),
+            var year = (new Date()).getUTCFullYear(),
                 years = [year, year+1, year+2, year+3],
                 options = '';
                 
             for (var i = 0; i < years.length; i++) {
-              if (years[i] === eventYear) {
+              if (years[i] === this.start_year) {
                 options += '<option value="' + years[i] + '" selected>' + years[i] + '</option>';
               } else {
                 options += '<option value="' + years[i] + '">' + years[i] + '</option>';
@@ -244,7 +243,7 @@ tc.gam.project_widgets.event_form = function(options) {
             return options;
         },
         meridiemOpts: function() {
-            var isPM = this.start_datetime ? (new Date(this.start_datetime).getUTCHours()) >= 11 : false,
+            var isPM = this.start_hour >= 12,
                 options = '';
                 
             options += '<option value="AM" ' + (isPM ? '' : 'selected') + '>AM</option>';
