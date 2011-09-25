@@ -167,8 +167,8 @@ tc.gam.project_widgets.event_form = function(options) {
                       if(data == 'False'){
                         return false;
                       }
-                      // window.location.hash = 'show,events';
-                      // window.location.reload();
+                      window.location.hash = 'show,events';
+                      window.location.reload();
                     };
                     if (event_id === undefined) {
                       tc.gam.project_data.createEvent(event_data, success);
