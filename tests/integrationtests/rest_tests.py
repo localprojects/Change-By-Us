@@ -252,7 +252,7 @@ class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
                 'address': '85 2nd St., San Francisco CA 94105',
                 'project_id': 1,
                 'start_datetime': '2011-6-07 12:30',
-                'need_ids[]':[1,3]
+                'need_ids':'1,3'
             }, status=200)
 
         response_dict = json.loads(response.body)
@@ -279,7 +279,7 @@ class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
                 'address': '85 2nd St., San Francisco CA 94105',
                 'project_id': 1,
                 'start_datetime': '2011-6-07 12:30',
-                'need_ids[]':[1,3]
+                'need_ids':'1,3'
             }, status=200)
 
         response_dict = json.loads(response.body)

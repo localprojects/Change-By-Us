@@ -154,7 +154,7 @@ tc.gam.project_widgets.event_form = function(options) {
                         project_id:merlin.app.app_page.data.project.project_id,
                         need_ids: tc.jQ.map(merlin.current_step.inputs.need_list.dom.find('li'), function(li, i) {
                           return tc.jQ(li).attr('data-id');
-                        })
+                        }).join(',')
                       });
                     }
                 },
@@ -167,8 +167,8 @@ tc.gam.project_widgets.event_form = function(options) {
                       if(data == 'False'){
                         return false;
                       }
-                      window.location.hash = 'show,events';
-                      window.location.reload();
+                      // window.location.hash = 'show,events';
+                      // window.location.reload();
                     };
                     if (event_id === undefined) {
                       tc.gam.project_data.createEvent(event_data, success);
