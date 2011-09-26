@@ -140,5 +140,21 @@ tc.gam.project_data = {
                 }
             }
         });
+    },
+    getEvents: function(success, error) {
+        tc.jQ.ajax({
+            url:'/rest/v1/events/',
+            dataType:'json',
+            success:function(data, status, xhr) {
+                if (success) {
+                    success(data, status, xhr);
+                }
+            },
+            error:function(xhr, status, errorThrown){
+                if (error) {
+                    error(xhr, status, errorThrown);
+                }
+            }
+        });
     }
 };
