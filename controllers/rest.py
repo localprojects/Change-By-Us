@@ -737,10 +737,11 @@ class NeedModelRestController (RestController):
 
         if event:
             event_dict['start_year'] = event.start_year
-            event_dict['start_month'] = event.start_year
-            event_dict['start_day'] = event.start_year
-            event_dict['start_hour'] = event.start_year
-            event_dict['start_minute'] = event.start_year
+            event_dict['start_month'] = event.start_month
+            event_dict['start_day'] = event.start_day
+            event_dict['start_hour'] = event.start_hour
+            event_dict['start_minute'] = event.start_minute
+            event_dict['start_displaydate'] = event.start_displaydate
 
         return event_dict
 

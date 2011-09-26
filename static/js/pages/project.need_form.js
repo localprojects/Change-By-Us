@@ -5,8 +5,40 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 tc.gam.project_widgets.need_form = function(options) {
     tc.util.log('project.need_form');
     var dom = options.dom,
+        cached_events = [],
         self = {};
 
+        //Helper function to make the jqDropDown plugin more robust
+        //since you can't set multiple classes at a time.
+        //  id - the selector for the select element, also used to
+        //       identify the generated markup
+        //  defaultVal - Used to identify the unselectable default value
+        var initDropDown = function(id, defaultVal) {
+          //Apply jqDropDown to our select element
+          tc.jQ('#' + id).jqDropDown({
+            toggleBtnName:'ddSelect',
+            optionListName:'ddSelectOptions',
+            containerName:'dd-' + id,
+            optionChanged: function() {
+              //This is not valid if we select the default
+              if ($('#' + id).val() === defaultVal) {
+                $('.dd-' + id + ' .ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
+              } else {
+                $('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+              }
+            }
+          });
+
+          //Add the default container css class (important, common styles on this guy)
+          tc.jQ('.dd-' + id).addClass('ddSelectContainer');
+
+          //There's no default value, something is always selected, so it's always valid
+          if (!defaultVal) {
+            tc.jQ('.dd-' + id).addClass('ddNoDefault');
+            tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+          }
+        };
+        
     /**
      * Function: initMerlin
      * Initialize the merlin object for validation of the modal dialog.
@@ -100,19 +132,9 @@ tc.gam.project_widgets.need_form = function(options) {
                     },
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
-                      tc.jQ('#vol-month').jqDropDown({
-                        toggleBtnName:'ddSelect',
-                        optionListName:'ddSelectOptions',
-                        containerName:'ddSelectContainer',
-                        optionChanged: function() {
-                          if ($('#vol-month').val() === 'Month') {
-                            $('.ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
-                          } else {
-                            $('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
-                          }
-                        }
-                      });
-
+                      initDropDown('vol-month', 'Month');
+                      initDropDown('event-list', 'Link to an event');
+                      
                       if (need_id) {
                         tc.jQ.each(merlin.current_step.inputs, function(key, input) {
                           if (input.default_val) {
@@ -184,11 +206,16 @@ tc.gam.project_widgets.need_form = function(options) {
                 }
             }, need_details),
             $html = ich.need_form_tmpl(new_details);
-            
+        
+        $html.find('#event-list').html(ich.event_list_tmpl({events: cached_events}));
+        
         dom.find('.add-need-step').html($html);
     };
 
     var initForm = function(need_id, callback) {
+      tc.gam.project_data.getEvents(function(events) {
+        cached_events = events;
+      
         if (need_id) {
             tc.gam.project_data.getNeedDetails(need_id, function(data){
                 mergeTemplate(data);
@@ -204,6 +231,7 @@ tc.gam.project_widgets.need_form = function(options) {
             }
             initMerlin();
         }
+      });
     };
 
     /**

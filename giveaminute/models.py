@@ -251,6 +251,13 @@ class Event (Base):
             return 'Eventbrite'
 
     @property
+    def start_displaydate(self):
+        if self.start_datetime:
+            return self.start_datetime.strftime('%B %d at %I:%M %p')
+        else:
+            return ''
+
+    @property
     def start_year(self):
         return self.start_datetime.year
 
