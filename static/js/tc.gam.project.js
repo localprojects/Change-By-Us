@@ -25,6 +25,9 @@ tc.gam.project = function(app, dom) {
         'events': tc.gam.project_widgets.events(
             tc.jQ.extend({ name: 'events', dom: dom.find('.project-section.events') }, widget_options)
         ),
+        'event-detail': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-detail', dom: dom.find('.project-section.event-detail') }, widget_options)
+        ),
         'event-form': tc.gam.project_widgets.event_form(
             tc.jQ.extend({ name: 'event-form', dom: dom.find('.project-section.event-form') }, widget_options)
         ),
@@ -47,14 +50,14 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.members') }, widget_options)
         )
     };
-    
+
     // Add fresh ideas component if available.
     if (tc.gam.project_widgets.fresh_ideas) {
         app.components.related_ideas = tc.gam.project_widgets.fresh_ideas(
             tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
         );
     }
-    
+
     tc.gam.project_widgets.project_tabs(
         tc.jQ.extend({ name: 'project_tabs', dom: dom.find('.project-tabs') }, widget_options)
     );
