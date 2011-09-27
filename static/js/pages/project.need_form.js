@@ -20,12 +20,9 @@ tc.gam.project_widgets.need_form = function(options) {
             optionListName:'ddSelectOptions',
             containerName:'dd-' + id,
             optionChanged: function() {
-              //This is not valid if we select the default
-              if ($('#' + id).val() === defaultVal) {
-                $('.dd-' + id + ' .ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
-              } else {
-                $('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
-              }
+              //manually trigger the change event on the select element
+              //so that Merlin validation will trigger properly
+              tc.jQ('#' + id).change();
             }
           });
 
@@ -101,19 +98,20 @@ tc.gam.project_widgets.need_form = function(options) {
                         'month': {
                           selector: '#vol-month',
                           validators: function(input, element, step, submit) {
-
+                            var $ddSelect = element.next('.ddSelectContainer').find('.ddSelect');
+                            
                             if (submit) {
-                              $('.ddSelect').addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
+                              $ddSelect.addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
                             }
 
                             if ($(element).val() === 'Month') {
-                              $('.ddSelect').addClass('not-valid').removeClass('valid');
+                              $ddSelect.addClass('not-valid').removeClass('valid');
                               return {
                                 valid: false,
                                 errors: ['Must select a month.']
                               }
                             } else {
-                              $('.ddSelect').addClass('valid').removeClass('not-valid');
+                              $ddSelect.addClass('valid').removeClass('not-valid');
                               return {valid: true}
                             }
                           },
@@ -128,6 +126,12 @@ tc.gam.project_widgets.need_form = function(options) {
                           selector: '#vol-time',
                           validators: ['required'],
                           hint:'Time'
+                        },
+                        'event_link': {
+                          selector: '#event-list',
+                          validators: function(merlinInput, $element, step, onSubmit) {
+                            
+                          }
                         }
                     },
                     init:function(merlin, dom) {
