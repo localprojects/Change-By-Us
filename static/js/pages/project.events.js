@@ -16,10 +16,27 @@ tc.gam.project_widgets.events = function(options) {
                 day: function() { return this.start_day; },
                 mon: function() { return month_names[this.start_month-1].substr(0, 3); },
                 year: function() { return this.start_year; },
-                hour: function() { return (this.start_hour-1) % 12 + 1; },
-                minute: function() { return this.start_minute; },
-                meridiem: function() { return (this.start_hour < 12 ? 'AM' : 'PM'); },
-                starttime: function() { return '' + this.hour() + (this.minute() > 0 ? (':' + this.minute()) : '') + this.meridiem(); },
+
+                starttime: function() {
+                    var hour, minute, meridiem, time;
+
+                    // Collect the pieces, converting the hour from the 0-23
+                    // range to the 1-12 range
+                    hour = (this.start_hour - 1) % 12 + 1;
+                    minute = this.start_minute;
+                    meridiem = this.start_hour < 12 ? 'AM' : 'PM';
+
+                    // Start with the hour
+                    time = '' + hour
+
+                    // Add the minutes, if they're not 0
+                    time += (minute > 0 ? (':' + minute) : '');
+
+                    // Finally, the meridiem
+                    time += meridiem;
+
+                    return time;
+                },
 
                 has_need: function() { return this.needs.length > 0; },
                 need_id: function() { return this.needs[0].id; },
@@ -63,6 +80,22 @@ tc.gam.project_widgets.events = function(options) {
                 tc.util.log('&&& hiding ' + options.name);
                 dom.hide();
             }
+        });
+
+        tc.jQ('a.event-delete').die('click').live('click', function(event) {
+            event.preventDefault();
+            options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.modal-content.remove-event'),
+                submit: function(){
+                    tc.gam.project_data.deleteEvent(event.target.href.split(',')[1],
+                                                   function(data, status, xhr) {
+                                                       if(data == 'False'){return false;}
+                                                       window.location.hash = 'show,events';
+                                                       window.location.reload();
+                                                   });
+                }
+            });
         });
     };
 

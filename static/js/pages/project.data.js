@@ -125,6 +125,22 @@ tc.gam.project_data = {
         }
       });
     },
+    deleteEvent: function(event_id, success, error) {
+        tc.jQ.ajax({
+            type:'DELETE',
+            url:'/rest/v1/events/' + event_id + '/',
+            success:function(data,ts,xhr){
+                if (success) {
+                    success(data, status, xhr);
+                }
+            },
+            error:function(xhr, status, errorThrown) {
+                if (error) {
+                    error(xhr, status, errorThrown);
+                }
+            }
+        });
+    },
     getEventDetails: function(id, success, error) {
         tc.jQ.ajax({
             url:'/rest/v1/events/' + id + '/',

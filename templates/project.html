@@ -282,6 +282,22 @@
         </div>
     {% endif %}
 
+    {% if d.template_data and d.template_data.project_user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+        <div class="template-content modal-content confirm-delete remove-event">
+            <div class="step">
+                <h2>Are you sure you want to delete this event?</h2>
+                <div>
+                    <p>This will permanently delete the event.</p>
+                </div>
+                <div class="actions">
+                    <a class="submit rounded-button" href="#">Yes, Delete Event</a>
+                    <a class="cancel" href="#">No, keep it.</a>
+                </div>
+            </div>
+            <a class='close' href="#"><span>close</span></a>
+        </div>
+    {% endif %}
+
 </div><!-- end .continent.project -->
 {% endblock continent %}
 
