@@ -759,6 +759,7 @@ class NeedModelRestController (RestController):
         raw_date = need_dict['date']
         if raw_date:
             need_dict['display_date'] = need.display_date
+        need_dict['display_address'] = need.display_address
 
         return need_dict
 
@@ -777,6 +778,12 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
 class NonProjectMemberReadOnly_ForNeedVolunteer (NonProjectMemberReadOnly):
     def get_project(self, volunteer, orm):
+        """
+        We need a custom get_project for the need-volunteer access rules
+        because a ``volunteer`` doesn't have a ``project`` property; instead
+        we have to reach through the need.
+        
+        """
         need = volunteer.need
         if need is None:
             need_id = volunteer.need_id
@@ -864,6 +871,7 @@ class EventModelRestController (RestController):
         raw_date = need_dict['date']
         if raw_date:
             need_dict['display_date'] = need.display_date
+        need_dict['display_address'] = need.display_address
 
         return need_dict
 

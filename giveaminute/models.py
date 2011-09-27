@@ -184,7 +184,10 @@ class Need (Base):
     @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
-        return util.make_pretty_date(self.date)
+        if self.event:
+            return util.make_pretty_date(self.event.start_datetime)
+        else:
+            return util.make_pretty_date(self.date)
 
     @property
     def reason(self):
@@ -192,6 +195,13 @@ class Need (Base):
             This is the reason."""
         # TODO: We need a way of constructing the reason.
         return ''
+    
+    @property
+    def display_address(self):
+        if self.event:
+            return self.event.address
+        else:
+            return self.address
 
 
 class Volunteer (Base):

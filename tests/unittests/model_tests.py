@@ -4,6 +4,7 @@ from nose.tools import *
 from mock import Mock
 
 from giveaminute.models import Event
+from giveaminute.models import Need
 from giveaminute.models import User
 
 class Test_User_display_name (TestCase):
@@ -31,6 +32,30 @@ class Test_User_display_name (TestCase):
         dname = user.display_name
 
         assert_equal(dname, 'Mjumbe P.')
+
+
+class Test_Need_displayAddress (TestCase):
+    
+    @istest
+    def returns_the_event_address_when_linked_to_event(self):
+        need = Need()
+        need.event = Event()
+        need.event.address = '1234 Sesame Street'
+        need.address = 'Skid row'
+        
+        daddress = need.display_address
+        
+        assert_equal(daddress, '1234 Sesame Street')
+    
+    @istest
+    def returns_the_custom_address_when_not_linked_to_event(self):
+        need = Need()
+        need.event = None
+        need.address = 'Skid row'
+        
+        daddress = need.display_address
+        
+        assert_equal(daddress, 'Skid row')
 
 
 class Test_Event_rsvpServiceName (TestCase):

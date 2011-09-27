@@ -139,16 +139,36 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_is_none(response_dict['event'])
 
     @istest
-    def should_include_a_pretty_date_in_the_list(self):
-        response = self.app.get('/rest/v1/needs/', status=200)
+    def should_use_event_date_if_event_exists(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
 
-        response_list = json.loads(response.body)
-        for need_dict in response_list:
-            print need_dict["display_date"]
-            if need_dict["display_date"] == "August 26th":
-                ok_(True)
-                return
-        ok_(False)
+        need_dict = json.loads(response.body)
+        print need_dict["display_date"]
+        assert need_dict["display_date"] == "September 6th"
+
+    @istest
+    def should_use_event_location_if_event_exists(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_address"]
+        assert need_dict["display_address"] == "CultureFix NYC"
+
+    @istest
+    def should_default_to_using_custom_date_if_no_event_exists(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_date"]
+        assert need_dict["display_date"] == "August 31st"
+
+    @istest
+    def should_default_to_using_custom_location_if_no_event_exists(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_address"]
+        assert need_dict["display_address"] == "Code for America, 85 2nd St., San Francisco, CA 94105"
 
     @istest
     def should_filter_needs_by_query_parameters(self):
@@ -163,7 +183,7 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         response = self.app.get('/rest/v1/needs/2/', status=200)
 
         response_dict = json.loads(response.body)
-        assert_equal(response_dict["display_date"], "August 26th")
+        assert_equal(response_dict["display_date"], "September 6th")
 
     @istest
     def should_include_the_volunteers_in_the_return_value(self):
