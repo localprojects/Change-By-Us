@@ -48,7 +48,7 @@ tc.top_bar = function(element, options) {
                 }
                 tc.jQ(this).children("a").toggleClass("opened");
             }).mouseleave(function () {
-                tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
+                tc.jQ(this).children(".dropdown").delay(200).fadeOut(o.fadeSpeed);
                 tc.jQ(this).children("a").toggleClass("opened");
             });
         };
