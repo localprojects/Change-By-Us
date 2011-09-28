@@ -148,26 +148,19 @@ tc.gam.project_widgets.need_form = function(options) {
                         },
                         'month': {
                           selector: '#vol-month',
-                          validators: function(input, $element, step, submit) {
-                            var $ddSelect = $element.next('.ddSelectContainer').find('.ddSelect');
-
-                            if ($element.is('.disabled')) {
+                          validators: function(merlinInput, $element, step, onSubmit) {
+                            var $ddSelectContainer = $element.next('.ddSelectContainer'),
+                                $ddSelect = $ddSelectContainer.find('.ddSelect');
+                            
+                            $ddSelect.removeClass('valid');
+                            
+                            if ($element.is('.disabled') 
+                              || $ddSelectContainer.hasClass('ddNoDefault') 
+                              || ($element.val() !== '' && $element.val() !== $element.data('default'))) {
+                              $ddSelect.addClass('has-been-focused valid');
                               return {valid:true};
                             } else {
-                              if (submit) {
-                                $ddSelect.addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
-                              }
-
-                              if ($element.val() === 'Month') {
-                                $ddSelect.addClass('not-valid').removeClass('valid');
-                                return {
-                                  valid: false,
-                                  errors: ['Must select a month.']
-                                };
-                              } else {
-                                $ddSelect.addClass('valid').removeClass('not-valid');
-                                return {valid: true};
-                              }
+                              return {valid:false, errors: ['Must select a month.']};
                             }
                           },
                           hint:'Month'
@@ -206,7 +199,6 @@ tc.gam.project_widgets.need_form = function(options) {
                               || ($element.val() !== '' && $element.val() !== $element.data('default'))) {
                               $ddSelect.addClass('has-been-focused valid');
                             }
-                            
                             return { valid: true };
                           }
                         }
