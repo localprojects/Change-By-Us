@@ -21,10 +21,11 @@ tc.gam.project_data = {
             }
         });
     },
-    getNeeds: function(success, error) {
+    _getNeedsByQuery: function(query_data, success, error) {
         tc.jQ.ajax({
             url:'/rest/v1/needs/',
             dataType:'json',
+            data:query_data,
             success:function(data, status, xhr) {
                 if (success) {
                     success(data, status, xhr);
@@ -36,6 +37,12 @@ tc.gam.project_data = {
                 }
             }
         });
+    },
+    getNeeds: function(success, error) {
+        this._getNeedsByQuery({}, success, error);
+    },
+    getEventNeeds: function(event_id, success, error) {
+        this._getNeedsByQuery({event_id:event_id}, success, error);
     },
     createNeed: function(need_data, success, error) {
       tc.jQ.ajax({
