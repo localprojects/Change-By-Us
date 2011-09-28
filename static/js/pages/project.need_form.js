@@ -115,39 +115,61 @@ tc.gam.project_widgets.need_form = function(options) {
                         },
                         'address': {
                           selector: '#vol-street',
-                          validators: ['required'],
+                          validators: function(merlinInput, $element, step, onSubmit) {
+                            if ($element.is('.disabled')) {
+                              return {valid:true};
+                            } else {
+                              return tc.validate($element, ['required']);
+                            }
+                          },
                           hint:'Address'
                         },
                         'month': {
                           selector: '#vol-month',
-                          validators: function(input, element, step, submit) {
-                            var $ddSelect = element.next('.ddSelectContainer').find('.ddSelect');
-                            
-                            if (submit) {
-                              $ddSelect.addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
-                            }
+                          validators: function(input, $element, step, submit) {
+                            var $ddSelect = $element.next('.ddSelectContainer').find('.ddSelect');
 
-                            if ($(element).val() === 'Month') {
-                              $ddSelect.addClass('not-valid').removeClass('valid');
-                              return {
-                                valid: false,
-                                errors: ['Must select a month.']
-                              }
+                            if ($element.is('.disabled')) {
+                              return {valid:true};
                             } else {
-                              $ddSelect.addClass('valid').removeClass('not-valid');
-                              return {valid: true}
+                              if (submit) {
+                                $ddSelect.addClass('not-valid has-been-focused has-attempted-submit').removeClass('valid');
+                              }
+
+                              if ($element.val() === 'Month') {
+                                $ddSelect.addClass('not-valid').removeClass('valid');
+                                return {
+                                  valid: false,
+                                  errors: ['Must select a month.']
+                                };
+                              } else {
+                                $ddSelect.addClass('valid').removeClass('not-valid');
+                                return {valid: true};
+                              }
                             }
                           },
                           hint:'Month'
                         },
                         'day': {
                           selector: '#vol-day',
-                          validators: ['required', 'numeric'],
+                          validators: function(merlinInput, $element, step, onSubmit) {
+                            if ($element.is('.disabled')) {
+                              return {valid:true};
+                            } else {
+                              return tc.validate($element, ['required', 'numeric']);
+                            }
+                          },
                           hint:'Day'
                         },
                         'time': {
                           selector: '#vol-time',
-                          validators: ['required'],
+                          validators: function(merlinInput, $element, step, onSubmit) {
+                            if ($element.is('.disabled')) {
+                              return {valid:true};
+                            } else {
+                              return tc.validate($element, ['required']);
+                            }
+                          },
                           hint:'Time'
                         },
                         'event_link': {
@@ -190,7 +212,7 @@ tc.gam.project_widgets.need_form = function(options) {
                     finish:function(merlin, dom) {
                       var d = new Date();
                       var needDate = d.getFullYear()
-                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val())+1)
+                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val(), 10)+1)
                               + '-' + merlin.current_step.inputs.day.dom.val();
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         type:'volunteer',
