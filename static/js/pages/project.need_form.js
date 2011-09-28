@@ -288,7 +288,7 @@ tc.gam.project_widgets.need_form = function(options) {
                   var options = '';
                   
                   for (var i = 0; i < cached_events.length; i++) {
-                    if (cached_events[i].id === need_details.event_id) {
+                    if (need_details && cached_events[i].id === need_details.event_id) {
                       options += '<option value="'+cached_events[i].id+'" selected>'+cached_events[i].name+'</option>';
                     } else {
                       options += '<option value="'+cached_events[i].id+'">'+cached_events[i].name+'</option>';
