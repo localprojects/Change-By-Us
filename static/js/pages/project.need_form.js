@@ -13,26 +13,35 @@ tc.gam.project_widgets.need_form = function(options) {
     //  id - the selector for the select element, also used to
     //       identify the generated markup
     //  defaultVal - Used to identify the unselectable default value
-    var initDropDown = function(id, defaultVal) {
+    var initDropDown = function(id, defaultVal, onChange) {
       //Apply jqDropDown to our select element
-      tc.jQ('#' + id).jqDropDown({
+      var $container,
+        $input = tc.jQ('#' + id);
+      
+      $input.jqDropDown({
         toggleBtnName:'ddSelect',
         optionListName:'ddSelectOptions',
         containerName:'dd-' + id,
         optionChanged: function() {
+          if (onChange) {
+            onChange($input);
+          }
+          
           //manually trigger the change event on the select element
           //so that Merlin validation will trigger properly
-          tc.jQ('#' + id).change();
+          $input.change();
         }
       }).data('default', defaultVal);
 
+      $container = tc.jQ('.dd-' + id);
+
       //Add the default container css class (important, common styles on this guy)
-      tc.jQ('.dd-' + id).addClass('ddSelectContainer');
+      $container.addClass('ddSelectContainer');
 
       //There's no default value, something is always selected, so it's always valid
       if (!defaultVal) {
-        tc.jQ('.dd-' + id).addClass('ddNoDefault');
-        tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+        $container.addClass('ddNoDefault');
+        $container.find('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
       }
     };
     
@@ -58,7 +67,20 @@ tc.gam.project_widgets.need_form = function(options) {
           }
         });
     };
-        
+
+
+    var initEventInputs = function(merlin) {
+      var $select = merlin.current_step.inputs.event_link.dom;
+    
+      if ($select.val() !== '' && $select.val() !== $select.data('default')) {
+        //disable all of the custom date/place fields
+        disableCustomEventInputs(true, merlin);
+      } else {
+        //enable all of the custom date/place fields
+        disableCustomEventInputs(false, merlin);
+      }
+    };
+
     /**
      * Function: initMerlin
      * Initialize the merlin object for validation of the modal dialog.
@@ -183,22 +205,19 @@ tc.gam.project_widgets.need_form = function(options) {
                             if ($ddSelectContainer.hasClass('ddNoDefault') 
                               || ($element.val() !== '' && $element.val() !== $element.data('default'))) {
                               $ddSelect.addClass('has-been-focused valid');
-
-                              //disable all of the custom date/place fields
-                              disableCustomEventInputs(true, merlinInput);
-                              return { valid: true };
-                            } else {
-                              //enable all of the custom date/place fields
-                              disableCustomEventInputs(false, merlinInput);
-                              return { valid: '' };
                             }
+                            
+                            return { valid: true };
                           }
                         }
                     },
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
                       initDropDown('vol-month', 'Month');
-                      initDropDown('event-list', 'Link to an event');
+                      initDropDown('event-list', 'Link to an event', function($select) {
+                        initEventInputs(merlin);
+                      });
+                      
                       
                       if (need_id) {
                         tc.jQ.each(merlin.current_step.inputs, function(key, input) {
@@ -206,6 +225,9 @@ tc.gam.project_widgets.need_form = function(options) {
                             input.dom.val(input.default_val);
                           }
                         });
+                        
+                        initEventInputs(merlin);
+                        
                         merlin.validate(true);
                       }
                     },
