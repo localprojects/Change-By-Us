@@ -8,33 +8,56 @@ tc.gam.project_widgets.need_form = function(options) {
         cached_events = [],
         self = {};
 
-        //Helper function to make the jqDropDown plugin more robust
-        //since you can't set multiple classes at a time.
-        //  id - the selector for the select element, also used to
-        //       identify the generated markup
-        //  defaultVal - Used to identify the unselectable default value
-        var initDropDown = function(id, defaultVal) {
-          //Apply jqDropDown to our select element
-          tc.jQ('#' + id).jqDropDown({
-            toggleBtnName:'ddSelect',
-            optionListName:'ddSelectOptions',
-            containerName:'dd-' + id,
-            optionChanged: function() {
-              //manually trigger the change event on the select element
-              //so that Merlin validation will trigger properly
-              tc.jQ('#' + id).change();
+    //Helper function to make the jqDropDown plugin more robust
+    //since you can't set multiple classes at a time.
+    //  id - the selector for the select element, also used to
+    //       identify the generated markup
+    //  defaultVal - Used to identify the unselectable default value
+    var initDropDown = function(id, defaultVal) {
+      //Apply jqDropDown to our select element
+      tc.jQ('#' + id).jqDropDown({
+        toggleBtnName:'ddSelect',
+        optionListName:'ddSelectOptions',
+        containerName:'dd-' + id,
+        optionChanged: function() {
+          //manually trigger the change event on the select element
+          //so that Merlin validation will trigger properly
+          tc.jQ('#' + id).change();
+        }
+      }).data('default', defaultVal);
+
+      //Add the default container css class (important, common styles on this guy)
+      tc.jQ('.dd-' + id).addClass('ddSelectContainer');
+
+      //There's no default value, something is always selected, so it's always valid
+      if (!defaultVal) {
+        tc.jQ('.dd-' + id).addClass('ddNoDefault');
+        tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+      }
+    };
+    
+    var disableCustomEventInputs = function(disable, merlin) {
+      var inputs = [merlin.current_step.inputs.month,
+          merlin.current_step.inputs.day,
+          merlin.current_step.inputs.time,
+          merlin.current_step.inputs.address];
+          
+        tc.jQ.each(inputs, function(i, input) {
+          if (input.dom.is('select')) {
+            if (disable) {
+              input.dom.next('.ddSelectContainer').find('.ddSelect').addClass('disabled');
+            } else {
+              input.dom.next('.ddSelectContainer').find('.ddSelect').removeClass('disabled');
             }
-          });
-
-          //Add the default container css class (important, common styles on this guy)
-          tc.jQ('.dd-' + id).addClass('ddSelectContainer');
-
-          //There's no default value, something is always selected, so it's always valid
-          if (!defaultVal) {
-            tc.jQ('.dd-' + id).addClass('ddNoDefault');
-            tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
           }
-        };
+          
+          if (disable) {
+            input.dom.addClass('disabled');
+          } else {
+            input.dom.removeClass('disabled');
+          }
+        });
+    };
         
     /**
      * Function: initMerlin
@@ -130,7 +153,23 @@ tc.gam.project_widgets.need_form = function(options) {
                         'event_link': {
                           selector: '#event-list',
                           validators: function(merlinInput, $element, step, onSubmit) {
+                            var $ddSelectContainer = $element.next('.ddSelectContainer'),
+                                $ddSelect = $ddSelectContainer.find('.ddSelect');
                             
+                            $ddSelect.removeClass('valid');
+                            
+                            if ($ddSelectContainer.hasClass('ddNoDefault') 
+                              || ($element.val() !== '' && $element.val() !== $element.data('default'))) {
+                              $ddSelect.addClass('has-been-focused valid');
+
+                              //disable all of the custom date/place fields
+                              disableCustomEventInputs(true, merlinInput);
+                              return { valid: true };
+                            } else {
+                              //enable all of the custom date/place fields
+                              disableCustomEventInputs(false, merlinInput);
+                              return { valid: '' };
+                            }
                           }
                         }
                     },
@@ -162,7 +201,8 @@ tc.gam.project_widgets.need_form = function(options) {
                         time:merlin.current_step.inputs.time.dom.val(),
                         duration:merlin.current_step.inputs.duration.dom.val(),
                         project_id:merlin.app.app_page.data.project.project_id,
-                        address:merlin.current_step.inputs.address.dom.val()
+                        address:merlin.current_step.inputs.address.dom.val(),
+                        event_id:merlin.current_step.inputs.event_link.dom.val()
                       });
                     }
                 },
