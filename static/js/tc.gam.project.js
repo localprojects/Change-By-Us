@@ -28,6 +28,9 @@ tc.gam.project = function(app, dom) {
         'event-detail': tc.gam.project_widgets.events(
             tc.jQ.extend({ name: 'event-detail', dom: dom.find('.project-section.event-detail') }, widget_options)
         ),
+        'event-needs': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-needs', dom: dom.find('.project-section.event-needs') }, widget_options)
+        ),
         'event-form': tc.gam.project_widgets.event_form(
             tc.jQ.extend({ name: 'event-form', dom: dom.find('.project-section.event-form') }, widget_options)
         ),
