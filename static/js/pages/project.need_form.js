@@ -269,11 +269,21 @@ tc.gam.project_widgets.need_form = function(options) {
                     }
                   }
                   return options;
+                },
+                eventOpts: function() {
+                  var options = '';
+                  
+                  for (var i = 0; i < cached_events.length; i++) {
+                    if (cached_events[i].id === need_details.event_id) {
+                      options += '<option value="'+cached_events[i].id+'" selected>'+cached_events[i].name+'</option>';
+                    } else {
+                      options += '<option value="'+cached_events[i].id+'">'+cached_events[i].name+'</option>';
+                    }
+                  }
+                  return options;
                 }
             }, need_details),
             $html = ich.need_form_tmpl(new_details);
-        
-        $html.find('#event-list').html(ich.event_list_tmpl({events: cached_events}));
         
         dom.find('.add-need-step').html($html);
     };
