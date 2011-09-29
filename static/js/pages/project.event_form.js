@@ -188,7 +188,7 @@ tc.gam.project_widgets.event_form = function(options) {
     var updateLinkedNeeds = function($target, needs, event_id) {
       var linked_needs = tc.jQ.map(needs, function(obj, i) {
           if (parseInt(obj.event_id, 10) === parseInt(event_id, 10)) {
-            return {name: obj.request, id: obj.id };
+            return {name: obj.request, quantity: obj.quantity, id: obj.id };
           }
         }),
         $need_list = ich.linked_event_needs_tmpl({ linked_needs:linked_needs });
