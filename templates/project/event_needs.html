@@ -1,0 +1,116 @@
+<div class="box main-section project-section event-needs">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Needs for the event:
+            </span>
+        </h2>
+        <div class="actions">
+            <a href="#show,needs" class="back fancy-caps">
+                <span>Go back to all needs</span>
+            </a>
+        </div>
+    </div>
+    <ol class="event-stack"></ol>
+    <ol class="need-stack"></ol>
+</div>
+
+{% raw %}
+<script id="event_needs_header_tmpl" type="text/html">
+<li class="event" data-id="{{id}}">
+    <div class="bd clearfix event-detail-cont">
+        <div class="wrapper">
+            <div class="event-datetime">
+                <span class="month">{{mon}}</span>
+                <span class="day">{{day}}</span>
+                <span class="time">{{starttime}}</span>
+            </div>
+
+            <div class="event-body">
+                <div class="event-title serif">
+                    <a href="#show,event-detail,{{id}}">{{name}}</a>
+                </div>
+
+                <div class="event-loc-title serif">
+                    at <a href="#">{{address}}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</li>
+</script>
+{% endraw %}
+
+{% raw %}
+<script id="need_list_tmpl" type="text/html">
+{{# needs }}
+    {{> need_teaser_tmpl }}
+{{/ needs }}
+</script>
+{% endraw %}
+
+{% raw %}
+<script id="need_teaser_tmpl" class="partial" type="text/html">
+<li class="box need" data-id="{{id}}">
+{% endraw %}
+{% if
+    (d.template_data.project_user.data.is_project_admin) or
+    (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+    (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+    <a href="#show,need-form,{{ '{{id}}' }}" class="need-edit">Edit This</a>
+{% endif %}
+{% raw %}
+  <div class="bd clearfix need-detail-cont">
+    <div class="vol-title serif">
+        We need <a href="#show,need-detail,{{id}}" class="vol-need"><span class="vol-count">{{quantity}}</span> volunteer {{request}}</a>
+        {{#reason}} for {{reason}}{{/reason}}
+        {{#display_date}} on {{display_date}}{{/display_date}}
+    </div>
+
+{% endraw %}
+    {% if
+      (d.template_data.project_user.data.is_project_admin) or
+      (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+      (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+      <a href="#deleteNeed,{{ '{{id}}' }}" class="need-delete" title="Delete this need">Delete</a>
+    {% endif %}
+{% raw %}
+
+    <div class="volunteer-body">
+      <p class="serif">
+          {{ truncated_description }}
+          {{# more_to_read }}
+              <a href="#show,need-detail,{{ id }}" class="read-more">Read More</a>
+          {{/ more_to_read }}
+      </p>
+
+      <span>Who&#39;s helping</span>
+      <div class="volunteers teaser">
+          <div class="vol-avatars teaser">
+              {{# volunteers }}
+                  <a href="/useraccount/{{ id }}">
+                  {{# avatar_path }}
+                      <img src="{% endraw %}{{ d.template_data.media_root }}{% raw %}{{ avatar_path }}" alt="{{ display_name }}"></img>
+                  {{/ avatar_path }}
+                  {{^ avatar_path }}
+                      <img src="/static/images/thumb_genAvatar.jpg" alt="{{ display_name }}"></img>
+                  {{/ avatar_path }}
+                  </a>
+              {{/ volunteers }}
+              {{^ volunteers }}
+                  Be the first to volunteer!
+              {{/ volunteers }}
+          </div>
+      </div>
+
+    </div>
+
+    <div class="volunteer-details serif">
+      <div class="volunteer-count">We have <strong>{{ volunteer_count }}</strong> volunteers</div>
+      <div class="progress-wrapper"><div class="progress" style="width:{{ progress_amount }}px;"><div class="progress-pin"></div></div></div>
+      <a href="#" class="help-link active">I can help</a>
+    </div>
+  </div>
+</li>
+</script>
+{% endraw %}
