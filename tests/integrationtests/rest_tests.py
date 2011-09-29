@@ -12,10 +12,12 @@ from framework.config import Config
 from framework.session_holder import SessionHolder
 import main
 
+from controllers.rest import BadRequest
 from controllers.rest import ForbiddenError
 from controllers.rest import NeedInstance
 from controllers.rest import NotFoundError
 from controllers.rest import NonProjectMemberReadOnly
+from controllers.rest import NonProjectAdminReadOnly
 from controllers.rest import NeedVolunteerList
 from controllers.rest import RestController
 from controllers.rest import Serializer
@@ -25,7 +27,7 @@ class Test_RestController_instanceToDict (AppSetupMixin, TestCase):
 
     @istest
     def should_return_user_object_dict_with_mapper_names_instead_of_table_names(self):
-        from giveaminute.models import *
+        from giveaminute.models import User
         cont = RestController()
         user = cont.orm.query(User).get(1)
 
@@ -121,23 +123,67 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert_equal(response_dict["address"], "Frugal 4 House, 563 46th St., Oakland, CA 94609")
 
     @istest
-    def should_include_a_pretty_date_in_the_list(self):
-        response = self.app.get('/rest/v1/needs/', status=200)
+    def should_include_event_information_if_available(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_in('event', response_dict)
+        assert_equal(response_dict['event']['name'], "Gallery Opening")
+
+    @istest
+    def should_set_an_event_parameter_to_None_if_none_is_linked(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_in('event', response_dict)
+        assert_is_none(response_dict['event'])
+
+    @istest
+    def should_use_event_date_if_event_exists(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_date"]
+        assert need_dict["display_date"] == "September 6th"
+
+    @istest
+    def should_use_event_location_if_event_exists(self):
+        response = self.app.get('/rest/v1/needs/2/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_address"]
+        assert need_dict["display_address"] == "CultureFix NYC"
+
+    @istest
+    def should_default_to_using_custom_date_if_no_event_exists(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_date"]
+        assert need_dict["display_date"] == "August 31st"
+
+    @istest
+    def should_default_to_using_custom_location_if_no_event_exists(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        need_dict = json.loads(response.body)
+        print need_dict["display_address"]
+        assert need_dict["display_address"] == "Code for America, 85 2nd St., San Francisco, CA 94105"
+
+    @istest
+    def should_filter_needs_by_query_parameters(self):
+        response = self.app.get('/rest/v1/needs/?event_id=1', status=200)
 
         response_list = json.loads(response.body)
-        for need_dict in response_list:
-            print need_dict["display_date"]
-            if need_dict["display_date"] == "August 26th":
-                ok_(True)
-                return
-        ok_(False)
+        assert_equal(len(response_list), 1)
+        assert_equal(int(response_list[0]['id']), 2)
 
     @istest
     def should_include_a_pretty_date_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/2/', status=200)
 
         response_dict = json.loads(response.body)
-        assert_equal(response_dict["display_date"], "August 26th")
+        assert_equal(response_dict["display_date"], "September 6th")
 
     @istest
     def should_include_the_volunteers_in_the_return_value(self):
@@ -171,6 +217,209 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         response_dict = json.loads(response.body)
         for volunteer_dict in response_dict['volunteers']:
             assert_in("display_name", volunteer_dict)
+
+
+class Test_EventsRestEndpoint_GET (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_return_a_reasonable_representation_of_an_event(self):
+        response = self.app.get('/rest/v1/events/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        assert_equal(response_dict["name"], "Gallery Opening")
+        assert_equal(response_dict["start_datetime"], "2011-09-06 19:00:00")
+        assert_equal(response_dict["address"], "CultureFix NYC")
+        assert_equal(response_dict["rsvp_service_name"], "Eventbrite")
+        assert_equal(len(response_dict["needs"]), 1)
+        assert_equal(int(response_dict["needs"][0]["id"]), 2)
+
+        # Has split up start date
+        assert_equal(int(response_dict['start_year']), 2011)
+        assert_equal(int(response_dict['start_month']), 9)
+        assert_equal(int(response_dict['start_day']), 6)
+        assert_equal(int(response_dict['start_hour']), 19)
+        assert_equal(int(response_dict['start_minute']), 0)
+
+    @istest
+    def should_return_a_list_of_events(self):
+        response = self.app.get('/rest/v1/events/', status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+        assert_equal(response_dict[0]["name"], "Gallery Opening")
+        assert_equal(response_dict[0]["start_datetime"], "2011-09-06 19:00:00")
+        assert_equal(response_dict[0]["address"], "CultureFix NYC")
+
+
+class Test_EventRestEndpoint_POST (AppSetupMixin, TestCase):
+    fixtures = ['aarons_db_20110826.sql']
+
+    @istest
+    def should_allow_admin_to_create_a_new_event_when_given_valid_input(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/',
+            params={
+                'name': 'Another Opening',
+                'start_datetime': '2011-08-12 12:00:00',
+                'address': '85 2nd St., San Francisco CA 94105',
+                'project_id': 1,
+                'start_datetime': '2011-6-07 12:30',
+                'need_ids':'1,3'
+            }, status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+
+        assert_equal(num_events+1, len(orm.query(Event).all()))
+        assert_equal(response_dict['start_datetime'], '2011-06-07 12:30:00')
+        assert_equal(set([int(need_dict['id']) for need_dict in response_dict['needs']]), set([1,3]))
+
+    @istest
+    def should_allow_admin_to_update_an_event_when_given_valid_input(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'start_datetime': '2011-08-12 12:00:00',
+                'address': '85 2nd St., San Francisco CA 94105',
+                'project_id': 1,
+                'start_datetime': '2011-6-07 12:30',
+                'need_ids':'1,3'
+            }, status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+
+        assert_equal(num_events, len(orm.query(Event).all()))
+        assert_equal(response_dict['name'], 'Gallery Opening')
+        assert_equal(response_dict['start_datetime'], '2011-06-07 12:30:00')
+        assert_equal(set([int(need_dict['id']) for need_dict in response_dict['needs']]), set([1,3]))
+
+    @istest
+    def should_not_change_the_needs_if_none_is_specified(self):
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'start_datetime': '2011-08-12 12:00:00',
+                'address': '85 2nd St., San Francisco CA 94105',
+                'project_id': 1,
+                'start_datetime': '2011-6-07 12:30',
+            }, status=200)
+
+        response_dict = json.loads(response.body)
+        print response
+
+        assert_equal([int(need_dict['id']) for need_dict in response_dict['needs']], [2])
+
+    @istest
+    def should_not_change_the_event_if_not_logged_in(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'name': 'Changed name'
+            }, status=403)
+
+        print response
+
+        assert_equal(orm.query(Event).get(1).name, 'Gallery Opening')
+
+    @istest
+    def should_not_change_the_event_if_not_admin(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+
+        # login as not admin
+        self.login(2)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'PUT',
+                'name': 'Changed name'
+            }, status=403)
+
+        print response
+
+        assert_equal(orm.query(Event).get(1).name, 'Gallery Opening')
+
+    @istest
+    def should_delete_the_event_if_method_is_delete(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # Login as an admin user
+        self.login(1)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'DELETE',
+            }, status=200)
+
+        print response
+
+        assert_equal(num_events-1, len(orm.query(Event).all()))
+        assert_not_in(1, [event.id for event in orm.query(Event).all()])
+
+    @istest
+    def should_not_delete_the_event_if_not_logged_in(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'DELETE',
+            }, status=403)
+
+        print response
+
+        assert_equal(num_events, len(orm.query(Event).all()))
+        assert_in(1, [event.id for event in orm.query(Event).all()])
+
+    @istest
+    def should_not_delete_the_event_if_not_admin(self):
+        from framework.orm_holder import OrmHolder
+        from giveaminute.models import Event
+        orm = OrmHolder().orm
+        num_events = len(orm.query(Event).all())
+
+        # login as not admin
+        self.login(2)
+
+        response = self.app.post('/rest/v1/events/1/',
+            params={
+                '_method': 'DELETE',
+            }, status=403)
+
+        print response
+
+        assert_equal(num_events, len(orm.query(Event).all()))
+        assert_in(1, [event.id for event in orm.query(Event).all()])
 
 
 class Test_NeedInstance_REST_READ (AppSetupMixin, TestCase):
@@ -271,6 +520,10 @@ class Test_RestController__BASE_METHOD_HANDLER (AppSetupMixin, TestCase):
 
         assert_is_instance(cont.user, giveaminute.models.User)
 
+    def test_that_it_doesnt_let_a_paramter_starting_with_underscore_through(self):
+        cont = RestController()
+        assert_equal(cont.get_model_params(**{'arg1':1, 'arg2':2, '_arg3':3}), {'arg1':1, 'arg2':2})
+
 
 class Test_NonProjectMemberReadOnly_IsMember(AppSetupMixin, TestCase):
     fixtures = ['aarons_db_20110826.sql']
@@ -298,3 +551,23 @@ class Test_Serializer_serialize (AppSetupMixin, TestCase):
         serialized = serializer.serialize(datetime.date(2011,8,2))
 
         assert_equal(serialized, '2011-08-02')
+
+
+class Test_NonProjectAdminReadOnly_canCreate (AppSetupMixin, TestCase):
+
+    @istest
+    def raises_a_BadRequest_error_when_instance_refers_to_a_nonexistant_project (self):
+        from framework.orm_holder import OrmHolder
+        orm = OrmHolder().orm
+        user = Mock()
+        instance = Mock()
+        instance.project = None
+        instance.project_id = 55
+
+        access_rules = NonProjectAdminReadOnly()
+
+        try:
+            access_rules.can_create(user, instance, orm)
+            ok_(False)
+        except BadRequest:
+            pass

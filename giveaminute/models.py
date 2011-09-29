@@ -149,6 +149,7 @@ class Project (Base):
     # FULLTEXT KEY `title` (`title`,`description`)
 
     needs = relationship('Need', backref='project')
+    events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
 
@@ -183,7 +184,10 @@ class Need (Base):
     @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
-        return util.make_pretty_date(self.date)
+        if self.event:
+            return util.make_pretty_date(self.event.start_datetime)
+        else:
+            return util.make_pretty_date(self.date)
 
     @property
     def reason(self):
@@ -191,6 +195,13 @@ class Need (Base):
             This is the reason."""
         # TODO: We need a way of constructing the reason.
         return ''
+    
+    @property
+    def display_address(self):
+        if self.event:
+            return self.event.address
+        else:
+            return self.address
 
 
 class Volunteer (Base):
@@ -201,6 +212,10 @@ class Volunteer (Base):
 
     need = relationship('Need')
     member = relationship('User')
+
+    @property
+    def project(self):
+        return self.need.project
 
 
 class CommunityLeader (Base):
@@ -217,6 +232,7 @@ class Event (Base):
     __tablename__ = 'project_event'
 
     id = Column(Integer, primary_key=True)
+    project_id = Column(ForeignKey('project.project_id'))
     name = Column(String(256))
     details = Column(Text)
     rsvp_url = Column(String(2048))
@@ -224,8 +240,52 @@ class Event (Base):
     end_datetime = Column(DateTime)
     address = Column(String(256))
 
+    project = relationship('Project')
     needs = relationship('Need')
 
+    @property
+    def rsvp_service_name(self):
+        """The name of the service providing RSVP for the event"""
+        url = self.rsvp_url
+
+        if url is None:
+            return None
+
+        # For now the list of supported sites/URLs is hardcoded.  In the future
+        # we might want to try to be more clever.
+        if 'facebook.com' in url[:24].lower():
+            return 'Facebook'
+        if 'meetup.com' in url[:22].lower():
+            return 'Meetup'
+        if 'eventbrite.com' in url[:26].lower():
+            return 'Eventbrite'
+
+    @property
+    def start_displaydate(self):
+        if self.start_datetime:
+            return self.start_datetime.strftime('%B %d at %I:%M %p')
+        else:
+            return ''
+
+    @property
+    def start_year(self):
+        return self.start_datetime.year
+
+    @property
+    def start_month(self):
+        return self.start_datetime.month
+
+    @property
+    def start_day(self):
+        return self.start_datetime.day
+
+    @property
+    def start_hour(self):
+        return self.start_datetime.hour
+
+    @property
+    def start_minute(self):
+        return self.start_datetime.minute
 
 
 if __name__ == '__main__':

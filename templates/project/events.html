@@ -1,0 +1,34 @@
+<div class="box main-section project-section events">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Events <span class="counter"></span>
+            </span>
+        </h2>
+        {% if
+            (d.template_data.project_user.data.is_member) or
+            (d.template_data.project_user.data.is_project_admin) or
+            (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+            (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+        <div class="actions">
+            <a href="#show,event-form" class="add fancy-caps">
+                <span>Add an Event</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+
+    <ol class="event-stack">
+        {% for event in d.template_data.project.events %}
+            {% include "project/event_teaser.html" %}
+        {% else %}
+            {% include "project/empty_events_list.html" %}
+        {% endfor %}
+    </ol>
+</div>
+
+{% include 'project/event_form.html' %}
+{% include 'project/event.html' %}
+
+<script src="/static/js/pages/project.events.js"></script>
