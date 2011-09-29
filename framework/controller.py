@@ -276,7 +276,7 @@ class Controller (object):
         # Debug data.
         log.info("%s: %s (%s)" % (status, content_type, template_name))
         log.info("*** session  = %s" % self.session)
-        
+
         # Set status
         web.ctx.status = status
 
@@ -407,7 +407,7 @@ class Controller (object):
 
         return image
 
-    def error(self, message):
+    def error(self, message, headers={}):
         log.error("400: %s" % message)
         return self.render('error', { 'error_code': 400, 'error_message': message }, status='400 %s' % message)
 

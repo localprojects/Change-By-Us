@@ -1,0 +1,71 @@
+<li class="event" data-id="{{ event.id }}">
+    {% if
+        (d.template_data.project_user.data.is_project_admin) or
+        (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+        (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+        <a href="#show,event-form,{{ event.id }}" class="event-edit">Edit This</a>
+    {% endif %}
+
+    <div class="bd clearfix">
+                {% if
+                  (d.template_data.project_user.data.is_project_admin) or
+                  (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+                  (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+                  <a href="#removeEvent,{{ event.id }}" class="event-delete" title="Delete this event">Delete</a>
+                {% endif %}
+
+        <div class="wrapper">
+            <div class="event-datetime">
+                <span class="month">{{ event.start_datetime|datetime('%b') }}</span>
+                <span class="day">{{ event.start_datetime.day }}</span>
+                <span class="time">{{ event.start_datetime|neattime }}</span>
+            </div>
+
+            <div class="event-body">
+                <div class="event-title serif">
+                    <a href="#show,event-detail,{{ event.id }}">{{ event.name }}</a>
+                </div>
+
+                <div class="event-loc-title serif">
+                    at <a href="#">{{ event.address }}</a>
+                </div>
+
+                <div class="event-description">
+                    <p class="serif">
+                        {{ event.details|truncate(130) }}
+                        {% if event.details|length > 130 %}
+                            <a href="#show,event-detail,{{ event.id }}" class="read-more">Read More</a>
+                        {% endif%}
+                    </p>
+                </div>
+            </div>
+
+            <div class="event-rsvp">
+                <a href="{{ event.rsvp_url }}" class="rsvp-link">RSVP{% if event.rsvp_service_name %} <span class="rsvp-site">on <span class="rsvp-site-name">{{ event.rsvp_service_name }}</span></span>{% endif %}</a>
+
+                {% if event.needs|length > 0 %}
+                    {% with need=event.needs[0] %}
+                        <span class="event-need serif">We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a></span>
+                        <span class="more-event-needs"><a href="#show,event-needs,{{ event.id }}">Show all needs for this event<span class="sm-arrow-forward dark"></span></a></span>
+                    {% endwith %}
+                {% endif %}
+            </div>
+
+            <!--
+            <div class="vol-recent-comment serif">
+                <img src="/static/images/thumb_sgoldsmith.jpg"></img>
+                <div class="comment">We still really need people for this if anyone can help. It'll be fun and it's just one night.</div>
+                <div class="author">
+                    <span>Alexandra M.</span><br>
+                    3 hours ago
+                </div>
+            </div>
+            -->
+
+            <div class="empty-state-box" style="display:none;">
+                <!--<a class="close" href="#"><span>Close</span></a>-->
+                <p>No events found.</p>
+            </div>
+        </div>
+    </div>
+</li>

@@ -40,15 +40,15 @@ class DbFixturesMixin (object):
     def install_db_structure(self, db):
         curdir = os.path.dirname(__file__)
         models_sql = open(os.path.join(curdir, '../../sql/models.sql')).read()
-        for sql_statement in models_sql.split(';'):
-            db.query(sql_statement)
+        cursor = db._db_cursor()
+        cursor.execute(models_sql)
 
     def load_db_fixtures(self, db, *fixtures):
         curdir = os.path.dirname(__file__)
         for fixture in fixtures:
             fixture_sql = open(os.path.join(curdir, 'sql', fixture)).read()
-            for sql_statement in fixture_sql.split(';'):
-                db.query(sql_statement)
+            cursor = db._db_cursor()
+            cursor.execute(fixture_sql)
 
 
 class WebPySetupMixin (object):
