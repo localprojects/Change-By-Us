@@ -63,7 +63,21 @@ tc.gam.project_widgets.events = function(options) {
     };
     
     self._getNeedListTemplateData = function(need_list) {
-        return need_list;
+        var i,
+            new_list = [],
+            new_need;
+        
+        for (i in need_list) {
+            new_need = tc.jQ.extend(true, {
+                volunteer_count: need_list[i].volunteers.length,
+                volunteers: need_list[i].volunteers.slice(0,5),
+                truncated_description: function() { return this.description.substr(0,130); },
+                more_to_read: function() { return this.description.length > 130; },
+                progress_amount: function() { return 150 * this.volunteers.length / this.quantity }
+            }, need_list[i]);
+            new_list.push(new_need);
+        }
+        return new_list;
     }
     
     var mergeNeedsListTemplate = function(need_list) {
@@ -77,7 +91,7 @@ tc.gam.project_widgets.events = function(options) {
         options.app.components.project_widgets.needs.bindNeedDeleteLinks();
         
         tc.util.log('populating the template with data ' + new_list);
-        $html = ich.need_list_tmpl({needs:new_list});
+        $html = ich.need_list_tmpl( {needs: new_list} );
         
         console.log($html);
         dom.find('.need-stack').html($html);
