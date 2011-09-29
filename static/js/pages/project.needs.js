@@ -256,7 +256,7 @@ tc.gam.project_widgets.needs = function(options) {
         initMerlin(need);
     };
     
-    var bindNeedHelpLinks = self.bindHelpLink = function() {
+    var bindNeedHelpLinks = self.bindNeedHelpLinks = function() {
         tc.jQ('.help-link').die('click').live('click', function(event) {
             event.preventDefault();
 

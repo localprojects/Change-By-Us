@@ -50,10 +50,37 @@ tc.gam.project_widgets.events = function(options) {
 
     var mergeDetailTemplate = function(event_details) {
         var new_details = self._getDetailTemplateData(event_details),
+            $html;
+        
+        if (options.name === 'event-needs') {
+            $html = ich.event_needs_header_tmpl(new_details);
+        } else {
             $html = ich.event_detail_tmpl(new_details);
+        }
 
         dom.find('.event-stack').html($html);
 //        updateEvent(event_details);
+    };
+    
+    self._getNeedListTemplateData = function(need_list) {
+        return need_list;
+    }
+    
+    var mergeNeedsListTemplate = function(need_list) {
+        var new_list = self._getNeedListTemplateData(need_list),
+            $html;
+        
+        tc.util.log('binding help link behavior');
+        options.app.components.project_widgets.needs.bindNeedHelpLinks();
+        
+        tc.util.log('binding delete link behavior');
+        options.app.components.project_widgets.needs.bindNeedDeleteLinks();
+        
+        tc.util.log('populating the template with data ' + new_list);
+        $html = ich.need_list_tmpl({needs:new_list});
+        
+        console.log($html);
+        dom.find('.need-stack').html($html);
     };
 
     /**
@@ -65,7 +92,7 @@ tc.gam.project_widgets.events = function(options) {
             if (options.name === widgetName) {
                 tc.util.log('&&& showing ' + options.name);
 
-                //We're going to show one need in detail, so go fetch
+                //We're going to show one event in detail, so go fetch
                 //the details and setup the template
                 if (id) {
                     self.event_id = id;
@@ -73,6 +100,13 @@ tc.gam.project_widgets.events = function(options) {
                         mergeDetailTemplate(event_details);
                         dom.show();
                     });
+                    if (options.name === 'event-needs') {
+                        tc.gam.project_data.getEventNeeds(self.event_id, function(event_needs) {
+                            tc.util.log('event-needs: ' + event_needs);
+                            mergeNeedsListTemplate(event_needs);
+                        });
+                    }
+                    
                 } else {
                     dom.show();
                 }
