@@ -298,7 +298,7 @@ tc.gam.project_widgets.event_form = function(options) {
 
     //Init the form 
     var initForm = function(event_id, callback) {
-      tc.gam.project_data.getNeeds(function(needs) {
+      tc.gam.project_data.getProjectNeeds(options.app.app_page.data.project.project_id, function(needs) {
         cached_needs = needs;
         
         if (event_id) {

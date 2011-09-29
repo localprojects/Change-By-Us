@@ -41,6 +41,9 @@ tc.gam.project_data = {
     getNeeds: function(success, error) {
         this._getNeedsByQuery({}, success, error);
     },
+    getProjectNeeds: function(project_id, success, error) {
+        this._getNeedsByQuery({project_id:project_id}, success, error);
+    },
     getEventNeeds: function(event_id, success, error) {
         this._getNeedsByQuery({event_id:event_id}, success, error);
     },
