@@ -99,19 +99,20 @@ def load_sqla(handler):
         def __enter__(self):
             log.debug("*** Loading the ORM")
             self.orm = OrmHolder().orm
+            log.debug('***** loaded as %r' % self.orm)
             return self.orm
 
         def __exit__(self, e_type=None, e_val=None, e_tb=None):
             if e_type == web.HTTPError:
                 log.debug("*** web.HTTPError with the ORM")
                 log.warning(e_tb)
-                orm.commit()
+                self.orm.commit()
             elif e_type:
                 log.debug("*** Other exception with the ORM")
                 log.error(e_tb)
                 OrmHolder.invalidate()
             else:
-                log.debug("*** Finishing up with the ORM")
+                log.debug("*** Finishing up with the ORM %r" % self.orm)
                 self.orm.commit()
 
     with OrmContextManager() as orm:
