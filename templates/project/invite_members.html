@@ -1,5 +1,4 @@
-<div class="project-section members">
-<div class="box">
+<div class="project-section box invite-members members">
     <div class="hd clearfix">
         <h2>
             <span>
@@ -14,49 +13,12 @@
     </div>
     <div class="bd">
         <div class="west">
-
-            {% if d.template_data.project.data.info.members['items']|length > 0 %}
-
-                <!-- Begin Members.Stack -->
-                <ul class="members-stack">
-                {% for member in d.template_data.project.data.info.members['items'] %}
-
-                    <li id='member-{{ member.u_id }}'>
-                        <div class="thumb">
-                            {% if member.image_id %}
-                                <img width='40' src='{{d.template_data.media_root}}images/{{ member.image_id % 10 }}/{{ member.image_id }}.png' alt="{{ member.name }}"/>
-                            {% else %}
-                                <img width='40' src="/static/images/thumb_genAvatar.jpg" alt="{{ member.name }}" class="avatar"/>
-                            {% endif %}
-                        </div>
-                        <div class="main">
-                            <a href="/useraccount/{{ member.u_id }}">{{ member.name }}</a>
-                        </div>
-                        {% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-                            <a class="close" href="#removeMember,{{member.u_id}}"><span>Close</span></a>
-                        {% endif %}
-                    </li>
-
-                {% endfor %}
-                </ul>
-                <!-- End Members.Stack -->
-            {% else %}
-
-                {% if d.template_data.project_user.data.is_member or d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-                    <!-- Begin Members.Empty -->
-                    <div class="empty-state-box">
-                        <!--<a class="close" href="#"><span>Close</span></a>-->
-                        <p>Invite people to join! Project members will appear here.</p>
-                        <a href="#show,link_add" class="rounded-button small">Add Link</a>
-                    </div>
-                    <!-- End Members.Empty -->
-                {% endif %}
-
-            {% endif %}
-
+            {% with active="invite" %}
+            {% include "project/members_nav.html" %}
+            {% endwith %}
         </div>
         <div class="east">
-
+            <div>
                 <!-- Begin Members.email-invite -->
                 <div class="email-invite merlin" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
 
@@ -80,7 +42,7 @@
                                 <div class="row clearfix" style='margin-top:0px;'>
                                     <textarea class='email-message'></textarea>
                                 </div>
-                                <div class='row clearfix' style='margin-top:0px;'>
+                                <div class="row clearfix" style='margin-top:0px;'>
                                     <input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
                                 </div>
                             </div>
@@ -160,25 +122,10 @@
 
                 </div>
                 <!-- End Members.ideas-invite -->
-
+            </div>
         </div>
     </div>
 </div>
 <!-- end Members -->
-
-<div class="template-content modal-content confirm-delete remove-member">
-    <div class="step">
-        <h2><strong>Delete</strong> this Project Member?</h2>
-        <div>
-            <p>You are about delete <span class="person-name serif">this member</span> from the project permanently! <br/>Are you sure?</p>
-        </div>
-        <div class="actions">
-            <a class="submit rounded-button" href="#">Yes, Delete <span class="person-name">Member</span></a>
-            <a class="cancel" href="#">No, keep them.</a>
-        </div>
-    </div>
-    <a class='close' href="#"><span>close</span></a>
-</div>
-</div>
 
 <script type='text/javascript' src="/static/js/pages/project.members.js"></script>
