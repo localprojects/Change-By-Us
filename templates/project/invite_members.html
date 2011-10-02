@@ -19,12 +19,31 @@
         </div>
         <div class="east">
             <div>
+                <div class="facebook-invite">
+                    <div class="sub-hd">
+                        <h3>Invite <span>your</span> friends</h3>
+                    </div>
+
+                    <div>
+                        <div id="fb-root"></div>
+                        <script>(function(d, s, id) {
+                          var js, fjs = d.getElementsByTagName(s)[0];
+                          if (d.getElementById(id)) {return;}
+                          js = d.createElement(s); js.id = id;
+                          js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+                          fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'facebook-jssdk'));</script>
+
+                        <div class="fb-like" data-href="{{ d.default_host }}project/{{ d.template_data.project.data.project_id }}" data-send="true" data-layout="button_count" data-width="450" data-show-faces="false" data-action="recommend"></div>
+                    </div>
+                </div>
+
                 <!-- Begin Members.email-invite -->
                 <div class="email-invite merlin" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
 
                     <div class='step email-invite-info'>
                         <div class="sub-hd">
-                            <h3 class="fancy-caps">Invite People <span>by</span> Email</h3>
+                            <h3>Invite People <span>by</span> Email</h3>
                         </div>
                         <div class="sub-bd form-pane">
                             <div class="fields">
@@ -34,9 +53,6 @@
                             </div>
                         </div>
 
-                        <div class="sub-hd" style='padding-top:0px;'>
-                            <h3 class="fancy-caps">Add <span>a</span> Message</h3>
-                        </div>
                         <div class="sub-bd form-pane">
                             <div class="fields">
                                 <div class="row clearfix" style='margin-top:0px;'>
@@ -44,6 +60,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="sub-bd form-pane">
                             <div class="fields">
                                 <div class="row clearfix" style='margin-top:0px;'>
@@ -68,7 +85,7 @@
                 <!-- Begin Members.ideas-invite -->
                 <div class="ideas-invite" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
                     <div class="sub-hd">
-                        <h3 class="fancy-caps">Invite People <span>with</span> Similar Ideas</h3>
+                        <h3>Invite People <span>with</span> Similar Ideas</h3>
                         <div class="pagination">
                             <span class="cur-index">0</span> <em>of</em>
                             <span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
