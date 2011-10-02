@@ -1,3 +1,5 @@
+import re
+
 from datetime import date
 from datetime import datetime
 from sqlalchemy import Boolean
@@ -195,7 +197,7 @@ class Need (Base):
             This is the reason."""
         # TODO: We need a way of constructing the reason.
         return ''
-    
+
     @property
     def display_address(self):
         if self.event:
@@ -251,14 +253,18 @@ class Event (Base):
         if url is None:
             return None
 
+        url = url.lower()
+
         # For now the list of supported sites/URLs is hardcoded.  In the future
         # we might want to try to be more clever.
-        if 'facebook.com' in url[:24].lower():
+        if re.match(r'^(https?://)?(www.)?facebook.com', url):
             return 'Facebook'
-        if 'meetup.com' in url[:22].lower():
+        if re.match(r'^(https?://)?(www.)?meetup.com', url):
             return 'Meetup'
-        if 'eventbrite.com' in url[:26].lower():
+        if re.match(r'^(https?://)?(www.)?eventbrite.com', url):
             return 'Eventbrite'
+        if re.match(r'^(http://)?(www.|\w+\.)?(ticketleap.com|tkt.ly)', url):
+            return 'TicketLeap'
 
     @property
     def start_displaydate(self):
