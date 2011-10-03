@@ -89,6 +89,7 @@ app_page.features.push(function (app) {
                         dataType: 'text',
                         success: function (data, ts, xhr) {
                             if (data == 'False') {
+                                this.show_step('feedback-error');
                                 return false;
                             }
                             this.show_step('thanks');
@@ -102,6 +103,9 @@ app_page.features.push(function (app) {
             },
             'thanks': {
                 selector: '.thanks'
+            },
+            'feedback-error': {
+                selector: '.feedback-error'
             }
         }
     });
