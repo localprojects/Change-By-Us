@@ -1,6 +1,27 @@
+/**
+ * File: Feedback
+ * Main logic for Feedback page.
+ *
+ * Filename:
+ * feedback.js
+ * 
+ * Dependencies:
+ * - tc.gam.base.js
+ * - tc.utils.js
+ * - tc.gam.app.js
+ * - tc.gam.merlin.js
+ */
+
+/**
+ * App Page Feature: Feedback
+ * 
+ */
 app_page.features.push(function (app) {
     tc.util.log('Give A Minute: Feedback');
 
+    /**
+     * Add Merlin component.
+     */
     app.components.merlin = new tc.merlin(app, {
         dom: tc.jQ('.merlin.feedback'),
         next_button: tc.jQ('input.submit'),
@@ -71,6 +92,9 @@ app_page.features.push(function (app) {
                                 return false;
                             }
                             this.show_step('thanks');
+                        },
+                        error: function (data, ts, xhr) {
+                            tc.util.log(data);
                         }
                     });
 
