@@ -159,9 +159,11 @@ class Project (Base):
 
     @property
     def admins(self):
+        admins = []
         for pm in self.project_members:
             if pm.is_project_admin:
-                yield pm.member
+                admins.append(pm.member)
+        return admins
 
 
 class Need (Base):
