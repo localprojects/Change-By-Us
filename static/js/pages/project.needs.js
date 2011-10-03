@@ -115,7 +115,7 @@ tc.gam.project_widgets.needs = function(options) {
         $avatars.html($avatar_html);
     };
 
-    var updateNeed = function(need) {
+    var updateNeed = self.updateNeed = function(need) {
         var $needContainer = tc.jQ('.need[data-id|="'+need.id+'"]');
 
         self._updateVolunteerProgress($needContainer, need);
@@ -255,6 +255,44 @@ tc.gam.project_widgets.needs = function(options) {
 
         initMerlin(need);
     };
+    
+    var bindNeedHelpLinks = self.bindNeedHelpLinks = function() {
+        tc.jQ('.help-link').die('click').live('click', function(event) {
+            event.preventDefault();
+
+            var $this = tc.jQ(this),
+                need_id = $this.parents('li.need').attr('data-id');
+
+            if ($this.hasClass('active')) {
+                if (isProjectMember()) {
+                    tc.gam.project_data.getNeedDetails(need_id, showModal);
+                } else {
+                    modal.show({
+                        app:options.app,
+                        source_element:tc.jQ('.modal-content.volunteer-no-member')
+                    });
+                }
+            }
+        });
+    }
+    
+    var bindNeedDeleteLinks = self.bindNeedDeleteLinks = function() {
+        tc.jQ('a.need-delete').die('click').live('click', function(event) {
+            event.preventDefault();
+            options.app.components.modal.show({
+                app:options.app,
+                source_element:tc.jQ('.modal-content.remove-need'),
+                submit: function(){
+                    tc.gam.project_data.deleteNeed(event.target.href.split(',')[1],
+                                                   function(data, status, xhr) {
+                                                       if(data == 'False'){return false;}
+                                                       window.location.hash = 'show,needs';
+                                                       window.location.reload();
+                                                   });
+                }
+            });
+        });
+    }
 
     /**
      * Function: bindEvents
@@ -281,40 +319,10 @@ tc.gam.project_widgets.needs = function(options) {
                 dom.hide();
             }
         });
+        
+        bindNeedHelpLinks();
+        bindNeedDeleteLinks();
 
-        tc.jQ('.help-link').die('click').live('click', function(event) {
-            event.preventDefault();
-
-            var $this = tc.jQ(this),
-                need_id = $this.parents('li.need').attr('data-id');
-
-            if ($this.hasClass('active')) {
-                if (isProjectMember()) {
-                    tc.gam.project_data.getNeedDetails(need_id, showModal);
-                } else {
-                    modal.show({
-                        app:options.app,
-                        source_element:tc.jQ('.modal-content.volunteer-no-member')
-                    });
-                }
-            }
-        });
-
-        tc.jQ('a.need-delete').die('click').live('click', function(event) {
-            event.preventDefault();
-            options.app.components.modal.show({
-                app:options.app,
-                source_element:tc.jQ('.modal-content.remove-need'),
-                submit: function(){
-                    tc.gam.project_data.deleteNeed(event.target.href.split(',')[1],
-                                                   function(data, status, xhr) {
-                                                       if(data == 'False'){return false;}
-                                                       window.location.hash = 'show,needs';
-                                                       window.location.reload();
-                                                   });
-                }
-            });
-        });
     };
 
     bindEvents();

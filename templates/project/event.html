@@ -1,0 +1,89 @@
+<div class="box main-section project-section event-detail">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Events
+            </span>
+        </h2>
+        <div class="actions">
+            <a href="#show,events" class="back fancy-caps">
+                <span>Go Back</span>
+            </a>
+        </div>
+    </div>
+    <ol class="event-stack"></ol>
+</div>
+
+{% raw %}
+<script id="event_detail_tmpl" type="text/html">
+<li class="event" data-id="{{id}}">
+{% endraw %}
+    {% if
+        (d.template_data.project_user.data.is_project_admin) or
+        (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+        (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+        <a href="#show,event-form,{{ '{{id}}' }}" class="event-edit">Edit This</a>
+{% endif %}
+{% raw %}
+    <div class="bd clearfix event-detail-cont">
+{% endraw %}
+        {% if
+          (d.template_data.project_user.data.is_project_admin) or
+          (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
+          (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
+          <a href="#removeEvent,{{ '{{id}}' }}" class="event-delete" title="Delete this event">Delete</a>
+        {% endif %}
+{% raw %}
+        <div class="wrapper">
+            <div class="event-datetime">
+                <span class="month">{{mon}}</span>
+                <span class="day">{{day}}</span>
+                <span class="time">{{starttime}}</span>
+            </div>
+
+            <div class="event-body">
+                <div class="event-title serif">
+                    <a href="#show,event-detail,{{id}}">{{name}}</a>
+                </div>
+
+                <div class="event-loc-title serif">
+                    at <a href="#">{{address}}</a>
+                    <a href="http://maps.google.com/maps?q={{address}}" target="_blank" class="rounded-button small">Map it</a>
+                </div>
+
+                <div class="event-description">
+                    <p class="serif">
+                        {{details}}
+                    </p>
+                </div>
+            </div>
+
+            <div class="event-rsvp">
+                <a href="{{rsvp_url}}" target="_blank" class="rsvp-link">RSVP{{#rsvp_service_name}} <span class="rsvp-site">on <span class="rsvp-site-name">{{ rsvp_service_name }}</span></span>{{/rsvp_service_name}}</a>
+
+                {{#has_need}}
+                    <span class="event-need serif">We need <a href="#show,need-detail,{{need_id}}" class="vol-need"><span class="vol-count">{{ need_quantity }}</span> volunteer {{ need_request }}</a></span>
+                    <span class="more-event-needs"><a href="#show,event-needs,{{id}}">Show all needs for this event<span class="sm-arrow-forward dark"></span></a></span>
+                {{/has_need}}
+            </div>
+
+            <!--
+            <div class="vol-recent-comment serif">
+                <img src="/static/images/thumb_sgoldsmith.jpg"></img>
+                <div class="comment">We still really need people for this if anyone can help. It'll be fun and it's just one night.</div>
+                <div class="author">
+                    <span>Alexandra M.</span><br>
+                    3 hours ago
+                </div>
+            </div>
+            -->
+
+            <div class="empty-state-box" style="display:none;">
+                <!--<a class="close" href="#"><span>Close</span></a>-->
+                <p>No events found.</p>
+            </div>
+        </div>
+    </div>
+</li>
+</script>
+{% endraw %}

@@ -45,7 +45,14 @@ if __name__ == "__main__":
             print e
         
 
-        # Determine location
+        # Determine location.  The data in the import is in the form
+        # of comma separated list.  Let's get first one and see if we can
+        # match it up with a location.
+        location = None
+        neighborhoods = [neighborhood.strip() for neighborhood in row.neighborhood.split(',')]
+        found = list(db.query('SELECT location_id FROM location WHERE name LIKE "%' + neighborhoods[0] + '%"'))
+        if (found):
+          location = found[0].location_id
         
         
         # Create project resource.
@@ -55,7 +62,7 @@ if __name__ == "__main__":
                     title = row.title,
                     description = row.description,
                     physical_address = row.physical_address,
-                    location_id = row.location_id,
+                    location_id = location,
                     url = row.url,
                     facebook_url = row.facebook_url,
                     twitter_url = row.twitter_url,

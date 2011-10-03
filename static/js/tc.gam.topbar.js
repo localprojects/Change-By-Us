@@ -13,7 +13,6 @@ tc.top_bar = function(element, options) {
         tc.jQ.ajax({
             url:'/rest/v1/keywords/',
             dataType:'json',
-            cache:true,
             success:function(data, status, xhr) {
                 if (success) {
                     success(data, status, xhr);
@@ -48,7 +47,7 @@ tc.top_bar = function(element, options) {
                 }
                 tc.jQ(this).children("a").toggleClass("opened");
             }).mouseleave(function () {
-                tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
+                tc.jQ(this).children(".dropdown").delay(200).fadeOut(o.fadeSpeed);
                 tc.jQ(this).children("a").toggleClass("opened");
             });
         };
