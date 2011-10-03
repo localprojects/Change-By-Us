@@ -80,6 +80,22 @@ tc.gam.project_widgets.need_form = function(options) {
         disableCustomEventInputs(false, merlin);
       }
     };
+    
+    /**
+     * Function: _getNextDateString
+     * Get the string representation of the next date for a given month and day.
+     */
+    self._getNextDateString = function(month, day, now) {
+        var thisYear = now.getFullYear(),
+            nextYear = thisYear + 1,
+            dateThisYear = new Date(thisYear, month, day);
+      
+        if (dateThisYear >= now) {
+            return thisYear + '-' + month + '-' + day;
+        } else {
+            return nextYear + '-' + month + '-' + day;
+        }
+    };
 
     /**
      * Function: initMerlin
@@ -224,10 +240,11 @@ tc.gam.project_widgets.need_form = function(options) {
                       }
                     },
                     finish:function(merlin, dom) {
-                      var d = new Date();
-                      var needDate = d.getFullYear()
-                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val(), 10)+1)
-                              + '-' + merlin.current_step.inputs.day.dom.val();
+                      var now = new Date(),
+                          month = parseInt(merlin.current_step.inputs.month.dom.val(), 10) + 1,
+                          day = parseInt(merlin.current_step.inputs.day.dom.val(), 10),
+                          needDate = self._getNextDateString(month, day, now);
+                      
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         type:'volunteer',
                         request:merlin.current_step.inputs.request.dom.val(),
