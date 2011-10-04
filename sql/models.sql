@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.54, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.10, for osx10.6 (i386)
 --
--- Host: localhost    Database: cbu_blank
+-- Host: localhost    Database: cbu
 -- ------------------------------------------------------
--- Server version	5.1.54-1ubuntu4
+-- Server version	5.1.44
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -350,7 +350,7 @@ CREATE TABLE `migrate_version` (
 
 LOCK TABLES `migrate_version` WRITE;
 /*!40000 ALTER TABLE `migrate_version` DISABLE KEYS */;
-INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',5);
+INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',6);
 /*!40000 ALTER TABLE `migrate_version` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -745,6 +745,7 @@ CREATE TABLE `site_feedback` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_datetime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `feedback_type` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`site_feedback_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -988,4 +989,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-09-28 23:30:14
+-- Dump completed on 2011-10-03 18:35:28
