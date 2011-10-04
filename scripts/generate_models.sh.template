@@ -1,13 +1,24 @@
-#!/bin/sh
+#!/bin/bash
 
-DBUSER=cbu_user
-DBNAME=cbu_blank
-DBPASS=cbu_password
+# Recreates models.sql.  Makes backup of DB, then recreates
+# database from scratch.
+#
+# Copy this script and change variables as needed.
+#     cp ./scripts/generate_models.sh.template generate_models.sh
+#
+# Run from application root (../) with the following command
+# ./scripts/generate_models.sh
+
+DBUSER=cbu
+DBNAME=cbu
+DBPASS=cbu
 DBHOST=localhost
 BACKUP=backup.sql
+RELPATH="."
+
 
 echo "Backing up database $DBNAME to $BACKUP..."
-mysqldump -u $DBUSER -p$DBPASS $DBNAME > $BACKUP
+mysqldump -u $DBUSER -p$DBPASS $DBNAME > $RELPATH/$BACKUP
 
 echo "Clearing out database $DBNAME..."
 mysql -u $DBUSER -p$DBPASS $DBNAME <<EOF
@@ -16,14 +27,14 @@ mysql -u $DBUSER -p$DBPASS $DBNAME <<EOF
 EOF
 
 echo "Running migrations on database $DBNAME..."
-python giveaminute/migrations/manage.py version_control mysql://$DBUSER:$DBPASS@$DBHOST/$DBNAME giveaminute/migrations
-python giveaminute/migrations/manage.py upgrade mysql://$DBUSER:$DBPASS@$DBHOST/$DBNAME giveaminute/migrations
+python $RELPATH/giveaminute/migrations/manage.py version_control mysql://$DBUSER:$DBPASS@$DBHOST/$DBNAME giveaminute/migrations
+python $RELPATH/giveaminute/migrations/manage.py upgrade mysql://$DBUSER:$DBPASS@$DBHOST/$DBNAME giveaminute/migrations
 
 echo "Generating the sql/models.sql file..."
-cp sql/models.sql sql/models.sql.$(date +"%Y%m%d%H%M%S")
-mysqldump -u $DBUSER -p$DBPASS $DBNAME > sql/models.sql
+cp $RELPATH/sql/models.sql $RELPATH/sql/models.sql.$(date +"%Y%m%d%H%M%S")
+mysqldump -u $DBUSER -p$DBPASS $DBNAME > $RELPATH/sql/models.sql
 
 echo "Restoring database $DBNAME from the backup..."
-mysql -u $DBUSER -p$DBPASS $DBNAME < $BACKUP
+mysql -u $DBUSER -p$DBPASS $DBNAME < $RELPATH/$BACKUP
 
 echo "Done!"
