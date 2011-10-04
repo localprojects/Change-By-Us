@@ -781,8 +781,11 @@ class NonProjectMemberReadOnly_ForNeedVolunteer (NonProjectMemberReadOnly):
         """
         We need a custom get_project for the need-volunteer access rules
         because a ``volunteer`` doesn't have a ``project`` property; instead
-        we have to reach through the need.
-        
+        we have to reach through the need.  So why not add one to the model?
+        Well, then we'd have to enforce that the volunteer instance be fully
+        loaded before it's passed in to here, which has been a headache and
+        is unnecessary.
+
         """
         need = volunteer.need
         if need is None:
