@@ -16,9 +16,17 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 class NotFoundError (Exception):
     pass
+
+
 class NoMethodError (Exception):
     pass
+
+
 class ForbiddenError (Exception):
+    pass
+
+
+class BadRequest (Exception):
     pass
 
 
@@ -31,7 +39,7 @@ class ResourceAccessRules(object):
     def can_read(self, user, instance):
         raise NotImplementedError()
 
-    def can_create(self, user, instance):
+    def can_create(self, user, instance, orm=None):
         raise NotImplementedError()
 
     def can_update(self, user, instance):
@@ -45,10 +53,13 @@ class DefaultAccess (ResourceAccessRules):
     """Read-only access by default"""
     def can_read(self, user, instance):
         return True
+
     def can_create(self, user, instance):
         return False
+
     def can_update(self, user, instance):
         return False
+
     def can_delete(self, user, instance):
         return False
 
@@ -60,27 +71,65 @@ class NonAdminReadOnly (ResourceAccessRules):
     def is_admin(self, user):
         return user is not None and user.isAdmin
 
-    def can_create(self, user, instance):
+    def can_create(self, user, instance, orm=None):
         return self.is_admin(user)
+
     def can_update(self, user, instance):
         return self.is_admin(user)
+
     def can_delete(self, user, instance):
         return self.is_admin(user)
 
 
-class NonProjectAdminReadOnly (ResourceAccessRules):
+class ProjectBasedAccessRulesMixin (object):
+    def get_project(self, instance, orm=None):
+        project = instance.project
+        if project is None and orm is not None:
+            project = orm.query(models.Project).get(instance.project_id)
+        if project is None:
+            raise BadRequest('Project with ID %r not found' %
+                             instance.project_id)
+        return project
+
+
+class NonProjectAdminReadOnly (ProjectBasedAccessRulesMixin, ResourceAccessRules):
     def can_read(self, user, instance):
         return True
 
     def is_project_admin(self, user, project):
-        return (user is not None) and ((user in project.members) or user.is_site_admin)
+        return (user is not None) and (user in project.admins
+                                       or user.is_site_admin)
 
-    def can_create(self, user, instance):
-        return self.is_project_admin(user, instance.project)
+    def can_create(self, user, instance, orm=None):
+        project = self.get_project(instance, orm)
+        return self.is_project_admin(user, project)
+
     def can_update(self, user, instance):
-        return self.is_project_admin(user, instance.project)
+        project = self.get_project(instance)
+        return self.is_project_admin(user, project)
+
     def can_delete(self, user, instance):
-        return self.is_project_admin(user, instance.project)
+        project = self.get_project(instance)
+        return self.is_project_admin(user, project)
+
+
+class NonProjectMemberReadOnly (ProjectBasedAccessRulesMixin, ResourceAccessRules):
+    def can_read(self, user, instance):
+        return True
+
+    def is_member(self, user, project):
+        return user is not None and \
+               project.id in [member.project_id for member in user.memberships]
+
+    def can_create(self, user, instance, orm=None):
+        project = self.get_project(instance, orm)
+        return self.is_member(user, project)
+
+    def can_update(self, user, instance):
+        return False
+
+    def can_delete(self, user, instance):
+        return False
 
 
 def _field_to_tuple(field):
@@ -91,11 +140,13 @@ def _field_to_tuple(field):
         return (field[0], field[1])
     return (field, None)
 
+
 def _fields_to_list(fields):
     """
     Return a list of field names.
     """
     return [_field_to_tuple(field)[0] for field in fields or ()]
+
 
 def _fields_to_dict(fields):
     """
@@ -150,11 +201,9 @@ class Serializer(object):
     The maximum depth to serialize to, or `None`.
     """
 
-
     def __init__(self, depth=None, stack=[], **kwargs):
         self.depth = depth or self.depth
         self.stack = stack
-
 
     def get_fields(self, obj):
         """
@@ -175,7 +224,6 @@ class Serializer(object):
 
         return fields
 
-
     def get_default_fields(self, obj):
         """
         Return the default list of field names/keys for a model instance/dict.
@@ -186,7 +234,6 @@ class Serializer(object):
 #            return [field.name for field in opts.fields + opts.many_to_many]
 #        else:
         return obj.keys()
-
 
     def get_related_serializer(self, key):
         info = _fields_to_dict(self.fields).get(key, None)
@@ -217,14 +264,12 @@ class Serializer(object):
         # Otherwise use `related_serializer` or fall back to `Serializer`
         return getattr(self, 'related_serializer') or Serializer
 
-
     def serialize_key(self, key):
         """
         Keys serialize to their string value,
         unless they exist in the `rename` dict.
         """
         return self.rename.get(safestr(key), safestr(key))
-
 
     def serialize_val(self, key, obj):
         """
@@ -247,7 +292,6 @@ class Serializer(object):
 
         return related_serializer(depth=depth, stack=stack).serialize(obj)
 
-
     def serialize_max_depth(self, obj):
         """
         Determine how objects should be serialized once `depth` is exceeded.
@@ -255,14 +299,12 @@ class Serializer(object):
         """
         raise _SkipField
 
-
     def serialize_recursion(self, obj):
         """
         Determine how objects should be serialized if recursion occurs.
         The default behavior is to ignore the field.
         """
         raise _SkipField
-
 
     def serialize_model(self, instance):
         """
@@ -294,13 +336,11 @@ class Serializer(object):
 
         return data
 
-
     def serialize_iter(self, obj):
         """
         Convert iterables into a serializable representation.
         """
         return [self.serialize(item) for item in obj]
-
 
     def serialize_func(self, obj):
         """
@@ -308,20 +348,17 @@ class Serializer(object):
         """
         return self.serialize(obj())
 
-
     def serialize_manager(self, obj):
         """
         Convert a model manager into a serializable representation.
         """
         return self.serialize_iter(obj.all())
 
-
     def serialize_fallback(self, obj):
         """
         Convert any unhandled object into a serializable representation.
         """
         return safeuni(obj)
-
 
     def serialize(self, obj):
         """
@@ -331,7 +368,7 @@ class Serializer(object):
         if isinstance(obj, (dict, models.Base)):
             # Model instances & dictionaries
             return self.serialize_model(obj)
-        elif isinstance(obj, (tuple, list, set)): # What are query types in sqlalchemy?
+        elif isinstance(obj, (tuple, list, set)):
             # basic iterables
             return self.serialize_iter(obj)
         elif inspect.isfunction(obj) and not inspect.getargspec(obj)[0]:
@@ -377,7 +414,8 @@ class RestController (Controller):
         return self.model
 
     def instance_to_dict(self, row):
-        if row is None: return None
+        if row is None:
+            return None
 
         d = {}
         for columnName in row.__mapper__.columns.keys():
@@ -389,12 +427,36 @@ class RestController (Controller):
         return [self.instance_to_dict(instance) for instance in query
                 if self.access_rules.can_read(self.user, instance)]
 
+    def dict_to_instance(self, data, instance=None):
+        if instance is None:
+            Model = self.get_model()
+            instance = Model()
+
+        for (key, val) in data.iteritems():
+            if key.startswith('_'):
+                continue
+            setattr(instance, key, val)
+
+        return instance
+
     def replace_gam_user_with_sqla_user(self):
         if self.user:
             self.user = self.orm.query(models.User).get(self.user.id)
 
+    def get_model_params(self, **kwargs):
+        all_kwargs = {}
+
+        # Get rid of things that start with underscore (_).  Things like jQuery
+        # will use this prefix for special variables.  You shouldn't.
+        for key, val in kwargs.items():
+            if not key.startswith('_'):
+                all_kwargs[key] = val
+
+        return all_kwargs
+
     def do_HTTP_verb(self, verb, *args, **kwargs):
         method_handler = getattr(self, verb)
+
         response_data = method_handler(*args, **kwargs)
 
         serializer = self.get_serializer()
@@ -430,11 +492,16 @@ class RestController (Controller):
             data = json.dumps({'error': str(e)})
             return self.forbidden(data, headers)
 
+        except BadRequest, e:
+            headers = {'Content-Type': 'application/json'}
+            data = json.dumps({'error': str(e)})
+            return self.error(data, headers)
 
     def GET(self, *args, **kwargs):
         # NOTE: As they're handled here, the READ and INDEX cases are mutually
         #       exclusive; an endpoint should have only one behavior anyway.
-        return self._BASE_METHOD_HANDLER(['REST_INDEX','REST_READ'], *args, **kwargs)
+        return self._BASE_METHOD_HANDLER(
+            ['REST_INDEX', 'REST_READ'], *args, **kwargs)
 
     def POST(self, *args, **kwargs):
         # Check if something other than POST was desired.
@@ -470,9 +537,11 @@ class ListInstancesMixin (object):
 
         query = orm.query(Model)
 
-        all_kw_args = dict(web.input().items() + kwargs.items())
-        if all_kw_args:
-            query = query.filter_by(**all_kw_args)
+        params = self.parameters() or {}
+        model_params = self.get_model_params(**dict(kwargs.items() +
+                                                    params.items()))
+        if model_params:
+            query = query.filter_by(**model_params)
         if hasattr(self, 'ordering'):
             query = query.order_by(self.ordering)
 
@@ -489,8 +558,9 @@ class ReadInstanceMixin (object):
         orm = self.orm
 
         query = orm.query(Model)
-        if kwargs:
-            query = query.filter(**kwargs)
+        model_params = self.get_model_params(**kwargs)
+        if model_params:
+            query = query.filter_by(**model_params)
 
         if args:
             # If we have any none kwargs then assume the last represents the primrary key
@@ -536,23 +606,15 @@ class CreateInstanceMixin (object):
 #                kwargs[related_name + '_id'] = kwargs[related_name]
 #                del kwargs[related_name]
 
-        all_kw_args = dict(web.input().items() + kwargs.items())
+        params = self.parameters() or {}
+        model_params = self.get_model_params(**dict(kwargs.items() +
+                                                    params.items()))
+        instance = self.dict_to_instance(model_params)
 
-        # HACK: This is a hack.  We kept getting a test file name being passed
-        # in as one of the query parameters.  Wierd.
-        for kw in all_kw_args:
-            if kw.startswith('tests/'):
-                del all_kw_args[kw]
-                break
-
-        instance = Model(**all_kw_args)
-        orm.add(instance)
-        orm.flush()
-
-        if not self.access_rules.can_create(self.user, instance):
-            orm.rollback()
+        if not self.access_rules.can_create(self.user, instance, orm=orm):
             raise ForbiddenError("User cannot store the resource")
 
+        orm.add(instance)
         orm.commit()
         return self.instance_to_dict(instance)
 
@@ -562,20 +624,14 @@ class UpdateInstanceMixin (object):
     Derive from this class to add UPDATE functionality to a REST controller.
 
     """
-    def current_user_can_update(self, instance):
-        """
-        Returns True if the currently authenticated user (or the anonymous user
-        as the case may be) can modify the given model instance object.
-        """
-        return True
-
     def REST_UPDATE(self, *args, **kwargs):
         Model = self.get_model()
         orm = self.orm
 
+        model_search_params = self.get_model_params(**kwargs)
         query = orm.query(Model)
-        if kwargs:
-            query = query.filter(**kwargs)
+        if model_search_params:
+            query = query.filter_by(**model_search_params)
 
         if args:
             # If we have any args then assume the last represents the primrary key
@@ -595,9 +651,10 @@ class UpdateInstanceMixin (object):
         if not self.access_rules.can_update(self.user, instance):
             raise ForbiddenError("Current user cannot modify the resource")
 
-        for (key, val) in self.parameters().iteritems():
-            if key == '_method': continue
-            setattr(instance, key, val)
+        params = self.parameters() or {}
+        model_params = self.get_model_params(**dict(kwargs.items() +
+                                                    params.items()))
+        instance = self.dict_to_instance(model_params, instance)
 
         orm.commit()
         return self.instance_to_dict(instance)
@@ -612,9 +669,10 @@ class DeleteInstanceMixin(object):
         Model = self.get_model()
         orm = self.orm
 
+        model_params = self.get_model_params(**kwargs)
         query = orm.query(Model)
-        if kwargs:
-            query = query.filter(**kwargs)
+        if model_params:
+            query = query.filter_by(**model_params)
 
         if args:
             # If we have any args then assume the last represents the primrary key
@@ -639,45 +697,25 @@ class DeleteInstanceMixin(object):
         return
 
 
-class NonProjectMemberReadOnly (ResourceAccessRules):
-    def can_read(self, user, instance):
-        return True
+#
+# Needs
+#
 
-    def is_member(self, user, project):
-        return user is not None and project.id in [member.project_id for member in user.memberships]
+class NeedModelRestController (RestController):
+    """Base RestController class for Need-model endpoints"""
 
-    def can_create(self, user, instance):
-        return self.is_member(user, instance.need.project)
-    def can_update(self, user, instance):
-        return False
-    def can_delete(self, user, instance):
-        return False
-
-
-class NeedsList (ListInstancesMixin, CreateInstanceMixin, RestController):
     model = models.Need
     ordering = models.Need.id
     access_rules = NonProjectAdminReadOnly()
 
-    def instance_to_dict(self, need):
-        need_dict = super(NeedsList, self).instance_to_dict(need)
+    def user_to_dict(self, user):
+        """Convert a user instance in the context of being a need volunteer to
+           a dictionary"""
 
-        raw_date = need_dict['date']
-        if raw_date:
-            need_dict['display_date'] = need.display_date
-
-        return need_dict
-
-
-class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, RestController):
-    model = models.Need
-    access_rules = NonProjectAdminReadOnly()
-
-    def user2dict(self, user):
         from giveaminute.project import userNameDisplay
         from giveaminute.project import isFullLastName
 
-        user_dict = super(NeedInstance, self).instance_to_dict(user)
+        user_dict = super(NeedModelRestController, self).instance_to_dict(user)
 
         # Add in some of that non-orm goodness
         user_dict['avatar_path'] = user.avatar_path
@@ -691,28 +729,91 @@ class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin,
 
         return user_dict
 
+    def event_to_dict(self, event):
+        """Convert an event instance in the context of being linked with a need
+           to a dictionary"""
+
+        event_dict = super(NeedModelRestController, self).instance_to_dict(event)
+
+        if event:
+            event_dict['start_year'] = event.start_year
+            event_dict['start_month'] = event.start_month
+            event_dict['start_day'] = event.start_day
+            event_dict['start_hour'] = event.start_hour
+            event_dict['start_minute'] = event.start_minute
+            event_dict['start_displaydate'] = event.start_displaydate
+
+        return event_dict
+
     def instance_to_dict(self, need):
-        need_dict = super(NeedInstance, self).instance_to_dict(need)
+        """Convert a need instance to a dictionary"""
+
+        need_dict = super(NeedModelRestController, self).instance_to_dict(need)
+
         need_dict['volunteers'] = [
-            self.user2dict(volunteer)
+            self.user_to_dict(volunteer)
             for volunteer in need.volunteers]
+
+        need_dict['event'] = self.event_to_dict(need.event)
 
         raw_date = need_dict['date']
         if raw_date:
             need_dict['display_date'] = need.display_date
+        need_dict['display_address'] = need.display_address
 
         return need_dict
 
 
+class NeedsList (ListInstancesMixin, CreateInstanceMixin, NeedModelRestController):
+    pass
+
+
+class NeedInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, NeedModelRestController):
+    pass
+
+
+#
+# Volunteer-based endpoints
+#
+
+class NonProjectMemberReadOnly_ForNeedVolunteer (NonProjectMemberReadOnly):
+    def get_project(self, volunteer, orm):
+        """
+        We need a custom get_project for the need-volunteer access rules
+        because a ``volunteer`` doesn't have a ``project`` property; instead
+        we have to reach through the need.  So why not add one to the model?
+        Well, then we'd have to enforce that the volunteer instance be fully
+        loaded before it's passed in to here, which has been a headache and
+        is unnecessary.
+
+        """
+        need = volunteer.need
+        if need is None:
+            need_id = volunteer.need_id
+            need = orm.query(models.Need).get(need_id)
+        if need is None:
+            raise BadRequest('Need with ID %r not found' %
+                             volunteer.need_id)
+
+        return need.project
+
+
 class NeedVolunteerList (CreateInstanceMixin, RestController):
     model = models.Volunteer
-    access_rules = NonProjectMemberReadOnly()
+    access_rules = NonProjectMemberReadOnly_ForNeedVolunteer()
 
     def REST_CREATE(self, *args, **kwargs):
-        kwargs['need'] = self.orm.query(models.Need).get(args[0])
+        # The need id is going to be passed in as a positional argument, so we
+        # have to intercept it and convert it to a keyword.
+        kwargs['need_id'] = args[0]
         response = super(NeedVolunteerList, self).REST_CREATE(**kwargs)
 
         return response
+
+
+#
+# Keyword-based endpoints
+#
 
 class PopularKeywordList (ListInstancesMixin, RestController):
     model = models.Project
@@ -726,6 +827,94 @@ class PopularKeywordList (ListInstancesMixin, RestController):
             keywords = project_dict['keywords'].strip().split()
             keyword_counter.update(keywords)
 
-        keyword_counter = [ {'name':key, 'count':value} for key, value in keyword_counter.most_common(10) ]
+        keyword_counter = [{'name':key, 'count':value}
+                           for key, value in keyword_counter.most_common(10)]
 
         return keyword_counter
+
+
+#
+# Event-based endpoints
+#
+
+class EventModelRestController (RestController):
+    model = models.Event
+    access_rules = NonProjectAdminReadOnly()
+
+    def user_to_dict(self, user):
+        """Convert a user instance in the context of being a need volunteer to
+           a dictionary"""
+
+        from giveaminute.project import userNameDisplay
+        from giveaminute.project import isFullLastName
+
+        user_dict = super(EventModelRestController, self).instance_to_dict(user)
+
+        # Add in some of that non-orm goodness
+        user_dict['avatar_path'] = user.avatar_path
+        user_dict['display_name'] = userNameDisplay(
+            user.first_name, user.last_name, user.affiliation,
+            isFullLastName(user.group_membership_bitmask))
+
+        # Remove sensitive information
+        del user_dict['password']
+        del user_dict['salt']
+
+        return user_dict
+
+    def need_to_dict(self, need):
+        """Convert a need instance to a dictionary"""
+
+        need_dict = super(EventModelRestController, self).instance_to_dict(need)
+
+        need_dict['volunteers'] = [
+            self.user_to_dict(volunteer)
+            for volunteer in need.volunteers]
+
+        raw_date = need_dict['date']
+        if raw_date:
+            need_dict['display_date'] = need.display_date
+        need_dict['display_address'] = need.display_address
+
+        return need_dict
+
+    def instance_to_dict(self, event):
+        """Convert an event instance to a dictionary"""
+
+        event_dict = super(EventModelRestController, self).instance_to_dict(event)
+
+        event_dict['rsvp_service_name'] = event.rsvp_service_name
+
+        event_dict['needs'] = [
+            self.need_to_dict(need)
+            for need in event.needs]
+
+        event_dict['start_year'] = event.start_year
+        event_dict['start_month'] = event.start_month
+        event_dict['start_day'] = event.start_day
+        event_dict['start_hour'] = event.start_hour
+        event_dict['start_minute'] = event.start_minute
+
+        return event_dict
+
+    def dict_to_instance(self, data, event=None):
+        need_ids = []
+        if 'need_ids' in data:
+            need_ids = data.pop('need_ids').split(',')
+            data['needs'] = []
+
+        event = super(EventModelRestController, self).dict_to_instance(data, event)
+
+        for need_id in need_ids:
+            need = self.orm.query(models.Need).get(need_id)
+            event.needs.append(need)
+
+        return event
+
+
+class EventList (ListInstancesMixin, CreateInstanceMixin, EventModelRestController):
+    pass
+
+
+class EventInstance (ReadInstanceMixin, UpdateInstanceMixin, DeleteInstanceMixin, EventModelRestController):
+    pass

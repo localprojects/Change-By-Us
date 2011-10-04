@@ -1,3 +1,5 @@
+import re
+
 from datetime import date
 from datetime import datetime
 from sqlalchemy import Boolean
@@ -75,6 +77,14 @@ class User (Base):
         if self.image_id:
             return 'images/%s/%s.png' % (str(self.image_id)[-1], self.image_id)
 
+    @property
+    def display_name(self):
+        from giveaminute import project
+
+        return project.userNameDisplay(
+            self.first_name, self.last_name, self.affiliation,
+            project.isFullLastName(self.group_membership_bitmask))
+
     def join(self, project, is_admin=False):
         if project not in self.projects:
             membership = ProjectMember()
@@ -141,6 +151,7 @@ class Project (Base):
     # FULLTEXT KEY `title` (`title`,`description`)
 
     needs = relationship('Need', backref='project')
+    events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
 
@@ -148,9 +159,11 @@ class Project (Base):
 
     @property
     def admins(self):
+        admins = []
         for pm in self.project_members:
             if pm.is_project_admin:
-                yield pm.member
+                admins.append(pm.member)
+        return admins
 
 
 class Need (Base):
@@ -166,13 +179,19 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
+    event_id = Column(ForeignKey('project_event.id'), nullable=True)
 
+    need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')
+    event = relationship('Event')
 
     @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
-        return util.make_pretty_date(self.date)
+        if self.event:
+            return util.make_pretty_date(self.event.start_datetime)
+        else:
+            return util.make_pretty_date(self.date)
 
     @property
     def reason(self):
@@ -181,6 +200,13 @@ class Need (Base):
         # TODO: We need a way of constructing the reason.
         return ''
 
+    @property
+    def display_address(self):
+        if self.event:
+            return self.event.address
+        else:
+            return self.address
+
 
 class Volunteer (Base):
     __tablename__ = 'project_need_volunteer'
@@ -188,8 +214,12 @@ class Volunteer (Base):
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
 
-    need = relationship('Need', backref='need_volunteers')
+    need = relationship('Need')
     member = relationship('User')
+
+    @property
+    def project(self):
+        return self.need.project
 
 
 class CommunityLeader (Base):
@@ -200,6 +230,70 @@ class CommunityLeader (Base):
     title = Column(String(256))
     image_path = Column(String(256))
     order = Column(Integer)
+
+
+class Event (Base):
+    __tablename__ = 'project_event'
+
+    id = Column(Integer, primary_key=True)
+    project_id = Column(ForeignKey('project.project_id'))
+    name = Column(String(256))
+    details = Column(Text)
+    rsvp_url = Column(String(2048))
+    start_datetime = Column(DateTime)
+    end_datetime = Column(DateTime)
+    address = Column(String(256))
+
+    project = relationship('Project')
+    needs = relationship('Need')
+
+    @property
+    def rsvp_service_name(self):
+        """The name of the service providing RSVP for the event"""
+        url = self.rsvp_url
+
+        if url is None:
+            return None
+
+        url = url.lower()
+
+        # For now the list of supported sites/URLs is hardcoded.  In the future
+        # we might want to try to be more clever.
+        if re.match(r'^(https?://)?(www.)?facebook.com', url):
+            return 'Facebook'
+        if re.match(r'^(https?://)?(www.)?meetup.com', url):
+            return 'Meetup'
+        if re.match(r'^(https?://)?(www.)?eventbrite.com', url):
+            return 'Eventbrite'
+        if re.match(r'^(http://)?(www.|\w+\.)?(ticketleap.com|tkt.ly)', url):
+            return 'TicketLeap'
+
+    @property
+    def start_displaydate(self):
+        if self.start_datetime:
+            return self.start_datetime.strftime('%B %d at %I:%M %p')
+        else:
+            return ''
+
+    @property
+    def start_year(self):
+        return self.start_datetime.year
+
+    @property
+    def start_month(self):
+        return self.start_datetime.month
+
+    @property
+    def start_day(self):
+        return self.start_datetime.day
+
+    @property
+    def start_hour(self):
+        return self.start_datetime.hour
+
+    @property
+    def start_minute(self):
+        return self.start_datetime.minute
 
 
 if __name__ == '__main__':
