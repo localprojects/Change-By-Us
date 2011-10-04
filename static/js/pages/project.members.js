@@ -6,11 +6,11 @@ tc.gam.project_widgets.members = function(options){
     tc.util.log('project.members');
     var dom = options.dom,
         self = {};
-    
+
     var handlers = {
         remove_member:function(e){
             e.preventDefault();
-            
+
             options.app.components.modal.show({
                 app:options.app,
                 source_element:tc.jQ('.modal-content.remove-member'),
@@ -38,7 +38,7 @@ tc.gam.project_widgets.members = function(options){
                             if(data == 'False'){
                                 return false;
                             }
-                            
+
                             dom.find('#member-'+e.target.href.split(',')[1]).remove();
                             n_members = dom.find('.members-stack').children().length;
                             dom.find('.members-counter').text(n_members);
@@ -48,15 +48,17 @@ tc.gam.project_widgets.members = function(options){
             });
         }
     };
-    
+
     dom.find('a.close').unbind('click').bind('click', handlers.remove_member);
-    
+
     var components = {
         email_merlin:null,
         ideas_carousel:null,
-        ideas_pagination: dom.find('.ideas-invite .pagination')
+        ideas_pagination: dom.find('.ideas-invite .pagination'),
+        members_carousel:null,
+        members_pagination: dom.find('.members .current_page_number')
     };
-    
+
     var build_email_merlin = function(){
         if(components.email_merlin){
             return;
@@ -130,9 +132,9 @@ tc.gam.project_widgets.members = function(options){
             }
         });
     };
-    
+
     build_email_merlin();
-    
+
     dom.find('a.flag-idea').bind('click', function(e){
         e.preventDefault();
         tc.jQ.ajax({
@@ -150,7 +152,7 @@ tc.gam.project_widgets.members = function(options){
             }
         });
     });
-    
+
     components.ideas_carousel = new tc.carousel({
         element: dom.find('.ideas-invite .carousel'),
         pagination: {
@@ -161,10 +163,50 @@ tc.gam.project_widgets.members = function(options){
     if (!components.ideas_carousel.is_rendered()) {
         components.ideas_pagination.hide();
     }
-    
+
+    components.members_carousel = new tc.carousel({
+        element: dom.find('#members-stack-carousel'),
+        scrollable: {
+            items: '#members-stack-list',
+            speed: 300,
+            circular: true,
+            initialIndex: 0,
+
+            onBeforeSeek: function(event, page_idx) {
+                // Get the lists of <li>'s in the first and current members
+                // stacks.
+                var $first_list_items = dom.find('li:not(.cloned) > #members-stack-0 > li'),
+                    $current_list_items = dom.find('li:not(.cloned) > #members-stack-' + page_idx + ' > li'),
+
+                // The length of the first members stack is going to be as
+                // large as the stacks will ever get.
+                    max_members_in_list = $first_list_items.length,
+                    num_members_in_list = $current_list_items.length,
+
+                    start_member_idx = (page_idx * max_members_in_list) + 1,
+                    end_member_idx = start_member_idx + num_members_in_list - 1,
+
+                    member_range;
+
+                // If we have 0 members in the current list, then we have gone
+                // past the last page.  This will happen if the carousel wraps
+                // around.  No big deal, just ignore it.
+                if (num_members_in_list > 0) {
+                    if (start_member_idx === end_member_idx) {
+                        member_range = start_member_idx
+                    } else {
+                        member_range = start_member_idx + ' - ' + end_member_idx
+                    }
+
+                    components.members_pagination.text(member_range);
+                }
+            }
+        }
+    });
+
     dom.find('a.remove-idea').bind('click', function(e){
         e.preventDefault();
-        
+
         options.app.components.modal.show({
             app:options.app,
             source_element:tc.jQ('.modal-content.remove-idea'),
@@ -198,7 +240,12 @@ tc.gam.project_widgets.members = function(options){
                 components.ideas_carousel.render();
                 components.ideas_pagination.show();
             }
-            
+
+            if (components.members_carousel.has_items() && !components.members_carousel.is_rendered()) {
+                components.members_carousel.render();
+                components.members_pagination.show();
+            }
+
             if(components.email_merlin){
                 components.email_merlin.show_step('email-invite-info');
             }
@@ -207,13 +254,13 @@ tc.gam.project_widgets.members = function(options){
             dom.hide();
         }
     });
-    
+
     tc.jQ(tc).bind('project-idea-remove', function(event, id) {
         if (components.ideas_carousel.carousel) {
             components.ideas_carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
             components.ideas_carousel.update_pagination().update_navigation();
         }
     });
-    
+
     return self;
 };
