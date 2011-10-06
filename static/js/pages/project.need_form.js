@@ -17,7 +17,7 @@ tc.gam.project_widgets.need_form = function(options) {
       //Apply jqDropDown to our select element
       var $container,
         $input = tc.jQ('#' + id);
-      
+
       $input.jqDropDown({
         toggleBtnName:'ddSelect',
         optionListName:'ddSelectOptions',
@@ -26,7 +26,7 @@ tc.gam.project_widgets.need_form = function(options) {
           if (onChange) {
             onChange($input);
           }
-          
+
           //manually trigger the change event on the select element
           //so that Merlin validation will trigger properly
           $input.change();
@@ -44,13 +44,13 @@ tc.gam.project_widgets.need_form = function(options) {
         $container.find('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
       }
     };
-    
+
     var disableCustomEventInputs = function(disable, merlin) {
       var inputs = [merlin.current_step.inputs.month,
           merlin.current_step.inputs.day,
           merlin.current_step.inputs.time,
           merlin.current_step.inputs.address];
-          
+
         tc.jQ.each(inputs, function(i, input) {
           if (input.dom.is('select')) {
             if (disable) {
@@ -59,7 +59,7 @@ tc.gam.project_widgets.need_form = function(options) {
               input.dom.next('.ddSelectContainer').find('.ddSelect').removeClass('disabled');
             }
           }
-          
+
           if (disable) {
             input.dom.addClass('disabled');
           } else {
@@ -71,7 +71,7 @@ tc.gam.project_widgets.need_form = function(options) {
 
     var initEventInputs = function(merlin) {
       var $select = merlin.current_step.inputs.event_link.dom;
-    
+
       if ($select.val() !== '' && $select.val() !== $select.data('default')) {
         //disable all of the custom date/place fields
         disableCustomEventInputs(true, merlin);
@@ -79,6 +79,22 @@ tc.gam.project_widgets.need_form = function(options) {
         //enable all of the custom date/place fields
         disableCustomEventInputs(false, merlin);
       }
+    };
+
+    /**
+     * Function: _getNextDateString
+     * Get the string representation of the next date for a given month and day.
+     */
+    self._getNextDateString = function(month, day, now) {
+        var thisYear = now.getFullYear(),
+            nextYear = thisYear + 1,
+            dateThisYear = new Date(thisYear, month, day);
+
+        if (dateThisYear >= now) {
+            return thisYear + '-' + month + '-' + day;
+        } else {
+            return nextYear + '-' + month + '-' + day;
+        }
     };
 
     /**
@@ -151,11 +167,11 @@ tc.gam.project_widgets.need_form = function(options) {
                           validators: function(merlinInput, $element, step, onSubmit) {
                             var $ddSelectContainer = $element.next('.ddSelectContainer'),
                                 $ddSelect = $ddSelectContainer.find('.ddSelect');
-                            
+
                             $ddSelect.removeClass('valid');
-                            
-                            if ($element.is('.disabled') 
-                              || $ddSelectContainer.hasClass('ddNoDefault') 
+
+                            if ($element.is('.disabled')
+                              || $ddSelectContainer.hasClass('ddNoDefault')
                               || ($element.val() !== '' && $element.val() !== $element.data('default'))) {
                               $ddSelect.addClass('has-been-focused valid');
                               return {valid:true};
@@ -192,10 +208,10 @@ tc.gam.project_widgets.need_form = function(options) {
                           validators: function(merlinInput, $element, step, onSubmit) {
                             var $ddSelectContainer = $element.next('.ddSelectContainer'),
                                 $ddSelect = $ddSelectContainer.find('.ddSelect');
-                            
+
                             $ddSelect.removeClass('valid');
-                            
-                            if ($ddSelectContainer.hasClass('ddNoDefault') 
+
+                            if ($ddSelectContainer.hasClass('ddNoDefault')
                               || ($element.val() !== '' && $element.val() !== $element.data('default'))) {
                               $ddSelect.addClass('has-been-focused valid');
                             }
@@ -209,25 +225,26 @@ tc.gam.project_widgets.need_form = function(options) {
                       initDropDown('event-list', 'Link to an event', function($select) {
                         initEventInputs(merlin);
                       });
-                      
-                      
+
+
                       if (need_id) {
                         tc.jQ.each(merlin.current_step.inputs, function(key, input) {
                           if (input.default_val) {
                             input.dom.val(input.default_val);
                           }
                         });
-                        
+
                         initEventInputs(merlin);
-                        
+
                         merlin.validate(true);
                       }
                     },
                     finish:function(merlin, dom) {
-                      var d = new Date();
-                      var needDate = d.getFullYear()
-                              + '-' + (parseInt(merlin.current_step.inputs.month.dom.val(), 10)+1)
-                              + '-' + merlin.current_step.inputs.day.dom.val();
+                      var now = new Date(),
+                          month = parseInt(merlin.current_step.inputs.month.dom.val(), 10) + 1,
+                          day = parseInt(merlin.current_step.inputs.day.dom.val(), 10),
+                          needDate = self._getNextDateString(month, day, now);
+
                       merlin.options.data = tc.jQ.extend(merlin.options.data,{
                         type:'volunteer',
                         request:merlin.current_step.inputs.request.dom.val(),
@@ -271,7 +288,7 @@ tc.gam.project_widgets.need_form = function(options) {
     var mergeTemplate = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
-                monthOpts: function() { 
+                monthOpts: function() {
                   var needDate = this.date ? (new Date(this.date).getUTCMonth()) : '';
                   var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
                   var options = '';
@@ -286,7 +303,7 @@ tc.gam.project_widgets.need_form = function(options) {
                 },
                 eventOpts: function() {
                   var options = '';
-                  
+
                   for (var i = 0; i < cached_events.length; i++) {
                     if (need_details && cached_events[i].id === need_details.event_id) {
                       options += '<option value="'+cached_events[i].id+'" selected>'+cached_events[i].name+'</option>';
@@ -298,14 +315,16 @@ tc.gam.project_widgets.need_form = function(options) {
                 }
             }, need_details),
             $html = ich.need_form_tmpl(new_details);
-        
+
         dom.find('.add-need-step').html($html);
     };
 
     var initForm = function(need_id, callback) {
-      tc.gam.project_data.getEvents(function(events) {
+      var project_id = options.app.app_page.data.project.project_id;
+
+      tc.gam.project_data.getProjectEvents(project_id, function(events) {
         cached_events = events;
-      
+
         if (need_id) {
             tc.gam.project_data.getNeedDetails(need_id, function(data){
                 mergeTemplate(data);
@@ -332,11 +351,11 @@ tc.gam.project_widgets.need_form = function(options) {
         tc.jQ(tc).bind('show-project-widget', function(event, widgetName, id) {
             if (options.name === widgetName) {
                 tc.util.log('&&& showing ' + options.name);
-                
+
                 initForm(id, function(){
                     dom.show();
                 });
-                
+
             } else {
                 tc.util.log('&&& hiding ' + options.name);
                 dom.hide();

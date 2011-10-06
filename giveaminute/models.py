@@ -1,3 +1,5 @@
+import re
+
 from datetime import date
 from datetime import datetime
 from sqlalchemy import Boolean
@@ -157,9 +159,11 @@ class Project (Base):
 
     @property
     def admins(self):
+        admins = []
         for pm in self.project_members:
             if pm.is_project_admin:
-                yield pm.member
+                admins.append(pm.member)
+        return admins
 
 
 class Need (Base):
@@ -195,7 +199,7 @@ class Need (Base):
             This is the reason."""
         # TODO: We need a way of constructing the reason.
         return ''
-    
+
     @property
     def display_address(self):
         if self.event:
@@ -251,14 +255,18 @@ class Event (Base):
         if url is None:
             return None
 
+        url = url.lower()
+
         # For now the list of supported sites/URLs is hardcoded.  In the future
         # we might want to try to be more clever.
-        if 'facebook.com' in url[:24].lower():
+        if re.match(r'^(https?://)?(www.)?facebook.com', url):
             return 'Facebook'
-        if 'meetup.com' in url[:22].lower():
+        if re.match(r'^(https?://)?(www.)?meetup.com', url):
             return 'Meetup'
-        if 'eventbrite.com' in url[:26].lower():
+        if re.match(r'^(https?://)?(www.)?eventbrite.com', url):
             return 'Eventbrite'
+        if re.match(r'^(http://)?(www.|\w+\.)?(ticketleap.com|tkt.ly)', url):
+            return 'TicketLeap'
 
     @property
     def start_displaydate(self):
@@ -286,6 +294,23 @@ class Event (Base):
     @property
     def start_minute(self):
         return self.start_datetime.minute
+
+
+class SiteFeedback (Base):
+    """
+    Site Feedback ORM class.
+    """
+    __tablename__ = 'site_feedback'
+
+    site_feedback_id = Column(Integer, primary_key=True)
+    submitter_name = Column(String(100))
+    submitter_email = Column(String(255))
+    text = Column(Text)
+    is_responded = Column(SmallInteger, nullable=False, default=0)
+    responded_user_id = Column(Integer)  # Should be foreign key
+    is_active = Column(SmallInteger, nullable=False, default=1)
+    created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
+    updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
 
 if __name__ == '__main__':

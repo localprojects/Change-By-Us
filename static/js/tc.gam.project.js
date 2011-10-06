@@ -50,7 +50,10 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'conversation', dom: dom.find('.project-section.conversation') }, widget_options)
         ),
         'members': tc.gam.project_widgets.members(
-            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.members') }, widget_options)
+            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.member-list') }, widget_options)
+        ),
+        'invite': tc.gam.project_widgets.members(
+            tc.jQ.extend({ name: 'invite', dom: dom.find('.project-section.invite-members') }, widget_options)
         )
     };
 
