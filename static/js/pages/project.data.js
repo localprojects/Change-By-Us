@@ -167,10 +167,11 @@ tc.gam.project_data = {
             }
         });
     },
-    getEvents: function(success, error) {
+    _getEventsByQuery: function(query_data, success, error) {
         tc.jQ.ajax({
             url:'/rest/v1/events/',
             dataType:'json',
+            data:query_data,
             success:function(data, status, xhr) {
                 if (success) {
                     success(data, status, xhr);
@@ -182,5 +183,11 @@ tc.gam.project_data = {
                 }
             }
         });
+    },
+    getEvents: function(success, error) {
+        return this._getEventsByQuery({}, success, error);
+    },
+    getProjectEvents: function(project_id, success, error) {
+        this._getEventsByQuery({project_id:project_id}, success, error);
     }
 };
