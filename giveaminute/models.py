@@ -296,6 +296,23 @@ class Event (Base):
         return self.start_datetime.minute
 
 
+class SiteFeedback (Base):
+    """
+    Site Feedback ORM class.
+    """
+    __tablename__ = 'site_feedback'
+
+    site_feedback_id = Column(Integer, primary_key=True)
+    submitter_name = Column(String(100))
+    submitter_email = Column(String(255))
+    text = Column(Text)
+    is_responded = Column(SmallInteger, nullable=False, default=0)
+    responded_user_id = Column(Integer)  # Should be foreign key
+    is_active = Column(SmallInteger, nullable=False, default=1)
+    created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
+    updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
 if __name__ == '__main__':
     import sys
     import os
