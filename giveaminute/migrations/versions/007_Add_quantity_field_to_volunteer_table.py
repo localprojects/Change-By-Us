@@ -9,7 +9,7 @@ def upgrade(migrate_engine):
     volunteers = Table('project_need_volunteer', meta, autoload=True)
 
     # Add column
-    create_column(Column('quantity', Integer, default=1), volunteers)
+    create_column(Column('quantity', Integer, default=1, nullable=False), volunteers)
 
 
 def downgrade(migrate_engine):

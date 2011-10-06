@@ -202,6 +202,15 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
             assert_in("avatar_path", volunteer_dict)
 
     @istest
+    def should_include_the_quantity_that_volunteers_can_give_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_in("quantity", volunteer_dict)
+            assert_is_not_none(volunteer_dict['quantity'])
+
+    @istest
     def should_not_include_the_volunteer_passwords_in_the_return_value(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
 

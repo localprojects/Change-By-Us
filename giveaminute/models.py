@@ -213,7 +213,7 @@ class Volunteer (Base):
 
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
-    quantity = Column(Integer, default=1)
+    quantity = Column(Integer, default=1, nullable=False)
     """The quantity of the reqested need that the member is able to provide"""
 
     need = relationship('Need')
