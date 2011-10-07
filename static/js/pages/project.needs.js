@@ -129,12 +129,12 @@ tc.gam.project_widgets.needs = function(options) {
      * Function: volunteer
      * The user can volunteer for a specific need.
      */
-    var volunteer = function(need, message, callback) {
+    var volunteer = function(need, quantity, message, callback) {
         var $error_msg = modal.options.element.find('.error-msg').hide();
 
         tc.jQ.ajax({
             url: '/rest/v1/needs/'+need.id+'/volunteers/',
-            data: { member_id: self._getUserId() },
+            data: { member_id: self._getUserId(), quantity: quantity },
             dataType: 'json',
             type: 'POST',
             success: function(volunteer_data, status, xhr) {
@@ -215,7 +215,7 @@ tc.gam.project_widgets.needs = function(options) {
                         'add_quantity': {
                             selector:'input.add-quantity',
                             validators: function(merlinInput, $element, step, onSubmit) {
-                                if ($element) {
+                                if ($element.length > 0) {
                                     return tc.validate($element, ['required', 'numeric']);
                                 } else {
                                     return {valid:true};
@@ -229,7 +229,9 @@ tc.gam.project_widgets.needs = function(options) {
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
 
                             if (!$this.hasClass('disabled')) {
-                                volunteer(need, message, function(data){
+                                var quantity = parseInt(merlin.options.steps.volunteer_agree.inputs.add_quantity.dom.val(), 10) || 1;
+                              
+                                volunteer(need, quantity, message, function(data){
                                     if (self.need_id) {
                                         tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
                                     } else {
