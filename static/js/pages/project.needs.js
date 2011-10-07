@@ -211,6 +211,16 @@ tc.gam.project_widgets.needs = function(options) {
                         'volunteer_agree':{
                             selector:'input.volunteer-agree',
                             validators:['required']
+                        },
+                        'add_quantity': {
+                            selector:'input.add-quantity',
+                            validators: function(merlinInput, $element, step, onSubmit) {
+                                if ($element) {
+                                    return tc.validate($element, ['required', 'numeric']);
+                                } else {
+                                    return {valid:true};
+                                }
+                            }
                         }
                     },
                     init:function(merlin, dom) {
@@ -244,9 +254,16 @@ tc.gam.project_widgets.needs = function(options) {
     var showModal = function(need) {
         //use ICanHaz to fill in the modal content template
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
-            h = ich.add_vol_need_tmpl(need);
+            $html;
+        
+        if (need.type === 'inkind') {
+            $html = ich.add_inkind_need_tmpl(need);
+        } else {
+            $html = ich.add_vol_need_tmpl(need);
+        }
+        
 
-        $needDetailsContent.html(h);
+        $needDetailsContent.html($html);
 
         //NOTE: the source_element gets cloned here, so be careful
         //binding events!

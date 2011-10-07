@@ -36,7 +36,7 @@ describe('project.needs.js', function () {
             dom: tc.jQ('body'),
             name: 'test'
         },
-        mock_need = {
+        mock_vol_need = {
             "display_date": "August 31st", 
             "project_id": "3", 
             "description": "test stuff", 
@@ -50,8 +50,26 @@ describe('project.needs.js', function () {
                            {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}], 
             "type": "volunteer", 
             "id": "5", 
-            "quantity": "6"
-        };;
+            "quantity": "6",
+            "event_id": ""
+        },
+        mock_inkind_need = {
+            "display_date": "", 
+            "project_id": "3", 
+            "description": "for nails, of course", 
+            "address": "", 
+            "request": "hammers", 
+            "date": "", 
+            "time": "", 
+            "duration": "", 
+            "volunteers": [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
+                           {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
+                           {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}], 
+            "type": "inkind", 
+            "id": "5", 
+            "quantity": "6",
+            "event_id": ""
+        };
 
     beforeEach(function() {
         need_widget = tc.gam.project_widgets.needs(mock_options);
@@ -83,59 +101,67 @@ describe('project.needs.js', function () {
     });
     
     describe('_getDetailTemplateData', function () {
-        var raw_need_details;
-        
+        var vol_need_details, inkind_need_details;
         beforeEach(function(){
-            raw_need_details = mock_need;
+            vol_need_details = need_widget._getDetailTemplateData(mock_vol_need);
+            inkind_need_details = need_widget._getDetailTemplateData(mock_inkind_need);
         });
-        
+
         it('creates a "day" template function', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.day).toBeTruthy();
+            expect(vol_need_details.day).toBeTruthy();
+            expect(inkind_need_details.day).toBeTruthy();
         });
         
         it('creates a "month" template function', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.month).toBeTruthy();
+            expect(vol_need_details.month).toBeTruthy();
+            expect(inkind_need_details.month).toBeTruthy();
         });
 
         it('creates a "isVolunteer" template function', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.isVolunteer()).toEqual(true);
+            expect(vol_need_details.isVolunteer()).toEqual(true);
+            expect(inkind_need_details.isVolunteer()).toEqual(false);
         });
 
         it('creates a "isInKind" template function', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.isInKind()).toEqual(false);
+            expect(vol_need_details.isInKind()).toEqual(false);
+            expect(inkind_need_details.isInKind()).toEqual(true);
         });
 
         it('creates a "has_first" template property if there is a least one volunteer', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.has_first).toEqual(true);
+            expect(vol_need_details.has_first).toEqual(true);
+            expect(inkind_need_details.has_first).toEqual(true);
         });
         
         it('creates a "first_vol" template property if there is a least one volunteer', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.first_vol).toBeTruthy();
-            expect(new_details.first_vol.id).toEqual('1');
+            expect(vol_need_details.first_vol).toBeTruthy();
+            expect(vol_need_details.first_vol.id).toEqual('1');
+
+            expect(inkind_need_details.first_vol).toBeTruthy();
+            expect(inkind_need_details.first_vol.id).toEqual('1');
         });
         
         it('modifies "volunteers" to shift the first volunteer off the list', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(raw_need_details.volunteers.length).toEqual(3);
-            expect(new_details.volunteers.length).toEqual(2);
-            expect(need_widget._isVolunteer('1', new_details.volunteers)).toEqual(false);
+            expect(mock_vol_need.volunteers.length).toEqual(3);
+            expect(vol_need_details.volunteers.length).toEqual(2);
+            expect(need_widget._isVolunteer('1', vol_need_details.volunteers)).toEqual(false);
+
+            expect(mock_inkind_need.volunteers.length).toEqual(3);
+            expect(inkind_need_details.volunteers.length).toEqual(2);
+            expect(need_widget._isVolunteer('1', inkind_need_details.volunteers)).toEqual(false);
         });
         
         it('creates a "vol_count_minus_one" template property to be the total volunteers minus 1', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.vol_count_minus_one).toEqual(raw_need_details.volunteers.length-1);
-            expect(new_details.vol_count_minus_one).toEqual(new_details.volunteers.length);
+            expect(vol_need_details.vol_count_minus_one).toEqual(mock_vol_need.volunteers.length-1);
+            expect(vol_need_details.vol_count_minus_one).toEqual(vol_need_details.volunteers.length);
+
+            expect(inkind_need_details.vol_count_minus_one).toEqual(mock_inkind_need.volunteers.length-1);
+            expect(inkind_need_details.vol_count_minus_one).toEqual(inkind_need_details.volunteers.length);
         });
         
         it('creates a "avatar" template function', function() {
-            var new_details = need_widget._getDetailTemplateData(raw_need_details);
-            expect(new_details.avatar).toBeTruthy();
+            expect(vol_need_details.avatar).toBeTruthy();
+
+            expect(inkind_need_details.avatar).toBeTruthy();
         });
     });
 
@@ -189,7 +215,7 @@ describe('project.needs.js', function () {
                 <a class="help-link active" href="#">I can help</a> \
                 </div>'
             );
-            need = mock_need;
+            need = mock_vol_need;
         });
         
         it('sets the number of people who have volunteered', function() {
