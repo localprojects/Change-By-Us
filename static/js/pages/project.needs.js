@@ -34,7 +34,9 @@ tc.gam.project_widgets.needs = function(options) {
     self._getDetailTemplateData = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
-                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
+                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; },
+                isVolunteer: function() { return this.type === 'volunteer'; },
+                isInKind: function() { return this.type === 'inkind'; }
             }, need_details);
 
         //Special cases for the first volunteer
@@ -274,7 +276,7 @@ tc.gam.project_widgets.needs = function(options) {
                 }
             }
         });
-    }
+    };
     
     var bindNeedDeleteLinks = self.bindNeedDeleteLinks = function() {
         tc.jQ('a.need-delete').die('click').live('click', function(event) {
@@ -292,7 +294,7 @@ tc.gam.project_widgets.needs = function(options) {
                 }
             });
         });
-    }
+    };
 
     /**
      * Function: bindEvents

@@ -8,9 +8,14 @@
 
     <div class="bd clearfix">
         <div class="vol-title serif">
-            We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a>
-            {% if need.reason %} for {{ need.reason }}{% endif %}
-            {% if need.display_date %} on {{ need.display_date }}{% endif %}
+          {% if need.type == "inkind" %}
+          We need to borrow <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> {{ need.request }}</a>
+          {% else %}
+          We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a>
+          {% endif %}
+
+          {% if need.reason %} for {{ need.reason }}{% endif %}
+          {% if need.display_date %} on {{ need.display_date }}{% endif %}
         </div>
 
         {% if

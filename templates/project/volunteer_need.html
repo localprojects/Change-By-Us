@@ -27,7 +27,13 @@
 {% raw %}
   <div class="bd clearfix need-detail-cont">
     <div class="vol-title serif">
+        {{#isInKind}}
+        We need to borrow <a href="#show,need-detail,{{id}}" class="vol-need"><span class="vol-count">{{quantity}}</span> {{request}}</a>
+        {{/isInKind}}
+        {{#isVolunteer}}
         We need <a href="#show,need-detail,{{id}}" class="vol-need"><span class="vol-count">{{quantity}}</span> volunteer {{request}}</a>
+        {{/isVolunteer}}
+
         {{#reason}} for {{reason}}{{/reason}}
         {{#display_date}} on {{display_date}}{{/display_date}}
     </div>
@@ -69,17 +75,19 @@
       <div class="volunteer-count">We have <strong>{{ need.volunteers|length }}</strong> volunteers</div>
       <div class="progress-wrapper"><div class="progress" style="width:150px;"><div class="progress-pin"></div></div></div>
       <a href="#" class="help-link active">I can help</a>
+      {{#isVolunteer}}
       <div class="time-detail">
         <span>We&#39;ll need you at<br>
           <span class="time">{{time}}</span>
           <span class="">for</span> <span class="time-length">{{duration}} hrs</span></span>
       </div>
-        <div class="location">We&#39;ll need you to go to
-          <ul>
-            <li class="location-name">{{display_address}}</li>
-          </ul>
-          <a href="http://maps.google.com/maps?q={{display_address}}" target="_blank" class="rounded-button small">Map it</a>
-        </div>
+      <div class="location">We&#39;ll need you to go to
+        <ul>
+          <li class="location-name">{{display_address}}</li>
+        </ul>
+        <a href="http://maps.google.com/maps?q={{display_address}}" target="_blank" class="rounded-button small">Map it</a>
+      </div>
+      {{/isVolunteer}}
     </div>
   </div>
 </li>

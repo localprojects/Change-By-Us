@@ -99,6 +99,16 @@ describe('project.needs.js', function () {
             expect(new_details.month).toBeTruthy();
         });
 
+        it('creates a "isVolunteer" template function', function() {
+            var new_details = need_widget._getDetailTemplateData(raw_need_details);
+            expect(new_details.isVolunteer()).toEqual(true);
+        });
+
+        it('creates a "isInKind" template function', function() {
+            var new_details = need_widget._getDetailTemplateData(raw_need_details);
+            expect(new_details.isInKind()).toEqual(false);
+        });
+
         it('creates a "has_first" template property if there is a least one volunteer', function() {
             var new_details = need_widget._getDetailTemplateData(raw_need_details);
             expect(new_details.has_first).toEqual(true);
