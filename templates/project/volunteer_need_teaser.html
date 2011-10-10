@@ -56,7 +56,13 @@
         </div>
 
         <div class="volunteer-details serif">
-            <div class="volunteer-count">We have <strong>{{ need.quantity_committed }}</strong> volunteers</div>
+            <div class="volunteer-count">We have <strong>{{ need.quantity_committed }}</strong>
+              {% if need.type == "inkind" %}
+                donations
+              {% else %}
+                volunteers
+              {% endif %}
+            </div>
             <div class="progress-wrapper"><div class="progress" style="width:{{ 150 * need.quantity_committed / need.quantity }}px;"><div class="progress-pin"></div></div></div>
 
             {# Volunteer button state #}
