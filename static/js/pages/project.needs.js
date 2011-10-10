@@ -215,8 +215,10 @@ tc.gam.project_widgets.needs = function(options) {
                         'add_quantity': {
                             selector:'input.add-quantity',
                             validators: function(merlinInput, $element, step, onSubmit) {
+                                var max;
                                 if ($element.length > 0) {
-                                    return tc.validate($element, ['required', 'numeric']);
+                                    max = need.quantity - need.quantity_committed;
+                                    return tc.validate($element, ['required', 'numeric', 'max-'+max]);
                                 } else {
                                     return {valid:true};
                                 }
