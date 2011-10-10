@@ -774,6 +774,7 @@ class NeedModelRestController (RestController):
         if raw_date:
             need_dict['display_date'] = need.display_date
         need_dict['display_address'] = need.display_address
+        need_dict['quantity_committed'] = need.quantity_committed
 
         return need_dict
 

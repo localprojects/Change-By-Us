@@ -186,6 +186,11 @@ class Need (Base):
     event = relationship('Event')
 
     @property
+    def quantity_committed(self):
+        """Returns the number of things volunteers/donations that have been committed"""
+        return sum(vol.quantity for vol in self.need_volunteers)
+
+    @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
         if self.event:

@@ -90,8 +90,8 @@ tc.gam.project_widgets.needs = function(options) {
             $progress = $container.find('.progress'),
             quantityNum = parseInt(need.quantity, 10);
 
-        $volCount.text(need.volunteers.length);
-        $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
+        $volCount.text(need.quantity_committed);
+        $progress.width(self._getProgressElementWidth($progress.parent().width(), need.quantity_committed, quantityNum));
     };
 
     self._updateVolunteerButton = function($container, need) {
