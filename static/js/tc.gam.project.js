@@ -25,6 +25,9 @@ tc.gam.project = function(app, dom) {
         'vol-form': tc.gam.project_widgets.vol_form(
             tc.jQ.extend({ name: 'vol-form', dom: dom.find('.project-section.vol-form') }, widget_options)
         ),
+        'inkind-form': tc.gam.project_widgets.inkind_form(
+            tc.jQ.extend({ name: 'inkind-form', dom: dom.find('.project-section.inkind-form') }, widget_options)
+        ),
         'events': tc.gam.project_widgets.events(
             tc.jQ.extend({ name: 'events', dom: dom.find('.project-section.events') }, widget_options)
         ),
