@@ -37,38 +37,44 @@ describe('project.needs.js', function () {
             name: 'test'
         },
         mock_vol_need = {
-            "display_date": "August 31st", 
-            "project_id": "3", 
-            "description": "test stuff", 
-            "address": "Code for America", 
-            "request": "testers", 
-            "date": "2011-08-31", 
-            "time": "9:00pm", 
-            "duration": "50", 
-            "volunteers": [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
-                           {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
-                           {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}], 
-            "type": "volunteer", 
-            "id": "5", 
-            "quantity": "6",
-            "event_id": ""
+          address: "Code for America",
+          date: "2011-10-01",
+          description: "to garden and pull weeds and stuff. to garden and pull weeds and stuff. to garden and pull weeds and stuff. the quick brown fox jumped over the lazy dog.",
+          display_address: "Code for America",
+          display_date: "October 1st",
+          duration: "6",
+          event: null,
+          event_id: null,
+          id: "1",
+          project_id: "1",
+          quantity: "4",
+          quantity_committed: "3",
+          request: "gardeners",
+          time: "11:00 am",
+          type: "volunteer",
+          volunteers: [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
+                       {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
+                       {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}]
         },
         mock_inkind_need = {
-            "display_date": "", 
-            "project_id": "3", 
-            "description": "for nails, of course", 
-            "address": "", 
-            "request": "hammers", 
-            "date": "", 
-            "time": "", 
-            "duration": "", 
-            "volunteers": [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
-                           {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
-                           {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}], 
-            "type": "inkind", 
-            "id": "5", 
-            "quantity": "6",
-            "event_id": ""
+          address: "",
+          date: "",
+          description: "for nails, of course",
+          display_address: "",
+          display_date: "",
+          duration: "6",
+          event: null,
+          event_id: null,
+          id: "5",
+          project_id: "3",
+          quantity: "8",
+          quantity_committed: "5",
+          request: "hammers",
+          time: "",
+          type: "inkind",
+          volunteers: [{"display_name": "John D.", "description": null, "image_id": "1", "email": "john.doe@codeforamerica.org", "location_id": "0", "id": "1"},
+                       {"display_name": "John E.", "description": null, "image_id": "1", "email": "john.eoe@codeforamerica.org", "location_id": "0", "id": "2"},
+                       {"display_name": "John F.", "description": null, "image_id": "1", "email": "john.foe@codeforamerica.org", "location_id": "0", "id": "3"}]
         };
 
     beforeEach(function() {
@@ -207,7 +213,7 @@ describe('project.needs.js', function () {
     });
     
     describe('_updateVolunteerProgress', function () {
-        var $container, need;
+        var $container, vol_need, inkind_need;
         beforeEach(function(){
             $container = tc.jQ('<div class="volunteer-details"> \
                 <div class="volunteer-count">We have <strong>0</strong> volunteers</div> \
@@ -215,13 +221,20 @@ describe('project.needs.js', function () {
                 <a class="help-link active" href="#">I can help</a> \
                 </div>'
             );
-            need = mock_vol_need;
+            vol_need = mock_vol_need;
+            inkind_need = mock_inkind_need;
         });
         
         it('sets the number of people who have volunteered', function() {
-            need_widget._updateVolunteerProgress($container, need);
+            need_widget._updateVolunteerProgress($container, vol_need);
             
             expect($container.find('.volunteer-count strong').text()).toEqual('3');
+        });
+        
+        it('sets the number of things that have been donated', function() {
+            need_widget._updateVolunteerProgress($container, inkind_need);
+            
+            expect($container.find('.volunteer-count strong').text()).toEqual('5');
         });
     });
     

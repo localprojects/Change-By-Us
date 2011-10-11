@@ -2,8 +2,8 @@ var tc = tc || {};
 tc.gam = tc.gam || {};
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
-tc.gam.project_widgets.need_form = function(options) {
-    tc.util.log('project.need_form');
+tc.gam.project_widgets.vol_form = function(options) {
+    tc.util.log('project.vol_form');
     var dom = options.dom,
         cached_events = [],
         self = {};
@@ -106,10 +106,10 @@ tc.gam.project_widgets.need_form = function(options) {
 
         //We are using merlin only for the built-in validation in this case.
         merlin =  new tc.merlin(options.app, {
-            name:'need_form',
+            name:'vol_form',
             dom:tc.jQ('.add-need.merlin'),
             next_button:tc.jQ('a.need-submit'),
-            first_step:'need_form',
+            first_step:'vol_form',
             use_hashchange:false,
             data: {
               type:'volunteer',
@@ -123,7 +123,7 @@ tc.gam.project_widgets.need_form = function(options) {
               address:null
             },
             steps: {
-                'need_form': {
+                'vol_form': {
                     selector: '.step.add-need-step',
                     next_step:'need-submit',
                     inputs: {
@@ -281,7 +281,7 @@ tc.gam.project_widgets.need_form = function(options) {
             }
         });
 
-        merlin.show_step('need_form');
+        merlin.show_step('vol_form');
     };
 
 
@@ -314,7 +314,7 @@ tc.gam.project_widgets.need_form = function(options) {
                   return options;
                 }
             }, need_details),
-            $html = ich.need_form_tmpl(new_details);
+            $html = ich.vol_form_tmpl(new_details);
 
         dom.find('.add-need-step').html($html);
     };
