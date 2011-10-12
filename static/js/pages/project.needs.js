@@ -217,6 +217,12 @@ tc.gam.project_widgets.needs = function(options) {
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
 
                             if (!$this.hasClass('disabled')) {
+                             console.log(self.need_id);
+                             console.log('going to the next volunteer step');
+                             //bug with this we don't have an event
+                             //event.data.merlin.show_step('volunteer_complete');
+                             modal.hide();
+                              /*
                                 volunteer(need, message, function(data){
                                     if (self.need_id) {
                                         tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
@@ -225,10 +231,21 @@ tc.gam.project_widgets.needs = function(options) {
                                     }
                                     modal.hide();
                                 });
+                              */
                             }
                         });
                     }
+                }/*,
+                'volunteer_complete': {
+                  selector:'.step.user-volunteer-complete',
+                  init: function(merlin, dom) {
+                    dom.find('.submit').bind('click', function(e) {
+                      e.preventDefault();
+                      modal.hide();
+                    });
+                  }
                 }
+                */
             }
         });
 
