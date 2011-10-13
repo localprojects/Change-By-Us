@@ -26,6 +26,30 @@
     <div class="hd clearfix">
         <h2>
             <span>
+                Events
+            </span>
+        </h2>
+        <div class="actions">
+            <a href="#show,events" class="forward fancy-caps">
+                <span>See More</span>
+            </a>
+        </div>
+    </div>
+    <ol class="event-stack">
+        {% with num_events_to_show = 1 %}
+            {% for event in d.template_data.project.events %}
+                {% if loop.index <= num_events_to_show %}
+                    {% include "project/event_teaser.html" %}
+                {% endif %}
+            {% else %}
+                {% include "project/empty_events_list.html" %}
+            {% endfor %}
+        {% endwith %}
+    </ol>
+
+    <div class="hd clearfix">
+        <h2>
+            <span>
                 Discussion
             </span>
         </h2>

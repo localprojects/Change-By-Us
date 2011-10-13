@@ -425,7 +425,7 @@ app_page.features.push(function(app){
 				prev_step:null,
 				next_step:null,
 				init:function(merlin,dom){
-					dom.find('span.email').text(merlin.options.data.email);
+					dom.find('.email').html(merlin.options.data.email);
 				}
 			},
 			/* Step: email-authentication-email-send-error  */

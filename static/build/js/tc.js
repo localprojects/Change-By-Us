@@ -1609,7 +1609,6 @@ tc.top_bar = function(element, options) {
         tc.jQ.ajax({
             url:'/rest/v1/keywords/',
             dataType:'json',
-            cache:true,
             success:function(data, status, xhr) {
                 if (success) {
                     success(data, status, xhr);
@@ -1644,7 +1643,7 @@ tc.top_bar = function(element, options) {
                 }
                 tc.jQ(this).children("a").toggleClass("opened");
             }).mouseleave(function () {
-                tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
+                tc.jQ(this).children(".dropdown").delay(200).fadeOut(o.fadeSpeed);
                 tc.jQ(this).children("a").toggleClass("opened");
             });
         };
@@ -2819,8 +2818,20 @@ tc.gam.project = function(app, dom) {
         'need-detail': tc.gam.project_widgets.needs(
             tc.jQ.extend({ name: 'need-detail', dom: dom.find('.project-section.need-detail') }, widget_options)
         ),
-       'need-form': tc.gam.project_widgets.need_form(
+        'need-form': tc.gam.project_widgets.need_form(
             tc.jQ.extend({ name: 'need-form', dom: dom.find('.project-section.need-form') }, widget_options)
+        ),
+        'events': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'events', dom: dom.find('.project-section.events') }, widget_options)
+        ),
+        'event-detail': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-detail', dom: dom.find('.project-section.event-detail') }, widget_options)
+        ),
+        'event-needs': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-needs', dom: dom.find('.project-section.event-needs') }, widget_options)
+        ),
+        'event-form': tc.gam.project_widgets.event_form(
+            tc.jQ.extend({ name: 'event-form', dom: dom.find('.project-section.event-form') }, widget_options)
         ),
         'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
@@ -2838,17 +2849,20 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'conversation', dom: dom.find('.project-section.conversation') }, widget_options)
         ),
         'members': tc.gam.project_widgets.members(
-            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.members') }, widget_options)
+            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.member-list') }, widget_options)
+        ),
+        'invite': tc.gam.project_widgets.members(
+            tc.jQ.extend({ name: 'invite', dom: dom.find('.project-section.invite-members') }, widget_options)
         )
     };
-    
+
     // Add fresh ideas component if available.
     if (tc.gam.project_widgets.fresh_ideas) {
         app.components.related_ideas = tc.gam.project_widgets.fresh_ideas(
             tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
         );
     }
-    
+
     tc.gam.project_widgets.project_tabs(
         tc.jQ.extend({ name: 'project_tabs', dom: dom.find('.project-tabs') }, widget_options)
     );
