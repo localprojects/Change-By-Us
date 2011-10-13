@@ -1,7 +1,9 @@
 import re
 
+from collections import defaultdict
 from datetime import date
 from datetime import datetime
+
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
@@ -164,6 +166,13 @@ class Project (Base):
             if pm.is_project_admin:
                 admins.append(pm.member)
         return admins
+
+    @property
+    def needs_by_type(self):
+        nbt = defaultdict(list)
+        for need in self.needs:
+            nbt[need.type].append(need)
+        return nbt
 
 
 class Need (Base):

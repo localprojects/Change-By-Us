@@ -18,13 +18,31 @@
     </div>
 
 
-    <ol class="need-stack">
-        {% for need in d.template_data.project.needs %}
+    {#
+     # The list of volunteers is expected to be sorted by type first.
+     #}
+
+    {% for type, needs in d.template_data.project.needs_by_type.items() %}
+
+        {% if type == 'volunteer' %}
+            <h3>Volunteers</h3>
+        {% elif type == 'inkind' %}
+            <h3>In-kind Donations</h3>
+        {% endif %}
+
+        <ol class="need-stack {{ type }}-need-stack">
+
+        {% for need in needs %}
             {% include "project/volunteer_need_teaser.html" %}
-        {% else %}
-            {% include "project/empty_needs_list.html" %}
         {% endfor %}
-    </ol>
+
+        </ol>
+
+    {% else %}
+        <ol class="need-stack">
+            {% include "project/empty_needs_list.html" %}
+        </ol>
+    {% endfor %}
 
 
     {% raw %}

@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from unittest2 import TestCase
 from nose.tools import *
 
@@ -5,6 +7,7 @@ from mock import Mock
 
 from giveaminute.models import Event
 from giveaminute.models import Need
+from giveaminute.models import Project
 from giveaminute.models import User
 
 class Test_User_display_name (TestCase):
@@ -32,6 +35,42 @@ class Test_User_display_name (TestCase):
         dname = user.display_name
 
         assert_equal(dname, 'Mjumbe P.')
+
+
+class Test_Project_needsByType (TestCase):
+    def setup (self):
+        self.__original_needs = Project.needs
+
+    def teardown (self):
+        Project.needs = self.__original_needs
+
+    @istest
+    def returns_an_empty_dictionary_when_no_needs (self):
+        project = Project()
+        project.needs = []
+
+        nbt = project.needs_by_type
+
+        assert_equal(nbt, {})
+
+    @istest
+    def returns_a_dict_with_the_need_types_as_keys (self):
+        NeedStub = namedtuple('NeedStub', 'type')
+        Project.needs = [NeedStub(type='a'),
+                         NeedStub(type='a'),
+                         NeedStub(type='b'),
+                         NeedStub(type='c'),
+                         NeedStub(type='d'),
+                         NeedStub(type='b')]
+        project = Project()
+
+        nbt = project.needs_by_type
+
+        assert_equal(sorted(nbt.keys()), ['a','b','c','d'])
+        assert_equal(len(nbt['a']), 2)
+        assert_equal(len(nbt['b']), 2)
+        assert_equal(len(nbt['c']), 1)
+        assert_equal(len(nbt['d']), 1)
 
 
 class Test_Need_displayAddress (TestCase):
