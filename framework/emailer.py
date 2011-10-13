@@ -53,8 +53,6 @@ class Emailer():
         
         """
         log.info("Emailer.send [%s] [%s]" % (addresses, subject))
-        sender = from_name + "<" + from_address + ">"
-        
         if isinstance(addresses, basestring):
             addresses = [r.strip() for r in addresses.split(',')]
                 
@@ -162,17 +160,17 @@ def send_email_via_smtp(addresses, subject, text, html=None, attachment=None, fr
     else:
         message = MIMEText(text, 'plain')
 
-        if attachment:
-            tmpmsg = msg
-            msg = MIMEMultipart()
-            msg.attach(tmpmsg)
-            msg.attach(MIMEText("\n\n", 'plain')) # helps to space the attachment from the body of the message
-            log.info("--> adding attachment")
-            part = MIMEBase('application', 'octet-stream')
-            part.set_payload(open(attachment, 'rb').read())
-            Encoders.encode_base64(part)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attachment))
-            msg.attach(part)
+    if attachment:
+        tmpmessage = message
+        message = MIMEMultipart()
+        message.attach(tmpmessage)
+        message.attach(MIMEText("\n\n", 'plain')) # helps to space the attachment from the body of the message
+        log.info("--> adding attachment")
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(open(attachment, 'rb').read())
+        Encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attachment))
+        message.attach(part)
 
     sender = from_name + "<" + from_address + ">"
     cc = listify(kwargs.get('cc', []))
@@ -184,16 +182,24 @@ def send_email_via_smtp(addresses, subject, text, html=None, attachment=None, fr
     message['Cc']     = ','.join(cc)
     message['Bcc']    = ','.join(bcc)
 
-        try:
-            # The use_msg_directly parameter should be set to True if we're adding message headers. This is the case
-            # with MIMEText() usage. If we send text directly (ie without MIMEText()) then use_msg_directly should be False
-            webpyutils.sendmail(from_address=sender, to_address=addresses, subject=subject, message=msg, attachment=attachment, use_msg_directly=True, **kwargs)
+    smtpserver.sendmail(sender, addresses, message.as_string())
+    smtpserver.quit()
 
-        except Exception, e:
-            log.error("Could not send email (%s)" % e)
-
-            return False
-        return True    
+def send_email_via_ses(addresses, subject, text, html=None, attachment=None, from_name=None, from_address=None, **kwargs):
+    """
+    BCC is in kwargs
+    If SES has any error, the request will be passed back to the caller and domino down to SMTP 
+    """
+    import boto.ses
+    try:
+        sesConn = boto.ses.SESConnection( aws_access_key_id = webapi.config.get('aws_access_key_id'),
+                                      aws_secret_access_key = webapi.config.get('aws_secret_access_key'))
+    except Exception, e:
+        raise
+    
+    cc = listify(kwargs.get('cc', []))
+    bcc = listify(kwargs.get('bcc', []))
+    sender = from_name + "<" + from_address + ">"
 
     # First send emails without attachments and not multipart
     if (text and not html and not attachment) or \

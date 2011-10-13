@@ -191,7 +191,8 @@ def main():
     # Load SQLAlchemy
     app.add_processor(load_sqla)
 
-    # Finally, run the web.py app!    app.run()
+    # Finally, run the web.py app!    
+    app.run()
 
 # Main logic for the CBU application.  Does some basic configuration,
 # then starts the web.py application.
