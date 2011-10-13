@@ -1,0 +1,103 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          lighttpd
+# Required-Start:    $syslog $remote_fs $network
+# Required-Stop:     $syslog $remote_fs $network
+# Should-Start:      fam
+# Should-Stop:       fam
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start the lighttpd web server.
+### END INIT INFO
+
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/sbin/lighttpd
+NAME=lighttpd
+DESC="web server"
+SCRIPTNAME=/etc/init.d/$NAME
+ENV="env -i LANG=C PATH=/usr/local/bin:/usr/bin:/bin"
+SSD="/sbin/start-stop-daemon"
+
+# SR: Changed to be more flexible
+# $1 is the command to execute; $2 is the root-path to use
+if [ -n "$2" ];then
+    DAEMON_OPTS="-f $2/etc/lighttpd/lighttpd.conf"
+    PIDFILE=$2/run/$NAME.pid
+else
+    DAEMON_OPTS="-f /home/giveaminute/gam2/lighttpd.conf"
+    PIDFILE=/home/giveaminute/gam2/run/$NAME.pid
+fi
+
+test -x $DAEMON || exit 0
+
+set -e
+
+# be sure there is a /var/run/lighttpd, even with tmpfs
+mkdir -p /var/run/lighttpd > /dev/null 2> /dev/null
+chown www-data:www-data /var/run/lighttpd
+chmod 0750 /var/run/lighttpd
+
+. /lib/lsb/init-functions
+
+syntax_check ()
+{
+    $DAEMON $DAEMON_OPTS -t || exit 1
+}
+
+case "$1" in
+    start)
+        syntax_check
+        log_daemon_msg "Starting $DESC" $NAME
+        if ! start-stop-daemon --start --quiet --oknodo \
+            --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
+        then
+            log_end_msg 1
+        else
+            log_end_msg 0
+        fi
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" $NAME
+        if start-stop-daemon --quiet --stop --oknodo --retry 30 --oknodo \
+            --pidfile $PIDFILE --exec $DAEMON
+        then
+            rm -f $PIDFILE
+            log_end_msg 0
+        else
+            log_end_msg 1
+        fi
+        ;;
+    reload|force-reload)
+        syntax_check
+        log_daemon_msg "Reloading $DESC configuration" $NAME
+        if start-stop-daemon --stop --signal 2 --oknodo --retry 30 --oknodo \
+            --quiet --pidfile $PIDFILE --exec $DAEMON
+        then
+            if start-stop-daemon --start --quiet  \
+                --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS ; then
+                log_end_msg 0
+            else
+                log_end_msg 1
+            fi
+        else
+            log_end_msg 1
+        fi
+        ;;
+    restart)
+        syntax_check
+        $0 stop $2
+        test -r  $PIDFILE && while pidof lighttpd | \
+            grep -q `cat $PIDFILE 2>/dev/null` 2>/dev/null ; do sleep 1; done
+        $0 start $2
+        ;;
+    status)
+        status_of_proc -p "$PIDFILE" "$DAEMON" lighttpd && exit 0 || exit $?
+        ;;
+    *)
+        echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

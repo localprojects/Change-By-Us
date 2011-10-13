@@ -497,7 +497,7 @@ class Admin(Controller):
             # email deleted user
 # TODO: temporarily commenting out because the only place this currently gets sent from is deletion of admins
 #             u = mUser.User(self.db, userId)
-#
+#             
 #             if (not mMessaging.emailAccountDeactivation(u.email)):
 #                 log.error("*** couldn't email deleted user_id = %s" % userId)
 
@@ -553,7 +553,7 @@ class Admin(Controller):
                 resource = mProjectResource.ProjectResource(self.db, projectResourceId)
 
                 mMessaging.emailResourceApproval(resource.data.contact_email, resource.data.title)
-
+                
                 if (resource.data.owner_email):
                     mMessaging.emailResourceApproval(resource.data.owner_email, resource.data.title)
                 return True

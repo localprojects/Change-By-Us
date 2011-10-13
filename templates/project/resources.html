@@ -38,7 +38,7 @@
 								</span>
 								<span class="resource-name">
 									<span>
-										<span><a target='_blank' href="http://{{ link.url|replace('http://','') }}"><span>{{ link.title }}</span></a></span>
+										<span><a target='_blank' href="http://{{ link.url|replace('http://','') }}" title="http://{{ link.url|replace('http://','') }}"><span>{{ link.title|truncate_external_link_title(10) }}</span></a></span>
 									</span>
 								</span>
 							</td>
@@ -83,6 +83,7 @@
 								<tr>
 							{% endif %}
 							<td title="{{ org.title }}" {% if org.is_official %}class="official-resource"{% endif %}>
+								{% if org.is_official %}<span class="official-resource-alt">Official Resource</span>{% endif %}
 								<span class="thumb">
 									{% if d.template_data and d.template_data.project_user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
 										<a class="close" href="#removeOrganization,{{ org.organization }}"><span>remove</span></a>
@@ -141,6 +142,7 @@
 </div>
 
 <div class='template-content organization-table-cell' title=''>
+	<span class="official-resource-alt" style="display:none">Official Resource</span>
 	<span class="thumb">
 		<a class="close" href="#removeOrganization,"></a>
 		<img width='30' src="/static/images/thumb_genAvatar30.png" alt=""/>

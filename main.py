@@ -61,24 +61,30 @@ def enable_smtp():
     Enable SMTP support for the web.py email handling.  This
     uses config values found in config.yaml.
     """
-    smtp_config = Config.get('email').get('smtp')
-    web.webapi.config.smtp_server = smtp_config.get('host')
-    web.webapi.config.smtp_port = smtp_config.get('port')
-    web.webapi.config.smtp_starttls = smtp_config.get('starttls')
-    web.webapi.config.smtp_username = smtp_config.get('username')
-    web.webapi.config.smtp_password = smtp_config.get('password')
-
-
+    try:
+        smtp_config = Config.get('email').get('smtp')
+        web.webapi.config.email_engine = 'smtp'
+        web.webapi.config.smtp_server = smtp_config.get('host')
+        web.webapi.config.smtp_port = smtp_config.get('port')
+        web.webapi.config.smtp_starttls = smtp_config.get('starttls')
+        web.webapi.config.smtp_username = smtp_config.get('username')
+        web.webapi.config.smtp_password = smtp_config.get('password')
+    except Exception, e:
+        log.info("ERROR: Exception when loading SMTP: %s" % e)
+        
 def enable_aws_ses():
     """
     Enable AWS SES support for the web.py email handling.  This
     uses config values found in config.yaml.
     """
-    ses_config = Config.get('email').get('aws_ses')
-    web.webapi.config.email_engine = 'aws'
-    web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
-    web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
-
+    try:
+        ses_config = Config.get('email').get('aws_ses')
+        web.webapi.config.email_engine = 'aws'
+        web.webapi.config.aws_access_key_id = ses_config.get('access_key_id')
+        web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
+    except Exception, e:
+        log.info("ERROR: Exception when loading SES: %s" % e)
+    
 def load_sqla(handler):
     """
     Create a load hook and use sqlalchemy's ``scoped session``. This construct
@@ -114,57 +120,58 @@ def load_sqla(handler):
 
     return result
 
-
-# Main logic for the CBU application.  Does some basic configuration,
-# then starts the web.py application.
-if __name__ == "__main__":
+def main():
+    web.config.logfile = Config.get('logfile')
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
-
-    # Handle debug logging, dependent on dev mode.
     if Config.get('dev'):
-        web.config.debug = True
+        web.config.debug = True        
     log.info("Debug: %s" % web.config.debug)
-
-    # Define cookie name for application.  GAM is for Give a Minute
-    # which is the old name for this application.
     web.config.session_parameters['cookie_name'] = 'gam'
 
-    # Email handling.  Determine which email method is appropriate.
-    # Start with SES and fall-back to SMTP if both are enabled.
-    # If both SES and SMTP config options are not available, web.py
-    # uses sendmail by default.
+    # TODO:
+    # Start with SES and fall-back to SMTP if both are enabled
     if Config.get('email').get('smtp') and Config.get('email').get('aws_ses'):
         import boto
 
-        c = boto.connect_ses(
-          aws_access_key_id     = Config.get('email').get('aws_ses').get('access_key_id'),
-          aws_secret_access_key = Config.get('email').get('aws_ses').get('secret_access_key'))
-
-        # TODO: Need to add proper exception handling or at least error reporting!
-        # Use raw_email since this allows for attachments
-        sendQuota = c.get_send_quota()["GetSendQuotaResponse"]["GetSendQuotaResult"]
-        # Check if we're close to the smtp quota. 10 seems like a good number
-        sentLast24Hours = sendQuota.get('SentLast24Hours')
-        if sentLast24Hours is None:
-            sentLast24Hours = 0
-
-        sentLast24Hours = int(float(sentLast24Hours))
-        max24HourSend = sendQuota.get('Max24HourSend')
-        if max24HourSend is None:
-            max24HourSend = 0
-
-        max24HourSend = int(float(max24HourSend))
-        if sentLast24Hours >= max24HourSend- 10:
+        try:
+            c = boto.connect_ses(
+              aws_access_key_id     = Config.get('email').get('aws_ses').get('access_key_id'),
+              aws_secret_access_key = Config.get('email').get('aws_ses').get('secret_access_key'))
+    
+            # TODO: Need to add proper exception handling or at least error reporting!
+            # Use raw_email since this allows for attachments
+            sendQuota = c.get_send_quota()["GetSendQuotaResponse"]["GetSendQuotaResult"]
+            # Check if we're close to the smtp quota. 10 seems like a good number
+            sentLast24Hours = sendQuota.get('SentLast24Hours') 
+            if sentLast24Hours is None:
+                sentLast24Hours = 0
+            sentLast24Hours = int(float(sentLast24Hours))
+            max24HourSend = sendQuota.get('Max24HourSend')
+            if max24HourSend is None:
+                max24HourSend = 0
+            max24HourSend = int(float(max24HourSend))
+            if sentLast24Hours >= max24HourSend- 10:
+                enable_smtp()
+            else:
+                enable_aws_ses()
+                
+        except Exception, e:
+            log.info(e)
+            log.info("ERROR: Email falling back to SMTP")
             enable_smtp()
-        else:
-            enable_aws_ses()
-
-    # Enable the appropriate method if configured.
+        
+    # Set the email configurations:
     elif Config.get('email').get('smtp'):
         enable_smtp()
 
     elif Config.get('email').get('aws_ses'):
         enable_aws_ses()
+
+    if web.webapi.config.email_engine not in ['aws', 'smtp']:
+        try:
+            raise Exception("ERROR: No valid email engine has been configured. Please check your configurations")
+        except Exception, e:
+            log.info(e)
 
     # Add blitz.io route.  We put into new var because of an odd behaviors
     # where a changed ROUTES is not handled correctly.
@@ -177,16 +184,19 @@ if __name__ == "__main__":
     except KeyError:
         NEW_ROUTES = ROUTES
 
-    # Create web.py app with defined routes.
     app = web.application(NEW_ROUTES, globals())
-
-    # Create database session object.
     db = sessionDB()
-    # Handle sessions in the database.
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
     # Load SQLAlchemy
     app.add_processor(load_sqla)
 
-    # Finally, run the web.py app!
-    app.run()
+    # Finally, run the web.py app!    app.run()
+
+# Main logic for the CBU application.  Does some basic configuration,
+# then starts the web.py application.
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception, e:
+        log.info("ERROR: %s" % e)

@@ -8,10 +8,9 @@ from framework.emailer import Emailer
 from framework.log import log
 from framework.config import Config
 
-#from framework.config import *
-#from framework.emailer import *
+## EMAIL FUNCTIONS
 
-
+# send email to invited users
 def emailInvite(email, inviterName, projectId, title, description, message = None):
     """
     Send invitation email.  Using template: project_invite
@@ -378,17 +377,13 @@ def emailIdeaConfirmation(email, responseEmail, locationId):
     subject = "Thanks for submitting an idea to Change by Us!"
     searchLink = "%ssearch?location_id=%s" % (host, locationId)
     createLink = "%screate" % host
-    template_values = {
-        'search_link': searchLink,
-        'create_link': createLink,
-        'response_email': emailAccount['from_email'],
-        'config': Config.get_all()
-    }
     
-    # Render email body.
-    body = Emailer.render('email/idea_confirmation', template_values, suffix = 'txt')
-
-    # Send email.
+    body = Emailer.render('email/idea_confirmation',
+                        {'search_link':searchLink,
+                         'create_link':createLink,
+                         'response_email':emailAccount['from_email']},
+                        suffix = 'txt')
+                        
     try:
         return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
             from_address = emailAccount['from_email'])

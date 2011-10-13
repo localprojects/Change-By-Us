@@ -5,6 +5,7 @@ import os
 import logging
 import __main__
 import logging.handlers
+from config import Config
 
 # Attempt to import lib from web, but not necessary
 try:
@@ -54,8 +55,8 @@ log = logging.getLogger(name)
 # Set log level to Debug (TODO: This should be pulled from config file)
 log.setLevel(logging.DEBUG)
 
-# Create new log handler and set logs to rotate out at midnight
-logfile = '%s/../logs/%s.log' % (os.path.dirname(os.path.realpath(__file__)), name)
+logfile = Config.get('logfile') # %s/../logs/%s.log' % (os.path.dirname(os.path.realpath(__file__)), name)
+
 fh = logging.handlers.TimedRotatingFileHandler(logfile, 'midnight')
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)

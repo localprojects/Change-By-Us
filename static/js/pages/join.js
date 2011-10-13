@@ -16,6 +16,11 @@ app_page.features.push(function(app){
 		$t.addClass('has-been-clicked').siblings().addClass('cannot-be-clicked');
 	});
 	
+	tc.jQ('.toc-link').bind('click',function(e){
+	    window.open(tc.jQ(this).attr('href'));
+	    return false;
+	})
+	
 	app.components.merlin = new tc.merlin(app,{
 		dom:tc.jQ('form.merlin'),
 		progress_element:tc.jQ('.merlin-progress'),
@@ -69,7 +74,7 @@ app_page.features.push(function(app){
 					},
 					email:{
 						selector:'input.email',
-						validators:['max-128','min-3','email','required'],
+						validators:['max-254','min-6','email','required'],
 						hint:''
 					},
 					password:{
@@ -140,7 +145,7 @@ app_page.features.push(function(app){
 					},
 					email:{
 						selector:'input.email',
-						validators:['max-32','min-3','email','required'],
+						validators:['max-254','min-6','email','required'],
 						hint:''
 					},
 					tos_email:{
@@ -233,7 +238,7 @@ app_page.features.push(function(app){
 				inputs:{
 					email:{
 						selector:'input.email-alt',
-						validators:['min-3','max-32','email'],
+						validators:['min-6','max-254','email'],
 						hint:''
 					},
 					tos_email:{
@@ -396,7 +401,7 @@ app_page.features.push(function(app){
 				prev_step:null,
 				next_step:null,
 				init:function(merlin,dom){
-					dom.find('strong.email').text(merlin.options.data.email);
+				    tc.jQ('strong.email').text(merlin.options.data.email);
 					tc.jQ.ajax({
 						type:'POST',
 						url:merlin.app.app_page.data.account_create_url,

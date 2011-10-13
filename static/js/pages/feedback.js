@@ -28,12 +28,12 @@ app_page.features.push(function(app){
 					},
 					name:{
 						selector:'input.name',
-						validators:['min-3,max-32','required'],
+						validators:['min-3,max-100','required'],
 						hint:''
 					},
 					email:{
 						selector:'input.email',
-						validators:['min-3','max-32','email','required'],
+						validators:['min-6','max-254','email','required'],
 						hint:''
 					},
 					text:{

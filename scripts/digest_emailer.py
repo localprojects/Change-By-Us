@@ -24,6 +24,8 @@ import boto
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from optparse import OptionParser, IndentedHelpFormatter  # for command-line menu
+import time     # for sleeping
+import re
 
 # Assuming we start in the scripts folder, we need
 # to traverse up for everything in our project
@@ -115,16 +117,37 @@ class Mailable():
         web.webapi.config.aws_secret_access_key = ses_config.get('secret_access_key')
 
     def htmlify(self, body):
+        body = re.sub('\n', '<br/>\n', body)
         return "<html><head></head><body>%s</body></html>" % body 
     
-    def sendEmail(self, to=None, recipients=None, subject=None, body=None):
-        return Emailer.send(addresses=to,
+    def sendEmail(self, to=None, recipients=None, subject=None, body=None, maxRetries=10):
+        complete = False
+        failNum = 0
+        
+        while not complete:
+            complete = Emailer.send(addresses=to,
                         subject=subject,
-                        text=body,
-                        html=self.htmlify(body),
+                        text=None,
+                        html=body,
                         from_name = self.MailerSettings.get('FromName'),
                         from_address = self.MailerSettings.get('FromEmail'),
                         bcc=recipients)
+                        
+            if (not complete):
+                if (failNum < maxRetries):
+                    failNum += 1
+                    
+                    # Most probably we got an SES error, which means we should wait and retry
+                    time.sleep(1)
+                    pass
+                else:
+                    complete = True
+                    logging.error("Failed to send digest email '%s'. Quit after %s tries." % (subject, str(maxRetries)))
+                    
+                    return False
+        
+        return True
+        
 
         
 class Configurable():
@@ -334,11 +357,11 @@ select
     u.last_name,
     u.image_id,
     u.email_notification,
-    u.created_datetime,
+    pu.created_datetime,
     pu.project_id
 from user u 
 join project__user as pu on u.user_id = pu.user_id
-where u.created_datetime between $fromDate and $toDate
+where pu.created_datetime between $fromDate and $toDate
 order by pu.project_id, u.created_datetime desc
 """
         params = {'fromDate':self.FromDate, 'toDate':self.ToDate}
@@ -417,6 +440,9 @@ order by pu.project_id, u.created_datetime desc
 
             project_feed[projId]['recipients'] = recipients_by_project.get(projId)
             project_feed[projId]['title'] = projects.get(projId).get('title')
+            project_feed[projId]['num_members'] = projects.get(projId).get('num_members')
+            project_feed[projId]['active_goal_description'] = projects.get(projId).get('active_goal_description')
+
         return project_feed
 
 
@@ -437,7 +463,7 @@ order by pu.project_id, u.created_datetime desc
 
         resp = self.getDataToCreateDigest()
         base_url = self.Config.get('default_host')
-        member_profile_url = "%s/member/#" % base_url
+        member_profile_url = "%suseraccount/" % base_url
         digests = {}
         for projId in resp.keys():
             # Ignore all empty projects, and projects that have no recipients
@@ -452,34 +478,28 @@ order by pu.project_id, u.created_datetime desc
 
             digests[projId]['recipients'] = resp[projId].get('recipients')
             digests[projId]['title'] = resp[projId].get('title')
-            digests[projId]['link'] = "<a href='%s/project/%s'>%s</a>" % (self.Config.get('default_host'), projId, resp[projId].get('title'))
+            digests[projId]['project_id'] = projId
+            digests[projId]['num_members'] = resp[projId].get('num_members')
+            digests[projId]['active_goal_description'] = resp[projId].get('active_goal_description')
+            digests[projId]['link'] = "<a href='%sproject/%s'>%s</a>" % (self.Config.get('default_host'), projId, resp[projId].get('title'))
 
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
-                for user in resp[projId].get('members'):
-                    username = (user.first_name + ' ' + user.last_name[1] + '.').title()
-                    digests[projId]['members'].append("<a href='%s%s'>%s</a>" % (member_profile_url, user.user_id, username))
+                digests[projId]['members'] = resp[projId].get('members')
             
             if resp[projId].get('messages') is not None and len(resp[projId].get('messages')) > 0:
-                for message in resp[projId].get('messages'):
-                    digests[projId]['messages'].append(self._formatMemberMessage(message))
+                digests[projId]['messages'] = resp[projId].get('messages')
 
         # Store the formatted body
         for digest in digests:
             currentDigest = digests.get(digest)
             currentDigest['subject'] = "%s%s\n\n" % (self.Config.get('email').get('digest').get('digest_subject_prefix'), currentDigest.get('title'))
-            body = ""
-            body += currentDigest.get('link') + "\n\n"
-            if currentDigest.get('members'):
-                body += "Recent Members:\n\n"
-                body += '\n'.join(currentDigest.get('members'))
-                body += "\n\n\n"
-            if currentDigest.get('messages'):
-                body += "Recent Messages:\n\n"
-                body += '\n'.join(currentDigest.get('messages'))
-                body += "\n\n\n"
-            currentDigest['body'] = body
+            currentDigest['body'] = Emailer.render('email/digest', 
+                                                   {'digest':currentDigest,
+                                                   'baseUrl':base_url,
+                                                   'contactEmail':self.Config.get('email').get('from_email')})
 
         # Store it for later consumption
+        logging.info('Created digests (in DB) for %s projects' % len(digests.keys()))
         self.Digests = digests
         return True
 
@@ -502,9 +522,12 @@ order by pu.project_id, u.created_datetime desc
         sql = """
 select distinct
     pm.project_id,
-    p.title
+    p.title,
+    pg.description as active_goal_description,
+    (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members 
 from project_message pm
-    join project p on pm.project_id = p.project_id
+    join project p on pm.project_id = p.project_id and p.is_active = 1
+    left join project_goal pg on pg.project_id = p.project_id and pg.is_featured = 1 and pg.is_active = 1
 where pm.message_type='member_comment'
     and (pm.created_datetime between $fromDate and $toDate or pm.project_id in $projects)
     order by pm.project_id
@@ -526,6 +549,11 @@ where pm.message_type='member_comment'
         Email out all the digests that we find, based on what's in self.Digests
         self.Digests should be an array of all the digests that need to be sent out
         """
+        if (self.Config.get('email').get('digest').get('max_retries')):
+            maxRetries = int(self.Config.get('email').get('digest').get('max_retries'))
+        else:
+            maxRetries = 10        
+        
         for digest in self.Digests:
             currentDigest = None
             if type(digest) == dict:
@@ -538,12 +566,14 @@ where pm.message_type='member_comment'
             recipients = currentDigest.get('recipients').split(',')
 
             if self.Config.get('dev'):
-                body += "Recipients are " + ','.join(currentDigest.get('recipients')) + "\n\n"
-                recipients = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
+                admins = self.Config.get('email').get('digest').get('digest_debug_recipients').split(',')
+                recipients.extend(admins)
+                body += "\n\nDevelopment Information:\nRecipients are: %s\n" % ', '.join(recipients)
 
-            self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body)
+            logging.info('Digest recipients: %s' % recipients)
+            isSent = self.sendEmail(to=self.Config.get('email').get('from_email'), recipients=recipients, subject=subject, body=body, maxRetries=maxRetries)
             
-            if (digest.get('digest_id')):
+            if (digest.get('digest_id') and isSent):
                 # Means that we've been called from a database record
                 # could also have done digest.__class__.__name__ == 'Storage'
                 self.setDigestAsSent(digest.digest_id)

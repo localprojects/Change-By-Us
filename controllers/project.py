@@ -333,7 +333,7 @@ class Project(Controller):
             return False
         else:
             if (mProject.addResourceToProject(self.db, projectId, projectResourceId)):
-                # TODO do we need to get the whole project here?
+                # TODO do we need to get the whole project here?    
                 project = mProject.Project(self.db, projectId)
                 res = mProjectResource.ProjectResource(self.db, projectResourceId)
 
@@ -468,7 +468,7 @@ class Project(Controller):
     def addKeywords(self):
         projectId = self.request('project_id')
         keywords = self.request('text')
-
+                
         if (projectId and keywords):
             return mProject.addKeywords(self.db, projectId, keywords.split(','))
         else:

@@ -614,9 +614,10 @@ def addKeywords(db, projectId, newKeywords):
 
             if (len(addKeywords) > 0):
                 keywords = ' '.join(keywords + addKeywords)
+        
                 sql = "update project set keywords = $keywords, num_flags = num_flags + $flags where project_id = $projectId"
                 db.query(sql, {'projectId':projectId, 'keywords':keywords, 'flags':numFlags})
-
+                    
             # return true whether keyword exists or not
             return True
         else:
@@ -636,13 +637,14 @@ def removeKeyword(db, projectId, keyword):
             keywords = data[0].keywords.split()
 
             if (keyword in keywords):
+                i = keywords.index(keyword) # save the index to return for proper client side removal
                 keywords.remove(keyword)
-
+                
                 newKeywords = ' '.join(keywords)
 
                 sql = "update project set keywords = $keywords where project_id = $projectId"
                 db.query(sql, {'projectId':projectId, 'keywords':newKeywords})
-
+                
             # return true whether keyword exists or not
             return True
         else:
