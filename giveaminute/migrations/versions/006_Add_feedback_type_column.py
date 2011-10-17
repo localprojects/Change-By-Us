@@ -14,7 +14,11 @@ def upgrade(migrate_engine):
     site_feedback = Table('site_feedback', meta, autoload=True)
 
     # Add column
-    create_column(Column('feedback_type', String(100), nullable=True), site_feedback)
+    try:
+        create_column(Column('feedback_type', String(100), nullable=True), site_feedback)
+    except Exception, e:
+        # The column may already exist, since it's set as an enum in some cases
+        print "Error when adding column site_feedback.feedback_type: %s. Ignoring" % e
 
 
 def downgrade(migrate_engine):
@@ -24,4 +28,8 @@ def downgrade(migrate_engine):
     site_feedback = Table('site_feedback', meta, autoload=True)
 
     # Remove the column
-    drop_column('feedback_type', site_feedback)
+    try:
+        drop_column('feedback_type', site_feedback)
+    except Exception, e:
+        # The column may already exist, since it's set as an enum in some cases
+        print "Error when removing column site_feedback.feedback_type: %s. Ignoring" % e
