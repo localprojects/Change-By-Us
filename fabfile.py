@@ -190,11 +190,10 @@ def common_config(func):
         env.app_path = '%(deploy_to)s/%(application)s' % env
         env.current_path = "%(app_path)s/current" % env
         env.releases_path = "%(app_path)s/releases" % env
+        env.shared_path = "%(app_path)s/shared" % env
+        env.run_path = "%(app_path)s/run" % env
         env.previous_path = "%(app_path)s/previous" % env
         env.next_path = "%(app_path)s/next" % env
-        
-        env.shared_path = "%(app_path)s/shared" % env
-        env.run_path = "%(app_path)s/var/run" % env
 
         # Configuration Template Files and config files
         env.etc_path = '%(app_path)s/etc' % env
@@ -326,7 +325,7 @@ def create_config_files():
         raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
 
     # Make sure that the code is the latest in the build_path
-    local('cd %(build_path)s && git fetch origin && git checkout %(branch)s' % env)
+    local('cd %(build_path)s && git fetch origin && git pull origin && git checkout %(branch)s' % env)
     for item in env.config_files:
         if not os.path.exists(item.get('local_config_template')):
             raise Exception("Unable to find configuration template file (%s) to create config from" % item.get('local_config_template'))
@@ -614,7 +613,7 @@ def bundle_code():
             "Create an archive from the current Git master branch and upload it"
             local('git clone --depth 0 %(repository)s %(build_path)s' % env)
             
-        local('cd %(build_path)s && git clean -d -x -f && git fetch origin && git checkout %(branch)s' % env)
+        local('cd %(build_path)s && git clean -d -x -f && git pull origin && git checkout %(branch)s' % env)
         env.release = local('cd %(build_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
         # Save the revision information to a file for post-deployment info
         local('cd %(build_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
