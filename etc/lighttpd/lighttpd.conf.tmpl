@@ -1,46 +1,69 @@
+#--------------------------------------------------------------------
 #
-# lighttpd configuration file
+# This is a sample configuration file for the Lighttpd server for
+# Give A Minute / Change By Us
 #
-# This file is interpolated with the fabric script. Any changes (addition of variables)
-# should be reflected in the rcfile.sample within the project
+# Instructions:
+#   * NEVER NEVER NEVER store passwords or keys in this file. This is a EXAMPLE!!
+#   * Copy this file to lighttpd on the production / deployed server
+#   * In your copy, change all <XXXX> values to what is specific to your server
+#   * diff, opendiff, diffmerge, windiff are your friends
+#   * If on Mac, uncomment "server.event-handler" line
 #
+#--------------------------------------------------------------------
 
-#------------------------------------------------
-# Variables:
-#------------------------------------------------
-var.pidfile = "%(app_path)s/run/lighttpd.pid"
-var.docroot = "%(app_path)s/current"
-var.errorlog = "%(log_path)s/error.log"
-var.accesslog =  "%(log_path)s/access.log"
-var.binpath  = "%(app_path)s/current/main.py"
-var.cachedir = "%(app_path)s/run/cache"
-var.serverport = %(webserver_port)s
-var.user = "%(webserver_user)s"
-var.groupname = "%(webserver_group)s"
-var.servername = "%(webserver_name)s"
 
-# SSL variables:
-# var.ssl_pemfile = "%(app_path)s/etc/lighttpd/ssl/changeby.us.pem"
-# var.ssl_cafile = "%(app_path)s/etc/lighttpd/ssl/changeby.us.crt"
-
-#----- /variables -----
-
+# Location and User
+#--------------------------------------------------------------------
+# Where specific directories are and what user runs this.
 #
-# SSL Configuration, only for port 443
-# Keep in mind that SSL is now managed directly by the ELB,
-# so this is only for cases when you're NOT using the ELB!
-#
-# $SERVER["socket"] == "%(webserver_name)s:%(webserver_sslport)s" {
-#    ssl.engine = "enable"
-#    ssl.pemfile = var.ssl_pemfile
-#    ssl.ca-file = var.ssl_cafile
-#    server.name = var.servername
-#    server.document-root = var.docroot
-#    server.errorlog = var.errorlog
-#    accesslog.filename = var.accesslog
-# }
+#--------------------------------------------------------------------
+var.username = "<YOUR_USERNAME>"
+var.groupname = "<YOUR_GROUP>"
 
+
+#--------------------------------------------------------------------
+# When running locally, this should work fine, but depending on
+# the environment, this may need to be absolute paths.
+#
+#--------------------------------------------------------------------
+var.pidfile = "./run/lighttpd.pid"
+var.docroot = "./"
+var.errorlog = "./logs/main.log"
+var.accesslog = "./logs/access.log"
+var.binpath  = "./main.py"
+var.cachedir = "./run/cache"
+
+
+# Mac specific even handling
+#--------------------------------------------------------------------
+# Enable the following line for OSX. Otherwise leave it disabled.
+#
+#--------------------------------------------------------------------
+# server.event-handler = "freebsd-kqueue"
+
+
+# Server settings
+#--------------------------------------------------------------------
+# Various server settings.
+#
+#--------------------------------------------------------------------
+server.port                = 8080
+server.pid-file            = var.pidfile
+server.username            = var.username
+server.groupname           = var.groupname
+server.document-root       = var.docroot
+server.errorlog            = var.errorlog
+accesslog.filename         = var.accesslog
+
+
+# Server modules
+#--------------------------------------------------------------------
+# Modules needed for server
+#
+#--------------------------------------------------------------------
 server.modules = (
+    "mod_expire",
     "mod_rewrite",
     "mod_alias",
     "mod_access",
@@ -48,38 +71,67 @@ server.modules = (
     "mod_accesslog",
     "mod_auth",
     "mod_compress"
+    )
+
+
+# Fast CGI settings
+#--------------------------------------------------------------------
+# Settings for Fast CGI.
+#
+#--------------------------------------------------------------------
+fastcgi.server = ("/main.py" =>
+    ((  "socket" => "/tmp/fastcgi.socket",
+        "bin-path" => var.binpath,
+        "max-procs" => 1,
+        "bin-environment" => (
+            "REAL_SCRIPT_NAME" => ""
+        ),
+        "check-local" => "disable"
+    ))
 )
 
-server.port                = var.serverport
-server.pid-file            = var.pidfile
-server.username            = var.user
-server.groupname           = var.groupname
-server.document-root       = var.docroot
-server.errorlog            = var.errorlog
-accesslog.filename         = var.accesslog
-index-file.names = ("index.php", "index.html", "index.htm", "default.htm")
 
-#enable static file compression
+# Authentication
+#--------------------------------------------------------------------
+# Enable the following if web server level authentication is
+# desired.
+#
+#--------------------------------------------------------------------
+# auth.debug = 2
+# auth.backend = "htpasswd"
+# auth.backend.htpasswd.userfile = "<AUTH_FILE>" # something/.lighttpd.htpasswd
+# auth.require = ("/" => ("method" => "basic",
+#      "realm" => "Password protected area",
+#      "require" => "valid-user")
+# )
+
+
+# File Compression
+#--------------------------------------------------------------------
+# Enable file compression
+#
+#--------------------------------------------------------------------
 compress.allowed-encodings = ("bzip2", "gzip", "deflate")
 compress.cache-dir = var.cachedir
 compress.filetype = ("text/plain", "text/html", "text/javascript", "text/css", "text/xml")
 
-# Enable the following line for OSX. Otherwise leave it disabled.
-# server.event-handler = "freebsd-kqueue" # needed on OS X
+# Expires Headers
+#--------------------------------------------------------------------
+# Set a long cache expiration for static content
+#
+#--------------------------------------------------------------------
+$HTTP["url"] =~ "^/static/" {
+     expire.url = ( "" => "access 1 years" )
+}
 
+# File handling
+#--------------------------------------------------------------------
+# File settings
+#
+#--------------------------------------------------------------------
+index-file.names = ("index.php", "index.html", "index.htm", "default.htm")
 static-file.exclude-extensions = (".php", ".pl", ".fcgi", ".py")
 url.access-deny = ("~", ".inc", ".log", ".yaml", ".conf")
-
-fastcgi.server = ("/main.py" =>
-                    ((  "socket" => "/tmp/fastcgi.socket-%(webserver_port)s",
-                        "bin-path" => var.binpath,
-                        "max-procs" => 1,
-                        "bin-environment" => (
-                            "REAL_SCRIPT_NAME" => ""
-                        ),
-                        "check-local" => "disable"
-                    ))
-                )
 
 $HTTP["url"] =~ "\.pdf$" {
     server.range-requests = "disable"
@@ -99,7 +151,7 @@ url.rewrite-once = (
     "^/(.*)$" => "/main.py/$1"
     )
 
-mimetype.assign             = (
+mimetype.assign = (
   ".pdf"          =>      "application/pdf",
   ".sig"          =>      "application/pgp-signature",
   ".spl"          =>      "application/futuresplash",
@@ -154,4 +206,4 @@ mimetype.assign             = (
   ".tar.bz2"      =>      "application/x-bzip-compressed-tar",
   # default mime type
   ""              =>      "application/octet-stream",
- )
+)

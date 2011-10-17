@@ -3,6 +3,11 @@ from fabric.contrib import files as files
 import os
 import time
 import re
+from boto.ec2.connection import EC2Connection
+from boto.ec2.autoscale import AutoScaleConnection
+from boto.ec2.autoscale import LaunchConfiguration
+from boto.ec2.autoscale import AutoScalingGroup
+# from boto.ec2.autoscale import Trigger
 
 """
 ------------------------------
@@ -31,6 +36,8 @@ COOKBOOK:
 ------------------------------
     The general format of a command is:
         fab --config=<rcfile> <environment> <tasks ...>
+        environment : the environment to launch. This is mandatory.
+                      value is one of dev, prod, demo
 
     Setup the initial system with prerequisites
         fab --config=rcfile.dev dev setup_system
@@ -72,27 +79,33 @@ COOKBOOK:
 # GLOBALS
 DEBUG = True
 
-# Expand user home paths if necessary, which is only relevant to some variables
-env.local_path = os.path.expanduser(env.local_path)
+# WHether to clean the build_path folder before the build. This is set
+# using the clean_build option
+env.clean_build = False
+
+# SSH Key configuration
 env.key_filename = os.path.expanduser(env.key_filename)
+env.ssh_port = 48022
 
 # We need to make the hosts into a list
 env.hosts = env.hosts.split(',')
 
-# Interpolate the local_path if necessary
-env.local_path = env.local_path % env
+# Interpolate the build_path if necessary
+env.build_path = env.build_path % env
+# if len(env.build_path) == 0 or not os.path.exists(env.build_path):
+#     raise Exception("Option build_path (%(build_path)s is incorrect, or the target folder does not exist. Please correct it before proceeding" % env)
+
 if not env.get('home_path'):
     env.home_path = "/home"
 
 # Roles for different targets clusters
 env.roledefs = {
    'web': env.hosts,
-   'database': [],
 }
 
 # Miscellaneous options
 env.vars = {}
-# path = local path where interpolated file is stored temporarily
+
 # Params for config_files are:
 #   filename        : post-interpolated filename on the remote host
 #   templatename    : name of the template file that interpolation is performed on
@@ -131,6 +144,21 @@ env.protected_folders = []
 # etc_path to this list!
 env.template_paths = []
 
+#------------------------------------------------
+# AWS related tasks require some configurations
+#------------------------------------------------
+env.ec2Conn = EC2Connection(env.aws_access_key_id, env.aws_secret_access_key)
+env.asConn  = AutoScaleConnection(env.aws_access_key_id, env.aws_secret_access_key)
+
+# Production Alias is the alias/tag that all production instances use
+env.production_alias = '911memorial_names_'
+
+# Security groups that are given access to newly generated production AMIs
+env.aws = { 'security_groups': ['ns11_multiplatform_prod'],
+            'key_pair': 'ns11_0630', 'as_group': 'n11asgroup', 
+            'balancers': ['n11loadbalancer'], 'instance_type':'m1.large',
+            'availability_zones': ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d'] }
+            # 'min_size': 3, 'max_size': 12 }
 
 #----- Decorator(s) -----
 def common_config(func):
@@ -159,10 +187,9 @@ def common_config(func):
         env.system_paths = ['var/log', 'etc/%(webserver)s' % env, 'run', 'releases', 'shared']
 
         # The scratch/work space for putting temporary stuff while we deploy from local dev
-        env.tmp_path = "/tmp/%(application)s/releases" % env
         env.app_path = '%(deploy_to)s/%(application)s' % env
-        
         env.current_path = "%(app_path)s/current" % env
+        env.releases_path = "%(app_path)s/releases" % env
         env.previous_path = "%(app_path)s/previous" % env
         env.next_path = "%(app_path)s/next" % env
         
@@ -172,34 +199,37 @@ def common_config(func):
         # Configuration Template Files and config files
         env.etc_path = '%(app_path)s/etc' % env
         env.log_path = '%(app_path)s/var/log' % env
-
-        # Some vars may need to be interpolated after we have all the data:
-        # TODO: Wonder if this can be done globally (ie on all vars)
-        env.script_working_path = env.script_working_path % env
-        env.webserver_user = env.webserver_user % env
-        env.webserver_docroot = env.webserver_docroot % env
-        env.local_path = env.local_path % env
-        env.digest_log_file = env.digest_log_file % env
-        env.logfile = env.logfile % env
-        
-        env.local_etc_path = '%(local_path)s/etc' % env
+        env.local_etc_path = '%(build_path)s/etc' % env
 
         # Todo: these might need to be moved to a common location
         for conf in env.config_files:
             conf['local_config_template'] = '%s/%s' % (env.local_etc_path, conf.get('templatename'))
-            conf['local_config_file'] = '%s/%s/%s' % (env.local_path, conf.get('path'), conf.get('filename'))
-
-        # Todo: these might need to be moved to a common location
-        # for conf in env.config_files:
-        #    conf['local_config_template'] = '%s/%s' % (env.local_etc_path, conf.get('templatename'))
-        #    conf['local_config_file'] = '%s/%s/%s' % (env.local_path, conf.get('path'), conf.get('filename'))
-
+            conf['local_config_file'] = '%s/%s/%s' % (env.build_path, conf.get('path'), conf.get('filename'))
+        
         # Each webservec can have its own set of configurations
         # Eg. apache, lighttpd, etc.
         env.webserver_template = '%(local_etc_path)s/%(webserver)s/%(application)s.conf.sample' % env
         env.webserver_file = '%(local_etc_path)s/%(webserver)s/%(application)s.conf' % env
         
+        # Some vars may need to be interpolated after we have all the data:
+        # TODO: Wonder if this can be done globally (ie on all vars)
+        for item in env:
+            if type(env[item]) == str:
+                # We may have to recursively keep interpolating
+                while '%(' in env[item]:
+                    env[item] = env[item] % env
+                debug("Interpolated %s to %s" % (item, env[item]))
 
+        # for item in ['deploy_to', 'build_path', 'script_working_path', 'media_store_path', 'webserver_docroot', 'media_url',
+        #              'app_path', 'current_path', 'shared_path', 'run_path', 'log_path', 'local_etc_path', ]:
+        #     # We may have to recursively keep interpolating
+        #     while '%(' in env[item]:
+        #         env[item] = env[item] % env
+        #     print "Interpolated %s to %s" % (item, env[item])
+
+        # Template paths are the folders to be interpolated in addition to etc
+        env.template_paths = [x % env for x in env.template_paths]
+        
     return wrapper
 
 def get_remote_host_info():
@@ -272,6 +302,12 @@ def dev():
         env.rcfile = 'rcfile.%s' % env.settings
         debug("Using default rcfile since one was not provided with --config option:" % env.rcfile)
 
+def clean_build():
+    """
+    Force clean out the build_path folder prior to building
+    """
+    env.clean_build = True
+
 def dump_env():
     """
     Test function for dumping all current environment variables
@@ -289,6 +325,8 @@ def create_config_files():
     if not os.path.exists(env.rcfile):
         raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
 
+    # Make sure that the code is the latest in the build_path
+    local('cd %(build_path)s && git fetch origin && git checkout %(branch)s' % env)
     for item in env.config_files:
         if not os.path.exists(item.get('local_config_template')):
             raise Exception("Unable to find configuration template file (%s) to create config from" % item.get('local_config_template'))
@@ -304,27 +342,29 @@ def upload_config_files():
     for item in env.config_files:
         put(item.get('local_config_file'), env.shared_path)
 
-def create_webserver_conf():
-    if not os.path.exists(env.webserver_template):
-        raise Exception("Unable to find configuration template file (%(webserver_template)s) to create config from" % env)
-    infile = open(env.webserver_template, 'r')
-    outfile = open(env.webserver_file, 'w')
-    outfile.write(infile.read() % env)
-    outfile.close()
-    infile.close()
+@roles('web')
+def deploy_app_configurations():
+    """
+    Interpolate templates into final config files and deploy to targets, but do NOT restart webserver
+    """
+    create_config_files()
+    upload_config_files()
 
-def upload_webserver_conf():
-    put(env.webserver_file, "%(etc_path)s/%(webserver)s" % env)
+    _upload_interpolated_files(_interpolate_templates())
+    
+    # Load the cronfile for the current user
+    if files.exists('%(shared_path)s/etc/cron/cron_table' % env):
+        run('crontab %(shared_path)s/etc/cron/cron_table' % env)
+    
 
 @roles('web')
 def deploy_configurations():
     """
-    Interpolate templates into final config files and deploy to targets
+    Perform deploy_app_configurations, create the media-link for the web apps, and restart webserver
     """
-    # create_config_files()
-    # upload_config_files()
-    
-    _upload_interpolated_files(_interpolate_templates())
+    deploy_app_configurations()
+    # Serve the media folder if necessary
+    # _create_media_link()
     restart_webserver()
     
 #---- /create-config-files ----------------------
@@ -335,15 +375,16 @@ def create_local_configs():
     """
     Create all configuration files in the local environment. Useful only for development.
     """
+    print "Local configuration files will be generated in %(build_path)s" % env
     create_config_files()
     _interpolate_templates()
     
 def _interpolate_templates():
     """
-    Translate the templates into a "real" files.
+    Translate template files to replace all python string-substitution points
     
     Should never be called directly, since the purpose of this function is
-    to perform the first step of cron-file deployment
+    to perform the first step of config-file deployment
     """
     if not os.path.exists(env.rcfile):
         raise Exception("%(rcfile)s does not exist. See rcfile.sample and run fab --config=rcfile.name <commands>!" % env)
@@ -385,7 +426,7 @@ def _interpolate_templates():
 
 def _upload_interpolated_files(files):
     """ 
-    Uploads cron files after interpolation 
+    Uploads template files after interpolation 
     
     Expects to have interpolation run initially, so this function should 
     not be called directly.
@@ -404,11 +445,11 @@ def _upload_interpolated_files(files):
                 if re.search(tmplpath, filename):
                     if re.match(env.local_etc_path, tmplpath):
                         env.temp = filename.split(env.local_etc_path)[1]
-                    elif re.match(env.local_path, tmplpath):
-                        # We want everything except the local_path
-                        env.temp = filename.split(env.local_path)[1]
+                    elif re.match(env.build_path, tmplpath):
+                        # We want everything except the build_path
+                        env.temp = filename.split(env.build_path)[1]
                     else:
-                        raise Exception("Unknown root path - not etc or local_path. Please check your configs!")
+                        raise Exception("Unknown root path - not etc or build_path. Please check your configs!")
                     
                     # Now that we found something, we can move on    
                     break
@@ -418,7 +459,7 @@ def _upload_interpolated_files(files):
             # Template file are either in the etc/ or under the current/
             if re.match(env.local_etc_path, filename):
                 temp_path.insert(0, env.etc_path)
-            elif re.match(env.local_path, filename):
+            elif re.match(env.build_path, filename):
                 temp_path.insert(0, env.current_path)
             
             remote_path = os.path.join(*temp_path[:-1])
@@ -432,16 +473,32 @@ def _upload_interpolated_files(files):
             if re.match('/cron', env.temp) or re.match('/logrotate.d', env.temp):
                 # Set the cron script to be executable
                 run('chmod +x %s' % remote_file)
-
-                # Symlink the cron job to the correct place
-                temp_path = list(base)
-                temp_path.insert(0, '/etc')
-                abs_etc_path = os.path.join(*temp_path[:-1])    # assuming the last index is the file
-                abs_etc_file = os.path.join(*temp_path)
-                # We want the target path to exist, but not the target file
-                sudo_as('if [ -d %s ];then if [ ! -e %s ];then sudo ln -snf %s %s; else echo "Target file already exists! Will not overwrite"; fi; else echo "Target path is incorrect"; fi' % (abs_etc_path, abs_etc_file, remote_file, abs_etc_file))
                 
+                # # Symlink the cron job to the correct place
+                # temp_path = list(base)
+                # temp_path.insert(0, '/etc')
+                # abs_etc_path = os.path.join(*temp_path[:-1])    # assuming the last index is the file
+                # abs_etc_file = os.path.join(*temp_path)
+                # # We want the target path to exist, but not the target file
+                # sudo_as('if [ -d %s ];then if [ ! -e %s ];then sudo ln -snf %s %s; else echo "Target file already exists! Will not overwrite"; fi; else echo "Target path is incorrect"; fi' % (abs_etc_path, abs_etc_file, remote_file, abs_etc_file))
+   
+def _create_media_link():
+    """
+    Create symlink for local media path as a URL in web docroot
+    """
 
+    if env.get('serve_media') and env.serve_media == "True":
+        src = env.media_store_path % env
+        
+        if re.match('s3://', env.media_store_path):
+            raise Exception("Cannot create a media link to an S3 resource. Terminating due to risk of other misconfigurations.")
+        link = "%(webserver_docroot)s/_store" % env
+        with settings(warn_only=True):
+            if files.exists(src):
+                run('ln -s %s %s' % (src, link))
+    else:
+        print "This environment does not need media to be served"
+        
 #----- /configuration related tasks -----
 
 """
@@ -451,19 +508,20 @@ def stable():
     """
     Work on stable branch.
     """
-    env.branch = 'stable'
+    branch('stable')
 
 def master():
     """
     Work on development branch.
     """
-    env.branch = 'master'
+    branch('master')
 
 def branch(branch_name):
     """
     Work on any specified branch.
     """
     env.branch = branch_name
+    print "Branch has been manually overridden to %(branch)s" % env
 
 """
 SETUP AND INITIALIZATION TASKS
@@ -486,8 +544,7 @@ def setup_application():
     """
     Set up the application path and all the application specific things
     """
-    require('settings', provided_by=[dev, demo])
-    # require('branch', provided_by=[stable, master, branch])
+    require('branch')
 
     setup_directories()
     deploy_configurations()
@@ -515,39 +572,57 @@ def bundle_code():
     """
     Pull the latest code from the SCM and bundle for deployment
     """
-    env.release = time.strftime('%Y%m%d%H%M%S')
+    # env.release = time.strftime('%Y%m%d%H%M%S')
 
     # We want the parent paths to the temporary location ...
-    if not os.path.exists(env.tmp_path):
-        os.makedirs(env.tmp_path)
+    if not env.get('build_path'):
+        raise "Need a build_path to build code to"
+    if not os.path.exists(env.build_path):
+        os.makedirs(env.build_path)
 
-    # .. but not the actual releases path since that's where we'll put new code
-    local('rm -rf %(tmp_path)s' % env)
+    # And if the code path already exists, let's update it with the latest code
+    # Unless we've been asked to do a clean-build in which case remove all old content
+    if env.clean_build:
+        local('rm -rf %(build_path)s' % env)
 
     if env.scm == 'git':
-        "Create an archive from the current Git master branch and upload it"
-        local('git clone --depth 0 %(repository)s %(tmp_path)s' % env)
-        local('cd %(tmp_path)s && git pull origin %(branch)s && git checkout %(branch)s' % env)
-        local('cd %(tmp_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
-        env.release = local('cd %(tmp_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
+        if not os.path.exists(env.build_path):
+            "Create an archive from the current Git master branch and upload it"
+            local('git clone --depth 0 %(repository)s %(build_path)s' % env)
+        else:
+            local('cd %(build_path)s && if [ $(git config --get remote.origin.url) != "%(repository)s" ];then echo "Existing repository is not the one requested. Deleting build path."; rm -rf %(build_path)s; fi' % env)
+            
+        try:
+            local('cd %(build_path)s && git clean -d -x -f' % env)
+        except:
+            local('rm -rf %(build_path)s' % env)
+            "Create an archive from the current Git master branch and upload it"
+            local('git clone --depth 0 %(repository)s %(build_path)s' % env)
+            
+        local('cd %(build_path)s && git clean -d -x -f && git fetch origin && git checkout %(branch)s' % env)
+        env.release = local('cd %(build_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
+        # Save the revision information to a file for post-deployment info
+        local('cd %(build_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
         # To be safe, remove any newline characters
         env.release = re.sub('[\r\n]', '', env.release)
-        local('cd %(tmp_path)s && git archive --format=tar %(branch)s > %(tmp_path)s/%(release)s.tar' % env)
-        local('cd %(tmp_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
+        # Archive the bundle for upload
+        local('cd %(build_path)s && git archive --format=tar %(branch)s > %(build_path)s/%(release)s.tar' % env)
+        local('cd %(build_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == "git-svn":
         # Get repo information and store it to REVISION.txt
-        local('cd %(repository)s && git svn info > %(tmp_path)s/REVISION.txt' % env)
-        local('cd %(tmp_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
+        local('cd %(repository)s && git svn info > %(build_path)s/REVISION.txt' % env)
+        local('cd %(build_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == 'svn':
-        local('svn export %(repository)s/%(branch)s %(tmp_path)s' % env)
-        local('svn info %(repository)s/%(branch)s > %(tmp_path)s/REVISION.txt' % env)
-        local('cd %(tmp_path)s && tar -cf %(release)s.tar .' % env)
+        local('svn export %(repository)s/%(branch)s %(build_path)s' % env)
+        local('svn info %(repository)s/%(branch)s > %(build_path)s/REVISION.txt' % env)
+        local('cd %(build_path)s && tar -cf %(release)s.tar .' % env)
     else:
         raise "Unknown SCM type %s" % env.scm
 
-    local('cd %(tmp_path)s && gzip %(release)s.tar' % env)
+    # Keep in mind that the .gitattributes file might ignore certain files from the archive 
+    local('cd %(build_path)s && gzip %(release)s.tar' % env)
 
-    print "Bundled code is at %(tmp_path)s/%(release)s.tar.gz" % env
+    print "Bundled code is at %(build_path)s/%(release)s.tar.gz" % env
     print "----- ATTENTION -----"
     print "If you plan to run the deployer at a later time, execute this first .."
     print "    echo 'release = %(release)s' >> %(rcfile)s" % env
@@ -558,13 +633,14 @@ def upload_and_explode_code_bundle():
     """
     Upload the local tarball of latest code to the target host
     """
-    put('%(tmp_path)s/%(release)s.tar.gz' % env, '%(app_path)s/releases/' % env)
+    put('%(build_path)s/%(release)s.tar.gz' % env, '%(releases_path)s' % env)
     
     with settings(warn_only=True):
-        result = run('cd %(app_path)s/releases/ && mkdir -p %(release)s && tar -xvf %(release)s.tar.gz -C %(release)s && if [ -e %(release)s.tar.gz ];then rm -rf %(release)s.tar.gz; fi' % env)
+        result = run('cd %(releases_path)s/ && mkdir -p %(release)s && tar -xf %(release)s.tar.gz -C %(release)s' % env)
     if result.failed:
         print "Ignoring as though everything is good"
-    sudo_as('chgrp -R %(webuser)s %(app_path)s/releases/%(release)s' % env)
+    run('cd %(releases_path)s/ && if [ -e %(release)s.tar.gz ];then rm -rf %(release)s.tar.gz; fi' % env)
+    sudo_as('chgrp -R %(webuser)s %(releases_path)s/%(release)s' % env)
 
 def symlink_current_release():
     """
@@ -572,13 +648,13 @@ def symlink_current_release():
     """
     require('release', provided_by=[deploy_webapp, setup_application])
     # if exists('%(app_path)s/previous' % env):
-    run('if [ -e %(previous_path)s ];then rm %(previous_path)s; fi; if [ -e %(current_path)s ];then mv %(current_path)s %(previous_path)s; fi' % env)
+    run('if [ -e %(app_path)s/previous ];then rm %(app_path)s/previous; fi; if [ -e %(app_path)s/current ];then mv %(app_path)s/current %(app_path)s/previous; fi' % env)
     # Link the shared config file into the current configuration
     for item in env.config_files:
-        run('rm -f %s/releases/%s/%s/%s' % (env.app_path, env.release, item.get('path'), item.get('filename')))
-        run('ln -nsf %s %s' % (os.path.join(env.app_path, 'etc', item.get('filename')), os.path.join(env.app_path, 'releases', env.release, item.get('path'), item.get('filename'))))
+        run('rm -f %s/%s/%s/%s' % (env.releases_path, env.release, item.get('path'), item.get('filename')))
+        run('ln -nsf %s %s' % (os.path.join(env.etc_path, item.get('filename')), os.path.join(env.releases_path, env.release, item.get('path'), item.get('filename'))))
 
-    run('ln -s %(app_path)s/releases/%(release)s %(current_path)s' % env)
+    run('ln -s %(releases_path)s/%(release)s %(app_path)s/current' % env)
 
 def install_requirements():
     """
@@ -725,6 +801,14 @@ def deploy_webapp():
     start_webserver()
 
 @roles('web')
+def deploy_webapp_and_configs():
+    """
+    Convenience: deploy_webapp and deploy_configurations rolled into one
+    """
+    deploy_webapp()
+    deploy_configurations()
+    
+@roles('web')
 def deploy_app():
     """
     Deploy the latest application bundle, and symlink current. But do NOT restart the web server
@@ -734,6 +818,14 @@ def deploy_app():
     """
     upload_and_explode_code_bundle()
     symlink_current_release()
+
+@roles('web')
+def deploy_app_and_configs():
+    """
+    Convenience: deploy_app and deploy_app_configurations rolled into one
+    """
+    deploy_app()
+    deploy_app_configurations()
 
 """
 WebServer related tasks
@@ -759,20 +851,17 @@ def _webserver_do(action=''):
     params = {}
     params['webserver'] = env.webserver
     params['action'] = action
-    params['app_path'] = env.app_path
     
     try:
         if env.webserver == 'lighttpd':
             # Keep in mind that this has to be configured for the new lighttpd init script
-        	# Also, because of the way /etc/init.d/lighttpd works, we need to ensure theres no
-	        # shell (ie bash -l -c) or pseudo-terminal 
-	        sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params, shell=False, pty=False)
+            sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params, shell=False, pty=False)
         elif env.webserver == 'apache':
-	        if env.os_name == 'rhel5':
-	            sudo_as('/usr/sbin/apachectl %(action)s' % params)
-	        elif env.os_name == 'ubuntu10':
-	            sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
-
+            if env.os_name == 'rhel5':
+                sudo_as('/usr/sbin/apachectl %(action)s' % params)
+            elif env.os_name == 'ubuntu10':
+                sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
+                
     except Exception, e:
         print "Got exception %s", e
         print "Continuing with the assumption that we don't mind."
@@ -813,6 +902,7 @@ def rollback(commit_id=None):
 Database Related Tasks 
 """
 def setup_db_backup():
+    """  """
     pass
 
 def create_mycnf():
@@ -824,53 +914,10 @@ def create_mycnf():
     # env.temp = env.database_password
     run('echo "[client]\nuser=%(database_user)s\npassword=%(temp)s\n" > $HOME/.my.cnf && chmod 600 $HOME/.my.cnf' % env)
     
-def load_new_data():
-    """
-    Erase the current database and load new data from the SQL dump file.
-    """
-    require('settings', provided_by=[production, staging])
-
-#    maintenance_up()
-#    destroy_database()
-#    create_database()
-#    load_data()
-#    maintenance_down()
-    pass
-
-def create_database():
-    """
-    Creates the user and database for this project.
-    """
-    run('echo "CREATE USER %(application)s WITH PASSWORD \'%(database_password)s\';" | psql postgres' % env)
-    run('createdb -O %(application)s %(application)s -T template_postgis' % env)
-
-def destroy_database():
-    """
-    Destroys the user and database for this project.
-
-    Will not cause the fab to fail if they do not exist.
-    """
-    with settings(warn_only=True):
-        run('dropdb %(application)s' % env)
-        run('dropuser %(application)s' % env)
-
-def load_data():
-    """
-    Loads data from the repository into PostgreSQL.
-    """
-    run('psql -q %(application)s < %(path)s/repository/data/psql/dump.sql' % env)
-    run('psql -q %(application)s < %(path)s/repository/data/psql/finish_init.sql' % env)
-
 
 """
-Commands - miscellaneous
+Miscellaneaus Tasks
 """
-
-def clear_cache():
-    """
-    Restart memcache, wiping the current cache.
-    """
-    sudo('/mnt/apps/bin/restart-memcache.sh')
 
 def echo_host():
     """
@@ -890,42 +937,90 @@ def test():
 @roles('web')
 def disable_cron():
     """
-    Remove all cron tasks from the system
+    Remove all cron tasks from the current user's context
     """
-    for root, dirs, files in os.walk(env.local_etc_path):
-        for name in files:
-            infilename = os.path.join(root, name)
-            if re.search('.tmpl$', infilename) and re.search('cron', infilename):
-                cronfile = os.path.splitext(infilename)[0]
-                cronfile = cronfile.split('etc')[1]
-                if cronfile[0] == '/':
-                    cronfile = cronfile[1:]
-                sudo_as('rm -f %s' % os.path.join('/etc', cronfile))
+    run('crontab -r')
 
 """
-EC2 AND CLOUD-RELATED TASKS
+AWS, EC2 AND CLOUD-RELATED TASKS
 """
 # EC2 bundling, scaling and other such tasks
 def _put_ec2_credentials_for_bundling():
     pass
 
-def bundle_and_save_image():
+def aws_create_ami_from():
     """
-    Make sure that this instance is not in the load-balancer
-    Stop the webserver on this instance
-    Clean this instance's log files
-    Upload the ec2 credentials to the defined target instance (the bundler)
-    Ren the bundler, which uploads image to S3. The bundler will inform us when it's done
+    Provides a list of instances matching the ProdAlias, and allows
+    user to select the instance to create an AMI from
     """
-    pass
+    hosts = _get_ec2_prod_instances()
+    print "------------------------------------------------------------------------"
+    print "  This is a DESTRUCTIVE AND DANGEROUS tool! "
+    print "  Please think before you proceed! After you finish, check the following: "
+    print "    * The Launch Configuration and AMI - to make sure that the AMI is healthy "
+    print "    * The AutoScaling Group's configs. They may have been violated/corrupted"
+    print "  Consider yourself WARNED!"
+    print "Please select the instance number to create an AMI from the list below. "
+    for i in range(0, len(hosts)):
+        print "    %s. %s" % (i+1, hosts[i].dns_name)
+    ans = prompt("Instance number to create AMI from: ", validate=int)
+    ami_host = hosts[int(ans)-1]
+    print "\nYou selected instance %s" % ami_host.id
 
-def update_ec2_instances_list():
-    """
-    Get a list of all the currently running instances and their versions so that
-    we know what's out of date
-    """
-    pass
+    # Let's actually create the AMI
+    dt = time.strftime('%Y%m%d%H%M', time.gmtime())
+    
+    ami_id = env.ec2Conn.create_image(ami_host.id, 'ns11rhel5_%s' % dt, description='Autogenerated by Fabric', no_reboot=False)
+    print "Created AMI ID %s" % ami_id
+    return ami_id
 
+def aws_update_autoscaler():
+    """
+    Update auto-scaling configuration for the configured (see env.aws) scaler
+    """
+    ami_id = aws_create_ami_from()
+    cur_date = time.strftime('%Y%m%d', time.gmtime())
+    lcName = 'ns11-%s' % cur_date
+    lc = LaunchConfiguration(name=lcName, 
+                             image_id=ami_id, instance_type=env.aws.get('instance_type'),
+                             key_name=env.aws.get('key_pair'), 
+                             security_groups=env.aws.get('security_groups'))
+    env.asConn.create_launch_configuration(lc)
+    print "Created launchConfiguration %s" % lcName
+    
+    ag = AutoScalingGroup(
+            connection=env.asConn,
+            launch_config=lc, 
+            group_name=env.aws.get('as_group'), load_balancers=env.aws.get('balancers'),
+            availability_zones=env.aws.get('availability_zones'))
+            # min_size=env.aws.get('min_size'), max_size=env.aws.get('max_size'))
+    ag.update()
+    # env.asConn.create_auto_scaling_group(ag)    
+    print "Added launchConfiguration %s to group %s (updated AutoScaleGroup)" % (lcName, env.aws.get('as_group'))
+
+def aws_update_ec2_instances():
+    """
+    Set the new list of hosts in the env.hosts option
+    """
+    hosts = _get_ec2_prod_instances()
+    hosts_dns = ["%s:%s" % (host.dns_name, env.ssh_port) for host in hosts]
+    print "Updated EC2 instances list is: %s" % ', '.join(hosts_dns)
+    env.hosts = hosts_dns
+    env.roledefs['web'] = env.hosts
+    
+def _get_ec2_prod_instances():
+    print "current hosts are: %(hosts)s" % env
+    hosts = []
+    for tag in env.ec2Conn.get_all_tags():
+        if tag.name != 'Name':
+            continue
+        if re.match(env.production_alias, tag.value):
+            # Get the reservation id, then figure out the instance id
+            tag.res_id
+            res = env.ec2Conn.get_all_instances(filters={'tag:Name':tag.value})
+            hosts.append(res[0].instances[0])
+    return hosts
+    
 def mount_ephemeral_storage():
     """
     If ephemeral storage is not mounted, create a mount point, initialize the block and mount it
@@ -939,3 +1034,25 @@ def debug(msg=None):
     """
     if DEBUG:
         print msg
+
+def cleanup():
+    """
+    Clean up old releases. By default, the last 5 releases are kept on each
+    server (though you can change this with the keep_releases variable). All
+    other deployed revisions are removed from the servers. By default, this 
+    will use sudo to clean up the old releases, but if sudo is not available 
+    for your environment, set the :use_sudo variable to false instead.
+    """
+    if not env.get('keep_releases'):
+        env.keep_releases = 5
+    # Get the list of folders in reverse time order (oldest last)
+    releases = run('ls -xtrF %(releases_path)s' % env).split()
+    # We only care about folders
+    releases = [x for x in releases if x[-1] == '/']
+    if int(env.keep_releases) >= len(releases):
+        print "No old releases to clean up"
+    else:
+        print "Keeping %s of %s deployed releases" % (env.keep_releases, len(releases))
+        for release in releases[0:0-int(env.keep_releases)]:
+            print "Will rm -rf %s/%s" % (env.releases_path, release)
+            run('rm -rf %s/%s' % (env.releases_path, release))
