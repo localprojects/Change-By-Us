@@ -330,12 +330,26 @@ def create_config_files():
     for item in env.config_files:
         if not os.path.exists(item.get('local_config_template')):
             raise Exception("Unable to find configuration template file (%s) to create config from" % item.get('local_config_template'))
+
+        infilename = item.get('local_config_template')
+        outfilename = item.get('local_config_file')
+        _interpolate_file(infilename, outfilename)
         
-        infile = open(item.get('local_config_template'), 'r')
-        outfile = open(item.get('local_config_file'), 'w')
-        outfile.write(infile.read() % env)
-        outfile.close()
-        infile.close()
+def _interpolate_file(infilename=None, outfilename=None):
+    infile = open(infilename, 'r')
+    outfile = open(outfilename, 'w')
+
+    for line in infile:
+        if line.strip().startswith('#'):
+            continue
+        else:
+            try:
+                outfile.write(line % env)
+            except:
+                print "Unable to write line %s" % line
+                raise
+    outfile.close()
+    infile.close()
 
 def upload_config_files():
     " Upload the interpolated config.yaml to the target servers"
@@ -403,23 +417,24 @@ def _interpolate_templates():
                     debug("Processing template file %s" % infilename)
                 
                     outfilename = os.path.splitext(infilename)[0]
-                    infile = open(infilename, 'r')
-                    outfile = open(outfilename, 'w')
-                    try:
-                        outfile.write(infile.read() % env)
-                    except TypeError, e:
-                        if re.search("not enough arguments for format string", e[0]):
-                            # We can safely ignore this since it means that there's nothing to interpolate
-                            print e[0]
-                            print "Continuing by using the template file (%s) as the target (ie no interpolation)" % infilename
-                            # Remember that we have to go back to the top due to read() being at eof
-                            infile.seek(0)
-                            outfile.write(infile.read())
-                        else:
-                            raise
-                        
-                    outfile.close()
-                    infile.close()
+                    _interpolate_file(infilename, outfilename)
+                    # infile = open(infilename, 'r')
+                    # outfile = open(outfilename, 'w')
+                    # try:
+                    #     outfile.write(infile.read() % env)
+                    # except TypeError, e:
+                    #     if re.search("not enough arguments for format string", e[0]):
+                    #         # We can safely ignore this since it means that there's nothing to interpolate
+                    #         print e[0]
+                    #         print "Continuing by using the template file (%s) as the target (ie no interpolation)" % infilename
+                    #         # Remember that we have to go back to the top due to read() being at eof
+                    #         infile.seek(0)
+                    #         outfile.write(infile.read())
+                    #     else:
+                    #         raise
+                    #     
+                    # outfile.close()
+                    # infile.close()
                     interpolated_files.append(outfilename)
                 
     return interpolated_files
