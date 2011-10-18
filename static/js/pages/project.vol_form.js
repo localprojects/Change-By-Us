@@ -204,7 +204,7 @@ tc.gam.project_widgets.vol_form = function(options) {
                           hint:'Time'
                         },
                         'event_link': {
-                          selector: '#event-list',
+                          selector: '#vol-event-list',
                           validators: function(merlinInput, $element, step, onSubmit) {
                             var $ddSelectContainer = $element.next('.ddSelectContainer'),
                                 $ddSelect = $ddSelectContainer.find('.ddSelect');
@@ -222,7 +222,7 @@ tc.gam.project_widgets.vol_form = function(options) {
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
                       initDropDown('vol-month', 'Month');
-                      initDropDown('event-list', 'Link to an event', function($select) {
+                      initDropDown('vol-event-list', 'Link to an event', function($select) {
                         initEventInputs(merlin);
                       });
 
