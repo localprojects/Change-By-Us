@@ -9,37 +9,6 @@ tc.gam.project_widgets.event_form = function(options) {
         event_id = -1,
         self = {};
 
-    //Helper function to make the jqDropDown plugin more robust
-    //since you can't set multiple classes at a time.
-    //  id - the selector for the select element, also used to
-    //       identify the generated markup
-    //  defaultVal - Used to identify the unselectable default value
-    var initDropDown = function(id, defaultVal) {
-      //Apply jqDropDown to our select element
-      tc.jQ('#' + id).jqDropDown({
-        toggleBtnName:'ddSelect',
-        optionListName:'ddSelectOptions',
-        containerName:'dd-' + id,
-        optionChanged: function() {
-          //This is not valid if we select the default
-          if ($('#' + id).val() === defaultVal) {
-            $('.dd-' + id + ' .ddSelect').addClass('not-valid has-been-focused').removeClass('valid');
-          } else {
-            $('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
-          }
-        }
-      });
-      
-      //Add the default container css class (important, common styles on this guy)
-      tc.jQ('.dd-' + id).addClass('ddSelectContainer');
-      
-      //There's no default value, something is always selected, so it's always valid
-      if (!defaultVal) {
-        tc.jQ('.dd-' + id).addClass('ddNoDefault');
-        tc.jQ('.dd-' + id + ' .ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
-      }
-    };
-    
     //Convert a "date config" into a string that the server knows how to parse
     self._makeDateString = function(c) {
       var hour = (parseInt(c.hour, 10) % 12) + (c.meridiem === 'PM' ? 12 : 0);
@@ -120,10 +89,10 @@ tc.gam.project_widgets.event_form = function(options) {
                     },
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
-                      initDropDown('event-month');
-                      initDropDown('event-year');
-                      initDropDown('event-meridiem');
-                      initDropDown('event-needs', 'Volunteer Needs');
+                      tc.initDropDown('event-month');
+                      tc.initDropDown('event-year');
+                      tc.initDropDown('event-meridiem');
+                      tc.initDropDown('event-needs', 'Volunteer Needs');
                       
                       if (event_id) {
                         tc.jQ.each(merlin.current_step.inputs, function(key, input) {

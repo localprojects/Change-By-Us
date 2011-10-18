@@ -8,43 +8,6 @@ tc.gam.project_widgets.vol_form = function(options) {
         cached_events = [],
         self = {};
 
-    //Helper function to make the jqDropDown plugin more robust
-    //since you can't set multiple classes at a time.
-    //  id - the selector for the select element, also used to
-    //       identify the generated markup
-    //  defaultVal - Used to identify the unselectable default value
-    var initDropDown = function(id, defaultVal, onChange) {
-      //Apply jqDropDown to our select element
-      var $container,
-        $input = tc.jQ('#' + id);
-
-      $input.jqDropDown({
-        toggleBtnName:'ddSelect',
-        optionListName:'ddSelectOptions',
-        containerName:'dd-' + id,
-        optionChanged: function() {
-          if (onChange) {
-            onChange($input);
-          }
-
-          //manually trigger the change event on the select element
-          //so that Merlin validation will trigger properly
-          $input.change();
-        }
-      }).data('default', defaultVal);
-
-      $container = tc.jQ('.dd-' + id);
-
-      //Add the default container css class (important, common styles on this guy)
-      $container.addClass('ddSelectContainer');
-
-      //There's no default value, something is always selected, so it's always valid
-      if (!defaultVal) {
-        $container.addClass('ddNoDefault');
-        $container.find('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
-      }
-    };
-
     var disableCustomEventInputs = function(disable, merlin) {
       var inputs = [merlin.current_step.inputs.month,
           merlin.current_step.inputs.day,
@@ -72,6 +35,7 @@ tc.gam.project_widgets.vol_form = function(options) {
     var initEventInputs = function(merlin) {
       var $select = merlin.current_step.inputs.event_link.dom;
 
+      //If not a blank val and val does not equal the default
       if ($select.val() !== '' && $select.val() !== $select.data('default')) {
         //disable all of the custom date/place fields
         disableCustomEventInputs(true, merlin);
@@ -221,8 +185,8 @@ tc.gam.project_widgets.vol_form = function(options) {
                     },
                     init:function(merlin, dom) {
                       // Set up the fancy jqDropDown for month
-                      initDropDown('vol-month', 'Month');
-                      initDropDown('vol-event-list', 'Link to an event', function($select) {
+                      tc.initDropDown('vol-month', 'Month');
+                      tc.initDropDown('vol-event-list', 'Link to an event', function($select) {
                         initEventInputs(merlin);
                       });
 
