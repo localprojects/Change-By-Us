@@ -307,11 +307,10 @@ tc.gam.project_widgets.needs = function(options) {
                 source_element:tc.jQ('.modal-content.remove-need'),
                 submit: function(){
                     tc.gam.project_data.deleteNeed(event.target.href.split(',')[1],
-                                                   function(data, status, xhr) {
-                                                       if(data == 'False'){return false;}
-                                                       window.location.hash = 'show,needs';
-                                                       window.location.reload();
-                                                   });
+                     function(data, status, xhr) {
+                         if(data == 'False'){return false;}
+                         tc.reloadProjectHash('show,needs');
+                     });
                 }
             });
         });

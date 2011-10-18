@@ -369,3 +369,14 @@ tc.initDropDown = function(id, defaultVal, onChange) {
     $container.find('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
   }
 };
+
+// Function to change the hash of a url, not change the state of the app,
+// and then reload the page. This is used when a new need or event is created
+// and we want change the hash but not update the page state. This is because
+// there is a long delay from when the page state changes and the page reloads,
+// so it's really jarring for the user. 
+tc.reloadProjectHash = function(hash) {
+  tc.jQ(tc).unbind('show-project-widget');
+  window.location.hash = hash;
+  window.location.reload();
+};

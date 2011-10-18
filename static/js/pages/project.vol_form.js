@@ -232,8 +232,8 @@ tc.gam.project_widgets.vol_form = function(options) {
                       if(data == 'False'){
                         return false;
                       }
-                      window.location.hash = 'show,needs';
-                      window.location.reload();
+                      
+                      tc.reloadProjectHash('show,needs');
                     };
                     if (need_id === undefined) {
                       tc.gam.project_data.createNeed(need_data, success);
