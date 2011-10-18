@@ -41,6 +41,9 @@ tc.gam.project_widgets.inkind_form = function(options) {
 
       initForm(id, function(){
           dom.show();
+          
+          tc.initDropDown('inkind-event-list', 'Link to an event');
+          
       });
 
       if((dom.offset().top - $window.scrollTop()) < 0){
