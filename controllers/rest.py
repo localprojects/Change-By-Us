@@ -770,13 +770,24 @@ class NeedModelRestController (RestController):
 
         need_dict['event'] = self.event_to_dict(need.event)
 
-        raw_date = need_dict['date']
-        if raw_date:
-            need_dict['display_date'] = need.display_date
+        ddate = need.display_date
+        if ddate:
+            need_dict['display_date'] = ddate
         need_dict['display_address'] = need.display_address
         need_dict['quantity_committed'] = need.quantity_committed
 
         return need_dict
+
+    def dict_to_instance(self, data, need=None):
+        if 'event_id' in data:
+            try:
+                int(data['event_id'])
+            except ValueError:
+                log.debug('Getting rid of an invalid event id: %r' % (data['event_id'],))
+                del data['event_id']
+
+        need = super(NeedModelRestController, self).dict_to_instance(data, need)
+        return need
 
 
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, NeedModelRestController):

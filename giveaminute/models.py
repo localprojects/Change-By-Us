@@ -188,7 +188,7 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    event_id = Column(ForeignKey('project_event.id'), nullable=True)
+    event_id = Column(ForeignKey('project_event.id'), default=None, nullable=True)
 
     need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')
@@ -204,8 +204,10 @@ class Need (Base):
         """Returns dates that end in '1st' or '22nd' and the like."""
         if self.event:
             return util.make_pretty_date(self.event.start_datetime)
-        else:
+        elif self.date:
             return util.make_pretty_date(self.date)
+        else:
+            return None
 
     @property
     def reason(self):

@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import (date, datetime)
 
 from unittest2 import TestCase
 from nose.tools import *
@@ -95,6 +96,39 @@ class Test_Need_displayAddress (TestCase):
         daddress = need.display_address
 
         assert_equal(daddress, 'Skid row')
+
+
+class Test_Need_displayDate (TestCase):
+
+    @istest
+    def returns_the_event_date_if_it_exists (self):
+        need = Need()
+        need.event = Event()
+        need.event.start_datetime = datetime(2011, 8, 2, 12, 30, 00)
+
+        # ... with no need date
+        ddate = need.display_date
+        assert_equal(ddate, 'August 2nd')
+
+        # ... with a need date
+        need.date = date(2011, 7, 11)
+        ddate = need.display_date
+        assert_equal(ddate, 'August 2nd')
+
+    @istest
+    def returns_the_need_date_if_no_event_set (self):
+        need = Need()
+        need.date = date(2011, 7, 11)
+
+        ddate = need.display_date
+        assert_equal(ddate, 'July 11th')
+
+    @istest
+    def returns_None_if_no_need_date_or_event_is_set (self):
+        need = Need()
+
+        ddate = need.display_date
+        assert_is_none(ddate)
 
 
 class Test_Event_rsvpServiceName (TestCase):
