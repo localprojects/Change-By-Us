@@ -188,7 +188,7 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    event_id = Column(ForeignKey('project_event.id'), nullable=True)
+    event_id = Column(ForeignKey('project_event.id'), default=None, nullable=True)
 
     need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')

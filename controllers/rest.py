@@ -778,6 +778,17 @@ class NeedModelRestController (RestController):
 
         return need_dict
 
+    def dict_to_instance(self, data, need=None):
+        if 'event_id' in data:
+            try:
+                int(data['event_id'])
+            except ValueError:
+                log.debug('Getting rid of an invalid event id: %r' % (data['event_id'],))
+                del data['event_id']
+
+        need = super(NeedModelRestController, self).dict_to_instance(data, need)
+        return need
+
 
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, NeedModelRestController):
     pass
