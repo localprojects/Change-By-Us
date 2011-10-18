@@ -770,9 +770,9 @@ class NeedModelRestController (RestController):
 
         need_dict['event'] = self.event_to_dict(need.event)
 
-        raw_date = need_dict['date']
-        if raw_date:
-            need_dict['display_date'] = need.display_date
+        ddate = need.display_date
+        if ddate:
+            need_dict['display_date'] = ddate
         need_dict['display_address'] = need.display_address
         need_dict['quantity_committed'] = need.quantity_committed
 

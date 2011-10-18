@@ -163,6 +163,13 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert need_dict["display_date"] == "August 31st"
 
     @istest
+    def should_use_the_event_date_if_given_without_custom_date(self):
+        response = self.app.get('/rest/v1/needs/4/', status=200)
+
+        need_dict = json.loads(response.body)
+        assert_equal(need_dict["display_date"], 'September 6th')
+
+    @istest
     def should_default_to_using_custom_location_if_no_event_exists(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
 

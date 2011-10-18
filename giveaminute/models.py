@@ -204,8 +204,10 @@ class Need (Base):
         """Returns dates that end in '1st' or '22nd' and the like."""
         if self.event:
             return util.make_pretty_date(self.event.start_datetime)
-        else:
+        elif self.date:
             return util.make_pretty_date(self.date)
+        else:
+            return None
 
     @property
     def reason(self):
