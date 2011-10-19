@@ -898,8 +898,11 @@ def _webserver_do(action=''):
     params = {}
     params['webserver'] = env.webserver
     params['action'] = action
+    params['app_path'] = env.app_path
     
-    try:
+    with settings(warn_only=True):
+        # If we get an exception here it's probably not catastrophic
+
         if env.webserver == 'lighttpd':
             # Keep in mind that this has to be configured for the new lighttpd init script
             sudo_as('/etc/init.d/%(webserver)s %(action)s %(app_path)s' % params, shell=False, pty=False)
@@ -909,10 +912,6 @@ def _webserver_do(action=''):
             elif env.os_name == 'ubuntu10':
                 sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
                 
-    except Exception, e:
-        print "Got exception %s", e
-        print "Continuing with the assumption that we don't mind."
-        
 def secure_website():
     """
     Apply htaccess (basicAuth) to folders defined by env.protected_folders
