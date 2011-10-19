@@ -86,6 +86,7 @@ env.clean_build = False
 # SSH Key configuration
 env.key_filename = os.path.expanduser(env.key_filename)
 env.ssh_port = 48022
+env.run_minifier = True
 
 # We need to make the hosts into a list
 env.hosts = env.hosts.split(',')
@@ -614,6 +615,7 @@ def bundle_code():
             local('git clone --depth 0 %(repository)s %(build_path)s' % env)
             
         local('cd %(build_path)s && git clean -d -x -f && git pull origin && git checkout %(branch)s' % env)
+        local('cd %(build_path)s && git submodule init && git submodule update' % env)
         env.release = local('cd %(build_path)s && git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
         # Save the revision information to a file for post-deployment info
         local('cd %(build_path)s && git rev-parse %(branch)s > REVISION.txt' % env)
@@ -621,6 +623,12 @@ def bundle_code():
         env.release = re.sub('[\r\n]', '', env.release)
         # Archive the bundle for upload
         local('cd %(build_path)s && git archive --format=tar %(branch)s > %(build_path)s/%(release)s.tar' % env)
+
+        if env.run_minifier == True and os.path.exists(os.path.join(env.build_path, 'scripts', 'minifier', 'minifier.py')):
+            local('cd %(build_path)s && python scripts/minifier/minifier.py -v -c scripts/minifier.conf --force' % env)
+            local('cd %(build_path)s && git status -s | grep -i "^ M" | tr -s " " | cut -d\  -f 3 | xargs tar -v --append --file=%(release)s.tar ' % env)
+
+        # Add any updated files
         local('cd %(build_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == "git-svn":
         # Get repo information and store it to REVISION.txt
@@ -807,13 +815,29 @@ def deploy_webapp():
     #    maintenance_up()
 
     upload_and_explode_code_bundle()
-
+    # Apply requirements.txt, if it exists
+    # _install_pip_requirements()
+    
     # Restart the web server with the latest code
     stop_webserver()
     symlink_current_release()
     # maintenance_down()
     start_webserver()
 
+def _install_pip_requirements():
+    '''
+    If there is a pip requirement file, apply it under a root context
+    TODO: This should be moved to a virtualenv context
+    '''
+    if files.exists('%(releases_path)s/%(release)s/requirements.txt' % env):
+        sudo_as('pip install -r %(releases_path)s/%(release)s/requirements.txt' % env)
+        
+def _db_migrations():
+    '''
+    Apply database migrations as necessary
+    '''
+    pass
+        
 @roles('web')
 def deploy_webapp_and_configs():
     """
