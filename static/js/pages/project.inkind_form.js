@@ -38,7 +38,7 @@ tc.gam.project_widgets.inkind_form = function(options) {
                   next_step:'need-submit',
                   inputs: {
                       'subtype': {
-                        selector: 'input[name="inkind-type-radio"]:checked'
+                        selector: 'input[name="inkind-type-radio"]'
                       },
                       'quantity': {
                           selector: '#inkind-quantity',
@@ -79,28 +79,27 @@ tc.gam.project_widgets.inkind_form = function(options) {
                   init:function(merlin, dom) {
                     if (need.id) {
                       tc.jQ.each(merlin.current_step.inputs, function(key, input) {
-                        if (input.default_val) {
+                        if (key === 'subtype') {
+                          //Special case to set the value of the subtype radio button
+                          if (need.subtype) {
+                            tc.jQ('label[for="inkind-'+ need.subtype + '-check"]').click();
+                          } else {
+                            tc.jQ('label[for="inkind-borrow-check"]').click();
+                          }
+                        } else if (input.default_val) {
                           input.dom.val(input.default_val);
                         }
                       });
-
-                      //Special case for the radio button
-                      if (need.subtype) {
-                        tc.jQ('label[for="inkind-'+ need.subtype + '-check"]').click();
-                      }
 
                       merlin.validate(true);
                     }
                   },
                   finish:function(merlin, dom) {
-                    // The radio button element that was originally selected for
-                    // the subtype was the default. We must select again to get
-                    // the button that is now checked.
-                    merlin.current_step.inputs.subtype.dom = $('input[name="inkind-type-radio"]:checked');
-
                     merlin.options.data = tc.jQ.extend(merlin.options.data,{
                       type:'inkind',
-                      subtype:merlin.current_step.inputs.subtype.dom.val(),
+                      // The subtype selector selects both radio button elements. We only
+                      // want to get the value of the checked one.
+                      subtype:merlin.current_step.inputs.subtype.dom.filter(':checked').val(),
                       request:merlin.current_step.inputs.request.dom.val(),
                       quantity:merlin.current_step.inputs.quantity.dom.val(),
                       description:merlin.current_step.inputs.description.dom.val(),
