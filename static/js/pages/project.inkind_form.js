@@ -93,7 +93,11 @@ tc.gam.project_widgets.inkind_form = function(options) {
                     }
                   },
                   finish:function(merlin, dom) {
+                    // The radio button element that was originally selected for
+                    // the subtype was the default. We must select again to get
+                    // the button that is now checked.
                     merlin.current_step.inputs.subtype.dom = $('input[name="inkind-type-radio"]:checked');
+
                     merlin.options.data = tc.jQ.extend(merlin.options.data,{
                       type:'inkind',
                       subtype:merlin.current_step.inputs.subtype.dom.val(),
