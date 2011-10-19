@@ -49,7 +49,7 @@ tc.gam.project_widgets.related_resources = function(options){
                         return false;
                     }
                     tc.util.log("resource add success");
-                    project.dom.trigger('resources-refresh',{ type:'organization' });
+                    dom.trigger('resources-refresh',{ type:'organization' });
                     add_btn.parent().addClass("added");
                 }
             });
