@@ -180,6 +180,7 @@ class Need (Base):
 
     id = Column(Integer, primary_key=True)
     type = Column(String(10))
+    subtype = Column(String(10))
     request = Column(String(64))
     quantity = Column(Integer)
     description = Column(Text)
