@@ -152,7 +152,7 @@ class Project (Base):
     #
     # FULLTEXT KEY `title` (`title`,`description`)
 
-    needs = relationship('Need', backref='project')
+    needs = relationship('Need', order_by="desc(Need.id)", backref='project')
     events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
