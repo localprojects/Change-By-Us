@@ -5,7 +5,7 @@ if (window.EnvJasmine) {
     EnvJasmine.load(EnvJasmine.jsDir + 'pages/project.event_form.js');
 }
 
-describe('project.need_form.js', function () {
+describe('project.event_form.js', function () {
     var event_form,
         mock_options = {
             //for merlin

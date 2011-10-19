@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.10, for osx10.6 (i386)
+-- MySQL dump 10.13  Distrib 5.1.54, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: cbu
+-- Host: localhost    Database: cbu_blank
 -- ------------------------------------------------------
--- Server version	5.1.44
+-- Server version	5.1.54-1ubuntu4
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -350,7 +350,7 @@ CREATE TABLE `migrate_version` (
 
 LOCK TABLES `migrate_version` WRITE;
 /*!40000 ALTER TABLE `migrate_version` DISABLE KEYS */;
-INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',6);
+INSERT INTO `migrate_version` VALUES ('cbu','giveaminute/migrations',7);
 /*!40000 ALTER TABLE `migrate_version` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -674,6 +674,7 @@ DROP TABLE IF EXISTS `project_need_volunteer`;
 CREATE TABLE `project_need_volunteer` (
   `need_id` int(11) NOT NULL,
   `member_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
   PRIMARY KEY (`need_id`,`member_id`),
   KEY `member_id` (`member_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -989,4 +990,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-10-03 18:35:28
+-- Dump completed on 2011-10-06  9:41:21

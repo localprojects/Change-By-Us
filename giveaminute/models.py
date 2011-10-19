@@ -1,7 +1,9 @@
 import re
 
+from collections import defaultdict
 from datetime import date
 from datetime import datetime
+
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
@@ -150,7 +152,7 @@ class Project (Base):
     #
     # FULLTEXT KEY `title` (`title`,`description`)
 
-    needs = relationship('Need', backref='project')
+    needs = relationship('Need', order_by="desc(Need.id)", backref='project')
     events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
@@ -165,12 +167,20 @@ class Project (Base):
                 admins.append(pm.member)
         return admins
 
+    @property
+    def needs_by_type(self):
+        nbt = defaultdict(list)
+        for need in self.needs:
+            nbt[need.type].append(need)
+        return nbt
+
 
 class Need (Base):
     __tablename__ = 'project_need'
 
     id = Column(Integer, primary_key=True)
     type = Column(String(10))
+    subtype = Column(String(10))
     request = Column(String(64))
     quantity = Column(Integer)
     description = Column(Text)
@@ -179,19 +189,26 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    event_id = Column(ForeignKey('project_event.id'), nullable=True)
+    event_id = Column(ForeignKey('project_event.id'), default=None, nullable=True)
 
     need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')
     event = relationship('Event')
 
     @property
+    def quantity_committed(self):
+        """Returns the number of things volunteers/donations that have been committed"""
+        return sum(vol.quantity for vol in self.need_volunteers)
+
+    @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
         if self.event:
             return util.make_pretty_date(self.event.start_datetime)
-        else:
+        elif self.date:
             return util.make_pretty_date(self.date)
+        else:
+            return None
 
     @property
     def reason(self):
@@ -213,6 +230,8 @@ class Volunteer (Base):
 
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
+    quantity = Column(Integer, default=1, nullable=False)
+    """The quantity of the reqested need that the member is able to provide"""
 
     need = relationship('Need')
     member = relationship('User')

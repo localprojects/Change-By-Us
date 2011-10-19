@@ -332,3 +332,51 @@ tc.browserDetection = function() {
     tc.jQ('body').addClass(os);
 }
 tc.browserDetection();
+
+//Helper function to make the jqDropDown plugin more robust
+//since you can't set multiple classes at a time.
+//  id - the selector for the select element, also used to
+//       identify the generated markup
+//  defaultVal - Used to identify the unselectable default value
+tc.initDropDown = function(id, defaultVal, onChange) {
+  //Apply jqDropDown to our select element
+  var $container,
+    $input = tc.jQ('#' + id);
+
+  $input.jqDropDown({
+    toggleBtnName:'ddSelect',
+    optionListName:'ddSelectOptions',
+    containerName:'dd-' + id,
+    optionChanged: function() {
+      if (onChange) {
+        onChange($input);
+      }
+
+      //manually trigger the change event on the select element
+      //so that Merlin validation will trigger properly
+      $input.change();
+    }
+  }).data('default', defaultVal);
+
+  $container = tc.jQ('.dd-' + id);
+
+  //Add the default container css class (important, common styles on this guy)
+  $container.addClass('ddSelectContainer');
+
+  //There's no default value, something is always selected, so it's always valid
+  if (!defaultVal) {
+    $container.addClass('ddNoDefault');
+    $container.find('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+  }
+};
+
+// Function to change the hash of a url, not change the state of the app,
+// and then reload the page. This is used when a new need or event is created
+// and we want change the hash but not update the page state. This is because
+// there is a long delay from when the page state changes and the page reloads,
+// so it's really jarring for the user. 
+tc.reloadProjectHash = function(hash) {
+  tc.jQ(tc).unbind('show-project-widget');
+  window.location.hash = hash;
+  window.location.reload();
+};
