@@ -137,11 +137,11 @@ tc.gam.project_widgets.events = function(options) {
                 source_element:tc.jQ('.modal-content.remove-event'),
                 submit: function(){
                     tc.gam.project_data.deleteEvent(event.target.href.split(',')[1],
-                                                   function(data, status, xhr) {
-                                                       if(data == 'False'){return false;}
-                                                       window.location.hash = 'show,events';
-                                                       window.location.reload();
-                                                   });
+                     function(data, status, xhr) {
+                         if(data == 'False'){return false;}
+                         
+                         tc.reloadHash('show,events');
+                     });
                 }
             });
         });
