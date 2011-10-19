@@ -86,7 +86,7 @@ tc.gam.project_widgets.inkind_form = function(options) {
 
                       //Special case for the radio button
                       if (need.subtype) {
-                        tc.jQ('input[for="inkind-'+ need.subtype + '-check"]').click();
+                        tc.jQ('label[for="inkind-'+ need.subtype + '-check"]').click();
                       }
 
                       merlin.validate(true);
