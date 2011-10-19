@@ -6,14 +6,16 @@ tc.gam.project_widgets.inkind_form = function(options) {
   tc.util.log('project.inkind_form');
   var dom = options.dom,
       $window = tc.jQ(window),
+      cached_events = [],
       self = {};
 
   /**
    * Function: initMerlin
    * Initialize the merlin object for validation of the modal dialog.
    */
-  var initMerlin = function(need_id) {
+  var initMerlin = function(need) {
       var merlin;
+      need = need || {}; //So we don't have to check for null all the time
 
       //We are using merlin only for the built-in validation in this case.
       merlin =  new tc.merlin(options.app, {
@@ -75,15 +77,17 @@ tc.gam.project_widgets.inkind_form = function(options) {
                       }
                   },
                   init:function(merlin, dom) {
-                    //
-                    if (need_id) {
+                    if (need.id) {
                       tc.jQ.each(merlin.current_step.inputs, function(key, input) {
                         if (input.default_val) {
                           input.dom.val(input.default_val);
                         }
                       });
-
-                      // initEventInputs(merlin);
+                      
+                      //Special case for the radio button
+                      if (need.subtype) {
+                        tc.jQ('input[for="inkind-'+ need.subtype + '-check"]').click();
+                      }
 
                       merlin.validate(true);
                     }
@@ -112,10 +116,11 @@ tc.gam.project_widgets.inkind_form = function(options) {
                     
                     tc.reloadProjectHash('show,needs');
                   };
-                  if (need_id === undefined) {
+                  
+                  if (need.id === undefined) {
                     tc.gam.project_data.createNeed(need_data, success);
                   } else {
-                    tc.gam.project_data.updateNeed(need_id, need_data, success);
+                    tc.gam.project_data.updateNeed(need.id, need_data, success);
                   }
                 }
               }
@@ -125,32 +130,50 @@ tc.gam.project_widgets.inkind_form = function(options) {
       merlin.show_step('inkind_form');
   };
 
+  var mergeTemplate = function(need_details) {
+    var new_details = tc.jQ.extend(true, {
+      eventOpts: function() {
+        var options = '';
+
+        for (var i = 0; i < cached_events.length; i++) {
+          if (need_details && cached_events[i].id === need_details.event_id) {
+            options += '<option value="'+cached_events[i].id+'" selected>'+cached_events[i].name+'</option>';
+          } else {
+            options += '<option value="'+cached_events[i].id+'">'+cached_events[i].name+'</option>';
+          }
+        }
+        return options;
+      }
+    }, need_details),
+    $html = ich.inkind_form_tmpl(new_details);
+
+    dom.find('.add-need-step').html($html);
+  };
 
   var initForm = function(need_id, callback) {
     var project_id = options.app.app_page.data.project.project_id;
 
-    dom.find('input[type=radio]').prettyCheckboxes();
-
-    // tc.gam.project_data.getProjectEvents(project_id, function(events) {
-    //   cached_events = events;
-    // 
-    //   if (need_id) {
-    //   //We are editing an existing need
-    //       tc.gam.project_data.getNeedDetails(need_id, function(data){
-    //           mergeTemplate(data);
-    //           if (callback) {
-    //               callback();
-    //           }
-    //           initMerlin(need_id);
-    //       });
-    //   } else {
-    //       mergeTemplate();
-          if (callback) {
+    tc.gam.project_data.getProjectEvents(project_id, function(events) {
+      cached_events = events;
+    
+      if (need_id) {
+      //We are editing an existing need
+          tc.gam.project_data.getNeedDetails(need_id, function(need){
+            mergeTemplate(need);
+            if (callback) {
               callback();
-          }
-          initMerlin();
-    //   }
-    // });
+            }
+            initMerlin(need);
+          });
+      } else {
+        mergeTemplate();
+        if (callback) {
+          callback();
+        }
+        initMerlin();
+      }
+      
+    });
   };
       
   tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
@@ -160,6 +183,7 @@ tc.gam.project_widgets.inkind_form = function(options) {
       initForm(id, function(){
           dom.show();
           
+          dom.find('input[type=radio]').prettyCheckboxes();
           tc.initDropDown('inkind-event-list', 'Link to an event');
       });
 

@@ -18,49 +18,52 @@
     </div>
     <div class="bd clearfix merlin add-need add-inkind-need">
         <div class='step add-need-step clearfix'>
-          {% raw %}
-          <form action='#' class="form-pane">
-            <div class="fields serif">
-              <div class="row need-header">
-                <span class="inkind-type-label">We need to</span>
-                <div class="inkind-type-cont">
-                  <div>
-                  <input type="radio" name="inkind-type-radio" id="inkind-borrow-check" value="borrow" checked="checked" class="inkind-borrow-check has-prettycheckbox">
-                  <label for="inkind-borrow-check"></label><span class="inkind-label">borrow</span>
-                  </div>
-                  <div>
-                  <input type="radio" name="inkind-type-radio" id="inkind-donate-check" value="donate" class="inkind-donate-check has-prettycheckbox">
-                  <label for="inkind-donate-check"></label><span class="inkind-label">get a donation of</span>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <input name="inkind-quantity" id="inkind-quantity" class="need-quantity" type="text" value="{{quantity}}" />
-                <input name="inkind-request" id="inkind-request" class="need-request" type="text" value="{{request}}" />
-              </div>
-              <div class="row">
-                <div id="inkind-desc-cont" class="desc-cont">
-                  <p>We&#39;re going to use this for...</p>
-                  <span class="charlimit title">200</span>
-                  <textarea name="inkind-desc" class="need-desc" id="inkind-desc">{{description}}</textarea>
-                </div>
-                <div id="inkind-event-link-cont" class="event-link-cont">
-                  <select id="inkind-event-list" class="need-event-list">
-                    <option value="">Link to an event</option>
-                    {{{eventOpts}}}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </form>
-          {% endraw %}
         </div>
 
-        <!-- <div class='step submit-need-step spinner-message'>
-            <p>Thank you for submitting a link!</p>
-            <p><img src='/static/images/loader32x32.gif' /></p>
-        </div> -->
+        <div class='step submit-need-step spinner-message'>
+          <p>Thank you for submitting a link!</p>
+          <p><img src='/static/images/loader32x32.gif' /></p>
+        </div>
     </div>
 </div>
+
+{% raw %}
+<script id="inkind_form_tmpl" type="text/html">
+<form action='#' class="form-pane">
+  <div class="fields serif">
+    <div class="row need-header">
+      <span class="inkind-type-label">We need to</span>
+      <div class="inkind-type-cont">
+        <div>
+        <input type="radio" name="inkind-type-radio" id="inkind-borrow-check" value="borrow" checked="checked" class="inkind-borrow-check has-prettycheckbox">
+        <label for="inkind-borrow-check"></label><span class="inkind-label">borrow</span>
+        </div>
+        <div>
+        <input type="radio" name="inkind-type-radio" id="inkind-donate-check" value="donate" class="inkind-donate-check has-prettycheckbox">
+        <label for="inkind-donate-check"></label><span class="inkind-label">get a donation of</span>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <input name="inkind-quantity" id="inkind-quantity" class="need-quantity" type="text" value="{{quantity}}" />
+      <input name="inkind-request" id="inkind-request" class="need-request" type="text" value="{{request}}" />
+    </div>
+    <div class="row">
+      <div id="inkind-desc-cont" class="desc-cont">
+        <p>We&#39;re going to use this for...</p>
+        <span class="charlimit title">200</span>
+        <textarea name="inkind-desc" class="need-desc" id="inkind-desc">{{description}}</textarea>
+      </div>
+      <div id="inkind-event-link-cont" class="event-link-cont">
+        <select id="inkind-event-list" class="need-event-list">
+          <option value="">Link to an event</option>
+          {{{eventOpts}}}
+        </select>
+      </div>
+    </div>
+  </div>
+</form>
+</script>
+{% endraw %}
 
 <script src="/static/js/pages/project.inkind_form.js"></script>
