@@ -138,11 +138,6 @@ def emailResourceNotification(email, projectId, title, description, resourceName
     
     """
     
-    # If dev, don't email resources
-    if (Config.get('dev')):
-        log.info("*** body = %s" % body)
-        return True
-    
     # Create values for template.
     emailAccount = Config.get('email')
     subject = "A project on Changeby.us has added %s as a resource" % resourceName
@@ -157,6 +152,11 @@ def emailResourceNotification(email, projectId, title, description, resourceName
     
     # Render email body.
     body = Emailer.render('email/resource_notification', template_values, suffix = 'txt')
+    
+    # If dev, don't email resources
+    if (Config.get('dev')):
+        log.info("*** body = %s" % body)
+        return True
 
     # Send email.
     try:
