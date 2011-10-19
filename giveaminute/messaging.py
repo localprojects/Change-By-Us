@@ -377,13 +377,17 @@ def emailIdeaConfirmation(email, responseEmail, locationId):
     subject = "Thanks for submitting an idea to Change by Us!"
     searchLink = "%ssearch?location_id=%s" % (host, locationId)
     createLink = "%screate" % host
+    template_values = {
+        'search_link': searchLink,
+        'create_link': createLink,
+        'response_email': emailAccount['from_email'],
+        'config': Config.get_all()
+    }
     
-    body = Emailer.render('email/idea_confirmation',
-                        {'search_link':searchLink,
-                         'create_link':createLink,
-                         'response_email':emailAccount['from_email']},
-                        suffix = 'txt')
-                        
+    # Render email body.
+    body = Emailer.render('email/idea_confirmation', template_values, suffix = 'txt')
+
+    # Send email.
     try:
         return Emailer.send(email, subject, body, from_name = emailAccount['from_name'],
             from_address = emailAccount['from_email'])
