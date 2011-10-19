@@ -83,7 +83,7 @@ tc.gam.project_widgets.inkind_form = function(options) {
                           input.dom.val(input.default_val);
                         }
                       });
-                      
+
                       //Special case for the radio button
                       if (need.subtype) {
                         tc.jQ('input[for="inkind-'+ need.subtype + '-check"]').click();
@@ -93,6 +93,7 @@ tc.gam.project_widgets.inkind_form = function(options) {
                     }
                   },
                   finish:function(merlin, dom) {
+                    merlin.current_step.inputs.subtype.dom = $('input[name="inkind-type-radio"]:checked');
                     merlin.options.data = tc.jQ.extend(merlin.options.data,{
                       type:'inkind',
                       subtype:merlin.current_step.inputs.subtype.dom.val(),
@@ -113,10 +114,10 @@ tc.gam.project_widgets.inkind_form = function(options) {
                     if(data == 'False'){
                       return false;
                     }
-                    
+
                     tc.reloadProjectHash('show,needs');
                   };
-                  
+
                   if (need.id === undefined) {
                     tc.gam.project_data.createNeed(need_data, success);
                   } else {
@@ -155,7 +156,7 @@ tc.gam.project_widgets.inkind_form = function(options) {
 
     tc.gam.project_data.getProjectEvents(project_id, function(events) {
       cached_events = events;
-    
+
       if (need_id) {
       //We are editing an existing need
           tc.gam.project_data.getNeedDetails(need_id, function(need){
@@ -172,17 +173,17 @@ tc.gam.project_widgets.inkind_form = function(options) {
         }
         initMerlin();
       }
-      
+
     });
   };
-      
+
   tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
     if (options.name === widgetName) {
       tc.util.log('&&& showing ' + options.name);
 
       initForm(id, function(){
           dom.show();
-          
+
           dom.find('input[type=radio]').prettyCheckboxes();
           tc.initDropDown('inkind-event-list', 'Link to an event');
       });
@@ -195,6 +196,6 @@ tc.gam.project_widgets.inkind_form = function(options) {
       dom.hide();
     }
   });
-  
+
   return self;
 };
