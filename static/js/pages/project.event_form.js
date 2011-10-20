@@ -97,7 +97,11 @@ tc.gam.project_widgets.event_form = function(options) {
                       if (event_id) {
                         tc.jQ.each(merlin.current_step.inputs, function(key, input) {
                           if (input.default_val) {
-                            input.dom.val(input.default_val);
+                            if (key === 'minute') {
+                              input.dom.val(tc.zeroPad(parseInt(input.default_val, 10), 2));
+                            } else {
+                              input.dom.val(input.default_val);
+                            }
                           }
                         });
                         merlin.validate(true);
@@ -137,7 +141,7 @@ tc.gam.project_widgets.event_form = function(options) {
                         return false;
                       }
                       
-                      tc.reloadHash('show,events');
+                      tc.reloadProjectHash('show,events');
                     };
                     if (event_id === undefined) {
                       tc.gam.project_data.createEvent(event_data, success);

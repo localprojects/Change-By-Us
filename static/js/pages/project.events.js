@@ -140,7 +140,7 @@ tc.gam.project_widgets.events = function(options) {
                      function(data, status, xhr) {
                          if(data == 'False'){return false;}
                          
-                         tc.reloadHash('show,events');
+                         tc.reloadProjectHash('show,events');
                      });
                 }
             });

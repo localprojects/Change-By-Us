@@ -380,3 +380,13 @@ tc.reloadProjectHash = function(hash) {
   window.location.hash = hash;
   window.location.reload();
 };
+
+
+// Takes a number and returns a string padded with the specified number of zeros
+tc.zeroPad = function (number, width) {
+  width -= number.toString().length;
+  if ( width > 0 ) {
+    return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+  }
+  return number;
+};
