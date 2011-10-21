@@ -316,8 +316,10 @@ tc.gam.project_widgets.event_form = function(options) {
         });
         
         //Bind the event to link a need
-        tc.jQ('.attach-need').live('click', function() {
-          var need_id = tc.jQ('#event-needs').val();
+        
+        tc.jQ('#event-needs').live('change', function() {
+          var $this =  tc.jQ(this),
+            need_id = $this.val();
           
           if (need_id) {
             self._linkNeed(need_id, event_id, cached_needs);
