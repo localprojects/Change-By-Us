@@ -14,6 +14,7 @@ from sqlalchemy import Integer
 from sqlalchemy import SmallInteger
 from sqlalchemy import String
 from sqlalchemy import Text
+from sqlalchemy import Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.exc import FlushError
@@ -54,7 +55,7 @@ class User (Base):
     last_name = Column(String(50), default=None)
     full_display_name = Column(String(255), default=None)
     image_id = Column(Integer, default=None)
-    location_id = Column(Integer, default=None)  # Should be a foreign key
+    location_id = Column(ForeignKey('location.location_id'), default=None)
     description = Column(String(255), default=None)
     affiliation = Column(String(100), default=None)
     group_membership_bitmask = Column(SmallInteger, nullable=False, default=1)
@@ -67,6 +68,7 @@ class User (Base):
 
     commitments = relationship('Volunteer', cascade='all, delete, delete-orphan')
     memberships = relationship('ProjectMember', primaryjoin='ProjectMember.user_id==User.id', cascade='all, delete, delete-orphan')
+    location = relationship('Location')
 
     projects = association_proxy('memberships', 'project')
 
@@ -330,6 +332,19 @@ class SiteFeedback (Base):
     is_active = Column(SmallInteger, nullable=False, default=1)
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
+class Location (Base):
+    __tablename__ = 'location'
+
+    id = Column('location_id', Integer, primary_key=True)
+    name =  Column(String(50), nullable=False)
+    lat =  Column(Float)
+    lon =  Column(Float)
+    borough =  Column(String(50))
+    address =  Column(String(100))
+    city =  Column(String(50))
+    state =  Column(String(2))
 
 
 if __name__ == '__main__':
