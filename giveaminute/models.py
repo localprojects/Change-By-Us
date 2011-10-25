@@ -83,6 +83,7 @@ class User (Base):
 
     @property
     def display_name(self):
+        import framework.controller
         from giveaminute import project
 
         return project.userNameDisplay(

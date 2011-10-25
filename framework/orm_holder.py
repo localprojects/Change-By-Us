@@ -27,7 +27,7 @@ class OrmHolder (object):
     @classmethod
     def invalidate(cls):
         web.ctx.orm = None
-    
+
     def get_db_config(self):
         """Pulls the database config information from the config.yaml file."""
         return Config.get('database')
@@ -36,25 +36,25 @@ class OrmHolder (object):
     def get_db_engine(self, db_config):
         """
         Gets the SQLAlchemy database engine.
-        
+
         The database engine should be a global object in the process.  As such,
         we stick it on ``web.config``.  This way, all the threads share the
         engine and the db connection pool that it maintains.
-        
+
         """
         if not hasattr(web.config, 'db_engine'):
             db_conn_string = '%(dbn)s://%(user)s:%(password)s@%(host)s/%(db)s' % db_config
-            web.config.db_engine = create_engine(db_conn_string, echo=True)
+            web.config.db_engine = create_engine(db_conn_string, encoding='latin1', convert_unicode=True, echo=True)
         return web.config.db_engine
 
 
     def get_orm(self, engine):
         """
         Returns a thread-specific SQLAlchemy ORM session.
-        
+
         The session is a scoped session, which means that it is global within
         a given thread.  New threads, however, will create new sessions.
-        
+
         """
         OrmSession = scoped_session(sessionmaker(bind=engine))
         return OrmSession
