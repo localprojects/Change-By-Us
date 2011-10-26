@@ -306,7 +306,7 @@ tc.gam.project_widgets.event_form = function(options) {
                 }
                 
                 initForm(id, function(){
-                    dom.show();
+                    tc.showProjectWidget(dom);
                 });
                 
             } else {

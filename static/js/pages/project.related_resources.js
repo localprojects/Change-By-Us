@@ -6,7 +6,6 @@ tc.gam.project_widgets.related_resources = function(options){
     tc.util.log("project.related_resources");
     var dom = options.dom,
         elements = {
-            window: tc.jQ(window),
             resource_counter: dom.find(".counter"),
             resources_table: dom.find("table.resources-list"),
             empty_box: dom.find(".empty-state-box")
@@ -166,10 +165,7 @@ tc.gam.project_widgets.related_resources = function(options){
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
             tc.util.log('&&& showing ' + options.name);
-            dom.show();
-            if((dom.offset().top - elements.window.scrollTop()) < 0){
-                elements.window.scrollTop(0);
-            }
+            tc.showProjectWidget(dom);
         } else {
             tc.util.log('&&& hiding ' + options.name);
             dom.hide();

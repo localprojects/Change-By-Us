@@ -331,10 +331,10 @@ tc.gam.project_widgets.needs = function(options) {
                     self.need_id = id;
                     tc.gam.project_data.getNeedDetails(self.need_id, function(need_details) {
                         mergeDetailTemplate(need_details);
-                        dom.show();
+                        tc.showProjectWidget(dom);
                     });
                 } else {
-                    dom.show();
+                    tc.showProjectWidget(dom);
                 }
             } else {
                 tc.util.log('&&& hiding ' + options.name);
