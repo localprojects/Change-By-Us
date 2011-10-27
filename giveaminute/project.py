@@ -573,7 +573,7 @@ def removeUserFromProject(db, projectId, userId):
 
         user = orm.query(models.User).get(userId)
         project = orm.query(models.Project).get(projectId)
-        
+
         result = user.leave(project)
         if result:
             orm.commit()

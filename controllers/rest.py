@@ -729,6 +729,17 @@ class NeedModelRestController (RestController):
 
         return user_dict
 
+    def volunteer_to_dict(self, volunteer):
+        """As a model, a volunteer is actually an intermediary between a user
+           and a need, but for this purpose, it looks a lot like a user."""
+
+        volunteer_dict = super(NeedModelRestController, self).instance_to_dict(volunteer)
+
+        del volunteer_dict['member_id']
+
+        volunteer_dict.update(self.user_to_dict(volunteer.member))
+        return volunteer_dict
+
     def event_to_dict(self, event):
         """Convert an event instance in the context of being linked with a need
            to a dictionary"""
@@ -750,18 +761,33 @@ class NeedModelRestController (RestController):
 
         need_dict = super(NeedModelRestController, self).instance_to_dict(need)
 
+        # Use the interbediary model (Volunteer) to get at the volunteering
+        # members so that we have access to other properties of the intermediary
+        # (like quantity).
         need_dict['volunteers'] = [
-            self.user_to_dict(volunteer)
-            for volunteer in need.volunteers]
+            self.volunteer_to_dict(need_volunteer)
+            for need_volunteer in need.need_volunteers]
 
         need_dict['event'] = self.event_to_dict(need.event)
 
-        raw_date = need_dict['date']
-        if raw_date:
-            need_dict['display_date'] = need.display_date
+        ddate = need.display_date
+        if ddate:
+            need_dict['display_date'] = ddate
         need_dict['display_address'] = need.display_address
+        need_dict['quantity_committed'] = need.quantity_committed
 
         return need_dict
+
+    def dict_to_instance(self, data, need=None):
+        if 'event_id' in data:
+            try:
+                int(data['event_id'])
+            except ValueError:
+                log.debug('Getting rid of an invalid event id: %r' % (data['event_id'],))
+                del data['event_id']
+
+        need = super(NeedModelRestController, self).dict_to_instance(data, need)
+        return need
 
 
 class NeedsList (ListInstancesMixin, CreateInstanceMixin, NeedModelRestController):

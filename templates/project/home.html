@@ -6,16 +6,18 @@
             </span>
         </h2>
         <div class="actions">
+            {% if d.template_data.project.needs|length > 1 %}
             <a href="#show,needs" class="forward fancy-caps">
                 <span>See More</span>
             </a>
+            {% endif %}
         </div>
     </div>
     <ol class="need-stack">
         {% with num_messages_to_show = 1 %}
             {% for need in d.template_data.project.needs %}
                 {% if loop.index <= num_messages_to_show %}
-                    {% include "project/volunteer_need_teaser.html" %}
+                    {% include "project/need_teaser.html" %}
                 {% endif %}
             {% else %}
                 {% include "project/empty_needs_list.html" %}
@@ -30,9 +32,11 @@
             </span>
         </h2>
         <div class="actions">
+          {% if d.template_data.project.events|length > 1 %}
             <a href="#show,events" class="forward fancy-caps">
                 <span>See More</span>
             </a>
+          {% endif %}
         </div>
     </div>
     <ol class="event-stack">
@@ -53,6 +57,13 @@
                 Discussion
             </span>
         </h2>
+        <div class="actions">
+          {% if d.template_data.project.data.info.messages['n_returned'] > 0 %}
+            <a href="#show,conversation" class="forward fancy-caps">
+                <span>See More</span>
+            </a>
+          {% endif %}
+        </div>
     </div>
     <ol class="comment-stack">
         {% if d.template_data.project.data.info.messages['n_returned'] > 0 %}

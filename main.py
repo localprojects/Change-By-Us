@@ -109,13 +109,14 @@ def load_sqla(handler):
             return self.orm
 
         def __exit__(self, e_type=None, e_val=None, e_tb=None):
+            from traceback import format_exception
             if e_type == web.HTTPError:
                 log.debug("*** web.HTTPError with the ORM")
-                log.warning(e_tb)
+                log.warning(''.join(format_exception(e_type, e_val, e_tb)))
                 self.orm.commit()
             elif e_type:
                 log.debug("*** Other exception with the ORM")
-                log.error(e_tb)
+                log.error(''.join(format_exception(e_type, e_val, e_tb)))
                 OrmHolder.invalidate()
             else:
                 log.debug("*** Finishing up with the ORM %r" % self.orm)

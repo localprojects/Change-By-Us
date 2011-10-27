@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+from collections import namedtuple
+from datetime import (date, datetime)
+
 from unittest2 import TestCase
 from nose.tools import *
 
@@ -5,6 +10,7 @@ from mock import Mock
 
 from giveaminute.models import Event
 from giveaminute.models import Need
+from giveaminute.models import Project
 from giveaminute.models import User
 
 class Test_User_display_name (TestCase):
@@ -12,26 +18,74 @@ class Test_User_display_name (TestCase):
     @istest
     def returns_full_first_and_last_name_when_user_has_nonzero_group_bitmask(self):
         user = User()
-        user.first_name = 'Mjumbe'
-        user.last_name = 'Poe'
+        user.first_name = u'Mjumbe'
+        user.last_name = u'Poe'
         user.affiliation = None
         user.group_membership_bitmask = 7
 
         dname = user.display_name
 
-        assert_equal(dname, 'Mjumbe Poe')
+        assert_equal(dname, u'Mjumbe Poe')
 
     @istest
     def returns_full_first_and_last_name_when_user_has_zero_group_bitmask(self):
         user = User()
-        user.first_name = 'Mjumbe'
-        user.last_name = 'Poe'
+        user.first_name = u'Mjumbe'
+        user.last_name = u'Poe'
         user.affiliation = None
         user.group_membership_bitmask = 0
 
         dname = user.display_name
 
-        assert_equal(dname, 'Mjumbe P.')
+        assert_equal(dname, u'Mjumbe P.')
+
+    @istest
+    def can_handle_non_ascii_characters(self):
+        user = User()
+        user.first_name = u'Adé'
+        user.last_name = 'F.'
+        user.affiliation = None
+        user.group_membership_bitmask = 0
+
+        dname = user.display_name
+
+        assert_equal(dname, u'Adé F.')
+
+
+class Test_Project_needsByType (TestCase):
+    def setup (self):
+        self.__original_needs = Project.needs
+
+    def teardown (self):
+        Project.needs = self.__original_needs
+
+    @istest
+    def returns_an_empty_dictionary_when_no_needs (self):
+        project = Project()
+        project.needs = []
+
+        nbt = project.needs_by_type
+
+        assert_equal(nbt, {})
+
+    @istest
+    def returns_a_dict_with_the_need_types_as_keys (self):
+        NeedStub = namedtuple('NeedStub', 'type')
+        Project.needs = [NeedStub(type='a'),
+                         NeedStub(type='a'),
+                         NeedStub(type='b'),
+                         NeedStub(type='c'),
+                         NeedStub(type='d'),
+                         NeedStub(type='b')]
+        project = Project()
+
+        nbt = project.needs_by_type
+
+        assert_equal(sorted(nbt.keys()), ['a','b','c','d'])
+        assert_equal(len(nbt['a']), 2)
+        assert_equal(len(nbt['b']), 2)
+        assert_equal(len(nbt['c']), 1)
+        assert_equal(len(nbt['d']), 1)
 
 
 class Test_Need_displayAddress (TestCase):
@@ -56,6 +110,39 @@ class Test_Need_displayAddress (TestCase):
         daddress = need.display_address
 
         assert_equal(daddress, 'Skid row')
+
+
+class Test_Need_displayDate (TestCase):
+
+    @istest
+    def returns_the_event_date_if_it_exists (self):
+        need = Need()
+        need.event = Event()
+        need.event.start_datetime = datetime(2011, 8, 2, 12, 30, 00)
+
+        # ... with no need date
+        ddate = need.display_date
+        assert_equal(ddate, 'August 2nd')
+
+        # ... with a need date
+        need.date = date(2011, 7, 11)
+        ddate = need.display_date
+        assert_equal(ddate, 'August 2nd')
+
+    @istest
+    def returns_the_need_date_if_no_event_set (self):
+        need = Need()
+        need.date = date(2011, 7, 11)
+
+        ddate = need.display_date
+        assert_equal(ddate, 'July 11th')
+
+    @istest
+    def returns_None_if_no_need_date_or_event_is_set (self):
+        need = Need()
+
+        ddate = need.display_date
+        assert_is_none(ddate)
 
 
 class Test_Event_rsvpServiceName (TestCase):

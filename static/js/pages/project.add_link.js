@@ -98,14 +98,10 @@ tc.gam.project_widgets.add_link = function(options) {
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
             tc.util.log('&&& showing ' + options.name);
-            dom.show();
+            tc.showProjectWidget(dom);
 
             if(components.merlin){
                 components.merlin.show_step('link-info');
-            }
-
-            if((dom.offset().top - elements.window.scrollTop()) < 0){
-                elements.window.scrollTop(0);
             }
         } else {
             tc.util.log('&&& hiding ' + options.name);

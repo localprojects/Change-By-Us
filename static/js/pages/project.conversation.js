@@ -19,6 +19,7 @@ tc.gam.project_widgets.conversation = function(options){
             messages: {}                      //The message by widget id
         },
         carouselWidget,
+        $window = tc.jQ(window),
         self = {};
     
     tc.util.dump(options);
@@ -623,8 +624,8 @@ tc.gam.project_widgets.conversation = function(options){
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
             tc.util.log('&&& showing ' + options.name);
-            dom.show();
-
+            tc.showProjectWidget(dom);
+            
             if(components.merlin){
                 components.merlin.show_step('message');
             }
