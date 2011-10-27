@@ -10,7 +10,7 @@
             (d.template_data and d.template_data.user and d.template_data.user.is_admin) or
             (d.template_data and d.template_data.user and d.template_data.user.is_leader) %}
         <div class="actions">
-            <a href="#show,need-form" class="add fancy-caps">
+            <a href="#show,add-need" class="add fancy-caps">
                 <span>Add Need</span>
             </a>
         </div>
@@ -18,16 +18,48 @@
     </div>
 
 
-    <ol class="need-stack">
-        {% for need in d.template_data.project.needs %}
-            {% include "project/volunteer_need_teaser.html" %}
-        {% else %}
-            {% include "project/empty_needs_list.html" %}
+    {#
+     # The list of volunteers is expected to be sorted by type first.
+     #}
+
+    {% for type, needs in d.template_data.project.needs_by_type.items() %}
+
+        {% if type == 'volunteer' %}
+            <h3>Volunteers</h3>
+        {% elif type == 'inkind' %}
+            <h3>In-kind Donations</h3>
+        {% endif %}
+
+        <ol class="need-stack {{ type }}-need-stack">
+
+        {% for need in needs %}
+            {% include "project/need_teaser.html" %}
         {% endfor %}
-    </ol>
+
+        </ol>
+
+    {% else %}
+        <ol class="need-stack">
+            {% include "project/empty_needs_list.html" %}
+        </ol>
+    {% endfor %}
 
 
     {% raw %}
+    <script id="add_inkind_need_tmpl" type="text/html">
+        <span>
+        <strong>YES</strong>, I can bring <input name="add-quantity" class="add-quantity" id="add_quantity" type="text" /> {{ request }}
+
+        {{#reason}}
+            for {{ reason }}
+        {{/reason}}
+
+        {{#display_date}}
+            on {{ display_date }}
+        {{/display_date}}
+        </span>
+    </script>
+
     <script id="add_vol_need_tmpl" type="text/html">
         <span>
         <strong>YES</strong>, I can help {{ request }}
@@ -79,7 +111,9 @@
     </div>
 </div>
 
-{% include 'project/need_form.html' %}
+{% include 'project/add_need.html' %}
+{% include 'project/volunteer_need_form.html' %}
+{% include 'project/inkind_need_form.html' %}
 {% include 'project/volunteer_need.html' %}
 
 <script src="/static/js/pages/project.needs.js"></script>

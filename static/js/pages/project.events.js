@@ -112,7 +112,7 @@ tc.gam.project_widgets.events = function(options) {
                     self.event_id = id;
                     tc.gam.project_data.getEventDetails(self.event_id, function(event_details) {
                         mergeDetailTemplate(event_details);
-                        dom.show();
+                        tc.showProjectWidget(dom);
                     });
                     if (options.name === 'event-needs') {
                         tc.gam.project_data.getEventNeeds(self.event_id, function(event_needs) {
@@ -122,7 +122,7 @@ tc.gam.project_widgets.events = function(options) {
                     }
                     
                 } else {
-                    dom.show();
+                    tc.showProjectWidget(dom);
                 }
             } else {
                 tc.util.log('&&& hiding ' + options.name);
@@ -137,11 +137,11 @@ tc.gam.project_widgets.events = function(options) {
                 source_element:tc.jQ('.modal-content.remove-event'),
                 submit: function(){
                     tc.gam.project_data.deleteEvent(event.target.href.split(',')[1],
-                                                   function(data, status, xhr) {
-                                                       if(data == 'False'){return false;}
-                                                       window.location.hash = 'show,events';
-                                                       window.location.reload();
-                                                   });
+                     function(data, status, xhr) {
+                         if(data == 'False'){return false;}
+                         
+                         tc.reloadProjectHash('show,events');
+                     });
                 }
             });
         });

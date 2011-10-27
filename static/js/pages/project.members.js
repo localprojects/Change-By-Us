@@ -234,7 +234,7 @@ tc.gam.project_widgets.members = function(options){
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
             tc.util.log('&&& showing ' + options.name);
-            dom.show();
+            tc.showProjectWidget(dom);
 
             if (components.ideas_carousel.has_items() && !components.ideas_carousel.is_rendered()) {
                 components.ideas_carousel.render();

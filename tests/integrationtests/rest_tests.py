@@ -163,6 +163,13 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         assert need_dict["display_date"] == "August 31st"
 
     @istest
+    def should_use_the_event_date_if_given_without_custom_date(self):
+        response = self.app.get('/rest/v1/needs/4/', status=200)
+
+        need_dict = json.loads(response.body)
+        assert_equal(need_dict["display_date"], 'September 6th')
+
+    @istest
     def should_default_to_using_custom_location_if_no_event_exists(self):
         response = self.app.get('/rest/v1/needs/1/', status=200)
 
@@ -200,6 +207,15 @@ class Test_NeedsRestEndpoint_GET (AppSetupMixin, TestCase):
         response_dict = json.loads(response.body)
         for volunteer_dict in response_dict['volunteers']:
             assert_in("avatar_path", volunteer_dict)
+
+    @istest
+    def should_include_the_quantity_that_volunteers_can_give_in_the_return_value(self):
+        response = self.app.get('/rest/v1/needs/1/', status=200)
+
+        response_dict = json.loads(response.body)
+        for volunteer_dict in response_dict['volunteers']:
+            assert_in("quantity", volunteer_dict)
+            assert_is_not_none(volunteer_dict['quantity'])
 
     @istest
     def should_not_include_the_volunteer_passwords_in_the_return_value(self):

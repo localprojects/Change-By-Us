@@ -1,7 +1,9 @@
 import re
 
+from collections import defaultdict
 from datetime import date
 from datetime import datetime
+
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
@@ -12,6 +14,7 @@ from sqlalchemy import Integer
 from sqlalchemy import SmallInteger
 from sqlalchemy import String
 from sqlalchemy import Text
+from sqlalchemy import Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.exc import FlushError
@@ -52,7 +55,7 @@ class User (Base):
     last_name = Column(String(50), default=None)
     full_display_name = Column(String(255), default=None)
     image_id = Column(Integer, default=None)
-    location_id = Column(Integer, default=None)  # Should be a foreign key
+    location_id = Column(ForeignKey('location.location_id'), default=None)
     description = Column(String(255), default=None)
     affiliation = Column(String(100), default=None)
     group_membership_bitmask = Column(SmallInteger, nullable=False, default=1)
@@ -65,6 +68,7 @@ class User (Base):
 
     commitments = relationship('Volunteer', cascade='all, delete, delete-orphan')
     memberships = relationship('ProjectMember', primaryjoin='ProjectMember.user_id==User.id', cascade='all, delete, delete-orphan')
+    location = relationship('Location')
 
     projects = association_proxy('memberships', 'project')
 
@@ -79,6 +83,7 @@ class User (Base):
 
     @property
     def display_name(self):
+        import framework.controller
         from giveaminute import project
 
         return project.userNameDisplay(
@@ -150,7 +155,7 @@ class Project (Base):
     #
     # FULLTEXT KEY `title` (`title`,`description`)
 
-    needs = relationship('Need', backref='project')
+    needs = relationship('Need', order_by="desc(Need.id)", backref='project')
     events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
@@ -165,12 +170,20 @@ class Project (Base):
                 admins.append(pm.member)
         return admins
 
+    @property
+    def needs_by_type(self):
+        nbt = defaultdict(list)
+        for need in self.needs:
+            nbt[need.type].append(need)
+        return nbt
+
 
 class Need (Base):
     __tablename__ = 'project_need'
 
     id = Column(Integer, primary_key=True)
     type = Column(String(10))
+    subtype = Column(String(10))
     request = Column(String(64))
     quantity = Column(Integer)
     description = Column(Text)
@@ -179,19 +192,26 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
-    event_id = Column(ForeignKey('project_event.id'), nullable=True)
+    event_id = Column(ForeignKey('project_event.id'), default=None, nullable=True)
 
     need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')
     event = relationship('Event')
 
     @property
+    def quantity_committed(self):
+        """Returns the number of things volunteers/donations that have been committed"""
+        return sum(vol.quantity for vol in self.need_volunteers)
+
+    @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
         if self.event:
             return util.make_pretty_date(self.event.start_datetime)
-        else:
+        elif self.date:
             return util.make_pretty_date(self.date)
+        else:
+            return None
 
     @property
     def reason(self):
@@ -213,6 +233,8 @@ class Volunteer (Base):
 
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
+    quantity = Column(Integer, default=1, nullable=False)
+    """The quantity of the reqested need that the member is able to provide"""
 
     need = relationship('Need')
     member = relationship('User')
@@ -311,6 +333,19 @@ class SiteFeedback (Base):
     is_active = Column(SmallInteger, nullable=False, default=1)
     created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
     updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
+class Location (Base):
+    __tablename__ = 'location'
+
+    id = Column('location_id', Integer, primary_key=True)
+    name =  Column(String(50), nullable=False)
+    lat =  Column(Float)
+    lon =  Column(Float)
+    borough =  Column(String(50))
+    address =  Column(String(100))
+    city =  Column(String(50))
+    state =  Column(String(2))
 
 
 if __name__ == '__main__':
