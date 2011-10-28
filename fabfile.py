@@ -151,8 +151,8 @@ env.minifier_cmd = 'python %(build_path)s/scripts/minifier/minifier.py -v -c %(b
 #------------------------------------------------
 # AWS related tasks require some configurations
 #------------------------------------------------
-env.ec2Conn = EC2Connection(env.aws_access_key_id, env.aws_secret_access_key)
-env.asConn  = AutoScaleConnection(env.aws_access_key_id, env.aws_secret_access_key)
+# env.ec2Conn = EC2Connection(env.aws_access_key_id, env.aws_secret_access_key)
+# env.asConn  = AutoScaleConnection(env.aws_access_key_id, env.aws_secret_access_key)
 
 # Production Alias is the alias/tag that all production instances use
 env.production_alias = '911memorial_names_'
