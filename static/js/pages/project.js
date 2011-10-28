@@ -186,6 +186,23 @@ app_page.features.push(function(app) {
         elements: tc.jQ('a.invite'),
         ref_project_id: app_page.data.project.project_id
     });
+    
+    
+    var $title = tc.jQ('.project-header .main');
+    if(app.app_page.project_user.is_project_admin || ( app.app_page.user &&  app.app_page.user.is_admin)) {
+        $title.addClass("mod-inline-edit");
+        new tc.inlineEditor({
+            dom: $title,
+            service: {
+                url: "/project/title",
+                param: "title",
+                post_data: {
+                    project_id: app_page.data.project.project_id
+                }
+            },
+            charlimit: 50
+        });
+    }
 });
 
 /**
