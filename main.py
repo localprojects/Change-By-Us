@@ -43,6 +43,9 @@ ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
 
             r'/rest/v1/keywords/', 'controllers.rest.PopularKeywordList',
 
+            r'/rest/v1/events/', 'controllers.rest.EventList',
+            r'/rest/v1/events/(?P<id>\d+)/', 'controllers.rest.EventInstance',
+
             r'/?([^/.]*)/?([^/.]*)', 'controllers.home.Home' )
 
 
@@ -96,17 +99,21 @@ def load_sqla(handler):
         def __enter__(self):
             log.debug("*** Loading the ORM")
             self.orm = OrmHolder().orm
+            log.debug('***** loaded as %r' % self.orm)
             return self.orm
 
         def __exit__(self, e_type=None, e_val=None, e_tb=None):
+            from traceback import format_exception
             if e_type == web.HTTPError:
                 log.debug("*** web.HTTPError with the ORM")
-                orm.commit()
+                log.warning(''.join(format_exception(e_type, e_val, e_tb)))
+                self.orm.commit()
             elif e_type:
                 log.debug("*** Other exception with the ORM")
-                self.orm.rollback()
+                log.error(''.join(format_exception(e_type, e_val, e_tb)))
+                OrmHolder.invalidate()
             else:
-                log.debug("*** Finishing up with the ORM")
+                log.debug("*** Finishing up with the ORM %r" % self.orm)
                 self.orm.commit()
 
     with OrmContextManager() as orm:

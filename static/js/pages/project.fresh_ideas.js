@@ -62,7 +62,7 @@ tc.gam.project_widgets.fresh_ideas = function(options){
     tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
         if (options.name === widgetName) {
             tc.util.log('&&& showing ' + options.name);
-            dom.show();
+            tc.showProjectWidget(dom);
         } else {
             tc.util.log('&&& hiding ' + options.name);
             dom.hide();

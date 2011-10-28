@@ -26,7 +26,11 @@
                 <div class="thumb-wrapper">
                     <div class="thumb">
                         <a href='/useraccount/{{ admin.id }}'>
-                        <img width="50" src="{{ d.template_data.media_root }}{{ admin.avatar_path }}" alt="{{ admin.display_name }}">
+                          {% if admin.avatar_path %}
+                          <img width="50" src="{{ d.template_data.media_root }}{{ admin.avatar_path }}" alt="{{ admin.display_name }}">
+                          {% else %}
+                          <img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ admin.display_name }}">
+                          {% endif %}
                         </a>
                     </div>
 

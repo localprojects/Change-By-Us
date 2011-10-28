@@ -34,7 +34,9 @@ tc.gam.project_widgets.needs = function(options) {
     self._getDetailTemplateData = function(need_details) {
         var new_details = tc.jQ.extend(true, {
                 day: function() { return this.date ? (new Date(this.date).getUTCDate()) : ''; },
-                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; }
+                month: function() { return this.date ? (new Date(this.date).getUTCMonth()+1) : ''; },
+                isVolunteer: function() { return this.type === 'volunteer'; },
+                isInKind: function() { return this.type === 'inkind'; }
             }, need_details);
 
         //Special cases for the first volunteer
@@ -88,8 +90,8 @@ tc.gam.project_widgets.needs = function(options) {
             $progress = $container.find('.progress'),
             quantityNum = parseInt(need.quantity, 10);
 
-        $volCount.text(need.volunteers.length);
-        $progress.width(self._getProgressElementWidth($progress.parent().width(), need.volunteers.length, quantityNum));
+        $volCount.text(need.quantity_committed);
+        $progress.width(self._getProgressElementWidth($progress.parent().width(), need.quantity_committed, quantityNum));
     };
 
     self._updateVolunteerButton = function($container, need) {
@@ -115,7 +117,7 @@ tc.gam.project_widgets.needs = function(options) {
         $avatars.html($avatar_html);
     };
 
-    var updateNeed = function(need) {
+    var updateNeed = self.updateNeed = function(need) {
         var $needContainer = tc.jQ('.need[data-id|="'+need.id+'"]');
 
         self._updateVolunteerProgress($needContainer, need);
@@ -127,12 +129,12 @@ tc.gam.project_widgets.needs = function(options) {
      * Function: volunteer
      * The user can volunteer for a specific need.
      */
-    var volunteer = function(need, message, callback) {
+    var volunteer = function(need, quantity, message, callback) {
         var $error_msg = modal.options.element.find('.error-msg').hide();
 
         tc.jQ.ajax({
             url: '/rest/v1/needs/'+need.id+'/volunteers/',
-            data: { member_id: self._getUserId() },
+            data: { member_id: self._getUserId(), quantity: quantity },
             dataType: 'json',
             type: 'POST',
             success: function(volunteer_data, status, xhr) {
@@ -209,6 +211,18 @@ tc.gam.project_widgets.needs = function(options) {
                         'volunteer_agree':{
                             selector:'input.volunteer-agree',
                             validators:['required']
+                        },
+                        'add_quantity': {
+                            selector:'input.add-quantity',
+                            validators: function(merlinInput, $element, step, onSubmit) {
+                                var max;
+                                if ($element.length > 0) {
+                                    max = need.quantity - need.quantity_committed;
+                                    return tc.validate($element, ['required', 'numeric', 'max-'+max]);
+                                } else {
+                                    return {valid:true};
+                                }
+                            }
                         }
                     },
                     init:function(merlin, dom) {
@@ -217,17 +231,28 @@ tc.gam.project_widgets.needs = function(options) {
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
 
                             if (!$this.hasClass('disabled')) {
-                                volunteer(need, message, function(data){
+                                var quantity = parseInt(merlin.options.steps.volunteer_agree.inputs.add_quantity.dom.val(), 10) || 1;
+
+                                volunteer(need, quantity, message, function(data){
                                     if (self.need_id) {
                                         tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
                                     } else {
                                         tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
                                     }
-                                    modal.hide();
+                                    merlin.show_step('volunteer_complete');
                                 });
                             }
                         });
                     }
+                },
+                'volunteer_complete': {
+                  selector:'.step.user-volunteer-complete',
+                  init: function(merlin, dom) {
+                    dom.find('.submit').bind('click', function(e) {
+                      e.preventDefault();
+                      modal.hide();
+                    });
+                  }
                 }
             }
         });
@@ -242,9 +267,16 @@ tc.gam.project_widgets.needs = function(options) {
     var showModal = function(need) {
         //use ICanHaz to fill in the modal content template
         var $needDetailsContent = tc.jQ('.modal-content .volunteer-agree-section .volunteer-agree-label'),
-            h = ich.add_vol_need_tmpl(need);
+            $html;
+        
+        if (need.type === 'inkind') {
+            $html = ich.add_inkind_need_tmpl(need);
+        } else {
+            $html = ich.add_vol_need_tmpl(need);
+        }
+        
 
-        $needDetailsContent.html(h);
+        $needDetailsContent.html($html);
 
         //NOTE: the source_element gets cloned here, so be careful
         //binding events!
@@ -255,33 +287,8 @@ tc.gam.project_widgets.needs = function(options) {
 
         initMerlin(need);
     };
-
-    /**
-     * Function: bindEvents
-     * Bind events for this widget
-     */
-    var bindEvents = function() {
-        tc.jQ(tc).bind('show-project-widget', function(event, widgetName, id) {
-            if (options.name === widgetName) {
-                tc.util.log('&&& showing ' + options.name);
-
-                //We're going to show one need in detail, so go fetch
-                //the details and setup the template
-                if (id) {
-                    self.need_id = id;
-                    tc.gam.project_data.getNeedDetails(self.need_id, function(need_details) {
-                        mergeDetailTemplate(need_details);
-                        dom.show();
-                    });
-                } else {
-                    dom.show();
-                }
-            } else {
-                tc.util.log('&&& hiding ' + options.name);
-                dom.hide();
-            }
-        });
-
+    
+    var bindNeedHelpLinks = self.bindNeedHelpLinks = function() {
         tc.jQ('.help-link').die('click').live('click', function(event) {
             event.preventDefault();
 
@@ -299,7 +306,9 @@ tc.gam.project_widgets.needs = function(options) {
                 }
             }
         });
-
+    };
+    
+    var bindNeedDeleteLinks = self.bindNeedDeleteLinks = function() {
         tc.jQ('a.need-delete').die('click').live('click', function(event) {
             event.preventDefault();
             options.app.components.modal.show({
@@ -307,14 +316,44 @@ tc.gam.project_widgets.needs = function(options) {
                 source_element:tc.jQ('.modal-content.remove-need'),
                 submit: function(){
                     tc.gam.project_data.deleteNeed(event.target.href.split(',')[1],
-                                                   function(data, status, xhr) {
-                                                       if(data == 'False'){return false;}
-                                                       window.location.hash = 'show,needs';
-                                                       window.location.reload();
-                                                   });
+                     function(data, status, xhr) {
+                         if(data == 'False'){return false;}
+                         tc.reloadProjectHash('show,needs');
+                     });
                 }
             });
         });
+    };
+
+    /**
+     * Function: bindEvents
+     * Bind events for this widget
+     */
+    var bindEvents = function() {
+        tc.jQ(tc).bind('show-project-widget', function(event, widgetName, id) {
+            if (options.name === widgetName) {
+                tc.util.log('&&& showing ' + options.name);
+
+                //We're going to show one need in detail, so go fetch
+                //the details and setup the template
+                if (id) {
+                    self.need_id = id;
+                    tc.gam.project_data.getNeedDetails(self.need_id, function(need_details) {
+                        mergeDetailTemplate(need_details);
+                        tc.showProjectWidget(dom);
+                    });
+                } else {
+                    tc.showProjectWidget(dom);
+                }
+            } else {
+                tc.util.log('&&& hiding ' + options.name);
+                dom.hide();
+            }
+        });
+        
+        bindNeedHelpLinks();
+        bindNeedDeleteLinks();
+
     };
 
     bindEvents();

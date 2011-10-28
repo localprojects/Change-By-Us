@@ -1,5 +1,9 @@
+import re
+
+from collections import defaultdict
 from datetime import date
 from datetime import datetime
+
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
@@ -10,6 +14,7 @@ from sqlalchemy import Integer
 from sqlalchemy import SmallInteger
 from sqlalchemy import String
 from sqlalchemy import Text
+from sqlalchemy import Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.exc import FlushError
@@ -50,7 +55,7 @@ class User (Base):
     last_name = Column(String(50), default=None)
     full_display_name = Column(String(255), default=None)
     image_id = Column(Integer, default=None)
-    location_id = Column(Integer, default=None)  # Should be a foreign key
+    location_id = Column(ForeignKey('location.location_id'), default=None)
     description = Column(String(255), default=None)
     affiliation = Column(String(100), default=None)
     group_membership_bitmask = Column(SmallInteger, nullable=False, default=1)
@@ -63,6 +68,7 @@ class User (Base):
 
     commitments = relationship('Volunteer', cascade='all, delete, delete-orphan')
     memberships = relationship('ProjectMember', primaryjoin='ProjectMember.user_id==User.id', cascade='all, delete, delete-orphan')
+    location = relationship('Location')
 
     projects = association_proxy('memberships', 'project')
 
@@ -77,6 +83,7 @@ class User (Base):
 
     @property
     def display_name(self):
+        import framework.controller
         from giveaminute import project
 
         return project.userNameDisplay(
@@ -148,7 +155,8 @@ class Project (Base):
     #
     # FULLTEXT KEY `title` (`title`,`description`)
 
-    needs = relationship('Need', backref='project')
+    needs = relationship('Need', order_by="desc(Need.id)", backref='project')
+    events = relationship('Event')
     project_members = relationship('ProjectMember', backref='project',
         primaryjoin='Project.id==ProjectMember.project_id')
 
@@ -156,9 +164,18 @@ class Project (Base):
 
     @property
     def admins(self):
+        admins = []
         for pm in self.project_members:
             if pm.is_project_admin:
-                yield pm.member
+                admins.append(pm.member)
+        return admins
+
+    @property
+    def needs_by_type(self):
+        nbt = defaultdict(list)
+        for need in self.needs:
+            nbt[need.type].append(need)
+        return nbt
 
 
 class Need (Base):
@@ -166,6 +183,7 @@ class Need (Base):
 
     id = Column(Integer, primary_key=True)
     type = Column(String(10))
+    subtype = Column(String(10))
     request = Column(String(64))
     quantity = Column(Integer)
     description = Column(Text)
@@ -174,14 +192,26 @@ class Need (Base):
     time = Column(String(32))
     duration = Column(String(64))
     project_id = Column(ForeignKey('project.project_id'), nullable=False)
+    event_id = Column(ForeignKey('project_event.id'), default=None, nullable=True)
 
     need_volunteers = relationship('Volunteer', cascade="all, delete-orphan")
     volunteers = association_proxy('need_volunteers', 'member')
+    event = relationship('Event')
+
+    @property
+    def quantity_committed(self):
+        """Returns the number of things volunteers/donations that have been committed"""
+        return sum(vol.quantity for vol in self.need_volunteers)
 
     @property
     def display_date(self):
         """Returns dates that end in '1st' or '22nd' and the like."""
-        return util.make_pretty_date(self.date)
+        if self.event:
+            return util.make_pretty_date(self.event.start_datetime)
+        elif self.date:
+            return util.make_pretty_date(self.date)
+        else:
+            return None
 
     @property
     def reason(self):
@@ -190,15 +220,28 @@ class Need (Base):
         # TODO: We need a way of constructing the reason.
         return ''
 
+    @property
+    def display_address(self):
+        if self.event:
+            return self.event.address
+        else:
+            return self.address
+
 
 class Volunteer (Base):
     __tablename__ = 'project_need_volunteer'
 
     need_id = Column(ForeignKey('project_need.id'), primary_key=True)
     member_id = Column(ForeignKey('user.user_id'), primary_key=True)
+    quantity = Column(Integer, default=1, nullable=False)
+    """The quantity of the reqested need that the member is able to provide"""
 
     need = relationship('Need')
     member = relationship('User')
+
+    @property
+    def project(self):
+        return self.need.project
 
 
 class CommunityLeader (Base):
@@ -209,6 +252,100 @@ class CommunityLeader (Base):
     title = Column(String(256))
     image_path = Column(String(256))
     order = Column(Integer)
+
+
+class Event (Base):
+    __tablename__ = 'project_event'
+
+    id = Column(Integer, primary_key=True)
+    project_id = Column(ForeignKey('project.project_id'))
+    name = Column(String(256))
+    details = Column(Text)
+    rsvp_url = Column(String(2048))
+    start_datetime = Column(DateTime)
+    end_datetime = Column(DateTime)
+    address = Column(String(256))
+
+    project = relationship('Project')
+    needs = relationship('Need')
+
+    @property
+    def rsvp_service_name(self):
+        """The name of the service providing RSVP for the event"""
+        url = self.rsvp_url
+
+        if url is None:
+            return None
+
+        url = url.lower()
+
+        # For now the list of supported sites/URLs is hardcoded.  In the future
+        # we might want to try to be more clever.
+        if re.match(r'^(https?://)?(www.)?facebook.com', url):
+            return 'Facebook'
+        if re.match(r'^(https?://)?(www.)?meetup.com', url):
+            return 'Meetup'
+        if re.match(r'^(https?://)?(www.)?eventbrite.com', url):
+            return 'Eventbrite'
+        if re.match(r'^(http://)?(www.|\w+\.)?(ticketleap.com|tkt.ly)', url):
+            return 'TicketLeap'
+
+    @property
+    def start_displaydate(self):
+        if self.start_datetime:
+            return self.start_datetime.strftime('%B %d at %I:%M %p')
+        else:
+            return ''
+
+    @property
+    def start_year(self):
+        return self.start_datetime.year
+
+    @property
+    def start_month(self):
+        return self.start_datetime.month
+
+    @property
+    def start_day(self):
+        return self.start_datetime.day
+
+    @property
+    def start_hour(self):
+        return self.start_datetime.hour
+
+    @property
+    def start_minute(self):
+        return self.start_datetime.minute
+
+
+class SiteFeedback (Base):
+    """
+    Site Feedback ORM class.
+    """
+    __tablename__ = 'site_feedback'
+
+    site_feedback_id = Column(Integer, primary_key=True)
+    submitter_name = Column(String(100))
+    submitter_email = Column(String(255))
+    text = Column(Text)
+    is_responded = Column(SmallInteger, nullable=False, default=0)
+    responded_user_id = Column(Integer)  # Should be foreign key
+    is_active = Column(SmallInteger, nullable=False, default=1)
+    created_datetime = Column(DateTime, nullable=False, default=datetime(1, 1, 1, 0, 0, 0))
+    updated_datetime = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
+class Location (Base):
+    __tablename__ = 'location'
+
+    id = Column('location_id', Integer, primary_key=True)
+    name =  Column(String(50), nullable=False)
+    lat =  Column(Float)
+    lon =  Column(Float)
+    borough =  Column(String(50))
+    address =  Column(String(100))
+    city =  Column(String(50))
+    state =  Column(String(2))
 
 
 if __name__ == '__main__':

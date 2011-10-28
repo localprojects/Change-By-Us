@@ -373,6 +373,75 @@ tc.browserDetection = function() {
     tc.jQ('body').addClass(os);
 }
 tc.browserDetection();
+
+//Helper function to make the jqDropDown plugin more robust
+//since you can't set multiple classes at a time.
+//  id - the selector for the select element, also used to
+//       identify the generated markup
+//  defaultVal - Used to identify the unselectable default value
+tc.initDropDown = function(id, defaultVal, onChange) {
+  //Apply jqDropDown to our select element
+  var $container,
+    $input = tc.jQ('#' + id);
+
+  $input.jqDropDown({
+    toggleBtnName:'ddSelect',
+    optionListName:'ddSelectOptions',
+    containerName:'dd-' + id,
+    optionChanged: function() {
+      if (onChange) {
+        onChange($input);
+      }
+
+      //manually trigger the change event on the select element
+      //so that Merlin validation will trigger properly
+      $input.change();
+    }
+  }).data('default', defaultVal);
+
+  $container = tc.jQ('.dd-' + id);
+
+  //Add the default container css class (important, common styles on this guy)
+  $container.addClass('ddSelectContainer');
+
+  //There's no default value, something is always selected, so it's always valid
+  if (!defaultVal) {
+    $container.addClass('ddNoDefault');
+    $container.find('.ddSelect').addClass('valid has-been-focused').removeClass('not-valid');
+  }
+};
+
+// Function to change the hash of a url, not change the state of the app,
+// and then reload the page. This is used when a new need or event is created
+// and we want change the hash but not update the page state. This is because
+// there is a long delay from when the page state changes and the page reloads,
+// so it's really jarring for the user. 
+tc.reloadProjectHash = function(hash) {
+  tc.jQ(tc).unbind('show-project-widget');
+  window.location.hash = hash;
+  window.location.reload();
+};
+
+// Show the project dom element and scroll up if necessary
+tc.showProjectWidget = function() {
+  var $window = tc.jQ(window);
+  return function($dom) {
+    $dom.show();
+    if(($dom.offset().top - $window.scrollTop()) < 0) {
+      $window.scrollTop(250);
+    }
+  };
+}();
+
+// Takes a number and returns a string padded with the specified number of zeros
+tc.zeroPad = function (number, width) {
+  width -= number.toString().length;
+  if ( width > 0 ) {
+    return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+  }
+  return number;
+};
+
 /********************   End ./static/js/tc.util.js         ********************/
 
 
@@ -1609,7 +1678,6 @@ tc.top_bar = function(element, options) {
         tc.jQ.ajax({
             url:'/rest/v1/keywords/',
             dataType:'json',
-            cache:true,
             success:function(data, status, xhr) {
                 if (success) {
                     success(data, status, xhr);
@@ -1644,7 +1712,7 @@ tc.top_bar = function(element, options) {
                 }
                 tc.jQ(this).children("a").toggleClass("opened");
             }).mouseleave(function () {
-                tc.jQ(this).children(".dropdown").fadeOut(o.fadeSpeed);
+                tc.jQ(this).children(".dropdown").delay(200).fadeOut(o.fadeSpeed);
                 tc.jQ(this).children("a").toggleClass("opened");
             });
         };
@@ -2819,8 +2887,26 @@ tc.gam.project = function(app, dom) {
         'need-detail': tc.gam.project_widgets.needs(
             tc.jQ.extend({ name: 'need-detail', dom: dom.find('.project-section.need-detail') }, widget_options)
         ),
-       'need-form': tc.gam.project_widgets.need_form(
-            tc.jQ.extend({ name: 'need-form', dom: dom.find('.project-section.need-form') }, widget_options)
+        'add-need': tc.gam.project_widgets.add_need(
+            tc.jQ.extend({ name: 'add-need', dom: dom.find('.project-section.add-need') }, widget_options)
+        ),
+        'vol-form': tc.gam.project_widgets.vol_form(
+            tc.jQ.extend({ name: 'vol-form', dom: dom.find('.project-section.vol-form') }, widget_options)
+        ),
+        'inkind-form': tc.gam.project_widgets.inkind_form(
+            tc.jQ.extend({ name: 'inkind-form', dom: dom.find('.project-section.inkind-form') }, widget_options)
+        ),
+        'events': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'events', dom: dom.find('.project-section.events') }, widget_options)
+        ),
+        'event-detail': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-detail', dom: dom.find('.project-section.event-detail') }, widget_options)
+        ),
+        'event-needs': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-needs', dom: dom.find('.project-section.event-needs') }, widget_options)
+        ),
+        'event-form': tc.gam.project_widgets.event_form(
+            tc.jQ.extend({ name: 'event-form', dom: dom.find('.project-section.event-form') }, widget_options)
         ),
         'infopane': tc.gam.project_widgets.infopane(
             tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
@@ -2838,17 +2924,20 @@ tc.gam.project = function(app, dom) {
             tc.jQ.extend({ name: 'conversation', dom: dom.find('.project-section.conversation') }, widget_options)
         ),
         'members': tc.gam.project_widgets.members(
-            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.members') }, widget_options)
+            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.member-list') }, widget_options)
+        ),
+        'invite': tc.gam.project_widgets.members(
+            tc.jQ.extend({ name: 'invite', dom: dom.find('.project-section.invite-members') }, widget_options)
         )
     };
-    
+
     // Add fresh ideas component if available.
     if (tc.gam.project_widgets.fresh_ideas) {
         app.components.related_ideas = tc.gam.project_widgets.fresh_ideas(
             tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
         );
     }
-    
+
     tc.gam.project_widgets.project_tabs(
         tc.jQ.extend({ name: 'project_tabs', dom: dom.find('.project-tabs') }, widget_options)
     );
