@@ -164,6 +164,7 @@ tc.gam.project_widgets.conversation = function(options){
             message = generate_message_markup(d);
             message.hide();
             elements.message_stack.prepend(message);
+            handlers.embed_media();
             dom.find('a.close').unbind('click').bind('click', handlers.remove_comment);
             message.slideDown(500);
         },
@@ -389,7 +390,6 @@ tc.gam.project_widgets.conversation = function(options){
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-text').html(handlers.construct_links(data.message));
-        handlers.embed_media();
         
         if (data.attachment && data.attachment.medium_thumb_url) {
             $thumb = markup.find('.file-thumb')
