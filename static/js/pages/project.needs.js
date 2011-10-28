@@ -217,25 +217,19 @@ tc.gam.project_widgets.needs = function(options) {
                                 message = merlin.options.steps.volunteer_agree.inputs.volunteer_agree_msg.dom.val();
 
                             if (!$this.hasClass('disabled')) {
-                             console.log(self.need_id);
-                             console.log('going to the next volunteer step');
                              //bug with this we don't have an event
-                             //event.data.merlin.show_step('volunteer_complete');
-                             modal.hide();
-                              /*
-                                volunteer(need, message, function(data){
-                                    if (self.need_id) {
-                                        tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
-                                    } else {
-                                        tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
-                                    }
-                                    modal.hide();
-                                });
-                              */
+                             volunteer(need, message, function(data){
+                               if (self.need_id) {
+                                 tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
+                               } else {
+                                 tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
+                               }
+                               merlin.show_step('volunteer_complete');
+                             });
                             }
                         });
                     }
-                }/*,
+                },
                 'volunteer_complete': {
                   selector:'.step.user-volunteer-complete',
                   init: function(merlin, dom) {
@@ -245,7 +239,6 @@ tc.gam.project_widgets.needs = function(options) {
                     });
                   }
                 }
-                */
             }
         });
 
