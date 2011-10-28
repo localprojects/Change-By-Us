@@ -174,8 +174,13 @@ tc.gam.project_widgets.conversation = function(options){
         embed_media:function() {
           tc.jQ('.oembed').oembed(null,{
             embedMethod: 'fill',
-            maxWidth: '360',
-            maxHeight: '262'
+            maxWidth: '240',
+            maxHeight: '240',
+            afterEmbed: function(oembedData) {
+              this.addClass('file-thumb');
+              this.closest('.main').prepend(this.clone());
+              this.remove();
+            }
           });
         },
         handle_message_body:function(i,j){
