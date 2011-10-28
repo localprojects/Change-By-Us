@@ -232,18 +232,27 @@ tc.gam.project_widgets.needs = function(options) {
 
                             if (!$this.hasClass('disabled')) {
                                 var quantity = parseInt(merlin.options.steps.volunteer_agree.inputs.add_quantity.dom.val(), 10) || 1;
-                              
+
                                 volunteer(need, quantity, message, function(data){
                                     if (self.need_id) {
                                         tc.gam.project_data.getNeedDetails(self.need_id, mergeDetailTemplate);
                                     } else {
                                         tc.gam.project_data.getNeedDetails(data.need_id, updateNeed);
                                     }
-                                    modal.hide();
+                                    merlin.show_step('volunteer_complete');
                                 });
                             }
                         });
                     }
+                },
+                'volunteer_complete': {
+                  selector:'.step.user-volunteer-complete',
+                  init: function(merlin, dom) {
+                    dom.find('.submit').bind('click', function(e) {
+                      e.preventDefault();
+                      modal.hide();
+                    });
+                  }
                 }
             }
         });
@@ -331,10 +340,10 @@ tc.gam.project_widgets.needs = function(options) {
                     self.need_id = id;
                     tc.gam.project_data.getNeedDetails(self.need_id, function(need_details) {
                         mergeDetailTemplate(need_details);
-                        dom.show();
+                        tc.showProjectWidget(dom);
                     });
                 } else {
-                    dom.show();
+                    tc.showProjectWidget(dom);
                 }
             } else {
                 tc.util.log('&&& hiding ' + options.name);

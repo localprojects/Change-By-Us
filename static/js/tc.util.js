@@ -381,6 +381,16 @@ tc.reloadProjectHash = function(hash) {
   window.location.reload();
 };
 
+// Show the project dom element and scroll up if necessary
+tc.showProjectWidget = function() {
+  var $window = tc.jQ(window);
+  return function($dom) {
+    $dom.show();
+    if(($dom.offset().top - $window.scrollTop()) < 0) {
+      $window.scrollTop(250);
+    }
+  };
+}();
 
 // Takes a number and returns a string padded with the specified number of zeros
 tc.zeroPad = function (number, width) {

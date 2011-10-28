@@ -5,7 +5,6 @@ tc.gam.project_widgets = tc.gam.project_widgets || {};
 tc.gam.project_widgets.inkind_form = function(options) {
   tc.util.log('project.inkind_form');
   var dom = options.dom,
-      $window = tc.jQ(window),
       cached_events = [],
       self = {};
 
@@ -185,15 +184,11 @@ tc.gam.project_widgets.inkind_form = function(options) {
       tc.util.log('&&& showing ' + options.name);
 
       initForm(id, function(){
-          dom.show();
-
+          tc.showProjectWidget(dom);
+          
           dom.find('input[type=radio]').prettyCheckboxes();
           tc.initDropDown('inkind-event-list', 'Link to an event');
       });
-
-      if((dom.offset().top - $window.scrollTop()) < 0){
-        $window.scrollTop(0);
-      }
     } else {
       tc.util.log('&&& hiding ' + options.name);
       dom.hide();

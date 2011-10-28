@@ -317,7 +317,7 @@ tc.gam.project_widgets.vol_form = function(options) {
                 tc.util.log('&&& showing ' + options.name);
 
                 initForm(id, function(){
-                    dom.show();
+                    tc.showProjectWidget(dom);
                 });
 
             } else {
