@@ -122,6 +122,7 @@ tc.gam.project_widgets.conversation = function(options){
         
         //add message body, text dependent on message type      
         $out.find('blockquote.serif p').html(handlers.construct_links((d.message_type == 'join' ? d.idea.text : d.body)));
+        handlers.embed_media();
         $out.attr('id','message-'+d.message_id);
         $out.find('.meta-ft').text(d.created).time_since();;
         $out.find('a.close').attr('href','#remove,'+d.message_id);
@@ -163,17 +164,31 @@ tc.gam.project_widgets.conversation = function(options){
             message = generate_message_markup(d);
             message.hide();
             elements.message_stack.prepend(message);
+            handlers.embed_media();
             dom.find('a.close').unbind('click').bind('click', handlers.remove_comment);
             message.slideDown(500);
         },
         construct_links:function(text){
             var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return text.replace(exp,"<a target='_blank' href='$1'>$1</a>");
+        return text.replace(exp,"<a target='_blank' class='oembed' href='$1'>$1</a>");
+        },
+        embed_media:function() {
+          tc.jQ('.oembed').oembed(null,{
+            embedMethod: 'fill',
+            maxWidth: '240',
+            maxHeight: '240',
+            afterEmbed: function(oembedData) {
+              this.addClass('file-thumb');
+              this.closest('.main').prepend(this.clone());
+              this.remove();
+            }
+          });
         },
         handle_message_body:function(i,j){
             var message, exp;
             message = tc.jQ(j);
             message.html(handlers.construct_links(message.text())); 
+            handlers.embed_media();
         },
         change_message_filter:function(e,d){
             var t = tc.jQ(e.target);

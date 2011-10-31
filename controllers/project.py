@@ -4,6 +4,8 @@ import giveaminute.project as mProject
 import giveaminute.idea as mIdea
 import giveaminute.projectResource as mProjectResource
 import giveaminute.messaging as mMessaging
+import giveaminute.models as models
+import helpers.censor
 import json
 import re
 import datetime
@@ -80,12 +82,14 @@ class Project(Controller):
             return self.updateImage()
         elif (action == 'description'):
             return self.updateDescription()
+        elif (action == 'title'):
+            return self.updateTitle()
         else:
             return self.not_found()
 
     def getProject(self, project_id):
-        from giveaminute.models import Project as ProjectSqla
-        project = self.orm.query(ProjectSqla).get(project_id)
+        """Get the SQL Alchemy project object"""
+        project = self.orm.query(models.Project).get(project_id)
         return project
 
     def showProject(self, projectId):
@@ -504,3 +508,20 @@ class Project(Controller):
         description = self.request('text')
 
         return mProject.updateProjectDescription(self.db, projectId, description)
+
+    def updateTitle(self):
+        project_id = self.request('project_id')
+        title = self.request('title')
+
+        num_flags = helpers.censor.badwords(self.db, title)
+        if num_flags == 2:
+            return False
+
+        project = self.orm.query(models.Project).get(project_id)
+        if project is None:
+            return False
+
+        project.title = title
+        self.orm.commit()
+
+        return True
