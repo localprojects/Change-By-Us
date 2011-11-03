@@ -1,7 +1,41 @@
+
+
+# Scripts
+scripts/genBetaCodes.py
+
+# Uploaded data
+data/*
+
+# Documentation
+naturaldocs
+
+# Custom files
+static/files/*
+!static/files/README.txt
+
+# Import files
+import/data/*
+!import/data/README.txt
+
+# Migration manage scripts
+manage.py
+backup.sql
+sql/models.sql.*
+generate_models.sh
+scripts/generate_models.sh
+
+# Tests and coverage
+.coverage
+htmlcov/
+*,cover
+
 #-----
 # Ignore all compiled binaries
 #-----
-*.pyc
+*.py[c|o]
+
+# compiled translation files
+*.mo
 
 #-----
 # Configuration files should not be checked in, only example files
@@ -23,6 +57,7 @@ rcfile.*
 
 #-----
 # IDE files that are user-environment-specific
+# But retain the example.* files since that's the template
 #-----
 
 # Eclipse/Aptana
@@ -35,6 +70,13 @@ org.eclipse.core.resources.prefs
 # vim/gvim related files
 *.swo
 *.swp
+
+*~
+.DS_Store
+
+# environments
+.env
+cbu.env
 
 #-----
 # Ignore all temporary git-related files
@@ -59,8 +101,10 @@ org.eclipse.core.resources.prefs
 #
 
 #-----
-# Ignore system processes
+# Ignore system processes and run files
 #-----
+# Necessary for the LigHTTPd pid file to be stored
+run/*
 *.pid
 
 #-----

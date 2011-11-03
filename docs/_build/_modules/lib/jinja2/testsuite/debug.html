@@ -1,0 +1,155 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.debug &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.debug</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.debug</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Tests the debug system.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span><span class="p">,</span> <span class="n">filesystem_loader</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">TemplateSyntaxError</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">filesystem_loader</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DebugTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.debug.DebugTestCase">[docs]</a><span class="k">class</span> <span class="nc">DebugTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+<div class="viewcode-block" id="DebugTestCase.test_runtime_error"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.debug.DebugTestCase.test_runtime_error">[docs]</a>        <span class="k">def</span> <span class="nf">test_runtime_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+                <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">fail</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;broken.html&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assert_traceback_matches</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="s">r&#39;&#39;&#39;</span>
+<span class="s">  File &quot;.*?broken.html&quot;, line 2, in (top-level template code|&lt;module&gt;)</span>
+<span class="s">    \{\{ fail\(\) \}\}</span>
+<span class="s">  File &quot;.*?debug.pyc?&quot;, line \d+, in &lt;lambda&gt;</span>
+<span class="s">    tmpl\.render\(fail=lambda: 1 / 0\)</span>
+<span class="s">ZeroDivisionError: (int(eger)? )?division (or modulo )?by zero</span>
+<span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DebugTestCase.test_syntax_error"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.debug.DebugTestCase.test_syntax_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_syntax_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># XXX: the .*? is necessary for python3 which does not hide</span>
+        <span class="c"># some of the stack frames we don&#39;t want to show.  Not sure</span>
+        <span class="c"># what&#39;s up with that, but that is not that critical.  Should</span>
+        <span class="c"># be fixed though.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_traceback_matches</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;syntaxerror.html&#39;</span><span class="p">),</span> <span class="s">r&#39;&#39;&#39;(?sm)</span>
+<span class="s">  File &quot;.*?syntaxerror.html&quot;, line 4, in (template|&lt;module&gt;)</span>
+<span class="s">    \{</span><span class="si">% e</span><span class="s">ndif %\}.*?</span>
+<span class="s">(jinja2\.exceptions\.)?TemplateSyntaxError: Encountered unknown tag &#39;endif&#39;. Jinja was looking for the following tags: &#39;endfor&#39; or &#39;else&#39;. The innermost block that needs to be closed is &#39;for&#39;.</span>
+<span class="s">    &#39;&#39;&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DebugTestCase.test_regular_syntax_error"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.debug.DebugTestCase.test_regular_syntax_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_regular_syntax_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&#39;wtf&#39;</span><span class="p">,</span> <span class="mi">42</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_traceback_matches</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="s">r&#39;&#39;&#39;</span>
+<span class="s">  File &quot;.*debug.pyc?&quot;, line \d+, in test</span>
+<span class="s">    raise TemplateSyntaxError\(&#39;wtf&#39;, 42\)</span>
+<span class="s">(jinja2\.exceptions\.)?TemplateSyntaxError: wtf</span>
+<span class="s">  line 42&#39;&#39;&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.debug.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">DebugTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

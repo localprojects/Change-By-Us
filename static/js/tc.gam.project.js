@@ -1,199 +1,79 @@
-if(!tc){ var tc = {}; }
-if(!tc.gam){ tc.gam = {}; }
+tc = tc || {};
+tc.gam = tc.gam || {};
+tc.gam.project = function(app, dom) {
+    var widget_options = {
+        app: app,                                   //for merlin
+        project_data: app.app_page.data.project,    //project specific data
+        user: app.app_page.user,                    //user data
+        project_user: app.app_page.project_user,    //project user data
+        media_root: app.app_page.media_root         //root directory for images and such
+    };
 
+    app.components.project_widgets = {
+        'home': tc.gam.project_widgets.home(
+            tc.jQ.extend({ name: 'home', dom: dom.find('.project-section.home') }, widget_options)
+        ),
+        'needs': tc.gam.project_widgets.needs(
+            tc.jQ.extend({ name: 'needs', dom: dom.find('.project-section.needs') }, widget_options)
+        ),
+        'need-detail': tc.gam.project_widgets.needs(
+            tc.jQ.extend({ name: 'need-detail', dom: dom.find('.project-section.need-detail') }, widget_options)
+        ),
+        'add-need': tc.gam.project_widgets.add_need(
+            tc.jQ.extend({ name: 'add-need', dom: dom.find('.project-section.add-need') }, widget_options)
+        ),
+        'vol-form': tc.gam.project_widgets.vol_form(
+            tc.jQ.extend({ name: 'vol-form', dom: dom.find('.project-section.vol-form') }, widget_options)
+        ),
+        'inkind-form': tc.gam.project_widgets.inkind_form(
+            tc.jQ.extend({ name: 'inkind-form', dom: dom.find('.project-section.inkind-form') }, widget_options)
+        ),
+        'events': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'events', dom: dom.find('.project-section.events') }, widget_options)
+        ),
+        'event-detail': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-detail', dom: dom.find('.project-section.event-detail') }, widget_options)
+        ),
+        'event-needs': tc.gam.project_widgets.events(
+            tc.jQ.extend({ name: 'event-needs', dom: dom.find('.project-section.event-needs') }, widget_options)
+        ),
+        'event-form': tc.gam.project_widgets.event_form(
+            tc.jQ.extend({ name: 'event-form', dom: dom.find('.project-section.event-form') }, widget_options)
+        ),
+        'infopane': tc.gam.project_widgets.infopane(
+            tc.jQ.extend({ name: 'infopane', dom: dom.find('.box.mission') }, widget_options)
+        ),
+        'resources': tc.gam.project_widgets.resources(
+            tc.jQ.extend({ name: 'resources', dom: dom.find('.box.resources') }, widget_options)
+        ),
+        'related_resources': tc.gam.project_widgets.related_resources(
+            tc.jQ.extend({ name: 'related_resources', dom: dom.find('.project-section.related-resources') }, widget_options)
+        ),
+        'add_link': tc.gam.project_widgets.add_link(
+            tc.jQ.extend({ name: 'add_link', dom: dom.find('.project-section.add-link') }, widget_options)
+        ),
+        'conversation': tc.gam.project_widgets.conversation(
+            tc.jQ.extend({ name: 'conversation', dom: dom.find('.project-section.conversation') }, widget_options)
+        ),
+        'members': tc.gam.project_widgets.members(
+            tc.jQ.extend({ name: 'members', dom: dom.find('.project-section.member-list') }, widget_options)
+        ),
+        'invite': tc.gam.project_widgets.members(
+            tc.jQ.extend({ name: 'invite', dom: dom.find('.project-section.invite-members') }, widget_options)
+        )
+    };
 
-tc.gam.project = function(options){	
-	var me, hash_onload;
-	me = this;
-	tc.util.log("tc.gam.project");
-	
-	this.options = tc.jQ.extend({
-		
-	},options);
-	
-	this.dom = this.options.dom;
-	this.event_data = { project:this };
-	this.data = this.options.data;
-	this.widget = new tc.gam.widget(null,this);
-	
-	hash_onload = window.location.hash;
-	
-	this.components = {
-		infopane:new tc.gam.project_widgets.infopane(this,this.dom.find('.box.mission'),{widget:this.widget},{app:options.app}),
-		resources:new tc.gam.project_widgets.resources(this,this.dom.find('.box.resources'),{widget:this.widget},{app:options.app}),
-		related_resources:new tc.gam.project_widgets.related_resources(this,this.dom.find('.box.related-resources'),{widget:this.widget},{app:options.app}),
-		add_link:new tc.gam.project_widgets.add_link(this,this.dom.find('.box.add-link'),{widget:this.widget},{app:options.app}),
-		goals_main:new tc.gam.project_widgets.goals_main(this,this.dom.find('.box.goals-main'),{widget:this.widget},{app:options.app}),
-		goals_add:new tc.gam.project_widgets.goals_add(this,this.dom.find('.box.goals-add'),{widget:this.widget},{app:options.app}),
-		conversation:new tc.gam.project_widgets.conversation(this,this.dom.find('.box.conversation'),{widget:this.widget},{app:options.app}),
-		members:new tc.gam.project_widgets.members(this,this.dom.find('.box.members'),{widget:this.widget},{app:options.app})
-	};
-		
-	if (tc.gam.project_widgets.fresh_ideas) {
-		this.components.related_ideas = new tc.gam.project_widgets.fresh_ideas(this,this.dom.find('.box.fresh-ideas'),{widget:this.widget},{app:options.app});
-	}
-	
-	if(tc.gam.project_widgets.goals_stack){
-		this.components.goals_stack = new tc.gam.project_widgets.goals_stack(this,this.dom.find('.box.goals-stack-holder'),{widget:this.widget},{app:options.app});
-	}
-	
-	// return project page to initial state
-	function go_home(e) {
-		if(e){
-			e.data.project.components.goals_main.show(false);
-			e.data.project.components.conversation.show(false);
-			
-			if (tc.gam.project_widgets.goals_stack) {
-				e.data.project.components.goals_stack.hide(false);
-			}
-			if(tc.gam.project_widgets.members){
-				e.data.project.components.members.hide(false);
-			}
-			e.data.project.components.goals_add.hide(false);
-			e.data.project.components.add_link.hide(false);
-			e.data.project.components.related_resources.hide(false);
-		} else {
-			this.components.goals_main.show(false);
-			this.components.conversation.show(false);
-		}
-	}
-	
-	this.handlers = {
-		widget_show:function(e,d){
-			tc.util.dump(d.name);
-			switch(d.name){
-				case 'members':
-					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.goals_add.hide(false);
-					e.data.project.components.conversation.hide(false);
-					e.data.project.components.add_link.hide(false);
-					break;
-				case 'goals_add':
-					e.data.project.components.goals_main.hide(false);
-					break;
-				case 'goals_stack':
-					e.data.project.components.goals_add.hide(false);
-					e.data.project.components.goals_main.hide(false);
-					break;
-				case 'related_resources':
-					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.members.hide(false);
-					e.data.project.components.conversation.hide(false);
-					e.data.project.components.add_link.hide(false);
-					break;
-				case 'add_link':
-					e.data.project.components.goals_main.hide(false);
-					if (tc.gam.project_widgets.goals_stack) {
-						e.data.project.components.goals_stack.hide(false);
-					}
-					e.data.project.components.members.hide(false);
-					e.data.project.components.conversation.hide(false);
-					e.data.project.components.related_resources.hide(false);
-					break;
-			}
-		},
-		widget_hide:function(e,d){
-			tc.util.dump('project.widget_hide');
-			switch(d.name){
-				case 'members':
-				case 'goals_add':
-				case 'goals_stack':
-				case 'related_resources':
-				case 'add_link':
-					go_home(e);
-					break;
-			}
-		},
-		hashchange:function(e){
-			tc.util.log('tc.project.handlers.hashchange');
-			var hash;
-			hash = window.location.hash.substring(1,window.location.hash.length);
-			if(hash == 'project-home'){
-				e.preventDefault();
-				go_home(e);
-				return;
-			}
-			switch(hash.split(',')[0]){
-				case 'show':
-					e.preventDefault();
-					tc.util.dump(hash.split(',')[1]);
-					if(e.data.project.components[hash.split(',')[1]]){
-						e.data.project.components[hash.split(',')[1]].show();
-					}
-					break;
-				case 'hide':
-					e.preventDefault();
-					if(e.data.project.components[hash.split(',')[1]]){
-						e.data.project.components[hash.split(',')[1]].hide();
-					}
-					break;
-			}
-		},
-		idea_remove: function(e, d) {
-			if (e.data.project.components.related_ideas) {
-				e.data.project.components.related_ideas.remove_idea(d.id);
-			}
-			e.data.project.components.members.remove_idea(d.id);
-		}
-	};
-	
-	this.update_goals = function() {
-		tc.jQ.ajax({
-			type: 'GET',
-			url: '/project/goals',
-			data: {
-				project_id: me.data.project_id
-			},
-			context: me,
-			dataType:'text',
-			success:function(data,ts,xhr){
-				var d;
-				try{
-					d = tc.jQ.parseJSON(data);
-				}catch(e){
-					return;
-				}
-				this.dom.trigger("goals-refresh", [d]);
-			}
-		});
-	};
+    // Add fresh ideas component if available.
+    if (tc.gam.project_widgets.fresh_ideas) {
+        app.components.related_ideas = tc.gam.project_widgets.fresh_ideas(
+            tc.jQ.extend({ name: 'fresh_ideas', dom: dom.find('.box.fresh-ideas') }, widget_options)
+        );
+    }
 
-	tc.jQ(window).bind('hashchange',this.event_data,this.handlers.hashchange);
-	this.dom.bind('project-widget-show',this.event_data,this.handlers.widget_show);
-	this.dom.bind('project-widget-hide',this.event_data,this.handlers.widget_hide);
-	this.dom.bind('project-idea-remove', this.event_data, this.handlers.idea_remove);
-	
-	window.location.hash = hash_onload;
-	tc.jQ(window).trigger('hashchange');
+    tc.gam.project_widgets.project_tabs(
+        tc.jQ.extend({ name: 'project_tabs', dom: dom.find('.project-tabs') }, widget_options)
+    );
+
+    // Create an object to handle widget visibility events
+    tc.gam.widgetVisibilityHandler();
 };
-
-
-tc.gam.widget = function(inheritor,project){
-	if(!inheritor){ return; }
-	
-	inheritor.show = function(propagate){
-		if(inheritor.dom){ inheritor.dom.show(); }
-		if(propagate !== false){
-			project.dom.trigger('project-widget-show',{name:inheritor.options.name});
-		}
-	};
-	
-	inheritor.hide = function(propagate){
-		if(inheritor.dom){ inheritor.dom.hide(); }
-		if(propagate !== false){
-			project.dom.trigger('project-widget-hide',{name:inheritor.options.name});
-		}
-	};
-	
-	return inheritor;
-};
-
-if(!tc.gam.project_widgets){
-	tc.gam.project_widgets = {};
-}

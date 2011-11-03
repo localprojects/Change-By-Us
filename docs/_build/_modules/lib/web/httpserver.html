@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.httpserver &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.httpserver</h1><div class="highlight"><pre>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;runsimple&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">SimpleHTTPServer</span> <span class="kn">import</span> <span class="n">SimpleHTTPRequestHandler</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">posixpath</span>
+
+<span class="kn">import</span> <span class="nn">webapi</span> <span class="kn">as</span> <span class="nn">web</span>
+<span class="kn">import</span> <span class="nn">net</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="k">def</span> <span class="nf">runbasic</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">server_address</span><span class="o">=</span><span class="p">(</span><span class="s">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">8080</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs a simple HTTP server hosting WSGI app `func`. The directory `static/` </span>
+<span class="sd">    is hosted statically.</span>
+
+<span class="sd">    Based on [WsgiServer][ws] from [Colin Stewart][cs].</span>
+<span class="sd">    </span>
+<span class="sd">  [ws]: http://www.owlfish.com/software/wsgiutils/documentation/wsgi-server-api.html</span>
+<span class="sd">  [cs]: http://www.owlfish.com/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Copyright (c) 2004 Colin Stewart (http://www.owlfish.com/)</span>
+    <span class="c"># Modified somewhat for simplicity</span>
+    <span class="c"># Used under the modified BSD license:</span>
+    <span class="c"># http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5</span>
+
+    <span class="kn">import</span> <span class="nn">SimpleHTTPServer</span><span class="o">,</span> <span class="nn">SocketServer</span><span class="o">,</span> <span class="nn">BaseHTTPServer</span><span class="o">,</span> <span class="nn">urlparse</span>
+    <span class="kn">import</span> <span class="nn">socket</span><span class="o">,</span> <span class="nn">errno</span>
+    <span class="kn">import</span> <span class="nn">traceback</span>
+
+    <span class="k">class</span> <span class="nc">WSGIHandler</span><span class="p">(</span><span class="n">SimpleHTTPServer</span><span class="o">.</span><span class="n">SimpleHTTPRequestHandler</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">run_wsgi_app</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">protocol</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">fragment</span> <span class="o">=</span> \
+                <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="s">&#39;http://dummyhost</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+            <span class="c"># we only use path, query</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;wsgi.version&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                   <span class="p">,</span><span class="s">&#39;wsgi.url_scheme&#39;</span><span class="p">:</span> <span class="s">&#39;http&#39;</span>
+                   <span class="p">,</span><span class="s">&#39;wsgi.input&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfile</span>
+                   <span class="p">,</span><span class="s">&#39;wsgi.errors&#39;</span><span class="p">:</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+                   <span class="p">,</span><span class="s">&#39;wsgi.multithread&#39;</span><span class="p">:</span> <span class="mi">1</span>
+                   <span class="p">,</span><span class="s">&#39;wsgi.multiprocess&#39;</span><span class="p">:</span> <span class="mi">0</span>
+                   <span class="p">,</span><span class="s">&#39;wsgi.run_once&#39;</span><span class="p">:</span> <span class="mi">0</span>
+                   <span class="p">,</span><span class="s">&#39;REQUEST_METHOD&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span>
+                   <span class="p">,</span><span class="s">&#39;REQUEST_URI&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+                   <span class="p">,</span><span class="s">&#39;PATH_INFO&#39;</span><span class="p">:</span> <span class="n">path</span>
+                   <span class="p">,</span><span class="s">&#39;QUERY_STRING&#39;</span><span class="p">:</span> <span class="n">query</span>
+                   <span class="p">,</span><span class="s">&#39;CONTENT_TYPE&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                   <span class="p">,</span><span class="s">&#39;CONTENT_LENGTH&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Content-Length&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                   <span class="p">,</span><span class="s">&#39;REMOTE_ADDR&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                   <span class="p">,</span><span class="s">&#39;SERVER_NAME&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">server_address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                   <span class="p">,</span><span class="s">&#39;SERVER_PORT&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">server_address</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                   <span class="p">,</span><span class="s">&#39;SERVER_PROTOCOL&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_version</span>
+                   <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">http_header</span><span class="p">,</span> <span class="n">http_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">env</span> <span class="p">[</span><span class="s">&#39;HTTP_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">http_header</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> \
+                    <span class="n">http_value</span>
+
+            <span class="c"># Setup the state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_sent_headers</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_headers</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># We have there environment, now invoke the application</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_start_response</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">data</span><span class="p">:</span> 
+                                <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_write_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="k">finally</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;close&#39;</span><span class="p">):</span> 
+                            <span class="n">result</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">socket_err</span><span class="p">:</span>
+                    <span class="c"># Catch common network errors and suppress them</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">socket_err</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> \
+                       <span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">ECONNABORTED</span><span class="p">,</span> <span class="n">errno</span><span class="o">.</span><span class="n">EPIPE</span><span class="p">)):</span> 
+                        <span class="k">return</span>
+                <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">socket_timeout</span><span class="p">:</span> 
+                    <span class="k">return</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">web</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(),</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_sent_headers</span><span class="p">):</span>
+                <span class="c"># We must write out something!</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_write_data</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">do_POST</span> <span class="o">=</span> <span class="n">run_wsgi_app</span>
+        <span class="n">do_PUT</span> <span class="o">=</span> <span class="n">run_wsgi_app</span>
+        <span class="n">do_DELETE</span> <span class="o">=</span> <span class="n">run_wsgi_app</span>
+
+        <span class="k">def</span> <span class="nf">do_GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;/static/&#39;</span><span class="p">):</span>
+                <span class="n">SimpleHTTPServer</span><span class="o">.</span><span class="n">SimpleHTTPRequestHandler</span><span class="o">.</span><span class="n">do_GET</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">run_wsgi_app</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">wsgi_start_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response_status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">,</span> 
+                              <span class="n">exc_info</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wsgi_sent_headers</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span> \
+                      <span class="p">(</span><span class="s">&quot;Headers already sent and start_response called again!&quot;</span><span class="p">)</span>
+            <span class="c"># Should really take a copy to avoid changes in the application....</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_headers</span> <span class="o">=</span> <span class="p">(</span><span class="n">response_status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_write_data</span>
+
+        <span class="k">def</span> <span class="nf">wsgi_write_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_sent_headers</span><span class="p">):</span>
+                <span class="n">status</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_headers</span>
+                <span class="c"># Need to send header prior to data</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">status</span><span class="p">[:</span><span class="n">status</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)]</span>
+                <span class="n">status_msg</span> <span class="o">=</span> <span class="n">status</span><span class="p">[</span><span class="n">status</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_response</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">status_code</span><span class="p">),</span> <span class="n">status_msg</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">header</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">end_headers</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_sent_headers</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c"># Send the data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">WSGIServer</span><span class="p">(</span><span class="n">SocketServer</span><span class="o">.</span><span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">BaseHTTPServer</span><span class="o">.</span><span class="n">HTTPServer</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">server_address</span><span class="p">):</span>
+            <span class="n">BaseHTTPServer</span><span class="o">.</span><span class="n">HTTPServer</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                                               <span class="n">server_address</span><span class="p">,</span> 
+                                               <span class="n">WSGIHandler</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">func</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">serverShuttingDown</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">print</span> <span class="s">&quot;http://</span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="n">server_address</span>
+    <span class="n">WSGIServer</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">server_address</span><span class="p">)</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+
+<div class="viewcode-block" id="runsimple"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.httpserver.runsimple">[docs]</a><span class="k">def</span> <span class="nf">runsimple</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">server_address</span><span class="o">=</span><span class="p">(</span><span class="s">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">8080</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs [CherryPy][cp] WSGI server hosting WSGI app `func`. </span>
+<span class="sd">    The directory `static/` is hosted statically.</span>
+
+<span class="sd">    [cp]: http://www.cherrypy.org</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">StaticMiddleware</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">LogMiddleware</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    
+    <span class="n">server</span> <span class="o">=</span> <span class="n">WSGIServer</span><span class="p">(</span><span class="n">server_address</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="s">&quot;http://</span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="n">server_address</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</div>
+<span class="k">def</span> <span class="nf">WSGIServer</span><span class="p">(</span><span class="n">server_address</span><span class="p">,</span> <span class="n">wsgi_app</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates CherryPy WSGI server listening at `server_address` to serve `wsgi_app`.</span>
+<span class="sd">    This function can be overwritten to customize the webserver or use a different webserver.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">wsgiserver</span>
+
+    <span class="c"># Default values of wsgiserver.ssl_adapters uses cheerypy.wsgiserver</span>
+    <span class="c"># prefix. Overwriting it make it work with web.wsgiserver.</span>
+    <span class="n">wsgiserver</span><span class="o">.</span><span class="n">ssl_adapters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;builtin&#39;</span><span class="p">:</span> <span class="s">&#39;web.wsgiserver.ssl_builtin.BuiltinSSLAdapter&#39;</span><span class="p">,</span>
+        <span class="s">&#39;pyopenssl&#39;</span><span class="p">:</span> <span class="s">&#39;web.wsgiserver.ssl_pyopenssl.pyOpenSSLAdapter&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">wsgiserver</span><span class="o">.</span><span class="n">CherryPyWSGIServer</span><span class="p">(</span><span class="n">server_address</span><span class="p">,</span> <span class="n">wsgi_app</span><span class="p">,</span> <span class="n">server_name</span><span class="o">=</span><span class="s">&quot;localhost&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">StaticApp</span><span class="p">(</span><span class="n">SimpleHTTPRequestHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;WSGI application for serving static files.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environ</span> <span class="o">=</span> <span class="n">environ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_response</span> <span class="o">=</span> <span class="n">start_response</span>
+
+    <span class="k">def</span> <span class="nf">send_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="nf">send_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">end_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">log_message</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">):</span> <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">environ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">environ</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH_INFO&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_address</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REMOTE_ADDR&#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">),</span> \
+                              <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REMOTE_PORT&#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REQUEST_METHOD&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">cStringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span> <span class="c"># for capturing error</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">etag</span> <span class="o">=</span> <span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">client_etag</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTP_IF_NONE_MATCH&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="s">&#39;ETag&#39;</span><span class="p">,</span> <span class="n">etag</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">etag</span> <span class="o">==</span> <span class="n">client_etag</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_response</span><span class="p">(</span><span class="mi">304</span><span class="p">,</span> <span class="s">&quot;Not Modified&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">start_response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">StopIteration</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span> <span class="c"># Probably a 404</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_head</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">block_size</span> <span class="o">=</span> <span class="mi">16</span> <span class="o">*</span> <span class="mi">1024</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">buf</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">yield</span> <span class="n">buf</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+            <span class="k">yield</span> <span class="n">value</span>
+
+<span class="k">class</span> <span class="nc">StaticMiddleware</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;WSGI middleware for serving static files.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s">&#39;/static/&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH_INFO&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">StaticApp</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">normpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">path2</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">):</span>
+            <span class="n">path2</span> <span class="o">+=</span> <span class="s">&quot;/&quot;</span>
+        <span class="k">return</span> <span class="n">path2</span>
+
+    
+<span class="k">class</span> <span class="nc">LogMiddleware</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;WSGI middleware for logging the status.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> - - [</span><span class="si">%s</span><span class="s">] &quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot; - </span><span class="si">%s</span><span class="s">&#39;</span>
+    
+        <span class="kn">from</span> <span class="nn">BaseHTTPServer</span> <span class="kn">import</span> <span class="n">BaseHTTPRequestHandler</span>
+        <span class="kn">import</span> <span class="nn">StringIO</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+        
+        <span class="k">class</span> <span class="nc">FakeSocket</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">makefile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">f</span>
+        
+        <span class="c"># take log_date_time_string method from BaseHTTPRequestHandler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_date_time_string</span> <span class="o">=</span> <span class="n">BaseHTTPRequestHandler</span><span class="p">(</span><span class="n">FakeSocket</span><span class="p">(),</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span><span class="o">.</span><span class="n">log_date_time_string</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">xstart_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">environ</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">out</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">xstart_response</span><span class="p">)</span>
+             
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">environ</span><span class="p">):</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;wsgi.errors&#39;</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">debug</span><span class="p">)</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH_INFO&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">protocol</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ACTUAL_SERVER_PROTOCOL&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REQUEST_METHOD&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REMOTE_ADDR&#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">),</span> 
+                          <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REMOTE_PORT&#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">))</span>
+
+        <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_date_time_string</span><span class="p">()</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">%</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">safestr</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

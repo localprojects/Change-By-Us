@@ -1,0 +1,755 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.application &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.application</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Web application</span>
+<span class="sd">(from web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">webapi</span> <span class="kn">as</span> <span class="nn">web</span>
+<span class="kn">import</span> <span class="nn">webapi</span><span class="o">,</span> <span class="nn">wsgi</span><span class="o">,</span> <span class="nn">utils</span>
+<span class="kn">import</span> <span class="nn">debugerror</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">lstrips</span><span class="p">,</span> <span class="n">safeunicode</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="kn">import</span> <span class="ne">SystemExit</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">wsgiref.handlers</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span> <span class="c"># don&#39;t break people with old Pythons</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&quot;application&quot;</span><span class="p">,</span> <span class="s">&quot;auto_application&quot;</span><span class="p">,</span>
+    <span class="s">&quot;subdir_application&quot;</span><span class="p">,</span> <span class="s">&quot;subdomain_application&quot;</span><span class="p">,</span> 
+    <span class="s">&quot;loadhook&quot;</span><span class="p">,</span> <span class="s">&quot;unloadhook&quot;</span><span class="p">,</span>
+    <span class="s">&quot;autodelegate&quot;</span>
+<span class="p">]</span>
+
+<div class="viewcode-block" id="application"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application">[docs]</a><span class="k">class</span> <span class="nc">application</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Application to delegate requests based on path.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; urls = (&quot;/hello&quot;, &quot;hello&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; app = application(urls, globals())</span>
+<span class="sd">        &gt;&gt;&gt; class hello:</span>
+<span class="sd">        ...     def GET(self): return &quot;hello&quot;</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; app.request(&quot;/hello&quot;).data</span>
+<span class="sd">        &#39;hello&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="p">(),</span> <span class="n">fvars</span><span class="o">=</span><span class="p">{},</span> <span class="n">autoreload</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">autoreload</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">autoreload</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">=</span> <span class="n">mapping</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fvars</span> <span class="o">=</span> <span class="n">fvars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processors</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_processor</span><span class="p">(</span><span class="n">loadhook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_processor</span><span class="p">(</span><span class="n">unloadhook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">autoreload</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">main_module_name</span><span class="p">():</span>
+                <span class="n">mod</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s">&#39;__main__&#39;</span><span class="p">]</span>
+                <span class="nb">file</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s">&#39;__file__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="c"># make sure this works even from python interpreter</span>
+                <span class="k">return</span> <span class="nb">file</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="nb">file</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">modname</span><span class="p">(</span><span class="n">fvars</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;find name of the module name from fvars.&quot;&quot;&quot;</span>
+                <span class="nb">file</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">fvars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;__file__&#39;</span><span class="p">),</span> <span class="n">fvars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;__name__&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">file</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+
+                <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+                    <span class="c"># Since the __main__ module can&#39;t be reloaded, the module has </span>
+                    <span class="c"># to be imported using its file name.                    </span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">main_module_name</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">name</span>
+                
+            <span class="n">mapping_name</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">dictfind</span><span class="p">(</span><span class="n">fvars</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+            <span class="n">module_name</span> <span class="o">=</span> <span class="n">modname</span><span class="p">(</span><span class="n">fvars</span><span class="p">)</span>
+            
+            <span class="k">def</span> <span class="nf">reload_mapping</span><span class="p">():</span>
+                <span class="sd">&quot;&quot;&quot;loadhook to reload mapping and fvars.&quot;&quot;&quot;</span>
+                <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+                <span class="n">mapping</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">mapping_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mapping</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fvars</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">__dict__</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">=</span> <span class="n">mapping</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_processor</span><span class="p">(</span><span class="n">loadhook</span><span class="p">(</span><span class="n">Reloader</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="n">mapping_name</span> <span class="ow">and</span> <span class="n">module_name</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_processor</span><span class="p">(</span><span class="n">loadhook</span><span class="p">(</span><span class="n">reload_mapping</span><span class="p">))</span>
+
+            <span class="c"># load __main__ module usings its filename, so that it can be reloaded.</span>
+            <span class="k">if</span> <span class="n">main_module_name</span><span class="p">()</span> <span class="ow">and</span> <span class="s">&#39;__main__&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">__import__</span><span class="p">(</span><span class="n">main_module_name</span><span class="p">())</span>
+                <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                    
+    <span class="k">def</span> <span class="nf">_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="p">:</span>
+            <span class="c"># this is a sub-application, revert ctx to earlier state.</span>
+            <span class="n">oldctx</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;_oldctx&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">oldctx</span><span class="p">:</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">home</span> <span class="o">=</span> <span class="n">oldctx</span><span class="o">.</span><span class="n">home</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">homepath</span> <span class="o">=</span> <span class="n">oldctx</span><span class="o">.</span><span class="n">homepath</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">oldctx</span><span class="o">.</span><span class="n">path</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fullpath</span> <span class="o">=</span> <span class="n">oldctx</span><span class="o">.</span><span class="n">fullpath</span>
+                
+    <span class="k">def</span> <span class="nf">_cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Threads can be recycled by WSGI servers.</span>
+        <span class="c"># Clearing up all thread-local state to avoid interefereing with subsequent requests.</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">ThreadedDict</span><span class="o">.</span><span class="n">clear_all</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="application.add_mapping"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.add_mapping">[docs]</a>    <span class="k">def</span> <span class="nf">add_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">classname</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">+=</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">classname</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="application.add_processor"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.add_processor">[docs]</a>    <span class="k">def</span> <span class="nf">add_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a processor to the application. </span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; urls = (&quot;/(.*)&quot;, &quot;echo&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; app = application(urls, globals())</span>
+<span class="sd">            &gt;&gt;&gt; class echo:</span>
+<span class="sd">            ...     def GET(self, name): return name</span>
+<span class="sd">            ...</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; def hello(handler): return &quot;hello, &quot; +  handler()</span>
+<span class="sd">            ...</span>
+<span class="sd">            &gt;&gt;&gt; app.add_processor(hello)</span>
+<span class="sd">            &gt;&gt;&gt; app.request(&quot;/web.py&quot;).data</span>
+<span class="sd">            &#39;hello, web.py&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">processor</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="application.request"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.request">[docs]</a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpart</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">host</span><span class="o">=</span><span class="s">&quot;0.0.0.0:8080&quot;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">https</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Makes request to this application for the specified path and method.</span>
+<span class="sd">        Response will be a storage object with data, status and headers.</span>
+
+<span class="sd">            &gt;&gt;&gt; urls = (&quot;/hello&quot;, &quot;hello&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; app = application(urls, globals())</span>
+<span class="sd">            &gt;&gt;&gt; class hello:</span>
+<span class="sd">            ...     def GET(self): </span>
+<span class="sd">            ...         web.header(&#39;Content-Type&#39;, &#39;text/plain&#39;)</span>
+<span class="sd">            ...         return &quot;hello&quot;</span>
+<span class="sd">            ...</span>
+<span class="sd">            &gt;&gt;&gt; response = app.request(&quot;/hello&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; response.data</span>
+<span class="sd">            &#39;hello&#39;</span>
+<span class="sd">            &gt;&gt;&gt; response.status</span>
+<span class="sd">            &#39;200 OK&#39;</span>
+<span class="sd">            &gt;&gt;&gt; response.headers[&#39;Content-Type&#39;]</span>
+<span class="sd">            &#39;text/plain&#39;</span>
+
+<span class="sd">        To use https, use https=True.</span>
+
+<span class="sd">            &gt;&gt;&gt; urls = (&quot;/redirect&quot;, &quot;redirect&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; app = application(urls, globals())</span>
+<span class="sd">            &gt;&gt;&gt; class redirect:</span>
+<span class="sd">            ...     def GET(self): raise web.seeother(&quot;/foo&quot;)</span>
+<span class="sd">            ...</span>
+<span class="sd">            &gt;&gt;&gt; response = app.request(&quot;/redirect&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; response.headers[&#39;Location&#39;]</span>
+<span class="sd">            &#39;http://0.0.0.0:8080/foo&#39;</span>
+<span class="sd">            &gt;&gt;&gt; response = app.request(&quot;/redirect&quot;, https=True)</span>
+<span class="sd">            &gt;&gt;&gt; response.headers[&#39;Location&#39;]</span>
+<span class="sd">            &#39;https://0.0.0.0:8080/foo&#39;</span>
+
+<span class="sd">        The headers argument specifies HTTP headers as a mapping object</span>
+<span class="sd">        such as a dict.</span>
+
+<span class="sd">            &gt;&gt;&gt; urls = (&#39;/ua&#39;, &#39;uaprinter&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; class uaprinter:</span>
+<span class="sd">            ...     def GET(self):</span>
+<span class="sd">            ...         return &#39;your user-agent is &#39; + web.ctx.env[&#39;HTTP_USER_AGENT&#39;]</span>
+<span class="sd">            ... </span>
+<span class="sd">            &gt;&gt;&gt; app = application(urls, globals())</span>
+<span class="sd">            &gt;&gt;&gt; app.request(&#39;/ua&#39;, headers = {</span>
+<span class="sd">            ...      &#39;User-Agent&#39;: &#39;a small jumping bean/1.0 (compatible)&#39;</span>
+<span class="sd">            ... }).data</span>
+<span class="sd">            &#39;your user-agent is a small jumping bean/1.0 (compatible)&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span><span class="p">,</span> <span class="n">maybe_query</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">splitquery</span><span class="p">(</span><span class="n">localpart</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">maybe_query</span> <span class="ow">or</span> <span class="s">&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="s">&#39;env&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;env&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">HTTP_HOST</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">REQUEST_METHOD</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">PATH_INFO</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">QUERY_STRING</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">HTTPS</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">https</span><span class="p">))</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">env</span><span class="p">[</span><span class="s">&#39;HTTP_&#39;</span> <span class="o">+</span> <span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="k">if</span> <span class="s">&#39;HTTP_CONTENT_LENGTH&#39;</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+            <span class="n">env</span><span class="p">[</span><span class="s">&#39;CONTENT_LENGTH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;HTTP_CONTENT_LENGTH&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;HTTP_CONTENT_TYPE&#39;</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+            <span class="n">env</span><span class="p">[</span><span class="s">&#39;CONTENT_TYPE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;HTTP_CONTENT_TYPE&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;POST&quot;</span><span class="p">,</span> <span class="s">&quot;PUT&quot;</span><span class="p">]:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+            <span class="kn">import</span> <span class="nn">StringIO</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="n">env</span><span class="p">[</span><span class="s">&#39;wsgi.input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;CONTENT_TYPE&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;multipart/&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;CONTENT_LENGTH&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+                <span class="n">env</span><span class="p">[</span><span class="s">&#39;CONTENT_LENGTH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">storage</span><span class="p">()</span>
+        <span class="k">def</span> <span class="nf">start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">):</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">header_items</span> <span class="o">=</span> <span class="n">headers</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wsgifunc</span><span class="p">()(</span><span class="n">env</span><span class="p">,</span> <span class="n">start_response</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">response</span>
+</div>
+<div class="viewcode-block" id="application.browser"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.browser">[docs]</a>    <span class="k">def</span> <span class="nf">browser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">browser</span>
+        <span class="k">return</span> <span class="n">browser</span><span class="o">.</span><span class="n">AppBrowser</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="application.handle"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fn</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delegate</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fvars</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="application.handle_with_processors"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.handle_with_processors">[docs]</a>    <span class="k">def</span> <span class="nf">handle_with_processors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">processors</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">processors</span><span class="p">:</span>
+                    <span class="n">p</span><span class="p">,</span> <span class="n">processors</span> <span class="o">=</span> <span class="n">processors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">processors</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">return</span> <span class="n">p</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">process</span><span class="p">(</span><span class="n">processors</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">web</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
+                <span class="k">raise</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">web</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">internalerror</span><span class="p">()</span>
+        
+        <span class="c"># processors must be applied in the resvere order. (??)</span>
+        <span class="k">return</span> <span class="n">process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processors</span><span class="p">)</span>
+                        </div>
+<div class="viewcode-block" id="application.wsgifunc"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.wsgifunc">[docs]</a>    <span class="k">def</span> <span class="nf">wsgifunc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">middleware</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a WSGI-compatible function for this application.&quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">peep</span><span class="p">(</span><span class="n">iterator</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Peeps into an iterator by doing an iteration</span>
+<span class="sd">            and returns an equivalent iterator.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c"># wsgi requires the headers first</span>
+            <span class="c"># so we need to do an iteration</span>
+            <span class="c"># and save the result for later</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">firstchunk</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">firstchunk</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+            <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">([</span><span class="n">firstchunk</span><span class="p">],</span> <span class="n">iterator</span><span class="p">)</span>    
+                                
+        <span class="k">def</span> <span class="nf">is_generator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;next&#39;</span><span class="p">)</span>
+        
+        <span class="k">def</span> <span class="nf">wsgi</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">start_resp</span><span class="p">):</span>
+            <span class="c"># clear threadlocal to avoid inteference of previous requests</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># allow uppercase methods only</span>
+                <span class="k">if</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">method</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">web</span><span class="o">.</span><span class="n">nomethod</span><span class="p">()</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_with_processors</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">is_generator</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">peep</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span>
+            <span class="k">except</span> <span class="n">web</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">safestr</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+
+            <span class="n">status</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">headers</span>
+            <span class="n">start_resp</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+            
+            <span class="k">def</span> <span class="nf">cleanup</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup</span><span class="p">()</span>
+                <span class="k">yield</span> <span class="s">&#39;&#39;</span> <span class="c"># force this function to be a generator</span>
+                            
+            <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">cleanup</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">middleware</span><span class="p">:</span> 
+            <span class="n">wsgi</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">wsgi</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wsgi</span>
+</div>
+<div class="viewcode-block" id="application.run"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">middleware</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts handling requests. If called in a CGI or FastCGI context, it will follow</span>
+<span class="sd">        that protocol. If called from the command line, it will start an HTTP</span>
+<span class="sd">        server on the port named in the first command line argument, or, if there</span>
+<span class="sd">        is no argument, on port 8080.</span>
+<span class="sd">        </span>
+<span class="sd">        `middleware` is a list of WSGI middleware which is applied to the resulting WSGI</span>
+<span class="sd">        function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">wsgi</span><span class="o">.</span><span class="n">runwsgi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wsgifunc</span><span class="p">(</span><span class="o">*</span><span class="n">middleware</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="application.cgirun"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.cgirun">[docs]</a>    <span class="k">def</span> <span class="nf">cgirun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">middleware</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a CGI handler. This is mostly useful with Google App Engine.</span>
+<span class="sd">        There you can just do:</span>
+<span class="sd">        </span>
+<span class="sd">            main = app.cgirun()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wsgiapp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgifunc</span><span class="p">(</span><span class="o">*</span><span class="n">middleware</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">google.appengine.ext.webapp.util</span> <span class="kn">import</span> <span class="n">run_wsgi_app</span>
+            <span class="k">return</span> <span class="n">run_wsgi_app</span><span class="p">(</span><span class="n">wsgiapp</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="c"># we&#39;re not running from within Google App Engine</span>
+            <span class="k">return</span> <span class="n">wsgiref</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">CGIHandler</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">wsgiapp</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="application.load"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes ctx using env.&quot;&quot;&quot;</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;200 OK&#39;</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">environ</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTP_HOST&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;wsgi.url_scheme&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;http&#39;</span><span class="p">,</span> <span class="s">&#39;https&#39;</span><span class="p">]:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;wsgi.url_scheme&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTPS&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;on&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">]:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s">&#39;https&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s">&#39;http&#39;</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">homedomain</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">protocol</span> <span class="o">+</span> <span class="s">&#39;://&#39;</span> <span class="o">+</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTP_HOST&#39;</span><span class="p">,</span> <span class="s">&#39;[unknown]&#39;</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">homepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REAL_SCRIPT_NAME&#39;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;SCRIPT_NAME&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">home</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">homedomain</span> <span class="o">+</span> <span class="n">ctx</span><span class="o">.</span><span class="n">homepath</span>
+        <span class="c">#@@ home is changed when the request is handled to a sub-application.</span>
+        <span class="c">#@@ but the real home is required for doing absolute redirects.</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">realhome</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">home</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REMOTE_ADDR&#39;</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REQUEST_METHOD&#39;</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH_INFO&#39;</span><span class="p">)</span>
+        <span class="c"># http://trac.lighttpd.net/trac/ticket/406 requires:</span>
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;SERVER_SOFTWARE&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;lighttpd/&#39;</span><span class="p">):</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">lstrips</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;REQUEST_URI&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;?&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ctx</span><span class="o">.</span><span class="n">homepath</span><span class="p">)</span>
+            <span class="c"># Apache and CherryPy webservers unquote the url but lighttpd doesn&#39;t. </span>
+            <span class="c"># unquote explicitly for lighttpd to make ctx.path uniform across all servers.</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;QUERY_STRING&#39;</span><span class="p">):</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="s">&#39;?&#39;</span> <span class="o">+</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;QUERY_STRING&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">fullpath</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="n">ctx</span><span class="o">.</span><span class="n">query</span>
+        
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">ctx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">safeunicode</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="c"># status must always be str</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;200 OK&#39;</span>
+        
+        <span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span> <span class="o">=</span> <span class="p">[]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_delegate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">fvars</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="k">def</span> <span class="nf">handle_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+            <span class="n">meth</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">method</span>
+            <span class="k">if</span> <span class="n">meth</span> <span class="o">==</span> <span class="s">&#39;HEAD&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">meth</span><span class="p">):</span>
+                <span class="n">meth</span> <span class="o">=</span> <span class="s">&#39;GET&#39;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">meth</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">web</span><span class="o">.</span><span class="n">nomethod</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+            <span class="n">tocall</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cls</span><span class="p">(),</span> <span class="n">meth</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tocall</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            
+        <span class="k">def</span> <span class="nf">is_class</span><span class="p">(</span><span class="n">o</span><span class="p">):</span> <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassType</span><span class="p">,</span> <span class="nb">type</span><span class="p">))</span>
+            
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">web</span><span class="o">.</span><span class="n">notfound</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">handle_with_processors</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">is_class</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">handle_class</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;redirect &#39;</span><span class="p">):</span>
+                <span class="n">url</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;GET&quot;</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;QUERY_STRING&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">x</span><span class="p">:</span>
+                        <span class="n">url</span> <span class="o">+=</span> <span class="s">&#39;?&#39;</span> <span class="o">+</span> <span class="n">x</span>
+                <span class="k">raise</span> <span class="n">web</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+                <span class="n">mod</span><span class="p">,</span> <span class="n">cls</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">(),</span> <span class="p">[</span><span class="s">&quot;&quot;</span><span class="p">])</span>
+                <span class="n">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cls</span> <span class="o">=</span> <span class="n">fvars</span><span class="p">[</span><span class="n">f</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">handle_class</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">notfound</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pat</span><span class="p">,</span> <span class="n">what</span> <span class="ow">in</span> <span class="n">utils</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">pat</span><span class="p">):</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delegate_sub_application</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="bp">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">continue</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="n">what</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">re_subm</span><span class="p">(</span><span class="s">&#39;^&#39;</span> <span class="o">+</span> <span class="n">pat</span> <span class="o">+</span> <span class="s">&#39;$&#39;</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">re_compile</span><span class="p">(</span><span class="s">&#39;^&#39;</span> <span class="o">+</span> <span class="n">pat</span> <span class="o">+</span> <span class="s">&#39;$&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span> <span class="c"># it&#39;s a match</span>
+                <span class="k">return</span> <span class="n">what</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">groups</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">_delegate_sub_application</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes request to sub application `app` rooted at the directory `dir`.</span>
+<span class="sd">        The home, homepath, path and fullpath values in web.ctx are updated to mimic request</span>
+<span class="sd">        to the subapp and are restored after it is handled. </span>
+<span class="sd">        </span>
+<span class="sd">        @@Any issues with when used with yield?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">_oldctx</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">storage</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">home</span> <span class="o">+=</span> <span class="nb">dir</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">homepath</span> <span class="o">+=</span> <span class="nb">dir</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nb">dir</span><span class="p">):]</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fullpath</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fullpath</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nb">dir</span><span class="p">):]</span>
+        <span class="k">return</span> <span class="n">app</span><span class="o">.</span><span class="n">handle_with_processors</span><span class="p">()</span>
+            
+<div class="viewcode-block" id="application.get_parent_app"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.get_parent_app">[docs]</a>    <span class="k">def</span> <span class="nf">get_parent_app</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">app_stack</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        </div>
+<div class="viewcode-block" id="application.notfound"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.notfound">[docs]</a>    <span class="k">def</span> <span class="nf">notfound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns HTTPError with &#39;404 not found&#39; message&quot;&quot;&quot;</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parent_app</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parent</span><span class="o">.</span><span class="n">notfound</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">_NotFound</span><span class="p">()</span>
+            </div>
+<div class="viewcode-block" id="application.internalerror"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.application.internalerror">[docs]</a>    <span class="k">def</span> <span class="nf">internalerror</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns HTTPError with &#39;500 internal error&#39; message&quot;&quot;&quot;</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parent_app</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parent</span><span class="o">.</span><span class="n">internalerror</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">):</span>
+            <span class="kn">import</span> <span class="nn">debugerror</span>
+            <span class="k">return</span> <span class="n">debugerror</span><span class="o">.</span><span class="n">debugerror</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">_InternalError</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="auto_application"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.auto_application">[docs]</a><span class="k">class</span> <span class="nc">auto_application</span><span class="p">(</span><span class="n">application</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Application similar to `application` but urls are constructed </span>
+<span class="sd">    automatiacally using metaclass.</span>
+
+<span class="sd">        &gt;&gt;&gt; app = auto_application()</span>
+<span class="sd">        &gt;&gt;&gt; class hello(app.page):</span>
+<span class="sd">        ...     def GET(self): return &quot;hello, world&quot;</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; class foo(app.page):</span>
+<span class="sd">        ...     path = &#39;/foo/.*&#39;</span>
+<span class="sd">        ...     def GET(self): return &quot;foo&quot;</span>
+<span class="sd">        &gt;&gt;&gt; app.request(&quot;/hello&quot;).data</span>
+<span class="sd">        &#39;hello, world&#39;</span>
+<span class="sd">        &gt;&gt;&gt; app.request(&#39;/foo/bar&#39;).data</span>
+<span class="sd">        &#39;foo&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">application</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">metapage</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+                <span class="nb">type</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;path&#39;</span><span class="p">,</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">)</span>
+
+                <span class="c"># path can be specified as None to ignore that class</span>
+                <span class="c"># typically required to create a abstract base class.</span>
+                <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_mapping</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">page</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">metapage</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">page</span> <span class="o">=</span> <span class="n">page</span>
+
+<span class="c"># The application class already has the required functionality of subdir_application</span></div>
+<span class="n">subdir_application</span> <span class="o">=</span> <span class="n">application</span>
+                
+<div class="viewcode-block" id="subdomain_application"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.subdomain_application">[docs]</a><span class="k">class</span> <span class="nc">subdomain_application</span><span class="p">(</span><span class="n">application</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Application to delegate requests based on the host.</span>
+
+<span class="sd">        &gt;&gt;&gt; urls = (&quot;/hello&quot;, &quot;hello&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; app = application(urls, globals())</span>
+<span class="sd">        &gt;&gt;&gt; class hello:</span>
+<span class="sd">        ...     def GET(self): return &quot;hello&quot;</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; mapping = (r&quot;hello\.example\.com&quot;, app)</span>
+<span class="sd">        &gt;&gt;&gt; app2 = subdomain_application(mapping)</span>
+<span class="sd">        &gt;&gt;&gt; app2.request(&quot;/hello&quot;, host=&quot;hello.example.com&quot;).data</span>
+<span class="sd">        &#39;hello&#39;</span>
+<span class="sd">        &gt;&gt;&gt; response = app2.request(&quot;/hello&quot;, host=&quot;something.example.com&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; response.status</span>
+<span class="sd">        &#39;404 Not Found&#39;</span>
+<span class="sd">        &gt;&gt;&gt; response.data</span>
+<span class="sd">        &#39;not found&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="subdomain_application.handle"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.subdomain_application.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">host</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#strip port</span>
+        <span class="n">fn</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delegate</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fvars</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pat</span><span class="p">,</span> <span class="n">what</span> <span class="ow">in</span> <span class="n">utils</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="n">what</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">re_subm</span><span class="p">(</span><span class="s">&#39;^&#39;</span> <span class="o">+</span> <span class="n">pat</span> <span class="o">+</span> <span class="s">&#39;$&#39;</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">re_compile</span><span class="p">(</span><span class="s">&#39;^&#39;</span> <span class="o">+</span> <span class="n">pat</span> <span class="o">+</span> <span class="s">&#39;$&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span> <span class="c"># it&#39;s a match</span>
+                <span class="k">return</span> <span class="n">what</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">groups</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        </div>
+<div class="viewcode-block" id="loadhook"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.loadhook">[docs]</a><span class="k">def</span> <span class="nf">loadhook</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a load hook into an application processor.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; app = auto_application()</span>
+<span class="sd">        &gt;&gt;&gt; def f(): &quot;something done before handling request&quot;</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; app.add_processor(loadhook(f))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">processor</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+        <span class="n">h</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">handler</span><span class="p">()</span>
+        
+    <span class="k">return</span> <span class="n">processor</span>
+    </div>
+<div class="viewcode-block" id="unloadhook"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.unloadhook">[docs]</a><span class="k">def</span> <span class="nf">unloadhook</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts an unload hook into an application processor.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; app = auto_application()</span>
+<span class="sd">        &gt;&gt;&gt; def f(): &quot;something done after handling request&quot;</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; app.add_processor(unloadhook(f))    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">processor</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">handler</span><span class="p">()</span>
+            <span class="n">is_generator</span> <span class="o">=</span> <span class="n">result</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;next&#39;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c"># run the hook even when handler raises some exception</span>
+            <span class="n">h</span><span class="p">()</span>
+            <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="n">is_generator</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">wrap</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">result</span>
+            
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">next</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c"># call the hook at the and of iterator</span>
+                <span class="n">h</span><span class="p">()</span>
+                <span class="k">raise</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="nb">next</span><span class="p">()</span>
+            
+    <span class="k">return</span> <span class="n">processor</span>
+</div>
+<div class="viewcode-block" id="autodelegate"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.application.autodelegate">[docs]</a><span class="k">def</span> <span class="nf">autodelegate</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a method that takes one argument and calls the method named prefix+arg,</span>
+<span class="sd">    calling `notfound()` if there isn&#39;t one. Example:</span>
+
+<span class="sd">        urls = (&#39;/prefs/(.*)&#39;, &#39;prefs&#39;)</span>
+
+<span class="sd">        class prefs:</span>
+<span class="sd">            GET = autodelegate(&#39;GET_&#39;)</span>
+<span class="sd">            def GET_password(self): pass</span>
+<span class="sd">            def GET_privacy(self): pass</span>
+
+<span class="sd">    `GET_password` would get called for `/prefs/password` while `GET_privacy` for </span>
+<span class="sd">    `GET_privacy` gets called for `/prefs/privacy`.</span>
+<span class="sd">    </span>
+<span class="sd">    If a user visits `/prefs/password/change` then `GET_password(self, &#39;/change&#39;)`</span>
+<span class="sd">    is called.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+            <span class="n">first</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">first</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">rest</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">arg</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">web</span><span class="o">.</span><span class="n">notfound</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">web</span><span class="o">.</span><span class="n">notfound</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">internal</span>
+</div>
+<span class="k">class</span> <span class="nc">Reloader</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Checks to see if any loaded modules have changed on disk and, </span>
+<span class="sd">    if so, reloads them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mtimes</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mod</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">mtime</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">st_mtime</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">mod</span><span class="o">.</span><span class="n">__file__</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.pyc&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">__file__</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">mtime</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">__file__</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">,</span> <span class="n">mtime</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">mod</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtimes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mtimes</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="o">=</span> <span class="n">mtime</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtimes</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">mtime</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="nb">reload</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mtimes</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="o">=</span> <span class="n">mtime</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> 
+                <span class="k">pass</span>
+                
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

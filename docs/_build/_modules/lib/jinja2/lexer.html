@@ -1,0 +1,774 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.lexer &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.lexer</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.lexer</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    This module implements a Jinja / Python combination lexer. The</span>
+<span class="sd">    `Lexer` class provided by this module is used to do some preprocessing</span>
+<span class="sd">    for Jinja.</span>
+
+<span class="sd">    On the one hand it filters out invalid operators like the bitshift</span>
+<span class="sd">    operators we don&#39;t allow in templates. On the other hand it separates</span>
+<span class="sd">    template code and python code in expressions.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateSyntaxError</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">LRUCache</span><span class="p">,</span> <span class="nb">next</span>
+
+
+<span class="c"># cache for the lexers. Exists in order to be able to have multiple</span>
+<span class="c"># environments with the same lexer</span>
+<span class="n">_lexer_cache</span> <span class="o">=</span> <span class="n">LRUCache</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="c"># static regular expressions</span>
+<span class="n">whitespace_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\s+&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">U</span><span class="p">)</span>
+<span class="n">string_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;(&#39;([^&#39;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^&#39;</span><span class="se">\\</span><span class="s">]*)*)&#39;&quot;</span>
+                       <span class="s">r&#39;|&quot;([^&quot;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^&quot;</span><span class="se">\\</span><span class="s">]*)*)&quot;)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">S</span><span class="p">)</span>
+<span class="n">integer_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\d+&#39;</span><span class="p">)</span>
+
+<span class="c"># we use the unicode identifier rule if this python version is able</span>
+<span class="c"># to handle unicode identifiers, otherwise the standard ASCII one.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="nb">compile</span><span class="p">(</span><span class="s">&#39;föö&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;unknown&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;eval&#39;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">SyntaxError</span><span class="p">:</span>
+    <span class="n">name_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\b[a-zA-Z_][a-zA-Z0-9_]*\b&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">_stringdefs</span>
+    <span class="n">name_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;[</span><span class="si">%s</span><span class="s">][</span><span class="si">%s</span><span class="s">]*&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">_stringdefs</span><span class="o">.</span><span class="n">xid_start</span><span class="p">,</span>
+                                         <span class="n">_stringdefs</span><span class="o">.</span><span class="n">xid_continue</span><span class="p">))</span>
+
+<span class="n">float_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(?&lt;!\.)\d+\.\d+&#39;</span><span class="p">)</span>
+<span class="n">newline_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(\r\n|\r|\n)&#39;</span><span class="p">)</span>
+
+<span class="c"># internal the tokens and keep references to them</span>
+<span class="n">TOKEN_ADD</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;add&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_ASSIGN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;assign&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_COLON</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;colon&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_COMMA</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;comma&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_DIV</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;div&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_DOT</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;dot&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_EQ</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;eq&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_FLOORDIV</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;floordiv&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_GT</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;gt&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_GTEQ</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;gteq&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LBRACE</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;lbrace&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LBRACKET</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;lbracket&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LPAREN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;lparen&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LT</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;lt&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LTEQ</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;lteq&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_MOD</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;mod&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_MUL</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;mul&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_NE</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;ne&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_PIPE</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;pipe&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_POW</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;pow&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_RBRACE</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;rbrace&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_RBRACKET</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;rbracket&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_RPAREN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;rparen&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_SEMICOLON</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;semicolon&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_SUB</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;sub&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_TILDE</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;tilde&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_WHITESPACE</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;whitespace&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_FLOAT</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;float&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_INTEGER</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;integer&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_NAME</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_STRING</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;string&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_OPERATOR</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;operator&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_BLOCK_BEGIN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;block_begin&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_BLOCK_END</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;block_end&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_VARIABLE_BEGIN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;variable_begin&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_VARIABLE_END</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;variable_end&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_RAW_BEGIN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;raw_begin&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_RAW_END</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;raw_end&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_COMMENT_BEGIN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;comment_begin&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_COMMENT_END</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;comment_end&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_COMMENT</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;comment&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LINESTATEMENT_BEGIN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;linestatement_begin&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LINESTATEMENT_END</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;linestatement_end&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LINECOMMENT_BEGIN</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;linecomment_begin&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LINECOMMENT_END</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;linecomment_end&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_LINECOMMENT</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;linecomment&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_DATA</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;data&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_INITIAL</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;initial&#39;</span><span class="p">)</span>
+<span class="n">TOKEN_EOF</span> <span class="o">=</span> <span class="nb">intern</span><span class="p">(</span><span class="s">&#39;eof&#39;</span><span class="p">)</span>
+
+<span class="c"># bind operators to token types</span>
+<span class="n">operators</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;+&#39;</span><span class="p">:</span>            <span class="n">TOKEN_ADD</span><span class="p">,</span>
+    <span class="s">&#39;-&#39;</span><span class="p">:</span>            <span class="n">TOKEN_SUB</span><span class="p">,</span>
+    <span class="s">&#39;/&#39;</span><span class="p">:</span>            <span class="n">TOKEN_DIV</span><span class="p">,</span>
+    <span class="s">&#39;//&#39;</span><span class="p">:</span>           <span class="n">TOKEN_FLOORDIV</span><span class="p">,</span>
+    <span class="s">&#39;*&#39;</span><span class="p">:</span>            <span class="n">TOKEN_MUL</span><span class="p">,</span>
+    <span class="s">&#39;%&#39;</span><span class="p">:</span>            <span class="n">TOKEN_MOD</span><span class="p">,</span>
+    <span class="s">&#39;**&#39;</span><span class="p">:</span>           <span class="n">TOKEN_POW</span><span class="p">,</span>
+    <span class="s">&#39;~&#39;</span><span class="p">:</span>            <span class="n">TOKEN_TILDE</span><span class="p">,</span>
+    <span class="s">&#39;[&#39;</span><span class="p">:</span>            <span class="n">TOKEN_LBRACKET</span><span class="p">,</span>
+    <span class="s">&#39;]&#39;</span><span class="p">:</span>            <span class="n">TOKEN_RBRACKET</span><span class="p">,</span>
+    <span class="s">&#39;(&#39;</span><span class="p">:</span>            <span class="n">TOKEN_LPAREN</span><span class="p">,</span>
+    <span class="s">&#39;)&#39;</span><span class="p">:</span>            <span class="n">TOKEN_RPAREN</span><span class="p">,</span>
+    <span class="s">&#39;{&#39;</span><span class="p">:</span>            <span class="n">TOKEN_LBRACE</span><span class="p">,</span>
+    <span class="s">&#39;}&#39;</span><span class="p">:</span>            <span class="n">TOKEN_RBRACE</span><span class="p">,</span>
+    <span class="s">&#39;==&#39;</span><span class="p">:</span>           <span class="n">TOKEN_EQ</span><span class="p">,</span>
+    <span class="s">&#39;!=&#39;</span><span class="p">:</span>           <span class="n">TOKEN_NE</span><span class="p">,</span>
+    <span class="s">&#39;&gt;&#39;</span><span class="p">:</span>            <span class="n">TOKEN_GT</span><span class="p">,</span>
+    <span class="s">&#39;&gt;=&#39;</span><span class="p">:</span>           <span class="n">TOKEN_GTEQ</span><span class="p">,</span>
+    <span class="s">&#39;&lt;&#39;</span><span class="p">:</span>            <span class="n">TOKEN_LT</span><span class="p">,</span>
+    <span class="s">&#39;&lt;=&#39;</span><span class="p">:</span>           <span class="n">TOKEN_LTEQ</span><span class="p">,</span>
+    <span class="s">&#39;=&#39;</span><span class="p">:</span>            <span class="n">TOKEN_ASSIGN</span><span class="p">,</span>
+    <span class="s">&#39;.&#39;</span><span class="p">:</span>            <span class="n">TOKEN_DOT</span><span class="p">,</span>
+    <span class="s">&#39;:&#39;</span><span class="p">:</span>            <span class="n">TOKEN_COLON</span><span class="p">,</span>
+    <span class="s">&#39;|&#39;</span><span class="p">:</span>            <span class="n">TOKEN_PIPE</span><span class="p">,</span>
+    <span class="s">&#39;,&#39;</span><span class="p">:</span>            <span class="n">TOKEN_COMMA</span><span class="p">,</span>
+    <span class="s">&#39;;&#39;</span><span class="p">:</span>            <span class="n">TOKEN_SEMICOLON</span>
+<span class="p">}</span>
+
+<span class="n">reverse_operators</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">operators</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()])</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">reverse_operators</span><span class="p">),</span> <span class="s">&#39;operators dropped&#39;</span>
+<span class="n">operator_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                         <span class="nb">sorted</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span>
+
+<span class="n">ignored_tokens</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">TOKEN_COMMENT_BEGIN</span><span class="p">,</span> <span class="n">TOKEN_COMMENT</span><span class="p">,</span>
+                            <span class="n">TOKEN_COMMENT_END</span><span class="p">,</span> <span class="n">TOKEN_WHITESPACE</span><span class="p">,</span>
+                            <span class="n">TOKEN_WHITESPACE</span><span class="p">,</span> <span class="n">TOKEN_LINECOMMENT_BEGIN</span><span class="p">,</span>
+                            <span class="n">TOKEN_LINECOMMENT_END</span><span class="p">,</span> <span class="n">TOKEN_LINECOMMENT</span><span class="p">])</span>
+<span class="n">ignore_if_empty</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">TOKEN_WHITESPACE</span><span class="p">,</span> <span class="n">TOKEN_DATA</span><span class="p">,</span>
+                             <span class="n">TOKEN_COMMENT</span><span class="p">,</span> <span class="n">TOKEN_LINECOMMENT</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_describe_token_type</span><span class="p">(</span><span class="n">token_type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">token_type</span> <span class="ow">in</span> <span class="n">reverse_operators</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">reverse_operators</span><span class="p">[</span><span class="n">token_type</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">TOKEN_COMMENT_BEGIN</span><span class="p">:</span>        <span class="s">&#39;begin of comment&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_COMMENT_END</span><span class="p">:</span>          <span class="s">&#39;end of comment&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_COMMENT</span><span class="p">:</span>              <span class="s">&#39;comment&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_LINECOMMENT</span><span class="p">:</span>          <span class="s">&#39;comment&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_BLOCK_BEGIN</span><span class="p">:</span>          <span class="s">&#39;begin of statement block&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_BLOCK_END</span><span class="p">:</span>            <span class="s">&#39;end of statement block&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_VARIABLE_BEGIN</span><span class="p">:</span>       <span class="s">&#39;begin of print statement&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_VARIABLE_END</span><span class="p">:</span>         <span class="s">&#39;end of print statement&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_LINESTATEMENT_BEGIN</span><span class="p">:</span>  <span class="s">&#39;begin of line statement&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_LINESTATEMENT_END</span><span class="p">:</span>    <span class="s">&#39;end of line statement&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_DATA</span><span class="p">:</span>                 <span class="s">&#39;template data / text&#39;</span><span class="p">,</span>
+        <span class="n">TOKEN_EOF</span><span class="p">:</span>                  <span class="s">&#39;end of template&#39;</span>
+    <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token_type</span><span class="p">,</span> <span class="n">token_type</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="describe_token"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.describe_token">[docs]</a><span class="k">def</span> <span class="nf">describe_token</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a description of the token.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">return</span> <span class="n">_describe_token_type</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="describe_token_expr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.describe_token_expr">[docs]</a><span class="k">def</span> <span class="nf">describe_token_expr</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like `describe_token` but for token expressions.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">:</span>
+        <span class="nb">type</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">expr</span>
+    <span class="k">return</span> <span class="n">_describe_token_type</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="count_newlines"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.count_newlines">[docs]</a><span class="k">def</span> <span class="nf">count_newlines</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Count the number of newline characters in the string.  This is</span>
+<span class="sd">    useful for extensions that filter a stream.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">newline_re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="compile_rules"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.compile_rules">[docs]</a><span class="k">def</span> <span class="nf">compile_rules</span><span class="p">(</span><span class="n">environment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compiles all the rules from the environment into a list of rules.&quot;&quot;&quot;</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span>
+    <span class="n">rules</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">comment_start_string</span><span class="p">),</span> <span class="s">&#39;comment&#39;</span><span class="p">,</span>
+         <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">comment_start_string</span><span class="p">)),</span>
+        <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">),</span> <span class="s">&#39;block&#39;</span><span class="p">,</span>
+         <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">)),</span>
+        <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">variable_start_string</span><span class="p">),</span> <span class="s">&#39;variable&#39;</span><span class="p">,</span>
+         <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">variable_start_string</span><span class="p">))</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">environment</span><span class="o">.</span><span class="n">line_statement_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">rules</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">line_statement_prefix</span><span class="p">),</span> <span class="s">&#39;linestatement&#39;</span><span class="p">,</span>
+                      <span class="s">r&#39;^\s*&#39;</span> <span class="o">+</span> <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">line_statement_prefix</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">environment</span><span class="o">.</span><span class="n">line_comment_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">rules</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">line_comment_prefix</span><span class="p">),</span> <span class="s">&#39;linecomment&#39;</span><span class="p">,</span>
+                      <span class="s">r&#39;(?:^|(?&lt;=\S))[^\S\r\n]*&#39;</span> <span class="o">+</span>
+                      <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">line_comment_prefix</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rules</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)]</span>
+
+</div>
+<div class="viewcode-block" id="Failure"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Failure">[docs]</a><span class="k">class</span> <span class="nc">Failure</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class that raises a `TemplateSyntaxError` if called.</span>
+<span class="sd">    Used by the `Lexer` to specify known errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">TemplateSyntaxError</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_class</span> <span class="o">=</span> <span class="n">cls</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Token"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Token">[docs]</a><span class="k">class</span> <span class="nc">Token</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Token class.&quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">lineno</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="nb">property</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="nb">intern</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">)),</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">reverse_operators</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">reverse_operators</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span>
+
+<div class="viewcode-block" id="Token.test"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Token.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test a token against a token expression.  This can either be a</span>
+<span class="sd">        token type or ``&#39;token_type:token_value&#39;``.  This can only test</span>
+<span class="sd">        against string values and types.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># here we do a regular string equality check as test_any is usually</span>
+        <span class="c"># passed an iterable of not interned strings.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">expr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Token.test_any"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Token.test_any">[docs]</a>    <span class="k">def</span> <span class="nf">test_any</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">iterable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test against multiple token expressions.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Token(</span><span class="si">%r</span><span class="s">, </span><span class="si">%r</span><span class="s">, </span><span class="si">%r</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TokenStreamIterator"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStreamIterator">[docs]</a><span class="k">class</span> <span class="nc">TokenStreamIterator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The iterator for tokenstreams.  Iterate over the stream</span>
+<span class="sd">    until the eof token is reached.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="TokenStreamIterator.next"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStreamIterator.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">current</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="n">TOKEN_EOF</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">()</span>
+        <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">token</span>
+
+</div></div>
+<div class="viewcode-block" id="TokenStream"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream">[docs]</a><span class="k">class</span> <span class="nc">TokenStream</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A token stream is an iterable that yields :class:`Token`\s.  The</span>
+<span class="sd">    parser however does not iterate over it but calls :meth:`next` to go</span>
+<span class="sd">    one token ahead.  The current active token is stored as :attr:`current`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span><span class="o">.</span><span class="n">next</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pushed</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="n">Token</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TOKEN_INITIAL</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TokenStreamIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pushed</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">TOKEN_EOF</span>
+
+    <span class="n">eos</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">x</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s">&quot;Are we at the end of the stream?&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TokenStream.push"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.push">[docs]</a>    <span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Push a token back to the stream.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pushed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TokenStream.look"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.look">[docs]</a>    <span class="k">def</span> <span class="nf">look</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Look at the next token.&quot;&quot;&quot;</span>
+        <span class="n">old_token</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="n">old_token</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="TokenStream.skip"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.skip">[docs]</a>    <span class="k">def</span> <span class="nf">skip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Got n tokens ahead.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TokenStream.next_if"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.next_if">[docs]</a>    <span class="k">def</span> <span class="nf">next_if</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform the token test and return the token if it matched.</span>
+<span class="sd">        Otherwise the return value is `None`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TokenStream.skip_if"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.skip_if">[docs]</a>    <span class="k">def</span> <span class="nf">skip_if</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Like :meth:`next_if` but only returns `True` or `False`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_if</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="TokenStream.next"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Go one token ahead and return the old one&quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pushed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pushed</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">TOKEN_EOF</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="TokenStream.close"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close the stream.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="n">Token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">TOKEN_EOF</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="TokenStream.expect"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.TokenStream.expect">[docs]</a>    <span class="k">def</span> <span class="nf">expect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Expect a given token type and return it.  This accepts the same</span>
+<span class="sd">        argument as :meth:`jinja2.lexer.Token.test`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">describe_token_expr</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="n">TOKEN_EOF</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&#39;unexpected end of template, &#39;</span>
+                                          <span class="s">&#39;expected </span><span class="si">%r</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&quot;expected token </span><span class="si">%r</span><span class="s">, got </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span>
+                                      <span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">describe_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="p">)),</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="get_lexer"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.get_lexer">[docs]</a><span class="k">def</span> <span class="nf">get_lexer</span><span class="p">(</span><span class="n">environment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a lexer which is probably cached.&quot;&quot;&quot;</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">variable_start_string</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">variable_end_string</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">comment_start_string</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">comment_end_string</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">line_statement_prefix</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">line_comment_prefix</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">trim_blocks</span><span class="p">,</span>
+           <span class="n">environment</span><span class="o">.</span><span class="n">newline_sequence</span><span class="p">)</span>
+    <span class="n">lexer</span> <span class="o">=</span> <span class="n">_lexer_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lexer</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">lexer</span> <span class="o">=</span> <span class="n">Lexer</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
+        <span class="n">_lexer_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">lexer</span>
+    <span class="k">return</span> <span class="n">lexer</span>
+
+</div>
+<div class="viewcode-block" id="Lexer"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Lexer">[docs]</a><span class="k">class</span> <span class="nc">Lexer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class that implements a lexer for a given environment. Automatically</span>
+<span class="sd">    created by the environment class, usually you don&#39;t have to do that.</span>
+
+<span class="sd">    Note that the lexer is not automatically bound to an environment.</span>
+<span class="sd">    Multiple environments can share the same lexer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="c"># shortcuts</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">S</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span>
+
+        <span class="c"># lexing rules for tags</span>
+        <span class="n">tag_rules</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">whitespace_re</span><span class="p">,</span> <span class="n">TOKEN_WHITESPACE</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">float_re</span><span class="p">,</span> <span class="n">TOKEN_FLOAT</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">integer_re</span><span class="p">,</span> <span class="n">TOKEN_INTEGER</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">name_re</span><span class="p">,</span> <span class="n">TOKEN_NAME</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">string_re</span><span class="p">,</span> <span class="n">TOKEN_STRING</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">operator_re</span><span class="p">,</span> <span class="n">TOKEN_OPERATOR</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c"># assamble the root lexing rule. because &quot;|&quot; is ungreedy</span>
+        <span class="c"># we have to sort by length so that the lexer continues working</span>
+        <span class="c"># as expected when we have parsing rules like &lt;% for block and</span>
+        <span class="c"># &lt;%= for variables. (if someone wants asp like syntax)</span>
+        <span class="c"># variables are just part of the rules if variable processing</span>
+        <span class="c"># is required.</span>
+        <span class="n">root_tag_rules</span> <span class="o">=</span> <span class="n">compile_rules</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
+
+        <span class="c"># block suffix if trimming is enabled</span>
+        <span class="n">block_suffix_re</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">trim_blocks</span> <span class="ow">and</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">n?&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline_sequence</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">newline_sequence</span>
+
+        <span class="c"># global lexing rules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;root&#39;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="c"># directives</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;(.*?)(?:</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s">r&#39;(?P&lt;raw_begin&gt;(?:\s*</span><span class="si">%s</span><span class="s">\-|</span><span class="si">%s</span><span class="s">)\s*raw\s*(?:\-</span><span class="si">%s</span><span class="s">\s*|</span><span class="si">%s</span><span class="s">))&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">),</span>
+                        <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">),</span>
+                        <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">),</span>
+                        <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">)</span>
+                    <span class="p">)]</span> <span class="o">+</span> <span class="p">[</span>
+                        <span class="s">r&#39;(?P&lt;</span><span class="si">%s</span><span class="s">_begin&gt;\s*</span><span class="si">%s</span><span class="s">\-|</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">root_tag_rules</span>
+                    <span class="p">])),</span> <span class="p">(</span><span class="n">TOKEN_DATA</span><span class="p">,</span> <span class="s">&#39;#bygroup&#39;</span><span class="p">),</span> <span class="s">&#39;#bygroup&#39;</span><span class="p">),</span>
+                <span class="c"># data</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;.+&#39;</span><span class="p">),</span> <span class="n">TOKEN_DATA</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="c"># comments</span>
+            <span class="n">TOKEN_COMMENT_BEGIN</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">r&#39;(.*?)((?:\-</span><span class="si">%s</span><span class="s">\s*|</span><span class="si">%s</span><span class="s">)</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">comment_end_string</span><span class="p">),</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">comment_end_string</span><span class="p">),</span>
+                    <span class="n">block_suffix_re</span>
+                <span class="p">)),</span> <span class="p">(</span><span class="n">TOKEN_COMMENT</span><span class="p">,</span> <span class="n">TOKEN_COMMENT_END</span><span class="p">),</span> <span class="s">&#39;#pop&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;(.)&#39;</span><span class="p">),</span> <span class="p">(</span><span class="n">Failure</span><span class="p">(</span><span class="s">&#39;Missing end of comment tag&#39;</span><span class="p">),),</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="c"># blocks</span>
+            <span class="n">TOKEN_BLOCK_BEGIN</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;(?:\-</span><span class="si">%s</span><span class="s">\s*|</span><span class="si">%s</span><span class="s">)</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">),</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">),</span>
+                    <span class="n">block_suffix_re</span>
+                <span class="p">)),</span> <span class="n">TOKEN_BLOCK_END</span><span class="p">,</span> <span class="s">&#39;#pop&#39;</span><span class="p">),</span>
+            <span class="p">]</span> <span class="o">+</span> <span class="n">tag_rules</span><span class="p">,</span>
+            <span class="c"># variables</span>
+            <span class="n">TOKEN_VARIABLE_BEGIN</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;\-</span><span class="si">%s</span><span class="s">\s*|</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">variable_end_string</span><span class="p">),</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">variable_end_string</span><span class="p">)</span>
+                <span class="p">)),</span> <span class="n">TOKEN_VARIABLE_END</span><span class="p">,</span> <span class="s">&#39;#pop&#39;</span><span class="p">)</span>
+            <span class="p">]</span> <span class="o">+</span> <span class="n">tag_rules</span><span class="p">,</span>
+            <span class="c"># raw block</span>
+            <span class="n">TOKEN_RAW_BEGIN</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;(.*?)((?:\s*</span><span class="si">%s</span><span class="s">\-|</span><span class="si">%s</span><span class="s">)\s*endraw\s*(?:\-</span><span class="si">%s</span><span class="s">\s*|</span><span class="si">%s%s</span><span class="s">))&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">),</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_start_string</span><span class="p">),</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">),</span>
+                    <span class="n">e</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">block_end_string</span><span class="p">),</span>
+                    <span class="n">block_suffix_re</span>
+                <span class="p">)),</span> <span class="p">(</span><span class="n">TOKEN_DATA</span><span class="p">,</span> <span class="n">TOKEN_RAW_END</span><span class="p">),</span> <span class="s">&#39;#pop&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">&#39;(.)&#39;</span><span class="p">),</span> <span class="p">(</span><span class="n">Failure</span><span class="p">(</span><span class="s">&#39;Missing end of raw directive&#39;</span><span class="p">),),</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="c"># line statements</span>
+            <span class="n">TOKEN_LINESTATEMENT_BEGIN</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">r&#39;\s*(\n|$)&#39;</span><span class="p">),</span> <span class="n">TOKEN_LINESTATEMENT_END</span><span class="p">,</span> <span class="s">&#39;#pop&#39;</span><span class="p">)</span>
+            <span class="p">]</span> <span class="o">+</span> <span class="n">tag_rules</span><span class="p">,</span>
+            <span class="c"># line comments</span>
+            <span class="n">TOKEN_LINECOMMENT_BEGIN</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="s">r&#39;(.*?)()(?=\n|$)&#39;</span><span class="p">),</span> <span class="p">(</span><span class="n">TOKEN_LINECOMMENT</span><span class="p">,</span>
+                 <span class="n">TOKEN_LINECOMMENT_END</span><span class="p">),</span> <span class="s">&#39;#pop&#39;</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_normalize_newlines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called for strings and template data to normlize it to unicode.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">newline_re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">newline_sequence</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Lexer.tokenize"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Lexer.tokenize">[docs]</a>    <span class="k">def</span> <span class="nf">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls tokeniter + tokenize and wraps it in a token stream.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokeniter</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TokenStream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Lexer.wrap"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Lexer.wrap">[docs]</a>    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is called with the stream as returned by `tokenize` and wraps</span>
+<span class="sd">        every token in a :class:`Token` and converts the value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">ignored_tokens</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;linestatement_begin&#39;</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="s">&#39;block_begin&#39;</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;linestatement_end&#39;</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="s">&#39;block_end&#39;</span>
+            <span class="c"># we are not interested in those tokens in the parser</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;raw_begin&#39;</span><span class="p">,</span> <span class="s">&#39;raw_end&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;data&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_newlines</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;keyword&#39;</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;name&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;string&#39;</span><span class="p">:</span>
+                <span class="c"># try to unescape string</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_newlines</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> \
+                        <span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">,</span> <span class="s">&#39;backslashreplace&#39;</span><span class="p">)</span> \
+                        <span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;unicode-escape&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="c"># if we can express it as bytestring (ascii only)</span>
+                <span class="c"># we do that for support of semi broken APIs</span>
+                <span class="c"># as datetime.datetime.strftime.  On python 3 this</span>
+                <span class="c"># call becomes a noop thanks to 2to3</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;integer&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;float&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;operator&#39;</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="n">operators</span><span class="p">[</span><span class="n">value</span><span class="p">]</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Lexer.tokeniter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.lexer.Lexer.tokeniter">[docs]</a>    <span class="k">def</span> <span class="nf">tokeniter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method tokenizes the text and returns the tokens in a</span>
+<span class="sd">        generator.  Use this method if you just want to tokenize a template.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;root&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">!=</span> <span class="s">&#39;root&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">state</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;variable&#39;</span><span class="p">,</span> <span class="s">&#39;block&#39;</span><span class="p">),</span> <span class="s">&#39;invalid state&#39;</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span> <span class="o">+</span> <span class="s">&#39;_begin&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="s">&#39;root&#39;</span>
+        <span class="n">statetokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rules</span><span class="p">[</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">source_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="n">balancing_stack</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># tokenizer loop</span>
+            <span class="k">for</span> <span class="n">regex</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">new_state</span> <span class="ow">in</span> <span class="n">statetokens</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                <span class="c"># if no match we try again with the next rule</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="c"># we only match blocks and variables if brances / parentheses</span>
+                <span class="c"># are balanced. continue parsing with the lower rule which</span>
+                <span class="c"># is the operator rule. do this only if the end tags look</span>
+                <span class="c"># like operators</span>
+                <span class="k">if</span> <span class="n">balancing_stack</span> <span class="ow">and</span> \
+                   <span class="n">tokens</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;variable_end&#39;</span><span class="p">,</span> <span class="s">&#39;block_end&#39;</span><span class="p">,</span>
+                              <span class="s">&#39;linestatement_end&#39;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+                <span class="c"># tuples support more options</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+                        <span class="c"># failure group</span>
+                        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">is</span> <span class="n">Failure</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                        <span class="c"># bygroup is a bit more complex, in that case we</span>
+                        <span class="c"># yield for the current token the first named</span>
+                        <span class="c"># group that matched</span>
+                        <span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;#bygroup&#39;</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                                    <span class="k">yield</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
+                                    <span class="n">lineno</span> <span class="o">+=</span> <span class="n">value</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+                                    <span class="k">break</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> wanted to resolve &#39;</span>
+                                                   <span class="s">&#39;the token dynamically&#39;</span>
+                                                   <span class="s">&#39; but no group matched&#39;</span>
+                                                   <span class="o">%</span> <span class="n">regex</span><span class="p">)</span>
+                        <span class="c"># normal group</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">data</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">data</span> <span class="ow">or</span> <span class="n">token</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_if_empty</span><span class="p">:</span>
+                                <span class="k">yield</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">data</span>
+                            <span class="n">lineno</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+                <span class="c"># strings as token just are yielded as it.</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+                    <span class="c"># update brace/parentheses balance</span>
+                    <span class="k">if</span> <span class="n">tokens</span> <span class="o">==</span> <span class="s">&#39;operator&#39;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">data</span> <span class="o">==</span> <span class="s">&#39;{&#39;</span><span class="p">:</span>
+                            <span class="n">balancing_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;}&#39;</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">data</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+                            <span class="n">balancing_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">data</span> <span class="o">==</span> <span class="s">&#39;[&#39;</span><span class="p">:</span>
+                            <span class="n">balancing_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;]&#39;</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">data</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;)&#39;</span><span class="p">,</span> <span class="s">&#39;]&#39;</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">balancing_stack</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&#39;unexpected </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">&#39;</span> <span class="o">%</span>
+                                                          <span class="n">data</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+                                                          <span class="n">filename</span><span class="p">)</span>
+                            <span class="n">expected_op</span> <span class="o">=</span> <span class="n">balancing_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">expected_op</span> <span class="o">!=</span> <span class="n">data</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&#39;unexpected </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">, &#39;</span>
+                                                          <span class="s">&#39;expected </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">&#39;</span> <span class="o">%</span>
+                                                          <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">expected_op</span><span class="p">),</span>
+                                                          <span class="n">lineno</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+                                                          <span class="n">filename</span><span class="p">)</span>
+                    <span class="c"># yield items</span>
+                    <span class="k">if</span> <span class="n">data</span> <span class="ow">or</span> <span class="n">tokens</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_if_empty</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">data</span>
+                    <span class="n">lineno</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+                <span class="c"># fetch new position into new variable so that we can check</span>
+                <span class="c"># if there is a internal parsing error which would result</span>
+                <span class="c"># in an infinite loop</span>
+                <span class="n">pos2</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+                <span class="c"># handle state changes</span>
+                <span class="k">if</span> <span class="n">new_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="c"># remove the uppermost state</span>
+                    <span class="k">if</span> <span class="n">new_state</span> <span class="o">==</span> <span class="s">&#39;#pop&#39;</span><span class="p">:</span>
+                        <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="c"># resolve the new state by group checking</span>
+                    <span class="k">elif</span> <span class="n">new_state</span> <span class="o">==</span> <span class="s">&#39;#bygroup&#39;</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                                <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                                <span class="k">break</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> wanted to resolve the &#39;</span>
+                                               <span class="s">&#39;new state dynamically but&#39;</span>
+                                               <span class="s">&#39; no group matched&#39;</span> <span class="o">%</span>
+                                               <span class="n">regex</span><span class="p">)</span>
+                    <span class="c"># direct state name given</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_state</span><span class="p">)</span>
+                    <span class="n">statetokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rules</span><span class="p">[</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="c"># we are still at the same position and no stack change.</span>
+                <span class="c"># this means a loop without break condition, avoid that and</span>
+                <span class="c"># raise error</span>
+                <span class="k">elif</span> <span class="n">pos2</span> <span class="o">==</span> <span class="n">pos</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> yielded empty string without &#39;</span>
+                                       <span class="s">&#39;stack change&#39;</span> <span class="o">%</span> <span class="n">regex</span><span class="p">)</span>
+                <span class="c"># publish new function and start again</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">pos2</span>
+                <span class="k">break</span>
+            <span class="c"># if loop terminated without break we havn&#39;t found a single match</span>
+            <span class="c"># either we are at the end of the file or we have a problem</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># end of text</span>
+                <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;=</span> <span class="n">source_length</span><span class="p">:</span>
+                    <span class="k">return</span>
+                <span class="c"># something went wrong</span>
+                <span class="k">raise</span> <span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s">&#39;unexpected char </span><span class="si">%r</span><span class="s"> at </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span>
+                                          <span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span> <span class="n">pos</span><span class="p">),</span> <span class="n">lineno</span><span class="p">,</span>
+                                          <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

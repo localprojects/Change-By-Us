@@ -1,0 +1,461 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.form &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.form</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">HTML forms</span>
+<span class="sd">(part of web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">webapi</span> <span class="kn">as</span> <span class="nn">web</span>
+<span class="kn">import</span> <span class="nn">utils</span><span class="o">,</span> <span class="nn">net</span>
+
+<div class="viewcode-block" id="attrget"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.attrget">[docs]</a><span class="k">def</span> <span class="nf">attrget</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;has_key&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span> <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span> <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Form"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form">[docs]</a><span class="k">class</span> <span class="nc">Form</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    HTML form.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; f = Form(Textbox(&quot;x&quot;))</span>
+<span class="sd">        &gt;&gt;&gt; f.render()</span>
+<span class="sd">        &#39;&lt;table&gt;\n    &lt;tr&gt;&lt;th&gt;&lt;label for=&quot;x&quot;&gt;x&lt;/label&gt;&lt;/th&gt;&lt;td&gt;&lt;input type=&quot;text&quot; id=&quot;x&quot; name=&quot;x&quot;/&gt;&lt;/td&gt;&lt;/tr&gt;\n&lt;/table&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">note</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validators</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;validators&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">validates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">o</span>
+    
+<div class="viewcode-block" id="Form.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rendernote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">note</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;&lt;table&gt;</span><span class="se">\n</span><span class="s">&#39;</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="n">html</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">safeunicode</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">pre</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rendernote</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">note</span><span class="p">)</span> <span class="o">+</span> <span class="n">utils</span><span class="o">.</span><span class="n">safeunicode</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">post</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_hidden</span><span class="p">():</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;    &lt;tr style=&quot;display: none;&quot;&gt;&lt;th&gt;&lt;/th&gt;&lt;td&gt;</span><span class="si">%s</span><span class="s">&lt;/td&gt;&lt;/tr&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">html</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s">&#39;    &lt;tr&gt;&lt;th&gt;&lt;label for=&quot;</span><span class="si">%s</span><span class="s">&quot;&gt;</span><span class="si">%s</span><span class="s">&lt;/label&gt;&lt;/th&gt;&lt;td&gt;</span><span class="si">%s</span><span class="s">&lt;/td&gt;&lt;/tr&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">description</span><span class="p">),</span> <span class="n">html</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s">&quot;&lt;/table&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">out</span>
+        </div>
+<div class="viewcode-block" id="Form.render_css"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form.render_css">[docs]</a>    <span class="k">def</span> <span class="nf">render_css</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rendernote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">note</span><span class="p">))</span> 
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">is_hidden</span><span class="p">():</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&lt;label for=&quot;</span><span class="si">%s</span><span class="s">&quot;&gt;</span><span class="si">%s</span><span class="s">&lt;/label&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">description</span><span class="p">)))</span> 
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">pre</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">render</span><span class="p">())</span> 
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rendernote</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">note</span><span class="p">))</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">post</span><span class="p">)</span> 
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> 
+        </div>
+<div class="viewcode-block" id="Form.rendernote"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form.rendernote">[docs]</a>    <span class="k">def</span> <span class="nf">rendernote</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">note</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">note</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;&lt;strong class=&quot;wrong&quot;&gt;</span><span class="si">%s</span><span class="s">&lt;/strong&gt;&#39;</span> <span class="o">%</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">note</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="s">&quot;&quot;</span>
+    </div>
+<div class="viewcode-block" id="Form.validates"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form.validates">[docs]</a>    <span class="k">def</span> <span class="nf">validates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_validate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">source</span> <span class="ow">or</span> <span class="n">kw</span> <span class="ow">or</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">attrget</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_validate</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">and</span> <span class="n">out</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_validate</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="n">out</span>
+        <span class="k">return</span> <span class="n">out</span>
+</div>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">note</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">msg</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="Form.fill"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form.fill">[docs]</a>    <span class="k">def</span> <span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">validates</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">_validate</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span> <span class="k">return</span> <span class="n">x</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="n">i</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c"># don&#39;t interfere with deepcopy</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;inputs&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span> <span class="k">return</span> <span class="n">x</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">name</span>
+    
+<div class="viewcode-block" id="Form.get"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Form.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+            </div>
+    <span class="k">def</span> <span class="nf">_get_d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c">#@@ should really be form.attr, no?</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">storage</span><span class="p">([(</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">])</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_d</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Input"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input">[docs]</a><span class="k">class</span> <span class="nc">Input</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validators</span> <span class="o">=</span> <span class="n">validators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">AttributeList</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;pre&#39;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;post&#39;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">note</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_id</span><span class="p">())</span>
+        
+        <span class="k">if</span> <span class="s">&#39;class_&#39;</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;class_&#39;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;class_&#39;</span><span class="p">]</span>
+        
+<div class="viewcode-block" id="Input.is_hidden"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.is_hidden">[docs]</a>    <span class="k">def</span> <span class="nf">is_hidden</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Input.get_type"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        </div>
+<div class="viewcode-block" id="Input.get_default_id"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.get_default_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_default_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Input.validate"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">note</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">msg</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Input.set_value"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.set_value">[docs]</a>    <span class="k">def</span> <span class="nf">set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Input.get_value"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Input.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_type</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;input </span><span class="si">%s</span><span class="s">/&gt;&#39;</span> <span class="o">%</span> <span class="n">attrs</span>
+</div>
+<div class="viewcode-block" id="Input.rendernote"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.rendernote">[docs]</a>    <span class="k">def</span> <span class="nf">rendernote</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">note</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">note</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;&lt;strong class=&quot;wrong&quot;&gt;</span><span class="si">%s</span><span class="s">&lt;/strong&gt;&#39;</span> <span class="o">%</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">note</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="s">&quot;&quot;</span>
+        </div>
+<div class="viewcode-block" id="Input.addatts"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Input.addatts">[docs]</a>    <span class="k">def</span> <span class="nf">addatts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># add leading space for backward-compatibility</span>
+        <span class="k">return</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="AttributeList"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.AttributeList">[docs]</a><span class="k">class</span> <span class="nc">AttributeList</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;List of atributes of input.</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; a = AttributeList(type=&#39;text&#39;, name=&#39;x&#39;, value=20)</span>
+<span class="sd">    &gt;&gt;&gt; a</span>
+<span class="sd">    &lt;attrs: &#39;type=&quot;text&quot; name=&quot;x&quot; value=&quot;20&quot;&#39;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AttributeList.copy"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.AttributeList.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AttributeList</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        </div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">=&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;attrs: </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Textbox"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Textbox">[docs]</a><span class="k">class</span> <span class="nc">Textbox</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Textbox input.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; Textbox(name=&#39;foo&#39;, value=&#39;bar&#39;).render()</span>
+<span class="sd">        &#39;&lt;input type=&quot;text&quot; id=&quot;foo&quot; value=&quot;bar&quot; name=&quot;foo&quot;/&gt;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; Textbox(name=&#39;foo&#39;, value=0).render()</span>
+<span class="sd">        &#39;&lt;input type=&quot;text&quot; id=&quot;foo&quot; value=&quot;0&quot; name=&quot;foo&quot;/&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>        
+<div class="viewcode-block" id="Textbox.get_type"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Textbox.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;text&#39;</span>
+</div></div>
+<div class="viewcode-block" id="Password"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Password">[docs]</a><span class="k">class</span> <span class="nc">Password</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Password input.</span>
+
+<span class="sd">        &gt;&gt;&gt; Password(name=&#39;password&#39;, value=&#39;secret&#39;).render()</span>
+<span class="sd">        &#39;&lt;input type=&quot;password&quot; id=&quot;password&quot; value=&quot;secret&quot; name=&quot;password&quot;/&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="Password.get_type"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Password.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;password&#39;</span>
+</div></div>
+<div class="viewcode-block" id="Textarea"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Textarea">[docs]</a><span class="k">class</span> <span class="nc">Textarea</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Textarea input.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; Textarea(name=&#39;foo&#39;, value=&#39;bar&#39;).render()</span>
+<span class="sd">        &#39;&lt;textarea id=&quot;foo&quot; name=&quot;foo&quot;&gt;bar&lt;/textarea&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Textarea.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Textarea.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;textarea </span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/textarea&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">attrs</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="Dropdown"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Dropdown">[docs]</a><span class="k">class</span> <span class="nc">Dropdown</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Dropdown/select input.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; Dropdown(name=&#39;foo&#39;, args=[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], value=&#39;b&#39;).render()</span>
+<span class="sd">        &#39;&lt;select id=&quot;foo&quot; name=&quot;foo&quot;&gt;\n  &lt;option value=&quot;a&quot;&gt;a&lt;/option&gt;\n  &lt;option selected=&quot;selected&quot; value=&quot;b&quot;&gt;b&lt;/option&gt;\n  &lt;option value=&quot;c&quot;&gt;c&lt;/option&gt;\n&lt;/select&gt;\n&#39;</span>
+<span class="sd">        &gt;&gt;&gt; Dropdown(name=&#39;foo&#39;, args=[(&#39;a&#39;, &#39;aa&#39;), (&#39;b&#39;, &#39;bb&#39;), (&#39;c&#39;, &#39;cc&#39;)], value=&#39;b&#39;).render()</span>
+<span class="sd">        &#39;&lt;select id=&quot;foo&quot; name=&quot;foo&quot;&gt;\n  &lt;option value=&quot;a&quot;&gt;aa&lt;/option&gt;\n  &lt;option selected=&quot;selected&quot; value=&quot;b&quot;&gt;bb&lt;/option&gt;\n  &lt;option value=&quot;c&quot;&gt;cc&lt;/option&gt;\n&lt;/select&gt;\n&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Dropdown</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Dropdown.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Dropdown.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        
+        <span class="n">x</span> <span class="o">=</span> <span class="s">&#39;&lt;select </span><span class="si">%s</span><span class="s">&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">attrs</span>
+        
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span> <span class="n">arg</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg</span> 
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">value</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+                <span class="n">select_p</span> <span class="o">=</span> <span class="s">&#39; selected=&quot;selected&quot;&#39;</span>
+            <span class="k">else</span><span class="p">:</span> <span class="n">select_p</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="s">&#39;  &lt;option</span><span class="si">%s</span><span class="s"> value=&quot;</span><span class="si">%s</span><span class="s">&quot;&gt;</span><span class="si">%s</span><span class="s">&lt;/option&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">select_p</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">desc</span><span class="p">))</span>
+            
+        <span class="n">x</span> <span class="o">+=</span> <span class="s">&#39;&lt;/select&gt;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">return</span> <span class="n">x</span>
+</div></div>
+<div class="viewcode-block" id="Radio"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Radio">[docs]</a><span class="k">class</span> <span class="nc">Radio</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Radio</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Radio.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Radio.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="s">&#39;&lt;span&gt;&#39;</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span> <span class="n">arg</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg</span> 
+            <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;radio&#39;</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;checked&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;checked&#39;</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="s">&#39;&lt;input </span><span class="si">%s</span><span class="s">/&gt; </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">attrs</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="n">desc</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="s">&#39;&lt;/span&gt;&#39;</span>
+        <span class="k">return</span> <span class="n">x</span>
+</div></div>
+<div class="viewcode-block" id="Checkbox"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Checkbox">[docs]</a><span class="k">class</span> <span class="nc">Checkbox</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checkbox input.</span>
+
+<span class="sd">    &gt;&gt;&gt; Checkbox(&#39;foo&#39;, value=&#39;bar&#39;, checked=True).render()</span>
+<span class="sd">    &#39;&lt;input checked=&quot;checked&quot; type=&quot;checkbox&quot; id=&quot;foo_bar&quot; value=&quot;bar&quot; name=&quot;foo&quot;/&gt;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; Checkbox(&#39;foo&#39;, value=&#39;bar&#39;).render()</span>
+<span class="sd">    &#39;&lt;input type=&quot;checkbox&quot; id=&quot;foo_bar&quot; value=&quot;bar&quot; name=&quot;foo&quot;/&gt;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; c = Checkbox(&#39;foo&#39;, value=&#39;bar&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; c.validate(&#39;on&#39;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; c.render()</span>
+<span class="sd">    &#39;&lt;input checked=&quot;checked&quot; type=&quot;checkbox&quot; id=&quot;foo_bar&quot; value=&quot;bar&quot; name=&quot;foo&quot;/&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checked</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;checked&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="n">Input</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="Checkbox.get_default_id"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Checkbox.get_default_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_default_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">safestr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Checkbox.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Checkbox.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;checkbox&#39;</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checked</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;checked&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;checked&#39;</span>            
+        <span class="k">return</span> <span class="s">&#39;&lt;input </span><span class="si">%s</span><span class="s">/&gt;&#39;</span> <span class="o">%</span> <span class="n">attrs</span>
+</div>
+<div class="viewcode-block" id="Checkbox.set_value"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Checkbox.set_value">[docs]</a>    <span class="k">def</span> <span class="nf">set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checked</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Checkbox.get_value"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Checkbox.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">checked</span>
+</div></div>
+<div class="viewcode-block" id="Button"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Button">[docs]</a><span class="k">class</span> <span class="nc">Button</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;HTML Button.</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; Button(&quot;save&quot;).render()</span>
+<span class="sd">    &#39;&lt;button id=&quot;save&quot; name=&quot;save&quot;&gt;save&lt;/button&gt;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; Button(&quot;action&quot;, value=&quot;save&quot;, html=&quot;&lt;b&gt;Save Changes&lt;/b&gt;&quot;).render()</span>
+<span class="sd">    &#39;&lt;button id=&quot;action&quot; value=&quot;save&quot; name=&quot;action&quot;&gt;&lt;b&gt;Save Changes&lt;/b&gt;&lt;/button&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Button</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">validators</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+<div class="viewcode-block" id="Button.render"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Button.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">html</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;html&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">net</span><span class="o">.</span><span class="n">websafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;button </span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/button&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">attrs</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="Hidden"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Hidden">[docs]</a><span class="k">class</span> <span class="nc">Hidden</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Hidden Input.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; Hidden(name=&#39;foo&#39;, value=&#39;bar&#39;).render()</span>
+<span class="sd">        &#39;&lt;input type=&quot;hidden&quot; id=&quot;foo&quot; value=&quot;bar&quot; name=&quot;foo&quot;/&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Hidden.is_hidden"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Hidden.is_hidden">[docs]</a>    <span class="k">def</span> <span class="nf">is_hidden</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+        </div>
+<div class="viewcode-block" id="Hidden.get_type"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Hidden.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;hidden&#39;</span>
+</div></div>
+<div class="viewcode-block" id="File"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.File">[docs]</a><span class="k">class</span> <span class="nc">File</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;File input.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; File(name=&#39;f&#39;).render()</span>
+<span class="sd">        &#39;&lt;input type=&quot;file&quot; id=&quot;f&quot; name=&quot;f&quot;/&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="File.get_type"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.File.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;file&#39;</span>
+    </div></div>
+<div class="viewcode-block" id="Validator"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Validator">[docs]</a><span class="k">class</span> <span class="nc">Validator</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span> <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">jstest</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="n">utils</span><span class="o">.</span><span class="n">autoassign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
+<div class="viewcode-block" id="Validator.valid"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.Validator.valid">[docs]</a>    <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span> 
+        <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span> <span class="k">return</span> <span class="bp">False</span>
+</div></div>
+<span class="n">notnull</span> <span class="o">=</span> <span class="n">Validator</span><span class="p">(</span><span class="s">&quot;Required&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="regexp"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.regexp">[docs]</a><span class="k">class</span> <span class="nc">regexp</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rexp</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">rexp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span>
+    
+<div class="viewcode-block" id="regexp.valid"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.form.regexp.valid">[docs]</a>    <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rexp</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

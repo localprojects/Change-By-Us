@@ -1,133 +1,165 @@
 <!-- Begin Project.West -->
 <div class="box mission">
 
-	<div class="hd clearfix">
-		<h2>
-			<span>
-				Mission
-			</span>
-		</h2>
-	</div>
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Us
+            </span>
+        </h2>
+    </div>
 
-	<div class="bd clearfix">
-		<div class="our-mission">
-			<div class="sub-hd clearfix">
-				<h3>Our Mission</h3>
-				<div class="inline-edit-controls"></div>
-			</div>
-			<div class="sub-bd serif">
-				<div class='mission-text editable-content'>{{ d.template_data.project.data.info.mission }}</div>
-			</div>
-		</div>
-		<div class="endorsements" style="{% if d.template_data.project.data.info.endorsements['items']|length == 0 and (d.template_data.user == False or (d.template_data.user and d.template_data.user.data.is_leader == False)) %}display:none;{% endif %}">
-			<div class="sub-hd">
-				<h3>Supporters</h3>
-			</div>
-			<div class="sub-bd">
-				<ul class="endorsements-stack">
-					{% for endorsement in d.template_data.project.data.info.endorsements['items'] %}
-						<li>
-							<div class="thumb">
-								{% if endorsement.image_id %}
-									<img width='30' height='30' class="endorser-photo" alt="{{ endorsement.name }}" src="{{d.template_data.media_root}}images/{{ endorsement.image_id % 10 }}/{{ endorsement.image_id }}.png"/>
-								{% endif %}
-								
-								<span class="overlay-tag"></span>
-							</div>
-							<div class="main" {% if not endorsement.organization %}style="padding-top: 5px"{% endif %}>
-								<strong><a href="/useraccount/{{ endorsement.u_id }}">{{ endorsement.name }}</a></strong>{% if endorsement.title or endorsement.organization %},{% endif %}
-								<cite>{% if endorsement.title %}{{ endorsement.title }}{% endif %} {% if endorsement.organization %}{{ endorsement.organization }}{% endif %}</cite>
-							</div>
-							{% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}
-								<a class='close remove-endorse' href="#removeEndorsement,{{ d.template_data.project.data.project_id }},{{ endorsement.u_id }}"><span>close</span></a>
-							{% endif %}
-						</li>
-					{% endfor %}
-				</ul>
-				{% if d.template_data.user and d.template_data.user.is_leader %}
-					<a class="endorse-button" href='#endorse,{{ d.template_data.project.data.project_id }}'><span><span class="fancy-caps">Support <span>this</span> project</span></span></a>
-				{% endif %}
-			</div>
-		</div>
-		<div class="has-layout-fixer">
-			<div class="location">
-				<div class="sub-hd">
-					<h3>Location</h3>
-				</div>
-				<div class="sub-bd">
-					<a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><div id="location-map" class="map-holder"><!-- container for google map --></div></a>
-					<a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><p class='location-link serif'>{{ d.template_data.project.data.info.location.name }}</p></a>
-				</div>
-			</div>
-			<div class="keywords">
-				<div class="sub-hd">
-					<h3>Keywords</h3>
-				</div>
-				<div class="sub-bd">
-					<ul class="tag-cloud serif">
-						{% for keyword in d.template_data.project.data.info.keywords %}
-							{% if d.template_data.user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
-								<li class="admin" id='keyword-{{ loop.index }}'><a href="/search?terms={{ keyword|urlencode }}">{{ keyword }}</a> <a href="#remove,{{ keyword|urlencode }}" class="remove-btn keyword"><span>Remove</span></a></li>
-							{% else %}
-								<li><a href="/search?terms={{ keyword|urlencode }}">{{ keyword }}</a></li>
-							{% endif %}
-						{% endfor %}
-					</ul>
-					{% if d.template_data.user and d.template_data.project_user.data.is_member %}
-						<div class="inline-edit-controls" style="display:none;">
-							<input class="mini" type="text"/>
-							<a href="#" class="ca-btn add-btn">Add</a>
-						</div>
-						<a href="" class="add-keyword">&#43; Add Keyword</a>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="bd clearfix">
+
+        <div class="leadership">
+            <div class="sub-hd">
+                <div class="inline-edit-controls">
+                    {% if d.template_data and d.template_data.user and not (d.template_data.project.data.info.owner.u_id == d.template_data['user'].data.u_id) %}
+                        <a href="#" class="contact"></a>
+                    {% endif %}
+                </div>
+                <h3>Project Leader</h3>
+            </div>
+
+            {% for admin in d.template_data.project.admins %}
+                {% if loop.first %}
+                <div class="thumb-wrapper">
+                    <div class="thumb">
+                        <a href='/useraccount/{{ admin.id }}'>
+                          {% if admin.avatar_path %}
+                          <img width="50" src="{{ d.template_data.media_root }}{{ admin.avatar_path }}" alt="{{ admin.display_name }}">
+                          {% else %}
+                          <img width='50' src="/static/images/thumb_genAvatar50.png" alt="{{ admin.display_name }}">
+                          {% endif %}
+                        </a>
+                    </div>
+
+                    <span class="vertical-align-middle-hack thumb-description">
+                        <span class="serif">Created by <br/> <strong><a href='/useraccount/{{ admin.id }}'>{{ admin.display_name }}</a></strong></span>
+                    </span>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="our-mission">
+            <div class="sub-hd clearfix">
+                <h3>Our Mission</h3>
+                <div class="inline-edit-controls"></div>
+            </div>
+            <div class="sub-bd serif">
+                <div class='mission-text editable-content'>{{ d.template_data.project.data.info.mission }}</div>
+            </div>
+        </div>
+        <div class="endorsements" style="{% if d.template_data.project.data.info.endorsements['items']|length == 0 and (d.template_data.user == False or (d.template_data.user and d.template_data.user.data.is_leader == False)) %}display:none;{% endif %}">
+            <div class="sub-hd">
+                <h3>Supporters</h3>
+            </div>
+            <div class="sub-bd">
+                <ul class="endorsements-stack">
+                    {% for endorsement in d.template_data.project.data.info.endorsements['items'] %}
+                        <li>
+                            <div class="thumb">
+                                {% if endorsement.image_id %}
+                                    <img width='30' height='30' class="endorser-photo" alt="{{ endorsement.name }}" src="{{d.template_data.media_root}}images/{{ endorsement.image_id % 10 }}/{{ endorsement.image_id }}.png"/>
+                                {% endif %}
+
+                                <span class="overlay-tag"></span>
+                            </div>
+                            <div class="main" {% if not endorsement.organization %}style="padding-top: 5px"{% endif %}>
+                                <strong><a href="/useraccount/{{ endorsement.u_id }}">{{ endorsement.name }}</a></strong>{% if endorsement.title or endorsement.organization %},{% endif %}
+                                <cite>{% if endorsement.title %}{{ endorsement.title }}{% endif %} {% if endorsement.organization %}{{ endorsement.organization }}{% endif %}</cite>
+                            </div>
+                            {% if d.template_data.project_user.data.is_project_admin or (d.template_data.user and d.template_data.user.is_admin) %}
+                                <a class='close remove-endorse' href="#removeEndorsement,{{ d.template_data.project.data.project_id }},{{ endorsement.u_id }}"><span>close</span></a>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% if d.template_data.user and d.template_data.user.is_leader %}
+                    <a class="endorse-button" href='#endorse,{{ d.template_data.project.data.project_id }}'><span><span class="fancy-caps">Support <span>this</span> project</span></span></a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="has-layout-fixer">
+            <div class="location">
+                <div class="sub-hd">
+                    <h3>Location</h3>
+                </div>
+                <div class="sub-bd">
+                    <a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><div id="location-map" class="map-holder"><!-- container for google map --></div></a>
+                    <a href='/search?location_id={{ d.template_data.project.data.info.location.location_id }}'><p class='location-link serif'>{{ d.template_data.project.data.info.location.name }}</p></a>
+                </div>
+            </div>
+            <div class="keywords">
+                <div class="sub-hd">
+                    <h3>Keywords</h3>
+                </div>
+                <div class="sub-bd">
+                    <ul class="tag-cloud serif">
+                        {% for keyword in d.template_data.project.data.info.keywords %}
+                            {% if d.template_data.user and d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+                                <li class="admin" id='keyword-{{ keyword }}'><a href="/search?terms={{ keyword }}">{{ keyword }}</a> <a href="#remove,{{ keyword }}" class="remove-btn keyword"><span>Remove</span></a></li>
+                            {% else %}
+                                <li><a href="/search?terms={{ keyword }}">{{ keyword }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                    {% if d.template_data.user and d.template_data.project_user.data.is_member %}
+                        <div class="inline-edit-controls" style="display:none;">
+                            <input class="mini" type="text"/>
+                            <a href="#" class="ca-btn add-btn">Add</a>
+                        </div>
+                        <a href="" class="add-keyword">&#43; Add Keyword</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div> <!-- end .box.mission -->
 
 <div class="template-content modal-content endorse-project">
-	<div class="step">
-		<h2><strong>Support</strong> this project?</h2>
-		<div>
-			<p>Do you want to endorse</p>
-			<p class="serif big">{{ d.template_data.project.data.info.title }}?</p>
-			<p>It will receive your seal of approval!</p>
-		</div>
-		<div class="actions yesno">
-			<a class="submit rounded-button" href="#">Yes</a>
-			<a class="cancel rounded-button" href="#">No</a>
-		</div>
-	</div>
-	<a class='close' href="#"><span>close</span></a>
+    <div class="step">
+        <h2><strong>Support</strong> this project?</h2>
+        <div>
+            <p>Do you want to endorse</p>
+            <p class="serif big">{{ d.template_data.project.data.info.title }}?</p>
+            <p>It will receive your seal of approval!</p>
+        </div>
+        <div class="actions yesno">
+            <a class="submit rounded-button" href="#">Yes</a>
+            <a class="cancel rounded-button" href="#">No</a>
+        </div>
+    </div>
+    <a class='close' href="#"><span>close</span></a>
 </div>
 
 <div class="template-content modal-content confirm-delete remove-endorse-project">
-	<div class="step">
-		<h2>Are you sure you want to <strong>remove</strong> this endorsement?</h2>
-		<div>
-			<p>Are you sure you want to remove this endorsement? To restore the endorsement, the city leader will need to endorse this project again.</p>
-		</div>
-		<div class="actions yesno">
-			<a class="submit rounded-button" href="#">Yes, Remove Endorsement</a>
-			<a class="cancel rounded-button" href="#">No</a>
-		</div>
-	</div>
-	<a class='close' href="#"><span>close</span></a>
+    <div class="step">
+        <h2>Are you sure you want to <strong>remove</strong> this endorsement?</h2>
+        <div>
+            <p>Are you sure you want to remove this endorsement? To restore the endorsement, the city leader will need to endorse this project again.</p>
+        </div>
+        <div class="actions yesno">
+            <a class="submit rounded-button" href="#">Yes, Remove Endorsement</a>
+            <a class="cancel rounded-button" href="#">No</a>
+        </div>
+    </div>
+    <a class='close' href="#"><span>close</span></a>
 </div>
 
 <div class="template-content modal-content confirm-delete remove-keyword">
-	<div class="step">
-		<h2><strong>Delete</strong> this Keyword?</h2>
-		<div>
-			<p>This deletes the keyword from this project! <br/>Are you sure?</p>
-		</div>
-		<div class="actions">
-			<a class="submit rounded-button" href="#">Yes, Delete Keyword</a>
-			<a class="cancel" href="#">No, keep it.</a>
-		</div>
-	</div>
-	<a class='close' href="#"><span>close</span></a>
+    <div class="step">
+        <h2><strong>Delete</strong> this Keyword?</h2>
+        <div>
+            <p>This deletes the keyword from this project! <br/>Are you sure?</p>
+        </div>
+        <div class="actions">
+            <a class="submit rounded-button" href="#">Yes, Delete Keyword</a>
+            <a class="cancel" href="#">No, keep it.</a>
+        </div>
+    </div>
+    <a class='close' href="#"><span>close</span></a>
 </div>
 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>

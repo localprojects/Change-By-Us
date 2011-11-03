@@ -1,0 +1,157 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.wsgi &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.wsgi</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">WSGI Utilities</span>
+<span class="sd">(from web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">http</span>
+<span class="kn">import</span> <span class="nn">webapi</span> <span class="kn">as</span> <span class="nn">web</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">listget</span>
+<span class="kn">from</span> <span class="nn">net</span> <span class="kn">import</span> <span class="n">validaddr</span><span class="p">,</span> <span class="n">validip</span>
+<span class="kn">import</span> <span class="nn">httpserver</span>
+    
+<div class="viewcode-block" id="runfcgi"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.wsgi.runfcgi">[docs]</a><span class="k">def</span> <span class="nf">runfcgi</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">addr</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Runs a WSGI function as a FastCGI server.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">flup.server.fcgi</span> <span class="kn">as</span> <span class="nn">flups</span>
+    <span class="k">return</span> <span class="n">flups</span><span class="o">.</span><span class="n">WSGIServer</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">multiplexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bindAddress</span><span class="o">=</span><span class="n">addr</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="runscgi"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.wsgi.runscgi">[docs]</a><span class="k">def</span> <span class="nf">runscgi</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">addr</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Runs a WSGI function as an SCGI server.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">flup.server.scgi</span> <span class="kn">as</span> <span class="nn">flups</span>
+    <span class="k">return</span> <span class="n">flups</span><span class="o">.</span><span class="n">WSGIServer</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">bindAddress</span><span class="o">=</span><span class="n">addr</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="runwsgi"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.wsgi.runwsgi">[docs]</a><span class="k">def</span> <span class="nf">runwsgi</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs a WSGI-compatible `func` using FCGI, SCGI, or a simple web server,</span>
+<span class="sd">    as appropriate based on context and `sys.argv`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;SERVER_SOFTWARE&#39;</span><span class="p">):</span> <span class="c"># cgi</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;FCGI_FORCE_CGI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Y&#39;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;PHP_FCGI_CHILDREN&#39;</span><span class="p">)</span> <span class="c">#lighttpd fastcgi</span>
+      <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;SERVER_SOFTWARE&#39;</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">runfcgi</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="s">&#39;fcgi&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> <span class="ow">or</span> <span class="s">&#39;fastcgi&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="s">&#39;fastcgi&#39;</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;fastcgi&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s">&#39;fcgi&#39;</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;fcgi&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">runfcgi</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">validaddr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">runfcgi</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="s">&#39;scgi&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;scgi&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">runscgi</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">validaddr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">runscgi</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">httpserver</span><span class="o">.</span><span class="n">runsimple</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">validip</span><span class="p">(</span><span class="n">listget</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)))</span>
+    </div>
+<span class="k">def</span> <span class="nf">_is_dev_mode</span><span class="p">():</span>
+    <span class="c"># quick hack to check if the program is running in dev mode.</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;SERVER_SOFTWARE&#39;</span><span class="p">)</span> \
+        <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;PHP_FCGI_CHILDREN&#39;</span><span class="p">)</span> \
+        <span class="ow">or</span> <span class="s">&#39;fcgi&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> <span class="ow">or</span> <span class="s">&#39;fastcgi&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> \
+        <span class="ow">or</span> <span class="s">&#39;mod_wsgi&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+<span class="c"># When running the builtin-server, enable debug mode if not already set.</span>
+<span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">,</span> <span class="n">_is_dev_mode</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

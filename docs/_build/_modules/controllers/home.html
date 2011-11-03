@@ -1,0 +1,603 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.home &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.home</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">giveaminute.location</span> <span class="kn">as</span> <span class="nn">mLocation</span>
+<span class="kn">import</span> <span class="nn">giveaminute.user</span> <span class="kn">as</span> <span class="nn">mUser</span>
+<span class="kn">import</span> <span class="nn">giveaminute.project</span> <span class="kn">as</span> <span class="nn">mProject</span>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">lib.web</span>
+<span class="c">#temp</span>
+<span class="kn">from</span> <span class="nn">framework.image_server</span> <span class="kn">import</span> <span class="o">*</span>  
+<span class="kn">import</span> <span class="nn">giveaminute.projectResource</span> <span class="kn">as</span> <span class="nn">mResource</span>  
+
+<span class="kn">import</span> <span class="nn">cgi</span>
+<span class="kn">import</span> <span class="nn">oauth2</span> <span class="kn">as</span> <span class="nn">oauth</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+
+<span class="n">tw_settings</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;twitter&#39;</span><span class="p">)</span>
+<span class="n">tw_consumer</span> <span class="o">=</span> <span class="n">oauth</span><span class="o">.</span><span class="n">Consumer</span><span class="p">(</span><span class="n">tw_settings</span><span class="p">[</span><span class="s">&#39;consumer_key&#39;</span><span class="p">],</span> <span class="n">tw_settings</span><span class="p">[</span><span class="s">&#39;consumer_secret&#39;</span><span class="p">])</span>
+<span class="n">tw_client</span> <span class="o">=</span> <span class="n">oauth</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">tw_consumer</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Home"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home">[docs]</a><span class="k">class</span> <span class="nc">Home</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="Home.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">param0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">project_user</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">is_member</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                              <span class="n">is_project_admin</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;project_user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">project_user</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">project_user</span><span class="p">))</span>
+                                          
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">action</span> <span class="ow">or</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;home&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showHome</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;leaderboard&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showLeaderboard</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;mobile&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showMobile</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;bb&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showMobile</span><span class="p">(</span><span class="n">isBlackBerry</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># Main login page</span>
+        <span class="c"># TODO: This should be consolidated with the twitter &amp; facebook actions</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;login&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showLogin</span><span class="p">()</span> 
+
+        <span class="c"># Twetter-related actions</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;twitter&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_twitter_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">param0</span><span class="p">)</span>
+
+        <span class="c"># The &quot;correct&quot; facebook URLs once we change them in the app(s)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;facebook&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_facebook_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">param0</span><span class="p">)</span>
+        
+        <span class="c"># Miscellaneous actions</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;nyc&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;http://nyc.changeby.us/&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showBeta</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            
+            </div>
+<div class="viewcode-block" id="Home.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">param0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;login&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;forgot&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forgotPassword</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;logout&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logout</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;feedback&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitFeedback</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span> <span class="ow">and</span> <span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;submit&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitInviteRequest</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;directmsg&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">directMessageUser</span><span class="p">()</span>
+        
+        <span class="c"># Twitter and Facebook callsbacks may be POST requests just as easily as GET</span>
+        <span class="c"># Twetter-related actions</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;twitter&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_twitter_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">param0</span><span class="p">)</span>
+
+        <span class="c"># The &quot;correct&quot; facebook URLs once we change them in the app(s)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;facebook&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_facebook_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">param0</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+         </div>
+    <span class="k">def</span> <span class="nf">_twitter_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;login&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">login_twitter</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;create&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">login_twitter_create</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;callback&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tw_authenticated</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;disconnect&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">disconnect_twitter</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_facebook_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;login&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">login_facebook</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;create&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">login_facebook_create</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s">&#39;disconnect&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">disconnect_facebook</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Home.showHome"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.showHome">[docs]</a>    <span class="k">def</span> <span class="nf">showHome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">homepage</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;homepage&#39;</span><span class="p">)</span>
+        
+        <span class="n">locationData</span> <span class="o">=</span> <span class="n">mLocation</span><span class="o">.</span><span class="n">getSimpleLocationDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">allIdeasData</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">getMostRecentIdeas</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">homepage</span><span class="p">[</span><span class="s">&#39;num_recent_ideas&#39;</span><span class="p">]);</span>
+
+        <span class="n">locations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">locationData</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locationData</span><span class="p">))</span>
+        <span class="n">allIdeas</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">allIdeasData</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">allIdeasData</span><span class="p">))</span>
+        
+        <span class="n">news</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNewsItems</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">homepage</span><span class="p">[</span><span class="s">&#39;is_display_leaderboard&#39;</span><span class="p">])):</span>
+            <span class="n">leaderboardProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getLeaderboardProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;leaderboard&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaderboardProjects</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">homepage</span><span class="p">[</span><span class="s">&#39;is_display_featured_projects&#39;</span><span class="p">])):</span>
+            <span class="n">featuredProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getFeaturedProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;featured_projects&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">featuredProjects</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;locations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">locations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;all_ideas&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">allIdeas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;news&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">news</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;home&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;locations&#39;</span><span class="p">:</span><span class="n">locations</span><span class="p">,</span> <span class="s">&#39;all_ideas&#39;</span><span class="p">:</span><span class="n">allIdeas</span><span class="p">})</span>
+        </div>
+<div class="viewcode-block" id="Home.showLeaderboard"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.showLeaderboard">[docs]</a>    <span class="k">def</span> <span class="nf">showLeaderboard</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">leaderboardProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getLeaderboardProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;leaderboard&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaderboardProjects</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;leaderboard&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Home.showMobile"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.showMobile">[docs]</a>    <span class="k">def</span> <span class="nf">showMobile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">isBlackBerry</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">locationData</span> <span class="o">=</span> <span class="n">mLocation</span><span class="o">.</span><span class="n">getSimpleLocationDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">locations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span><span class="n">locationData</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locationData</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;locations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">locations</span>
+        
+        <span class="n">t</span> <span class="o">=</span> <span class="s">&#39;bb&#39;</span> <span class="k">if</span> <span class="n">isBlackBerry</span> <span class="k">else</span> <span class="s">&#39;mobile&#39;</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Home.showLogin"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.showLogin">[docs]</a>    <span class="k">def</span> <span class="nf">showLogin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">referer</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;HTTP_REFERER&#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">referer</span> <span class="ow">and</span> <span class="s">&quot;/join&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">referer</span> <span class="ow">and</span> <span class="s">&quot;/login&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">referer</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;redir_from&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">referer</span>
+        
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;login&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    
+    <span class="c"># if in beta mode and user is not logged in show splash</span>
+    <span class="c"># otherwise redirect homepage    </span></div>
+<div class="viewcode-block" id="Home.showBeta"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.showBeta">[docs]</a>    <span class="k">def</span> <span class="nf">showBeta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">appMode</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;splash&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Home.login"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.login">[docs]</a>    <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;email&quot;</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;password&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">email</span> <span class="ow">and</span> <span class="n">password</span><span class="p">):</span>
+            <span class="c">#userId = mUser.authenticateUser(self.db, email, password)</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">authGetUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="p">(</span><span class="n">user</span><span class="p">):</span>        
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s">&#39;u_id&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+                <span class="c"># set cbu_key for blog access</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">setcookie</span><span class="p">(</span><span class="s">&#39;cbu_key&#39;</span><span class="p">,</span> <span class="n">util</span><span class="o">.</span><span class="n">obfuscate</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s">&#39;u_id&#39;</span><span class="p">]),</span> <span class="n">domain</span> <span class="o">=</span> <span class="s">&quot;.changeby.us&quot;</span><span class="p">)</span>
+                
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>    
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** Login attempt missing email or password&quot;</span><span class="p">)</span>                        
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Home.forgotPassword"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.forgotPassword">[docs]</a>    <span class="k">def</span> <span class="nf">forgotPassword</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">email</span><span class="p">):</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">findUserByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">userId</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t find user matching forgotten password request email&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mUser</span><span class="o">.</span><span class="n">resetPassword</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** Forgot password attempt w/o email&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Home.login_facebook"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.login_facebook">[docs]</a>    <span class="k">def</span> <span class="nf">login_facebook</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+        <span class="n">fb_settings</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;facebook&#39;</span><span class="p">)</span>
+        
+        <span class="c">#cookiename = &quot;fbs_%s&quot; % fb_settings[&#39;app_id&#39;]</span>
+        <span class="c">#fbcookie = web.cookies().get(cookiename)</span>
+        <span class="c">#entries = fbcookie.split(&quot;&amp;&quot;)</span>
+        <span class="c">#dc = {}</span>
+        <span class="c">#for e in entries:</span>
+        <span class="c">#    es = e.split(&quot;=&quot;)</span>
+        <span class="c">#    dc[es[0]] = es[1]</span>
+        
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&quot;https://graph.facebook.com/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;uid&#39;</span><span class="p">)</span>
+        <span class="c"># Facebook does not like POST requests, but when they do, we can</span>
+        <span class="c"># enable the following</span>
+        <span class="c"># params = {&#39;access_token&#39;:self.request(&#39;access_token&#39;)}</span>
+        <span class="c"># resp = urllib2.urlopen(url, urllib.urlencode(dict(params)))</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">?access_token=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;access_token&#39;</span><span class="p">)))</span>
+
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">resp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select * from facebook_user where facebook_id = $id&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">profile</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="p">}))</span>
+        
+        <span class="n">associated_user</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        
+        <span class="n">created_user</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">created_facebook_user</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c"># do we already have fb data for this user? -&gt; log them in</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">facebook_user</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">facebook_user</span><span class="o">.</span><span class="n">user_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">email</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s">&quot;email&quot;</span><span class="p">]</span>
+            <span class="n">check_if_email_exists</span> <span class="o">=</span> <span class="s">&quot;select * from user where email = $email&quot;</span>
+            <span class="n">users_with_this_email</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">check_if_email_exists</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;email&#39;</span><span class="p">:</span><span class="n">email</span><span class="p">}))</span>
+            <span class="n">email_exists</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">users_with_this_email</span><span class="p">)</span>
+            
+            <span class="c"># see if we have a user with this email on a regular account</span>
+            <span class="k">if</span> <span class="n">email_exists</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">uid</span> <span class="o">=</span> <span class="n">users_with_this_email</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">user_id</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c"># no regular account with this email</span>
+            
+                <span class="c"># see if the user is logged in</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+                
+                <span class="n">make_new_user</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">uid</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">user_id</span>
+                    <span class="k">if</span> <span class="n">uid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">make_new_user</span> <span class="o">=</span> <span class="bp">False</span> <span class="c"># user is logged in</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                    <span class="c">#uid = mUser.createUser(self.db, profile[&quot;email&quot;], passw, profile[&quot;first_name&quot;], profile[&quot;last_name&quot;])</span>
+                
+                <span class="c"># not logged in, so make a new user</span>
+                <span class="k">if</span> <span class="n">make_new_user</span><span class="p">:</span>
+                    <span class="n">created_user</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">profile</span> <span class="o">=</span> <span class="n">profile</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">_changed</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="n">SessionHolder</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">created_user</span><span class="p">:</span> <span class="c"># we can associate an existing account with this data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;facebook_user&#39;</span><span class="p">,</span> <span class="n">user_id</span> <span class="o">=</span> <span class="n">uid</span><span class="p">,</span> <span class="n">facebook_id</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">])</span>
+                <span class="n">associated_user</span> <span class="o">=</span> <span class="n">uid</span>
+                <span class="n">created_facebook_user</span> <span class="o">=</span> <span class="bp">True</span>
+        
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">associated_user</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">created_user</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;join&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;new_account_via_facebook&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;facebook_data&#39;</span><span class="p">:</span> <span class="n">profile</span><span class="p">})</span> <span class="c"># go to TOS</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span> <span class="c"># user had already signed up with us before</span>
+     </div>
+<div class="viewcode-block" id="Home.login_facebook_create"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.login_facebook_create">[docs]</a>    <span class="k">def</span> <span class="nf">login_facebook_create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">s</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">profile</span>
+        
+        <span class="c"># profile = self.request(&#39;facebook_data&#39;)</span>
+        
+        <span class="n">passw</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha224</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="s">&quot;email&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">createUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">profile</span><span class="p">[</span><span class="s">&quot;email&quot;</span><span class="p">],</span> <span class="n">passw</span><span class="p">,</span> <span class="n">profile</span><span class="p">[</span><span class="s">&quot;first_name&quot;</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s">&quot;last_name&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;facebook_user&#39;</span><span class="p">,</span> <span class="n">user_id</span> <span class="o">=</span> <span class="n">uid</span><span class="p">,</span> <span class="n">facebook_id</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+        
+        <span class="c"># Set the user object in case it&#39;s been created since we initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setUserObject</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+       </div>
+<div class="viewcode-block" id="Home.login_twitter"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.login_twitter">[docs]</a>    <span class="k">def</span> <span class="nf">login_twitter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Step 1. Get a request token from Twitter.</span>
+            
+        <span class="n">resp</span><span class="p">,</span> <span class="n">content</span> <span class="o">=</span> <span class="n">tw_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">tw_settings</span><span class="p">[</span><span class="s">&#39;request_token_url&#39;</span><span class="p">],</span> <span class="s">&quot;GET&quot;</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">resp</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;200&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    
+        <span class="c"># Step 2. Store the request token in a session for later use.</span>
+        
+        <span class="n">req_token</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cgi</span><span class="o">.</span><span class="n">parse_qsl</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">request_token</span> <span class="o">=</span> <span class="n">req_token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">_changed</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">SessionHolder</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+    
+        <span class="c"># Step 3. Redirect the user to the authentication URL.</span>
+        
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">?oauth_token=</span><span class="si">%s</span><span class="s">&amp;force_login=true&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tw_settings</span><span class="p">[</span><span class="s">&#39;authenticate_url&#39;</span><span class="p">],</span> <span class="n">req_token</span><span class="p">[</span><span class="s">&#39;oauth_token&#39;</span><span class="p">])</span>
+        
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;twitter login&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Home.tw_authenticated"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.tw_authenticated">[docs]</a>    <span class="k">def</span> <span class="nf">tw_authenticated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Step 1. Use the request token in the session to build a new client.</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">oauth</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">request_token</span><span class="p">[</span><span class="s">&#39;oauth_token&#39;</span><span class="p">],</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">request_token</span><span class="p">[</span><span class="s">&#39;oauth_token_secret&#39;</span><span class="p">])</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">oauth</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">tw_consumer</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    
+        <span class="c"># Step 2. Request the authorized access token from Twitter.</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">content</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">tw_settings</span><span class="p">[</span><span class="s">&#39;access_token_url&#39;</span><span class="p">],</span> <span class="s">&quot;GET&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;200&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    
+        <span class="n">access_token</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cgi</span><span class="o">.</span><span class="n">parse_qsl</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">access_token</span><span class="p">))</span>
+    
+        <span class="c"># Step 3. Lookup the user or create them if they don&#39;t exist</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select * from twitter_user where twitter_id = $id&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">access_token</span><span class="p">[</span><span class="s">&#39;user_id&#39;</span><span class="p">]}))</span>
+        
+        <span class="n">associated_user</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        
+        <span class="n">created_user</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">created_twitter_user</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="c"># do we already have twitter data for this user?</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">twitter_user</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">twitter_user</span><span class="o">.</span><span class="n">user_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span> <span class="c"># no existing twitter data</span>
+            <span class="c"># is the user logged in with a regular or FB account?</span>
+            <span class="n">make_new_user</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">uid</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">user_id</span>
+                <span class="k">if</span> <span class="n">uid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">make_new_user</span> <span class="o">=</span> <span class="bp">False</span> <span class="c"># user is logged in</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+                <span class="c">#uid = mUser.createUser(self.db, profile[&quot;email&quot;], passw, profile[&quot;first_name&quot;], profile[&quot;last_name&quot;])</span>
+            
+            <span class="k">if</span> <span class="n">make_new_user</span><span class="p">:</span> <span class="c"># no existing account data, make a new one after TOS</span>
+                <span class="n">created_user</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">tw_access_token</span> <span class="o">=</span> <span class="n">access_token</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">_changed</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">SessionHolder</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span> <span class="c"># no twitter data, but logged in, associate the accounts</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;twitter_user&#39;</span><span class="p">,</span> <span class="n">user_id</span> <span class="o">=</span> <span class="n">uid</span><span class="p">,</span> <span class="n">twitter_username</span> <span class="o">=</span> <span class="n">access_token</span><span class="p">[</span><span class="s">&#39;screen_name&#39;</span><span class="p">],</span> <span class="n">twitter_id</span> <span class="o">=</span> <span class="n">access_token</span><span class="p">[</span><span class="s">&#39;user_id&#39;</span><span class="p">])</span>
+                <span class="n">associated_user</span> <span class="o">=</span> <span class="n">uid</span>
+                <span class="n">created_twitter_user</span> <span class="o">=</span> <span class="bp">True</span>
+        
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">associated_user</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+    
+        <span class="k">if</span> <span class="n">created_user</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;join&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;new_account_via_twitter&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;twitter_data&#39;</span><span class="p">:</span> <span class="n">access_token</span><span class="p">})</span> <span class="c"># go to TOS</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;join&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;twitter_error&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">})</span> <span class="c"># go to TOS</span>
+            
+            </div>
+<div class="viewcode-block" id="Home.login_twitter_create"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.login_twitter_create">[docs]</a>    <span class="k">def</span> <span class="nf">login_twitter_create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">firstName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;f_name&#39;</span><span class="p">)</span>
+        <span class="n">lastName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;l_name&#39;</span><span class="p">)</span>
+        <span class="n">phone</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">cleanUSPhone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;sms_phone&#39;</span><span class="p">))</span>
+        
+        <span class="n">s</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+        <span class="n">access_token</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">tw_access_token</span>
+        <span class="c">#access_token = self.request(&#39;twitter_data&#39;)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">firstName</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;no first name&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lastName</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;no last name&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">email</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">validate_email</span><span class="p">(</span><span class="n">email</span><span class="p">)):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;invalid email&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#userId = user.createUser(self.db, email, password, firstName, lastName, phone)</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">createUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">access_token</span><span class="p">[</span><span class="s">&#39;oauth_token_secret&#39;</span><span class="p">],</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;twitter_user&#39;</span><span class="p">,</span> <span class="n">user_id</span> <span class="o">=</span> <span class="n">userId</span><span class="p">,</span> <span class="n">twitter_username</span> <span class="o">=</span> <span class="n">access_token</span><span class="p">[</span><span class="s">&#39;screen_name&#39;</span><span class="p">],</span> <span class="n">twitter_id</span> <span class="o">=</span> <span class="n">access_token</span><span class="p">[</span><span class="s">&#39;user_id&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">userId</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+            <span class="c">#following 3 lines commented out for oauth dev</span>
+            <span class="c">#idea.attachIdeasByEmail(self.db, email)</span>
+            <span class="c">#if (phone and len(phone) &gt; 0):</span>
+            <span class="c">#    idea.attachIdeasByPhone(self.db, phone)</span>
+            
+        <span class="k">return</span> <span class="n">userId</span><span class="p">;</span>
+        </div>
+<div class="viewcode-block" id="Home.disconnect_twitter"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.disconnect_twitter">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect_twitter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s">&quot;twitter_user&quot;</span><span class="p">,</span> <span class="s">&quot;user_id = </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">uid</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s">&#39;success&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">})</span>
+        </div>
+<div class="viewcode-block" id="Home.disconnect_facebook"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.disconnect_facebook">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect_facebook</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s">&quot;facebook_user&quot;</span><span class="p">,</span> <span class="s">&quot;user_id = </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">uid</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s">&#39;success&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">})</span>
+            </div>
+<div class="viewcode-block" id="Home.logout"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.logout">[docs]</a>    <span class="k">def</span> <span class="nf">logout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">setcookie</span><span class="p">(</span><span class="s">&#39;cbu_key&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">expires</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">domain</span> <span class="o">=</span> <span class="s">&quot;.changeby.us&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">True</span>    
+</div>
+<div class="viewcode-block" id="Home.getNewsItems"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.getNewsItems">[docs]</a>    <span class="k">def</span> <span class="nf">getNewsItems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">feedUrl</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">?feed=cbujson&quot;</span> <span class="o">%</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;blog_host&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># BUGFIX: couldn&#39;t parse json from production blog, hence the string conversion</span>
+            <span class="c"># eholda 2011-06-19</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">feedUrl</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">raw</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get feed for news items at </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">feedUrl</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                        
+        <span class="k">return</span> <span class="n">data</span>        
+                </div>
+<div class="viewcode-block" id="Home.submitFeedback"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.submitFeedback">[docs]</a>    <span class="k">def</span> <span class="nf">submitFeedback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">t</span> <span class="o">==</span> <span class="s">&#39;feature&#39;</span><span class="p">):</span> <span class="n">feedbackType</span> <span class="o">=</span> <span class="s">&#39;feature&#39;</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">t</span> <span class="o">==</span> <span class="s">&#39;bugs&#39;</span><span class="p">):</span> <span class="n">feedbackType</span> <span class="o">=</span> <span class="s">&#39;bug&#39;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">feedbackType</span> <span class="o">=</span> <span class="s">&#39;general&#39;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;site_feedback&#39;</span><span class="p">,</span> <span class="n">submitter_name</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span>
+                                            <span class="n">submitter_email</span> <span class="o">=</span> <span class="n">email</span><span class="p">,</span>
+                                            <span class="n">comment</span> <span class="o">=</span> <span class="n">comment</span><span class="p">,</span>
+                                            <span class="n">feedback_type</span> <span class="o">=</span> <span class="n">feedbackType</span><span class="p">,</span>
+                                            <span class="n">created_datetime</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>
+                                            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem submitting feedback comment&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Home.submitInviteRequest"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.submitInviteRequest">[docs]</a>    <span class="k">def</span> <span class="nf">submitInviteRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;beta_invite_request&#39;</span><span class="p">,</span><span class="n">email</span> <span class="o">=</span> <span class="n">email</span><span class="p">,</span>
+                                            <span class="n">comment</span> <span class="o">=</span> <span class="n">comment</span><span class="p">)</span>
+                                            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem submitting beta invite request&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Home.directMessageUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.home.Home.directMessageUser">[docs]</a>    <span class="k">def</span> <span class="nf">directMessageUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">toUserId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;to_user_id&#39;</span><span class="p">))</span>
+        <span class="n">fromUserId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">toUserId</span> <span class="ow">and</span> <span class="n">message</span><span class="p">):</span>
+            <span class="n">fromName</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">userName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">lastName</span><span class="p">)</span>
+            
+            <span class="n">toUser</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">toUserId</span><span class="p">)</span>
+            <span class="n">toName</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toUser</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span> <span class="n">toUser</span><span class="o">.</span><span class="n">lastName</span><span class="p">)</span>
+            <span class="n">toEmail</span> <span class="o">=</span> <span class="n">toUser</span><span class="o">.</span><span class="n">email</span>
+            
+            <span class="k">return</span> <span class="n">mMessaging</span><span class="o">.</span><span class="n">directMessageUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">toUserId</span><span class="p">,</span> <span class="n">toName</span><span class="p">,</span> <span class="n">toEmail</span><span class="p">,</span> <span class="n">fromUserId</span><span class="p">,</span> <span class="n">fromName</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** direct message missing to user_id or message&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

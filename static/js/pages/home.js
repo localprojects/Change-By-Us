@@ -78,7 +78,7 @@ app_page.features.push(function(app){
 						location:{
 							selector:'.location-group',
 							validators:tc.locationDropdown.validator,
-							hint:'Start typing neighborhood or borough...'
+							hint:'Start typing a neighborhood'
 						}
 					},
 					step_data:{},

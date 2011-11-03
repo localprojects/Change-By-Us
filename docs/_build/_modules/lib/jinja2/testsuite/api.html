@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.api &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.api</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.api</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Tests the public API and related stuff.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">,</span> <span class="n">DebugUndefined</span><span class="p">,</span> \
+     <span class="n">StrictUndefined</span><span class="p">,</span> <span class="n">UndefinedError</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> \
+     <span class="n">is_undefined</span><span class="p">,</span> <span class="n">Template</span><span class="p">,</span> <span class="n">DictLoader</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">Cycler</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ExtendedAPITestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase">[docs]</a><span class="k">class</span> <span class="nc">ExtendedAPITestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ExtendedAPITestCase.test_item_and_attribute"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase.test_item_and_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">test_item_and_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">jinja2.sandbox</span> <span class="kn">import</span> <span class="n">SandboxedEnvironment</span>
+
+        <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="n">Environment</span><span class="p">(),</span> <span class="n">SandboxedEnvironment</span><span class="p">():</span>
+            <span class="c"># the |list is necessary for python3</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo.items()|list }}&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span> <span class="o">==</span> <span class="s">&quot;[(&#39;items&#39;, 42)]&quot;</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo|attr(&quot;items&quot;)()|list }}&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span> <span class="o">==</span> <span class="s">&quot;[(&#39;items&#39;, 42)]&quot;</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo[&quot;items&quot;] }}&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span> <span class="o">==</span> <span class="s">&#39;42&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtendedAPITestCase.test_finalizer"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase.test_finalizer">[docs]</a>    <span class="k">def</span> <span class="nf">test_finalizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">finalize_none_empty</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="s">u&#39;&#39;</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">finalize</span><span class="o">=</span><span class="n">finalize_none_empty</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}|{{ item }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;foo&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;||1|foo&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&lt;{{ none }}&gt;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&lt;&gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtendedAPITestCase.test_cycler"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase.test_cycler">[docs]</a>    <span class="k">def</span> <span class="nf">test_cycler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">Cycler</span><span class="p">(</span><span class="o">*</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span> <span class="o">+</span> <span class="n">items</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">c</span><span class="o">.</span><span class="n">current</span> <span class="o">==</span> <span class="n">item</span>
+            <span class="k">assert</span> <span class="n">c</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="o">==</span> <span class="n">item</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">c</span><span class="o">.</span><span class="n">current</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">c</span><span class="o">.</span><span class="n">current</span> <span class="o">==</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="ExtendedAPITestCase.test_expressions"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase.test_expressions">[docs]</a>    <span class="k">def</span> <span class="nf">test_expressions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">compile_expression</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">expr</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">None</span>
+        <span class="k">assert</span> <span class="n">expr</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="mi">42</span>
+        <span class="n">expr2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">compile_expression</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">undefined_to_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">is_undefined</span><span class="p">(</span><span class="n">expr2</span><span class="p">())</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">compile_expression</span><span class="p">(</span><span class="s">&quot;42 + foo&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">expr</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="mi">84</span>
+</div>
+<div class="viewcode-block" id="ExtendedAPITestCase.test_template_passthrough"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase.test_template_passthrough">[docs]</a>    <span class="k">def</span> <span class="nf">test_template_passthrough</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="s">&#39;Content&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">is</span> <span class="n">t</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">select_template</span><span class="p">([</span><span class="n">t</span><span class="p">])</span> <span class="ow">is</span> <span class="n">t</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">get_or_select_template</span><span class="p">([</span><span class="n">t</span><span class="p">])</span> <span class="ow">is</span> <span class="n">t</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">get_or_select_template</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">is</span> <span class="n">t</span>
+</div>
+<div class="viewcode-block" id="ExtendedAPITestCase.test_autoescape_autoselect"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.ExtendedAPITestCase.test_autoescape_autoselect">[docs]</a>    <span class="k">def</span> <span class="nf">test_autoescape_autoselect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">select_autoescape</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="s">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.html&#39;</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">autoescape</span><span class="o">=</span><span class="n">select_autoescape</span><span class="p">,</span>
+                          <span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">({</span>
+            <span class="s">&#39;test.txt&#39;</span><span class="p">:</span>     <span class="s">&#39;{{ foo }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;test.html&#39;</span><span class="p">:</span>    <span class="s">&#39;{{ foo }}&#39;</span>
+        <span class="p">}))</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;test.txt&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;&lt;foo&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;foo&gt;&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;test.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;&lt;foo&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;foo&amp;gt;&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;&lt;foo&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;foo&gt;&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="MetaTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.MetaTestCase">[docs]</a><span class="k">class</span> <span class="nc">MetaTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MetaTestCase.test_find_undeclared_variables"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.MetaTestCase.test_find_undeclared_variables">[docs]</a>    <span class="k">def</span> <span class="nf">test_find_undeclared_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% s</span><span class="s">et foo = 42 %}{{ bar + foo }}&#39;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_undeclared_variables</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">x</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;bar&#39;</span><span class="p">])</span>
+
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% s</span><span class="s">et foo = 42 %}{{ bar + foo }}&#39;</span>
+                        <span class="s">&#39;{% macro meh(x) %}{{ x }}{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span>
+                        <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}{{ muh(item) + meh(seq) }}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_undeclared_variables</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">x</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;bar&#39;</span><span class="p">,</span> <span class="s">&#39;seq&#39;</span><span class="p">,</span> <span class="s">&#39;muh&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="MetaTestCase.test_find_refererenced_templates"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.MetaTestCase.test_find_refererenced_templates">[docs]</a>    <span class="k">def</span> <span class="nf">test_find_refererenced_templates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;layout.html&quot; %}{</span><span class="si">% i</span><span class="s">nclude helper %}&#39;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">i</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;layout.html&#39;</span>
+        <span class="k">assert</span> <span class="n">i</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">None</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="p">[]</span>
+
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;layout.html&quot; %}&#39;</span>
+                        <span class="s">&#39;{</span><span class="si">% f</span><span class="s">rom &quot;test.html&quot; import a, b as c %}&#39;</span>
+                        <span class="s">&#39;{</span><span class="si">% i</span><span class="s">mport &quot;meh.html&quot; as meh %}&#39;</span>
+                        <span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude &quot;muh.html&quot; %}&#39;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;layout.html&#39;</span><span class="p">,</span> <span class="s">&#39;test.html&#39;</span><span class="p">,</span> <span class="s">&#39;meh.html&#39;</span><span class="p">,</span> <span class="s">&#39;muh.html&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="MetaTestCase.test_find_included_templates"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.MetaTestCase.test_find_included_templates">[docs]</a>    <span class="k">def</span> <span class="nf">test_find_included_templates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [&quot;foo.html&quot;, &quot;bar.html&quot;] %}&#39;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;foo.html&#39;</span><span class="p">,</span> <span class="s">&#39;bar.html&#39;</span><span class="p">]</span>
+
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude (&quot;foo.html&quot;, &quot;bar.html&quot;) %}&#39;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;foo.html&#39;</span><span class="p">,</span> <span class="s">&#39;bar.html&#39;</span><span class="p">]</span>
+
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude [&quot;foo.html&quot;, &quot;bar.html&quot;, foo] %}&#39;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;foo.html&#39;</span><span class="p">,</span> <span class="s">&#39;bar.html&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">]</span>
+
+        <span class="n">ast</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">nclude (&quot;foo.html&quot;, &quot;bar.html&quot;, foo) %}&#39;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;foo.html&#39;</span><span class="p">,</span> <span class="s">&#39;bar.html&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="StreamingTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.StreamingTestCase">[docs]</a><span class="k">class</span> <span class="nc">StreamingTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="StreamingTestCase.test_basic_streaming"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.StreamingTestCase.test_basic_streaming">[docs]</a>    <span class="k">def</span> <span class="nf">test_basic_streaming</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;&lt;ul&gt;{</span><span class="si">% f</span><span class="s">or item in seq %}&lt;li&gt;{{ loop.index &quot;</span>
+                               <span class="s">&quot;}} - {{ item }}&lt;/li&gt;{</span><span class="si">%- e</span><span class="s">ndfor %}&lt;/ul&gt;&quot;</span><span class="p">)</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">&#39;&lt;ul&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">&#39;&lt;li&gt;1 - 0&lt;/li&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">&#39;&lt;li&gt;2 - 1&lt;/li&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">&#39;&lt;li&gt;3 - 2&lt;/li&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">&#39;&lt;li&gt;4 - 3&lt;/li&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">&#39;&lt;/ul&gt;&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="StreamingTestCase.test_buffered_streaming"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.StreamingTestCase.test_buffered_streaming">[docs]</a>    <span class="k">def</span> <span class="nf">test_buffered_streaming</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;&lt;ul&gt;{</span><span class="si">% f</span><span class="s">or item in seq %}&lt;li&gt;{{ loop.index &quot;</span>
+                               <span class="s">&quot;}} - {{ item }}&lt;/li&gt;{</span><span class="si">%- e</span><span class="s">ndfor %}&lt;/ul&gt;&quot;</span><span class="p">)</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">enable_buffering</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">u&#39;&lt;ul&gt;&lt;li&gt;1 - 0&lt;/li&gt;&lt;li&gt;2 - 1&lt;/li&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="s">u&#39;&lt;li&gt;3 - 2&lt;/li&gt;&lt;li&gt;4 - 3&lt;/li&gt;&lt;/ul&gt;&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="StreamingTestCase.test_streaming_behavior"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.StreamingTestCase.test_streaming_behavior">[docs]</a>    <span class="k">def</span> <span class="nf">test_streaming_behavior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">stream</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">stream</span><span class="o">.</span><span class="n">buffered</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">enable_buffering</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">stream</span><span class="o">.</span><span class="n">buffered</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">disable_buffering</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">stream</span><span class="o">.</span><span class="n">buffered</span>
+
+</div></div>
+<div class="viewcode-block" id="UndefinedTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase">[docs]</a><span class="k">class</span> <span class="nc">UndefinedTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="UndefinedTestCase.test_stopiteration_is_undefined"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_stopiteration_is_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">test_stopiteration_is_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">()</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="s">&#39;A{{ test() }}B&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;AB&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="s">&#39;A{{ test().missingattribute }}B&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_undefined_and_special_attributes"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_undefined_and_special_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">test_undefined_and_special_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">Undefined</span><span class="p">(</span><span class="s">&#39;Foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&quot;Expected actual attribute error&quot;</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_default_undefined"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_default_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">test_default_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">undefined</span><span class="o">=</span><span class="n">Undefined</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">u&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span>
+                           <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing.attribute }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing|list }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;[]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing is not defined }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo.missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ not missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_debug_undefined"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_debug_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">test_debug_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">undefined</span><span class="o">=</span><span class="n">DebugUndefined</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;{{ missing }}&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span>
+                           <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing.attribute }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing|list }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;[]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing is not defined }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo.missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
+                          <span class="s">u&quot;{{ no such element: int object[&#39;missing&#39;] }}&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ not missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_strict_undefined"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_strict_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">test_strict_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing.attribute }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing|list }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ missing is not defined }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo.missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">,</span> <span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ not missing }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_indexing_gives_undefined"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_indexing_gives_undefined">[docs]</a>    <span class="k">def</span> <span class="nf">test_indexing_gives_undefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="s">&quot;{{ var[42].foo }}&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_none_gives_proper_error"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_none_gives_proper_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_none_gives_proper_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">Environment</span><span class="p">()</span><span class="o">.</span><span class="n">getattr</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;split&#39;</span><span class="p">)()</span>
+        <span class="k">except</span> <span class="n">UndefinedError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s">&quot;&#39;None&#39; has no attribute &#39;split&#39;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;expected exception&#39;</span>
+</div>
+<div class="viewcode-block" id="UndefinedTestCase.test_object_repr"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.UndefinedTestCase.test_object_repr">[docs]</a>    <span class="k">def</span> <span class="nf">test_object_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">Undefined</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;upper&#39;</span><span class="p">)()</span>
+        <span class="k">except</span> <span class="n">UndefinedError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s">&quot;&#39;int object&#39; has no attribute &#39;upper&#39;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;expected exception&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.api.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">ExtendedAPITestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">MetaTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">StreamingTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">UndefinedTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

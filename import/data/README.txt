@@ -1,0 +1,1 @@
+This folder is to hold data for importing into the application.

@@ -1,10 +1,13 @@
-import smtplib, os
-import helpers.custom_filters as custom_filters
+"""
+Emailing utility.  Emailing is ultimately handled through webpy.
 
+"""
+import smtplib
+import os
+import helpers.custom_filters as custom_filters
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
-
 from email import Encoders
 from lib.web.contrib.template import render_jinja
 from lib.jinja2.exceptions import TemplateNotFound
@@ -13,26 +16,42 @@ from framework.controller import *
 import lib.web.utils as webpyutils
 import lib.web.webapi as webapi
 
+
 class Emailer():
+    """
+    Email class for handling emailing for the application.
+    """
 
     @classmethod
     def send_from_template(cls, addresses, subject, template_name, template_values=None, attachment=None, from_name=None, from_address=None, **kwags):
+        """
+        Create HTML and text emails from template, then send.
+        
+        """
         log.info("Emailer.send_from_template (%s)" % template_name)
+        
+        # Render email template as HTML.
         try:
-            html = Emailer.render(template_name, template_values)
+            html = cls.render(template_name, template_values)
         except TemplateNotFound:
-            log.warning("html template not found")
+            log.warning("HTML template not found.")
             html = None
+            
         try:    
-            text = Emailer.render(template_name, template_values, suffix="txt")        
+            text = cls.render(template_name, template_values, suffix="txt")        
         except TemplateNotFound:
-            log.warning("text template not found")
+            log.warning("Text template not found.")
             text = None
+            
         log.debug(html)
         return cls.send(addresses, subject, text, html, attachment, from_name, from_address)
 
     @classmethod
     def send(cls, addresses, subject, text, html=None, attachment=None, from_name=None, from_address=None, **kwargs):
+        """
+        Send email to recipients.
+        
+        """
         log.info("Emailer.send [%s] [%s]" % (addresses, subject))
         if isinstance(addresses, basestring):
             addresses = [r.strip() for r in addresses.split(',')]

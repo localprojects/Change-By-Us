@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.createProject &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.createProject</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">giveaminute.keywords</span> <span class="kn">as</span> <span class="nn">keywords</span>
+<span class="kn">import</span> <span class="nn">giveaminute.project</span> <span class="kn">as</span> <span class="nn">mProject</span>
+<span class="kn">import</span> <span class="nn">giveaminute.projectResource</span> <span class="kn">as</span> <span class="nn">mProjectResource</span>
+<span class="kn">import</span> <span class="nn">giveaminute.location</span> <span class="kn">as</span> <span class="nn">mLocation</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.image_server</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.file_server</span> <span class="kn">import</span> <span class="n">FileServer</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">lib.web</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<div class="viewcode-block" id="CreateProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject">[docs]</a><span class="k">class</span> <span class="nc">CreateProject</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="CreateProject.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;keywords&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getKeywordsJSON</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;similar&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSimilarProjectsJSON</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;resources&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSimilarResourcesJSON</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">locations_data</span> <span class="o">=</span> <span class="n">mLocation</span><span class="o">.</span><span class="n">getSimpleLocationDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locations_data</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">locations_data</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;create&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;locations&#39;</span><span class="p">:</span><span class="n">locations</span><span class="p">})</span>
+            </div>
+<div class="viewcode-block" id="CreateProject.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;photo&#39;</span><span class="p">):</span>
+            <span class="n">imageId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uploadImage</span><span class="p">()</span>
+        
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">thumbnail_id</span> <span class="o">=</span> <span class="n">imageId</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="p">(</span><span class="n">imageId</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">)</span> <span class="p">))</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;file&#39;</span><span class="p">):</span>
+            <span class="c"># Requires a parameter qqfile</span>
+            <span class="n">fileId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uploadFile</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">file_id</span> <span class="o">=</span> <span class="n">fileId</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="p">(</span><span class="n">fileId</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">newProject</span><span class="p">()</span>  
+        </div>
+<div class="viewcode-block" id="CreateProject.newProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.newProject">[docs]</a>    <span class="k">def</span> <span class="nf">newProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;main_text&#39;</span><span class="p">)):</span> <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">owner_user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;title&#39;</span><span class="p">)</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+            <span class="n">organization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;organization&#39;</span><span class="p">)</span>
+            <span class="n">locationId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location_id&#39;</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">imageId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;image&#39;</span><span class="p">)</span>
+            <span class="n">keywords</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">))</span> <span class="k">else</span> <span class="p">[]</span>
+            <span class="n">resourceIds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resources&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">isOfficial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span>
+            
+            <span class="n">projectId</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">createProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">owner_user_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keywords</span><span class="p">),</span> <span class="n">locationId</span><span class="p">,</span> <span class="n">imageId</span><span class="p">,</span> <span class="n">isOfficial</span><span class="p">,</span> <span class="n">organization</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">resourceId</span> <span class="ow">in</span> <span class="n">resourceIds</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** insert resource id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">resourceId</span><span class="p">)</span>
+                <span class="n">mProject</span><span class="o">.</span><span class="n">addResourceToProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">resourceId</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="p">(</span><span class="n">projectId</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">projectId</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t create project&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** only logged in users can create projects&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+                    </div>
+<div class="viewcode-block" id="CreateProject.getKeywordsJSON"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.getKeywordsJSON">[docs]</a>    <span class="k">def</span> <span class="nf">getKeywordsJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;title&#39;</span><span class="p">))</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">getKeywords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+        
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">suggested_keywords</span><span class="o">=</span><span class="n">kw</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>    
+        </div>
+<div class="viewcode-block" id="CreateProject.getSimilarProjectsJSON"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.getSimilarProjectsJSON">[docs]</a>    <span class="k">def</span> <span class="nf">getSimilarProjectsJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">locationId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location_id&#39;</span><span class="p">)</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
+                
+        <span class="n">projects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">searchProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">,</span> <span class="n">locationId</span><span class="p">)</span>
+        
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">projects</span> <span class="o">=</span> <span class="n">projects</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="CreateProject.getSimilarResourcesJSON"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.getSimilarResourcesJSON">[docs]</a>    <span class="k">def</span> <span class="nf">getSimilarResourcesJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">locationId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location&#39;</span><span class="p">)</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;keywords&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
+                
+        <span class="n">resources</span> <span class="o">=</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">searchProjectResources</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">keywords</span><span class="p">,</span> <span class="n">locationId</span><span class="p">)</span>
+        
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">resources</span> <span class="o">=</span> <span class="n">resources</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="CreateProject.uploadImage"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.uploadImage">[docs]</a>    <span class="k">def</span> <span class="nf">uploadImage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;qqfile&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** == </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()[</span><span class="s">&#39;qqfile&#39;</span><span class="p">]))</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()[</span><span class="s">&#39;qqfile&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+        
+        <span class="n">imageId</span> <span class="o">=</span> <span class="n">ImageServer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="s">&#39;giveaminute&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="n">imageId</span>
+        </div>
+<div class="viewcode-block" id="CreateProject.uploadFile"><a class="viewcode-back" href="../../modules/controllers.html#controllers.createProject.CreateProject.uploadFile">[docs]</a>    <span class="k">def</span> <span class="nf">uploadFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handler for the /create/file endpoint. Looks for the variable named</span>
+<span class="sd">        qqfile from the request and saves it to a file on the server.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Get file from the request</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;qqfile&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** == </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()[</span><span class="s">&#39;qqfile&#39;</span><span class="p">]))</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()[</span><span class="s">&#39;qqfile&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+        
+        <span class="c"># Get a file server wrapper</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="n">FileServer</span><span class="p">()</span>
+        
+        <span class="c"># Upload the file to the server</span>
+        <span class="n">fileId</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="s">&#39;giveaminute&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="n">fileId</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.controller &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.controller</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">yaml</span><span class="o">,</span> <span class="nn">memcache</span><span class="o">,</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">cgi</span> <span class="kn">import</span> <span class="n">escape</span>
+<span class="kn">import</span> <span class="nn">helpers.custom_filters</span> <span class="kn">as</span> <span class="nn">custom_filters</span>
+<span class="kn">from</span> <span class="nn">lib.web.contrib.template</span> <span class="kn">import</span> <span class="n">render_jinja</span>
+<span class="kn">from</span> <span class="nn">lib</span> <span class="kn">import</span> <span class="n">web</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.session_holder</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.task_manager</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">giveaminute.user</span> <span class="kn">as</span> <span class="nn">mUser</span>
+
+<div class="viewcode-block" id="Controller"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller">[docs]</a><span class="k">class</span> <span class="nc">Controller</span><span class="p">():</span>
+    
+    <span class="n">_db</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Controller.get_db"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.get_db">[docs]</a>    <span class="k">def</span> <span class="nf">get_db</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="c"># settings = Config.get(&#39;database&#39;)</span>
+        <span class="c"># db = web.database(dbn=settings[&#39;dbn&#39;], user=settings[&#39;user&#39;], pw=settings[&#39;password&#39;], db=settings[&#39;db&#39;], host=settings[&#39;host&#39;])        </span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">_db</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_db</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">db_connect</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_db</span>
+    </div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Controller.db_connect"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.db_connect">[docs]</a>    <span class="k">def</span> <span class="nf">db_connect</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;database&#39;</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_db</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">database</span><span class="p">(</span><span class="n">dbn</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;dbn&#39;</span><span class="p">],</span> <span class="n">user</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">],</span> <span class="n">pw</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">],</span> <span class="n">db</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;db&#39;</span><span class="p">],</span> <span class="n">host</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;host&#39;</span><span class="p">])</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Connected to db: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">_db</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;---------- </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> --------------------------------------------------------------------------&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+
+        <span class="c"># database</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">Controller</span><span class="o">.</span><span class="n">get_db</span><span class="p">()</span>
+        
+        <span class="c"># memcache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">memcache</span><span class="o">.</span><span class="n">Client</span><span class="p">([</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;memcache&#39;</span><span class="p">)[</span><span class="s">&#39;address&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;memcache&#39;</span><span class="p">)[</span><span class="s">&#39;port&#39;</span><span class="p">])])</span>                
+        
+        <span class="c"># session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">SessionHolder</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;SESSION: </span><span class="si">%s</span><span class="s"> &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>    
+        
+        <span class="c"># template data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="c"># set mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;app_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">appMode</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;app_mode&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;app_env&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">appEnv</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;app_env&#39;</span><span class="p">)</span> 
+        
+        <span class="c">#set media root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;media_root&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;media&#39;</span><span class="p">)[</span><span class="s">&#39;root&#39;</span><span class="p">]</span>
+        
+        <span class="c"># user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setUserObject</span><span class="p">()</span>
+                        
+        <span class="c"># beta redirect</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">appMode</span> <span class="o">==</span> <span class="s">&#39;beta&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+            <span class="n">allowed</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;beta&#39;</span><span class="p">,</span> 
+                       <span class="s">&#39;login&#39;</span><span class="p">,</span> 
+                       <span class="s">&#39;join&#39;</span><span class="p">,</span> 
+                       <span class="s">&#39;tou&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;logout&#39;</span><span class="p">,</span>
+                       <span class="c"># Twitter related paths</span>
+                       <span class="s">&#39;twitter&#39;</span><span class="p">,</span>
+                       <span class="c"># &#39;twitter/login&#39;, &#39;twitter/create&#39;, &#39;twitter/callback&#39;, &#39;twitter/disconnect&#39;</span>
+
+                       <span class="c"># Facebook paths - not relevant until FB app is updated</span>
+                       <span class="s">&#39;facebook&#39;</span><span class="p">,</span>
+                       <span class="c"># &#39;facebook/login&#39;, &#39;facebook/create&#39;, &#39;facebook/callback&#39;, &#39;facebook/disconnect&#39;</span>
+
+                       <span class="c"># Remove the following facebook paths once app is updated</span>
+                       <span class="c"># &#39;login_facebook&#39;,</span>
+                       <span class="c"># &#39;login_facebook_create&#39;,</span>
+                       <span class="c"># &#39;disconnect_facebook&#39;,</span>
+
+                       <span class="p">]</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&#39;/beta&#39;</span><span class="p">)</span>
+  
+<div class="viewcode-block" id="Controller.setUserObject"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.setUserObject">[docs]</a>    <span class="k">def</span> <span class="nf">setUserObject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="s">&#39;user_id&#39;</span><span class="p">):</span>
+            <span class="c"># todo would like to move gam-specific user attrs out of controller module</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s">&#39;user_id&#39;</span><span class="p">])</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">getDictionary</span><span class="p">(),</span>
+                                                <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">getDictionary</span><span class="p">()),</span>
+                                                <span class="n">is_admin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span><span class="p">,</span>
+                                                <span class="n">is_moderator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isModerator</span><span class="p">,</span>
+                                                <span class="n">is_leader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isLeader</span><span class="p">)</span>            
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="bp">None</span>         
+</div>
+<div class="viewcode-block" id="Controller.require_login"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.require_login">[docs]</a>    <span class="k">def</span> <span class="nf">require_login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; not logged in&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="c"># gam-specific admin</span>
+        <span class="c">#if admin and self.user[&#39;admin&#39;] != 1:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">admin</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; not an admin&quot;</span><span class="p">)</span>            
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>                      
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>                             
+                </div>
+<div class="viewcode-block" id="Controller.request"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.request">[docs]</a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">querystring</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">query</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>         
+            <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="n">part</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">querystring</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;&amp;&#39;</span><span class="p">)])</span> 
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()[</span><span class="n">var</span><span class="p">]</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">(),</span> <span class="n">var</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+            
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="c">#var = util.strip_html(var)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">escape</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">safeuni</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">var</span>              
+        
+</div>
+<div class="viewcode-block" id="Controller.render"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">&quot;html&quot;</span><span class="p">,</span> <span class="n">content_type</span> <span class="o">=</span> <span class="s">&quot;text/html&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">template_values</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">template_values</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="c"># Set the user object in case it&#39;s been created since we initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setUserObject</span><span class="p">()</span>
+        
+        <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span>       
+        <span class="n">config</span><span class="p">[</span><span class="s">&#39;base_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">base_url</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>      
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                    <span class="n">template_values</span><span class="p">[</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">param</span><span class="p">)]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">template_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>              
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">:</span> <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span>
+        
+        <span class="c">#add template data object</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">:</span> <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;template_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span> 
+        
+        <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;full_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">home</span> <span class="o">+</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fullpath</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="s">&#39;flash&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;flash&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;showing flash message: &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span> <span class="o">+</span> <span class="s">&#39;&quot;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">flash</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+        <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;session_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">session_id</span>    
+
+        <span class="c"># debug debug gubed</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** session  = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+        
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">template_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;template_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">template_name</span>
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">render_jinja</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/../templates/&#39;</span><span class="p">)</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">custom_filters</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span>
+
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+        <span class="c">#log.info(&quot;TEMPLATE %s: %s&quot; % (template_name, template_values))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">content_type</span><span class="p">,</span> <span class="n">template_name</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="p">(</span><span class="n">renderer</span><span class="p">[</span><span class="n">template_name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">](</span><span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">template_values</span><span class="p">)))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Controller.json"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.json">[docs]</a>    <span class="k">def</span> <span class="nf">json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;text/plain&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/plain (JSON)&quot;</span><span class="p">)</span>                                
+        <span class="k">return</span> <span class="n">output</span>
+        </div>
+<div class="viewcode-block" id="Controller.xml"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.xml">[docs]</a>    <span class="k">def</span> <span class="nf">xml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>    
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/xml&quot;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="s">&quot;&lt;?xml version=</span><span class="se">\&quot;</span><span class="s">1.0</span><span class="se">\&quot;</span><span class="s"> encoding=</span><span class="se">\&quot;</span><span class="s">UTF-8</span><span class="se">\&quot;</span><span class="s"> ?&gt;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="n">data</span>                                          <span class="c">## should make this use a real library</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: application/xml&quot;</span><span class="p">)</span>                        
+        <span class="k">return</span> <span class="n">output</span>
+</div>
+<div class="viewcode-block" id="Controller.html"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.html">[docs]</a>    <span class="k">def</span> <span class="nf">html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;text/html&quot;</span><span class="p">)</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="s">&quot;&lt;html&gt;&lt;head&gt;&lt;meta http-equiv=</span><span class="se">\&quot;</span><span class="s">Content-Type</span><span class="se">\&quot;</span><span class="s"> content=</span><span class="se">\&quot;</span><span class="s">text/html; charset=UTF-8</span><span class="se">\&quot;</span><span class="s"> /&gt;&lt;/head&gt;&lt;body&gt;&quot;</span>
+        <span class="n">doc</span> <span class="o">+=</span> <span class="n">html</span>
+        <span class="n">doc</span> <span class="o">+=</span> <span class="s">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/html&quot;</span><span class="p">)</span>                
+        <span class="k">return</span> <span class="n">doc</span>
+        </div>
+<div class="viewcode-block" id="Controller.text"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.text">[docs]</a>    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;text/plain&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/plain&quot;</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">string</span>
+</div>
+<div class="viewcode-block" id="Controller.csv"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.csv">[docs]</a>    <span class="k">def</span> <span class="nf">csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;text/csv&quot;</span><span class="p">)</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Disposition&quot;</span><span class="p">,</span> <span class="s">&quot;attachment; filename=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/csv&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">string</span>
+        </div>
+<div class="viewcode-block" id="Controller.image"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.image">[docs]</a>    <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;image/png&quot;</span><span class="p">)</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Expires&quot;</span><span class="p">,</span><span class="s">&quot;Thu, 15 Apr 2050 20:00:00 GMT&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: image/png&quot;</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">image</span>
+</div>
+<div class="viewcode-block" id="Controller.temp_image"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.temp_image">[docs]</a>    <span class="k">def</span> <span class="nf">temp_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;image/png&quot;</span><span class="p">)</span>     
+        <span class="n">web</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Cache-Control&quot;</span><span class="p">,</span> <span class="s">&quot;no-cache&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: image/png (temporary)&quot;</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">image</span>
+</div>
+<div class="viewcode-block" id="Controller.error"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.error">[docs]</a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;400: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">BadRequest</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Controller.warning"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.warning">[docs]</a>    <span class="k">def</span> <span class="nf">warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;400: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">BadRequest</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>        
+</div>
+<div class="viewcode-block" id="Controller.not_found"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.not_found">[docs]</a>    <span class="k">def</span> <span class="nf">not_found</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;404: Page not found&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">NotFound</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Controller.redirect"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.redirect">[docs]</a>    <span class="k">def</span> <span class="nf">redirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="c"># Set the user object in case it&#39;s been created since we initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setUserObject</span><span class="p">()</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;303: Redirecting to &quot;</span> <span class="o">+</span> <span class="n">url</span><span class="p">)</span>      
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">SeeOther</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Controller.refresh"><a class="viewcode-back" href="../../modules/framework.html#framework.controller.Controller.refresh">[docs]</a>    <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;303: Redirecting to &quot;</span> <span class="o">+</span> <span class="n">url</span> <span class="o">+</span> <span class="s">&quot; (refresh)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">SeeOther</span><span class="p">(</span><span class="n">url</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

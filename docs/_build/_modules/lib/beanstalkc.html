@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.beanstalkc &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.beanstalkc</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;beanstalkc - A beanstalkd Client Library for Python&quot;&quot;&quot;</span>
+
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">Copyright (C) 2008 Andreas Bolka</span>
+
+<span class="s">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="s">you may not use this file except in compliance with the License.</span>
+<span class="s">You may obtain a copy of the License at</span>
+
+<span class="s">    http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="s">Unless required by applicable law or agreed to in writing, software</span>
+<span class="s">distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="s">WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="s">See the License for the specific language governing permissions and</span>
+<span class="s">limitations under the License.</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;0.1.1&#39;</span>
+
+<span class="kn">import</span> <span class="nn">socket</span>
+
+<span class="n">DEFAULT_HOST</span> <span class="o">=</span> <span class="s">&#39;localhost&#39;</span>
+<span class="n">DEFAULT_PORT</span> <span class="o">=</span> <span class="mi">11300</span>
+<span class="n">DEFAULT_PRIORITY</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">31</span>
+<span class="n">DEFAULT_TTR</span> <span class="o">=</span> <span class="mi">120</span>
+
+
+<div class="viewcode-block" id="BeanstalkcException"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.BeanstalkcException">[docs]</a><span class="k">class</span> <span class="nc">BeanstalkcException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span></div>
+<div class="viewcode-block" id="UnexpectedResponse"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.UnexpectedResponse">[docs]</a><span class="k">class</span> <span class="nc">UnexpectedResponse</span><span class="p">(</span><span class="n">BeanstalkcException</span><span class="p">):</span> <span class="k">pass</span></div>
+<div class="viewcode-block" id="CommandFailed"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.CommandFailed">[docs]</a><span class="k">class</span> <span class="nc">CommandFailed</span><span class="p">(</span><span class="n">BeanstalkcException</span><span class="p">):</span> <span class="k">pass</span></div>
+<div class="viewcode-block" id="DeadlineSoon"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.DeadlineSoon">[docs]</a><span class="k">class</span> <span class="nc">DeadlineSoon</span><span class="p">(</span><span class="n">BeanstalkcException</span><span class="p">):</span> <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="Connection"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection">[docs]</a><span class="k">class</span> <span class="nc">Connection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="n">DEFAULT_HOST</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">DEFAULT_PORT</span><span class="p">,</span> <span class="n">decode_yaml</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">decode_yaml</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yaml_load</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="s">&#39;yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yaml_load</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Connection.connect"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">makefile</span><span class="p">(</span><span class="s">&#39;rb&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.close"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_interact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="n">status</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_response</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">expected_ok</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results</span>
+        <span class="k">elif</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">expected_err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CommandFailed</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnexpectedResponse</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_read_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">def</span> <span class="nf">_read_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c"># trailing crlf</span>
+        <span class="k">return</span> <span class="n">body</span>
+
+    <span class="k">def</span> <span class="nf">_interact_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_interact_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="p">,</span> <span class="n">reserved</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">jid</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_body</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">jid</span><span class="p">),</span> <span class="n">body</span><span class="p">,</span> <span class="n">reserved</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_interact_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="n">size</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">expected_ok</span><span class="p">,</span> <span class="n">expected_err</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_body</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">yaml_load</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_interact_peek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_job</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;FOUND&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">],</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CommandFailed</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="c"># -- public interface --</span>
+
+<div class="viewcode-block" id="Connection.put"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="n">DEFAULT_PRIORITY</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ttr</span><span class="o">=</span><span class="n">DEFAULT_TTR</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="n">jid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_value</span><span class="p">(</span>
+                <span class="s">&#39;put </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="se">\r\n</span><span class="si">%s</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="n">ttr</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">),</span> <span class="n">body</span><span class="p">),</span>
+                <span class="p">[</span><span class="s">&#39;INSERTED&#39;</span><span class="p">,</span> <span class="s">&#39;BURIED&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">jid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.reserve"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.reserve">[docs]</a>    <span class="k">def</span> <span class="nf">reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="s">&#39;reserve-with-timeout </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">timeout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="s">&#39;reserve</span><span class="se">\r\n</span><span class="s">&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_job</span><span class="p">(</span><span class="n">command</span><span class="p">,</span>
+                                      <span class="p">[</span><span class="s">&#39;RESERVED&#39;</span><span class="p">],</span>
+                                      <span class="p">[</span><span class="s">&#39;DEADLINE_SOON&#39;</span><span class="p">,</span> <span class="s">&#39;TIMED_OUT&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="n">CommandFailed</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s">&#39;TIMED_OUT&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s">&#39;DEADLINE_SOON&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DeadlineSoon</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.kick"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.kick">[docs]</a>    <span class="k">def</span> <span class="nf">kick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interact_value</span><span class="p">(</span><span class="s">&#39;kick </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">bound</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;KICKED&#39;</span><span class="p">]))</span>
+</div>
+<div class="viewcode-block" id="Connection.peek"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.peek">[docs]</a>    <span class="k">def</span> <span class="nf">peek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_peek</span><span class="p">(</span><span class="s">&#39;peek </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">jid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.peek_ready"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.peek_ready">[docs]</a>    <span class="k">def</span> <span class="nf">peek_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_peek</span><span class="p">(</span><span class="s">&#39;peek-ready</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.peek_delayed"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.peek_delayed">[docs]</a>    <span class="k">def</span> <span class="nf">peek_delayed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_peek</span><span class="p">(</span><span class="s">&#39;peek-delayed</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.peek_buried"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.peek_buried">[docs]</a>    <span class="k">def</span> <span class="nf">peek_buried</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_peek</span><span class="p">(</span><span class="s">&#39;peek-buried</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Connection.tubes"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.tubes">[docs]</a>    <span class="k">def</span> <span class="nf">tubes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_yaml</span><span class="p">(</span><span class="s">&#39;list-tubes</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;OK&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.using"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.using">[docs]</a>    <span class="k">def</span> <span class="nf">using</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_value</span><span class="p">(</span><span class="s">&#39;list-tube-used</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;USING&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.use"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.use">[docs]</a>    <span class="k">def</span> <span class="nf">use</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_value</span><span class="p">(</span><span class="s">&#39;use </span><span class="si">%s</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;USING&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.watching"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.watching">[docs]</a>    <span class="k">def</span> <span class="nf">watching</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_yaml</span><span class="p">(</span><span class="s">&#39;list-tubes-watched</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;OK&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.watch"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.watch">[docs]</a>    <span class="k">def</span> <span class="nf">watch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interact_value</span><span class="p">(</span><span class="s">&#39;watch </span><span class="si">%s</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;WATCHING&#39;</span><span class="p">]))</span>
+</div>
+<div class="viewcode-block" id="Connection.ignore"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.ignore">[docs]</a>    <span class="k">def</span> <span class="nf">ignore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interact_value</span><span class="p">(</span><span class="s">&#39;ignore </span><span class="si">%s</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span>
+                                            <span class="p">[</span><span class="s">&#39;WATCHING&#39;</span><span class="p">],</span>
+                                            <span class="p">[</span><span class="s">&#39;NOT_IGNORED&#39;</span><span class="p">]))</span>
+        <span class="k">except</span> <span class="n">CommandFailed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Connection.stats"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.stats">[docs]</a>    <span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_yaml</span><span class="p">(</span><span class="s">&#39;stats</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;OK&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.stats_tube"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.stats_tube">[docs]</a>    <span class="k">def</span> <span class="nf">stats_tube</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_yaml</span><span class="p">(</span><span class="s">&#39;stats-tube </span><span class="si">%s</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span>
+                                  <span class="p">[</span><span class="s">&#39;OK&#39;</span><span class="p">],</span>
+                                  <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">])</span>
+
+    <span class="c"># -- job interactors --</span>
+</div>
+<div class="viewcode-block" id="Connection.delete"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="s">&#39;delete </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">jid</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;DELETED&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.release"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.release">[docs]</a>    <span class="k">def</span> <span class="nf">release</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="s">&#39;release </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jid</span><span class="p">,</span> <span class="n">priority</span><span class="p">,</span> <span class="n">delay</span><span class="p">),</span>
+                       <span class="p">[</span><span class="s">&#39;RELEASED&#39;</span><span class="p">,</span> <span class="s">&#39;BURIED&#39;</span><span class="p">],</span>
+                       <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.bury"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.bury">[docs]</a>    <span class="k">def</span> <span class="nf">bury</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="s">&#39;bury </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jid</span><span class="p">,</span> <span class="n">priority</span><span class="p">),</span>
+                       <span class="p">[</span><span class="s">&#39;BURIED&#39;</span><span class="p">],</span>
+                       <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.touch"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.touch">[docs]</a>    <span class="k">def</span> <span class="nf">touch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interact</span><span class="p">(</span><span class="s">&#39;touch </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">jid</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;TOUCHED&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Connection.stats_job"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Connection.stats_job">[docs]</a>    <span class="k">def</span> <span class="nf">stats_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interact_yaml</span><span class="p">(</span><span class="s">&#39;stats-job </span><span class="si">%d</span><span class="se">\r\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">jid</span><span class="p">,</span>
+                                   <span class="p">[</span><span class="s">&#39;OK&#39;</span><span class="p">],</span>
+                                   <span class="p">[</span><span class="s">&#39;NOT_FOUND&#39;</span><span class="p">])</span>
+
+</div></div>
+<div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Job">[docs]</a><span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">jid</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">reserved</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="o">=</span> <span class="n">conn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jid</span> <span class="o">=</span> <span class="n">jid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span> <span class="o">=</span> <span class="n">reserved</span>
+
+    <span class="c"># -- public interface --</span>
+    
+<div class="viewcode-block" id="Job.delete"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Job.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Job.release"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Job.release">[docs]</a>    <span class="k">def</span> <span class="nf">release</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jid</span><span class="p">,</span> <span class="n">priority</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">()[</span><span class="s">&#39;pri&#39;</span><span class="p">],</span> <span class="n">delay</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Job.bury"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Job.bury">[docs]</a>    <span class="k">def</span> <span class="nf">bury</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">bury</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jid</span><span class="p">,</span> <span class="n">priority</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">()[</span><span class="s">&#39;pri&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Job.touch"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Job.touch">[docs]</a>    <span class="k">def</span> <span class="nf">touch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Job.stats"><a class="viewcode-back" href="../../modules/lib.html#lib.beanstalkc.Job.stats">[docs]</a>    <span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">stats_job</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jid</span><span class="p">)</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">signal</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">spawnlp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">P_NOWAIT</span><span class="p">,</span>
+                         <span class="s">&#39;beanstalkd&#39;</span><span class="p">,</span>
+                         <span class="s">&#39;beanstalkd&#39;</span><span class="p">,</span> <span class="s">&#39;-l&#39;</span><span class="p">,</span> <span class="s">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="s">&#39;-p&#39;</span><span class="p">,</span> <span class="s">&#39;14711&#39;</span><span class="p">)</span>
+        <span class="n">doctest</span><span class="o">.</span><span class="n">testfile</span><span class="p">(</span><span class="s">&#39;TUTORIAL&#39;</span><span class="p">,</span> <span class="n">optionflags</span><span class="o">=</span><span class="n">doctest</span><span class="o">.</span><span class="n">ELLIPSIS</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,195 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.meta &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.meta</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.meta</span>
+<span class="sd">    ~~~~~~~~~~~</span>
+
+<span class="sd">    This module implements various functions that exposes information about</span>
+<span class="sd">    templates that might be interesting for various kinds of applications.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team, see AUTHORS for more details.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">nodes</span>
+<span class="kn">from</span> <span class="nn">jinja2.compiler</span> <span class="kn">import</span> <span class="n">CodeGenerator</span>
+
+
+<div class="viewcode-block" id="TrackingCodeGenerator"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.meta.TrackingCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">TrackingCodeGenerator</span><span class="p">(</span><span class="n">CodeGenerator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;We abuse the code generator for introspection.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="n">CodeGenerator</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="s">&#39;&lt;introspection&gt;&#39;</span><span class="p">,</span>
+                               <span class="s">&#39;&lt;introspection&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">undeclared_identifiers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TrackingCodeGenerator.write"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.meta.TrackingCodeGenerator.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Don&#39;t write.&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="TrackingCodeGenerator.pull_locals"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.meta.TrackingCodeGenerator.pull_locals">[docs]</a>    <span class="k">def</span> <span class="nf">pull_locals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remember all undeclared identifiers.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">undeclared_identifiers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">undeclared</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="find_undeclared_variables"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.meta.find_undeclared_variables">[docs]</a><span class="k">def</span> <span class="nf">find_undeclared_variables</span><span class="p">(</span><span class="n">ast</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a set of all variables in the AST that will be looked up from</span>
+<span class="sd">    the context at runtime.  Because at compile time it&#39;s not known which</span>
+<span class="sd">    variables will be used depending on the path the execution takes at</span>
+<span class="sd">    runtime, all variables are returned.</span>
+
+<span class="sd">    &gt;&gt;&gt; from jinja2 import Environment, meta</span>
+<span class="sd">    &gt;&gt;&gt; env = Environment()</span>
+<span class="sd">    &gt;&gt;&gt; ast = env.parse(&#39;{% set foo = 42 %}{{ bar + foo }}&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; meta.find_undeclared_variables(ast)</span>
+<span class="sd">    set([&#39;bar&#39;])</span>
+
+<span class="sd">    .. admonition:: Implementation</span>
+
+<span class="sd">       Internally the code generator is used for finding undeclared variables.</span>
+<span class="sd">       This is good to know because the code generator might raise a</span>
+<span class="sd">       :exc:`TemplateAssertionError` during compilation and as a matter of</span>
+<span class="sd">       fact this function can currently raise that exception as well.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">codegen</span> <span class="o">=</span> <span class="n">TrackingCodeGenerator</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
+    <span class="n">codegen</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">codegen</span><span class="o">.</span><span class="n">undeclared_identifiers</span>
+
+</div>
+<div class="viewcode-block" id="find_referenced_templates"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.meta.find_referenced_templates">[docs]</a><span class="k">def</span> <span class="nf">find_referenced_templates</span><span class="p">(</span><span class="n">ast</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds all the referenced templates from the AST.  This will return an</span>
+<span class="sd">    iterator over all the hardcoded template extensions, inclusions and</span>
+<span class="sd">    imports.  If dynamic inheritance or inclusion is used, `None` will be</span>
+<span class="sd">    yielded.</span>
+
+<span class="sd">    &gt;&gt;&gt; from jinja2 import Environment, meta</span>
+<span class="sd">    &gt;&gt;&gt; env = Environment()</span>
+<span class="sd">    &gt;&gt;&gt; ast = env.parse(&#39;{% extends &quot;layout.html&quot; %}{% include helper %}&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; list(meta.find_referenced_templates(ast))</span>
+<span class="sd">    [&#39;layout.html&#39;, None]</span>
+
+<span class="sd">    This function is useful for dependency tracking.  For example if you want</span>
+<span class="sd">    to rebuild parts of the website after a layout template has changed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">find_all</span><span class="p">((</span><span class="n">nodes</span><span class="o">.</span><span class="n">Extends</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">FromImport</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Import</span><span class="p">,</span>
+                              <span class="n">nodes</span><span class="o">.</span><span class="n">Include</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">):</span>
+            <span class="c"># a tuple with some non consts in there</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="p">,</span> <span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">List</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">template_name</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+                    <span class="c"># something const, only yield the strings and ignore</span>
+                    <span class="c"># non-string consts that really just make no sense</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Const</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_name</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                            <span class="k">yield</span> <span class="n">template_name</span><span class="o">.</span><span class="n">value</span>
+                    <span class="c"># something dynamic in there</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="bp">None</span>
+            <span class="c"># something dynamic we don&#39;t know about here</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span>
+            <span class="k">continue</span>
+        <span class="c"># constant is a basestring, direct template name</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">value</span>
+        <span class="c"># a tuple or list (latter *should* not happen) made of consts,</span>
+        <span class="c"># yield the consts that are strings.  We could warn here for</span>
+        <span class="c"># non string values</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Include</span><span class="p">)</span> <span class="ow">and</span> \
+             <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">template_name</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">template_name</span>
+        <span class="c"># something else we don&#39;t care about, we could warn here</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">None</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

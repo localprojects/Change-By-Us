@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.lexnparse &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.lexnparse</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.lexnparse</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    All the unittests regarding lexing, parsing and syntax.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">Template</span><span class="p">,</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> \
+     <span class="n">UndefinedError</span><span class="p">,</span> <span class="n">nodes</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+
+
+<span class="c"># how does a string look like in jinja syntax?</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="jinja_string_repr"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.jinja_string_repr">[docs]</a>    <span class="k">def</span> <span class="nf">jinja_string_repr</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">string</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span></div>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">jinja_string_repr</span> <span class="o">=</span> <span class="nb">repr</span>
+
+
+<div class="viewcode-block" id="LexerTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase">[docs]</a><span class="k">class</span> <span class="nc">LexerTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LexerTestCase.test_raw1"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_raw1">[docs]</a>    <span class="k">def</span> <span class="nf">test_raw1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% r</span><span class="s">aw %}foo{</span><span class="si">% e</span><span class="s">ndraw %}|&#39;</span>
+                               <span class="s">&#39;{</span><span class="si">%r</span><span class="s">aw%}{{ bar }}|{% baz %}{</span><span class="si">%       e</span><span class="s">ndraw    %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;foo|{{ bar }}|{% baz %}&#39;</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_raw2"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_raw2">[docs]</a>    <span class="k">def</span> <span class="nf">test_raw2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;1  {</span><span class="si">%- r</span><span class="s">aw -%}   2   {</span><span class="si">%- e</span><span class="s">ndraw -%}   3&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;123&#39;</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_balancing"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_balancing">[docs]</a>    <span class="k">def</span> <span class="nf">test_balancing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;{%&#39;</span><span class="p">,</span> <span class="s">&#39;%}&#39;</span><span class="p">,</span> <span class="s">&#39;${&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or item in seq</span>
+<span class="s">            %}${{&#39;foo&#39;: item}|upper}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">==</span> <span class="s">&quot;{&#39;FOO&#39;: 0}{&#39;FOO&#39;: 1}{&#39;FOO&#39;: 2}&quot;</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_comments"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_comments">[docs]</a>    <span class="k">def</span> <span class="nf">test_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;&lt;!--&#39;</span><span class="p">,</span> <span class="s">&#39;--&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;{&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">&lt;ul&gt;</span>
+<span class="s">&lt;!--- for item in seq --&gt;</span>
+<span class="s">  &lt;li&gt;{item}&lt;/li&gt;</span>
+<span class="s">&lt;!--- endfor --&gt;</span>
+<span class="s">&lt;/ul&gt;&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">==</span> <span class="p">(</span><span class="s">&quot;&lt;ul&gt;</span><span class="se">\n</span><span class="s">  &lt;li&gt;0&lt;/li&gt;</span><span class="se">\n</span><span class="s">  &quot;</span>
+                                             <span class="s">&quot;&lt;li&gt;1&lt;/li&gt;</span><span class="se">\n</span><span class="s">  &lt;li&gt;2&lt;/li&gt;</span><span class="se">\n</span><span class="s">&lt;/ul&gt;&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_string_escapes"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_string_escapes">[docs]</a>    <span class="k">def</span> <span class="nf">test_string_escapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="s">u&#39;</span><span class="se">\0</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\u2668</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\xe4</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\r</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">:</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="n">jinja_string_repr</span><span class="p">(</span><span class="n">char</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="n">char</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;</span><span class="se">\N{HOT SPRINGS}</span><span class="s">&quot; }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">u&#39;</span><span class="se">\u2668</span><span class="s">&#39;</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_bytefallback"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_bytefallback">[docs]</a>    <span class="k">def</span> <span class="nf">test_bytefallback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">u&#39;&#39;&#39;{{ &#39;foo&#39;|pprint }}|{{ &#39;bär&#39;|pprint }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="n">pformat</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;|&#39;</span> <span class="o">+</span> <span class="n">pformat</span><span class="p">(</span><span class="s">u&#39;bär&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_operators"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_operators">[docs]</a>    <span class="k">def</span> <span class="nf">test_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">jinja2.lexer</span> <span class="kn">import</span> <span class="n">operators</span>
+        <span class="k">for</span> <span class="n">test</span><span class="p">,</span> <span class="n">expect</span> <span class="ow">in</span> <span class="n">operators</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">test</span> <span class="ow">in</span> <span class="s">&#39;([{}])&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="n">test</span><span class="p">)</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">stream</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">expect</span>
+</div>
+<div class="viewcode-block" id="LexerTestCase.test_normalizing"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.LexerTestCase.test_normalizing">[docs]</a>    <span class="k">def</span> <span class="nf">test_normalizing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">newline_sequence</span><span class="o">=</span><span class="n">seq</span><span class="p">)</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;1</span><span class="se">\n</span><span class="s">2</span><span class="se">\r\n</span><span class="s">3</span><span class="se">\n</span><span class="s">4</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;1X2X3X4&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="ParserTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase">[docs]</a><span class="k">class</span> <span class="nc">ParserTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ParserTestCase.test_php_syntax"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_php_syntax">[docs]</a>    <span class="k">def</span> <span class="nf">test_php_syntax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;&lt;?&#39;</span><span class="p">,</span> <span class="s">&#39;?&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;?=&#39;</span><span class="p">,</span> <span class="s">&#39;?&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;!--&#39;</span><span class="p">,</span> <span class="s">&#39;--&gt;&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">&lt;!-- I&#39;m a comment, I&#39;m not interesting --&gt;</span><span class="se">\</span>
+<span class="s">&lt;? for item in seq -?&gt;</span>
+<span class="s">    &lt;?= item ?&gt;</span>
+<span class="s">&lt;?- endfor ?&gt;&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;01234&#39;</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_erb_syntax"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_erb_syntax">[docs]</a>    <span class="k">def</span> <span class="nf">test_erb_syntax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;&lt;%&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;%=&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;%#&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">&lt;%# I&#39;m a comment, I&#39;m not interesting %&gt;</span><span class="se">\</span>
+<span class="s">&lt;</span><span class="si">% f</span><span class="s">or item in seq -%&gt;</span>
+<span class="s">    &lt;%= item %&gt;</span>
+<span class="s">&lt;</span><span class="si">%- e</span><span class="s">ndfor %&gt;&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;01234&#39;</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_comment_syntax"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_comment_syntax">[docs]</a>    <span class="k">def</span> <span class="nf">test_comment_syntax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;&lt;!--&#39;</span><span class="p">,</span> <span class="s">&#39;--&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;${&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;!--#&#39;</span><span class="p">,</span> <span class="s">&#39;--&gt;&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">&lt;!--# I&#39;m a comment, I&#39;m not interesting --&gt;</span><span class="se">\</span>
+<span class="s">&lt;!-- for item in seq ---&gt;</span>
+<span class="s">    ${item}</span>
+<span class="s">&lt;!--- endfor --&gt;&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;01234&#39;</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_balancing"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_balancing">[docs]</a>    <span class="k">def</span> <span class="nf">test_balancing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{{&#39;foo&#39;:&#39;bar&#39;}.foo}}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;bar&#39;</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_start_comment"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_start_comment">[docs]</a>    <span class="k">def</span> <span class="nf">test_start_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{# foo comment</span>
+<span class="s">and bar comment #}</span>
+<span class="s">{% macro blub() %}foo{</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">{{ blub() }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;foo&#39;</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_line_syntax"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_line_syntax">[docs]</a>    <span class="k">def</span> <span class="nf">test_line_syntax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;&lt;%&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;${&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;%#&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;%&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">&lt;</span><span class="si">%# r</span><span class="s">egular comment %&gt;</span>
+<span class="si">% f</span><span class="s">or item in seq:</span>
+<span class="s">    ${item}</span>
+<span class="si">% e</span><span class="s">ndfor&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span> <span class="o">==</span> \
+               <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;&lt;%&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;${&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;%#&#39;</span><span class="p">,</span> <span class="s">&#39;%&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;%&#39;</span><span class="p">,</span> <span class="s">&#39;##&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">&lt;</span><span class="si">%# r</span><span class="s">egular comment %&gt;</span>
+<span class="si">% f</span><span class="s">or item in seq:</span>
+<span class="s">    ${item} ## the rest of the stuff</span>
+<span class="si">% e</span><span class="s">ndfor&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span> <span class="o">==</span> \
+                <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_line_syntax_priority"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_line_syntax_priority">[docs]</a>    <span class="k">def</span> <span class="nf">test_line_syntax_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># XXX: why is the whitespace there in front of the newline?</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;{%&#39;</span><span class="p">,</span> <span class="s">&#39;%}&#39;</span><span class="p">,</span> <span class="s">&#39;${&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;/*&#39;</span><span class="p">,</span> <span class="s">&#39;*/&#39;</span><span class="p">,</span> <span class="s">&#39;##&#39;</span><span class="p">,</span> <span class="s">&#39;#&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">/* ignore me.</span>
+<span class="s">   I&#39;m a multiline comment */</span>
+<span class="s">## for item in seq:</span>
+<span class="s">* ${item}          # this is just extra stuff</span>
+<span class="s">## endfor&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;* 1</span><span class="se">\n</span><span class="s">* 2&#39;</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="s">&#39;{%&#39;</span><span class="p">,</span> <span class="s">&#39;%}&#39;</span><span class="p">,</span> <span class="s">&#39;${&#39;</span><span class="p">,</span> <span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;/*&#39;</span><span class="p">,</span> <span class="s">&#39;*/&#39;</span><span class="p">,</span> <span class="s">&#39;#&#39;</span><span class="p">,</span> <span class="s">&#39;##&#39;</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">/* ignore me.</span>
+<span class="s">   I&#39;m a multiline comment */</span>
+<span class="s"># for item in seq:</span>
+<span class="s">* ${item}          ## this is just extra stuff</span>
+<span class="s">    ## extra stuff i just want to ignore</span>
+<span class="s"># endfor&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;* 1</span><span class="se">\n\n</span><span class="s">* 2&#39;</span>
+</div>
+<div class="viewcode-block" id="ParserTestCase.test_error_messages"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.ParserTestCase.test_error_messages">[docs]</a>    <span class="k">def</span> <span class="nf">test_error_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">assert_error</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">Template</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">==</span> <span class="n">expected</span><span class="p">,</span> <span class="s">&#39;unexpected error message&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;that was suposed to be an error&#39;</span>
+
+        <span class="n">assert_error</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}...{</span><span class="si">% e</span><span class="s">ndif %}&#39;</span><span class="p">,</span>
+                     <span class="s">&quot;Encountered unknown tag &#39;endif&#39;. Jinja was looking &quot;</span>
+                     <span class="s">&quot;for the following tags: &#39;endfor&#39; or &#39;else&#39;. The &quot;</span>
+                     <span class="s">&quot;innermost block that needs to be closed is &#39;for&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">assert_error</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">f foo %}{</span><span class="si">% f</span><span class="s">or item in seq %}...{</span><span class="si">% e</span><span class="s">ndfor %}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">,</span>
+                     <span class="s">&quot;Encountered unknown tag &#39;endfor&#39;. Jinja was looking for &quot;</span>
+                     <span class="s">&quot;the following tags: &#39;elif&#39; or &#39;else&#39; or &#39;endif&#39;. The &quot;</span>
+                     <span class="s">&quot;innermost block that needs to be closed is &#39;if&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">assert_error</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% i</span><span class="s">f foo %}&#39;</span><span class="p">,</span>
+                     <span class="s">&quot;Unexpected end of template. Jinja was looking for the &quot;</span>
+                     <span class="s">&quot;following tags: &#39;elif&#39; or &#39;else&#39; or &#39;endif&#39;. The &quot;</span>
+                     <span class="s">&quot;innermost block that needs to be closed is &#39;if&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">assert_error</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% f</span><span class="s">or item in seq %}&#39;</span><span class="p">,</span>
+                     <span class="s">&quot;Unexpected end of template. Jinja was looking for the &quot;</span>
+                     <span class="s">&quot;following tags: &#39;endfor&#39; or &#39;else&#39;. The innermost block &quot;</span>
+                     <span class="s">&quot;that needs to be closed is &#39;for&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">assert_error</span><span class="p">(</span><span class="s">&#39;{% block foo-bar-baz %}&#39;</span><span class="p">,</span>
+                     <span class="s">&quot;Block names in Jinja have to be valid Python identifiers &quot;</span>
+                     <span class="s">&quot;and may not contain hypens, use an underscore instead.&quot;</span><span class="p">)</span>
+        <span class="n">assert_error</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% u</span><span class="s">nknown_tag %}&#39;</span><span class="p">,</span>
+                     <span class="s">&quot;Encountered unknown tag &#39;unknown_tag&#39;.&quot;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="SyntaxTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase">[docs]</a><span class="k">class</span> <span class="nc">SyntaxTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SyntaxTestCase.test_call"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_call">[docs]</a>    <span class="k">def</span> <span class="nf">test_call</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">globals</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">g</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">e</span> <span class="o">+</span> <span class="n">g</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo(&#39;a&#39;, c=&#39;d&#39;, e=&#39;f&#39;, *[&#39;b&#39;], **{&#39;g&#39;: &#39;h&#39;}) }}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;abdfh&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_slicing"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_slicing">[docs]</a>    <span class="k">def</span> <span class="nf">test_slicing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ [1, 2, 3][:] }}|{{ [1, 2, 3][::-1] }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[1, 2, 3]|[3, 2, 1]&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_attr"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_attr">[docs]</a>    <span class="k">def</span> <span class="nf">test_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo.bar }}|{{ foo[&#39;bar&#39;] }}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span> <span class="o">==</span> <span class="s">&#39;42|42&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_subscript"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_subscript">[docs]</a>    <span class="k">def</span> <span class="nf">test_subscript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo[0] }}|{{ foo[-1] }}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="s">&#39;0|2&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_tuple"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_tuple">[docs]</a>    <span class="k">def</span> <span class="nf">test_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ () }}|{{ (1,) }}|{{ (1, 2) }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;()|(1,)|(1, 2)&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_math"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_math">[docs]</a>    <span class="k">def</span> <span class="nf">test_math</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ (1 + 1 * 2) - 3 / 2 }}|{{ 2**3 }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1.5|8&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_div"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_div">[docs]</a>    <span class="k">def</span> <span class="nf">test_div</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ 3 // 2 }}|{{ 3 / 2 }}|{{ 3 % 2 }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1|1.5|1&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_unary"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_unary">[docs]</a>    <span class="k">def</span> <span class="nf">test_unary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ +3 }}|{{ -3 }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;3|-3&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_concat"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_concat">[docs]</a>    <span class="k">def</span> <span class="nf">test_concat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ [1, 2] ~ &#39;foo&#39; }}&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[1, 2]foo&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_compare"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_compare">[docs]</a>    <span class="k">def</span> <span class="nf">test_compare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ 1 &gt; 0 }}|{{ 1 &gt;= 1 }}|{{ 2 &lt; 3 }}|&#39;</span>
+                               <span class="s">&#39;{{ 2 == 2 }}|{{ 1 &lt;= 1 }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;True|True|True|True|True&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_inop"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_inop">[docs]</a>    <span class="k">def</span> <span class="nf">test_inop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ 1 in [1, 2, 3] }}|{{ 1 not in [1, 2, 3] }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;True|False&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_literals"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_literals">[docs]</a>    <span class="k">def</span> <span class="nf">test_literals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ [] }}|{{ {} }}|{{ () }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;[]|{}|()&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_bool"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_bool">[docs]</a>    <span class="k">def</span> <span class="nf">test_bool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ true and false }}|{{ false &#39;</span>
+                               <span class="s">&#39;or true }}|{{ not false }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;False|True|True&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_grouping"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_grouping">[docs]</a>    <span class="k">def</span> <span class="nf">test_grouping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ (true and false) or (false and true) and not false }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;False&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_django_attr"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_django_attr">[docs]</a>    <span class="k">def</span> <span class="nf">test_django_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ [1, 2, 3].0 }}|{{ [[1]].0.0 }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;1|1&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_conditional_expression"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_conditional_expression">[docs]</a>    <span class="k">def</span> <span class="nf">test_conditional_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ 0 if true else 1 }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;0&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_short_conditional_expression"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_short_conditional_expression">[docs]</a>    <span class="k">def</span> <span class="nf">test_short_conditional_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&lt;{{ 1 if false }}&gt;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&lt;&gt;&#39;</span>
+
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&lt;{{ (1 if false).bar }}&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">UndefinedError</span><span class="p">,</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_filter_priority"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_filter_priority">[docs]</a>    <span class="k">def</span> <span class="nf">test_filter_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo&quot;|upper + &quot;bar&quot;|upper }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;FOOBAR&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_function_calls"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_function_calls">[docs]</a>    <span class="k">def</span> <span class="nf">test_function_calls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tests</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="s">&#39;*foo, bar&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="s">&#39;*foo, *bar&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="s">&#39;*foo, bar=42&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="s">&#39;**foo, *bar&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="s">&#39;**foo, bar&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="s">&#39;foo, bar&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="s">&#39;foo, bar=42&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="s">&#39;foo, bar=23, *args&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="s">&#39;a, b=c, *d, **e&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="s">&#39;*foo, **bar&#39;</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">should_fail</span><span class="p">,</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">should_fail</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span>
+                    <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span> <span class="s">&#39;{{ foo(</span><span class="si">%s</span><span class="s">) }}&#39;</span> <span class="o">%</span> <span class="n">sig</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;foo(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">sig</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_tuple_expr"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_tuple_expr">[docs]</a>    <span class="k">def</span> <span class="nf">test_tuple_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">tmpl</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s">&#39;{{ () }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{{ (1, 2) }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{{ (1, 2,) }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{{ 1, }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{{ 1, 2 }}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or foo, bar in seq %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or x in foo, bar %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span><span class="p">,</span>
+            <span class="s">&#39;{</span><span class="si">% f</span><span class="s">or x in foo, %}...{</span><span class="si">% e</span><span class="s">ndfor %}&#39;</span>
+        <span class="p">]:</span>
+            <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">tmpl</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_trailing_comma"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_trailing_comma">[docs]</a>    <span class="k">def</span> <span class="nf">test_trailing_comma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ (1, 2,) }}|{{ [1, 2,] }}|{{ {1: 2,} }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;(1, 2)|[1, 2]|{1: 2}&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_block_end_name"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_block_end_name">[docs]</a>    <span class="k">def</span> <span class="nf">test_block_end_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% block foo %}...{</span><span class="si">% e</span><span class="s">ndblock foo %}&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                           <span class="s">&#39;{% block x %}{</span><span class="si">% e</span><span class="s">ndblock y %}&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_contant_casing"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_contant_casing">[docs]</a>    <span class="k">def</span> <span class="nf">test_contant_casing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">const</span> <span class="ow">in</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}|{{ </span><span class="si">%s</span><span class="s"> }}|{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">const</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">const</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">const</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="p">))</span>
+            <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">|</span><span class="si">%s</span><span class="s">|&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="n">const</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_test_chaining"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_test_chaining">[docs]</a>    <span class="k">def</span> <span class="nf">test_test_chaining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                           <span class="s">&#39;{{ foo is string is sequence }}&#39;</span><span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ 42 is string or 42 is number }}&#39;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;True&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_string_concatenation"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_string_concatenation">[docs]</a>    <span class="k">def</span> <span class="nf">test_string_concatenation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ &quot;foo&quot; &quot;bar&quot; &quot;baz&quot; }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;foobarbaz&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_notin"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_notin">[docs]</a>    <span class="k">def</span> <span class="nf">test_notin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">bar</span> <span class="o">=</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{{ not 42 in bar }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">bar</span><span class="o">=</span><span class="n">bar</span><span class="p">)</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="ow">not</span> <span class="mi">42</span> <span class="ow">in</span> <span class="n">bar</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_implicit_subscribed_tuple"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_implicit_subscribed_tuple">[docs]</a>    <span class="k">def</span> <span class="nf">test_implicit_subscribed_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">x</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ foo[1, 2] }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="n">Foo</span><span class="p">())</span> <span class="o">==</span> <span class="s">u&#39;(1, 2)&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_raw2"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_raw2">[docs]</a>    <span class="k">def</span> <span class="nf">test_raw2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{</span><span class="si">% r</span><span class="s">aw %}{{ FOO }} and {% BAR %}{</span><span class="si">% e</span><span class="s">ndraw %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;{{ FOO }} and {% BAR %}&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_const"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_const">[docs]</a>    <span class="k">def</span> <span class="nf">test_const</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ true }}|{{ false }}|{{ none }}|&#39;</span>
+                               <span class="s">&#39;{{ none is defined }}|{{ missing is defined }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;True|False|None|True|False&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_neg_filter_priority"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_neg_filter_priority">[docs]</a>    <span class="k">def</span> <span class="nf">test_neg_filter_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;{{ -1|foo }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Filter</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Neg</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_const_assign"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_const_assign">[docs]</a>    <span class="k">def</span> <span class="nf">test_const_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">constass1</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;{</span><span class="si">% s</span><span class="s">et true = 42 %}&#39;&#39;&#39;</span>
+        <span class="n">constass2</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;{</span><span class="si">% f</span><span class="s">or none in seq %}{</span><span class="si">% e</span><span class="s">ndfor %}&#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">tmpl</span> <span class="ow">in</span> <span class="n">constass1</span><span class="p">,</span> <span class="n">constass2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span> <span class="n">tmpl</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_localset"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_localset">[docs]</a>    <span class="k">def</span> <span class="nf">test_localset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;{</span><span class="si">% s</span><span class="s">et foo = 0 %}</span><span class="se">\</span>
+<span class="s">{</span><span class="si">% f</span><span class="s">or item in [1, 2] %}{</span><span class="si">% s</span><span class="s">et foo = 1 %}{</span><span class="si">% e</span><span class="s">ndfor %}</span><span class="se">\</span>
+<span class="s">{{ foo }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;0&#39;</span>
+</div>
+<div class="viewcode-block" id="SyntaxTestCase.test_parse_unary"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.SyntaxTestCase.test_parse_unary">[docs]</a>    <span class="k">def</span> <span class="nf">test_parse_unary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ -foo[&quot;bar&quot;] }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span> <span class="o">==</span> <span class="s">&#39;-42&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ -foo[&quot;bar&quot;]|abs }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span> <span class="o">==</span> <span class="s">&#39;42&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.lexnparse.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">LexerTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">ParserTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">SyntaxTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

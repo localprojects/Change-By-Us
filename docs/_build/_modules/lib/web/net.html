@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.net &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.net</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Network Utilities</span>
+<span class="sd">(from web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s">&quot;validipaddr&quot;</span><span class="p">,</span> <span class="s">&quot;validipport&quot;</span><span class="p">,</span> <span class="s">&quot;validip&quot;</span><span class="p">,</span> <span class="s">&quot;validaddr&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;urlquote&quot;</span><span class="p">,</span>
+  <span class="s">&quot;httpdate&quot;</span><span class="p">,</span> <span class="s">&quot;parsehttpdate&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;htmlquote&quot;</span><span class="p">,</span> <span class="s">&quot;htmlunquote&quot;</span><span class="p">,</span> <span class="s">&quot;websafe&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">time</span>
+<span class="k">try</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="k">pass</span>
+
+<div class="viewcode-block" id="validipaddr"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.validipaddr">[docs]</a><span class="k">def</span> <span class="nf">validipaddr</span><span class="p">(</span><span class="n">address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if `address` is a valid IPv4 address.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; validipaddr(&#39;192.168.1.1&#39;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; validipaddr(&#39;192.168.1.800&#39;)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; validipaddr(&#39;192.168.1&#39;)</span>
+<span class="sd">        False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">octets</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">octets</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">octets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">255</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="validipport"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.validipport">[docs]</a><span class="k">def</span> <span class="nf">validipport</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if `port` is a valid IPv4 port.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; validipport(&#39;9000&#39;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; validipport(&#39;foo&#39;)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; validipport(&#39;1000000&#39;)</span>
+<span class="sd">        False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">65535</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="validip"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.validip">[docs]</a><span class="k">def</span> <span class="nf">validip</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">defaultaddr</span><span class="o">=</span><span class="s">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="n">defaultport</span><span class="o">=</span><span class="mi">8080</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns `(ip_address, port)` from string `ip_addr_port`&quot;&quot;&quot;</span>
+    <span class="n">addr</span> <span class="o">=</span> <span class="n">defaultaddr</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">defaultport</span>
+    
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">ip</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ip</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">validipaddr</span><span class="p">(</span><span class="n">ip</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">addr</span> <span class="o">=</span> <span class="n">ip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">validipport</span><span class="p">(</span><span class="n">ip</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; is not a valid IP address/port&#39;</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">addr</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">ip</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validipaddr</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span> <span class="ow">and</span> <span class="n">validipport</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; is not a valid IP address/port&#39;</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; is not a valid IP address/port&#39;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="validaddr"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.validaddr">[docs]</a><span class="k">def</span> <span class="nf">validaddr</span><span class="p">(</span><span class="n">string_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns either (ip_address, port) or &quot;/path/to/socket&quot; from string_</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; validaddr(&#39;/path/to/socket&#39;)</span>
+<span class="sd">        &#39;/path/to/socket&#39;</span>
+<span class="sd">        &gt;&gt;&gt; validaddr(&#39;8000&#39;)</span>
+<span class="sd">        (&#39;0.0.0.0&#39;, 8000)</span>
+<span class="sd">        &gt;&gt;&gt; validaddr(&#39;127.0.0.1&#39;)</span>
+<span class="sd">        (&#39;127.0.0.1&#39;, 8080)</span>
+<span class="sd">        &gt;&gt;&gt; validaddr(&#39;127.0.0.1:8000&#39;)</span>
+<span class="sd">        (&#39;127.0.0.1&#39;, 8000)</span>
+<span class="sd">        &gt;&gt;&gt; validaddr(&#39;fff&#39;)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        ValueError: fff is not a valid IP address/port</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">string_</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">string_</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">validip</span><span class="p">(</span><span class="n">string_</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="urlquote"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.urlquote">[docs]</a><span class="k">def</span> <span class="nf">urlquote</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quotes a string for use in a URL.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; urlquote(&#39;://?f=1&amp;j=1&#39;)</span>
+<span class="sd">        &#39;%3A//%3Ff%3D1%26j%3D1&#39;</span>
+<span class="sd">        &gt;&gt;&gt; urlquote(None)</span>
+<span class="sd">        &#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; urlquote(u&#39;\u203d&#39;)</span>
+<span class="sd">        &#39;%E2%80%BD&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span> <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="httpdate"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.httpdate">[docs]</a><span class="k">def</span> <span class="nf">httpdate</span><span class="p">(</span><span class="n">date_obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Formats a datetime object for use in HTTP headers.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; import datetime</span>
+<span class="sd">        &gt;&gt;&gt; httpdate(datetime.datetime(1970, 1, 1, 1, 1, 1))</span>
+<span class="sd">        &#39;Thu, 01 Jan 1970 01:01:01 GMT&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">date_obj</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%a, </span><span class="si">%d</span><span class="s"> %b %Y %H:%M:%S GMT&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="parsehttpdate"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.parsehttpdate">[docs]</a><span class="k">def</span> <span class="nf">parsehttpdate</span><span class="p">(</span><span class="n">string_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses an HTTP date into a datetime object.</span>
+
+<span class="sd">        &gt;&gt;&gt; parsehttpdate(&#39;Thu, 01 Jan 1970 01:01:01 GMT&#39;)</span>
+<span class="sd">        datetime.datetime(1970, 1, 1, 1, 1, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">string_</span><span class="p">,</span> <span class="s">&quot;%a, </span><span class="si">%d</span><span class="s"> %b %Y %H:%M:%S %Z&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="n">t</span><span class="p">[:</span><span class="mi">6</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="htmlquote"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.htmlquote">[docs]</a><span class="k">def</span> <span class="nf">htmlquote</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Encodes `text` for raw use in HTML.</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; htmlquote(u&quot;&lt;&#39;&amp;\&quot;&gt;&quot;)</span>
+<span class="sd">        u&#39;&amp;lt;&amp;#39;&amp;amp;&amp;quot;&amp;gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&amp;&quot;</span><span class="p">,</span> <span class="s">u&quot;&amp;amp;&quot;</span><span class="p">)</span> <span class="c"># Must be done first!</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&lt;&quot;</span><span class="p">,</span> <span class="s">u&quot;&amp;lt;&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&gt;&quot;</span><span class="p">,</span> <span class="s">u&quot;&amp;gt;&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&#39;&quot;</span><span class="p">,</span> <span class="s">u&quot;&amp;#39;&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&#39;&quot;&#39;</span><span class="p">,</span> <span class="s">u&quot;&amp;quot;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">text</span>
+</div>
+<div class="viewcode-block" id="htmlunquote"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.htmlunquote">[docs]</a><span class="k">def</span> <span class="nf">htmlunquote</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Decodes `text` that&#39;s HTML quoted.</span>
+
+<span class="sd">        &gt;&gt;&gt; htmlunquote(u&#39;&amp;lt;&amp;#39;&amp;amp;&amp;quot;&amp;gt;&#39;)</span>
+<span class="sd">        u&#39;&lt;\&#39;&amp;&quot;&gt;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&amp;quot;&quot;</span><span class="p">,</span> <span class="s">u&#39;&quot;&#39;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&amp;#39;&quot;</span><span class="p">,</span> <span class="s">u&quot;&#39;&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&amp;gt;&quot;</span><span class="p">,</span> <span class="s">u&quot;&gt;&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&amp;lt;&quot;</span><span class="p">,</span> <span class="s">u&quot;&lt;&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">u&quot;&amp;amp;&quot;</span><span class="p">,</span> <span class="s">u&quot;&amp;&quot;</span><span class="p">)</span> <span class="c"># Must be done last!</span>
+    <span class="k">return</span> <span class="n">text</span>
+    </div>
+<div class="viewcode-block" id="websafe"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.net.websafe">[docs]</a><span class="k">def</span> <span class="nf">websafe</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Converts `val` so that it is safe for use in Unicode HTML.</span>
+
+<span class="sd">        &gt;&gt;&gt; websafe(&quot;&lt;&#39;&amp;\&quot;&gt;&quot;)</span>
+<span class="sd">        u&#39;&amp;lt;&amp;#39;&amp;amp;&amp;quot;&amp;gt;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; websafe(None)</span>
+<span class="sd">        u&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; websafe(u&#39;\u203d&#39;)</span>
+<span class="sd">        u&#39;\u203d&#39;</span>
+<span class="sd">        &gt;&gt;&gt; websafe(&#39;\xe2\x80\xbd&#39;)</span>
+<span class="sd">        u&#39;\u203d&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">u&#39;&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">htmlquote</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

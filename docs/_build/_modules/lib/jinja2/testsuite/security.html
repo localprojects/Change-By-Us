@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.security &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.security</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.security</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Checks the sandbox and other security features.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span>
+<span class="kn">from</span> <span class="nn">jinja2.sandbox</span> <span class="kn">import</span> <span class="n">SandboxedEnvironment</span><span class="p">,</span> \
+     <span class="n">ImmutableSandboxedEnvironment</span><span class="p">,</span> <span class="n">unsafe</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">escape</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">SecurityError</span><span class="p">,</span> <span class="n">TemplateSyntaxError</span><span class="p">,</span> \
+     <span class="n">TemplateRuntimeError</span>
+
+
+<div class="viewcode-block" id="PrivateStuff"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.PrivateStuff">[docs]</a><span class="k">class</span> <span class="nc">PrivateStuff</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PrivateStuff.bar"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.PrivateStuff.bar">[docs]</a>    <span class="k">def</span> <span class="nf">bar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">23</span>
+</div>
+    <span class="nd">@unsafe</span>
+<div class="viewcode-block" id="PrivateStuff.foo"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.PrivateStuff.foo">[docs]</a>    <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">42</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;PrivateStuff&#39;</span>
+
+</div>
+<div class="viewcode-block" id="PublicStuff"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.PublicStuff">[docs]</a><span class="k">class</span> <span class="nc">PublicStuff</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">bar</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="mi">23</span>
+    <span class="n">_foo</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="mi">42</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;PublicStuff&#39;</span>
+
+</div>
+<div class="viewcode-block" id="SandboxTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase">[docs]</a><span class="k">class</span> <span class="nc">SandboxTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SandboxTestCase.test_unsafe"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_unsafe">[docs]</a>    <span class="k">def</span> <span class="nf">test_unsafe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">SandboxedEnvironment</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">SecurityError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo.foo() }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">,</span>
+                           <span class="n">foo</span><span class="o">=</span><span class="n">PrivateStuff</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo.bar() }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="n">PrivateStuff</span><span class="p">()),</span> <span class="s">&#39;23&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">SecurityError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo._foo() }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">,</span>
+                           <span class="n">foo</span><span class="o">=</span><span class="n">PublicStuff</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo.bar() }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="n">PublicStuff</span><span class="p">()),</span> <span class="s">&#39;23&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo.__class__ }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;{{ foo.func_code }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span><span class="bp">None</span><span class="p">),</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="c"># security error comes from __class__ already.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">SecurityError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&quot;{{ foo.__class__.__subclasses__() }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">,</span> <span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_immutable_environment"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_immutable_environment">[docs]</a>    <span class="k">def</span> <span class="nf">test_immutable_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">ImmutableSandboxedEnvironment</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">SecurityError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&#39;{{ [].append(23) }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">SecurityError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span>
+            <span class="s">&#39;{{ {1:2}.clear() }}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_restricted"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_restricted">[docs]</a>    <span class="k">def</span> <span class="nf">test_restricted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">SandboxedEnvironment</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                      <span class="s">&quot;{</span><span class="si">% f</span><span class="s">or item.attribute in seq %}...{</span><span class="si">% e</span><span class="s">ndfor %}&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateSyntaxError</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                      <span class="s">&quot;{</span><span class="si">% f</span><span class="s">or foo, bar.baz in seq %}...{</span><span class="si">% e</span><span class="s">ndfor %}&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_markup_operations"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_markup_operations">[docs]</a>    <span class="k">def</span> <span class="nf">test_markup_operations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># adding two strings should escape the unsafe one</span>
+        <span class="n">unsafe</span> <span class="o">=</span> <span class="s">&#39;&lt;script type=&quot;application/x-some-script&quot;&gt;alert(&quot;foo&quot;);&lt;/script&gt;&#39;</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&#39;&lt;em&gt;username&lt;/em&gt;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">unsafe</span> <span class="o">+</span> <span class="n">safe</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">escape</span><span class="p">(</span><span class="n">unsafe</span><span class="p">))</span> <span class="o">+</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span>
+
+        <span class="c"># string interpolations are safe to use too</span>
+        <span class="k">assert</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&#39;&lt;em&gt;</span><span class="si">%s</span><span class="s">&lt;/em&gt;&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="s">&#39;&lt;bad user&gt;&#39;</span> <span class="o">==</span> \
+               <span class="s">&#39;&lt;em&gt;&amp;lt;bad user&amp;gt;&lt;/em&gt;&#39;</span>
+        <span class="k">assert</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&#39;&lt;em&gt;</span><span class="si">%(username)s</span><span class="s">&lt;/em&gt;&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">{</span>
+            <span class="s">&#39;username&#39;</span><span class="p">:</span> <span class="s">&#39;&lt;bad user&gt;&#39;</span>
+        <span class="p">}</span> <span class="o">==</span> <span class="s">&#39;&lt;em&gt;&amp;lt;bad user&amp;gt;&lt;/em&gt;&#39;</span>
+
+        <span class="c"># an escaped object is markup too</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">Markup</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;bar&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Markup</span>
+
+        <span class="c"># and it implements __html__ by returning itself</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">__html__</span><span class="p">()</span> <span class="ow">is</span> <span class="n">x</span>
+
+        <span class="c"># it also knows how to treat __html__ objects</span>
+        <span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__html__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s">&#39;&lt;em&gt;awesome&lt;/em&gt;&#39;</span>
+            <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s">&#39;awesome&#39;</span>
+        <span class="k">assert</span> <span class="n">Markup</span><span class="p">(</span><span class="n">Foo</span><span class="p">())</span> <span class="o">==</span> <span class="s">&#39;&lt;em&gt;awesome&lt;/em&gt;&#39;</span>
+        <span class="k">assert</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&#39;&lt;strong&gt;</span><span class="si">%s</span><span class="s">&lt;/strong&gt;&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="n">Foo</span><span class="p">()</span> <span class="o">==</span> \
+               <span class="s">&#39;&lt;strong&gt;&lt;em&gt;awesome&lt;/em&gt;&lt;/strong&gt;&#39;</span>
+
+        <span class="c"># escaping and unescaping</span>
+        <span class="k">assert</span> <span class="n">escape</span><span class="p">(</span><span class="s">&#39;&quot;&lt;&gt;&amp;</span><span class="se">\&#39;</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&amp;#34;&amp;lt;&amp;gt;&amp;amp;&amp;#39;&#39;</span>
+        <span class="k">assert</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&quot;&lt;em&gt;Foo &amp;amp; Bar&lt;/em&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">striptags</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;Foo &amp; Bar&quot;</span>
+        <span class="k">assert</span> <span class="n">Markup</span><span class="p">(</span><span class="s">&quot;&amp;lt;test&amp;gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unescape</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;&lt;test&gt;&quot;</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_template_data"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_template_data">[docs]</a>    <span class="k">def</span> <span class="nf">test_template_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% macro say_hello(name) %}&#39;</span>
+                            <span class="s">&#39;&lt;p&gt;Hello {{ name }}!&lt;/p&gt;{</span><span class="si">% e</span><span class="s">ndmacro %}&#39;</span>
+                            <span class="s">&#39;{{ say_hello(&quot;&lt;blink&gt;foo&lt;/blink&gt;&quot;) }}&#39;</span><span class="p">)</span>
+        <span class="n">escaped_out</span> <span class="o">=</span> <span class="s">&#39;&lt;p&gt;Hello &amp;lt;blink&amp;gt;foo&amp;lt;/blink&amp;gt;!&lt;/p&gt;&#39;</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="n">escaped_out</span>
+        <span class="k">assert</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">module</span><span class="p">)</span> <span class="o">==</span> <span class="n">escaped_out</span>
+        <span class="k">assert</span> <span class="n">escape</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">module</span><span class="p">)</span> <span class="o">==</span> <span class="n">escaped_out</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">say_hello</span><span class="p">(</span><span class="s">&#39;&lt;blink&gt;foo&lt;/blink&gt;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">escaped_out</span>
+        <span class="k">assert</span> <span class="n">escape</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">say_hello</span><span class="p">(</span><span class="s">&#39;&lt;blink&gt;foo&lt;/blink&gt;&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="n">escaped_out</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_attr_filter"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_attr_filter">[docs]</a>    <span class="k">def</span> <span class="nf">test_attr_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">SandboxedEnvironment</span><span class="p">()</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ cls|attr(&quot;__subclasses__&quot;)() }}&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">SecurityError</span><span class="p">,</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_binary_operator_intercepting"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_binary_operator_intercepting">[docs]</a>    <span class="k">def</span> <span class="nf">test_binary_operator_intercepting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">disable_op</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TemplateRuntimeError</span><span class="p">(</span><span class="s">&#39;that operator so does not work&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">rv</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;1 + 2&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="s">&#39;3&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;a + 2&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="s">&#39;4&#39;</span><span class="p">):</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">SandboxedEnvironment</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">binop_table</span><span class="p">[</span><span class="s">&#39;+&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">disable_op</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">==</span> <span class="n">rv</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">intercepted_binops</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s">&#39;+&#39;</span><span class="p">])</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">TemplateRuntimeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;expected runtime error&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SandboxTestCase.test_unary_operator_intercepting"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.SandboxTestCase.test_unary_operator_intercepting">[docs]</a>    <span class="k">def</span> <span class="nf">test_unary_operator_intercepting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">disable_op</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TemplateRuntimeError</span><span class="p">(</span><span class="s">&#39;that operator so does not work&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">rv</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;-1&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="s">&#39;-1&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="s">&#39;-2&#39;</span><span class="p">):</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">SandboxedEnvironment</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">unop_table</span><span class="p">[</span><span class="s">&#39;-&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">disable_op</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">==</span> <span class="n">rv</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">intercepted_unops</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s">&#39;-&#39;</span><span class="p">])</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ </span><span class="si">%s</span><span class="s"> }}&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">TemplateRuntimeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;expected runtime error&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.security.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">SandboxTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

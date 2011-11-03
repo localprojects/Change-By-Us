@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>main &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for main</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">environ</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">framework.session_holder</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.task_manager</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.image_server</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;lib/&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lib</span> <span class="kn">import</span> <span class="n">web</span>
+
+<span class="n">ROUTES</span> <span class="o">=</span> <span class="p">(</span>  <span class="s">r&#39;/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.admin.Admin&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/cms/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.admin.Admin&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/create/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.createProject.CreateProject&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/idea/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.idea.Idea&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/join/?([^/.]*)/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.join.Join&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/project/?([^/.]*)/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.project.Project&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/resource/?([^/.]*)/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.resource.Resource&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/search/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.search.Search&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/twilio/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.sms.twilio.Twilio&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/useraccount/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.user.UserAccount&#39;</span><span class="p">,</span>
+            <span class="s">r&#39;/?([^/.]*)/?([^/.]*)&#39;</span><span class="p">,</span> <span class="s">&#39;controllers.home.Home&#39;</span> <span class="p">)</span>
+            
+<div class="viewcode-block" id="sessionDB"><a class="viewcode-back" href="../modules/main.html#main.sessionDB">[docs]</a><span class="k">def</span> <span class="nf">sessionDB</span><span class="p">():</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;database&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">database</span><span class="p">(</span><span class="n">dbn</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;dbn&#39;</span><span class="p">],</span> <span class="n">user</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">],</span> <span class="n">pw</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">],</span> <span class="n">db</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;db&#39;</span><span class="p">],</span> <span class="n">host</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;host&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="enable_smtp"><a class="viewcode-back" href="../modules/main.html#main.enable_smtp">[docs]</a><span class="k">def</span> <span class="nf">enable_smtp</span><span class="p">():</span>
+    <span class="n">smtp_config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;smtp&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">smtp_server</span> <span class="o">=</span> <span class="n">smtp_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">smtp_port</span> <span class="o">=</span> <span class="n">smtp_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;port&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">smtp_starttls</span> <span class="o">=</span> <span class="n">smtp_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;starttls&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">smtp_username</span> <span class="o">=</span> <span class="n">smtp_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;username&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">smtp_password</span> <span class="o">=</span> <span class="n">smtp_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="enable_aws_ses"><a class="viewcode-back" href="../modules/main.html#main.enable_aws_ses">[docs]</a><span class="k">def</span> <span class="nf">enable_aws_ses</span><span class="p">():</span>
+    <span class="c"># AWS SES config</span>
+    <span class="n">ses_config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aws_ses&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">email_engine</span> <span class="o">=</span> <span class="s">&#39;aws&#39;</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">aws_access_key_id</span> <span class="o">=</span> <span class="n">ses_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;access_key_id&#39;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">webapi</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">aws_secret_access_key</span> <span class="o">=</span> <span class="n">ses_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;secret_access_key&#39;</span><span class="p">)</span>
+    
+
+<span class="c">#def cmd_show_quota():</span>
+<span class="c">#    ses = boto.connect_ses()</span>
+<span class="c">#    args.verbose= True</span>
+<span class="c">#    </span>
+<span class="c">#    sendQuota = ses.get_send_quota()[&quot;GetSendQuotaResponse&quot;][&quot;GetSendQuotaResult&quot;]</span>
+<span class="c">#    return sendQuota</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;dev&#39;</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="bp">True</span>        
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Debug: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">debug</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">session_parameters</span><span class="p">[</span><span class="s">&#39;cookie_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;gam&#39;</span>
+
+
+    <span class="c"># TODO:</span>
+    <span class="c"># Start with SES and fall-back to SMTP if both are enabled</span>
+    <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;smtp&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aws_ses&#39;</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">boto</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">connect_ses</span><span class="p">(</span>
+          <span class="n">aws_access_key_id</span>     <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aws_ses&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;access_key_id&#39;</span><span class="p">),</span>
+          <span class="n">aws_secret_access_key</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aws_ses&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;secret_access_key&#39;</span><span class="p">))</span>
+
+        <span class="c"># TODO: Need to add proper exception handling or at least error reporting!</span>
+        <span class="c"># Use raw_email since this allows for attachments</span>
+        <span class="n">sendQuota</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_send_quota</span><span class="p">()[</span><span class="s">&quot;GetSendQuotaResponse&quot;</span><span class="p">][</span><span class="s">&quot;GetSendQuotaResult&quot;</span><span class="p">]</span>
+        <span class="c"># Check if we&#39;re close to the smtp quota. 10 seems like a good number</span>
+        <span class="n">sentLast24Hours</span> <span class="o">=</span> <span class="n">sendQuota</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;SentLast24Hours&#39;</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">sentLast24Hours</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">sentLast24Hours</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sentLast24Hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">sentLast24Hours</span><span class="p">))</span>
+        <span class="n">max24HourSend</span> <span class="o">=</span> <span class="n">sendQuota</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Max24HourSend&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max24HourSend</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">max24HourSend</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">max24HourSend</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">max24HourSend</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sentLast24Hours</span> <span class="o">&gt;=</span> <span class="n">max24HourSend</span><span class="o">-</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">enable_smtp</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">enable_aws_ses</span><span class="p">()</span>
+        
+    <span class="c"># Set the email configurations:</span>
+    <span class="k">elif</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;smtp&#39;</span><span class="p">):</span>
+        <span class="n">enable_smtp</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aws_ses&#39;</span><span class="p">):</span>
+        <span class="n">enable_aws_ses</span><span class="p">()</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">application</span><span class="p">(</span><span class="n">ROUTES</span><span class="p">,</span> <span class="nb">globals</span><span class="p">())</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">sessionDB</span><span class="p">()</span>
+    <span class="n">SessionHolder</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">DBStore</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="s">&#39;web_session&#39;</span><span class="p">)))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

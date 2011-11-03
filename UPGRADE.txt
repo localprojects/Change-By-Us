@@ -1,0 +1,266 @@
+The following are upgrade instructions for each version
+of the Change by Us application.
+
+
+2.x (manage upcoming changes here)
+==========================================================
+
+Database migrations.  See the following for more details:
+https://github.com/codeforamerica/cbu/wiki/Data-and-Schema-Migrations
+
+* XXXXX
+
+Add the following config values to your config.yaml file.  See
+the config.yaml.sample for more details.
+
+* XXXX
+
+
+2.1.8 (upcoming)
+==========================================================
+
+Database migrations.  See the following for more details:
+https://github.com/codeforamerica/cbu/wiki/Data-and-Schema-Migrations
+
+* Run: `python manage.py upgrade`
+
+Add the following config values to your config.yaml file.  See
+the config.yaml.sample for more details.
+
+* logfile?
+
+To replace Philly leaders, run a command similar to:
+
+* mysql -u <DB_USER> -p <DB> < sql/test_data/data_community_leaders_philly.sql
+
+
+2.1.7
+==========================================================
+
+* None
+
+
+2.1.6
+==========================================================
+
+Database migrations.  See the following for more details:
+https://github.com/codeforamerica/cbu/wiki/Data-and-Schema-Migrations
+
+* Run: `python manage.py upgrade`
+
+
+2.1.5c (minor release)
+==========================================================
+
+* None
+    
+    
+2.1.5b (minor release)
+==========================================================
+
+* None
+
+
+2.1.5a (minor release)
+==========================================================
+
+* None
+
+
+2.1.5
+==========================================================
+
+* Due to a change in migration #5 (which had to be made; though in normal
+  circumstances we should never ever ever be changing existing migrations
+  and instead be fixing them with additional migrations) you will first have
+  to downgrade the database before upgrading:
+
+    python manage.py downgrade 4
+    python manage.py upgrade
+
+  This should have no adverse effects on the existing data.
+
+
+2.1.4a (minor release)
+==========================================================
+
+* None
+
+
+2.1.4
+==========================================================
+
+Database migrations.  See the following for more details:
+https://github.com/codeforamerica/cbu/wiki/Data-and-Schema-Migrations
+
+* Run: `python manage.py upgrade`
+
+Add the following config values to your config.yaml file.  See
+the config.yaml.sample for more details.
+
+* blog_host_feed
+
+
+
+2.1.3
+==========================================================
+
+* None
+
+
+2.1.2
+==========================================================
+
+* load sql/test_data/data_community_leaders.sql
+
+
+2.1.1c
+==========================================================
+
+* None
+
+
+
+2.1.1b
+==========================================================
+
+Add the following config values to your config.yaml file.  See
+the config.yaml.sample for more details.
+
+* features:
+    + is_show_beta_splash
+
+2.1.1a
+==========================================================
+
+* None
+
+
+2.1.1
+==========================================================
+
+For SES to work properly, run pip upgrade:
+
+* pip install --upgrade -r requirements.txt
+
+
+2.1.0
+==========================================================
+
+* None.
+
+
+2.0.9
+==========================================================
+
+Run the following scripts to the database:
+
+* run python manage.py upgrade
+* load sql/test_data/data_community_leaders.sql
+
+Add the following config values to your config.yaml file.  See
+the config.yaml.sample for more details.
+
+* features:
+    + is_community_leaders_displayed
+
+
+2.0.8
+==========================================================
+
+Run the following scripts to the database:
+
+* The locations SQL now includes a truncate statement, so
+  it may be run each time the server is updated, if necesssary.
+
+Add/remove the following config values to your config.yaml file.
+See the config.yaml.sample for more details.
+
+* homepage:
+    - is_display_leaderboard
+    - is_display_featured_projects
+
+* features:
+    + is_display_leaderboard (True or False)
+    + is_display_featured_projects (True or False)
+    + is_official_supported (True or False)
+    + is_feedback_form_available
+
+* getsatisfaction:
+    + company
+    + product
+
+
+2.0.7
+==========================================================
+
+* None
+
+
+2.0.6
+==========================================================
+
+After updating the requirements (from requirements.txt),
+follow the instruction on the wiki's Data and Schema Migrations
+page.  In short, run:
+
+    Stop the webserver before running the upgrade.
+    python manage.py upgrade
+
+
+
+2.0.5c
+==========================================================
+
+After updating the requirements (from requirements.txt),
+follow the instruction on the wiki's Data and Schema Migrations
+page.  In short, run:
+
+    migrate manage manage.py --repository=giveaminute/migrations/ --url=mysql://[username]:[password]@[dbhost]/[dbname]
+    python manage.py version_control
+    python manage.py upgrade
+
+
+2.0.4
+==========================================================
+
+Add the following config values to your config.yaml file.  See
+the config.yaml.sample for more details.
+
+* map (and sub values)
+
+
+2.0.3
+==========================================================
+
+* None
+
+
+2.0.2
+==========================================================
+
+* None.
+
+
+2.0.1
+==========================================================
+
+Run the following scripts to the database:
+
+* sql/migrations/0005_remove_goals.sql
+
+Add the following config values to your config.yaml file:
+
+* homepage.photo_credit
+
+
+2.0.0
+==========================================================
+
+* Install normally as stated in INSTALL.txt
+
+Run the following scripts to the database:
+
+* sql/migrations/0002_add_file_id_field_to_project_message_table.sql
+* sql/migrations/0003_rename_files_table_to_attachments.sql
+* sql/migrations/0004_copy_row_id_to_file_media_id.sql

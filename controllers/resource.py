@@ -99,6 +99,7 @@ class Resource(Controller):
         if (imageId):
             return mProjectResource.updateProjectResourceImage(self.db, resourceId, imageId)
         else:
+
             log.error("*** resource edit attempt without image id, resource id %s" % resourceId)
             return False
         

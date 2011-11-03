@@ -1,0 +1,709 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.util &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.util</h1><div class="highlight"><pre>
+<span class="c"># generally try not to import things up here</span>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">string</span><span class="o">,</span> <span class="nn">urlparse</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="try_f"><a class="viewcode-back" href="../../modules/framework.html#framework.util.try_f">[docs]</a><span class="k">def</span> <span class="nf">try_f</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Try to convert data to a new type using the f function. If the conversion</span>
+<span class="sd">    fails, then return default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+</div>
+<div class="viewcode-block" id="dictsort"><a class="viewcode-back" href="../../modules/framework.html#framework.util.dictsort">[docs]</a><span class="k">def</span> <span class="nf">dictsort</span><span class="p">(</span><span class="n">dict_list</span><span class="p">,</span> <span class="n">sort_by_me</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes a list of dicts and returns that list sorted by the property given in</span>
+<span class="sd">    the sort_by_me argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">decorated</span> <span class="o">=</span> <span class="p">[(</span><span class="n">resolve_variable</span><span class="p">(</span><span class="s">&#39;var.&#39;</span> <span class="o">+</span> <span class="n">sort_by_me</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;var&#39;</span> <span class="p">:</span> <span class="n">item</span><span class="p">}),</span> <span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dict_list</span><span class="p">]</span>
+    <span class="n">decorated</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">decorated</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="safeuni"><a class="viewcode-back" href="../../modules/framework.html#framework.util.safeuni">[docs]</a><span class="k">def</span> <span class="nf">safeuni</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tries to convert an object to a unicode string, handling common edge cases.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#if unicode</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="c">#if not a string</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="c">#if can be converted to unicode, then go for it</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;__unicode__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># assume a utf-8 string, then try to convert it</span>
+        <span class="c"># unicode() is expecting a utf-8 bytestring (unicode itself is not utf-8 or anything else)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s">&#39;strict&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="c"># dump anything that doesnt make sense in utf-8</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span>
+</div>
+<div class="viewcode-block" id="safestr"><a class="viewcode-back" href="../../modules/framework.html#framework.util.safestr">[docs]</a><span class="k">def</span> <span class="nf">safestr</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tries to convert an object to a string, handling common edge cases. Also</span>
+<span class="sd">    supports iterators by converting all items to strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#return if this is a string already</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="c">#if a unicode string, try to encode as utf-8</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="c">#if an iterater, then try to convert everything to a string</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;next&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span> <span class="c"># iterator</span>
+        <span class="kn">import</span> <span class="nn">itertools</span>
+        <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">safestr</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="validate_email"><a class="viewcode-back" href="../../modules/framework.html#framework.util.validate_email">[docs]</a><span class="k">def</span> <span class="nf">validate_email</span><span class="p">(</span><span class="n">emailaddress</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate that the given string is an email address. Returns True when</span>
+<span class="sd">    valid, False when invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;aero&quot;</span><span class="p">,</span> <span class="s">&quot;asia&quot;</span><span class="p">,</span> <span class="s">&quot;biz&quot;</span><span class="p">,</span> <span class="s">&quot;cat&quot;</span><span class="p">,</span> <span class="s">&quot;com&quot;</span><span class="p">,</span> <span class="s">&quot;coop&quot;</span><span class="p">,</span> \
+        <span class="s">&quot;edu&quot;</span><span class="p">,</span> <span class="s">&quot;gov&quot;</span><span class="p">,</span> <span class="s">&quot;info&quot;</span><span class="p">,</span> <span class="s">&quot;int&quot;</span><span class="p">,</span> <span class="s">&quot;jobs&quot;</span><span class="p">,</span> <span class="s">&quot;mil&quot;</span><span class="p">,</span> <span class="s">&quot;mobi&quot;</span><span class="p">,</span> <span class="s">&quot;museum&quot;</span><span class="p">,</span> \
+        <span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;net&quot;</span><span class="p">,</span> <span class="s">&quot;org&quot;</span><span class="p">,</span> <span class="s">&quot;pro&quot;</span><span class="p">,</span> <span class="s">&quot;tel&quot;</span><span class="p">,</span> <span class="s">&quot;travel&quot;</span><span class="p">,</span> <span class="s">&quot;fm&quot;</span><span class="p">,</span> <span class="s">&quot;ly&quot;</span><span class="p">,</span> <span class="s">&quot;uk&quot;</span><span class="p">,</span> \
+        <span class="s">&quot;in&quot;</span><span class="p">,</span> <span class="s">&quot;us&quot;</span><span class="p">,</span> <span class="s">&quot;il&quot;</span><span class="p">,</span> <span class="s">&quot;de&quot;</span><span class="p">,</span> <span class="s">&quot;it&quot;</span><span class="p">,</span> <span class="s">&quot;fr&quot;</span>
+        <span class="p">]</span>
+
+    <span class="c">#validate length</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">emailaddress</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="c"># TODO: SR: Why? i@u.nu is valid!</span>
+        <span class="k">return</span> <span class="bp">False</span> <span class="c"># Address too short.</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">localpart</span><span class="p">,</span> <span class="n">domainname</span> <span class="o">=</span> <span class="n">emailaddress</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">toplevel</span> <span class="o">=</span> <span class="n">domainname</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span> <span class="c"># Address does not have enough parts.</span>
+
+    <span class="c">#if not a country code and not in the domain list</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">toplevel</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">toplevel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">domains</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span> <span class="c"># Not a domain name.</span>
+
+    <span class="c">#is there a username?</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">localpart</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c">#NOTE: Why is this here? It doesn&#39;t do anything without the test below.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s">&#39;-_.%.&#39;</span><span class="p">:</span>
+        <span class="c"># Keep in mind that google allows +: my+name@gmail.com</span>
+        <span class="n">localpart</span> <span class="o">=</span> <span class="n">localpart</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s">&#39;-_.&#39;</span><span class="p">:</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c"># SR: The following test is generally incorrect, because:</span>
+    <span class="c">#   * domain can contain -, _</span>
+    <span class="c">#   * local can contain ., -, _</span>
+    <span class="c"># if localpart.isalnum() and host.isalnum():</span>
+    <span class="c">#    return True # Email address is fine.</span>
+    <span class="c"># else:</span>
+    <span class="c">#    return False # Email address has funny characters.</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="validateUSPhone"><a class="viewcode-back" href="../../modules/framework.html#framework.util.validateUSPhone">[docs]</a><span class="k">def</span> <span class="nf">validateUSPhone</span><span class="p">(</span><span class="n">phone</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates that the given string is a valid US phone number, a number</span>
+<span class="sd">    that starts with 2-9 followed by 9 digits. ie. &quot;2124800479&quot;</span>
+<span class="sd">    http://en.wikipedia.org/wiki/North_American_Numbering_Plan</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&quot;^[2-9]\d{9}$&quot;</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span> <span class="o">==</span> <span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="cleanUSPhone"><a class="viewcode-back" href="../../modules/framework.html#framework.util.cleanUSPhone">[docs]</a><span class="k">def</span> <span class="nf">cleanUSPhone</span><span class="p">(</span><span class="n">phone</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clean up US phone numbers by stripping the leading 1 and any non-numerics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">phone</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">phone</span> <span class="o">=</span> <span class="n">phone</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">phone</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;\D&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+    <span class="n">phone</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;^1&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">validateUSPhone</span><span class="p">(</span><span class="n">phone</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">phone</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="parse_tags"><a class="viewcode-back" href="../../modules/framework.html#framework.util.parse_tags">[docs]</a><span class="k">def</span> <span class="nf">parse_tags</span><span class="p">(</span><span class="n">tagstring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses out a list of tags from the given delimited tag string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#extract everything in quotes</span>
+    <span class="n">quotes</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">r&#39;&quot;.*?&quot;&#39;</span><span class="p">,</span> <span class="n">tagstring</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quotes</span><span class="p">:</span>
+        <span class="n">repaired</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="s">&#39;@@&#39;</span><span class="p">)</span> <span class="c"># protect commas</span>
+        <span class="n">repaired</span> <span class="o">=</span> <span class="n">repaired</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;$$&#39;</span><span class="p">)</span> <span class="c"># protect spaces</span>
+        <span class="n">tagstring</span> <span class="o">=</span> <span class="n">tagstring</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">repaired</span><span class="p">)</span>
+
+    <span class="n">tagstring</span> <span class="o">=</span> <span class="n">tagstring</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">,</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">tagstring</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">[:]:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">tags</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">tag</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;@@&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">tags</span><span class="p">[</span><span class="n">tags</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">tag</span><span class="p">)]</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;$$&#39;</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tags</span>
+</div>
+<div class="viewcode-block" id="list_to_str"><a class="viewcode-back" href="../../modules/framework.html#framework.util.list_to_str">[docs]</a><span class="k">def</span> <span class="nf">list_to_str</span><span class="p">(</span><span class="n">tags</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a list of tags into a delimited string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">safestr</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">tags</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="wordcount"><a class="viewcode-back" href="../../modules/framework.html#framework.util.wordcount">[docs]</a><span class="k">def</span> <span class="nf">wordcount</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Counts all of the words in a string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="filesizeformat"><a class="viewcode-back" href="../../modules/framework.html#framework.util.filesizeformat">[docs]</a><span class="k">def</span> <span class="nf">filesizeformat</span><span class="p">(</span><span class="nb">bytes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format the value like a &#39;human-readable&#39; file size (i.e. 13 KB, 4.1 MB, 102</span>
+<span class="sd">    bytes, etc).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">bytes</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">bytes</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;0 bytes&quot;</span>
+    <span class="k">if</span> <span class="nb">bytes</span> <span class="o">&lt;</span> <span class="mi">1024</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s"> byte</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s">&#39;s&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">bytes</span> <span class="o">&lt;</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%.1f</span><span class="s"> KB&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">bytes</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">bytes</span> <span class="o">&lt;</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%.1f</span><span class="s"> MB&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">bytes</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s">&quot;</span><span class="si">%.1f</span><span class="s"> GB&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">bytes</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="strip_html"><a class="viewcode-back" href="../../modules/framework.html#framework.util.strip_html">[docs]</a><span class="k">def</span> <span class="nf">strip_html</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove anything between &lt;angle brackets&gt;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;&lt;.*?&gt;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="singlespace"><a class="viewcode-back" href="../../modules/framework.html#framework.util.singlespace">[docs]</a><span class="k">def</span> <span class="nf">singlespace</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replace all groups of white space with a single space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\s+&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="remove_linebreaks"><a class="viewcode-back" href="../../modules/framework.html#framework.util.remove_linebreaks">[docs]</a><span class="k">def</span> <span class="nf">remove_linebreaks</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collapse the given string into a single line, and replace all groups</span>
+<span class="sd">    of white space with a single space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">singlespace</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="depunctuate"><a class="viewcode-back" href="../../modules/framework.html#framework.util.depunctuate">[docs]</a><span class="k">def</span> <span class="nf">depunctuate</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Strips out all of the punctuation of the given string, excluding any punctuation</span>
+<span class="sd">    included in the exclude argument list. Punctuation is replaced by a blank string</span>
+<span class="sd">    or the given replacement argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">string</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span>
+    <span class="k">if</span> <span class="n">exclude</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">regex</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replacement</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="nl2br"><a class="viewcode-back" href="../../modules/framework.html#framework.util.nl2br">[docs]</a><span class="k">def</span> <span class="nf">nl2br</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert all newlines (\n) to &lt;br /&gt; tags.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s">&#39;&lt;br /&gt;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="br2nl"><a class="viewcode-back" href="../../modules/framework.html#framework.util.br2nl">[docs]</a><span class="k">def</span> <span class="nf">br2nl</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert all &lt;br /&gt; tags to newlines (\n).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;&lt;br ?\/?&gt;&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="prefix"><a class="viewcode-back" href="../../modules/framework.html#framework.util.prefix">[docs]</a><span class="k">def</span> <span class="nf">prefix</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the prefix of the given string, split on the given delimiter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delim</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="suffix"><a class="viewcode-back" href="../../modules/framework.html#framework.util.suffix">[docs]</a><span class="k">def</span> <span class="nf">suffix</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the suffix of the given string, split on the given delimiter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delim</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="urlencode"><a class="viewcode-back" href="../../modules/framework.html#framework.util.urlencode">[docs]</a><span class="k">def</span> <span class="nf">urlencode</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quotes the path section of the URL, using urllib.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="s">&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">urllib</span>
+    <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="add_leading_slash"><a class="viewcode-back" href="../../modules/framework.html#framework.util.add_leading_slash">[docs]</a><span class="k">def</span> <span class="nf">add_leading_slash</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prefix the given string with a leading forward slash if it does not</span>
+<span class="sd">    already exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">s</span>
+    <span class="k">return</span> <span class="n">s</span>
+</div>
+<div class="viewcode-block" id="titlecase"><a class="viewcode-back" href="../../modules/framework.html#framework.util.titlecase">[docs]</a><span class="k">def</span> <span class="nf">titlecase</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a string into titlecase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;([a-z])&#39;([A-Z])&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">value</span><span class="o">.</span><span class="n">title</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="location_cap"><a class="viewcode-back" href="../../modules/framework.html#framework.util.location_cap">[docs]</a><span class="k">def</span> <span class="nf">location_cap</span><span class="p">(</span><span class="n">location</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Appropriately set the caplitalization of the the location.</span>
+<span class="sd">    ie. forT collins, co, usa becomes Fort Collins, CO, USA</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">location</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="c">#Split on comma - Fort Collins, CO, USA</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="c">#Split on spaces so we can case every word</span>
+        <span class="c">#If the word len &gt; 2 (ie, not a state prefix) and not USA</span>
+            <span class="c">#Titlecase the string</span>
+        <span class="c">#Else uppercase the string</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="s">&quot;USA&quot;</span> <span class="k">else</span> <span class="n">i</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)]</span>
+        <span class="n">tokens</span><span class="p">[</span><span class="n">tokens</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">token</span><span class="p">)]</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="pluralize"><a class="viewcode-back" href="../../modules/framework.html#framework.util.pluralize">[docs]</a><span class="k">def</span> <span class="nf">pluralize</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="s">&#39;s&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a plural suffix if the value is not 1, for &#39;1 vote&#39; vs. &#39;2 votes&#39;</span>
+<span class="sd">    By default, &#39;s&#39; is used as a suffix; if an argument is provided, that string</span>
+<span class="sd">    is used instead. If the provided argument contains a comma, the text before</span>
+<span class="sd">    the comma is used for the singular case.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span> <span class="o">+</span> <span class="n">arg</span>
+    <span class="n">bits</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    <span class="n">singular_suffix</span><span class="p">,</span> <span class="n">plural_suffix</span> <span class="o">=</span> <span class="n">bits</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">plural_suffix</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="c"># invalid string that&#39;s not a number</span>
+        <span class="k">pass</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span> <span class="c"># value isn&#39;t a string or a number; maybe it&#39;s a list?</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">plural_suffix</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span> <span class="c"># len() of unsized object</span>
+            <span class="k">pass</span>
+    <span class="k">return</span> <span class="n">singular_suffix</span>
+</div>
+<div class="viewcode-block" id="slugify"><a class="viewcode-back" href="../../modules/framework.html#framework.util.slugify">[docs]</a><span class="k">def</span> <span class="nf">slugify</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts to lowercase, removes non-alpha chars and converts spaces to hyphens.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;[^\w\s-]&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;[-\s]+&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="short_decimal"><a class="viewcode-back" href="../../modules/framework.html#framework.util.short_decimal">[docs]</a><span class="k">def</span> <span class="nf">short_decimal</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Floors the float value to two decimal places.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="mf">100.0</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>
+    <span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="zeropad"><a class="viewcode-back" href="../../modules/framework.html#framework.util.zeropad">[docs]</a><span class="k">def</span> <span class="nf">zeropad</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Zero pad the given single digit number.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;0&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="random_string"><a class="viewcode-back" href="../../modules/framework.html#framework.util.random_string">[docs]</a><span class="k">def</span> <span class="nf">random_string</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a random string, including upper and lower case characters and digits,</span>
+<span class="sd">    of the specified length.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">random</span>
+    <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="s">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;</span><span class="p">,</span> <span class="n">length</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="obfuscate"><a class="viewcode-back" href="../../modules/framework.html#framework.util.obfuscate">[docs]</a><span class="k">def</span> <span class="nf">obfuscate</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">12</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Appends alpha characters to the given integer id until it is the specified</span>
+<span class="sd">    character length (defaults to 12), then base 64 encodes the string and returns it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz&quot;</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span> <span class="o">%</span> <span class="mi">52</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="nb">id</span><span class="p">))])</span>
+    <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="nb">id</span> <span class="o">+</span> <span class="n">padding</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="deobfuscate"><a class="viewcode-back" href="../../modules/framework.html#framework.util.deobfuscate">[docs]</a><span class="k">def</span> <span class="nf">deobfuscate</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base 64 decodes the given string and returns the leading digits of the decoded string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Deobfuscate failed!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="n">numbers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="format_time"><a class="viewcode-back" href="../../modules/framework.html#framework.util.format_time">[docs]</a><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the given seconds into a human readable string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">//</span> <span class="mi">60</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">-</span> <span class="p">(</span><span class="n">minutes</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">minutes</span> <span class="o">//</span> <span class="mi">60</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="n">minutes</span> <span class="o">-</span> <span class="p">(</span><span class="n">hours</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">days</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">//</span> <span class="mi">24</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">-</span> <span class="p">(</span><span class="n">days</span> <span class="o">*</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">days</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">:&quot;</span> <span class="o">%</span> <span class="n">days</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hours</span> <span class="ow">or</span> <span class="n">days</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">:&quot;</span> <span class="o">%</span> <span class="n">zeropad</span><span class="p">(</span><span class="n">hours</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="ow">or</span> <span class="n">hours</span> <span class="ow">or</span> <span class="n">days</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">:&quot;</span> <span class="o">%</span> <span class="n">zeropad</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">seconds</span> <span class="ow">or</span> <span class="n">minutes</span> <span class="ow">or</span> <span class="n">hours</span> <span class="ow">or</span> <span class="n">days</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">zeropad</span><span class="p">(</span><span class="n">seconds</span><span class="p">))</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">time</span>
+</div>
+<div class="viewcode-block" id="good_decimal"><a class="viewcode-back" href="../../modules/framework.html#framework.util.good_decimal">[docs]</a><span class="k">def</span> <span class="nf">good_decimal</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rounds a number to the nearest two decimal places.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">))</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s">&#39;.01&#39;</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="normalize"><a class="viewcode-back" href="../../modules/framework.html#framework.util.normalize">[docs]</a><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize the given num argument for the given max and min.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="confirm_pid"><a class="viewcode-back" href="../../modules/framework.html#framework.util.confirm_pid">[docs]</a><span class="k">def</span> <span class="nf">confirm_pid</span><span class="p">(</span><span class="n">run_folder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TBD</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">signal</span><span class="o">,</span> <span class="nn">__main__</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">__main__</span><span class="o">.</span><span class="n">__file__</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Attempting to launch daemon </span><span class="si">%s</span><span class="s">...&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">())</span>
+    <span class="n">pidfile</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s%s</span><span class="s">.pid&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">run_folder</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pidfile</span><span class="p">):</span>
+        <span class="n">old_pid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pidfile</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;--&gt; pidfile already exists for </span><span class="si">%s</span><span class="s">, attempting to kill process...&quot;</span> <span class="o">%</span> <span class="n">old_pid</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">old_pid</span><span class="p">),</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGKILL</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;--&gt; no process with pid </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">old_pid</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="nb">exit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; killed process </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">old_pid</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">pidfile</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;--&gt; could not remove pidfile, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">pidfile</span><span class="p">)</span>
+            <span class="nb">exit</span><span class="p">()</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">pidfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; launched with pid </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">pid</span><span class="p">)</span>
+</div>
+<span class="sd">&quot;&quot;&quot; web.py specific &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="get_flash_upload"><a class="viewcode-back" href="../../modules/framework.html#framework.util.get_flash_upload">[docs]</a><span class="k">def</span> <span class="nf">get_flash_upload</span><span class="p">(</span><span class="n">web</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reformat data coming in from Flash FileReference</span>
+<span class="sd">    FileReference has silly boundary problems that create bad timeout errors</span>
+<span class="sd">    As standard multipart form data is present, this also works fine with standard HTML forms</span>
+<span class="sd">    http://www.mail-archive.com/webpy@googlegroups.com/msg04505.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="n">tmpfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">tmpfile</span><span class="p">()</span>
+    <span class="n">contentLength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CONTENT_LENGTH&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">contentLength</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&quot;Invalid content length&quot;</span><span class="p">)</span>
+    <span class="n">wsgiInput</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;wsgi.input&#39;</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">contentLength</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="mi">1024</span>
+        <span class="k">if</span> <span class="n">contentLength</span> <span class="o">&lt;</span> <span class="n">chunk</span><span class="p">:</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">contentLength</span>
+        <span class="n">contentLength</span> <span class="o">-=</span> <span class="n">chunk</span>
+        <span class="n">tmpfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">wsgiInput</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>
+    <span class="n">tmpfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;wsgi.input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmpfile</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+    <span class="n">tmpfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">input</span>
+</div>
+<div class="viewcode-block" id="get_post_data"><a class="viewcode-back" href="../../modules/framework.html#framework.util.get_post_data">[docs]</a><span class="k">def</span> <span class="nf">get_post_data</span><span class="p">(</span><span class="n">web</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get either web.input[&#39;file&#39;] (HTML multipart form) or web.data() (octet upload)</span>
+<span class="sd">    This is useful when a controller needs to accept data from both an HTML and a Flash post (URLLoader, not FileReference)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">input</span><span class="p">()[</span><span class="s">&#39;file&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="n">e1</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">Error</span><span class="p">,</span> <span class="n">e2</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;--&gt; bad post data web.input[</span><span class="si">%s</span><span class="s">] web.data[</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span><span class="n">s</span> <span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="get_fake_session"><a class="viewcode-back" href="../../modules/framework.html#framework.util.get_fake_session">[docs]</a><span class="k">def</span> <span class="nf">get_fake_session</span><span class="p">(</span><span class="n">controller</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the session manually (like from a request variable) instead of a cookie.</span>
+<span class="sd">    Flash cant consistently get cookie data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">pickle</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">controller</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;session_id&#39;</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s">&quot;sessions/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">session_id</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;--&gt; get_fake_session: key path (</span><span class="si">%s</span><span class="s">) doesnt exist&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>	
+        <span class="n">pickled</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">decodestring</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="n">fake_session</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickled</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;--&gt; get_fake_session error: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;FAKE SESSION: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">fake_session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fake_session</span>
+</div>
+<div class="viewcode-block" id="save_fake_session"><a class="viewcode-back" href="../../modules/framework.html#framework.util.save_fake_session">[docs]</a><span class="k">def</span> <span class="nf">save_fake_session</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the session manually from a dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">pickle</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="s">&quot;sessions/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;session_id&#39;</span><span class="p">]</span>
+        <span class="n">pickled</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodestring</span><span class="p">(</span><span class="n">pickled</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;--&gt; save_fake_session formatting error: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; saving fake session&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="check_bad_words"><a class="viewcode-back" href="../../modules/framework.html#framework.util.check_bad_words">[docs]</a><span class="k">def</span> <span class="nf">check_bad_words</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check input against a bad words list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">badwords</span> <span class="o">=</span> <span class="s">&quot;anal anus arse ballsack balls bitch blowjob boner boob bugger butt buttplug clit clitoris cock coon cunt dick dildo dyke fag fellate fellatio felch felching fuck fucker fucken fucking fudgepacker homo jizz knobend labia muff nigger penis piss poop prick pube pussy scrotum slut smegma spunk tit turd twat vagina wank whore kike shit nigga sex ass&quot;</span>
+    <span class="n">bw</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">badwords</span><span class="p">,</span> <span class="s">&quot; &quot;</span><span class="p">)</span>
+    <span class="n">mods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">,</span> <span class="s">&#39;es&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">bw</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">mods</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">+</span> <span class="n">mod</span>
+            <span class="k">if</span> <span class="n">data</span> <span class="o">==</span> <span class="n">w</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">w</span><span class="o">+</span><span class="s">&quot; &quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="o">+</span><span class="n">w</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="s">&quot; &quot;</span><span class="o">+</span><span class="n">w</span><span class="o">+</span><span class="s">&quot; &quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="strNullOrEmpty"><a class="viewcode-back" href="../../modules/framework.html#framework.util.strNullOrEmpty">[docs]</a><span class="k">def</span> <span class="nf">strNullOrEmpty</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Is the None, empty, or only stripable white space?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">s</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="makeUrlAbsolute"><a class="viewcode-back" href="../../modules/framework.html#framework.util.makeUrlAbsolute">[docs]</a><span class="k">def</span> <span class="nf">makeUrlAbsolute</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    NOTE: The use case is unclear to me.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">fragment</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">netloc</span><span class="p">:</span>
+            <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlunparse</span><span class="p">((</span><span class="s">&#39;http&#39;</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">fragment</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">fixed</span>
+    <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&#39;http&#39;</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="s">&quot;http://&quot;</span> <span class="o">+</span> <span class="n">url</span>
+        <span class="k">return</span> <span class="n">fixed</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">url</span>
+</div>
+<div class="viewcode-block" id="uniqify"><a class="viewcode-back" href="../../modules/framework.html#framework.util.uniqify">[docs]</a><span class="k">def</span> <span class="nf">uniqify</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a list unique.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+        <span class="n">keys</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">keys</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../../modules/framework.html#framework.util.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">ltypes</span><span class="o">=</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Flatten a list of lists into a single list. Not as cool as ruby&#39;s flatten, but it works</span>
+<span class="sd">    Thanks to: http://rightfootin.blogspot.com/2006/09/more-on-python-flatten.html</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">ltype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+        <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ltypes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">ltype</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="getBit"><a class="viewcode-back" href="../../modules/framework.html#framework.util.getBit">[docs]</a><span class="k">def</span> <span class="nf">getBit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">i</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">index</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="setBit"><a class="viewcode-back" href="../../modules/framework.html#framework.util.setBit">[docs]</a><span class="k">def</span> <span class="nf">setBit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">index</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">i</span> <span class="o">|</span> <span class="n">mask</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

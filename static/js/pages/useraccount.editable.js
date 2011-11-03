@@ -1,8 +1,8 @@
 
 	app_page.features.push(function(app){
 		tc.util.log('Give A Minute: User Account Editable');
-		
-		
+
+
 		app.components.account_merlin = new tc.merlin(app,{
 			name: "account-info",
 			dom: tc.jQ(".account-view.merlin"),
@@ -52,7 +52,7 @@
 							merlin.show_step('submit-account-details');
 							//window.location.hash = 'account-info,submit-account-details';
 						});
-						
+
 						tc.jQ(document).unbind('create-image-uploaded').bind('create-image-uploaded',{merlin:merlin}, function(e, d){
 							e.data.merlin.app.components.modal.hide();
 							if(d.responseJSON.thumbnail_id){
@@ -61,7 +61,7 @@
 								merlin.options.data.image_id = d.responseJSON.thumbnail_id;
 							}
 						});
-						
+
 						if (!merlin.current_step.locationDropdown) {
 							merlin.current_step.locationDropdown = new tc.locationDropdown({
 								input: dom.find('input.location-hood-enter'),
@@ -69,7 +69,7 @@
 								locations: merlin.app.app_page.data.locations
 							});
 						}
-						
+
 					},
 					finish: function(merlin, dom) {
 						var location_id;
@@ -100,7 +100,7 @@
 									//window.location.hash = "account-info,account-details-error";
 									return false;
 								}
-								
+
 								tc.timer(2000, function() {
 									//window.location.assign("/useraccount#account-info,edit-account-details");
 									window.location.reload(true);
@@ -120,14 +120,14 @@
 				"account-details-error":{
 					selector:".step.account-details-error",
 					init: function(merlin, dom) {
-						
+
 					}
 				}
 			}
 		});
-		
-		
-			
+
+
+
 		app.components.change_pass_merlin = new tc.merlin(app,{
 			name: "change-password",
 			dom: tc.jQ(".password-info.merlin"),
@@ -202,14 +202,14 @@
 				"password-details-error":{
 					selector:".step.password-details-error",
 					init: function(merlin, dom) {
-						
+
 					}
 				}
 			}
 		});
-			
-			
-		
+
+
+
 		tc.jQ('a.change-profile-image').bind('click',{
 			app:app,
 			source_element:tc.jQ('.modal-content.upload-image'),
@@ -220,6 +220,12 @@
 					onComplete: function(id, fileName, responseJSON){
 						modal.hide();
 						if (responseJSON.thumbnail_id) {
+
+						  // Update the stored user image_id so that it is not overwritten
+						  // when the user inevitably clicks the Save button.
+						  app.app_page.user.image_id = responseJSON.thumbnail_id;
+						  app.components.account_merlin.options.data.image_id = responseJSON.thumbnail_id;
+
 							tc.jQ.ajax({
 								type:"POST",
 								url:"/useraccount/edit",
@@ -227,7 +233,7 @@
 									f_name: app.app_page.user.f_name,
 									l_name: app.app_page.user.l_name,
 									email: app.app_page.user.email,
-									image_id: responseJSON.thumbnail_id,
+									image_id: app.app_page.user.image_id,
 									location_id: app.app_page.user.location_id || null
 								},
 								dataType:"text",
@@ -235,13 +241,12 @@
 									if (data == "False") {
 										return false;
 									}
-									
-									tc.jQ(".user-account-nav img.avatar").attr('src',app.app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');	
-									//window.location.reload(true);
+
+									tc.jQ(".user-account-nav img.avatar").attr('src',app.app_page.media_root + 'images/'+(responseJSON.thumbnail_id % 10)+'/'+responseJSON.thumbnail_id+'.png');
 								}
 							});
 						}
-						
+
 						return true;
 					}
 				});
@@ -253,9 +258,9 @@
 			e.preventDefault();
 			e.data.app.components.modal.show(e.data);
 		});
-		
-		
-		
+
+
+
 		// user description
 		new tc.inlineEditor({
 			dom: tc.jQ(".user-info .description"),
@@ -269,11 +274,11 @@
 
 
 		function editableResource($r) {
-			
-			var post_data = { 
+
+			var post_data = {
 				resource_id: $r.attr("id")
 			};
-			
+
 			// photo
 			$r.find("a.change-image").bind("click", {
 				app: app,
@@ -284,7 +289,7 @@
 						action: "/create/photo",
 						onComplete: function(id, fileName, responseJSON){
 							modal.hide();
-							
+
 							if (responseJSON.thumbnail_id) {
 								tc.jQ.ajax({
 									type: "POST",
@@ -303,7 +308,7 @@
 									}
 								});
 							}
-							
+
 							return true;
 						}
 					});
@@ -315,7 +320,7 @@
 				e.preventDefault();
 				e.data.app.components.modal.show(e.data);
 			});
-			
+
 			//location
 			new tc.inlineLocationEditor({
 				dom: $r.find(".box.res-location"),
@@ -326,7 +331,7 @@
 					post_data: post_data
 				}
 			});
-			
+
 			// mission
 			new tc.inlineEditor({
 				dom: $r.find(".box.res-description"),
@@ -337,7 +342,7 @@
 				},
 				charlimit: 400
 			});
-			
+
 			//url
 			new tc.inlineEditor({
 				dom: $r.find(".box.res-url"),
@@ -348,7 +353,7 @@
 				},
 				validators: ["url"]
 			});
-			
+
 			//email
 			new tc.inlineEditor({
 				dom: $r.find(".box.res-email"),
@@ -359,7 +364,7 @@
 				},
 				validators: ["email"]
 			});
-			
+
 			//physical address
 			new tc.inlineEditor({
 				dom: $r.find(".box.res-addr"),
@@ -369,7 +374,7 @@
 					post_data: post_data
 				}
 			});
-			
+
 			//keywords
 			new tc.inlineEditor({
 				dom: $r.find(".box.res-keywords"),
@@ -379,13 +384,12 @@
 					post_data: post_data
 				}
 			});
-			
+
 		}
-		
+
 		tc.jQ(".resources-view ul.my-res > li").each(function() {
 			editableResource( tc.jQ(this) );
 		});
-		
-		
+
+
 	});
-	

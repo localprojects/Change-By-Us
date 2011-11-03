@@ -1,0 +1,187 @@
+--------------------------------------------------------------------------
+DEVELOPMENT RECOMMENDATIONS (not required, but helps)
+--------------------------------------------------------------------------
+Set up virtualenv and virtualenvwrapper so that python libs are easy to version,
+and so you don't have conflicts between different python projects:
+    http://www.doughellmann.com/projects/virtualenvwrapper/
+
+This allows you to do stuff like:
+    workon cbu
+which will switch to the cbu virtual environment.
+
+--------------------------------------------------------------------------
+DEPLOYMENT PROCESS
+--------------------------------------------------------------------------
+The system-setup and code deployment process uses Fabric, a python-based
+deployment tool.
+
+The minimum requirement for the Python scripts is 
+    * Python 2.6.x
+    * pip-2.6, installed with: easy_install pip
+
+Scripts have their own pre-requisites which are installed using a pip 
+requirements file (included in the tools_server/ folder):
+    pip install -r requirements.txt
+
+Fabric uses a script and different configuration files. The default script
+filename is fabfile.py, and configuration files are called "rcfile". To
+facilitate this naming convention, all configuration files are rcfile.ENV,
+where ENV is the environment to which to deploy. Eg. rcfile.demo would be
+the configuration set for the 'demo' environment.
+
+The fabric script is located in the root of the project as of this writing.
+However, this location may change in future, since deployment scripts really
+should be versioned separately from the code project.
+
+Configuration files are NEVER versioned with the project since they contain
+sensitive information. Configuration files (rcfiles) are versioned in a private
+repository. Please consult with a sysadmin for the location of this repo.
+
+SETTING UP FOR DEPLOYMENT:
+The deployment host is assumed to have the following:
+    * SSH key (or pem file) to connect to the target environment under the
+      appropriate user contexts. These files are usually in:
+        ~/.ssh/ChangeByUs/*.pem or ~/.ssh/ChangeByUs/id_rsa
+      The "key_filename" option in the RCFile defines the file to use, and can
+      be changed based on the user environment.
+      However, it is recommended that all deployment administrators use a
+      standardized structure for storage of these files so as to limit
+      confusion or inconsistency.
+    * A source tree in a standardized location. The git source tree is expected
+      to be at ~/Projects/LP/<project-name>:
+        ~/Projects/LP/lp-changebyus
+      This path is defined by the "local_path" option in the RCFile.
+      
+      [TODO: this really should not be required since the deployer should
+      have a way of pulling the code to a working location and creating the
+      final configurations from it. However this functionality is not yet
+      implemented.]
+    * The necessary RCfiles in a separate location. Eg.:
+      ~/Projects/LP/configs/lp-changebyus/rcfile.*
+
+To change the paths, do the following:
+    * Ensure that the local_path option in the rcfile is correct
+    * Clone the project into the appropriate folder
+
+Once the system is set up, the deployment steps are:
+  fab -f /path/to/fabfile.py \
+      --config=/path/to/rcfile.XX ENV \
+      <list of tasks>
+      
+where:
+  /path/to/ : the path to the fabfile.py or rcfile.env. NOTE that fabric
+              does NOT handle ~ (user-path) correctly, so always specify
+              full path. Relative paths from current location work fine
+  rcfile.XX : The rcfile to use. Ensure that you provide the /path/to/
+              correctly. If you receive an error such as:
+                  "AttributeError: local_path"
+              this is indication that your rcfile was not read correctly.
+              Check your paths!
+  ENV       : The environment that the configuration is specific to. This
+              is actually a task which processes all the system and
+              required variables, and is usually one of live, prod, demo, dev.
+
+Deployment TASKS (Overview):
+--------------------------------------------------------------------------
+The tasks for deployment are generally found at the top of the fabfile.py file,
+in the CookBook section. To get detailed information about the function of each
+available task, run:
+  fab --list
+
+Some of the more common sets of tasks are below.
+* Setting up an initial system with all pre-requisites.
+  NOTE: This task should NOT be necessary on an already functional host
+    fab --config=/path/to/rcfile.demo demo \
+        setup_system
+
+* Setup servers (either web or application)
+      fab --config=rcfile.dev dev setup_application
+
+* Standard deployment of branch defined in rcfile, with webserver restart:
+    fab --config=/path/to/rcfile.demo demo \
+        bundle_code deploy_webapp_and_configs 
+
+* Only deploy configuration updates, but not new code
+    fab --config=/path/to/rcfile.demo demo \
+        deploy_configurations
+
+* Deploy the latest code, change the 'current' symlink, but don't restart
+  webserver. This is useful if you want to just put code up, but don't want
+  the webserver to know about it yet.
+    fab --config=/path/to/rcfile.demo demo \
+        bundle_code deploy_app_and_configs
+
+    You can then run the
+    fab --config=/path/to/rcfile.demo demo \
+        restart_webserver
+    task to ... um ... restart the webserver.
+
+* Deploy the latest code, but don't symlink, and don't do anything else:
+    fab --config=/path/to/rcfile.demo demo \
+        bundle_code upload_and_explode_code_bundle
+
+* Rollback the deploment (NOT YET TESTED):
+    fab --config=/path/to/rcfile.demo demo \
+        rollback
+          
+    This will:
+        mv current next
+        mv previous current
+
+MISSING FUNCTIONALITY
+--------------------------------------------------------------------------
+The fabfile.py does not yet support the following features:
+    * Automatically installing updated requirements.txt. This is WIP
+    * Running database migrations. This must be done manually
+
+The fabric script DOES perform CSS and JS minification just prior to 
+deployment via the minifier.py script (after first doing a submodule update)
+
+
+QUICK START STEPS:
+--------------------------------------------------------------------------
+The credentials.tgz is a tarball provided by Local Projects. The archive contains
+configuration files (rcfiles) and private keys all in GPG encrypted format. The recipients
+are currently gdamiani@911memorial.org and sundar@localprojects.net.
+Other recipients must request access from one of these contacts.
+
+    # Install Python packages:
+    pip install fabric
+    
+    # Create the project structure
+    mkdir -p ~/Projects
+    cd ~/Projects
+
+    # Set up the credentials stuff, once you receive a credentials package from LP
+    mkdir -p ~/Projects/configs
+    mv /path/to/credentials.tgz.gpg ~/Projects/configs/
+    cd ~/Projects/configs
+    gpg -d credentials.tgz.gpg > credentials.tgz && tar -xzf credentials.tgz
+    
+    # Get the code and deploy to central servers
+    # Note that the --config option to fabric MUST be a full path, and not 
+    # relative paths
+    git clone git@git.assembla.com:lp-changebyus.git
+    
+    # Start a deployment to the central servers
+    cd lp-changebyus
+    fab -f script/fabfile.py --config=$HOME/Projects/configs/credentials/rcfile.cfa prod \
+        bundle_code deploy_webapp_and_configs 
+
+--------------------------------------------------------------------------
+MISCELLANEOUS TROUBLESHOOTING AND SYSTEM SETUP
+--------------------------------------------------------------------------
+
+UTF-8 ENCODING AND PYTHON
+-----------------------------
+When running the python scripts you may get:
+    Got incorrect data and error: 'ascii' codec can't encode character u'\xe9' 
+    in position 483: ordinal not in range(128)
+or something similar. The reason is that Python uses ASCII encoding by default. 
+It's worthwhile to change python's default encoding to utf-8 to avoid this issue.
+The way to do this is:
+    if [ ! -e /usr/lib/python2.6/site-packages/sitecustomize.py ];then
+        touch /usr/lib/python2.6/site-packages/sitecustomize.py
+        echo -n "import sys\nsys.setdefaultencoding('utf-8')" >> /usr/lib/python2.6/site-packages/sitecustomize.py
+    fi
+

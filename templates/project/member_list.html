@@ -1,0 +1,134 @@
+<div class="project-section member-list members">
+<div class="box">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Members <span class="counter members-counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
+            </span>
+        </h2>
+        <div class="actions">
+            <a class="back fancy-caps" href="#project-home">
+                <span>Back <span>to</span> Project Home</span>
+            </a>
+        </div>
+    </div>
+    <div class="bd">
+        <div class="west">
+            {% with active="members" %}
+            {% include "project/members_nav.html" %}
+            {% endwith %}
+        </div>
+        <div class="east">
+            <div>
+
+            {% if d.template_data.project.data.info.members['items']|length > 0 %}
+
+                <!-- Begin Members.Stack -->
+                {#
+                 # Grab the project admins here so that we don't have to rerun
+                 # the query for each member
+                 #}
+                {% with project_admins=d.template_data.project.admins %}
+                {% with members_per_page=3 %}
+                {% with members=d.template_data.project.members %}
+                {% with num_members=members|length %}
+
+                <div id="members-stack-carousel" class="carousel">
+
+                <!-- carousel controls -->
+				<div class="pagination-controls members clearfix">
+					<span class="control">
+						<a class="prev members-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+						<span class="carousel-page-info">
+							<span class='current_page_number'>
+							    1 -
+							    {% if members_per_page <= num_members %}
+							        {{ members_per_page }}
+							     {% else %}
+							        {{ num_members }}
+							     {% endif %}</span> of
+							<span class='n_pages'>{{ num_members }}</span>
+						</span>
+						<a class="next members-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+					</span>
+				</div>
+
+                <div class="scrollable">
+                    <ul id="members-stack-list" class="items">
+
+                    {% for member in d.template_data.project.members %}
+                    {% if loop.index % members_per_page == 1 %}
+                    <li>
+                    <ul class="members-stack" id="members-stack-{{ loop.index0 // members_per_page }}">
+                    {% endif %}
+
+                        <li id='member-{{ member.id }}'>
+                            <div class="thumb">
+                                {% if member.image_id %}
+                                    <img width='40' src='{{d.template_data.media_root}}images/{{ member.image_id % 10 }}/{{ member.image_id }}.png' alt="{{ member.display_name }}"/>
+                                {% else %}
+                                    <img width='40' src="/static/images/thumb_genAvatar.jpg" alt="{{ member.display_name }}" class="avatar"/>
+                                {% endif %}
+                            </div>
+                            <div class="main">
+                                <a class="name" href="/useraccount/{{ member.id }}">{{ member.display_name }}</a>
+                                <div class="serif location">{{ member.location.name }}</div>
+                            </div>
+                            {% if d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+                            {% if member not in project_admins %} {# Don't go removing the project admin from here #}
+                                <a class="close" href="#removeMember,{{member.id}}"><span>Close</span></a>
+                            {% endif %}
+                            {% endif %}
+                        </li>
+
+                    {% if loop.last or loop.index % members_per_page == 0 %}
+                    </ul>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    </ul>
+                </div>
+                </div> <!-- #members-stack-carousel -->
+
+                {% endwith %}
+                {% endwith %}
+                {% endwith %} {# members_per_page #}
+                {% endwith %} {# project_admins #}
+                <!-- End Members.Stack -->
+            {% else %}
+
+                {% if d.template_data.project_user.data.is_member or d.template_data.project_user.data.is_project_admin or d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+                    <!-- Begin Members.Empty -->
+                    <div class="empty-state-box">
+                        <!--<a class="close" href="#"><span>Close</span></a>-->
+                        <p>Invite people to join! Project members will appear here.</p>
+                        <a href="#show,link_add" class="rounded-button small">Add Link</a>
+                    </div>
+                    <!-- End Members.Empty -->
+                {% endif %}
+
+            {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end Members -->
+
+<div class="template-content modal-content confirm-delete remove-member">
+    <div class="step">
+        <h2><strong>Delete</strong> this Project Member?</h2>
+        <div>
+            <p>You are about delete <span class="person-name serif">this member</span> from the project permanently! <br/>Are you sure?</p>
+        </div>
+        <div class="actions">
+            <a class="submit rounded-button" href="#">Yes, Delete <span class="person-name">Member</span></a>
+            <a class="cancel" href="#">No, keep them.</a>
+        </div>
+    </div>
+    <a class='close' href="#"><span>close</span></a>
+</div>
+</div>
+
+<script type='text/javascript' src="/static/js/pages/project.members.js"></script>

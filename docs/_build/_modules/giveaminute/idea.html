@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.idea &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.idea</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">helpers.censor</span> <span class="kn">as</span> <span class="nn">censor</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="Idea"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.Idea">[docs]</a><span class="k">class</span> <span class="nc">Idea</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">ideaId</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">populateIdeaData</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locationId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">location_id</span>
+        
+<div class="viewcode-block" id="Idea.populateIdeaData"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.Idea.populateIdeaData">[docs]</a>    <span class="k">def</span> <span class="nf">populateIdeaData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, i.email as idea_email, i.phone, i.num_flags,</span>
+<span class="s">                        u.first_name, u.last_name, u.email as user_email,</span>
+<span class="s">                        coalesce(u.email, i.email) as email</span>
+<span class="s">                from idea  i               </span>
+<span class="s">                left join user u on u.user_id = i.user_id</span>
+<span class="s">                                where idea_id = $id&quot;&quot;&quot;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">}))</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get idea into&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>        
+        
+</div></div>
+<div class="viewcode-block" id="createIdea"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.createIdea">[docs]</a><span class="k">def</span> <span class="nf">createIdea</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">locationId</span><span class="p">,</span> <span class="n">submissionType</span><span class="p">,</span> <span class="n">userId</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">phone</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># censor behavior</span>
+        <span class="n">numFlags</span> <span class="o">=</span> <span class="n">censor</span><span class="o">.</span><span class="n">badwords</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+        <span class="n">isActive</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">numFlags</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span>
+        
+        <span class="n">ideaId</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;idea&#39;</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="p">,</span>
+                                    <span class="n">location_id</span> <span class="o">=</span> <span class="n">locationId</span><span class="p">,</span>
+                                    <span class="n">submission_type</span> <span class="o">=</span> <span class="n">submissionType</span><span class="p">,</span>
+                                    <span class="n">user_id</span> <span class="o">=</span> <span class="n">userId</span><span class="p">,</span>
+                                    <span class="n">email</span> <span class="o">=</span> <span class="n">email</span><span class="p">,</span>
+                                    <span class="n">phone</span> <span class="o">=</span> <span class="n">phone</span><span class="p">,</span>
+                                    <span class="n">is_active</span> <span class="o">=</span> <span class="n">isActive</span><span class="p">,</span>
+                                    <span class="n">num_flags</span> <span class="o">=</span> <span class="n">numFlags</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem creating idea&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        <span class="k">return</span> <span class="bp">None</span>
+        
+    <span class="k">return</span> <span class="n">ideaId</span>
+
+</div>
+<div class="viewcode-block" id="deleteIdea"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.deleteIdea">[docs]</a><span class="k">def</span> <span class="nf">deleteIdea</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;delete from idea where idea.idea_id = $id&quot;&quot;&quot;</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">ideaId</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span><span class="p">;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem deleting id with id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">ideaId</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="attachIdeasByEmail"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.attachIdeasByEmail">[docs]</a><span class="k">def</span> <span class="nf">attachIdeasByEmail</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">update idea i, user u </span>
+<span class="s">set i.user_id = u.user_id</span>
+<span class="s">where i.email = u.email </span>
+<span class="s">    and u.email = $email</span>
+<span class="s">    and u.is_active = 1</span>
+<span class="s">&quot;&quot;&quot;</span> 
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;email&#39;</span><span class="p">:</span><span class="n">email</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span><span class="p">;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating ideas by email&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="attachIdeasByPhone"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.attachIdeasByPhone">[docs]</a><span class="k">def</span> <span class="nf">attachIdeasByPhone</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">update idea i, user u </span>
+<span class="s">set i.user_id = u.user_id</span>
+<span class="s">where (i.phone is not null and i.phone &lt;&gt; &#39;&#39; and i.phone = u.phone) </span>
+<span class="s">    and u.phone = $phone</span>
+<span class="s">    and u.is_active = 1</span>
+<span class="s">&quot;&quot;&quot;</span> 
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;phone&#39;</span><span class="p">:</span><span class="n">phone</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span><span class="p">;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem updating ideas by phone&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="findIdeasByPhone"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.findIdeasByPhone">[docs]</a><span class="k">def</span> <span class="nf">findIdeasByPhone</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">phone</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select idea_id from idea where phone = $phone&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;phone&#39;</span><span class="p">:</span><span class="n">phone</span><span class="p">}))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem getting ideas by phone&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="searchIdeasCount"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.searchIdeasCount">[docs]</a><span class="k">def</span> <span class="nf">searchIdeasCount</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">locationId</span><span class="p">,</span> <span class="n">excludeProjectId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([(</span><span class="n">item</span> <span class="o">+</span> <span class="s">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">])</span>
+            
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select count(*) as count</span>
+<span class="s">                from idea i</span>
+<span class="s">                where</span>
+<span class="s">                i.is_active = 1 </span>
+<span class="s">                and ($locationId is null or i.location_id = $locationId)</span>
+<span class="s">                and ($match = &#39;&#39; or match(i.description) against ($match in boolean mode))</span>
+<span class="s">                and ($projectId is null or i.idea_id not in (select pi.idea_id from project__idea pi where pi.project_id = $projectId))&quot;&quot;&quot;</span>  
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;match&#39;</span><span class="p">:</span><span class="n">match</span><span class="p">,</span> <span class="s">&#39;locationId&#39;</span><span class="p">:</span><span class="n">locationId</span><span class="p">,</span> <span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">excludeProjectId</span><span class="p">}))</span>
+        
+        <span class="n">count</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">count</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get idea search count&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">count</span>
+</div>
+<div class="viewcode-block" id="searchIdeas"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.searchIdeas">[docs]</a><span class="k">def</span> <span class="nf">searchIdeas</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">locationId</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">excludeProjectId</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="n">betterData</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([(</span><span class="n">item</span> <span class="o">+</span> <span class="s">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">])</span>
+            
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select i.idea_id</span>
+<span class="s">                       ,i.description</span>
+<span class="s">                      ,i.submission_type</span>
+<span class="s">                      ,i.created_datetime</span>
+<span class="s">                      ,u.user_id</span>
+<span class="s">                      ,u.first_name</span>
+<span class="s">                      ,u.last_name</span>
+<span class="s">                      ,u.affiliation</span>
+<span class="s">                      ,u.image_id</span>
+<span class="s">                from idea i</span>
+<span class="s">                left join user u on u.user_id = i.user_id</span>
+<span class="s">                where</span>
+<span class="s">                i.is_active = 1 </span>
+<span class="s">                and ($locationId is null or i.location_id = $locationId)</span>
+<span class="s">                and ($match = &#39;&#39; or match(i.description) against ($match in boolean mode))</span>
+<span class="s">                and ($projectId is null or i.user_id not in (select pu.user_id from project__user pu where pu.project_id = $projectId))</span>
+<span class="s">                order by i.created_datetime desc</span>
+<span class="s">                limit $limit offset $offset&quot;&quot;&quot;</span>  
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;match&#39;</span><span class="p">:</span><span class="n">match</span><span class="p">,</span> <span class="s">&#39;locationId&#39;</span><span class="p">:</span><span class="n">locationId</span><span class="p">,</span> <span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">,</span> <span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">excludeProjectId</span><span class="p">}))</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">owner</span> <span class="o">=</span> <span class="bp">None</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">user_id</span><span class="p">):</span>
+                <span class="c"># repeating smallUser method from giveaminute.project to avoid circular reference</span>
+                <span class="n">owner</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">u_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                            <span class="n">image_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                            <span class="n">name</span> <span class="o">=</span> <span class="n">ideaName</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">affiliation</span><span class="p">))</span>
+
+            <span class="n">betterData</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">idea_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">idea_id</span><span class="p">,</span>
+                            <span class="n">message</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                            <span class="n">created</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">),</span>
+                            <span class="n">submission_type</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">submission_type</span><span class="p">,</span>
+                            <span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get idea search data&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">betterData</span>
+</div>
+<div class="viewcode-block" id="findIdeasByUser"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.findIdeasByUser">[docs]</a><span class="k">def</span> <span class="nf">findIdeasByUser</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">ideas</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select i.idea_id, i.description, i.location_id, i.submission_type, i.user_id, u.first_name, u.last_name, i.created_datetime</span>
+<span class="s">                    from idea i </span>
+<span class="s">                    inner join user u on u.user_id = i.user_id</span>
+<span class="s">                    where i.is_active = 1 and u.is_active = 1 and u.user_id = $userId</span>
+<span class="s">                order by i.created_datetime desc</span>
+<span class="s">                limit $limit&quot;&quot;&quot;</span>
+        
+        <span class="n">ideas</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span> <span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="n">userId</span><span class="p">,</span> <span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">}))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem getting ideas for user </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">userId</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+    
+    <span class="k">return</span> <span class="n">ideas</span> 
+        </div>
+<div class="viewcode-block" id="flagIdea"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.flagIdea">[docs]</a><span class="k">def</span> <span class="nf">flagIdea</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update idea set num_flags = num_flags + 1 where idea_id = $ideaId&quot;</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;ideaId&#39;</span><span class="p">:</span><span class="n">ideaId</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem flagging idea&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="setIdeaIsActive"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.setIdeaIsActive">[docs]</a><span class="k">def</span> <span class="nf">setIdeaIsActive</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update idea set is_active = $b where idea_id = $ideaId&quot;</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;ideaId&#39;</span><span class="p">:</span><span class="n">ideaId</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span><span class="n">b</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem setting idea is_active = </span><span class="si">%s</span><span class="s"> for idea_id = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        <span class="k">return</span> <span class="bp">False</span>
+
+        </div>
+<div class="viewcode-block" id="addIdeaToProject"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.addIdeaToProject">[docs]</a><span class="k">def</span> <span class="nf">addIdeaToProject</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">,</span> <span class="n">projectId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;project__idea&#39;</span><span class="p">,</span> <span class="n">idea_id</span> <span class="o">=</span> <span class="n">ideaId</span><span class="p">,</span> <span class="n">project_id</span> <span class="o">=</span> <span class="n">projectId</span><span class="p">)</span>
+                    
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem adding idea to project&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="addInvitedIdeaToProject"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.addInvitedIdeaToProject">[docs]</a><span class="k">def</span> <span class="nf">addInvitedIdeaToProject</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">projectId</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;insert into project__idea (project_id, idea_id)</span>
+<span class="s">                  select $projectId, inv.invitee_idea_id from project_invite inv</span>
+<span class="s">                    inner join idea i on i.idea_id = inv.invitee_idea_id and i.user_id = $userId</span>
+<span class="s">                    where project_id = $projectId</span>
+<span class="s">                    limit 1&quot;&quot;&quot;</span>    
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;projectId&#39;</span><span class="p">:</span><span class="n">projectId</span><span class="p">,</span> <span class="s">&#39;userId&#39;</span><span class="p">:</span><span class="n">userId</span><span class="p">})</span>
+        
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t add invited idea(s) from user id </span><span class="si">%s</span><span class="s"> to project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">userId</span><span class="p">,</span> <span class="n">projectId</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="getMostRecentIdeas"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.getMostRecentIdeas">[docs]</a><span class="k">def</span> <span class="nf">getMostRecentIdeas</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">betterData</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select i.idea_id, i.description as text, u.user_id, u.first_name, u.last_name, u.affiliation, i.submission_type as submitted_by </span>
+<span class="s">            from idea i</span>
+<span class="s">            left join user u on u.user_id = i.user_id and u.is_active = 1</span>
+<span class="s">            where i.is_active = 1</span>
+<span class="s">            order by i.created_datetime desc</span>
+<span class="s">            limit $limit offset $offset&quot;&quot;&quot;</span>
+            
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">}))</span>
+    
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">betterData</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">text</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                        <span class="n">user_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                        <span class="n">name</span> <span class="o">=</span> <span class="n">ideaName</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">affiliation</span><span class="p">),</span>
+                        <span class="n">submitted_by</span> <span class="o">=</span>  <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">submitted_by</span><span class="p">)))</span>   
+    
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get most recent ideas&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>    
+        
+    <span class="k">return</span> <span class="n">betterData</span>
+    
+<span class="c"># TODO put this with the rest of the formatting functions</span></div>
+<div class="viewcode-block" id="ideaName"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.idea.ideaName">[docs]</a><span class="k">def</span> <span class="nf">ideaName</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">affiliation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">first</span> <span class="ow">and</span> <span class="n">last</span><span class="p">):</span>
+        <span class="c"># TODO should use general username formatter</span>
+        <span class="c">#return userName(first, last, False)</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">affiliation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">affiliation</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

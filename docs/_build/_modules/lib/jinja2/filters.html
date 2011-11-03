@@ -1,0 +1,894 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.filters &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.filters</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.filters</span>
+<span class="sd">    ~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Bundled jinja filters.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">imap</span><span class="p">,</span> <span class="n">groupby</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">escape</span><span class="p">,</span> <span class="n">pformat</span><span class="p">,</span> <span class="n">urlize</span><span class="p">,</span> <span class="n">soft_unicode</span>
+<span class="kn">from</span> <span class="nn">jinja2.runtime</span> <span class="kn">import</span> <span class="n">Undefined</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">FilterArgumentError</span><span class="p">,</span> <span class="n">SecurityError</span>
+
+
+<span class="n">_word_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\w+(?u)&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="contextfilter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.contextfilter">[docs]</a><span class="k">def</span> <span class="nf">contextfilter</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for marking context dependent filters. The current</span>
+<span class="sd">    :class:`Context` will be passed as first argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">contextfilter</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="evalcontextfilter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.evalcontextfilter">[docs]</a><span class="k">def</span> <span class="nf">evalcontextfilter</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for marking eval-context dependent filters.  An eval</span>
+<span class="sd">    context object is passed as first argument.  For more information</span>
+<span class="sd">    about the eval context, see :ref:`eval-context`.</span>
+
+<span class="sd">    .. versionadded:: 2.4</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">evalcontextfilter</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="environmentfilter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.environmentfilter">[docs]</a><span class="k">def</span> <span class="nf">environmentfilter</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for marking evironment dependent filters.  The current</span>
+<span class="sd">    :class:`Environment` is passed to the filter as first argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">environmentfilter</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="make_attrgetter"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.make_attrgetter">[docs]</a><span class="k">def</span> <span class="nf">make_attrgetter</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a callable that looks up the given attribute from a</span>
+<span class="sd">    passed object with the rules of the environment.  Dots are allowed</span>
+<span class="sd">    to access attributes of attributes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attribute</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">environment</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+    <span class="n">attribute</span> <span class="o">=</span> <span class="n">attribute</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">attrgetter</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">attribute</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span>
+    <span class="k">return</span> <span class="n">attrgetter</span>
+
+</div>
+<div class="viewcode-block" id="do_forceescape"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_forceescape">[docs]</a><span class="k">def</span> <span class="nf">do_forceescape</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enforce HTML escaping.  This will probably double escape variables.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">__html__</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">escape</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+</div>
+<span class="nd">@evalcontextfilter</span>
+<div class="viewcode-block" id="do_replace"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_replace">[docs]</a><span class="k">def</span> <span class="nf">do_replace</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a copy of the value with all occurrences of a substring</span>
+<span class="sd">    replaced with a new one. The first argument is the substring</span>
+<span class="sd">    that should be replaced, the second is the replacement string.</span>
+<span class="sd">    If the optional third argument ``count`` is given, only the first</span>
+<span class="sd">    ``count`` occurrences are replaced:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ &quot;Hello World&quot;|replace(&quot;Hello&quot;, &quot;Goodbye&quot;) }}</span>
+<span class="sd">            -&gt; Goodbye World</span>
+
+<span class="sd">        {{ &quot;aaaaargh&quot;|replace(&quot;a&quot;, &quot;d&#39;oh, &quot;, 2) }}</span>
+<span class="sd">            -&gt; d&#39;oh, d&#39;oh, aaargh</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">old</span><span class="p">),</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">new</span><span class="p">),</span> <span class="n">count</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+       <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">escape</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">soft_unicode</span><span class="p">(</span><span class="n">old</span><span class="p">),</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">new</span><span class="p">),</span> <span class="n">count</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_upper"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_upper">[docs]</a><span class="k">def</span> <span class="nf">do_upper</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a value to uppercase.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="do_lower"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_lower">[docs]</a><span class="k">def</span> <span class="nf">do_lower</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a value to lowercase.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+</div>
+<span class="nd">@evalcontextfilter</span>
+<div class="viewcode-block" id="do_xmlattr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_xmlattr">[docs]</a><span class="k">def</span> <span class="nf">do_xmlattr</span><span class="p">(</span><span class="n">_eval_ctx</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">autospace</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an SGML/XML attribute string based on the items in a dict.</span>
+<span class="sd">    All values that are neither `none` nor `undefined` are automatically</span>
+<span class="sd">    escaped:</span>
+
+<span class="sd">    .. sourcecode:: html+jinja</span>
+
+<span class="sd">        &lt;ul{{ {&#39;class&#39;: &#39;my_list&#39;, &#39;missing&#39;: none,</span>
+<span class="sd">                &#39;id&#39;: &#39;list-%d&#39;|format(variable)}|xmlattr }}&gt;</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;/ul&gt;</span>
+
+<span class="sd">    Results in something like this:</span>
+
+<span class="sd">    .. sourcecode:: html</span>
+
+<span class="sd">        &lt;ul class=&quot;my_list&quot; id=&quot;list-42&quot;&gt;</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;/ul&gt;</span>
+
+<span class="sd">    As you can see it automatically prepends a space in front of the item</span>
+<span class="sd">    if the filter returned something unless the second parameter is false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="s">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="s">u&#39;</span><span class="si">%s</span><span class="s">=&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">escape</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">escape</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">autospace</span> <span class="ow">and</span> <span class="n">rv</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="s">u&#39; &#39;</span> <span class="o">+</span> <span class="n">rv</span>
+    <span class="k">if</span> <span class="n">_eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+</div>
+<div class="viewcode-block" id="do_capitalize"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_capitalize">[docs]</a><span class="k">def</span> <span class="nf">do_capitalize</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Capitalize a value. The first character will be uppercase, all others</span>
+<span class="sd">    lowercase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="do_title"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_title">[docs]</a><span class="k">def</span> <span class="nf">do_title</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a titlecased version of the value. I.e. words will start with</span>
+<span class="sd">    uppercase letters, all remaining characters are lowercase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="do_dictsort"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_dictsort">[docs]</a><span class="k">def</span> <span class="nf">do_dictsort</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s">&#39;key&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort a dict and yield (key, value) pairs. Because python dicts are</span>
+<span class="sd">    unsorted you may want to use this function to order them by either</span>
+<span class="sd">    key or value:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {% for item in mydict|dictsort %}</span>
+<span class="sd">            sort the dict by key, case insensitive</span>
+
+<span class="sd">        {% for item in mydict|dicsort(true) %}</span>
+<span class="sd">            sort the dict by key, case sensitive</span>
+
+<span class="sd">        {% for item in mydict|dictsort(false, &#39;value&#39;) %}</span>
+<span class="sd">            sort the dict by key, case insensitive, sorted</span>
+<span class="sd">            normally and ordered by value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">by</span> <span class="o">==</span> <span class="s">&#39;key&#39;</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">by</span> <span class="o">==</span> <span class="s">&#39;value&#39;</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">FilterArgumentError</span><span class="p">(</span><span class="s">&#39;You can only sort by either &#39;</span>
+                                  <span class="s">&#39;&quot;key&quot; or &quot;value&quot;&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">sort_func</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">case_sensitive</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">sort_func</span><span class="p">)</span>
+
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_sort"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_sort">[docs]</a><span class="k">def</span> <span class="nf">do_sort</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">attribute</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort an iterable.  Per default it sorts ascending, if you pass it</span>
+<span class="sd">    true as first argument it will reverse the sorting.</span>
+
+<span class="sd">    If the iterable is made of strings the third parameter can be used to</span>
+<span class="sd">    control the case sensitiveness of the comparison which is disabled by</span>
+<span class="sd">    default.</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {% for item in iterable|sort %}</span>
+<span class="sd">            ...</span>
+<span class="sd">        {% endfor %}</span>
+
+<span class="sd">    It is also possible to sort by an attribute (for example to sort</span>
+<span class="sd">    by the date of an object) by specifying the `attribute` parameter:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {% for item in iterable|sort(attribute=&#39;date&#39;) %}</span>
+<span class="sd">            ...</span>
+<span class="sd">        {% endfor %}</span>
+
+<span class="sd">    .. versionchanged:: 2.6</span>
+<span class="sd">       The `attribute` parameter was added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">case_sensitive</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">sort_func</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">item</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sort_func</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">getter</span> <span class="o">=</span> <span class="n">make_attrgetter</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">sort_func</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">processor</span><span class="o">=</span><span class="n">sort_func</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">processor</span><span class="p">(</span><span class="n">getter</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">sort_func</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_default"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_default">[docs]</a><span class="k">def</span> <span class="nf">do_default</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="s">u&#39;&#39;</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;If the value is undefined it will return the passed default value,</span>
+<span class="sd">    otherwise the value of the variable:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ my_variable|default(&#39;my_variable is not defined&#39;) }}</span>
+
+<span class="sd">    This will output the value of ``my_variable`` if the variable was</span>
+<span class="sd">    defined, otherwise ``&#39;my_variable is not defined&#39;``. If you want</span>
+<span class="sd">    to use default with variables that evaluate to false you have to</span>
+<span class="sd">    set the second parameter to `true`:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ &#39;&#39;|default(&#39;the string was empty&#39;, true) }}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">boolean</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">value</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">default_value</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+</div>
+<span class="nd">@evalcontextfilter</span>
+<div class="viewcode-block" id="do_join"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_join">[docs]</a><span class="k">def</span> <span class="nf">do_join</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="s">u&#39;&#39;</span><span class="p">,</span> <span class="n">attribute</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a string which is the concatenation of the strings in the</span>
+<span class="sd">    sequence. The separator between elements is an empty string per</span>
+<span class="sd">    default, you can define it with the optional parameter:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ [1, 2, 3]|join(&#39;|&#39;) }}</span>
+<span class="sd">            -&gt; 1|2|3</span>
+
+<span class="sd">        {{ [1, 2, 3]|join }}</span>
+<span class="sd">            -&gt; 123</span>
+
+<span class="sd">    It is also possible to join certain attributes of an object:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ users|join(&#39;, &#39;, attribute=&#39;username&#39;) }}</span>
+
+<span class="sd">    .. versionadded:: 2.6</span>
+<span class="sd">       The `attribute` parameter was added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">imap</span><span class="p">(</span><span class="n">make_attrgetter</span><span class="p">(</span><span class="n">eval_ctx</span><span class="o">.</span><span class="n">environment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">),</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c"># no automatic escaping?  joining is a lot eaiser then</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">imap</span><span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="c"># if the delimiter doesn&#39;t have an html representation we check</span>
+    <span class="c"># if any of the items has.  If yes we do a coercion to Markup</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">do_escape</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">):</span>
+                <span class="n">do_escape</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">do_escape</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">escape</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="c"># no html involved, to normal joining</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">imap</span><span class="p">(</span><span class="n">soft_unicode</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="do_center"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_center">[docs]</a><span class="k">def</span> <span class="nf">do_center</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Centers the value in a field of a given width.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_first"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_first">[docs]</a><span class="k">def</span> <span class="nf">do_first</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the first item of a sequence.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;No first item, sequence was empty.&#39;</span><span class="p">)</span>
+
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_last"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_last">[docs]</a><span class="k">def</span> <span class="nf">do_last</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the last item of a sequence.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;No last item, sequence was empty.&#39;</span><span class="p">)</span>
+
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_random"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_random">[docs]</a><span class="k">def</span> <span class="nf">do_random</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a random item from the sequence.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">choice</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="s">&#39;No random item, sequence was empty.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_filesizeformat"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_filesizeformat">[docs]</a><span class="k">def</span> <span class="nf">do_filesizeformat</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format the value like a &#39;human-readable&#39; file size (i.e. 13 kB,</span>
+<span class="sd">    4.1 MB, 102 Bytes, etc).  Per default decimal prefixes are used (Mega,</span>
+<span class="sd">    Giga, etc.), if the second parameter is set to `True` the binary</span>
+<span class="sd">    prefixes are used (Mebi, Gibi).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">bytes</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">binary</span> <span class="ow">and</span> <span class="mi">1024</span> <span class="ow">or</span> <span class="mi">1000</span>
+    <span class="n">prefixes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;KiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;kB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;MiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;MB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;GiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;GB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;TiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;TB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;PiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;PB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;EiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;EB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;ZiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;ZB&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">binary</span> <span class="ow">and</span> <span class="s">&quot;YiB&quot;</span> <span class="ow">or</span> <span class="s">&quot;YB&quot;</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="nb">bytes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;1 Byte&quot;</span>
+    <span class="k">elif</span> <span class="nb">bytes</span> <span class="o">&lt;</span> <span class="n">base</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s"> Bytes&quot;</span> <span class="o">%</span> <span class="nb">bytes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">prefixes</span><span class="p">):</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">base</span> <span class="o">*</span> <span class="n">base</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">bytes</span> <span class="o">&lt;</span> <span class="n">unit</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&quot;</span><span class="si">%.1f</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">((</span><span class="nb">bytes</span> <span class="o">/</span> <span class="n">unit</span><span class="p">),</span> <span class="n">prefix</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%.1f</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">((</span><span class="nb">bytes</span> <span class="o">/</span> <span class="n">unit</span><span class="p">),</span> <span class="n">prefix</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_pprint"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_pprint">[docs]</a><span class="k">def</span> <span class="nf">do_pprint</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pretty print a variable. Useful for debugging.</span>
+
+<span class="sd">    With Jinja 1.2 onwards you can pass it a parameter.  If this parameter</span>
+<span class="sd">    is truthy the output will be more verbose (this requires `pretty`)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pformat</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+</div>
+<span class="nd">@evalcontextfilter</span>
+<div class="viewcode-block" id="do_urlize"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_urlize">[docs]</a><span class="k">def</span> <span class="nf">do_urlize</span><span class="p">(</span><span class="n">eval_ctx</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">trim_url_limit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nofollow</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts URLs in plain text into clickable links.</span>
+
+<span class="sd">    If you pass the filter an additional integer it will shorten the urls</span>
+<span class="sd">    to that number. Also a third argument exists that makes the urls</span>
+<span class="sd">    &quot;nofollow&quot;:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ mytext|urlize(40, true) }}</span>
+<span class="sd">            links are shortened to 40 chars and defined with rel=&quot;nofollow&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">urlize</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">trim_url_limit</span><span class="p">,</span> <span class="n">nofollow</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eval_ctx</span><span class="o">.</span><span class="n">autoescape</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+</div>
+<div class="viewcode-block" id="do_indent"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_indent">[docs]</a><span class="k">def</span> <span class="nf">do_indent</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">indentfirst</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a copy of the passed string, each line indented by</span>
+<span class="sd">    4 spaces. The first line is not indented. If you want to</span>
+<span class="sd">    change the number of spaces or indent the first line too</span>
+<span class="sd">    you can pass additional parameters to the filter:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ mytext|indent(2, true) }}</span>
+<span class="sd">            indent by two spaces and indent the first line too.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">indention</span> <span class="o">=</span> <span class="s">u&#39; &#39;</span> <span class="o">*</span> <span class="n">width</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="p">(</span><span class="s">u&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="n">indention</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">indentfirst</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">indention</span> <span class="o">+</span> <span class="n">rv</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+</div>
+<div class="viewcode-block" id="do_truncate"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_truncate">[docs]</a><span class="k">def</span> <span class="nf">do_truncate</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">killwords</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s">&#39;...&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a truncated copy of the string. The length is specified</span>
+<span class="sd">    with the first parameter which defaults to ``255``. If the second</span>
+<span class="sd">    parameter is ``true`` the filter will cut the text at length. Otherwise</span>
+<span class="sd">    it will try to save the last word. If the text was in fact</span>
+<span class="sd">    truncated it will append an ellipsis sign (``&quot;...&quot;``). If you want a</span>
+<span class="sd">    different ellipsis sign than ``&quot;...&quot;`` you can specify it using the</span>
+<span class="sd">    third parameter.</span>
+
+<span class="sd">    .. sourcecode jinja::</span>
+
+<span class="sd">        {{ mytext|truncate(300, false, &#39;&amp;raquo;&#39;) }}</span>
+<span class="sd">            truncate mytext to 300 chars, don&#39;t split up words, use a</span>
+<span class="sd">            right pointing double arrow as ellipsis sign.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">s</span>
+    <span class="k">elif</span> <span class="n">killwords</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">s</span><span class="p">[:</span><span class="n">length</span><span class="p">]</span> <span class="o">+</span> <span class="n">end</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="n">length</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_wordwrap"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_wordwrap">[docs]</a><span class="k">def</span> <span class="nf">do_wordwrap</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">79</span><span class="p">,</span> <span class="n">break_long_words</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a copy of the string passed to the filter wrapped after</span>
+<span class="sd">    ``79`` characters.  You can override this default using the first</span>
+<span class="sd">    parameter.  If you set the second parameter to `false` Jinja will not</span>
+<span class="sd">    split words apart if they are longer than `width`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">textwrap</span>
+    <span class="k">return</span> <span class="n">environment</span><span class="o">.</span><span class="n">newline_sequence</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">expand_tabs</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                   <span class="n">replace_whitespace</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                   <span class="n">break_long_words</span><span class="o">=</span><span class="n">break_long_words</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="do_wordcount"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_wordcount">[docs]</a><span class="k">def</span> <span class="nf">do_wordcount</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Count the words in that string.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">_word_re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="do_int"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_int">[docs]</a><span class="k">def</span> <span class="nf">do_int</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the value into an integer. If the</span>
+<span class="sd">    conversion doesn&#39;t work it will return ``0``. You can</span>
+<span class="sd">    override this default using the first parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="c"># this quirk is necessary so that &quot;42.23&quot;|int gives 42.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">default</span>
+
+</div>
+<div class="viewcode-block" id="do_float"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_float">[docs]</a><span class="k">def</span> <span class="nf">do_float</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the value into a floating point number. If the</span>
+<span class="sd">    conversion doesn&#39;t work it will return ``0.0``. You can</span>
+<span class="sd">    override this default using the first parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+</div>
+<div class="viewcode-block" id="do_format"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_format">[docs]</a><span class="k">def</span> <span class="nf">do_format</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply python string formatting on an object:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ &quot;%s - %s&quot;|format(&quot;Hello?&quot;, &quot;Foo!&quot;) }}</span>
+<span class="sd">            -&gt; Hello? - Foo!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">FilterArgumentError</span><span class="p">(</span><span class="s">&#39;can</span><span class="se">\&#39;</span><span class="s">t handle positional and keyword &#39;</span>
+                                  <span class="s">&#39;arguments at the same time&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">kwargs</span> <span class="ow">or</span> <span class="n">args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_trim"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_trim">[docs]</a><span class="k">def</span> <span class="nf">do_trim</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Strip leading and trailing whitespace.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">soft_unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="do_striptags"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_striptags">[docs]</a><span class="k">def</span> <span class="nf">do_striptags</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Strip SGML/XML tags and replace adjacent whitespace by one space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;__html__&#39;</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">__html__</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">striptags</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="do_slice"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_slice">[docs]</a><span class="k">def</span> <span class="nf">do_slice</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">fill_with</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Slice an iterator and return a list of lists containing</span>
+<span class="sd">    those items. Useful if you want to create a div containing</span>
+<span class="sd">    three ul tags that represent columns:</span>
+
+<span class="sd">    .. sourcecode:: html+jinja</span>
+
+<span class="sd">        &lt;div class=&quot;columwrapper&quot;&gt;</span>
+<span class="sd">          {%- for column in items|slice(3) %}</span>
+<span class="sd">            &lt;ul class=&quot;column-{{ loop.index }}&quot;&gt;</span>
+<span class="sd">            {%- for item in column %}</span>
+<span class="sd">              &lt;li&gt;{{ item }}&lt;/li&gt;</span>
+<span class="sd">            {%- endfor %}</span>
+<span class="sd">            &lt;/ul&gt;</span>
+<span class="sd">          {%- endfor %}</span>
+<span class="sd">        &lt;/div&gt;</span>
+
+<span class="sd">    If you pass it a second argument it&#39;s used to fill missing</span>
+<span class="sd">    values on the last iteration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+    <span class="n">items_per_slice</span> <span class="o">=</span> <span class="n">length</span> <span class="o">//</span> <span class="n">slices</span>
+    <span class="n">slices_with_extra</span> <span class="o">=</span> <span class="n">length</span> <span class="o">%</span> <span class="n">slices</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">slice_number</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">slices</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">slice_number</span> <span class="o">*</span> <span class="n">items_per_slice</span>
+        <span class="k">if</span> <span class="n">slice_number</span> <span class="o">&lt;</span> <span class="n">slices_with_extra</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="p">(</span><span class="n">slice_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">items_per_slice</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">fill_with</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">slice_number</span> <span class="o">&gt;=</span> <span class="n">slices_with_extra</span><span class="p">:</span>
+            <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fill_with</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">tmp</span>
+
+</div>
+<div class="viewcode-block" id="do_batch"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_batch">[docs]</a><span class="k">def</span> <span class="nf">do_batch</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">linecount</span><span class="p">,</span> <span class="n">fill_with</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A filter that batches items. It works pretty much like `slice`</span>
+<span class="sd">    just the other way round. It returns a list of lists with the</span>
+<span class="sd">    given number of items. If you provide a second parameter this</span>
+<span class="sd">    is used to fill missing items. See this example:</span>
+
+<span class="sd">    .. sourcecode:: html+jinja</span>
+
+<span class="sd">        &lt;table&gt;</span>
+<span class="sd">        {%- for row in items|batch(3, &#39;&amp;nbsp;&#39;) %}</span>
+<span class="sd">          &lt;tr&gt;</span>
+<span class="sd">          {%- for column in row %}</span>
+<span class="sd">            &lt;td&gt;{{ column }}&lt;/td&gt;</span>
+<span class="sd">          {%- endfor %}</span>
+<span class="sd">          &lt;/tr&gt;</span>
+<span class="sd">        {%- endfor %}</span>
+<span class="sd">        &lt;/table&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">==</span> <span class="n">linecount</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">tmp</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fill_with</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">linecount</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">+=</span> <span class="p">[</span><span class="n">fill_with</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">linecount</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="n">tmp</span>
+
+</div>
+<div class="viewcode-block" id="do_round"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_round">[docs]</a><span class="k">def</span> <span class="nf">do_round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;common&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Round the number to a given precision. The first</span>
+<span class="sd">    parameter specifies the precision (default is ``0``), the</span>
+<span class="sd">    second the rounding method:</span>
+
+<span class="sd">    - ``&#39;common&#39;`` rounds either up or down</span>
+<span class="sd">    - ``&#39;ceil&#39;`` always rounds up</span>
+<span class="sd">    - ``&#39;floor&#39;`` always rounds down</span>
+
+<span class="sd">    If you don&#39;t specify a method ``&#39;common&#39;`` is used.</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ 42.55|round }}</span>
+<span class="sd">            -&gt; 43.0</span>
+<span class="sd">        {{ 42.55|round(1, &#39;floor&#39;) }}</span>
+<span class="sd">            -&gt; 42.5</span>
+
+<span class="sd">    Note that even if rounded to 0 precision, a float is returned.  If</span>
+<span class="sd">    you need a real integer, pipe it through `int`:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        {{ 42.55|round|int }}</span>
+<span class="sd">            -&gt; 43</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;common&#39;</span><span class="p">,</span> <span class="s">&#39;ceil&#39;</span><span class="p">,</span> <span class="s">&#39;floor&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">FilterArgumentError</span><span class="p">(</span><span class="s">&#39;method must be common, ceil or floor&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;common&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">math</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="n">precision</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="n">precision</span><span class="p">)</span>
+
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_groupby"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_groupby">[docs]</a><span class="k">def</span> <span class="nf">do_groupby</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Group a sequence of objects by a common attribute.</span>
+
+<span class="sd">    If you for example have a list of dicts or objects that represent persons</span>
+<span class="sd">    with `gender`, `first_name` and `last_name` attributes and you want to</span>
+<span class="sd">    group all users by genders you can do something like the following</span>
+<span class="sd">    snippet:</span>
+
+<span class="sd">    .. sourcecode:: html+jinja</span>
+
+<span class="sd">        &lt;ul&gt;</span>
+<span class="sd">        {% for group in persons|groupby(&#39;gender&#39;) %}</span>
+<span class="sd">            &lt;li&gt;{{ group.grouper }}&lt;ul&gt;</span>
+<span class="sd">            {% for person in group.list %}</span>
+<span class="sd">                &lt;li&gt;{{ person.first_name }} {{ person.last_name }}&lt;/li&gt;</span>
+<span class="sd">            {% endfor %}&lt;/ul&gt;&lt;/li&gt;</span>
+<span class="sd">        {% endfor %}</span>
+<span class="sd">        &lt;/ul&gt;</span>
+
+<span class="sd">    Additionally it&#39;s possible to use tuple unpacking for the grouper and</span>
+<span class="sd">    list:</span>
+
+<span class="sd">    .. sourcecode:: html+jinja</span>
+
+<span class="sd">        &lt;ul&gt;</span>
+<span class="sd">        {% for grouper, list in persons|groupby(&#39;gender&#39;) %}</span>
+<span class="sd">            ...</span>
+<span class="sd">        {% endfor %}</span>
+<span class="sd">        &lt;/ul&gt;</span>
+
+<span class="sd">    As you can see the item we&#39;re grouping by is stored in the `grouper`</span>
+<span class="sd">    attribute and the `list` contains all the objects that have this grouper</span>
+<span class="sd">    in common.</span>
+
+<span class="sd">    .. versionchanged:: 2.6</span>
+<span class="sd">       It&#39;s now possible to use dotted notation to group by the child</span>
+<span class="sd">       attribute of another attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">make_attrgetter</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">_GroupTuple</span><span class="p">,</span> <span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">expr</span><span class="p">),</span> <span class="n">expr</span><span class="p">)))</span>
+
+</div>
+<span class="k">class</span> <span class="nc">_GroupTuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">grouper</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="nb">list</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+
+
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_sum"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_sum">[docs]</a><span class="k">def</span> <span class="nf">do_sum</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">attribute</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the sum of a sequence of numbers plus the value of parameter</span>
+<span class="sd">    &#39;start&#39; (which defaults to 0).  When the sequence is empty it returns</span>
+<span class="sd">    start.</span>
+
+<span class="sd">    It is also possible to sum up only certain attributes:</span>
+
+<span class="sd">    .. sourcecode:: jinja</span>
+
+<span class="sd">        Total: {{ items|sum(attribute=&#39;price&#39;) }}</span>
+
+<span class="sd">    .. versionchanged:: 2.6</span>
+<span class="sd">       The `attribute` parameter was added to allow suming up over</span>
+<span class="sd">       attributes.  Also the `start` parameter was moved on to the right.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">imap</span><span class="p">(</span><span class="n">make_attrgetter</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">),</span> <span class="n">iterable</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_list"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_list">[docs]</a><span class="k">def</span> <span class="nf">do_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the value into a list.  If it was a string the returned list</span>
+<span class="sd">    will be a list of characters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_mark_safe"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_mark_safe">[docs]</a><span class="k">def</span> <span class="nf">do_mark_safe</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mark the value as safe which means that in an environment with automatic</span>
+<span class="sd">    escaping enabled this variable will not be escaped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_mark_unsafe"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_mark_unsafe">[docs]</a><span class="k">def</span> <span class="nf">do_mark_unsafe</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mark a value as unsafe.  This is the reverse operation for :func:`safe`.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="do_reverse"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_reverse">[docs]</a><span class="k">def</span> <span class="nf">do_reverse</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reverse the object or return an iterator the iterates over it the other</span>
+<span class="sd">    way round.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">rv</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">rv</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FilterArgumentError</span><span class="p">(</span><span class="s">&#39;argument must be iterable&#39;</span><span class="p">)</span>
+
+</div>
+<span class="nd">@environmentfilter</span>
+<div class="viewcode-block" id="do_attr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.filters.do_attr">[docs]</a><span class="k">def</span> <span class="nf">do_attr</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get an attribute of an object.  ``foo|attr(&quot;bar&quot;)`` works like</span>
+<span class="sd">    ``foo[&quot;bar&quot;]`` just that always an attribute is returned and items are not</span>
+<span class="sd">    looked up.</span>
+
+<span class="sd">    See :ref:`Notes on subscriptions &lt;notes-on-subscriptions&gt;` for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">environment</span><span class="o">.</span><span class="n">sandboxed</span> <span class="ow">and</span> <span class="ow">not</span> \
+               <span class="n">environment</span><span class="o">.</span><span class="n">is_safe_attribute</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">environment</span><span class="o">.</span><span class="n">unsafe_undefined</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">environment</span><span class="o">.</span><span class="n">undefined</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+</div>
+<span class="n">FILTERS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;attr&#39;</span><span class="p">:</span>                 <span class="n">do_attr</span><span class="p">,</span>
+    <span class="s">&#39;replace&#39;</span><span class="p">:</span>              <span class="n">do_replace</span><span class="p">,</span>
+    <span class="s">&#39;upper&#39;</span><span class="p">:</span>                <span class="n">do_upper</span><span class="p">,</span>
+    <span class="s">&#39;lower&#39;</span><span class="p">:</span>                <span class="n">do_lower</span><span class="p">,</span>
+    <span class="s">&#39;escape&#39;</span><span class="p">:</span>               <span class="n">escape</span><span class="p">,</span>
+    <span class="s">&#39;e&#39;</span><span class="p">:</span>                    <span class="n">escape</span><span class="p">,</span>
+    <span class="s">&#39;forceescape&#39;</span><span class="p">:</span>          <span class="n">do_forceescape</span><span class="p">,</span>
+    <span class="s">&#39;capitalize&#39;</span><span class="p">:</span>           <span class="n">do_capitalize</span><span class="p">,</span>
+    <span class="s">&#39;title&#39;</span><span class="p">:</span>                <span class="n">do_title</span><span class="p">,</span>
+    <span class="s">&#39;default&#39;</span><span class="p">:</span>              <span class="n">do_default</span><span class="p">,</span>
+    <span class="s">&#39;d&#39;</span><span class="p">:</span>                    <span class="n">do_default</span><span class="p">,</span>
+    <span class="s">&#39;join&#39;</span><span class="p">:</span>                 <span class="n">do_join</span><span class="p">,</span>
+    <span class="s">&#39;count&#39;</span><span class="p">:</span>                <span class="nb">len</span><span class="p">,</span>
+    <span class="s">&#39;dictsort&#39;</span><span class="p">:</span>             <span class="n">do_dictsort</span><span class="p">,</span>
+    <span class="s">&#39;sort&#39;</span><span class="p">:</span>                 <span class="n">do_sort</span><span class="p">,</span>
+    <span class="s">&#39;length&#39;</span><span class="p">:</span>               <span class="nb">len</span><span class="p">,</span>
+    <span class="s">&#39;reverse&#39;</span><span class="p">:</span>              <span class="n">do_reverse</span><span class="p">,</span>
+    <span class="s">&#39;center&#39;</span><span class="p">:</span>               <span class="n">do_center</span><span class="p">,</span>
+    <span class="s">&#39;indent&#39;</span><span class="p">:</span>               <span class="n">do_indent</span><span class="p">,</span>
+    <span class="s">&#39;title&#39;</span><span class="p">:</span>                <span class="n">do_title</span><span class="p">,</span>
+    <span class="s">&#39;capitalize&#39;</span><span class="p">:</span>           <span class="n">do_capitalize</span><span class="p">,</span>
+    <span class="s">&#39;first&#39;</span><span class="p">:</span>                <span class="n">do_first</span><span class="p">,</span>
+    <span class="s">&#39;last&#39;</span><span class="p">:</span>                 <span class="n">do_last</span><span class="p">,</span>
+    <span class="s">&#39;random&#39;</span><span class="p">:</span>               <span class="n">do_random</span><span class="p">,</span>
+    <span class="s">&#39;filesizeformat&#39;</span><span class="p">:</span>       <span class="n">do_filesizeformat</span><span class="p">,</span>
+    <span class="s">&#39;pprint&#39;</span><span class="p">:</span>               <span class="n">do_pprint</span><span class="p">,</span>
+    <span class="s">&#39;truncate&#39;</span><span class="p">:</span>             <span class="n">do_truncate</span><span class="p">,</span>
+    <span class="s">&#39;wordwrap&#39;</span><span class="p">:</span>             <span class="n">do_wordwrap</span><span class="p">,</span>
+    <span class="s">&#39;wordcount&#39;</span><span class="p">:</span>            <span class="n">do_wordcount</span><span class="p">,</span>
+    <span class="s">&#39;int&#39;</span><span class="p">:</span>                  <span class="n">do_int</span><span class="p">,</span>
+    <span class="s">&#39;float&#39;</span><span class="p">:</span>                <span class="n">do_float</span><span class="p">,</span>
+    <span class="s">&#39;string&#39;</span><span class="p">:</span>               <span class="n">soft_unicode</span><span class="p">,</span>
+    <span class="s">&#39;list&#39;</span><span class="p">:</span>                 <span class="n">do_list</span><span class="p">,</span>
+    <span class="s">&#39;urlize&#39;</span><span class="p">:</span>               <span class="n">do_urlize</span><span class="p">,</span>
+    <span class="s">&#39;format&#39;</span><span class="p">:</span>               <span class="n">do_format</span><span class="p">,</span>
+    <span class="s">&#39;trim&#39;</span><span class="p">:</span>                 <span class="n">do_trim</span><span class="p">,</span>
+    <span class="s">&#39;striptags&#39;</span><span class="p">:</span>            <span class="n">do_striptags</span><span class="p">,</span>
+    <span class="s">&#39;slice&#39;</span><span class="p">:</span>                <span class="n">do_slice</span><span class="p">,</span>
+    <span class="s">&#39;batch&#39;</span><span class="p">:</span>                <span class="n">do_batch</span><span class="p">,</span>
+    <span class="s">&#39;sum&#39;</span><span class="p">:</span>                  <span class="n">do_sum</span><span class="p">,</span>
+    <span class="s">&#39;abs&#39;</span><span class="p">:</span>                  <span class="nb">abs</span><span class="p">,</span>
+    <span class="s">&#39;round&#39;</span><span class="p">:</span>                <span class="n">do_round</span><span class="p">,</span>
+    <span class="s">&#39;groupby&#39;</span><span class="p">:</span>              <span class="n">do_groupby</span><span class="p">,</span>
+    <span class="s">&#39;safe&#39;</span><span class="p">:</span>                 <span class="n">do_mark_safe</span><span class="p">,</span>
+    <span class="s">&#39;xmlattr&#39;</span><span class="p">:</span>              <span class="n">do_xmlattr</span>
+<span class="p">}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -11,6 +11,8 @@
 #    This will create config.yaml in the current directory,
 #    which can then be used by the fabfile for all other tasks
 #
+# fab --config=rcfile.sundar_dev dev bundle_code deploy_webapp_and_configs
+#
 #------------------------------------------------
 # COMMON TARGET SETTINGS
 # These are necessary for every deployment target
@@ -43,9 +45,9 @@ logfile = %(log_path)s/%(application)s.log
 #------------------------------------------------
 
 # User's Development environment (local)
-# Caveat: need to ensure that all developers use the same project 
-# structure
-local_path = ~/Projects/LP/%(application)s
+build_path = /tmp/%(application)s/releases
+
+# local_path = ~/Projects/LP/%(application)s
 
 #------------------------------------------------
 # CHANGEBYUS User Parameters
@@ -70,6 +72,7 @@ script_working_path = /mnt/%(application)s/var
 #------------------------------------------------
 # LIGHTTPD Configurations
 #------------------------------------------------
+webserver = lighttpd
 webserver_port = 8080
 webserver_user = %(user)s
 webserver_group = developers
@@ -92,6 +95,8 @@ dev = Yes
 app_env = dev
 # Instance is either ChangeByUs-dev or ChangeByUs-Live
 instance = ChangeByUs-dev
+# htaccess -- Yes or no.  Is the site behind htaccess.
+htaccess = No
 
 default_host = http://localhost:8080/
 blog_host = http://dev-nycblog.changeby.us/
@@ -101,25 +106,63 @@ database_db = gam2
 database_user = gam
 database_password = 'gam'
 database_host = 127.0.0.1
+database_test = gam2_test
 
 # Email configurations
 email_from_noreplies_email = noreplies@nyc.changeby.us
-
-digest_log_file = %(log_path)s/digest.log
-digest_log_level = debug
-
+email_from_noreplies_name = 'Do Not Reply, Change By Us NYC'
+email_smtp_host = localhost
+email_smtp_port = 25
 email_smtp_username = 'noreplies@nycmail.changeby.us'
 email_smtp_password = XXXXXXXXXX
+email_common_domain = xxxxx.changeby.us
+email_from_email = info@xxxxx.changeby.us
+email_from_name = 'Change By Us XXXXX'
+
+# Digest configuratiosn
+digest_log_file = %(log_path)s/digests.log
+digest_log_level = debug
+# Comma-delimited (without-spaces) names of all recipients of debug messages
+digest_debug_recipients = a@b.com,admin@digest-admin.com
+digest_subject_prefix = '[CBU Digest]'
+
+
 
 # Homepage and leaderboard configurations
 homepage_num_featured_projects = 6
 homepage_num_recent_ideas = 125
 homepage_is_display_featured_projects = True
 homepage_is_display_leaderboard = False
+homepage_question = ''
+homepage_who_is_listening = No
+homepage_news = No
+# Following are default values
+homepage_postboard_bg = /static/images/bg_home_wider.jpg
+homepage_top_left_tag_bg = /static/images/button_heyNYC_old.png
+homepage_photo_credit = ''
 
-# Comma-delimited (without-spaces) names of all recipients of debug messages
-digest_debug_recipients = XXXX@XXXX.com
-from_email = changebyusnyc@gmail.com
+
+# Site Settings
+site_name = 'Change by Us NYC'
+site_city = NYC
+site_city_id = nyc
+site_full_city = 'New York City'
+
+# Map settings
+center_lat = 0
+center_lon = 0
+
+# Language settings
+# Nothing yet
+
+# Features settings
+feature_is_display_leaderboard = True
+feature_is_display_featured_projects = True
+features_is_official_supported = True
+feature_is_feedback_form_available = True
+feature_is_community_leaders_displayed = True
+feature_is_show_beta_splash = True
+
 
 # AWS Credentials
 aws_secret_access_key = XXXXXXXXXX
@@ -141,7 +184,24 @@ facebook_app_id = XXXXXXXXXX
 twitter_consumer_key = XXXXXXXXXX
 twitter_consumer_secret = XXXXXXXXXX
 
+# Get Satisfaction credentials
+getsatisfaction_company = 'Change by Us NYC'
+getsatisfaction_product = xxxxxxxxxx
+
+# Typekit settings
+typekit_key = xxxxxxxxxx
+
+# Google analytics settings
+google_analytics_key = xxxxxxxxxx
+
+# Blitz settings
+blitz_io_route = xxxxxxxxxx
+blitz_io_response = xxxxxxxxxx
+
 # Media
 media_root = XXXXXXXXXX
+
+# Static Files
+staticfiles_root = XXXXXXXXX
 
 

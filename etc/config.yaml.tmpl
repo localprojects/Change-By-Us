@@ -8,21 +8,144 @@
 #   * diff, opendiff, diffmerge, windiff are your friends
 #
 #--------------------------------------------------------------------
-dev: %(dev)s
 
+
+# Applications state
+#--------------------------------------------------------------------
+# Explanation of these values is needed.
+#
+# dev -- Yes or No (what does this affect?)
+# app_mode -- If 'beta', the site will be in private beta mode.  Set
+#             to anything else to get out of beta mode.  This is
+#             currently handled by the __init__ of the Controller
+#             class.
+# app_env  -- Environment, available are (??):
+#                * dev
+#                * staging
+#                * live
+#                * beta (essentially a private beta)
+#                * live-beta (public beta)
+# instance -- ??
+# htaccess -- Yes or no.  Is the site behind htaccess.
+#
+#--------------------------------------------------------------------
+dev: %(dev)s
 app_mode: %(appmode)s
 app_env: %(app_env)s
-
 instance: %(instance)s
-
-default_host: %(default_host)s
-blog_host: %(blog_host)s
-
+htaccess: %(htaccess)s
 logfile: %(logfile)s
 
+
+# Locations
+#--------------------------------------------------------------------
+# These are settings are around URL locations.
+#
+# default_host   -- The URL of the site.  URLs are formed from this
+#                   value.  Example: http://google.com/
+# blog_host      -- The URL of a blog of news links.  This can be
+#                   any URL, and will be the URL for the News link.
+# blog_host_feed -- This is the JSON feed that has the News items
+#                   in them.  Used to display news on the home page.
+#                   Ensure that homepage.news is on to see items.
+#--------------------------------------------------------------------
+default_host: %(default_host)s
+blog_host: %(blog_host)s
+blog_host_feed: %(blog_host)s
+
+
+# Site settings
+#--------------------------------------------------------------------
+# Various site settings
+#
+# name      -- the site name, like "Change by Us NYC"
+# city      -- the city name, like "NYC"
+# city_id   -- and identifier for the city, like "nyc"
+# full_city -- the longer city name, like "New York City"
+#--------------------------------------------------------------------
+site:
+    name: %(site_name)s
+    city: %(site_city)s
+    city_id: %(site_city_id)s
+    full_city: %(site_full_city)s
+    city_logo: %(site_city_logo)s
+    city_url: %(site_city_url)s
+
+# Map Settings
+#--------------------------------------------------------------------
+# City specific map settings
+#
+#--------------------------------------------------------------------
+map:
+    center_lat: %(center_lat)s
+    center_lon: %(center_lon)s
+
+# Enabled languages
+#--------------------------------------------------------------------
+# These are the languages that the site is available in.
+#
+#--------------------------------------------------------------------
+lang:
+#    en_US: 'US English'
+    en_TEST: 'L33t'
+
+
+# Features
+#--------------------------------------------------------------------
+# This is where we can turn specific features on and off.
+#
+# is_display_leaderboard       -- True to show the leaderboard on the
+#                                 homepage
+# is_display_featured_projects -- True to show the featured projects
+#                                 on the homepage
+#--------------------------------------------------------------------
+features:
+    is_display_leaderboard: %(feature_is_display_leaderboard)s
+    is_display_featured_projects: %(feature_is_display_featured_projects)s
+    is_official_supported: %(features_is_official_supported)s
+    is_feedback_form_available: %(feature_is_feedback_form_available)s
+    is_community_leaders_displayed: %(feature_is_community_leaders_displayed)s
+    is_show_beta_splash: %(feature_is_show_beta_splash)s
+
+
+# Homepage
+#--------------------------------------------------------------------
+# Home page specific settings
+#
+# question         -- The main marquee question on the homepage.
+# who_is_listening -- Yes or No.  Enable this feature on homepage;
+#                     currently the content is not configurable.
+# news             -- Yes or No.  Enable this feature on homepage;
+#                     See blog_host_feed as well.
+# postboard_bg     -- Path to image to use for background.  The default
+#                     NYC one is: /static/images/bg_home_wider.jpg
+# top_left_tag_bg  -- Path to image to use for top left tag background.
+#                     The default NYC one is:
+#                     /static/images/button_heyNYC_old.png
+# photo_credit     -- String to put in as photo credit for home page
+#                     image.  Leave blank for none.  Also, escape
+#                     HTML special characters.
+#--------------------------------------------------------------------
+homepage:
+    num_featured_projects: %(homepage_num_featured_projects)s
+    num_recent_ideas: %(homepage_num_recent_ideas)s
+    question: %(homepage_question)s
+    who_is_listening: %(homepage_who_is_listening)s
+    news: %(homepage_news)s
+    postboard_bg: %(homepage_postboard_bg)s
+    top_left_tag_bg: %(homepage_top_left_tag_bg)s
+    photo_credit: %(homepage_photo_credit)s
+
+
+# Server settings
+#--------------------------------------------------------------------
+# Various server level settings
+#
+#--------------------------------------------------------------------
 database:
     dbn: mysql
     db: %(database_db)s
+    test_db: %(database_test)s
     user: %(database_user)s
     password: %(database_password)s
     host: %(database_host)s
@@ -32,64 +155,99 @@ memcache:
     port: 11222
 
 beanstalk:
-    address: 0.0.0.0
+    address: '0.0.0.0'
     port: 11238
 
-homepage:
-    is_display_leaderboard: %(homepage_is_display_leaderboard)s
-    is_display_featured_projects: %(homepage_is_display_featured_projects)s
-    num_featured_projects: %(homepage_num_featured_projects)s
-    num_recent_ideas: %(homepage_num_recent_ideas)s
 
+# Media settings
+#--------------------------------------------------------------------
+# isS3mirror:       -- True or False (not sure what this designates
+#                      but probably has to do with S3)
+# root:             -- This is used for displaying uploaded files.  It
+#                      should be something like the following:
+#                      https://s3.amazonaws.com/BUCKET-NAME/data/files/
+# file_path:        -- This is the directory where the uploaded files are
+#                      stored on S3 and should align with what was inputted
+#                      for root.  Overall, this should be 'data/files'
+#
+#--------------------------------------------------------------------
+media:
+    isS3mirror: True
+    root: %(media_root)s
+    file_path: 'data/files'
+
+
+# Static files settings
+#--------------------------------------------------------------------
+# root:             -- Location of the static directory.  Used for default
+#                      file image.  This is used in forming URL's for src
+#                      attributes or link's href.  The default value is:
+#                      /static/
+#--------------------------------------------------------------------
+staticfiles:
+    root: %(staticfiles_root)s
+
+
+# Email settings
+#--------------------------------------------------------------------
+# Various email settings
+#
+#--------------------------------------------------------------------
 email:
-  # Common configuration
+    # Common email domain name (ie. google.com) that will be displayed
+    # on HTML pages.
+    common_domain: %(email_common_domain)s
 
-  # This needs to be an email address that has been validated by SES
-  # run ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -l
-  # and
-  # ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -v newaddr@localprojects.net
-  from_email: %(from_email)s
-  from_name: 'Change by Us NYC'
+    # This needs to be an email address that has been validated by SES
+    # run ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -l
+    # and
+    # ./ses-verify-email-address.pl -k ~/.aws/localprojects/awsCredentials -v <EMAIL>
+    from_email: %(email_from_email)s
+    from_name: %(email_from_name)s
 
-   # address for non-responsive messaging, such as person-to-person emails
-  from_noreplies_email: %(email_from_noreplies_email)s
-  from_noreplies_name: 'Change by Us NYC (do not reply)'
+    # address for non-responsive messaging, such as person-to-person emails
+    from_noreplies_email: %(email_from_noreplies_email)s
+    from_noreplies_name: %(email_from_noreplies_name)s
 
-  digest:
-    # Log settings for digest_emailer.py
-    log_file: %(digest_log_file)s
-    log_level: %(digest_log_level)s
+    digest:
+        # Log settings for digest_emailer.py
+        log_file: %(digest_log_file)s
+        log_level: %(digest_log_level)s
 
-    # Digest email prefix is for the Digest email subject line
-    digest_subject_prefix: 'Change By Us Digest: '
-    # The email to which we should send digest messages during test/dev testing
-    # so that we don't spam live users.
-    # Used by the digest_emailer.py script, if 'dev' == Yes | True
-    digest_debug_recipients: sundar@localprojects.net
-    
-    # determines max number retry attempts on failed email send
-    max_retries: 10
+        # Digest email prefix is for the Digest email subject line
+        digest_subject_prefix: %(digest_subject_prefix)s
+
+        # The email to which we should send digest messages during test/dev testing
+        # so that we don't spam live users.
+        # Used by the digest_emailer.py script, if 'dev' == Yes | True
+        digest_debug_recipients: %(digest_debug_recipients)s
+
+    # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if
+    # the aws send quota is close then we switch over to SMTP. This is handled in code.
+    # To just use SMTP, simply comment out the aws_ses section below.
+
+    # SMTP specific configuration.
+    smtp:
+        host: %(email_smtp_host)s
+        port: %(email_smtp_port)s
+        username: %(email_smtp_username)s
+        password: %(email_smtp_password)s
+        # Generally TLS is necessary for gmail. So set it here
+        starttls: True
+
+    # Amazon SES
+    # TODO: merge this with the AWS root config
+    # TODO: add the quota limit
+    # aws_ses:
+    #    access_key_id: %(aws_ses_access_key_id)s
+    #    secret_access_key: %(aws_ses_secret_access_key)s
 
 
-  # If both SMTP and AWS_SES are enabled then the system uses AWS first, and if
-  # the aws send quota is close then we switch over to SMTP. This is handled in code
-
-  # SMTP specific configuration.
-  smtp:
-    host: smtp.gmail.com
-    port: 587
-    username: %(email_smtp_username)s
-    password: %(email_smtp_password)s
-    # Generally TLS is necessary for gmail. So set it here
-    starttls: True
-
-  # Amazon SES
-  # TODO: merge this with the AWS root config
-  aws_ses:
-     # TODO: add the quota limit
-     access_key_id: %(aws_access_key_id)s
-     secret_access_key: %(aws_secret_access_key)s
-
+# Services
+#--------------------------------------------------------------------
+# Various service settings
+#
+#--------------------------------------------------------------------
 twilio:
     sid: %(twilio_sid)s
     token: %(twilio_token)s
@@ -98,7 +256,6 @@ twilio:
 
 facebook:
     app_id: %(facebook_app_id)s
-    #app_id: '177033235680785'
 
 twitter:
     consumer_key: %(twitter_consumer_key)s
@@ -106,6 +263,10 @@ twitter:
     request_token_url: 'http://twitter.com/oauth/request_token'
     access_token_url: 'http://twitter.com/oauth/access_token'
     authenticate_url: 'http://twitter.com/oauth/authenticate'
+
+getsatisfaction:
+    company: %(getsatisfaction_company)s
+    product: %(getsatisfaction_product)s
 
 aws:
     access_key_id: %(aws_access_key_id)s
@@ -115,3 +276,17 @@ aws:
 media:
     isS3mirror: True
     root: %(media_root)s
+
+# Typekit key is the name of the JS file, like http://use.typekit.com/XXXXXX.js
+typekit:
+    key: %(typekit_key)s
+
+# Key should be in the form: UA-XXXXXX-X
+google_analytics:
+    key: %(google_analytics_key)s
+
+# If the site is not "live", this will create a route
+# so that Blitz.io can be registered.
+blitz_io:
+    route: %(blitz_io_route)s
+    response: %(blitz_io_response)s

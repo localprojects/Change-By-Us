@@ -1,0 +1,152 @@
+<div class="project-section box invite-members members">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Members <span class="counter members-counter">{{ d.template_data.project.data.info.members['items']|length }}</span>
+            </span>
+        </h2>
+        <div class="actions">
+            <a class="back fancy-caps" href="#project-home">
+                <span>Back <span>to</span> Project Home</span>
+            </a>
+        </div>
+    </div>
+    <div class="bd">
+        <div class="west">
+            {% with active="invite" %}
+            {% include "project/members_nav.html" %}
+            {% endwith %}
+        </div>
+        <div class="east">
+            <div>
+                <div class="facebook-invite">
+                    <div class="sub-hd">
+                        <h3>Invite <span>your</span> friends</h3>
+                    </div>
+
+                    <div>
+                        <div id="fb-root"></div>
+                        <script>(function(d, s, id) {
+                          var js, fjs = d.getElementsByTagName(s)[0];
+                          if (d.getElementById(id)) {return;}
+                          js = d.createElement(s); js.id = id;
+                          js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+                          fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'facebook-jssdk'));</script>
+
+                        <div class="fb-like" data-href="{{ d.default_host }}project/{{ d.template_data.project.data.project_id }}" data-send="true" data-layout="button_count" data-width="450" data-show-faces="false" data-action="recommend"></div>
+                    </div>
+                </div>
+
+                <!-- Begin Members.email-invite -->
+                <div class="email-invite merlin" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
+
+                    <div class='step email-invite-info'>
+                        <div class="sub-hd">
+                            <h3>Invite People <span>by</span> Email</h3>
+                        </div>
+                        <div class="sub-bd form-pane">
+                            <div class="fields">
+                                <div class="row clearfix">
+                                    <textarea class='email-list'></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sub-bd form-pane">
+                            <div class="fields">
+                                <div class="row clearfix" style='margin-top:0px;'>
+                                    <textarea class='email-message'></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sub-bd form-pane">
+                            <div class="fields">
+                                <div class="row clearfix" style='margin-top:0px;'>
+                                    <input class="rounded-button email-invite-submit-button" id="send-invites" name="send-invites" type="submit" value="Send Invites" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class='step email-invite-submit clearfix spinner-message' style='display:none;'>
+                        <p>Thank you for inviting more users!</p>
+                        <p><img src='/static/images/loader32x32.gif' /></p>
+                    </div>
+
+                    <div class='step email-invite-error' style='display:none;'>
+                        <p>There was an error sending the email invites!</p>
+                    </div>
+
+                </div>
+                <!-- End Members.email-invite -->
+
+                <!-- Begin Members.ideas-invite -->
+                <div class="ideas-invite" style="{% if not d.template_data.project_user.data.is_member and not d.template_data.project_user.data.is_project_admin %}display:none;{% endif %}">
+                    <div class="sub-hd">
+                        <h3>Invite People <span>with</span> Similar Ideas</h3>
+                        <div class="pagination">
+                            <span class="cur-index">0</span> <em>of</em>
+                            <span class="total">{{ d.template_data.project.data.info.related_ideas['items']|length }}</span>
+                        </div>
+                    </div>
+                    <div class="sub-bd" style="{% if d.template_data.project.data.info.related_ideas['items']|length == 0 %}display:none;{% endif %}">
+
+                        {% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}
+                            <div class="carousel">
+                                <div class="scrollable">
+                                    <ul class="items">
+                                        {% for idea in d.template_data.project.data.info.related_ideas['items'] %}
+                                            <li rel="idea-{{ idea.idea_id }}">
+                                                <div class="note-card-public-controls">
+                                                    {% if not(d.template_data.user and (d.template_data.user.data.u_id == idea.owner.u_id)) %}
+                                                        <a class="invite rounded-button" href="#invite,{{ idea.idea_id }},{{ idea.owner.name }}">Invite</a>
+                                                    {% endif %}
+                                                    <span class="flag"><a href="#flagIdea,{{ idea.idea_id }}" class='flag-idea'>Flag as Inappropriate</a></span>
+                                                </div>
+                                                <div class="note-card">
+                                                    <div class="membrane">
+                                                        {% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}
+                                                            <a class="close remove-idea" href="#removeIdea,{{ idea.idea_id }}"><span>Close</span></a>
+                                                        {% endif %}
+
+                                                        {% if idea.owner.name %}
+                                                            <cite class="note-meta-hd">
+                                                                <strong><a href="/useraccount/{{ idea.owner.u_id }}">{{ idea.owner.name }}</a></strong> said &mdash;
+                                                            </cite>
+                                                        {% endif %}
+                                                        <blockquote>{% if d.template_data and d.template_data.user and d.template_data.user.is_admin %}{% if not idea.owner.name %}<span class="topright-spacer"></span>{% endif %}{% endif %}<p>{{ idea.message|truncate(175) }}</p></blockquote>
+                                                        <cite class="note-meta-ft">
+                                                            Posted <strong><span class="time-since">{{ idea.created }}</span></strong>
+                                                        </cite>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="carousel-controls">
+                                    <a class="next" href="#">
+                                        <span>Next</span>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <div class="empty-state-box" style="{% if d.template_data.project.data.info.related_ideas['items']|length > 0 %}display:none;{% endif %}">
+                        <!--<a class="close" href="#"><span>Close</span></a>-->
+                        <p>No similar ideas found.</p>
+                    </div>
+
+                </div>
+                <!-- End Members.ideas-invite -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end Members -->
+
+<script type='text/javascript' src="/static/js/pages/project.members.js"></script>

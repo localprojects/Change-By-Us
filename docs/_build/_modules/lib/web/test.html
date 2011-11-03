@@ -1,0 +1,141 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.test &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.test</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;test utilities</span>
+<span class="sd">(part of web.py)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">web</span>
+
+<span class="n">TestCase</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span>
+<span class="n">TestSuite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span>
+
+<div class="viewcode-block" id="load_modules"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.test.load_modules">[docs]</a><span class="k">def</span> <span class="nf">load_modules</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">__import__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot;x&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="module_suite"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.test.module_suite">[docs]</a><span class="k">def</span> <span class="nf">module_suite</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">classnames</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Makes a suite from a module.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">classnames</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromNames</span><span class="p">(</span><span class="n">classnames</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s">&#39;suite&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">suite</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromModule</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="doctest_suite"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.test.doctest_suite">[docs]</a><span class="k">def</span> <span class="nf">doctest_suite</span><span class="p">(</span><span class="n">module_names</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Makes a test suite from doctests.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">TestSuite</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">load_modules</span><span class="p">(</span><span class="n">module_names</span><span class="p">):</span>
+        <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">doctest</span><span class="o">.</span><span class="n">DocTestSuite</span><span class="p">(</span><span class="n">mod</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span>
+    </div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.test.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">(</span><span class="n">module_names</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a suite from multiple modules.&quot;&quot;&quot;</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">TestSuite</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">load_modules</span><span class="p">(</span><span class="n">module_names</span><span class="p">):</span>
+        <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">module_suite</span><span class="p">(</span><span class="n">mod</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span>
+</div>
+<div class="viewcode-block" id="runTests"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.test.runTests">[docs]</a><span class="k">def</span> <span class="nf">runTests</span><span class="p">(</span><span class="n">suite</span><span class="p">):</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TextTestRunner</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">suite</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../modules/lib.web.html#lib.web.test.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">suite</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">suite</span><span class="p">:</span>
+        <span class="n">main_module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="s">&#39;__main__&#39;</span><span class="p">)</span>
+        <span class="c"># allow command line switches</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">)]</span>
+        <span class="n">suite</span> <span class="o">=</span> <span class="n">module_suite</span><span class="p">(</span><span class="n">main_module</span><span class="p">,</span> <span class="n">args</span> <span class="ow">or</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">runTests</span><span class="p">(</span><span class="n">suite</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">wasSuccessful</span><span class="p">())</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<div class="box main-section project-section vol-form">
+    <div class="hd clearfix">
+        <h2>
+            <span>
+                Create a new volunteer need
+            </span>
+        </h2>
+        <div class="actions">
+            <a href="#show,add-need" class="back fancy-caps">
+                <span>Go Back</span>
+            </a>
+        </div>
+    </div>
+
+    <div>
+      <a href="#" class="submit need-submit">Submit</a>
+      <br style="clear:both;" />
+    </div>
+    <div class="bd clearfix merlin add-need">
+        <div class='step add-need-step clearfix'></div>
+
+        <div class='step submit-need-step spinner-message'>
+            <p>Thank you for submitting a link!</p>
+            <p><img src='/static/images/loader32x32.gif' /></p>
+        </div>
+    </div>
+</div>
+
+{% raw %}
+<script id="vol_form_tmpl" type="text/html">
+    <form action='#' class="form-pane">
+      <div class="fields serif">
+        <div class="row need-header">
+          <p>We need</p>
+          <input name="vol-quantity" id="vol-quantity" class="need-quantity" type="text" value="{{quantity}}" />
+          <p>volunteer</p>
+          <input name="vol-job" id="vol-job" class="need-request" type="text" value="{{request}}" />
+        </div>
+        <div class="row">
+          <div class="desc-cont">
+            <p>We&#39;ll need them to...</p>
+            <span class="charlimit title">200</span>
+            <textarea name="vol-desc" id="vol-desc" class="need-desc">{{description}}</textarea>
+          </div>
+          <div class="time-cont">
+            <p>It will be a time commitment of</p>
+            <input name="vol-hours" id="vol-hours" type="text" value="{{duration}}" />
+            <label>hours</label>
+          </div>
+        </div>
+        <div class="row vol-address">
+          <div class="addr-cont">
+            <p>We will need them to come to...</p>
+            <input name="vol-street" id="vol-street" value="{{address}}" type="text" />
+            <p class="madlib">on</p>
+            <select id="vol-month">
+              <option value="Month">Month</option>
+              {{{monthOpts}}}
+            <input name="vol-day" id="vol-day"value="{{day}}" type="text" />
+            <p class="madlib">at</p>
+            <input name="vol-time" id="vol-time" value="{{time}}" type="text" />
+          </div>
+          <div class="event-link-cont">
+            <div class="event-link-label">&#8212;&#8212;&nbsp;&nbsp;&nbsp; OR &nbsp;&nbsp;&nbsp;&#8212;&#8212;</div>
+            <select id="vol-event-list" class="need-event-list">
+              <option value="">Link to an event</option>
+              {{{eventOpts}}}
+            </select>
+          </div>
+        </div>
+      </div>
+    </form>
+</script>
+{% endraw %}
+
+<script type='text/javascript' src="/static/js/pages/project.vol_form.js"></script>

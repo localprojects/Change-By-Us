@@ -1,188 +1,112 @@
-if(!tc){ var tc = {}; }
+/**
+ * File: App
+ * This file defines the "app" of the tc framework.
+ *
+ * Filename:
+ * tc.gam.app.js
+ * 
+ * Dependencies:
+ * - tc.gam.base.js
+ * - tc.utils.js
+ */
 
+/**
+ * Class: tc.app
+ * App is ??
+ */
 tc.app = makeClass();
 
+/**
+ * Variable: tc.app.prototype.app_page
+ * App Page object.  ??
+ */
 tc.app.prototype.app_page = null;
+
+/**
+ * Variable: tc.app.prototype.components
+ * Collection of components of the app.
+ */
 tc.app.prototype.components = {};
+
+/**
+ * Variable: tc.app.prototype.events
+ * Collection of jQuery events.
+ */
 tc.app.prototype.events = tc.jQ({});
 
-tc.app.prototype.init = function(page){
-	tc.util.log('tc.app.init');
-	var _me, feature_status;
-	_me = this;
-	this.app_page = page;
-	
-	tc.jQ.ajaxSetup({
-		cache:false
-	});
-	
-	if(page.features){
-		for(i in page.features){
-			if(tc.jQ.isFunction(page.features[i])){
-				if(page.features[i](_me) === false){
-					break;
-				}
-			}
-		}
-	}
-		
-	// called from the main logout callback, or, if we were logged in to facebook, from the FB logout callback
-	this.finish_logout = function(e){
-		tc.util.log('tc.app.finish_logout');
-		window.location.hash = '';
-		if (window.location.pathname === "/useraccount") {
-			if (e.data.app.app_page.user) {
-				window.location.assign("/useraccount/"+ e.data.app.app_page.user.u_id);
-				return;
-			}
-		}
-		window.location.reload(true);
-	};
-	
-	tc.jQ(window).bind('hashchange',{app:this}, function(e){
-		tc.util.log('hashchange.logout');
-		if(window.location.hash.substring(1,window.location.hash.length) === 'logout'){
-			tc.jQ.ajax({
-				type:'POST',
-				url:'/logout',
-				context:e.data.app,
-				dataType:'text',
-				success:function(data,ts,xhr){
-					var me = this;
-					if(FB._userStatus == 'unknown'){
-						me.finish_logout(e);
-					} else {
-						FB.getLoginStatus(function(response) {
-							if (response.session) {
-								FB.logout(function(response){
-									me.finish_logout(e);
-								});
-							} else {
-								me.finish_logout(e);
-							}
-						});
-					}
-				}
-			});
-		}
-	});
-	
+/**
+ * Function: tc.app.prototype.init
+ * Initialize the app.
+ *
+ * Parameters:
+ * page - {Object} Page object used for ??
+ */
+tc.app.prototype.init = function(page) {
+    var _me = this;
+    var feature_status;
+    this.app_page = page;
+    
+    // Turn off AJAX caching.
+    tc.jQ.ajaxSetup({
+        cache: false
+    });
+
+    // Handle feature functions.  These are general features for the application,
+    // such as merlin wizard set of widgets.
+    if (page.features) {
+        for (i in page.features) {
+            if (tc.jQ.isFunction(page.features[i])) {
+                if (page.features[i](_me) === false) {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Called from the main logout callback, or, if we were logged in to 
+    // facebook, from the FB logout callback
+    this.finish_logout = function(e) {
+        window.location.hash = '';
+        if (window.location.pathname === "/useraccount") {
+            if (e.data.app.app_page.user) {
+                window.location.assign("/useraccount/" + e.data.app.app_page.user.u_id);
+                return;
+            }
+        }
+        window.location.reload(true);
+    };
+
+    // Handle logout, specifically via hash change event.
+    tc.jQ(window).bind('hashchange', {
+            app: this
+        },
+        function(e) {
+            if (window.location.hash.substring(1, window.location.hash.length) === 'logout') {
+                // Post to logout, when done, handle Facebook logout.
+                tc.jQ.ajax({
+                    type: 'POST',
+                    url: '/logout',
+                    context: e.data.app,
+                    dataType: 'text',
+                    success: function(data, ts, xhr) {
+                        var me = this;
+                        if (FB._userStatus == 'unknown') {
+                            me.finish_logout(e);
+                        } else {
+                            FB.getLoginStatus(function (response) {
+                                if (response.session) {
+                                    FB.logout(function (response) {
+                                        me.finish_logout(e);
+                                    });
+                                } else {
+                                    me.finish_logout(e);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    );
+
 };
-
-tc.animate_bg = function(ele, from, to) {
-	from += from > to ? -0.25 : 0.25;
-		if(!$.support.opacity){
-			if(from != to){
-				var opStr = (Math.round(from * 25.5)).toString(16);
-				ele.css({
-					backgroundColor:'transparent',
-					filter:"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF) !important",
-					'-ms-filter':"progid:DXImageTransform.Microsoft.gradient(startColorstr=#" + opStr + "FFFFFF, endColorstr=#" + opStr + "FFFFFF) !important"
-				});
-			}else{
-				//ele.css({background:'transparent',filter:"none"}); 
-				//tc.jQ('.more-info.after-idea-message').attr('style','');  
-			}
-		}else{
-			ele.css("backgroundColor", "rgba(255, 255, 255, " + (from) / 10 + ")"); 
-		}
-		if(from != to){
-			setTimeout(function() { tc.animate_bg(ele, from, to) }, 50);
-		}
-};
-
-tc.addOfficialResourceTags = function(dom){
-	tc.util.log('tc.addOfficialResourceTags');
-	var officialResourceCells = dom.find('td.official-resource');
-	dom.parent().children('.official-resource-tag').remove();
-
-	for(var i = 0; i < officialResourceCells.length; i++) {
-		var td = officialResourceCells.eq(i)
-		var tdPos = td.position();
-		var tdWidth = td.outerWidth();
-		
-		dom.before('<div class="official-resource-tag" id="tag-' + i + '" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
-		td.css({'padding-top' : '25px'});
-	};
-};
-
-tc.jQ.fn.time_since = function() {
-	return this.each(function() {
-		var me, raw;
-		me = tc.jQ(this);
-		raw = me.text();
-		me.attr("title", raw.split(" ").join("T") + "Z");
-		me.prettyDate();
-	});
-};
-
-tc.truncate = function(str, len, suffix) {
-	if (typeof str === "string") {
-		if (str.length > len) {
-			return str.substring(0, len) + (suffix || "&hellip;");
-		}
-	}
-	return str;
-};
-
-tc.randomNoteCardBg = function(ideasList) {
-	var ideas = ideasList.children('li');
-	for (i=0; i < ideas.length; i++) {
-		ideas.eq(i).children('.note-card').addClass('card' + (Math.floor(Math.random()*4) + 1));
-	}
-};
-
-tc.makeEmailLink = function(name, domain) {
-    addr = name + '@' + domain;
-    s = '<a href="mailto:' + addr + '">' + addr + '</a>';
-    return s;
-}
-
-/* Browser Detection Stuff */
-var ua = tc.jQ.browser;
-var os;
-var isMsie8orBelow = false;
-var isMsie7orBelow = false;
-var isiPad = false;
-
-if( ua && ua.msie && ua.version < 9 ) {
-	isMsie8orBelow = true;
-	
-	(function() {
-		var originalTitle = document.title.split("#")[0];
-		document.attachEvent("onpropertychange", function(e) {
-			if (e.propertyName === "title" && document.title !== originalTitle) {
-				document.title = originalTitle;
-			}
-		});
-	}());
-	
-	if( ua.version < 8 ) {
-		tc.jQ('body').addClass('ie7');
-		isMsie7orBelow = true
-	}
-};
-
-if (ua.mozilla) { /* gecko 1.9.1 is for FF3.5, 1.9.0 for FF3 */
-	if (ua.version.slice(0,5) == "1.9.0") { tc.jQ('body').addClass('ff3') }
-	else if (ua.version.slice(0,5) == "1.9.1") {  }
-} else if (ua.webkit) {
-	tc.jQ('body').addClass('webkit')
-};
-
-if (navigator.userAgent.indexOf('Chrome')!=-1) {
-	tc.jQ('body').addClass('chrome')
-}
-
-if (navigator.appVersion.indexOf("Win")!=-1) {
-	os = 'windows';
-} else if (navigator.appVersion.indexOf("Mac")!=-1) {
-	os = 'mac'
-};
-
-if (navigator.userAgent.match(/iPad/i) != null) {
-	os = 'ipad';
-	isiPad = true;
-}
-
-tc.jQ('body').addClass(os);

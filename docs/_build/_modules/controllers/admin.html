@@ -1,0 +1,714 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.admin &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.admin</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">giveaminute.user</span> <span class="kn">as</span> <span class="nn">mUser</span>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.project</span> <span class="kn">as</span> <span class="nn">mProject</span>
+<span class="kn">import</span> <span class="nn">giveaminute.metrics</span> <span class="kn">as</span> <span class="nn">mMetrics</span>
+<span class="kn">import</span> <span class="nn">giveaminute.projectResource</span> <span class="kn">as</span> <span class="nn">mProjectResource</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<div class="viewcode-block" id="Admin"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin">[docs]</a><span class="k">class</span> <span class="nc">Admin</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="Admin.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">param0</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">param1</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_login</span><span class="p">(</span><span class="s">&quot;/login&quot;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;admin&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showAdmin</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;content&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">showContent</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;users&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAdminUsers</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;all&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getflagged&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;counts&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedItemCounts</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c"># TODO: eholda</span>
+                    <span class="c"># this is temporary until we decide how aggregate view will work</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedIdeas</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;project&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getflagged&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedProjects</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;idea&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getflagged&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedIdeas</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;message&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getflagged&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedMessages</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;goal&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getflagged&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedGoals</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;link&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getflagged&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedLinks</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;resource&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;getunreviewed&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUnreviewedResources</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;metrics&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBasicMetrics</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;csv&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;metrics&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;keywords&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTagsCSV</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;project&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProjectCSV</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;resource&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResourceCSV</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;user&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUserCSV</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;location&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getLocationCSV</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;site&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;feedback&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSiteFeedbackCSV</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;betarequests&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBetaRequestsCSV</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>                   
+            </div>
+<div class="viewcode-block" id="Admin.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">param0</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">param1</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_login</span><span class="p">(</span><span class="s">&quot;/login&quot;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;user&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addUser</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteUser</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;setrole&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setUserGroup</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;oncall&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setUserOncall</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;blacklist&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateBlacklist</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;idea&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;idea&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;idea_id&#39;</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;approve&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">approveItem</span><span class="p">(</span><span class="s">&#39;idea&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;idea_id&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;project&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteProject</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;approve&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">approveItem</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;feature&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">param1</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfeatureProject</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">featureProject</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;message&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;project_message&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message_id&#39;</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;approve&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">approveItem</span><span class="p">(</span><span class="s">&#39;project_message&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;message_id&#39;</span><span class="p">))</span>                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;goal&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;project_goal&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;goal_id&#39;</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;approve&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">approveItem</span><span class="p">(</span><span class="s">&#39;project_goal&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;goal_id&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;link&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;project_link&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;link_id&#39;</span><span class="p">))</span> 
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;approve&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">approveItem</span><span class="p">(</span><span class="s">&#39;project_link&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;link_id&#39;</span><span class="p">))</span>                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;resource&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;delete&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;project_resource&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">param0</span> <span class="o">==</span> <span class="s">&#39;approve&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">approveProjectResource</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+            </div>
+<div class="viewcode-block" id="Admin.showAdmin"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.showAdmin">[docs]</a>    <span class="k">def</span> <span class="nf">showAdmin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># first page of admin</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">getAdminUsers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c"># blacklist/graylist</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBadwords</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;users&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">users</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">users</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;words&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">words</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">words</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;cms_adminsettings&#39;</span><span class="p">)</span>
+        
+        </div>
+<div class="viewcode-block" id="Admin.showContent"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.showContent">[docs]</a>    <span class="k">def</span> <span class="nf">showContent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">featuredProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">getFeaturedProjectsDictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_data</span><span class="p">[</span><span class="s">&#39;featured_projects&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">featuredProjects</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">featuredProjects</span><span class="p">))</span>
+    
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s">&#39;cms_content&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Admin.deleteProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.deleteProject">[docs]</a>    <span class="k">def</span> <span class="nf">deleteProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        
+        <span class="n">isDeleted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="n">projectId</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">isDeleted</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s">&#39;featured_project&#39;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s">&quot;project_id = $id&quot;</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">projectId</span><span class="p">})</span>
+            
+        <span class="k">return</span> <span class="n">isDeleted</span>
+        </div>
+<div class="viewcode-block" id="Admin.featureProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.featureProject">[docs]</a>    <span class="k">def</span> <span class="nf">featureProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">featuredProjectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        <span class="n">unfeaturedProjectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;replace_project_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">featuredProjectId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** feature project submitted w/o project id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>   
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">unfeaturedProjectId</span><span class="p">):</span>
+                <span class="n">ordinal</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">unfeatureProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">unfeaturedProjectId</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ordinal</span> <span class="o">=</span> <span class="bp">None</span>
+            
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">featureProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">featuredProjectId</span><span class="p">,</span> <span class="n">ordinal</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.unfeatureProject"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.unfeatureProject">[docs]</a>    <span class="k">def</span> <span class="nf">unfeatureProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">unfeaturedProjectId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;project_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">unfeaturedProjectId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** unfeature project submitted w/o project id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">unfeatureProject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">unfeaturedProjectId</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.getFlaggedProjects"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedProjects">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedProjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.title as project_title, </span>
+<span class="s">                         p.project_id,</span>
+<span class="s">                         &#39;project&#39; as item_type,</span>
+<span class="s">                         p.project_id as item_id,</span>
+<span class="s">                         p.description as item_description,</span>
+<span class="s">                         cast(p.created_datetime as char) as item_created_datetime,</span>
+<span class="s">                         u.first_name as owner_first_name,</span>
+<span class="s">                         u.last_name as owner_last_name,</span>
+<span class="s">                         u.user_id as owner_user_id</span>
+<span class="s">                  from project p</span>
+<span class="s">                  left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin</span>
+<span class="s">                  left join user u on u.user_id = pu.user_id</span>
+<span class="s">                  where p.is_active = 1 and p.num_flags &gt; 0</span>
+<span class="s">                  order by p.created_datetime desc</span>
+<span class="s">                limit $limit offset $offset&quot;&quot;&quot;</span>
+                
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedItems</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.getFlaggedIdeas"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedIdeas">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedIdeas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select null as project_title, </span>
+<span class="s">                         null as project_id,</span>
+<span class="s">                         &#39;idea&#39; as item_type,</span>
+<span class="s">                         i.idea_id as item_id,</span>
+<span class="s">                         i.description as item_description,</span>
+<span class="s">                         cast(i.created_datetime as char) as item_created_datetime,</span>
+<span class="s">                         u.first_name as owner_first_name,</span>
+<span class="s">                         u.last_name as owner_last_name,</span>
+<span class="s">                         u.user_id as owner_user_id</span>
+<span class="s">                  from idea i</span>
+<span class="s">                  left join user u on u.user_id = i.user_id</span>
+<span class="s">                  where i.is_active = 1 and i.num_flags &gt; 0</span>
+<span class="s">                  order by i.created_datetime desc</span>
+<span class="s">                  limit $limit offset $offset&quot;&quot;&quot;</span>
+                  
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedItems</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.getFlaggedMessages"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedMessages">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.title as project_title, </span>
+<span class="s">                         p.project_id,</span>
+<span class="s">                         &#39;message&#39; as item_type,</span>
+<span class="s">                         pm.project_id as item_id,</span>
+<span class="s">                         pm.message as item_description,</span>
+<span class="s">                         cast(pm.created_datetime as char) as item_created_datetime,</span>
+<span class="s">                         u.first_name as owner_first_name,</span>
+<span class="s">                         u.last_name as owner_last_name,</span>
+<span class="s">                         u.user_id as owner_user_id</span>
+<span class="s">                  from project_message pm</span>
+<span class="s">                  inner join project p on pm.project_id = p.project_id</span>
+<span class="s">                  inner join user u on u.user_id = pm.user_id</span>
+<span class="s">                  where pm.is_active = 1 and pm.num_flags &gt; 0</span>
+<span class="s">                  order by pm.created_datetime desc</span>
+<span class="s">                  limit $limit offset $offset&quot;&quot;&quot;</span>
+                  
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedItems</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+        </div>
+<div class="viewcode-block" id="Admin.getFlaggedGoals"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedGoals">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedGoals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.title as project_title, </span>
+<span class="s">                         p.project_id,</span>
+<span class="s">                         &#39;goal&#39; as item_type,</span>
+<span class="s">                         pg.project_goal_id as item_id,</span>
+<span class="s">                         pg.description as item_description,</span>
+<span class="s">                         cast(pg.created_datetime as char) as item_created_datetime,</span>
+<span class="s">                         u.first_name as owner_first_name,</span>
+<span class="s">                         u.last_name as owner_last_name,</span>
+<span class="s">                         u.user_id as owner_user_id</span>
+<span class="s">                  from project_goal pg</span>
+<span class="s">                  inner join project p on pg.project_id = p.project_id</span>
+<span class="s">                  inner join user u on u.user_id = pg.user_id</span>
+<span class="s">                  where pg.is_active = 1 and pg.num_flags &gt; 0</span>
+<span class="s">                  order by pg.created_datetime desc</span>
+<span class="s">                  limit $limit offset $offset&quot;&quot;&quot;</span>
+                  
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedItems</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.getFlaggedLinks"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedLinks">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedLinks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.title as project_title, </span>
+<span class="s">                         p.project_id,</span>
+<span class="s">                         &#39;link&#39; as item_type,</span>
+<span class="s">                         pl.project_link_id as item_id,</span>
+<span class="s">                         concat(pl.title, &#39;: &#39;, pl.url) as item_description,</span>
+<span class="s">                         cast(pl.created_datetime as char) as item_created_datetime,</span>
+<span class="s">                         u.first_name as owner_first_name,</span>
+<span class="s">                         u.last_name as owner_last_name,</span>
+<span class="s">                         u.user_id as owner_user_id</span>
+<span class="s">                  from project_link pl</span>
+<span class="s">                  inner join project p on pl.project_id = p.project_id</span>
+<span class="s">                  left join project__user pu on pu.project_id = p.project_id and pu.is_project_admin</span>
+<span class="s">                  left join user u on u.user_id = pu.user_id</span>
+<span class="s">                  where pl.is_active = 1 and pl.num_flags &gt; 0</span>
+<span class="s">                  limit $limit offset $offset&quot;&quot;&quot;</span>
+                  
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFlaggedItems</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.getFlaggedItems"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedItems">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedItems</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">):</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_limit&#39;</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;offset&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">}))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** problem getting flagged items&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.getFlaggedItemCounts"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getFlaggedItemCounts">[docs]</a>    <span class="k">def</span> <span class="nf">getFlaggedItemCounts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">None</span>
+    
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select &#39;projects&#39; as flagged_item,</span>
+<span class="s">                          count(p.project_id) as num</span>
+<span class="s">                  from project p</span>
+<span class="s">                  where p.is_active = 1 and p.num_flags &gt; 0</span>
+<span class="s">                  union</span>
+<span class="s">                  select &#39;ideas&#39; as flagged_item,</span>
+<span class="s">                         count(i.idea_id) as num</span>
+<span class="s">                  from idea i</span>
+<span class="s">                  where i.is_active = 1 and i.num_flags &gt; 0</span>
+<span class="s">                  union</span>
+<span class="s">                  select &#39;messages&#39; as flagged_item,</span>
+<span class="s">                         count(pm.project_message_id) as num</span>
+<span class="s">                  from project_message pm</span>
+<span class="s">                  inner join project p on pm.project_id = p.project_id</span>
+<span class="s">                  inner join user u on u.user_id = pm.user_id</span>
+<span class="s">                  where pm.is_active = 1 and pm.num_flags &gt; 0</span>
+<span class="s">                  union</span>
+<span class="s">                  select &#39;goals&#39; as flagged_item,</span>
+<span class="s">                         count(pg.project_goal_id) as num</span>
+<span class="s">                  from project_goal pg</span>
+<span class="s">                  inner join project p on pg.project_id = p.project_id</span>
+<span class="s">                  inner join user u on u.user_id = pg.user_id</span>
+<span class="s">                  where pg.is_active = 1 and pg.num_flags &gt; 0</span>
+<span class="s">                  union</span>
+<span class="s">                  select &#39;links&#39; as flagged_item,</span>
+<span class="s">                         count(pl.project_link_id) as num</span>
+<span class="s">                  from project_link pl</span>
+<span class="s">                  inner join project p on pl.project_id = p.project_id</span>
+<span class="s">                  where pl.is_active = 1 and pl.num_flags &gt; 0&quot;&quot;&quot;</span>
+                  
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+            
+            <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">flagged_items</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">item</span><span class="o">.</span><span class="n">flagged_item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get flagged item counts&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        </div>
+<div class="viewcode-block" id="Admin.getUnreviewedResources"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getUnreviewedResources">[docs]</a>    <span class="k">def</span> <span class="nf">getUnreviewedResources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_limit&#39;</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;offset&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">mProjectResource</span><span class="o">.</span><span class="n">getUnreviewedProjectResources</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+        
+    <span class="c"># BEGIN metrics methods</span></div>
+<div class="viewcode-block" id="Admin.getBasicMetrics"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getBasicMetrics">[docs]</a>    <span class="k">def</span> <span class="nf">getBasicMetrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getCounts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">kwUsage</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getKeywordUsage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">kwNum</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getNumKeywords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+    
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">overall</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">,</span>
+                    <span class="n">tags</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">num_total</span> <span class="o">=</span> <span class="n">kwNum</span><span class="p">,</span>
+                                <span class="n">top</span> <span class="o">=</span> <span class="n">kwUsage</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>        
+                </div>
+<div class="viewcode-block" id="Admin.getTagsCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getTagsCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getTagsCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getKeywordUsage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;WORD&quot;,&quot;TOTAL&quot;,&quot;PROJECTS&quot;,&quot;RESOURCES&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">word</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">num_projects</span> <span class="o">+</span> <span class="n">item</span><span class="o">.</span><span class="n">num_resources</span><span class="p">),</span> <span class="n">item</span><span class="o">.</span><span class="n">num_projects</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_resources</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.tags.csv&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.getProjectCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getProjectCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getProjectCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getProjectCounts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;PROJECT&quot;,&quot;USERS&quot;,&quot;IDEAS&quot;,&quot;RESOURCES&quot;,&quot;ENDORSEMENTS&quot;,&quot;KEYWORDS&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_users</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_ideas</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_resources</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_endorsements</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">keywords</span><span class="o">.</span><span class="n">split</span><span class="p">())))</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.project.csv&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.getResourceCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getResourceCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getResourceCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getResourceCounts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;RESOURCE&quot;,&quot;DETAIL&quot;,&quot;NUM PROJECTS ADDED&quot;,&quot;DATE CREATED&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">project_count</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.resource.csv&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.getUserCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getUserCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getUserCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getUserCounts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;LAST NAME&quot;,&quot;FIRST NAME&quot;,&quot;EMAIL&quot;,&quot;PROJECTS JOINED&quot;,&quot;DATE JOINED&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_projects</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">))</span>
+            
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.user.csv&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.getLocationCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getLocationCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getLocationCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mMetrics</span><span class="o">.</span><span class="n">getLocationCounts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;LOCATION&quot;,&quot;BOROUGH&quot;,&quot;PROJECTS&quot;,&quot;IDEAS&quot;,&quot;RESOURCES&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">borough</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_projects</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_ideas</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num_resources</span><span class="p">))</span>            
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.location.csv&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.getSiteFeedbackCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getSiteFeedbackCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getSiteFeedbackCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;ID&quot;,&quot;NAME&quot;,&quot;EMAIL&quot;,&quot;COMMENT&quot;,&quot;TYPE&quot;,&quot;TIMESTAMP&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select site_feedback_id, submitter_name, submitter_email, comment, feedback_type, created_datetime from site_feedback order by site_feedback_id&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+        
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">site_feedback_id</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">submitter_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">comment</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">feedback_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">)))</span> 
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** there was a problem getting site feedback&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.feedback.csv&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.getBetaRequestsCSV"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getBetaRequestsCSV">[docs]</a>    <span class="k">def</span> <span class="nf">getBetaRequestsCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;EMAIL&quot;,&quot;TIMESTAMP&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select email, created_datetime from beta_invite_request order by created_datetime&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+        
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">csv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">created_datetime</span><span class="p">)))</span> 
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** there was a problem getting beta invite requests&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv</span><span class="p">),</span> <span class="s">&quot;change_by_us.beta_invite_requests.csv&quot;</span><span class="p">)</span>
+    <span class="c"># END metrics methods</span>
+    </div>
+<div class="viewcode-block" id="Admin.getAdminUsers"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getAdminUsers">[docs]</a>    <span class="k">def</span> <span class="nf">getAdminUsers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_users&#39;</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;offset&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">mUser</span><span class="o">.</span><span class="n">getAdminUsers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+        </div>
+<div class="viewcode-block" id="Admin.setUserGroup"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.setUserGroup">[docs]</a>    <span class="k">def</span> <span class="nf">setUserGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">)</span>
+        <span class="n">userGroupId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;role&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mUser</span><span class="o">.</span><span class="n">assignUserToGroup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">userGroupId</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Admin.setUserOncall"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.setUserOncall">[docs]</a>    <span class="k">def</span> <span class="nf">setUserOncall</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">)</span>
+        <span class="n">isOncall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;is_oncall&#39;</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="n">mUser</span><span class="o">.</span><span class="n">setUserOncallStatus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">isOncall</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Admin.addUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.addUser">[docs]</a>    <span class="k">def</span> <span class="nf">addUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">firstName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;f_name&#39;</span><span class="p">)</span>
+        <span class="n">lastName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;l_name&#39;</span><span class="p">)</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">)</span>    
+        <span class="n">userGroupId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;role&#39;</span><span class="p">))</span>
+        <span class="n">affiliation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;affiliation&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">email</span><span class="p">)</span><span class="ow">or</span> <span class="ow">not</span> <span class="n">util</span><span class="o">.</span><span class="n">validate_email</span><span class="p">(</span><span class="n">email</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** cms user submitted with invalid email&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">strNullOrEmpty</span><span class="p">(</span><span class="n">password</span><span class="p">)):</span> 
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** cms user submitted with no password&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">userGroupId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** cms user submitted with no role&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="n">mUser</span><span class="o">.</span><span class="n">createUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">,</span> <span class="n">affiliation</span> <span class="o">=</span> <span class="n">affiliation</span><span class="p">,</span> <span class="n">isAdmin</span> <span class="o">=</span> <span class="p">(</span><span class="n">userGroupId</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">userGroupId</span> <span class="o">==</span> <span class="mi">3</span><span class="p">))</span>
+            
+            <span class="c"># do we want to attach ideas to cms users?</span>
+            <span class="n">mIdea</span><span class="o">.</span><span class="n">attachIdeasByEmail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+
+            <span class="n">mUser</span><span class="o">.</span><span class="n">assignUserToGroup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">userGroupId</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">userId</span>
+            </div>
+<div class="viewcode-block" id="Admin.deleteUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.deleteUser">[docs]</a>    <span class="k">def</span> <span class="nf">deleteUser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">)</span>
+              
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="n">userId</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeUserFromAllProjects</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleteProjectsByUser</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleteItemsByUser</span><span class="p">(</span><span class="s">&#39;project_goal&#39;</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleteItemsByUser</span><span class="p">(</span><span class="s">&#39;project_message&#39;</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleteItemsByUser</span><span class="p">(</span><span class="s">&#39;idea&#39;</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            
+            <span class="c"># email deleted user</span>
+<span class="c"># TODO: temporarily commenting out because the only place this currently gets sent from is deletion of admins</span>
+<span class="c">#             u = mUser.User(self.db, userId)</span>
+<span class="c">#             </span>
+<span class="c">#             if (not mMessaging.emailAccountDeactivation(u.email)):</span>
+<span class="c">#                 log.error(&quot;*** couldn&#39;t email deleted user_id = %s&quot; % userId)            </span>
+            
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t delete user </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">userId</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Admin.approveItem"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.approveItem">[docs]</a>    <span class="k">def</span> <span class="nf">approveItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">id</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** approve item attempted w/o id for table = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">table</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">approveItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Admin.deleteItem"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.deleteItem">[docs]</a>    <span class="k">def</span> <span class="nf">deleteItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">id</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** delete item attempted w/o id for table = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">table</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">deleteItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.deleteItemsByUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.deleteItemsByUser">[docs]</a>    <span class="k">def</span> <span class="nf">deleteItemsByUser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">userId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** delete items by user attempted w/o user_id for table = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">table</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">deleteItemsByUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Admin.deleteProjectsByUser"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.deleteProjectsByUser">[docs]</a>    <span class="k">def</span> <span class="nf">deleteProjectsByUser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">userId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** delete projects by user attempted w/o user_id &quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">deleteProjectsByUser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Admin.removeUserFromAllProjects"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.removeUserFromAllProjects">[docs]</a>    <span class="k">def</span> <span class="nf">removeUserFromAllProjects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userId</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">userId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** remove user from projects attempted w/o user_id &quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mProject</span><span class="o">.</span><span class="n">removeUserFromAllProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">userId</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Admin.approveProjectResource"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.approveProjectResource">[docs]</a>    <span class="k">def</span> <span class="nf">approveProjectResource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">projectResourceId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;resource_id&#39;</span><span class="p">)</span>
+        <span class="n">isOfficial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;is_official&#39;</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">projectResourceId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** attempted to approve resource w/o id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">approveProjectResource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">,</span> <span class="n">isOfficial</span><span class="p">):</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">mProjectResource</span><span class="o">.</span><span class="n">ProjectResource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">)</span>
+            
+                <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailResourceApproval</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">contact_email</span><span class="p">,</span> <span class="n">resource</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_email</span><span class="p">):</span>
+                    <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailResourceApproval</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">owner_email</span><span class="p">,</span> <span class="n">resource</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+                
+           </div>
+<div class="viewcode-block" id="Admin.updateBlacklist"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.updateBlacklist">[docs]</a>    <span class="k">def</span> <span class="nf">updateBlacklist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">blacklist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;blacklist&#39;</span><span class="p">)</span>
+        <span class="n">graylist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;graylist&#39;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c">#replace delimiters, strip whitespace</span>
+            <span class="n">newBlacklist</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">blacklist</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)])</span>
+            <span class="n">newGraylist</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">graylist</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)])</span>
+        
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;badwords&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;id = 1&quot;</span><span class="p">,</span> 
+                                <span class="n">kill_words</span> <span class="o">=</span> <span class="n">newBlacklist</span><span class="p">,</span>
+                                <span class="n">warn_words</span> <span class="o">=</span> <span class="n">newGraylist</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t update blacklist&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="Admin.getBadwords"><a class="viewcode-back" href="../../modules/controllers.html#controllers.admin.Admin.getBadwords">[docs]</a>    <span class="k">def</span> <span class="nf">getBadwords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">blacklist</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">graylist</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select kill_words, warn_words from badwords where id = 1 limit 1&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">words</span><span class="p">[</span><span class="s">&#39;blacklist&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">kill_words</span>
+                <span class="n">words</span><span class="p">[</span><span class="s">&#39;graylist&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">warn_words</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get badwords&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">words</span>
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -43,6 +43,8 @@ class Idea(Controller):
             return ideaId
         else:
             return False
+
+        return ideaId if ideaId else False 
         
     def flagIdea(self):
         ideaId = self.request('idea_id')

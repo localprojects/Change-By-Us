@@ -1,0 +1,191 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.page &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.page</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">cgi</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">framework.filters</span> <span class="kn">as</span> <span class="nn">filters</span>
+<span class="kn">from</span> <span class="nn">lib</span> <span class="kn">import</span> <span class="n">jinja2</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;____________________________________________________________________________&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="render_jinja"><a class="viewcode-back" href="../../modules/framework.html#framework.page.render_jinja">[docs]</a><span class="k">class</span> <span class="nc">render_jinja</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">extensions</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="nb">globals</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;globals&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">FileSystemLoader</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">extensions</span><span class="o">=</span><span class="n">extensions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">globals</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>	<span class="c"># bh added</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span>
+</div>
+<div class="viewcode-block" id="render"><a class="viewcode-back" href="../../modules/framework.html#framework.page.render">[docs]</a><span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">&quot;html&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">template_values</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">template_values</span> <span class="o">=</span> <span class="p">{}</span>        
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;TEMPLATE </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="p">))</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span>       
+    <span class="n">config</span><span class="p">[</span><span class="s">&#39;base_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">base_url</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>      
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">template_values</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">template_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>              
+    <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;template_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">template_name</span>
+    <span class="n">renderer</span> <span class="o">=</span> <span class="n">render_jinja</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/../&#39;</span><span class="p">)</span>      
+    <span class="n">renderer</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: text/plain</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/html (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">template_name</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">renderer</span><span class="p">[</span><span class="n">template_name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">](</span><span class="n">template_values</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="json"><a class="viewcode-back" href="../../modules/framework.html#framework.page.json">[docs]</a><span class="k">def</span> <span class="nf">json</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>               
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: text/plain</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/plain (JSON)&quot;</span><span class="p">)</span>                                
+    <span class="k">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="xml"><a class="viewcode-back" href="../../modules/framework.html#framework.page.xml">[docs]</a><span class="k">def</span> <span class="nf">xml</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>    
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: application/xml</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="s">&quot;&lt;?xml version=</span><span class="se">\&quot;</span><span class="s">1.0</span><span class="se">\&quot;</span><span class="s"> encoding=</span><span class="se">\&quot;</span><span class="s">UTF-8</span><span class="se">\&quot;</span><span class="s"> ?&gt;</span><span class="se">\n</span><span class="s">&quot;</span>
+    <span class="n">output</span> <span class="o">+=</span> <span class="n">data</span>                                          <span class="c">## should make this use a real library</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: application/xml&quot;</span><span class="p">)</span>                        
+    <span class="k">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="html"><a class="viewcode-back" href="../../modules/framework.html#framework.page.html">[docs]</a><span class="k">def</span> <span class="nf">html</span><span class="p">(</span><span class="n">html</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: text/html</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="s">&quot;&lt;html&gt;&lt;head&gt;&lt;meta http-equiv=</span><span class="se">\&quot;</span><span class="s">Content-Type</span><span class="se">\&quot;</span><span class="s"> content=</span><span class="se">\&quot;</span><span class="s">text/html; charset=UTF-8</span><span class="se">\&quot;</span><span class="s"> /&gt;&lt;/head&gt;&lt;body&gt;&quot;</span>
+    <span class="n">doc</span> <span class="o">+=</span> <span class="n">html</span>
+    <span class="n">doc</span> <span class="o">+=</span> <span class="s">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/html&quot;</span><span class="p">)</span>                
+    <span class="k">print</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="text"><a class="viewcode-back" href="../../modules/framework.html#framework.page.text">[docs]</a><span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: text/plain</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/plain&quot;</span><span class="p">)</span>        
+    <span class="k">print</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="csv"><a class="viewcode-back" href="../../modules/framework.html#framework.page.csv">[docs]</a><span class="k">def</span> <span class="nf">csv</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: text/csv</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Disposition attachment; filename=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: text/csv&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="image"><a class="viewcode-back" href="../../modules/framework.html#framework.page.image">[docs]</a><span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: image/png</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Expires Thu, 15 Apr 2050 20:00:00 GMT&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: image/png&quot;</span><span class="p">)</span>        
+    <span class="k">print</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="temp_image"><a class="viewcode-back" href="../../modules/framework.html#framework.page.temp_image">[docs]</a><span class="k">def</span> <span class="nf">temp_image</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Content-Type: image/png</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>     
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Cache-Control no-cache&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;200: image/png (temporary)&quot;</span><span class="p">)</span>        
+    <span class="k">print</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c"># def error(message):</span>
+<span class="c">#     log.error(&quot;400: %s&quot; % message)</span>
+<span class="c">#     return web.BadRequest(message)</span>
+
+<span class="c"># def not_found(self):</span>
+<span class="c">#     log.error(&quot;404: Page not found&quot;)</span>
+<span class="c">#     return web.NotFound()</span>
+<span class="c">#     </span>
+<span class="c"># def redirect(url):</span>
+<span class="c">#     log.info(&quot;303: Redirecting to &quot; + url)      </span>
+<span class="c">#     return web.SeeOther(url)</span>
+<span class="c"># </span>
+<span class="c"># def refresh(self):</span>
+<span class="c">#     url = web.ctx.path</span>
+<span class="c">#     log.info(&quot;303: Redirecting to &quot; + url + &quot; (refresh)&quot;)</span>
+<span class="c">#     return web.SeeOther(url)    </span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

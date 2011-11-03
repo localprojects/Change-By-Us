@@ -1,0 +1,550 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite.ext &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="lib.jinja2.testsuite" href="../testsuite.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" accesskey="U">lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite.ext</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite.ext</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Tests for the extensions.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">JinjaTestCase</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">DictLoader</span><span class="p">,</span> <span class="n">contextfunction</span><span class="p">,</span> <span class="n">nodes</span>
+<span class="kn">from</span> <span class="nn">jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateAssertionError</span>
+<span class="kn">from</span> <span class="nn">jinja2.ext</span> <span class="kn">import</span> <span class="n">Extension</span>
+<span class="kn">from</span> <span class="nn">jinja2.lexer</span> <span class="kn">import</span> <span class="n">Token</span><span class="p">,</span> <span class="n">count_newlines</span>
+<span class="kn">from</span> <span class="nn">jinja2.utils</span> <span class="kn">import</span> <span class="nb">next</span>
+
+<span class="c"># 2.x / 3.x</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span> <span class="k">as</span> <span class="n">BytesIO</span>
+
+
+<span class="n">importable_object</span> <span class="o">=</span> <span class="mi">23</span>
+
+<span class="n">_gettext_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;_\((.*?)\)(?s)&#39;</span><span class="p">)</span>
+
+
+<span class="n">i18n_templates</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;master.html&#39;</span><span class="p">:</span> <span class="s">&#39;&lt;title&gt;{{ page_title|default(_(&quot;missing&quot;)) }}&lt;/title&gt;&#39;</span>
+                   <span class="s">&#39;{% block body %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;child.html&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;master.html&quot; %}{% block body %}&#39;</span>
+                  <span class="s">&#39;{% trans %}watch out{</span><span class="si">% e</span><span class="s">ndtrans %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;plural.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans user_count %}One user online{% pluralize %}&#39;</span>
+                   <span class="s">&#39;{{ user_count }} users online{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;stringformat.html&#39;</span><span class="p">:</span> <span class="s">&#39;{{ _(&quot;User: </span><span class="si">%(num)s</span><span class="s">&quot;)|format(num=user_count) }}&#39;</span>
+<span class="p">}</span>
+
+<span class="n">newstyle_i18n_templates</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;master.html&#39;</span><span class="p">:</span> <span class="s">&#39;&lt;title&gt;{{ page_title|default(_(&quot;missing&quot;)) }}&lt;/title&gt;&#39;</span>
+                   <span class="s">&#39;{% block body %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;child.html&#39;</span><span class="p">:</span> <span class="s">&#39;{</span><span class="si">% e</span><span class="s">xtends &quot;master.html&quot; %}{% block body %}&#39;</span>
+                  <span class="s">&#39;{% trans %}watch out{</span><span class="si">% e</span><span class="s">ndtrans %}{</span><span class="si">% e</span><span class="s">ndblock %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;plural.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans user_count %}One user online{% pluralize %}&#39;</span>
+                   <span class="s">&#39;{{ user_count }} users online{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;stringformat.html&#39;</span><span class="p">:</span> <span class="s">&#39;{{ _(&quot;User: </span><span class="si">%(num)s</span><span class="s">&quot;, num=user_count) }}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ngettext.html&#39;</span><span class="p">:</span> <span class="s">&#39;{{ ngettext(&quot;</span><span class="si">%(num)s</span><span class="s"> apple&quot;, &quot;</span><span class="si">%(num)s</span><span class="s"> apples&quot;, apples) }}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ngettext_long.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans num=apples %}{{ num }} apple{% pluralize %}&#39;</span>
+                          <span class="s">&#39;{{ num }} apples{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;transvars1.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans %}User: {{ num }}{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;transvars2.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans num=count %}User: {{ num }}{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;transvars3.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans count=num %}User: {{ count }}{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;novars.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans %}</span><span class="si">%(hello)s</span><span class="s">{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;vars.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans %}{{ foo }}</span><span class="si">%(foo)s</span><span class="s">{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">,</span>
+    <span class="s">&#39;explicitvars.html&#39;</span><span class="p">:</span> <span class="s">&#39;{% trans foo=&quot;42&quot; %}</span><span class="si">%(foo)s</span><span class="s">{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span>
+<span class="p">}</span>
+
+
+<span class="n">languages</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;de&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;missing&#39;</span><span class="p">:</span>                      <span class="s">u&#39;fehlend&#39;</span><span class="p">,</span>
+        <span class="s">&#39;watch out&#39;</span><span class="p">:</span>                    <span class="s">u&#39;pass auf&#39;</span><span class="p">,</span>
+        <span class="s">&#39;One user online&#39;</span><span class="p">:</span>              <span class="s">u&#39;Ein Benutzer online&#39;</span><span class="p">,</span>
+        <span class="s">&#39;</span><span class="si">%(user_count)s</span><span class="s"> users online&#39;</span><span class="p">:</span>  <span class="s">u&#39;</span><span class="si">%(user_count)s</span><span class="s"> Benutzer online&#39;</span><span class="p">,</span>
+        <span class="s">&#39;User: </span><span class="si">%(num)s</span><span class="s">&#39;</span><span class="p">:</span>                <span class="s">u&#39;Benutzer: </span><span class="si">%(num)s</span><span class="s">&#39;</span><span class="p">,</span>
+        <span class="s">&#39;User: </span><span class="si">%(count)s</span><span class="s">&#39;</span><span class="p">:</span>              <span class="s">u&#39;Benutzer: </span><span class="si">%(count)s</span><span class="s">&#39;</span><span class="p">,</span>
+        <span class="s">&#39;</span><span class="si">%(num)s</span><span class="s"> apple&#39;</span><span class="p">:</span>                <span class="s">u&#39;</span><span class="si">%(num)s</span><span class="s"> Apfel&#39;</span><span class="p">,</span>
+        <span class="s">&#39;</span><span class="si">%(num)s</span><span class="s"> apples&#39;</span><span class="p">:</span>               <span class="s">u&#39;</span><span class="si">%(num)s</span><span class="s"> Äpfel&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="nd">@contextfunction</span>
+<div class="viewcode-block" id="gettext"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.gettext">[docs]</a><span class="k">def</span> <span class="nf">gettext</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="n">language</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;LANGUAGE&#39;</span><span class="p">,</span> <span class="s">&#39;en&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">languages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+</div>
+<span class="nd">@contextfunction</span>
+<div class="viewcode-block" id="ngettext"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ngettext">[docs]</a><span class="k">def</span> <span class="nf">ngettext</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">language</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;LANGUAGE&#39;</span><span class="p">,</span> <span class="s">&#39;en&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">languages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">languages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+</div>
+<span class="n">i18n_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span>
+    <span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">(</span><span class="n">i18n_templates</span><span class="p">),</span>
+    <span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.i18n&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">i18n_env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+    <span class="s">&#39;_&#39;</span><span class="p">:</span>            <span class="n">gettext</span><span class="p">,</span>
+    <span class="s">&#39;gettext&#39;</span><span class="p">:</span>      <span class="n">gettext</span><span class="p">,</span>
+    <span class="s">&#39;ngettext&#39;</span><span class="p">:</span>     <span class="n">ngettext</span>
+<span class="p">})</span>
+
+<span class="n">newstyle_i18n_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span>
+    <span class="n">loader</span><span class="o">=</span><span class="n">DictLoader</span><span class="p">(</span><span class="n">newstyle_i18n_templates</span><span class="p">),</span>
+    <span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.i18n&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">install_gettext_callables</span><span class="p">(</span><span class="n">gettext</span><span class="p">,</span> <span class="n">ngettext</span><span class="p">,</span> <span class="n">newstyle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestExtension"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.TestExtension">[docs]</a><span class="k">class</span> <span class="nc">TestExtension</span><span class="p">(</span><span class="n">Extension</span><span class="p">):</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;test&#39;</span><span class="p">])</span>
+    <span class="n">ext_attr</span> <span class="o">=</span> <span class="mi">42</span>
+
+<div class="viewcode-block" id="TestExtension.parse"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.TestExtension.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Output</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s">&#39;_dump&#39;</span><span class="p">,</span> <span class="p">[</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">EnvironmentAttribute</span><span class="p">(</span><span class="s">&#39;sandboxed&#39;</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">(</span><span class="s">&#39;ext_attr&#39;</span><span class="p">),</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">ImportedName</span><span class="p">(</span><span class="n">__name__</span> <span class="o">+</span> <span class="s">&#39;.importable_object&#39;</span><span class="p">),</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">ContextReference</span><span class="p">()</span>
+        <span class="p">])])</span><span class="o">.</span><span class="n">set_lineno</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sandboxed</span><span class="p">,</span> <span class="n">ext_attr</span><span class="p">,</span> <span class="n">imported_object</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">|</span><span class="si">%s</span><span class="s">|</span><span class="si">%s</span><span class="s">|</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">sandboxed</span><span class="p">,</span>
+            <span class="n">ext_attr</span><span class="p">,</span>
+            <span class="n">imported_object</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">blocks</span>
+        <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="PreprocessorExtension"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.PreprocessorExtension">[docs]</a><span class="k">class</span> <span class="nc">PreprocessorExtension</span><span class="p">(</span><span class="n">Extension</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PreprocessorExtension.preprocess"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.PreprocessorExtension.preprocess">[docs]</a>    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;[[TEST]]&#39;</span><span class="p">,</span> <span class="s">&#39;({{ foo }})&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="StreamFilterExtension"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.StreamFilterExtension">[docs]</a><span class="k">class</span> <span class="nc">StreamFilterExtension</span><span class="p">(</span><span class="n">Extension</span><span class="p">):</span>
+
+<div class="viewcode-block" id="StreamFilterExtension.filter_stream"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.StreamFilterExtension.filter_stream">[docs]</a>    <span class="k">def</span> <span class="nf">filter_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;data&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">t</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">token</span>
+</div>
+<div class="viewcode-block" id="StreamFilterExtension.interpolate"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.StreamFilterExtension.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">lineno</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">_gettext_re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="n">lineno</span> <span class="o">+=</span> <span class="n">count_newlines</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;variable_begin&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;gettext&#39;</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;lparen&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;rparen&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;variable_end&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">Token</span><span class="p">(</span><span class="n">lineno</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">pos</span><span class="p">:])</span>
+
+</div></div>
+<div class="viewcode-block" id="ExtensionsTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase">[docs]</a><span class="k">class</span> <span class="nc">ExtensionsTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ExtensionsTestCase.test_extend_late"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_extend_late">[docs]</a>    <span class="k">def</span> <span class="nf">test_extend_late</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">add_extension</span><span class="p">(</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% autoescape true %}{{ &quot;&lt;test&gt;&quot; }}{</span><span class="si">% e</span><span class="s">ndautoescape %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;test&amp;gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_loop_controls"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_loop_controls">[docs]</a>    <span class="k">def</span> <span class="nf">test_loop_controls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.loopcontrols&#39;</span><span class="p">])</span>
+
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {</span><span class="si">%- f</span><span class="s">or item in [1, 2, 3, 4] %}</span>
+<span class="s">                {</span><span class="si">%- i</span><span class="s">f item % 2 == 0 %}{</span><span class="si">% c</span><span class="s">ontinue %}{</span><span class="si">% e</span><span class="s">ndif -%}</span>
+<span class="s">                {{ item }}</span>
+<span class="s">            {</span><span class="si">%- e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;13&#39;</span>
+
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {</span><span class="si">%- f</span><span class="s">or item in [1, 2, 3, 4] %}</span>
+<span class="s">                {</span><span class="si">%- i</span><span class="s">f item &gt; 2 %}{% break %}{</span><span class="si">% e</span><span class="s">ndif -%}</span>
+<span class="s">                {{ item }}</span>
+<span class="s">            {</span><span class="si">%- e</span><span class="s">ndfor %}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;12&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_do"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_do">[docs]</a>    <span class="k">def</span> <span class="nf">test_do</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.do&#39;</span><span class="p">])</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {</span><span class="si">%- s</span><span class="s">et items = [] %}</span>
+<span class="s">            {</span><span class="si">%- f</span><span class="s">or char in &quot;foo&quot; %}</span>
+<span class="s">                {</span><span class="si">%- d</span><span class="s">o items.append(loop.index0 ~ char) %}</span>
+<span class="s">            {</span><span class="si">%- e</span><span class="s">ndfor %}{{ items|join(&#39;, &#39;) }}&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;0f, 1o, 2o&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_with"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_with">[docs]</a>    <span class="k">def</span> <span class="nf">test_with</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.with_&#39;</span><span class="p">])</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">        {% with a=42, b=23 -%}</span>
+<span class="s">            {{ a }} = {{ b }}</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">ndwith -%}</span>
+<span class="s">            {{ a }} = {{ b }}</span><span class="se">\</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span> \
+            <span class="o">==</span> <span class="p">[</span><span class="s">&#39;42 = 23&#39;</span><span class="p">,</span> <span class="s">&#39;1 = 2&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_extension_nodes"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_extension_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">test_extension_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="n">TestExtension</span><span class="p">])</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% test %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;False|42|23|{}&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_identifier"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_identifier">[docs]</a>    <span class="k">def</span> <span class="nf">test_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">TestExtension</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="n">__name__</span> <span class="o">+</span> <span class="s">&#39;.TestExtension&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_rebinding"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_rebinding">[docs]</a>    <span class="k">def</span> <span class="nf">test_rebinding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">original</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="n">TestExtension</span><span class="p">])</span>
+        <span class="n">overlay</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="n">overlay</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="n">original</span><span class="p">,</span> <span class="n">overlay</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">itervalues</span><span class="p">():</span>
+                <span class="k">assert</span> <span class="n">ext</span><span class="o">.</span><span class="n">environment</span> <span class="ow">is</span> <span class="n">env</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_preprocessor_extension"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_preprocessor_extension">[docs]</a>    <span class="k">def</span> <span class="nf">test_preprocessor_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="n">PreprocessorExtension</span><span class="p">])</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{[[TEST]]}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;{(42)}&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_streamfilter_extension"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_streamfilter_extension">[docs]</a>    <span class="k">def</span> <span class="nf">test_streamfilter_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="n">StreamFilterExtension</span><span class="p">])</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">globals</span><span class="p">[</span><span class="s">&#39;gettext&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;Foo _(bar) Baz&#39;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&#39;Foo BAR Baz&#39;</span>
+</div>
+<div class="viewcode-block" id="ExtensionsTestCase.test_extension_ordering"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.ExtensionsTestCase.test_extension_ordering">[docs]</a>    <span class="k">def</span> <span class="nf">test_extension_ordering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">T1</span><span class="p">(</span><span class="n">Extension</span><span class="p">):</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">class</span> <span class="nc">T2</span><span class="p">(</span><span class="n">Extension</span><span class="p">):</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="p">])</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">iter_extensions</span><span class="p">())</span>
+        <span class="k">assert</span> <span class="n">ext</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">is</span> <span class="n">T1</span>
+        <span class="k">assert</span> <span class="n">ext</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">is</span> <span class="n">T2</span>
+
+</div></div>
+<div class="viewcode-block" id="InternationalizationTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase">[docs]</a><span class="k">class</span> <span class="nc">InternationalizationTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InternationalizationTestCase.test_trans"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase.test_trans">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;child.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;title&gt;fehlend&lt;/title&gt;pass auf&#39;</span>
+</div>
+<div class="viewcode-block" id="InternationalizationTestCase.test_trans_plural"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase.test_trans_plural">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans_plural</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;plural.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">user_count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Ein Benutzer online&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">user_count</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;2 Benutzer online&#39;</span>
+</div>
+<div class="viewcode-block" id="InternationalizationTestCase.test_complex_plural"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase.test_complex_plural">[docs]</a>    <span class="k">def</span> <span class="nf">test_complex_plural</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">i18n_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% trans foo=42, count=2 %}{{ count }} item{% &#39;</span>
+                                    <span class="s">&#39;pluralize count %}{{ count }} items{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;2 items&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateAssertionError</span><span class="p">,</span> <span class="n">i18n_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                           <span class="s">&#39;{% trans foo %}...{% pluralize bar %}...{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InternationalizationTestCase.test_trans_stringformatting"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase.test_trans_stringformatting">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans_stringformatting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;stringformat.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">user_count</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Benutzer: 5&#39;</span>
+</div>
+<div class="viewcode-block" id="InternationalizationTestCase.test_extract"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase.test_extract">[docs]</a>    <span class="k">def</span> <span class="nf">test_extract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">jinja2.ext</span> <span class="kn">import</span> <span class="n">babel_extract</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {{ gettext(&#39;Hello World&#39;) }}</span>
+<span class="s">        {% trans %}Hello World{</span><span class="si">% e</span><span class="s">ndtrans %}</span>
+<span class="s">        {% trans %}{{ users }} user{% pluralize %}{{ users }} users{</span><span class="si">% e</span><span class="s">ndtrans %}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">))</span> <span class="c"># make python 3 happy</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">babel_extract</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;gettext&#39;</span><span class="p">,</span> <span class="s">&#39;ngettext&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">),</span> <span class="p">[],</span> <span class="p">{}))</span> <span class="o">==</span> <span class="p">[</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;gettext&#39;</span><span class="p">,</span> <span class="s">u&#39;Hello World&#39;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;gettext&#39;</span><span class="p">,</span> <span class="s">u&#39;Hello World&#39;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;ngettext&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s">u&#39;</span><span class="si">%(users)s</span><span class="s"> user&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="si">%(users)s</span><span class="s"> users&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">[])</span>
+        <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="InternationalizationTestCase.test_comment_extract"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.InternationalizationTestCase.test_comment_extract">[docs]</a>    <span class="k">def</span> <span class="nf">test_comment_extract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">jinja2.ext</span> <span class="kn">import</span> <span class="n">babel_extract</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {# trans first #}</span>
+<span class="s">        {{ gettext(&#39;Hello World&#39;) }}</span>
+<span class="s">        {% trans %}Hello World{</span><span class="si">% e</span><span class="s">ndtrans %}{# trans second #}</span>
+<span class="s">        {#: third #}</span>
+<span class="s">        {% trans %}{{ users }} user{% pluralize %}{{ users }} users{</span><span class="si">% e</span><span class="s">ndtrans %}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span> <span class="c"># make python 3 happy</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">babel_extract</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;gettext&#39;</span><span class="p">,</span> <span class="s">&#39;ngettext&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;trans&#39;</span><span class="p">,</span> <span class="s">&#39;:&#39;</span><span class="p">],</span> <span class="p">{}))</span> <span class="o">==</span> <span class="p">[</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;gettext&#39;</span><span class="p">,</span> <span class="s">u&#39;Hello World&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;first&#39;</span><span class="p">]),</span>
+            <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;gettext&#39;</span><span class="p">,</span> <span class="s">u&#39;Hello World&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;second&#39;</span><span class="p">]),</span>
+            <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s">&#39;ngettext&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s">u&#39;</span><span class="si">%(users)s</span><span class="s"> user&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="si">%(users)s</span><span class="s"> users&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;third&#39;</span><span class="p">])</span>
+        <span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase">[docs]</a><span class="k">class</span> <span class="nc">NewstyleInternationalizationTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_trans"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_trans">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;child.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;title&gt;fehlend&lt;/title&gt;pass auf&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_trans_plural"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_trans_plural">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans_plural</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;plural.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">user_count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Ein Benutzer online&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">user_count</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;2 Benutzer online&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_complex_plural"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_complex_plural">[docs]</a>    <span class="k">def</span> <span class="nf">test_complex_plural</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% trans foo=42, count=2 %}{{ count }} item{% &#39;</span>
+                                    <span class="s">&#39;pluralize count %}{{ count }} items{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;2 items&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_raises</span><span class="p">(</span><span class="n">TemplateAssertionError</span><span class="p">,</span> <span class="n">i18n_env</span><span class="o">.</span><span class="n">from_string</span><span class="p">,</span>
+                           <span class="s">&#39;{% trans foo %}...{% pluralize bar %}...{</span><span class="si">% e</span><span class="s">ndtrans %}&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_trans_stringformatting"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_trans_stringformatting">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans_stringformatting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;stringformat.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">user_count</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Benutzer: 5&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_newstyle_plural"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_newstyle_plural">[docs]</a>    <span class="k">def</span> <span class="nf">test_newstyle_plural</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;ngettext.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">apples</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;1 Apfel&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="n">apples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="s">u&#39;5 Äpfel&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_autoescape_support"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_autoescape_support">[docs]</a>    <span class="k">def</span> <span class="nf">test_autoescape_support</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">,</span>
+                                      <span class="s">&#39;jinja2.ext.i18n&#39;</span><span class="p">])</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">install_gettext_callables</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s">u&#39;&lt;strong&gt;Wert: </span><span class="si">%(name)s</span><span class="s">&lt;/strong&gt;&#39;</span><span class="p">,</span>
+                                      <span class="k">lambda</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">s</span><span class="p">,</span> <span class="n">newstyle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% autoescape ae %}{{ gettext(&quot;foo&quot;, name=&#39;</span>
+                            <span class="s">&#39;&quot;&lt;test&gt;&quot;) }}{</span><span class="si">% e</span><span class="s">ndautoescape %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ae</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;strong&gt;Wert: &amp;lt;test&amp;gt;&lt;/strong&gt;&#39;</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">ae</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&lt;strong&gt;Wert: &lt;test&gt;&lt;/strong&gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_num_used_twice"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_num_used_twice">[docs]</a>    <span class="k">def</span> <span class="nf">test_num_used_twice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;ngettext_long.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">apples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">u&#39;5 Äpfel&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_num_called_num"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_num_called_num">[docs]</a>    <span class="k">def</span> <span class="nf">test_num_called_num</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {% trans num=3 %}{{ num }} apple{% pluralize</span>
+<span class="s">            %}{{ num }} apples{</span><span class="si">% e</span><span class="s">ndtrans %}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="c"># quite hacky, but the only way to properly test that.  The idea is</span>
+        <span class="c"># that the generated code does not pass num twice (although that</span>
+        <span class="c"># would work) for better performance.  This only works on the</span>
+        <span class="c"># newstyle gettext of course</span>
+        <span class="k">assert</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&quot;l_ngettext, u?&#39;\%\(num\)s apple&#39;, u?&#39;\%\(num\)s &quot;</span>
+                         <span class="s">r&quot;apples&#39;, 3&quot;</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_trans_vars"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_trans_vars">[docs]</a>    <span class="k">def</span> <span class="nf">test_trans_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;transvars1.html&#39;</span><span class="p">)</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;transvars2.html&#39;</span><span class="p">)</span>
+        <span class="n">t3</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;transvars3.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t1</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Benutzer: 1&#39;</span>
+        <span class="k">assert</span> <span class="n">t2</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">23</span><span class="p">,</span> <span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Benutzer: 23&#39;</span>
+        <span class="k">assert</span> <span class="n">t3</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">LANGUAGE</span><span class="o">=</span><span class="s">&#39;de&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;Benutzer: 42&#39;</span>
+</div>
+<div class="viewcode-block" id="NewstyleInternationalizationTestCase.test_novars_vars_escaping"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.NewstyleInternationalizationTestCase.test_novars_vars_escaping">[docs]</a>    <span class="k">def</span> <span class="nf">test_novars_vars_escaping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;novars.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;</span><span class="si">%(hello)s</span><span class="s">&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;vars.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s">&#39;42&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;42</span><span class="si">%(foo)s</span><span class="s">&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">newstyle_i18n_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;explicitvars.html&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;</span><span class="si">%(foo)s</span><span class="s">&#39;</span>
+
+</div></div>
+<div class="viewcode-block" id="AutoEscapeTestCase"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.AutoEscapeTestCase">[docs]</a><span class="k">class</span> <span class="nc">AutoEscapeTestCase</span><span class="p">(</span><span class="n">JinjaTestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AutoEscapeTestCase.test_scoped_setting"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.AutoEscapeTestCase.test_scoped_setting">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoped_setting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">],</span>
+                          <span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {{ &quot;&lt;HelloWorld&gt;&quot; }}</span>
+<span class="s">            {% autoescape false %}</span>
+<span class="s">                {{ &quot;&lt;HelloWorld&gt;&quot; }}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndautoescape %}</span>
+<span class="s">            {{ &quot;&lt;HelloWorld&gt;&quot; }}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="o">==</span> \
+            <span class="p">[</span><span class="s">u&#39;&amp;lt;HelloWorld&amp;gt;&#39;</span><span class="p">,</span> <span class="s">u&#39;&lt;HelloWorld&gt;&#39;</span><span class="p">,</span> <span class="s">u&#39;&amp;lt;HelloWorld&amp;gt;&#39;</span><span class="p">]</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">],</span>
+                          <span class="n">autoescape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            {{ &quot;&lt;HelloWorld&gt;&quot; }}</span>
+<span class="s">            {% autoescape true %}</span>
+<span class="s">                {{ &quot;&lt;HelloWorld&gt;&quot; }}</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndautoescape %}</span>
+<span class="s">            {{ &quot;&lt;HelloWorld&gt;&quot; }}</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="o">==</span> \
+            <span class="p">[</span><span class="s">u&#39;&lt;HelloWorld&gt;&#39;</span><span class="p">,</span> <span class="s">u&#39;&amp;lt;HelloWorld&amp;gt;&#39;</span><span class="p">,</span> <span class="s">u&#39;&lt;HelloWorld&gt;&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="AutoEscapeTestCase.test_nonvolatile"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.AutoEscapeTestCase.test_nonvolatile">[docs]</a>    <span class="k">def</span> <span class="nf">test_nonvolatile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">],</span>
+                          <span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{{ {&quot;foo&quot;: &quot;&lt;test&gt;&quot;}|xmlattr|escape }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39; foo=&quot;&amp;lt;test&amp;gt;&quot;&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% autoescape false %}{{ {&quot;foo&quot;: &quot;&lt;test&gt;&quot;}&#39;</span>
+                               <span class="s">&#39;|xmlattr|escape }}{</span><span class="si">% e</span><span class="s">ndautoescape %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39; foo=&amp;#34;&amp;amp;lt;test&amp;amp;gt;&amp;#34;&#39;</span>
+</div>
+<div class="viewcode-block" id="AutoEscapeTestCase.test_volatile"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.AutoEscapeTestCase.test_volatile">[docs]</a>    <span class="k">def</span> <span class="nf">test_volatile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">],</span>
+                          <span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% autoescape foo %}{{ {&quot;foo&quot;: &quot;&lt;test&gt;&quot;}&#39;</span>
+                               <span class="s">&#39;|xmlattr|escape }}{</span><span class="si">% e</span><span class="s">ndautoescape %}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39; foo=&amp;#34;&amp;amp;lt;test&amp;amp;gt;&amp;#34;&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39; foo=&quot;&amp;lt;test&amp;gt;&quot;&#39;</span>
+</div>
+<div class="viewcode-block" id="AutoEscapeTestCase.test_scoping"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.AutoEscapeTestCase.test_scoping">[docs]</a>    <span class="k">def</span> <span class="nf">test_scoping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">])</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&#39;{% autoescape true %}{</span><span class="si">% s</span><span class="s">et x = &quot;&lt;x&gt;&quot; %}{{ x }}&#39;</span>
+                               <span class="s">&#39;{</span><span class="si">% e</span><span class="s">ndautoescape %}{{ x }}{{ &quot;&lt;y&gt;&quot; }}&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;&amp;lt;x&amp;gt;1&lt;y&gt;&#39;</span>
+</div>
+<div class="viewcode-block" id="AutoEscapeTestCase.test_volatile_scoping"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.AutoEscapeTestCase.test_volatile_scoping">[docs]</a>    <span class="k">def</span> <span class="nf">test_volatile_scoping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">])</span>
+        <span class="n">tmplsource</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">        {% autoescape val %}</span>
+<span class="s">            {% macro foo(x) %}</span>
+<span class="s">                [{{ x }}]</span>
+<span class="s">            {</span><span class="si">% e</span><span class="s">ndmacro %}</span>
+<span class="s">            {{ foo().__class__.__name__ }}</span>
+<span class="s">        {</span><span class="si">% e</span><span class="s">ndautoescape %}</span>
+<span class="s">        {{ &#39;&lt;testing&gt;&#39; }}</span>
+<span class="s">        &#39;&#39;&#39;</span>
+        <span class="n">tmpl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">tmplsource</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;Markup&#39;</span>
+        <span class="k">assert</span> <span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="c"># looking at the source we should see &lt;testing&gt; there in raw</span>
+        <span class="c"># (and then escaped as well)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">])</span>
+        <span class="n">pysource</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">tmplsource</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s">&#39;&lt;testing&gt;</span><span class="se">\\</span><span class="s">n&#39;</span> <span class="ow">in</span> <span class="n">pysource</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">extensions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;jinja2.ext.autoescape&#39;</span><span class="p">],</span>
+                          <span class="n">autoescape</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">pysource</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">tmplsource</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s">&#39;&amp;lt;testing&amp;gt;</span><span class="se">\\</span><span class="s">n&#39;</span> <span class="ow">in</span> <span class="n">pysource</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.ext.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">ExtensionsTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">InternationalizationTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">NewstyleInternationalizationTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">AutoEscapeTestCase</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../jinja2.html" >lib.jinja2</a> &raquo;</li>
+          <li><a href="../testsuite.html" >lib.jinja2.testsuite</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

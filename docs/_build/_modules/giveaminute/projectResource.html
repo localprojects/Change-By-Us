@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.projectResource &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.projectResource</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">import</span> <span class="nn">helpers.censor</span> <span class="kn">as</span> <span class="nn">censor</span>
+
+<div class="viewcode-block" id="ProjectResource"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.ProjectResource">[docs]</a><span class="k">class</span> <span class="nc">ProjectResource</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">projectResourceId</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">populateResourceData</span><span class="p">()</span>
+        
+<div class="viewcode-block" id="ProjectResource.populateResourceData"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.ProjectResource.populateResourceData">[docs]</a>    <span class="k">def</span> <span class="nf">populateResourceData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select pr.project_resource_id, </span>
+<span class="s">                        pr.title, </span>
+<span class="s">                        pr.description, </span>
+<span class="s">                        pr.url, </span>
+<span class="s">                        pr.contact_name, </span>
+<span class="s">                        pr.contact_email, </span>
+<span class="s">                        pr.image_id, </span>
+<span class="s">                        pr.location_id, </span>
+<span class="s">                        pr.is_official,</span>
+<span class="s">                        o.user_id as owner_user_id,</span>
+<span class="s">                        o.first_name as owner_first_name,</span>
+<span class="s">                        o.last_name as owner_last_name,</span>
+<span class="s">                        o.email as owner_email</span>
+<span class="s">                from project_resource pr </span>
+<span class="s">                left join user o on o.user_id = pr.contact_user_id</span>
+<span class="s">                where pr.project_resource_id = $id;&quot;&quot;&quot;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">}))</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get project resource info&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span> 
+            </div>
+<div class="viewcode-block" id="ProjectResource.getFullDictionary"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.ProjectResource.getFullDictionary">[docs]</a>    <span class="k">def</span> <span class="nf">getFullDictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">image_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                    <span class="n">project_resource_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">project_resource_id</span><span class="p">,</span>
+                    <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                    <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">location_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">location_id</span><span class="p">,</span>
+                    <span class="n">is_official</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">is_official</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div></div>
+<div class="viewcode-block" id="searchProjectResourcesCount"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.searchProjectResourcesCount">[docs]</a><span class="k">def</span> <span class="nf">searchProjectResourcesCount</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">locationId</span><span class="p">):</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([(</span><span class="n">item</span> <span class="o">+</span> <span class="s">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">])</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select count(*) as count</span>
+<span class="s">                from project_resource</span>
+<span class="s">                    where</span>
+<span class="s">                    is_active = 1 and is_hidden = 0</span>
+<span class="s">                    and ($locationId is null or location_id = $locationId)</span>
+<span class="s">                    and ($match = &#39;&#39; or match(title, keywords, description) against ($match in boolean mode))&quot;&quot;&quot;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;match&#39;</span><span class="p">:</span><span class="n">match</span><span class="p">,</span> <span class="s">&#39;locationId&#39;</span><span class="p">:</span><span class="n">locationId</span><span class="p">}))</span>
+        
+        <span class="n">count</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">count</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get resources search data&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">count</span>
+</div>
+<div class="viewcode-block" id="searchProjectResources"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.searchProjectResources">[docs]</a><span class="k">def</span> <span class="nf">searchProjectResources</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">locationId</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">match</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([(</span><span class="n">item</span> <span class="o">+</span> <span class="s">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">])</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select project_resource_id as link_id, title, url, image_id, is_official </span>
+<span class="s">                from project_resource</span>
+<span class="s">                    where</span>
+<span class="s">                    is_active = 1 and is_hidden = 0</span>
+<span class="s">                    and ($locationId is null or location_id = $locationId)</span>
+<span class="s">                    and ($match = &#39;&#39; or match(title, keywords, description) against ($match in boolean mode))</span>
+<span class="s">                    order by created_datetime desc</span>
+<span class="s">                    limit $limit offset $offset&quot;&quot;&quot;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;match&#39;</span><span class="p">:</span><span class="n">match</span><span class="p">,</span> <span class="s">&#39;locationId&#39;</span><span class="p">:</span><span class="n">locationId</span><span class="p">,</span> <span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span>	<span class="p">}))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get resources search data&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">data</span>
+        </div>
+<div class="viewcode-block" id="updateProjectResourceImage"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.updateProjectResourceImage">[docs]</a><span class="k">def</span> <span class="nf">updateProjectResourceImage</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">,</span> <span class="n">imageId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;project_resource&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;project_resource_id = $id&quot;</span><span class="p">,</span> <span class="n">image_id</span> <span class="o">=</span> <span class="n">imageId</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">projectResourceId</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t update project image&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="updateProjectResourceLocation"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.updateProjectResourceLocation">[docs]</a><span class="k">def</span> <span class="nf">updateProjectResourceLocation</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">,</span> <span class="n">locationId</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;project_resource&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;project_resource_id = $id&quot;</span><span class="p">,</span> <span class="n">location_id</span> <span class="o">=</span> <span class="n">locationId</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">projectResourceId</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t update project location&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+        </div>
+<div class="viewcode-block" id="updateProjectResourceTextData"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.updateProjectResourceTextData">[docs]</a><span class="k">def</span> <span class="nf">updateProjectResourceTextData</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="n">isHidden</span> <span class="o">=</span> <span class="p">(</span><span class="n">censor</span><span class="o">.</span><span class="n">badwords</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;update project_resource set </span><span class="si">%s</span><span class="s"> = $text, is_hidden = $isHidden where project_resource_id = $id&quot;</span> <span class="o">%</span> <span class="n">field</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="n">projectResourceId</span><span class="p">,</span> <span class="s">&#39;text&#39;</span><span class="p">:</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;isHidden&#39;</span><span class="p">:</span><span class="n">isHidden</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t update project </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">field</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+        </div>
+<div class="viewcode-block" id="getUnreviewedProjectResources"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.getUnreviewedProjectResources">[docs]</a><span class="k">def</span> <span class="nf">getUnreviewedProjectResources</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">limit</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select pr.project_resource_id, </span>
+<span class="s">                        pr.title, pr.description, </span>
+<span class="s">                        pr.image_id, </span>
+<span class="s">                        pr.location_id, </span>
+<span class="s">                        pr.url,</span>
+<span class="s">                        pr.twitter_url,</span>
+<span class="s">                        pr.facebook_url,</span>
+<span class="s">                        pr.physical_address,</span>
+<span class="s">                        pr.contact_name,</span>
+<span class="s">                        pr.contact_email,</span>
+<span class="s">                        replace(pr.keywords, &#39; &#39;, &#39;,&#39;) as keywords,</span>
+<span class="s">                        l.name as location_name</span>
+<span class="s">                    from project_resource pr </span>
+<span class="s">                    left join location l on l.location_id = pr.location_id</span>
+<span class="s">                    where pr.is_active = 1 and pr.is_hidden = 1 </span>
+<span class="s">                    limit $limit offset $offset&quot;&quot;&quot;</span>
+                    
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">}))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get unreviewed resources&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">data</span>
+    </div>
+<div class="viewcode-block" id="approveProjectResource"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.projectResource.approveProjectResource">[docs]</a><span class="k">def</span> <span class="nf">approveProjectResource</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">projectResourceId</span><span class="p">,</span> <span class="n">isOfficial</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s">&#39;project_resource&#39;</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;project_resource_id = $projectResourceId&quot;</span><span class="p">,</span> <span class="n">is_hidden</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">is_official</span> <span class="o">=</span> <span class="n">isOfficial</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;projectResourceId&#39;</span><span class="p">:</span><span class="n">projectResourceId</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t approve project resource </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">projectResourceId</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

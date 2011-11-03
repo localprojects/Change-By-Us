@@ -1,0 +1,226 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.web.contrib.template &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.web.contrib.template</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Interface to various templating engines.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&quot;render_cheetah&quot;</span><span class="p">,</span> <span class="s">&quot;render_genshi&quot;</span><span class="p">,</span> <span class="s">&quot;render_mako&quot;</span><span class="p">,</span>
+    <span class="s">&quot;cache&quot;</span><span class="p">,</span> 
+<span class="p">]</span>
+
+<div class="viewcode-block" id="render_cheetah"><a class="viewcode-back" href="../../../../modules/lib.web.contrib.html#lib.web.contrib.template.render_cheetah">[docs]</a><span class="k">class</span> <span class="nc">render_cheetah</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rendering interface to Cheetah Templates.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        render = render_cheetah(&#39;templates&#39;)</span>
+<span class="sd">        render.hello(name=&quot;cheetah&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="c"># give error if Chetah is not installed</span>
+        <span class="kn">from</span> <span class="nn">Cheetah.Template</span> <span class="kn">import</span> <span class="n">Template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">Cheetah.Template</span> <span class="kn">import</span> <span class="n">Template</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.html&quot;</span><span class="p">)</span>
+        
+        <span class="k">def</span> <span class="nf">template</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">searchList</span><span class="o">=</span><span class="p">[</span><span class="n">kw</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">respond</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">template</span>
+    </div>
+<div class="viewcode-block" id="render_genshi"><a class="viewcode-back" href="../../../../modules/lib.web.contrib.html#lib.web.contrib.template.render_genshi">[docs]</a><span class="k">class</span> <span class="nc">render_genshi</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rendering interface genshi templates.</span>
+<span class="sd">    Example:</span>
+
+<span class="sd">    for xml/html templates.</span>
+
+<span class="sd">        render = render_genshi([&#39;templates/&#39;])</span>
+<span class="sd">        render.hello(name=&#39;genshi&#39;)</span>
+
+<span class="sd">    For text templates:</span>
+
+<span class="sd">        render = render_genshi([&#39;templates/&#39;], type=&#39;text&#39;)</span>
+<span class="sd">        render.hello(name=&#39;genshi&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">genshi.template</span> <span class="kn">import</span> <span class="n">TemplateLoader</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span> <span class="o">=</span> <span class="n">TemplateLoader</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c"># Assuming all templates are html</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.html&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s">&quot;text&quot;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">genshi.template</span> <span class="kn">import</span> <span class="n">TextTemplate</span>
+            <span class="n">cls</span> <span class="o">=</span> <span class="n">TextTemplate</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="s">&quot;text&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cls</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">template</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">template</span>
+</div>
+<span class="k">class</span> <span class="nc">render_jinja</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rendering interface to Jinja2 Templates</span>
+<span class="sd">    </span>
+<span class="sd">    Example:</span>
+
+<span class="sd">        render= render_jinja(&#39;templates&#39;)</span>
+<span class="sd">        render.hello(name=&#39;jinja2&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">extensions</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="nb">globals</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;globals&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span><span class="n">FileSystemLoader</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">extensions</span><span class="o">=</span><span class="n">extensions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">globals</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c"># Assuming all templates end with .html</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&#39;.html&#39;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span>
+        
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>    <span class="c"># bh added</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span>
+
+<div class="viewcode-block" id="render_mako"><a class="viewcode-back" href="../../../../modules/lib.web.contrib.html#lib.web.contrib.template.render_mako">[docs]</a><span class="k">class</span> <span class="nc">render_mako</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rendering interface to Mako Templates.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        render = render_mako(directories=[&#39;templates&#39;])</span>
+<span class="sd">        render.hello(name=&quot;mako&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">mako.lookup</span> <span class="kn">import</span> <span class="n">TemplateLookup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="n">TemplateLookup</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c"># Assuming all templates are html</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.html&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span>
+</div>
+<div class="viewcode-block" id="cache"><a class="viewcode-back" href="../../../../modules/lib.web.contrib.html#lib.web.contrib.template.cache">[docs]</a><span class="k">class</span> <span class="nc">cache</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Cache for any rendering interface.</span>
+<span class="sd">    </span>
+<span class="sd">    Example:</span>
+
+<span class="sd">        render = cache(render_cheetah(&quot;templates/&quot;))</span>
+<span class="sd">        render.hello(name=&#39;cache&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">render</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_render</span> <span class="o">=</span> <span class="n">render</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_render</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

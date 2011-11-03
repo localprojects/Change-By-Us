@@ -1,79 +1,78 @@
-if(!tc){ var tc = {}; }
-if(!tc.gam){ tc.gam = {}; }
-if(!tc.gam.project_widgets){ tc.gam.project_widgets = {}; }
+var tc = tc || {};
+tc.gam = tc.gam || {};
+tc.gam.project_widgets = tc.gam.project_widgets || {};
 
-tc.gam.project_widgets.fresh_ideas = function(project,dom,deps,options){
-	var widget, carousel;
-	tc.util.log("project.fresh_ideas");
-	this.options = tc.jQ.extend({name:'fresh_ideas'},options);
-	this.dom = dom;
-	widget = tc.gam.widget(this,project);
+tc.gam.project_widgets.fresh_ideas = function(options){
+    tc.util.log("project.fresh_ideas");
+    var dom = options.dom,
+        carouselWidget = new tc.carousel({
+            element: dom.find(".carousel"),
+            pagination: {
+                current: dom.find(".pagination .cur-index"),
+                total: dom.find(".pagination .total, .hd h2 .counter")
+            }
+        });
 
-	carousel = new tc.carousel({
-		element: this.dom.find(".carousel"),
-		pagination: {
-			current: this.dom.find(".pagination .cur-index"),
-			total: this.dom.find(".pagination .total, .hd h2 .counter")
-		}
-	});
-	if (!carousel.is_rendered()) {
-		
-	}
-	
-	
-	dom.find('a.flag-idea').bind('click', {project:project}, function(e){
-		e.preventDefault();
-		tc.jQ.ajax({
-			type:"POST",
-			url:'/idea/flag',
-			data:{
-				idea_id:e.target.hash.split(',')[1]
-			},
-			context:tc.jQ(e.target),
-			dataType:"text",
-			success: function(data, ts, xhr) {
-				if (data == "False") {
-					return false;
-				}
-				this.parent().text('Flagged');
-			}
-		});
-	});
-	
-	dom.find('a.remove-idea').bind('click', {project:project, app:options.app}, function(e){
-		e.preventDefault();
-		
-		e.data.app.components.modal.show({
-			app:e.data.app,
-			source_element:tc.jQ('.modal-content.remove-idea'),
-			submit:function(){
-				var id;
-				id = e.target.hash.split(",")[1];
-				tc.jQ.ajax({
-					type:'POST',
-					url:'/idea/remove',
-					data:{
-						idea_id: id
-					},
-					context: tc.jQ(e.target),
-					dataType:'text',
-					success:function(data,ts,xhr){
-						if(data == 'False'){
-							return false;
-						}
-						e.data.project.dom.trigger("project-idea-remove", { id: id });
-					}
-				});
-			}
-		});
-	});
-		
-	return {
-		show:widget.show,
-		hide:widget.hide,
-		remove_idea: function(id) {
-			carousel.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
-			carousel.update_pagination().update_navigation();
-		}
-	};
+    dom.find('a.flag-idea').bind('click', function(e){
+        e.preventDefault();
+        tc.jQ.ajax({
+            type:"POST",
+            url:'/idea/flag',
+            data:{
+                idea_id:e.target.hash.split(',')[1]
+            },
+            dataType:"text",
+            success: function(data, ts, xhr) {
+                if (data == "False") {
+                    return false;
+                }
+                tc.jQ(e.target).parent().text('Flagged');
+            }
+        });
+    });
+    
+    dom.find('a.remove-idea').bind('click', function(e){
+        e.preventDefault();
+        
+        options.app.components.modal.show({
+            app:options.app,
+            source_element:tc.jQ('.modal-content.remove-idea'),
+            submit:function(){
+                var id;
+                id = e.target.hash.split(",")[1];
+                tc.jQ.ajax({
+                    type:'POST',
+                    url:'/idea/remove',
+                    data:{
+                        idea_id: id
+                    },
+                    context: tc.jQ(e.target),
+                    dataType:'text',
+                    success:function(data,ts,xhr){
+                        if(data == 'False'){
+                            return false;
+                        }
+                        tc.jQ(tc).trigger("project-idea-remove", { id: id });
+                    }
+                });
+            }
+        });
+    });
+    
+    tc.jQ(tc).bind('show-project-widget', function(event, widgetName) {
+        if (options.name === widgetName) {
+            tc.util.log('&&& showing ' + options.name);
+            tc.showProjectWidget(dom);
+        } else {
+            tc.util.log('&&& hiding ' + options.name);
+            dom.hide();
+        }
+    });
+    
+    tc.jQ(tc).bind('project-idea-remove', function(event, id) {
+        if (carouselWidget.carousel) {
+            carouselWidget.carousel.getRoot().find("li[rel='idea-"+ id +"']").remove();
+            carouselWidget.update_pagination().update_navigation();
+        }
+    });
 };

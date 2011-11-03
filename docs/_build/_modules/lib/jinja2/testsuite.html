@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.testsuite &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.testsuite</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.testsuite</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    All the unittests of Jinja2.  These tests can be executed by</span>
+<span class="sd">    either running run-tests.py using multiple Python versions at</span>
+<span class="sd">    the same time.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">from</span> <span class="nn">traceback</span> <span class="kn">import</span> <span class="n">format_exception</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">loaders</span>
+
+
+<span class="n">here</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span>
+
+<span class="n">dict_loader</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">DictLoader</span><span class="p">({</span>
+    <span class="s">&#39;justdict.html&#39;</span><span class="p">:</span>        <span class="s">&#39;FOO&#39;</span>
+<span class="p">})</span>
+<span class="n">package_loader</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">PackageLoader</span><span class="p">(</span><span class="s">&#39;jinja2.testsuite.res&#39;</span><span class="p">,</span> <span class="s">&#39;templates&#39;</span><span class="p">)</span>
+<span class="n">filesystem_loader</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">here</span> <span class="o">+</span> <span class="s">&#39;/res/templates&#39;</span><span class="p">)</span>
+<span class="n">function_loader</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">FunctionLoader</span><span class="p">({</span><span class="s">&#39;justfunction.html&#39;</span><span class="p">:</span> <span class="s">&#39;FOO&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+<span class="n">choice_loader</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">ChoiceLoader</span><span class="p">([</span><span class="n">dict_loader</span><span class="p">,</span> <span class="n">package_loader</span><span class="p">])</span>
+<span class="n">prefix_loader</span> <span class="o">=</span> <span class="n">loaders</span><span class="o">.</span><span class="n">PrefixLoader</span><span class="p">({</span>
+    <span class="s">&#39;a&#39;</span><span class="p">:</span>        <span class="n">filesystem_loader</span><span class="p">,</span>
+    <span class="s">&#39;b&#39;</span><span class="p">:</span>        <span class="n">dict_loader</span>
+<span class="p">})</span>
+
+
+<div class="viewcode-block" id="JinjaTestCase"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase">[docs]</a><span class="k">class</span> <span class="nc">JinjaTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+    <span class="c">### use only these methods for testing.  If you need standard</span>
+    <span class="c">### unittest method, wrap them!</span>
+
+<div class="viewcode-block" id="JinjaTestCase.setup"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="JinjaTestCase.teardown"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.teardown">[docs]</a>    <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="JinjaTestCase.setUp"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="JinjaTestCase.tearDown"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teardown</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="JinjaTestCase.assert_equal"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.assert_equal">[docs]</a>    <span class="k">def</span> <span class="nf">assert_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="JinjaTestCase.assert_raises"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.assert_raises">[docs]</a>    <span class="k">def</span> <span class="nf">assert_raises</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="JinjaTestCase.assert_traceback_matches"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.JinjaTestCase.assert_traceback_matches">[docs]</a>    <span class="k">def</span> <span class="nf">assert_traceback_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">expected_tb</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">format_exception</span><span class="p">(</span><span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">expected_tb</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tb</span><span class="p">))</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;Traceback did not match:</span><span class="se">\n\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">expected:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tb</span><span class="p">),</span> <span class="n">expected_tb</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&#39;Expected exception&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../modules/lib.jinja2.testsuite.html#lib.jinja2.testsuite.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">jinja2.testsuite</span> <span class="kn">import</span> <span class="n">ext</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">tests</span><span class="p">,</span> <span class="n">core_tags</span><span class="p">,</span> \
+         <span class="n">loader</span><span class="p">,</span> <span class="n">inheritance</span><span class="p">,</span> <span class="n">imports</span><span class="p">,</span> <span class="n">lexnparse</span><span class="p">,</span> <span class="n">security</span><span class="p">,</span> <span class="n">api</span><span class="p">,</span> \
+         <span class="n">regression</span><span class="p">,</span> <span class="n">debug</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">doctests</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">ext</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">core_tags</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">inheritance</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">imports</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">lexnparse</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">security</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">api</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">regression</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">debug</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+
+    <span class="c"># doctests will not run on python 3 currently.  Too many issues</span>
+    <span class="c"># with that, do not test that on that platform.</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">doctests</span><span class="o">.</span><span class="n">suite</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">suite</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

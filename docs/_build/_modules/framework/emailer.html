@@ -1,0 +1,207 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.emailer &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.emailer</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Emailing utility.  Emailing is ultimately handled through webpy.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">smtplib</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">helpers.custom_filters</span> <span class="kn">as</span> <span class="nn">custom_filters</span>
+<span class="kn">from</span> <span class="nn">email.mime.text</span> <span class="kn">import</span> <span class="n">MIMEText</span>
+<span class="kn">from</span> <span class="nn">email.mime.multipart</span> <span class="kn">import</span> <span class="n">MIMEMultipart</span>
+<span class="kn">from</span> <span class="nn">email.mime.base</span> <span class="kn">import</span> <span class="n">MIMEBase</span>
+<span class="kn">from</span> <span class="nn">email</span> <span class="kn">import</span> <span class="n">Encoders</span>
+<span class="kn">from</span> <span class="nn">lib.web.contrib.template</span> <span class="kn">import</span> <span class="n">render_jinja</span>
+<span class="kn">from</span> <span class="nn">lib.jinja2.exceptions</span> <span class="kn">import</span> <span class="n">TemplateNotFound</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">lib.web.utils</span> <span class="kn">as</span> <span class="nn">webpyutils</span>
+
+
+<div class="viewcode-block" id="Emailer"><a class="viewcode-back" href="../../modules/framework.html#framework.emailer.Emailer">[docs]</a><span class="k">class</span> <span class="nc">Emailer</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Email class for handling emailing for the application.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Emailer.send_from_template"><a class="viewcode-back" href="../../modules/framework.html#framework.emailer.Emailer.send_from_template">[docs]</a>    <span class="k">def</span> <span class="nf">send_from_template</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">addresses</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">from_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">from_address</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwags</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create HTML and text emails from template, then send.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Emailer.send_from_template (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">template_name</span><span class="p">)</span>
+        
+        <span class="c"># Render email template as HTML.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">html</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TemplateNotFound</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;HTML template not found.&quot;</span><span class="p">)</span>
+            <span class="n">html</span> <span class="o">=</span> <span class="bp">None</span>
+            
+        <span class="k">try</span><span class="p">:</span>    
+            <span class="n">text</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">&quot;txt&quot;</span><span class="p">)</span>        
+        <span class="k">except</span> <span class="n">TemplateNotFound</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Text template not found.&quot;</span><span class="p">)</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="bp">None</span>
+            
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">addresses</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">html</span><span class="p">,</span> <span class="n">attachment</span><span class="p">,</span> <span class="n">from_name</span><span class="p">,</span> <span class="n">from_address</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Emailer.send"><a class="viewcode-back" href="../../modules/framework.html#framework.emailer.Emailer.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">addresses</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">from_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">from_address</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send email to recipients.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Emailer.send [</span><span class="si">%s</span><span class="s">] [</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">addresses</span><span class="p">,</span> <span class="n">subject</span><span class="p">))</span>
+        <span class="n">sender</span> <span class="o">=</span> <span class="n">from_name</span> <span class="o">+</span> <span class="s">&quot;&lt;&quot;</span> <span class="o">+</span> <span class="n">from_address</span> <span class="o">+</span> <span class="s">&quot;&gt;&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">addresses</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="n">addresses</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">addresses</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)]</span>
+
+        <span class="c"># If HTML, send just HTML, otherwise send text.  This is mostly because</span>
+        <span class="c"># theres&#39; a problem with gmail and multi-part messages.</span>
+        <span class="k">if</span> <span class="n">html</span><span class="p">:</span>
+            <span class="c"># msg = MIMEMultipart(&#39;alternative&#39;)</span>
+            <span class="c"># msg.attach(MIMEText(html, &#39;html&#39;))</span>
+            <span class="c"># msg.attach(MIMEText(text, &#39;plain&#39;))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">MIMEText</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s">&#39;html&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">MIMEText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s">&#39;plain&#39;</span><span class="p">)</span>
+
+        <span class="c"># Handle attachments.</span>
+        <span class="k">if</span> <span class="n">attachment</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;--&gt; adding attachment&quot;</span><span class="p">)</span>
+            <span class="n">tmpmsg</span> <span class="o">=</span> <span class="n">msg</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">MIMEMultipart</span><span class="p">()</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">tmpmsg</span><span class="p">)</span>
+            <span class="c"># Add a little space</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">MIMEText</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="s">&#39;plain&#39;</span><span class="p">))</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="n">MIMEBase</span><span class="p">(</span><span class="s">&#39;application&#39;</span><span class="p">,</span> <span class="s">&#39;octet-stream&#39;</span><span class="p">)</span>
+            <span class="n">part</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">attachment</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">Encoders</span><span class="o">.</span><span class="n">encode_base64</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+            <span class="n">part</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="s">&#39;attachment; filename=&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">attachment</span><span class="p">))</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+
+        <span class="c"># Fill in message dict.</span>
+        <span class="n">msg</span><span class="p">[</span><span class="s">&#39;Subject&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subject</span>
+        <span class="n">msg</span><span class="p">[</span><span class="s">&#39;From&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sender</span>
+        <span class="n">msg</span><span class="p">[</span><span class="s">&#39;To&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">addresses</span><span class="p">)</span>
+
+        <span class="c"># The use_msg_directly parameter should be set to True if we&#39;re adding message </span>
+        <span class="c"># headers. This is the case with MIMEText() usage. If we send text directly</span>
+        <span class="c"># (ie without MIMEText()) then use_msg_directly should be False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">webpyutils</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">from_address</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">to_address</span><span class="o">=</span><span class="n">addresses</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="n">attachment</span><span class="p">,</span> <span class="n">use_msg_directly</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Could not send email (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            
+        <span class="k">return</span> <span class="bp">True</span>    
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Emailer.render"><a class="viewcode-back" href="../../modules/framework.html#framework.emailer.Emailer.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">&quot;html&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Render an email template, given values.  Uses the jinja engine.</span>
+<span class="sd">        Assumes templates are in a `templates` directory one above current.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">template_values</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">template_values</span> <span class="o">=</span> <span class="p">{}</span>       
+             
+        <span class="n">template_values</span><span class="p">[</span><span class="s">&#39;template_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">template_name</span>       
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">render_jinja</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/../templates/&#39;</span><span class="p">)</span>      
+        <span class="n">renderer</span><span class="o">.</span><span class="n">_lookup</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">custom_filters</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span>
+        
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Email template </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">template_values</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">renderer</span><span class="p">[</span><span class="n">template_name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">](</span><span class="n">template_values</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

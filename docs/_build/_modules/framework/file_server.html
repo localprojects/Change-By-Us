@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>framework.file_server &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for framework.file_server</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">cStringIO</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">framework.s3uploader</span> <span class="kn">import</span> <span class="n">S3Uploader</span>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="n">Controller</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageOps</span>
+
+<div class="viewcode-block" id="FileServer"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.FileServer">[docs]</a><span class="k">class</span> <span class="nc">FileServer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A generic FileServer.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="FileServer.add"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.FileServer.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">grayscale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">mirror</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">thumb_max_size</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a file to the fileserver.  If either adding the database record for </span>
+<span class="sd">        the file or saving the file fails, then add will return None, and no</span>
+<span class="sd">        modification will be made.  Otherwise, the ID of the record in the </span>
+<span class="sd">        database will be returned.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Create a new record for the file</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;FileServer.add&quot;</span><span class="p">)</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addDbRecord</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        
+        <span class="c"># Save the file to the system</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveFile</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="n">max_size</span><span class="p">,</span> <span class="n">mirror</span><span class="o">=</span><span class="n">mirror</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeDbRecord</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        
+        <span class="c"># Return the id of the file</span>
+        <span class="k">return</span> <span class="nb">id</span>
+    
+    </div>
+<div class="viewcode-block" id="FileServer.addDbRecord"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.FileServer.addDbRecord">[docs]</a>    <span class="k">def</span> <span class="nf">addDbRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert a new record for a file into the given database.</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">        db -- A web.py database (`web.db`) object</span>
+<span class="sd">        app -- The name of the app (`str`)</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;files&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        
+        <span class="k">return</span> <span class="nb">id</span>
+    
+    </div>
+<div class="viewcode-block" id="FileServer.removeDbRecord"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.FileServer.removeDbRecord">[docs]</a>    <span class="k">def</span> <span class="nf">removeDbRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;DELETE FROM files WHERE id=$id&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="nb">id</span><span class="p">})</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;--&gt; removed id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    
+    </div>
+<div class="viewcode-block" id="FileServer.saveFile"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.FileServer.saveFile">[docs]</a>    <span class="k">def</span> <span class="nf">saveFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileid</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the data into a file.  Return True is file successfully saved,</span>
+<span class="sd">        otherwise False.</span>
+<span class="sd">        </span>
+<span class="sd">        Override this method to save files in other places.</span>
+<span class="sd">        </span>
+<span class="sd">        Attributes:</span>
+<span class="sd">        fileid -- The id from the database record that corresponds to this file</span>
+<span class="sd">        data -- The data (string of bytes) contained in the file</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">((</span><span class="s">&quot;You must override the implementaion of &quot;</span>
+                                   <span class="s">&quot;saveFile for your file server.  For &quot;</span>
+                                   <span class="s">&quot;example, check out the S3FileServer.&quot;</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="S3FileServer"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.S3FileServer">[docs]</a><span class="k">class</span> <span class="nc">S3FileServer</span><span class="p">(</span><span class="n">FileServer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In order to use this FileServer, make sure that you have the aws section</span>
+<span class="sd">    filled out in your conf.yaml file:</span>
+<span class="sd">    </span>
+<span class="sd">    aws:</span>
+<span class="sd">        access_key_id: &#39;&lt;ACCESS_KEY&gt;&#39;</span>
+<span class="sd">        secret_access_key: &#39;&lt;SECRET_KEY&gt;&#39;</span>
+<span class="sd">        bucket: &#39;&lt;BUCKET_NAME&gt;&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="S3FileServer.getConfigVar"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.S3FileServer.getConfigVar">[docs]</a>    <span class="k">def</span> <span class="nf">getConfigVar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+    
+    </div>
+<div class="viewcode-block" id="S3FileServer.getLocalPath"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.S3FileServer.getLocalPath">[docs]</a>    <span class="k">def</span> <span class="nf">getLocalPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path to the file given by the fileid on the local file system.</span>
+<span class="sd">        This is used only to temporarily save the file before uploading it to</span>
+<span class="sd">        the S3 server.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;data/files/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">fileid</span>
+    
+    </div>
+<div class="viewcode-block" id="S3FileServer.getS3Path"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.S3FileServer.getS3Path">[docs]</a>    <span class="k">def</span> <span class="nf">getS3Path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path to the file given by the fileid on the S3 server.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;data/files/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">fileid</span>
+    
+    </div>
+<div class="viewcode-block" id="S3FileServer.saveTemporaryLocalFile"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.S3FileServer.saveTemporaryLocalFile">[docs]</a>    <span class="k">def</span> <span class="nf">saveTemporaryLocalFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the file on the local file system.</span>
+<span class="sd">        This is used only to temporarily save the file before uploading it to</span>
+<span class="sd">        the S3 server.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        
+        <span class="k">return</span> <span class="bp">True</span>
+    
+    </div>
+<div class="viewcode-block" id="S3FileServer.saveFile"><a class="viewcode-back" href="../../modules/framework.html#framework.file_server.S3FileServer.saveFile">[docs]</a>    <span class="k">def</span> <span class="nf">saveFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileid</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mirror</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the data into a file.  Return True is file successfully saved,</span>
+<span class="sd">        otherwise False.</span>
+<span class="sd">        </span>
+<span class="sd">        Attributes:</span>
+<span class="sd">        fileid -- The id from the database record that corresponds to this file</span>
+<span class="sd">        data -- The data (string of bytes) contained in the file</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">localpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getLocalPath</span><span class="p">(</span><span class="n">fileid</span><span class="p">)</span>
+        <span class="n">localsaved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveTemporaryLocalFile</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">localsaved</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        
+        <span class="n">isS3mirror</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfigVar</span><span class="p">(</span><span class="s">&#39;media&#39;</span><span class="p">)[</span><span class="s">&#39;isS3mirror&#39;</span><span class="p">]</span>
+        <span class="n">s3path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getS3Path</span><span class="p">(</span><span class="n">fileid</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** config = </span><span class="si">%s</span><span class="s">, mirror = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">isS3mirror</span><span class="p">,</span> <span class="n">mirror</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">isS3mirror</span> <span class="ow">and</span> <span class="n">mirror</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">S3Uploader</span><span class="o">.</span><span class="n">upload</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">s3path</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">tb</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">tb</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        
+        <span class="k">return</span> <span class="bp">True</span>
+        
+    <span class="c">#</span>
+<span class="c">#    @classmethod</span>
+<span class="c">#    def cropToBox(cls, image):</span>
+<span class="c">#        if (image.size[0] &gt; image.size[1]):</span>
+<span class="c">#            max_length = image.size[1]</span>
+<span class="c">#            top = 0</span>
+<span class="c">#            left = int(float(image.size[0] - max_length)/float(2))</span>
+<span class="c">#        else:</span>
+<span class="c">#            max_length = image.size[0]</span>
+<span class="c">#            top = int(float(image.size[1] - max_length)/float(2))</span>
+<span class="c">#            left = 0</span>
+<span class="c">#            </span>
+<span class="c">#        box = (left, top, left + max_length, top + max_length)</span>
+<span class="c">#        </span>
+<span class="c">#        return image.crop(box)</span>
+<span class="c">#         </span>
+<span class="c">#        </span>
+<span class="c">#    # old resize method    </span>
+<span class="c">#    @classmethod</span>
+<span class="c">#    def resizeToMax(cls, image, max_size):</span>
+<span class="c">#        ratio = float(max_size[0]) / float(image.size[0]) if image.size[0] &gt; max_size[0] else float(max_size[1]) / float(image.size[1])</span>
+<span class="c">#        new_size = int(ratio * image.size[0]), int(ratio * image.size[1])</span>
+<span class="c">#        log.info(&quot;--&gt; resizing to %sx%s&quot; % new_size)</span>
+<span class="c">#        image = image.resize(new_size, Image.ANTIALIAS)     </span>
+<span class="c">#        return image</span>
+
+<span class="c">#    # new resize method, eholda 2011-02-12</span>
+<span class="c">#    @classmethod</span>
+<span class="c">#    def resizeToFit(cls, image, box):</span>
+<span class="c">#        if (image.size[0] &gt; box[0] or image.size[1] &gt; box[1]):</span>
+<span class="c">#            xratio = float(box[0]) / float(image.size[0])</span>
+<span class="c">#            yratio = float(box[1]) / float(image.size[1])</span>
+<span class="c">#        </span>
+<span class="c">#            ratio = xratio if xratio &lt; yratio else yratio</span>
+<span class="c">#            </span>
+<span class="c">#            #print &quot;--&gt; xratio = %s, yratio = %s, ratio = %s&quot; % (xratio, yratio, ratio)</span>
+<span class="c">#            </span>
+<span class="c">#            newsize = [int(ratio * image.size[0]), int(ratio * image.size[1])]</span>
+<span class="c">#        </span>
+<span class="c">#            log.info(&quot;*** RESIZING from %s to %s&quot; % ([image.size[0], image.size[1]], newsize))</span>
+<span class="c">#            </span>
+<span class="c">#            return image.resize(newsize, Image.ANTIALIAS)</span>
+<span class="c">#        else:</span>
+<span class="c">#            print &quot;--&gt; no resize&quot;</span>
+<span class="c">#            return image     </span>
+
+<span class="c">#    @classmethod</span>
+<span class="c">#    def remove(cls, db, app, id):</span>
+<span class="c">#        log.info(&quot;ImageServer.remove %s %s&quot; % (app, id))</span>
+<span class="c">#        path = ImageServer.path(app, id)</span>
+<span class="c">#        try:</span>
+<span class="c">#            db.query(&quot;DELETE FROM images WHERE id=$id&quot;, {&#39;id&#39;: id})</span>
+<span class="c">#            os.remove(path)</span>
+<span class="c">#        except Exception, e:</span>
+<span class="c">#            log.error(e)</span>
+<span class="c">#        else:</span>
+<span class="c">#            log.info(&quot;--&gt; removed id %s&quot; % id)        </span>
+<span class="c">#       </span>
+<span class="c">#    @classmethod</span>
+<span class="c">#    def path(cls, app, id):</span>
+<span class="c">#        path = &quot;data/%s/images/%s/%s.png&quot; % (app, str(id)[-1], id)</span>
+<span class="c">#        return path</span>
+<span class="c">#    </span>
+<span class="c">#    def GET(self, app=None, mode=None, target_width=None, target_height=None, id=None):</span>
+<span class="c">#        log.info(&quot;ImageServer.get app[%s] mode[%s] width[%s] height[%s] id[%s]&quot; % (app, mode, target_width, target_height, id))       </span>
+<span class="c">#        key = &quot;%s_%s_%s_%s_%s&quot; % (app, mode, target_width, target_height, id)</span>
+<span class="c">#        image = self.cache.get(str(key))</span>
+<span class="c">#        if image is not None:</span>
+<span class="c">#            log.info(&quot;--&gt; image [%s] is cached! yay!&quot; % key)</span>
+<span class="c">#            return self.image(image)</span>
+<span class="c">#        image = None</span>
+<span class="c">#        if mode != &#39;bounded&#39; and mode != &#39;exact&#39;:</span>
+<span class="c">#            return self.error(&quot;Mode not available&quot;)          </span>
+<span class="c">#        try:</span>
+<span class="c">#            record = list(Controller.get_db().query(&quot;SELECT id FROM images WHERE id=$id&quot;, {&#39;id&#39;: id}))[0]</span>
+<span class="c">#        except Exception, e:</span>
+<span class="c">#            log.error(&quot;No image found with that ID (%s)&quot; % e)</span>
+<span class="c">#        else:</span>
+<span class="c">#            try:</span>
+<span class="c">#                path = ImageServer.path(app, id)</span>
+<span class="c">#                log.info(&quot;--&gt; %s&quot; % path)</span>
+<span class="c">#                image = Image.open(path)                </span>
+<span class="c">#                found = True</span>
+<span class="c">#            except Exception, e:</span>
+<span class="c">#                log.error(e)</span>
+<span class="c">#        if not image:   </span>
+<span class="c">#            cache_image = False</span>
+<span class="c">#            log.info(&quot;--&gt; showing image placeholder&quot;)</span>
+<span class="c">#            image = Image.open(&quot;static/img/image_placeholder.png&quot;, &#39;r&#39;)                </span>
+<span class="c">#        else:</span>
+<span class="c">#            cache_image = True</span>
+<span class="c">#        source_width = image.size[0]</span>
+<span class="c">#        source_height = image.size[1]                                </span>
+<span class="c">#        try:</span>
+<span class="c">#            target_width = int(target_width)</span>
+<span class="c">#            if target_width &lt; 1: raise Error</span>
+<span class="c">#        except Exception:</span>
+<span class="c">#            target_width = source_width</span>
+<span class="c">#        try:</span>
+<span class="c">#            target_height = int(target_height)</span>
+<span class="c">#            if target_height &lt; 1: raise Error            </span>
+<span class="c">#        except Exception:</span>
+<span class="c">#            target_height = source_height</span>
+<span class="c">#        source_ratio = float(source_width) / float(source_height)</span>
+<span class="c">#        target_ratio = float(target_width) / float(target_height)            </span>
+<span class="c">#        log.info(&quot;--&gt; source %sx%s (%s)&quot; % (source_width, source_height, source_ratio))</span>
+<span class="c">#        log.info(&quot;--&gt; target %sx%s (%s)&quot; % (target_width, target_height, target_ratio))</span>
+
+<span class="c">#        if not target_width and not target_height:</span>
+<span class="c">#            log.info(&quot;--&gt; no target dimensions, showing at source dimensions&quot;)</span>
+<span class="c">#        elif target_width == source_width and target_height == source_height:</span>
+<span class="c">#            log.info(&quot;--&gt; target matches source dimensions&quot;)</span>
+<span class="c">#        else:</span>
+<span class="c">#            if mode == &#39;exact&#39;:</span>
+<span class="c">#                if source_ratio &lt; target_ratio:</span>
+<span class="c">#                    res = int(target_width), int(target_width / source_ratio)</span>
+<span class="c">#                    image = image.resize(res, Image.ANTIALIAS)</span>
+<span class="c">#                    cropoff = (image.size[1] - target_height) / 2</span>
+<span class="c">#                    crop = 0, cropoff, image.size[0], image.size[1] - cropoff</span>
+<span class="c">#                    image = image.crop(crop)</span>
+<span class="c">#                else:</span>
+<span class="c">#                    res = int(target_height * source_ratio), int(target_height)</span>
+<span class="c">#                    image = image.resize(res, Image.ANTIALIAS)</span>
+<span class="c">#                    cropoff = (image.size[0] - target_width) / 2</span>
+<span class="c">#                    crop = cropoff, 0, image.size[0] - cropoff, image.size[1]</span>
+<span class="c">#                    image = image.crop(crop)</span>
+<span class="c">#            else:</span>
+<span class="c">#                if source_ratio &lt; target_ratio:</span>
+<span class="c">#                    res = int(target_height * source_ratio), int(target_height)</span>
+<span class="c">#                else:</span>
+<span class="c">#                    res = int(target_width), int(target_width / source_ratio)</span>
+<span class="c">#                image = image.resize(res, Image.ANTIALIAS)</span>
+<span class="c">#        log.info(&quot;--&gt; result %sx%s (%s)&quot; % (image.size[0], image.size[1], mode))</span>
+<span class="c">#        image = self._image_string(image)</span>
+<span class="c">#        if cache_image:</span>
+<span class="c">#            try:</span>
+<span class="c">#                if self.cache.add(str(key), image): # cache forever</span>
+<span class="c">#                    log.info(&quot;--&gt; image cached&quot;)</span>
+<span class="c">#                else:</span>
+<span class="c">#                    log.warning(&quot;--&gt; memcache set failed [no error]: %s&quot; % key)</span>
+<span class="c">#            except Exception, e:</span>
+<span class="c">#                log.warning(&quot;--&gt; memcache set failed [%s]: %s&quot; % (e, key))</span>
+<span class="c">#            return self.image(image)</span>
+<span class="c">#        else:</span>
+<span class="c">#            log.info(&quot;--&gt; placeholder image, not caching&quot;)</span>
+<span class="c">#            return self.temp_image(image)</span>
+<span class="c">#            </span>
+<span class="c">#    def _image_string(self, image):</span>
+<span class="c">#        f = cStringIO.StringIO()</span>
+<span class="c">#        image.save(f, &quot;PNG&quot;)</span>
+<span class="c">#        f.seek(0)                    </span>
+<span class="c">#        return f.read()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

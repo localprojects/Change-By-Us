@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>controllers.idea &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for controllers.idea</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">giveaminute.idea</span> <span class="kn">as</span> <span class="nn">mIdea</span>
+<span class="kn">import</span> <span class="nn">giveaminute.keywords</span> <span class="kn">as</span> <span class="nn">mKeywords</span>
+<span class="kn">import</span> <span class="nn">giveaminute.project</span> <span class="kn">as</span> <span class="nn">mProject</span>
+<span class="kn">import</span> <span class="nn">giveaminute.messaging</span> <span class="kn">as</span> <span class="nn">mMessaging</span>
+<span class="kn">import</span> <span class="nn">framework.util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">framework.controller</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">framework.config</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="Idea"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea">[docs]</a><span class="k">class</span> <span class="nc">Idea</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+<div class="viewcode-block" id="Idea.GET"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea.GET">[docs]</a>    <span class="k">def</span> <span class="nf">GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;related&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRelatedProjects</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_found</span><span class="p">()</span>
+            
+            </div>
+<div class="viewcode-block" id="Idea.POST"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea.POST">[docs]</a>    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;flag&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flagIdea</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removeIdea</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">newIdea</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Idea.newIdea"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea.newIdea">[docs]</a>    <span class="k">def</span> <span class="nf">newIdea</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;main_text&#39;</span><span class="p">)):</span> <span class="k">return</span> <span class="bp">False</span>
+    
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+        <span class="n">locationId</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">try_f</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;location_id&#39;</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span>
+            <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">userId</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span>
+        
+        <span class="n">ideaId</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">createIdea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">locationId</span><span class="p">,</span> <span class="s">&#39;web&#39;</span><span class="p">,</span> <span class="n">userId</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">ideaId</span><span class="p">):</span>
+            <span class="n">mMessaging</span><span class="o">.</span><span class="n">emailIdeaConfirmation</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;from_address&#39;</span><span class="p">),</span> <span class="n">locationId</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">ideaId</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="n">ideaId</span> <span class="k">if</span> <span class="n">ideaId</span> <span class="k">else</span> <span class="bp">False</span> 
+        </div>
+<div class="viewcode-block" id="Idea.flagIdea"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea.flagIdea">[docs]</a>    <span class="k">def</span> <span class="nf">flagIdea</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ideaId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;idea_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">ideaId</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">flagIdea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+            </div>
+<div class="viewcode-block" id="Idea.removeIdea"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea.removeIdea">[docs]</a>    <span class="k">def</span> <span class="nf">removeIdea</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ideaId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;idea_id&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">ideaId</span><span class="p">):</span>
+            <span class="n">idea</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">Idea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">)</span>
+        
+            <span class="k">if</span> <span class="p">(</span><span class="n">idea</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isAdmin</span> <span class="ow">and</span> 
+                    <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">isModerator</span> <span class="ow">and</span>
+                    <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">idea</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">user_id</span><span class="p">):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;*** unauthorized idea removal attempt by user_id = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">setIdeaIsActive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** idea does not exist for idea id </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">ideaId</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;*** attempting to delete idea with no id&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        
+        </div>
+<div class="viewcode-block" id="Idea.getRelatedProjects"><a class="viewcode-back" href="../../modules/controllers.html#controllers.idea.Idea.getRelatedProjects">[docs]</a>    <span class="k">def</span> <span class="nf">getRelatedProjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ideaId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;idea_id&#39;</span><span class="p">)</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_limit&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&#39;n_limit&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mi">5</span>
+        <span class="n">relatedProjects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">citywideProjects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">isLocationOnlyMatch</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ideaId</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;No idea id&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">idea</span> <span class="o">=</span> <span class="n">mIdea</span><span class="o">.</span><span class="n">Idea</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">ideaId</span><span class="p">)</span>
+        
+            <span class="k">if</span> <span class="p">(</span><span class="n">idea</span><span class="p">):</span>
+                <span class="n">kw</span> <span class="o">=</span> <span class="n">mKeywords</span><span class="o">.</span><span class="n">getKeywords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">idea</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="n">idea</span><span class="o">.</span><span class="n">locationId</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">relatedProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">searchProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">idea</span><span class="o">.</span><span class="n">locationId</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+                    
+                    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">relatedProjects</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                        <span class="n">isLocationOnlyMatch</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="n">relatedProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">searchProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="p">[],</span> <span class="n">idea</span><span class="o">.</span><span class="n">locationId</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+                    
+                <span class="n">citywideProjects</span> <span class="o">=</span> <span class="n">mProject</span><span class="o">.</span><span class="n">searchProjects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;No idea found for id = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">ideaId</span><span class="p">)</span>
+            
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">is_location_only_match</span> <span class="o">=</span> <span class="n">isLocationOnlyMatch</span><span class="p">,</span> <span class="n">related</span> <span class="o">=</span> <span class="n">relatedProjects</span><span class="p">,</span> <span class="n">citywide</span> <span class="o">=</span> <span class="n">citywideProjects</span><span class="p">,</span> <span class="n">search_terms</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">kw</span><span class="p">))</span>
+            
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        
+
+    </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

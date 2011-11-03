@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>giveaminute.metrics &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for giveaminute.metrics</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">framework.log</span> <span class="kn">import</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="getCounts"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getCounts">[docs]</a><span class="k">def</span> <span class="nf">getCounts</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select count(*) as num, &#39;num_users&#39; as type from user where is_active = 1</span>
+<span class="s">                  union</span>
+<span class="s">                select count(*) as num, &#39;num_projects&#39; as type from project where is_active = 1</span>
+<span class="s">                  union</span>
+<span class="s">                select count(*) as num, &#39;num_ideas&#39; as type from idea where is_active = 1</span>
+<span class="s">                  union</span>
+<span class="s">                select count(*) as num, &#39;num_resources&#39; as type from project_resource where is_active = 1</span>
+<span class="s">                  union</span>
+<span class="s">                select cast((count(pu.user_id) / (select count(project_id) from project where is_active = 1)) as unsigned) as num, </span>
+<span class="s">                      &#39;num_avg_users_per_project&#39; as type </span>
+<span class="s">                from project__user pu</span>
+<span class="s">                  inner join user u on u.user_id = pu.user_id and u.is_active = 1</span>
+<span class="s">                  union</span>
+<span class="s">                select cast((count(idea_id) / datediff(now(), min(created_datetime))) as unsigned) as num, &#39;num_avg_ideas_per_day&#39; as type from idea where is_active = 1&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+        
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">item</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get metrics counts&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">obj</span>
+    </div>
+<div class="viewcode-block" id="getProjectCounts"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getProjectCounts">[docs]</a><span class="k">def</span> <span class="nf">getProjectCounts</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select p.title,</span>
+<span class="s">                  (select count(pu.user_id) from project__user pu </span>
+<span class="s">                      inner join user u on u.user_id = pu.user_id and u.is_active = 1</span>
+<span class="s">                      where pu.project_id = p.project_id) as num_users,</span>
+<span class="s">                  (select count(pi.idea_id) from project__idea pi  </span>
+<span class="s">                      inner join idea i on i.idea_id = pi.idea_id and i.is_active = 1</span>
+<span class="s">                      where pi.project_id = p.project_id) as num_ideas,</span>
+<span class="s">                  (select count(pr.project_resource_id) from project__project_resource pr </span>
+<span class="s">                      inner join project_resource r on r.project_resource_id = pr.project_resource_id and r.is_active = 1</span>
+<span class="s">                      where pr.project_id = p.project_id) as num_resources,</span>
+<span class="s">                  (select count(pe.user_id) from project_endorsement pe </span>
+<span class="s">                      inner join user u on u.user_id = pe.user_id and u.is_active = 1</span>
+<span class="s">                      where pe.project_id = p.project_id) as num_endorsements,</span>
+<span class="s">                  coalesce(p.keywords, &#39;&#39;) as keywords</span>
+<span class="s">                from project p</span>
+<span class="s">                where p.is_active = 1</span>
+<span class="s">                order by p.title&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get project counts&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">data</span>
+    </div>
+<div class="viewcode-block" id="getResourceCounts"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getResourceCounts">[docs]</a><span class="k">def</span> <span class="nf">getResourceCounts</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select r.project_resource_id,</span>
+<span class="s">                       r.title, </span>
+<span class="s">                       r.description,</span>
+<span class="s">                       r.created_datetime,</span>
+<span class="s">                       (select count(*) from project__project_resource ppr</span>
+<span class="s">                          inner join project p on p.project_id = ppr.project_id and p.is_active = 1</span>
+<span class="s">                          where ppr.project_resource_id = r.project_resource_id) as project_count</span>
+<span class="s">                from project_resource r</span>
+<span class="s">                where r.is_active = 1 and is_hidden = 0</span>
+<span class="s">                order by r.title&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get resource counts&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">data</span>
+    </div>
+<div class="viewcode-block" id="getUserCounts"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getUserCounts">[docs]</a><span class="k">def</span> <span class="nf">getUserCounts</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select u.first_name,</span>
+<span class="s">                      u.last_name,</span>
+<span class="s">                      u.email,</span>
+<span class="s">                      u.created_datetime,</span>
+<span class="s">                      (select count(pu.project_id) from project__user pu</span>
+<span class="s">                        inner join project p on p.project_id = pu.project_id and p.is_active = 1</span>
+<span class="s">                        where pu.user_id = u.user_id) as num_projects</span>
+<span class="s">                from user u</span>
+<span class="s">                where u.is_active = 1</span>
+<span class="s">                order by u.last_name, u.first_name&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get user counts&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="getLocationCounts"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getLocationCounts">[docs]</a><span class="k">def</span> <span class="nf">getLocationCounts</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select l.name,</span>
+<span class="s">                        l.borough,</span>
+<span class="s">                        (select count(p.project_id) from project p where p.is_active = 1 and p.location_id = l.location_id) as num_projects,</span>
+<span class="s">                        (select count(i.idea_id) from idea i where i.is_active = 1 and i.location_id = l.location_id) as num_ideas,</span>
+<span class="s">                        (select count(r.project_resource_id) from project_resource r where r.is_active = 1 and r.location_id = l.location_id) as num_resources</span>
+<span class="s">                from location l</span>
+<span class="s">                order by l.borough, l.location_id&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get location counts&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="getKeywordUsage"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getKeywordUsage">[docs]</a><span class="k">def</span> <span class="nf">getKeywordUsage</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">limit</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;select k.keyword as word, </span>
+<span class="s">                      (select count(p.project_id) from project p where p.keywords like concat(&#39;</span><span class="si">%%%%</span><span class="s">&#39;, k.keyword, &#39;</span><span class="si">%%%%</span><span class="s">&#39;)) as num_projects,</span>
+<span class="s">                      (select count(r.project_resource_id) from project_resource r where r.keywords like concat(&#39;</span><span class="si">%%%%</span><span class="s">&#39;, k.keyword, &#39;</span><span class="si">%%%%</span><span class="s">&#39;)) as num_resources</span>
+<span class="s">                from keyword k</span>
+<span class="s">                order by </span>
+<span class="s">                    ((select count(p.project_id) from project p where keywords like concat(&#39;</span><span class="si">%%%%</span><span class="s">&#39;, k.keyword, &#39;</span><span class="si">%%%%</span><span class="s">&#39;))</span>
+<span class="s">                    + (select count(r.project_resource_id) from project_resource r where r.keywords like concat(&#39;</span><span class="si">%%%%</span><span class="s">&#39;, k.keyword, &#39;</span><span class="si">%%%%</span><span class="s">&#39;))) desc</span>
+<span class="s">                limit $limit offset $offset&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span><span class="n">limit</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span><span class="n">offset</span><span class="p">}))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get keyword usage&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">data</span>
+    </div>
+<div class="viewcode-block" id="getNumKeywords"><a class="viewcode-back" href="../../modules/giveaminute.html#giveaminute.metrics.getNumKeywords">[docs]</a><span class="k">def</span> <span class="nf">getNumKeywords</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;select count(*) as count from keyword&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+        
+        <span class="n">num</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">count</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;*** couldn&#39;t get keyword count&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">num</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

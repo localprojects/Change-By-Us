@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lib.jinja2.utils &mdash; Change by Us v2.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Change by Us v2.0-alpha documentation" href="../../../index.html" />
+    <link rel="up" title="lib.jinja2" href="../jinja2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" accesskey="U">lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for lib.jinja2.utils</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    jinja2.utils</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    Utility functions.</span>
+
+<span class="sd">    :copyright: (c) 2010 by the Jinja Team.</span>
+<span class="sd">    :license: BSD, see LICENSE for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">thread</span> <span class="kn">import</span> <span class="n">allocate_lock</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">dummy_thread</span> <span class="kn">import</span> <span class="n">allocate_lock</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">imap</span>
+
+
+<span class="n">_word_split_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(\s+)&#39;</span><span class="p">)</span>
+<span class="n">_punctuation_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="s">&#39;^(?P&lt;lead&gt;(?:</span><span class="si">%s</span><span class="s">)*)(?P&lt;middle&gt;.*?)(?P&lt;trail&gt;(?:</span><span class="si">%s</span><span class="s">)*)$&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">imap</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;lt;&#39;</span><span class="p">))),</span>
+        <span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">imap</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="s">&#39;)&#39;</span><span class="p">,</span> <span class="s">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;gt;&#39;</span><span class="p">)))</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">_simple_email_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;^\S+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+$&#39;</span><span class="p">)</span>
+<span class="n">_striptags_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(&lt;!--.*?--&gt;|&lt;[^&gt;]*&gt;)&#39;</span><span class="p">)</span>
+<span class="n">_entity_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;&amp;([^;]+);&#39;</span><span class="p">)</span>
+<span class="n">_letters</span> <span class="o">=</span> <span class="s">&#39;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&#39;</span>
+<span class="n">_digits</span> <span class="o">=</span> <span class="s">&#39;0123456789&#39;</span>
+
+<span class="c"># special singleton representing missing values for the runtime</span>
+<span class="n">missing</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s">&#39;MissingType&#39;</span><span class="p">,</span> <span class="p">(),</span> <span class="p">{</span><span class="s">&#39;__repr__&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s">&#39;missing&#39;</span><span class="p">})()</span>
+
+<span class="c"># internal code</span>
+<span class="n">internal_code</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+
+<span class="c"># concatenate a list of strings and convert them to unicode.</span>
+<span class="c"># unfortunately there is a bug in python 2.4 and lower that causes</span>
+<span class="c"># unicode.join trash the traceback.</span>
+<span class="n">_concat</span> <span class="o">=</span> <span class="s">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_test_gen_bug</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">_test_gen_bug</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="bp">None</span>
+    <span class="n">_concat</span><span class="p">(</span><span class="n">_test_gen_bug</span><span class="p">())</span>
+<span class="k">except</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="n">_error</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_error</span><span class="o">.</span><span class="n">args</span> <span class="ow">or</span> <span class="n">_error</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">_test_gen_bug</span><span class="p">:</span>
+<div class="viewcode-block" id="concat"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.concat">[docs]</a>        <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_concat</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">gen</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="c"># this hack is needed so that the current frame</span>
+                <span class="c"># does not show up in the traceback.</span>
+                <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span></div>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">concat</span> <span class="o">=</span> <span class="n">_concat</span>
+    <span class="k">del</span> <span class="n">_test_gen_bug</span><span class="p">,</span> <span class="n">_error</span>
+
+
+<span class="c"># for python 2.x we create outselves a next() function that does the</span>
+<span class="c"># basics without exception catching.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="nb">next</span> <span class="o">=</span> <span class="nb">next</span>
+<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+
+
+<span class="c"># if this python version is unable to deal with unicode filenames</span>
+<span class="c"># when passed to encode we let this function encode it properly.</span>
+<span class="c"># This is used in a couple of places.  As far as Jinja is concerned</span>
+<span class="c"># filenames are unicode *or* bytestrings in 2.x and unicode only in</span>
+<span class="c"># 3.x because compile cannot handle bytes</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_encode_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">filename</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">filename</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_encode_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> \
+            <span class="s">&#39;filenames must be strings&#39;</span>
+        <span class="k">return</span> <span class="n">filename</span>
+
+<span class="kn">from</span> <span class="nn">keyword</span> <span class="kn">import</span> <span class="n">iskeyword</span> <span class="k">as</span> <span class="n">is_python_keyword</span>
+
+
+<span class="c"># common types.  These do exist in the special types module too which however</span>
+<span class="c"># does not exist in IronPython out of the box.  Also that way we don&#39;t have</span>
+<span class="c"># to deal with implementation specific stuff here</span>
+<span class="k">class</span> <span class="nc">_C</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">def</span> <span class="nf">_func</span><span class="p">():</span>
+    <span class="k">yield</span> <span class="bp">None</span>
+<span class="n">FunctionType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">_func</span><span class="p">)</span>
+<span class="n">GeneratorType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">_func</span><span class="p">())</span>
+<span class="n">MethodType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">_C</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+<span class="n">CodeType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">_C</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">func_code</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+    <span class="n">_tb</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">TracebackType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">_tb</span><span class="p">)</span>
+    <span class="n">FrameType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">_tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">_C</span><span class="p">,</span> <span class="n">_tb</span><span class="p">,</span> <span class="n">_func</span>
+
+
+<div class="viewcode-block" id="contextfunction"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.contextfunction">[docs]</a><span class="k">def</span> <span class="nf">contextfunction</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This decorator can be used to mark a function or method context callable.</span>
+<span class="sd">    A context callable is passed the active :class:`Context` as first argument when</span>
+<span class="sd">    called from the template.  This is useful if a function wants to get access</span>
+<span class="sd">    to the context or functions provided on the context object.  For example</span>
+<span class="sd">    a function that returns a sorted list of template variables the current</span>
+<span class="sd">    template exports could look like this::</span>
+
+<span class="sd">        @contextfunction</span>
+<span class="sd">        def get_exported_names(context):</span>
+<span class="sd">            return sorted(context.exported_vars)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">contextfunction</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="evalcontextfunction"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.evalcontextfunction">[docs]</a><span class="k">def</span> <span class="nf">evalcontextfunction</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This decoraotr can be used to mark a function or method as an eval</span>
+<span class="sd">    context callable.  This is similar to the :func:`contextfunction`</span>
+<span class="sd">    but instead of passing the context, an evaluation context object is</span>
+<span class="sd">    passed.  For more information about the eval context, see</span>
+<span class="sd">    :ref:`eval-context`.</span>
+
+<span class="sd">    .. versionadded:: 2.4</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">evalcontextfunction</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="environmentfunction"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.environmentfunction">[docs]</a><span class="k">def</span> <span class="nf">environmentfunction</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This decorator can be used to mark a function or method as environment</span>
+<span class="sd">    callable.  This decorator works exactly like the :func:`contextfunction`</span>
+<span class="sd">    decorator just that the first argument is the active :class:`Environment`</span>
+<span class="sd">    and not context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">environmentfunction</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="internalcode"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.internalcode">[docs]</a><span class="k">def</span> <span class="nf">internalcode</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Marks the function as internally used&quot;&quot;&quot;</span>
+    <span class="n">internal_code</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">func_code</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="is_undefined"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.is_undefined">[docs]</a><span class="k">def</span> <span class="nf">is_undefined</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the object passed is undefined.  This does nothing more than</span>
+<span class="sd">    performing an instance check against :class:`Undefined` but looks nicer.</span>
+<span class="sd">    This can be used for custom filters or tests that want to react to</span>
+<span class="sd">    undefined variables.  For example a custom default filter can look like</span>
+<span class="sd">    this::</span>
+
+<span class="sd">        def default(var, default=&#39;&#39;):</span>
+<span class="sd">            if is_undefined(var):</span>
+<span class="sd">                return default</span>
+<span class="sd">            return var</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">jinja2.runtime</span> <span class="kn">import</span> <span class="n">Undefined</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="consume"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.consume">[docs]</a><span class="k">def</span> <span class="nf">consume</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an iterable without doing anything with it.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="clear_caches"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.clear_caches">[docs]</a><span class="k">def</span> <span class="nf">clear_caches</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Jinja2 keeps internal caches for environments and lexers.  These are</span>
+<span class="sd">    used so that Jinja2 doesn&#39;t have to recreate environments and lexers all</span>
+<span class="sd">    the time.  Normally you don&#39;t have to care about that but if you are</span>
+<span class="sd">    messuring memory consumption you may want to clean the caches.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">jinja2.environment</span> <span class="kn">import</span> <span class="n">_spontaneous_environments</span>
+    <span class="kn">from</span> <span class="nn">jinja2.lexer</span> <span class="kn">import</span> <span class="n">_lexer_cache</span>
+    <span class="n">_spontaneous_environments</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">_lexer_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="import_string"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.import_string">[docs]</a><span class="k">def</span> <span class="nf">import_string</span><span class="p">(</span><span class="n">import_name</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Imports an object based on a string.  This use useful if you want to</span>
+<span class="sd">    use import paths as endpoints or something similar.  An import path can</span>
+<span class="sd">    be specified either in dotted notation (``xml.sax.saxutils.escape``)</span>
+<span class="sd">    or with a colon as object delimiter (``xml.sax.saxutils:escape``).</span>
+
+<span class="sd">    If the `silent` is True the return value will be `None` if the import</span>
+<span class="sd">    fails.</span>
+
+<span class="sd">    :return: imported object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">import_name</span><span class="p">:</span>
+            <span class="n">module</span><span class="p">,</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">import_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">import_name</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">import_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">import_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="n">obj</span><span class="p">]),</span> <span class="n">obj</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+</div>
+<div class="viewcode-block" id="open_if_exists"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.open_if_exists">[docs]</a><span class="k">def</span> <span class="nf">open_if_exists</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;rb&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a file descriptor for the filename if that file exists,</span>
+<span class="sd">    otherwise `None`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">,</span> <span class="n">errno</span><span class="o">.</span><span class="n">EISDIR</span><span class="p">):</span>
+            <span class="k">raise</span>
+
+</div>
+<div class="viewcode-block" id="object_type_repr"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.object_type_repr">[docs]</a><span class="k">def</span> <span class="nf">object_type_repr</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the name of the object&#39;s type.  For some recognized</span>
+<span class="sd">    singletons the name of the object is returned instead. (For</span>
+<span class="sd">    example for `None` and `Ellipsis`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;None&#39;</span>
+    <span class="k">elif</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">Ellipsis</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;Ellipsis&#39;</span>
+    <span class="c"># __builtin__ in 2.x, builtins in 3.x</span>
+    <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__module__</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;__builtin__&#39;</span><span class="p">,</span> <span class="s">&#39;builtins&#39;</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__module__</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> object&#39;</span> <span class="o">%</span> <span class="n">name</span>
+
+</div>
+<div class="viewcode-block" id="pformat"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.pformat">[docs]</a><span class="k">def</span> <span class="nf">pformat</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prettyprint an object.  Either use the `pretty` library or the</span>
+<span class="sd">    builtin `pprint`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">pretty</span> <span class="kn">import</span> <span class="n">pretty</span>
+        <span class="k">return</span> <span class="n">pretty</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+        <span class="k">return</span> <span class="n">pformat</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="urlize"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.urlize">[docs]</a><span class="k">def</span> <span class="nf">urlize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">trim_url_limit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nofollow</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts any URLs in text into clickable links. Works on http://,</span>
+<span class="sd">    https:// and www. links. Links can have trailing punctuation (periods,</span>
+<span class="sd">    commas, close-parens) and leading punctuation (opening parens) and</span>
+<span class="sd">    it&#39;ll still do the right thing.</span>
+
+<span class="sd">    If trim_url_limit is not None, the URLs in link text will be limited</span>
+<span class="sd">    to trim_url_limit characters.</span>
+
+<span class="sd">    If nofollow is True, the URLs in link text will get a rel=&quot;nofollow&quot;</span>
+<span class="sd">    attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">trim_url</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">trim_url_limit</span><span class="p">:</span> <span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> \
+                         <span class="ow">and</span> <span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span><span class="n">limit</span> <span class="ow">and</span> <span class="s">&#39;...&#39;</span>
+                         <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="n">x</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">_word_split_re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">escape</span><span class="p">(</span><span class="n">text</span><span class="p">)))</span>
+    <span class="n">nofollow_attr</span> <span class="o">=</span> <span class="n">nofollow</span> <span class="ow">and</span> <span class="s">&#39; rel=&quot;nofollow&quot;&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">words</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">_punctuation_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">lead</span><span class="p">,</span> <span class="n">middle</span><span class="p">,</span> <span class="n">trail</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;www.&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="s">&#39;@&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">middle</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;http://&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">middle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span>
+                <span class="n">middle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_letters</span> <span class="o">+</span> <span class="n">_digits</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="n">middle</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.org&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                    <span class="n">middle</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.net&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                    <span class="n">middle</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.com&#39;</span><span class="p">)</span>
+                <span class="p">)):</span>
+                <span class="n">middle</span> <span class="o">=</span> <span class="s">&#39;&lt;a href=&quot;http://</span><span class="si">%s</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/a&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">middle</span><span class="p">,</span>
+                    <span class="n">nofollow_attr</span><span class="p">,</span> <span class="n">trim_url</span><span class="p">(</span><span class="n">middle</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;http://&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+               <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;https://&#39;</span><span class="p">):</span>
+                <span class="n">middle</span> <span class="o">=</span> <span class="s">&#39;&lt;a href=&quot;</span><span class="si">%s</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/a&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">middle</span><span class="p">,</span>
+                    <span class="n">nofollow_attr</span><span class="p">,</span> <span class="n">trim_url</span><span class="p">(</span><span class="n">middle</span><span class="p">))</span>
+            <span class="k">if</span> <span class="s">&#39;@&#39;</span> <span class="ow">in</span> <span class="n">middle</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;www.&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="ow">not</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">middle</span> <span class="ow">and</span> <span class="n">_simple_email_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">middle</span><span class="p">):</span>
+                <span class="n">middle</span> <span class="o">=</span> <span class="s">&#39;&lt;a href=&quot;mailto:</span><span class="si">%s</span><span class="s">&quot;&gt;</span><span class="si">%s</span><span class="s">&lt;/a&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">middle</span><span class="p">,</span> <span class="n">middle</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lead</span> <span class="o">+</span> <span class="n">middle</span> <span class="o">+</span> <span class="n">trail</span> <span class="o">!=</span> <span class="n">word</span><span class="p">:</span>
+                <span class="n">words</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">lead</span> <span class="o">+</span> <span class="n">middle</span> <span class="o">+</span> <span class="n">trail</span>
+    <span class="k">return</span> <span class="s">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="generate_lorem_ipsum"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.generate_lorem_ipsum">[docs]</a><span class="k">def</span> <span class="nf">generate_lorem_ipsum</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate some lorem impsum for the template.&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">jinja2.constants</span> <span class="kn">import</span> <span class="n">LOREM_IPSUM_WORDS</span>
+    <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span><span class="p">,</span> <span class="n">randrange</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">LOREM_IPSUM_WORDS</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">next_capitalized</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">last_comma</span> <span class="o">=</span> <span class="n">last_fullstop</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">word</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># each paragraph contains out of 20 to 100 words.</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="n">randrange</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">))):</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">word</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">word</span> <span class="o">!=</span> <span class="n">last</span><span class="p">:</span>
+                    <span class="n">last</span> <span class="o">=</span> <span class="n">word</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">next_capitalized</span><span class="p">:</span>
+                <span class="n">word</span> <span class="o">=</span> <span class="n">word</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
+                <span class="n">next_capitalized</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="c"># add commas</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">randrange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">last_comma</span><span class="p">:</span>
+                <span class="n">last_comma</span> <span class="o">=</span> <span class="n">idx</span>
+                <span class="n">last_fullstop</span> <span class="o">+=</span> <span class="mi">2</span>
+                <span class="n">word</span> <span class="o">+=</span> <span class="s">&#39;,&#39;</span>
+            <span class="c"># add end of sentences</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">randrange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">last_fullstop</span><span class="p">:</span>
+                <span class="n">last_comma</span> <span class="o">=</span> <span class="n">last_fullstop</span> <span class="o">=</span> <span class="n">idx</span>
+                <span class="n">word</span> <span class="o">+=</span> <span class="s">&#39;.&#39;</span>
+                <span class="n">next_capitalized</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+
+        <span class="c"># ensure that the paragraph ends with a dot.</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">+=</span> <span class="s">&#39;.&#39;</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">html</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">u&#39;</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Markup</span><span class="p">(</span><span class="s">u&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">u&#39;&lt;p&gt;</span><span class="si">%s</span><span class="s">&lt;/p&gt;&#39;</span> <span class="o">%</span> <span class="n">escape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="LRUCache"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache">[docs]</a><span class="k">class</span> <span class="nc">LRUCache</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A simple LRU Cache implementation.&quot;&quot;&quot;</span>
+
+    <span class="c"># this is fast for small capacities (something below 1000) but doesn&#39;t</span>
+    <span class="c"># scale.  But as long as it&#39;s only used as storage for templates this</span>
+    <span class="c"># won&#39;t do any harm.</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="n">capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_postinit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_postinit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># alias all queue methods for faster lookup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_popleft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">popleft</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">pop</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">,</span> <span class="s">&#39;remove&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">remove</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span> <span class="o">=</span> <span class="n">allocate_lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">append</span>
+
+    <span class="k">def</span> <span class="nf">_remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Python 2.4 compatibility.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">break</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&#39;capacity&#39;</span><span class="p">:</span>     <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span>
+            <span class="s">&#39;_mapping&#39;</span><span class="p">:</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">,</span>
+            <span class="s">&#39;_queue&#39;</span><span class="p">:</span>       <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_postinit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="LRUCache.copy"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an shallow copy of the instance.&quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">_mapping</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">)</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="LRUCache.get"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an item from the cache dict or `default`&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+</div>
+<div class="viewcode-block" id="LRUCache.setdefault"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.setdefault">[docs]</a>    <span class="k">def</span> <span class="nf">setdefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `default` if the key is not in the cache otherwise</span>
+<span class="sd">        leave unchanged. Return the value of this key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+            <span class="k">return</span> <span class="n">default</span>
+</div>
+<div class="viewcode-block" id="LRUCache.clear"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the cache.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if a key exists in this cache.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the current size of the cache.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%r</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an item from the cache. Moves the item up so that it has the</span>
+<span class="sd">        highest priority then.</span>
+
+<span class="sd">        Raise an `KeyError` if it does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="c"># if something removed the key from the container</span>
+                <span class="c"># when we read, ignore the ValueError that we would</span>
+                <span class="c"># get otherwise.</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the value for an item. Moves the item up so that it</span>
+<span class="sd">        has the highest priority then.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c"># __getitem__ is not locked, it might happen</span>
+                    <span class="k">pass</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_popleft</span><span class="p">()]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove an item from the cache dict.</span>
+<span class="sd">        Raise an `KeyError` if it does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="c"># __getitem__ is not locked, it might happen</span>
+                <span class="k">pass</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wlock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LRUCache.items"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.items">[docs]</a>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of items.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">)]</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="LRUCache.iteritems"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.iteritems">[docs]</a>    <span class="k">def</span> <span class="nf">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over all items.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="LRUCache.values"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of all values.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+</div>
+<div class="viewcode-block" id="LRUCache.itervalue"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.itervalue">[docs]</a>    <span class="k">def</span> <span class="nf">itervalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over all values.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="LRUCache.keys"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of all keys ordered by most recent usage.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LRUCache.iterkeys"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.LRUCache.iterkeys">[docs]</a>    <span class="k">def</span> <span class="nf">iterkeys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over all keys in the cache dict, ordered by</span>
+<span class="sd">        the most recent usage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">))</span>
+</div>
+    <span class="n">__iter__</span> <span class="o">=</span> <span class="n">iterkeys</span>
+
+    <span class="k">def</span> <span class="nf">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over the values in the cache dict, oldest items</span>
+<span class="sd">        coming first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">))</span>
+
+    <span class="n">__copy__</span> <span class="o">=</span> <span class="n">copy</span>
+
+
+<span class="c"># register the LRU cache as mutable mapping if possible</span></div>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">MutableMapping</span>
+    <span class="n">MutableMapping</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">LRUCache</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="Cycler"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.Cycler">[docs]</a><span class="k">class</span> <span class="nc">Cycler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A cycle helper for templates.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">items</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;at least one item has to be provided&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Cycler.reset"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.Cycler.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resets the cycle.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Cycler.current"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.Cycler.current">[docs]</a>    <span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the current item.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Cycler.next"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.Cycler.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Goes one item ahead and returns it.&quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+</div></div>
+<div class="viewcode-block" id="Joiner"><a class="viewcode-back" href="../../../modules/lib.jinja2.html#lib.jinja2.utils.Joiner">[docs]</a><span class="k">class</span> <span class="nc">Joiner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A joining helper for templates.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">u&#39;, &#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sep</span> <span class="o">=</span> <span class="n">sep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">used</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="s">u&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep</span>
+
+
+<span class="c"># try markupsafe first, if that fails go with Jinja2&#39;s bundled version</span>
+<span class="c"># of markupsafe.  Markupsafe was previously Jinja2&#39;s implementation of</span>
+<span class="c"># the Markup object but was moved into a separate package in a patchleve</span>
+<span class="c"># release</span></div>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">markupsafe</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">escape</span><span class="p">,</span> <span class="n">soft_unicode</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">jinja2._markupsafe</span> <span class="kn">import</span> <span class="n">Markup</span><span class="p">,</span> <span class="n">escape</span><span class="p">,</span> <span class="n">soft_unicode</span>
+
+
+<span class="c"># partials</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">class</span> <span class="nc">partial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_func</span> <span class="o">=</span> <span class="n">_func</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_func</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">+</span> <span class="n">args</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Change by Us v2.0-alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../jinja2.html" >lib.jinja2</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Local Projects and Code for America.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
