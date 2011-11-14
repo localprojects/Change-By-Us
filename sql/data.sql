@@ -1,3 +1,7 @@
+#--------------------------------------------------------------------
+# Copyright (c) 2011 Local Projects. All rights reserved.
+# Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+#--------------------------------------------------------------------
 # DATA
 insert into user_group (user_group_id, group_name, description) values (1, 'admin', 'Site admin/super users');
 insert into user_group (user_group_id, group_name, description) values (2, 'moderator', 'Site moderators');

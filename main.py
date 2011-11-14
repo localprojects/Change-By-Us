@@ -1,5 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
 import os, sys
 from os import environ
 from framework.log import log

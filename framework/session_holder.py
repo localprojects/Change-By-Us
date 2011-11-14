@@ -1,4 +1,9 @@
 """
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
+"""
 Singleton allows the session object to be passed between classes
 Putting it here means we wont lose it if webpy reloads controller classes
 

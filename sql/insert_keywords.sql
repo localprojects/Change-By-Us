@@ -1,3 +1,7 @@
+#--------------------------------------------------------------------
+# Copyright (c) 2011 Local Projects. All rights reserved.
+# Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+#--------------------------------------------------------------------
 /*
 -- Query: select keyword from keyword
 LIMIT 0, 1000

@@ -1,3 +1,7 @@
+#--------------------------------------------------------------------
+# Copyright (c) 2011 Local Projects. All rights reserved.
+# Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+#--------------------------------------------------------------------
 INSERT INTO `location` (location_id,name,borough,city,lat,lon,state) VALUES (501,'Manhattan','Manhattan','New York','40.783435','-73.966250','NY');
 INSERT INTO `location` (location_id,name,borough,city,lat,lon,state) VALUES (502,'Brooklyn','Brooklyn','Brooklyn','40.650000','-73.950000','NY');
 INSERT INTO `location` (location_id,name,borough,city,lat,lon,state) VALUES (503,'Bronx','Bronx','Bronx','40.850100','-73.866246','NY');

@@ -1,3 +1,7 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
 import helpers.sms as sms
 from framework.emailer import *
 from framework.log import log

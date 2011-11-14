@@ -1,3 +1,7 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
 import cgi, os
 import framework.filters as filters
 from lib import jinja2
