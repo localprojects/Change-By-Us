@@ -1,9 +1,10 @@
+
+/******************** Begin ./static/js/tc.gam.base.js     ********************/
 /*--------------------------------------------------------------------
   Copyright (c) 2011 Local Projects. All rights reserved.
   Licensed under the Affero GNU GPL v3, see LICENSE for more details.
  --------------------------------------------------------------------*/
 
-/******************** Begin ./static/js/tc.gam.base.js     ********************/
 /**
  * File: Base
  * Base file for the TC application.  This should be included
@@ -43,6 +44,11 @@ if (typeof jQuery != "undefined") {
 
 
 /******************** Begin ./static/js/tc.util.js         ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: Utilities
  * This file holds various utility functions for CBU.
@@ -450,6 +456,11 @@ tc.zeroPad = function (number, width) {
 
 
 /******************** Begin ./static/js/tc.gam.validate.js ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: Validate
  * Defines input validators, mostly used in the Merlin framework.
@@ -900,6 +911,11 @@ tc.countContain = function(strPassword, strCheck) {
 
 
 /******************** Begin ./static/js/tc.gam.merlin.js   ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: Merlin
  * This file defines the wizard handling framework, known as
@@ -1667,6 +1683,11 @@ tc.merlin.prototype.handlers.invalid = function (e, d) {
 
 
 /******************** Begin ./static/js/tc.gam.topbar.js   ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 var tc = tc || {};
 
 tc.top_bar = function(element, options) {
@@ -1735,6 +1756,11 @@ tc.top_bar = function(element, options) {
 
 
 /******************** Begin ./static/js/tc.gam.modal.js    ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: Modal
  * This file defines the modal widget.
@@ -1887,6 +1913,11 @@ tc.modal.prototype.hide = function(){
 
 
 /******************** Begin ./static/js/tc.gam.carousel.js ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: Carousel
  * This file defines the carousel widget.
@@ -2110,6 +2141,11 @@ tc.carousel.prototype.get_element = function(){
 
 
 /******************** Begin ./static/js/tc.gam.tooltip.js  ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 if (!tc) { var tc = {}; }
 
 tc.resource_tooltip = makeClass();
@@ -2333,6 +2369,11 @@ tc.resource_tooltip.prototype.hide = function(){
 
 
 /******************** Begin ./static/js/tc.gam.locationDropdown.js ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 if(!tc){ var tc = {}; }
 
 tc.locationDropdown = makeClass();
@@ -2659,6 +2700,11 @@ tc.locationDropdown.prototype.handleListScrollbar = function() {
 
 
 /******************** Begin ./static/js/tc.gam.inlineEditor.js ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 if (!tc) { var tc = {}; }
 
 tc.inlineEditor = function(options) {
@@ -2870,6 +2916,11 @@ tc.inlineLocationEditor.prototype = tc.jQ.extend({}, tc.inlineEditor.prototype, 
 
 
 /******************** Begin ./static/js/tc.gam.project.js  ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 tc = tc || {};
 tc.gam = tc.gam || {};
 tc.gam.project = function(app, dom) {
@@ -2954,6 +3005,11 @@ tc.gam.project = function(app, dom) {
 
 
 /******************** Begin ./static/js/tc.gam.invite.js   ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 if(!tc){ var tc = {}; }
 if(!tc.gam){ tc.gam = {}; }
 
@@ -3111,6 +3167,11 @@ tc.gam.ideas_invite = function(app, options) {
 
 
 /******************** Begin ./static/js/tc.gam.add_resource.js ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 if(!tc){ var tc = {}; }
 if(!tc.gam){ tc.gam = {}; }
 
@@ -3203,6 +3264,11 @@ tc.gam.add_resource = function(app, options) {
 
 
 /******************** Begin ./static/js/tc.gam.user_handler.js ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: User Handler
  * User handling functionality.
@@ -3252,6 +3318,11 @@ tc.user_handler = function(options) {
 
 
 /******************** Begin ./static/js/tc.gam.app.js      ********************/
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: App
  * This file defines the "app" of the tc framework.
