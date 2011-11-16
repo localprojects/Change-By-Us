@@ -1,5 +1,9 @@
 # lazy code generator
 # doesn't check against db, but will throw key error on attempted duplicate insert
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
 
 import MySQLdb
 

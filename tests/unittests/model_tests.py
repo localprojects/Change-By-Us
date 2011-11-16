@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
 
 from collections import namedtuple
 from datetime import (date, datetime)

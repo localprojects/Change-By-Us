@@ -1,3 +1,8 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
 from fabric.api import *
 from fabric.contrib import files as files
 import os

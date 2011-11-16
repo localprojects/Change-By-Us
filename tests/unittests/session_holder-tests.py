@@ -1,6 +1,8 @@
 """
-Session holder module.
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
 
+Session holder module.
 """
 from unittest2 import TestCase
 from framework.session_holder import SessionHolder

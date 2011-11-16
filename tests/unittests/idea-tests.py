@@ -1,3 +1,7 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
 import unittest, sys, os, yaml
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 import framework.util as util
