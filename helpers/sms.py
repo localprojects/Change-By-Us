@@ -1,3 +1,8 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
 import json
 from framework import util
 from lib import twilio

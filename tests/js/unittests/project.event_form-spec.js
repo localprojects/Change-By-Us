@@ -1,3 +1,8 @@
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 if (window.EnvJasmine) {
     EnvJasmine.load(EnvJasmine.jsDir + 'tc.gam.base.js');
     EnvJasmine.load(EnvJasmine.jsDir + 'tc.util.js');

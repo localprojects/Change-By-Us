@@ -1,4 +1,9 @@
 """
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
+"""
 Module to handle general messaging, though mostly emailing.
 Emailing templates can be found in templates/email.
 

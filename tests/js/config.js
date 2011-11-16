@@ -1,3 +1,8 @@
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 // Add any files here that need to be loaded before all tests are run, (e.g. third-party libraries, like jQuery)
 // NOTE: Load order does matter.
 
