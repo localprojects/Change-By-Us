@@ -1,3 +1,8 @@
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 
 var nychoods = {{ d.template_data.locations_scored }};
 var max_score = {{ d.template_data.max_score }};

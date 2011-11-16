@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#--------------------------------------------------------------------
+# Copyright (c) 2011 Local Projects. All rights reserved.
+# Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+#--------------------------------------------------------------------
+
 # Compress client side resources
 echo "========= MINIFY JS AND CSS ============"
 python scripts/minifier/minifier.py -v -c scripts/minifier.conf --force

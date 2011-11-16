@@ -1,3 +1,8 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
 from lib import web
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker

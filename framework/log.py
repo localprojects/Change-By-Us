@@ -1,4 +1,9 @@
 """
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
+"""
 Extend the standard log module to enable some more detailed debug information.
 """
 import os

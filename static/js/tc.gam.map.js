@@ -1,3 +1,8 @@
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 var max_marker_size = 75;	// px
 var min_marker_size = 20;	// px
 var marker_ratio = (max_marker_size - min_marker_size) / max_score;
