@@ -1,3 +1,8 @@
+"""
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
 ## {{{ http://code.activestate.com/recipes/576611/ (r11)
 from operator import itemgetter
 from heapq import nlargest

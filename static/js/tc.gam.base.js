@@ -1,3 +1,8 @@
+/*--------------------------------------------------------------------
+  Copyright (c) 2011 Local Projects. All rights reserved.
+  Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ --------------------------------------------------------------------*/
+
 /**
  * File: Base
  * Base file for the TC application.  This should be included

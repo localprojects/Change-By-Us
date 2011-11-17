@@ -1,4 +1,9 @@
 """
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
+"""
 Module to test messaging system (mostly email).
 
 Need to find a way to test emails by faking to send them

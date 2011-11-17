@@ -1,4 +1,9 @@
 """
+    :copyright: (c) 2011 Local Projects, all rights reserved
+    :license: Affero GNU GPL v3, see LICENSE for more details.
+"""
+
+"""
 This file aims to import data from the import_project_resources table to
 the project_resources table.  It will also use image files that correspond
 to the external_id field in the directory like: 
