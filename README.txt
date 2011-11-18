@@ -25,7 +25,7 @@ More information on this can be found at [Running as Service in Install Instruct
    
 ## How to Contribute ##
 
-Coming soon...
+Instructions coming soon!
 
 ## Documentation ##
 
