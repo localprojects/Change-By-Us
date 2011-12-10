@@ -677,10 +677,6 @@ def main():
         print "Try -h for help"
         exit(0)
 
-    description = """
-Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -h for help
-    """
-
     parser = OptionParser()
     parser.add_option("-c", "--config_file", help="Configuration Yaml file", default="config.yaml")
     parser.add_option("-f", "--from_date", help="Date to use as start-point for digest generation, in mysql-compatible format")
@@ -713,7 +709,8 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
             if not gamDigest.reserveTask(int(task.task_id)):
                 raise Exception("cannot reserve a task slot. Can't continue")
             # Ok, we're good to create a digest since nobody else is doing it
-            gamDigest.createDigests(mark=task.updated_datetime)
+            # Set mark from when script is running, not last ran
+            gamDigest.createDigests(mark=datetime.now())
             gamDigest.storeDigestsToDB()
             gamDigest.releaseTask(int(task.task_id))
 
