@@ -29,7 +29,7 @@ class Config():
         
         """
         try:
-            c = open(os.path.dirname(__file__) + "/../etc/config.yaml")
+            c = open(os.path.dirname(__file__) + "/../config.yaml")
         except Exception:
             c = open(os.path.dirname(__file__) + "/config.yaml")
 
