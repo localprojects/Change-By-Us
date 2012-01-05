@@ -48,7 +48,7 @@ facebookClass.prototype.connect = function() {
             }
         },
         {
-            perms: requiredPerms.join(',')
+            scope: requiredPerms.join(',')
         }
     );
 };
