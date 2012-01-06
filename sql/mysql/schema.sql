@@ -10,7 +10,7 @@ DROP DATABASE IF EXISTS `db_name`;
 CREATE DATABASE IF NOT EXISTS `db_name` DEFAULT CHARACTER SET = 'utf8' DEFAULT COLLATE = 'utf8_general_ci';
 
 CREATE USER 'db_user_name'@'127.0.0.1' IDENTIFIED BY 'db_user_password';
-GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON `db_name`.* TO 'db_user'@'127.0.0.1';
+GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON `db_name`.* TO 'db_user_name'@'127.0.0.1';
 
 CREATE USER 'db_user_name'@'localhost' IDENTIFIED BY 'db_user_password';
 GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON `db_name`.* TO 'db_user_name'@'localhost';
