@@ -310,7 +310,7 @@ CREATE TABLE `project__idea` (
   `idea_id` int(11) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`idea_id`)
-) ENGINE=MyISAM DEFAULT;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
