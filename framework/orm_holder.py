@@ -49,7 +49,7 @@ class OrmHolder (object):
         """
         if not hasattr(web.config, 'db_engine'):
             db_conn_string = '%(dbn)s://%(user)s:%(password)s@%(host)s/%(db)s' % db_config
-            web.config.db_engine = create_engine(db_conn_string, encoding='latin1', convert_unicode=True, echo=True)
+            web.config.db_engine = create_engine(db_conn_string, encoding='utf-8', convert_unicode=True, echo=True)
         return web.config.db_engine
 
 
