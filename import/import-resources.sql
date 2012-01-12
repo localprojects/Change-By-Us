@@ -43,4 +43,4 @@ CREATE TABLE IF NOT EXISTS `import_project_resource` (
   `neighborhood` text NOT NULL,
   PRIMARY KEY (`project_resource_id`),
   FULLTEXT KEY `title` (`title`,`description`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM AUTO_INCREMENT=1;

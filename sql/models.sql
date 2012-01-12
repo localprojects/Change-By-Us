@@ -30,7 +30,7 @@ CREATE TABLE `attachments` (
   `media_id` varchar(64) DEFAULT NULL COMMENT 'The id of the media relative to its type (e.g., the Youtube ID, or uploaded file id, ...)',
   `type` varchar(64) NOT NULL DEFAULT 'file',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=72 DEFAULT CHARSET=latin1 COMMENT='Comment attachment descriptions';
+) ENGINE=MyISAM AUTO_INCREMENT=72 COMMENT='Comment attachment descriptions';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -55,7 +55,7 @@ CREATE TABLE `badwords` (
   `warn_words` text,
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -79,7 +79,7 @@ CREATE TABLE `beta_invite_code` (
   `user_id` int(11) DEFAULT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -104,7 +104,7 @@ CREATE TABLE `beta_invite_request` (
   `comment` text,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`beta_invite_request_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -130,7 +130,7 @@ CREATE TABLE `community_leader` (
   `image_path` varchar(256) DEFAULT NULL,
   `order` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -156,7 +156,7 @@ CREATE TABLE `direct_message` (
   `message` text,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`direct_message_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -180,7 +180,7 @@ CREATE TABLE `facebook_user` (
   `user_id` int(11) NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `facebook_id` (`facebook_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -204,7 +204,7 @@ CREATE TABLE `featured_project` (
   `project_id` int(11) NOT NULL,
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`ordinal`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -238,7 +238,7 @@ CREATE TABLE `idea` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`idea_id`),
   FULLTEXT KEY `description` (`description`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -265,7 +265,7 @@ CREATE TABLE `images` (
   PRIMARY KEY (`id`),
   KEY `app` (`app`),
   KEY `mirrored` (`mirrored`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -288,7 +288,7 @@ CREATE TABLE `keyword` (
   `keyword` varchar(25) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`keyword`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -317,7 +317,7 @@ CREATE TABLE `location` (
   `city` varchar(50) DEFAULT NULL,
   `state` char(2) DEFAULT NULL,
   PRIMARY KEY (`location_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -341,7 +341,7 @@ CREATE TABLE `migrate_version` (
   `repository_path` text,
   `version` int(11) DEFAULT NULL,
   PRIMARY KEY (`repository_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -376,7 +376,7 @@ CREATE TABLE `project` (
   `organization` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   FULLTEXT KEY `title` (`title`,`description`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -400,7 +400,7 @@ CREATE TABLE `project__idea` (
   `idea_id` int(11) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`idea_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -424,7 +424,7 @@ CREATE TABLE `project__project_resource` (
   `project_resource_id` int(11) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`project_resource_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -449,7 +449,7 @@ CREATE TABLE `project__user` (
   `is_project_admin` tinyint(1) NOT NULL DEFAULT '0',
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -473,7 +473,7 @@ CREATE TABLE `project_endorsement` (
   `user_id` int(11) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -503,7 +503,7 @@ CREATE TABLE `project_event` (
   `project_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `project_id` (`project_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -533,7 +533,7 @@ CREATE TABLE `project_invite` (
   `accepted_datetime` timestamp NULL DEFAULT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_invite_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -558,7 +558,7 @@ CREATE TABLE `project_leader` (
   `organization` varchar(255) DEFAULT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -587,7 +587,7 @@ CREATE TABLE `project_link` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_link_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -618,7 +618,7 @@ CREATE TABLE `project_message` (
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `file_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`project_message_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -652,7 +652,7 @@ CREATE TABLE `project_need` (
   PRIMARY KEY (`id`),
   KEY `project_id` (`project_id`),
   KEY `event_id` (`event_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -677,7 +677,7 @@ CREATE TABLE `project_need_volunteer` (
   `quantity` int(11) NOT NULL,
   PRIMARY KEY (`need_id`,`member_id`),
   KEY `member_id` (`member_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -717,7 +717,7 @@ CREATE TABLE `project_resource` (
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_resource_id`),
   FULLTEXT KEY `title` (`title`,`description`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -748,7 +748,7 @@ CREATE TABLE `site_feedback` (
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `feedback_type` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`site_feedback_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -771,7 +771,7 @@ CREATE TABLE `sms_stopped_phone` (
   `phone` varchar(10) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`phone`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -798,7 +798,7 @@ CREATE TABLE `tasks` (
   `frequency` varchar(20) DEFAULT NULL,
   `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`task_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -823,7 +823,7 @@ CREATE TABLE `twitter_user` (
   `user_id` int(11) NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `twitter_id` (`twitter_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -852,7 +852,7 @@ CREATE TABLE `unauthenticated_user` (
   `last_name` varchar(50) DEFAULT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`auth_guid`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -895,7 +895,7 @@ CREATE TABLE `user` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `phone` (`phone`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -919,7 +919,7 @@ CREATE TABLE `user__user_group` (
   `user_group_id` int(11) NOT NULL,
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`,`user_group_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -945,7 +945,7 @@ CREATE TABLE `user_group` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_group_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -969,7 +969,7 @@ CREATE TABLE `web_session` (
   `atime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `data` text,
   UNIQUE KEY `session_id` (`session_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
