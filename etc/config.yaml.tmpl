@@ -169,12 +169,14 @@ beanstalk:
 # file_path:        -- This is the directory where the uploaded files are
 #                      stored on S3 and should align with what was inputted
 #                      for root.  Overall, this should be 'data/files'
+#                      It is a variable so that it comes from the rcfile
+#                      and will fail if not defined
 #
 #--------------------------------------------------------------------
 media:
     isS3mirror: True
     root: %(media_root)s
-    file_path: 'data/files'
+    file_path: %(file_path)s
 
 
 # Static files settings
@@ -272,10 +274,6 @@ aws:
     access_key_id: %(aws_access_key_id)s
     secret_access_key: %(aws_secret_access_key)s
     bucket: %(s3_bucket)s
-
-media:
-    isS3mirror: True
-    root: %(media_root)s
 
 # Typekit key is the name of the JS file, like http://use.typekit.com/XXXXXX.js
 typekit:
