@@ -334,7 +334,7 @@ def create_config_files():
 
     # Make sure that the code is the latest in the build_path
     with lcd(env.build_path):
-        local('git fetch origin && git pull origin && git checkout %(branch)s' % env)
+        local('git fetch && git checkout %(branch)s' % env)
     for item in env.config_files:
         if not os.path.exists(item.get('local_config_template')):
             raise Exception("Unable to find configuration template file (%s) to create config from" % item.get('local_config_template'))
@@ -625,7 +625,7 @@ def bundle_code():
             local('git clone --depth 0 %(repository)s %(build_path)s' % env)
             
         with lcd(env.build_path):
-            local('git clean -d -x -f && git pull origin && git checkout %(branch)s' % env)
+            local('git clean -d -x -f && git fetch && git checkout %(branch)s' % env)
             local('git submodule init && git submodule update' % env)
             env.release = local('git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
             # Save the revision information to a file for post-deployment info
