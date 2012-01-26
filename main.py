@@ -193,6 +193,8 @@ def main():
             NEW_ROUTES = ROUTES
     except KeyError:
         NEW_ROUTES = ROUTES
+    except Exception, e:
+        log.error(e)
 
     app = web.application(NEW_ROUTES, globals())
     db = sessionDB()
