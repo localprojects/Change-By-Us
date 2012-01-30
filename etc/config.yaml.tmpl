@@ -14,7 +14,9 @@
 #--------------------------------------------------------------------
 # Explanation of these values is needed.
 #
-# dev -- Yes or No (what does this affect?)
+# dev -- Yes or No. Affects debug level. 
+#           if dev=='Yes': web.config.debug = True
+#           On production, ensure that this is set to NO
 # app_mode -- If 'beta', the site will be in private beta mode.  Set
 #             to anything else to get out of beta mode.  This is
 #             currently handled by the __init__ of the Controller
@@ -27,6 +29,8 @@
 #                * live-beta (public beta)
 # instance -- ??
 # htaccess -- Yes or no.  Is the site behind htaccess.
+# loglevel -- [optional, but recommended] Standard logging loglevel for logfile. 
+#             Default = DEBUG
 #
 #--------------------------------------------------------------------
 dev: %(dev)s
@@ -35,7 +39,6 @@ app_env: %(app_env)s
 instance: %(instance)s
 htaccess: %(htaccess)s
 logfile: %(logfile)s
-
 
 # Locations
 #--------------------------------------------------------------------
@@ -169,12 +172,14 @@ beanstalk:
 # file_path:        -- This is the directory where the uploaded files are
 #                      stored on S3 and should align with what was inputted
 #                      for root.  Overall, this should be 'data/files'
+#                      It is a variable so that it comes from the rcfile
+#                      and will fail if not defined
 #
 #--------------------------------------------------------------------
 media:
     isS3mirror: True
     root: %(media_root)s
-    file_path: 'data/files'
+    file_path: %(file_path)s
 
 
 # Static files settings
@@ -272,10 +277,6 @@ aws:
     access_key_id: %(aws_access_key_id)s
     secret_access_key: %(aws_secret_access_key)s
     bucket: %(s3_bucket)s
-
-media:
-    isS3mirror: True
-    root: %(media_root)s
 
 # Typekit key is the name of the JS file, like http://use.typekit.com/XXXXXX.js
 typekit:

@@ -91,6 +91,18 @@ def enable_aws_ses():
     except Exception, e:
         log.info("ERROR: Exception when loading SES: %s" % e)
     
+def basic_processor(handler):
+    from traceback import format_exception
+    
+    try:
+        result = handler()
+    except Exception, e:
+        log.error("Unhandled exception: %s" % e)
+        # Do we want to continue even after exception?
+        raise
+        
+    return handler()
+    
 def load_sqla(handler):
     """
     Create a load hook and use sqlalchemy's ``scoped session``. This construct
@@ -112,13 +124,14 @@ def load_sqla(handler):
             return self.orm
 
         def __exit__(self, e_type=None, e_val=None, e_tb=None):
+            # Since load_sqla is a processor, it catches bubbled-up exceptions
             from traceback import format_exception
             if e_type == web.HTTPError:
                 log.debug("*** web.HTTPError with the ORM")
                 log.warning(''.join(format_exception(e_type, e_val, e_tb)))
                 self.orm.commit()
             elif e_type:
-                log.debug("*** Other exception with the ORM")
+                log.debug("*** Unhandled exception - check console logs for details")
                 log.error(''.join(format_exception(e_type, e_val, e_tb)))
                 OrmHolder.invalidate()
             else:
@@ -193,12 +206,15 @@ def main():
             NEW_ROUTES = ROUTES
     except KeyError:
         NEW_ROUTES = ROUTES
+    except Exception, e:
+        log.error(e)
 
     app = web.application(NEW_ROUTES, globals())
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
     # Load SQLAlchemy
+    app.add_processor(basic_processor)
     app.add_processor(load_sqla)
 
     # Finally, run the web.py app!    
