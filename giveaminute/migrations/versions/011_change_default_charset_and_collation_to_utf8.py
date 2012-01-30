@@ -22,7 +22,7 @@ def upgrade(migrate_engine):
     tbls = meta.tables.keys()
     
     for item in tbls:
-        sql_update_table = "alter table `%s` DEFAULT CHARACTER SET 'utf8' DEFAULT COLLATE 'utf8_general_ci'" % item
+        sql_update_table = "alter table `%s` CHARACTER SET 'utf8' COLLATE 'utf8_general_ci'" % item
         migrate_engine.execute(sql_update_table)
     
     
