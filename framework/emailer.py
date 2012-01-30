@@ -119,7 +119,6 @@ class Emailer():
     def render(cls, template_name, template_values=None, suffix="html"):
         if template_values is None: template_values = {}        
         template_values['template_name'] = template_name
-        log.info("TEMPLATE %s: %s" % (template_name, template_values))        
         renderer = render_jinja(os.path.dirname(__file__) + '/../templates/')      
         renderer._lookup.filters.update(custom_filters.filters)
         return (renderer[template_name + "." + suffix](template_values)).encode('utf-8')
