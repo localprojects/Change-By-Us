@@ -49,9 +49,6 @@ class Home(Controller):
         elif (action == 'login'):
             return self.showLogin()
         
-        elif (action == 'feedback'):
-            return self.showFeedback()
-        
         # Twetter-related actions
         elif action == 'twitter':
             return self._twitter_action(action=param0)
@@ -80,7 +77,9 @@ class Home(Controller):
             # This is the default for all pages.  We should check
             # if there is a matching template, and if not, throw
             # a 404.
-            template = os.path.dirname(__file__) + '/../templates/%s' + action + '.html'
+            
+            template = os.path.dirname(__file__) + '/../templates/' + action + '.html'
+            print template
             if not os.path.exists(template):
                 return self.not_found()
             else:
