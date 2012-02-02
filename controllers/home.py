@@ -48,7 +48,10 @@ class Home(Controller):
         # TODO: This should be consolidated with the twitter & facebook actions
         elif (action == 'login'):
             return self.showLogin()
-
+        
+        elif (action == 'feedback'):
+            return self.showFeedback()
+        
         # Twetter-related actions
         elif action == 'twitter':
             return self._twitter_action(action=param0)
@@ -192,6 +195,9 @@ class Home(Controller):
             return self.render('login')
         else:
             return self.redirect('/')
+        
+    def showFeedback(self):
+        return self.render('feedback')
 
     # if in beta mode and user is not logged in show splash
     # otherwise redirect homepage
