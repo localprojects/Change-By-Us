@@ -19,7 +19,7 @@ from framework.session_holder import SessionHolder
 import framework.util as util
 import giveaminute.user as mUser
 import giveaminute.models as models
-import jinja2, unidecode
+import jinja2
 
 class Controller (object):
 
