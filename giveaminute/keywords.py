@@ -14,11 +14,10 @@ def getKeywords(db, s):
     :returns   list of matching keywords
     """
     words = []
-    if isinstance(s, str) or isinstance(s, unicode): s = re.split(r'[,\s+]', s)
-    if not isinstance(s, list):
-        log.error("getKeywords requested for a non-string, non-list value: %s. Cannot process!" % s)
-    else:
-        words = list(db.query("select keyword from keyword where keyword in $lookfor", vars=dict(lookfor=s)))
+    try:
+        words = list(db.query("select keyword from keyword where locate(keyword, $lookin)>0", vars=dict(lookin=s)))
+    except Exception, e:
+        log.error("Exception getting keyword matches for %s: %s" % (s, e))
 
     return words
 
