@@ -19,6 +19,7 @@ from framework.session_holder import SessionHolder
 import framework.util as util
 import giveaminute.user as mUser
 import giveaminute.models as models
+import jinja2
 
 class Controller (object):
 
@@ -183,11 +184,11 @@ class Controller (object):
 
         if isinstance(var, basestring):
             #var = util.strip_html(var)
-            var = escape(var)
+            var = jinja2.escape(var).encode('ascii','xmlcharrefreplace')
             var = var.strip()
             if len(var) == 0: return None
             var = util.safeuni(var)
-
+            
         return var
 
     def render(self, template_name, template_values=None, suffix="html", content_type = "text/html", status="200 OK"):
