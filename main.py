@@ -213,8 +213,12 @@ def main():
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
+    # WARNING:
+    #    Adding new processors may cause duplicate insertions!
+    #    The basic_processor has been disabled for this reason
+    # app.add_processor(basic_processor)
+    
     # Load SQLAlchemy
-    app.add_processor(basic_processor)
     app.add_processor(load_sqla)
 
     # Finally, run the web.py app!    
