@@ -143,6 +143,30 @@ LOCK TABLES `community_leader` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `digests`
+--
+
+DROP TABLE IF EXISTS `digests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `digests` (
+  `digest_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sender` varchar(255) DEFAULT NULL,
+  `send_to` varchar(255) DEFAULT NULL,
+  `recipients` text,
+  `subject` varchar(255) DEFAULT NULL,
+  `body` text,
+  `start_datetime` datetime DEFAULT NULL,
+  `end_datetime` datetime DEFAULT NULL,
+  `sent_datetime` datetime DEFAULT NULL,
+  `status` char(1) DEFAULT NULL,
+  `worker_id` varchar(255) DEFAULT NULL,
+  `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`digest_id`)
+) ENGINE=MyISAM;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `direct_message`
 --
 
@@ -649,6 +673,7 @@ CREATE TABLE `project_need` (
   `duration` varchar(64) DEFAULT NULL,
   `address` varchar(256) DEFAULT NULL,
   `event_id` int(11) DEFAULT NULL,
+  `subtype` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `project_id` (`project_id`),
   KEY `event_id` (`event_id`)
