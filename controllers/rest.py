@@ -426,6 +426,8 @@ class RestController (Controller):
         d = {}
         for columnName in row.__mapper__.columns.keys():
             d[columnName] = getattr(row, columnName)
+            if str(row.__mapper__.columns.get('name').type).startswith('VARCHAR'):
+                d[columnName] = jinja2.Markup(d[columnName]).unescape()                
 
         return d
 
