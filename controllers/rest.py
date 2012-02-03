@@ -441,14 +441,14 @@ class RestController (Controller):
             if key.startswith('_'):
                 continue
             
-            # Don't try to set unknown columns
-            if key not in Model.__table__.c.keys(): 
-                continue
-            
             # All non-ascii (ond special) characters should be escaped with char-ref
-            if 'VARCHAR' in str(Model.__table__.c.get(key).type):
-                val = jinja2.escape(val).encode('ascii','xmlcharrefreplace')
-                if len(val) > 0: val = safeuni(val)
+            try:
+                if key in Model.__table__.c.keys() and str(Model.__table__.c.get(key).type).startswith('VARCHAR'):
+                    val = jinja2.escape(val).encode('ascii','xmlcharrefreplace')
+                    if len(val) > 0: val = safeuni(val)
+            except Exception, e:
+                log.debug("Exception encoding field %s: %s" % key, e)
+                pass
                 
             setattr(instance, key, val)
 
