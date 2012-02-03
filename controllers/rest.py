@@ -18,6 +18,7 @@ from giveaminute import models
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
+import jinja2
 
 class NotFoundError (Exception):
     pass
@@ -436,10 +437,19 @@ class RestController (Controller):
         if instance is None:
             Model = self.get_model()
             instance = Model()
-
         for (key, val) in data.iteritems():
             if key.startswith('_'):
                 continue
+            
+            # Don't try to set unknown columns
+            if key not in Model.__table__.c.keys(): 
+                continue
+            
+            # All non-ascii (ond special) characters should be escaped with char-ref
+            if 'VARCHAR' in str(Model.__table__.c.get(key).type):
+                val = jinja2.escape(val).encode('ascii','xmlcharrefreplace')
+                if len(val) > 0: val = safeuni(val)
+                
             setattr(instance, key, val)
 
         return instance
