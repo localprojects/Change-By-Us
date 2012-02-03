@@ -165,7 +165,7 @@ tc.addOfficialResourceTags = function(dom) {
         var tdPos = td.position();
         var tdWidth = td.outerWidth();
 
-        dom.before('<div class="official-resource-tag" id="tag-' + i + '" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 19) + 'px"><span>Official Resource</span></div>');
+        dom.before('<div class="official-resource-tag" id="tag-' + i + '" style="top:' + tdPos.top + 'px; left:' + tdPos.left + 'px; width:' + (tdWidth - 48) + 'px"><span>Official Resource</span></div>');
         td.css({
             'padding-top': '25px'
         });
