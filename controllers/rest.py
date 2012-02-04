@@ -426,9 +426,12 @@ class RestController (Controller):
         d = {}
         for columnName in row.__mapper__.columns.keys():
             d[columnName] = getattr(row, columnName)
-            if str(row.__mapper__.columns.get('name').type).startswith('VARCHAR'):
-                d[columnName] = jinja2.Markup(d[columnName]).unescape()                
-
+            try:
+                if str(row.__mapper__.columns.get('name').type).startswith('VARCHAR'):
+                    d[columnName] = jinja2.Markup(d[columnName]).unescape()                
+            except Exception, e:
+                log.debug("Exception decoding field %s: %s" % (columnName, e))
+                
         return d
 
     def query_to_list(self, query):
@@ -449,7 +452,7 @@ class RestController (Controller):
                     val = jinja2.escape(val).encode('ascii','xmlcharrefreplace')
                     if len(val) > 0: val = safeuni(val)
             except Exception, e:
-                log.debug("Exception encoding field %s: %s" % key, e)
+                log.debug("Exception encoding field %s: %s" % (key, e))
                 pass
                 
             setattr(instance, key, val)
