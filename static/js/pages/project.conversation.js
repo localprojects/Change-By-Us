@@ -8,6 +8,7 @@ tc.gam = tc.gam || {};
 tc.gam.project_widgets = tc.gam.project_widgets || {};
 
 tc.gam.project_widgets.conversation = function(options){
+	tc.util.log('project.conversation');
     var dom = options.dom,
         MEDIA_MSGS_TO_LOAD = 100, //TODO See https://github.com/codeforamerica/cbu/wiki/Compromises for details
         components = {
@@ -298,7 +299,8 @@ tc.gam.project_widgets.conversation = function(options){
                                 return false;
                             }
                             
-                            dom.find('#message-'+message_id).remove();
+                            //dom.find('#message-'+message_id).remove();
+                            tc.jQ('li.message-'+message_id).remove();
 //                            n_messages = dom.find('.comment-stack').children().length;
 //                            dom.find('.comment-counter').text(n_messages);
                         }
@@ -388,10 +390,10 @@ tc.gam.project_widgets.conversation = function(options){
     };
     
     function generate_message_markup(data){
-        tc.util.dump(data);
+    	tc.util.dump(data);
         var $thumb,
-            markup = tc.jQ("<li class='message-markup'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
-        markup.attr('id','message-'+data.message_id);
+            markup = tc.jQ("<li class='message-markup message-" + data.message_id + "'></li>").append(tc.jQ('.template-content.message-markup').clone().children());
+        //markup.attr('id','message-'+data.message_id);
         //markup.find('img').attr('src','/images/'++'/'++'.png')
         markup.find('a.close').hide();//.attr('href','#remove,'+data.message_id);
         markup.find('p.message-text').html(handlers.construct_links(data.message));

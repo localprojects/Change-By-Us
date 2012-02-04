@@ -58,7 +58,13 @@ name = os.path.basename(__main__.__file__).split('.')[0]
 log = logging.getLogger(name)
 
 # Set log level to Debug (TODO: This should be pulled from config file)
-log.setLevel(logging.DEBUG)
+loglevel = None
+try:
+    loglevel = Config.get("loglevel")
+    log.setLevel(logging.__getattribute__(loglevel))
+except:
+    print "Unable to set loglevel to %s. Defaulting to DEBUG" % loglevel
+    log.setLevel(logging.DEBUG)
 
 logfile = Config.get('logfile') # %s/../logs/%s.log' % (os.path.dirname(os.path.realpath(__file__)), name)
 

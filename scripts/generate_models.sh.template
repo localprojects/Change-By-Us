@@ -29,7 +29,7 @@ mysqldump -u $DBUSER -p$DBPASS $DBNAME > $RELPATH/$BACKUP
 echo "Clearing out database $DBNAME..."
 mysql -u $DBUSER -p$DBPASS $DBNAME <<EOF
     drop database $DBNAME;
-    create database $DBNAME
+    create database $DBNAME DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_unicode_ci;
 EOF
 
 echo "Running migrations on database $DBNAME..."

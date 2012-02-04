@@ -116,7 +116,7 @@
         </script>
         {% endblock %}
 
-        {% if d.config.typekit %}
+        {% if d.config.typekit and d.config.typekit.key %}
             <!-- Typekit font -->
             <script type="text/javascript" src="http://use.typekit.com/{{ d.config.typekit.key }}.js"></script>
             <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -291,7 +291,9 @@
                 <span class="supported fancy-caps">{{ _('Supported <span>by</span>') }}</span>
                 <a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
                 <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
-<!--                <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>-->
+                {% if d.config.site.city_id == 'nyc' %}
+                <a href='http://www.casefoundation.org/' target='_blank'><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>
+                {% endif %}
             </div>
 
             <!-- Basic links and search -->
@@ -492,7 +494,7 @@
     <div id="fb-root"></div>
     <script>
         window.fbAsyncInit = function() {
-            FB.init({appId: '{{d.facebook_app_id}}', status: true, cookie: true, xfbml: true});
+            FB.init({appId: '{{d.facebook_app_id}}', status: true, cookie: true, xfbml: true, oauth: true});
             tc.util.dump('FB.init!');
         };
 

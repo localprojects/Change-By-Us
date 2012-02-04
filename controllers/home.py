@@ -48,7 +48,7 @@ class Home(Controller):
         # TODO: This should be consolidated with the twitter & facebook actions
         elif (action == 'login'):
             return self.showLogin()
-
+        
         # Twetter-related actions
         elif action == 'twitter':
             return self._twitter_action(action=param0)
@@ -62,11 +62,24 @@ class Home(Controller):
             self.redirect('http://nyc.changeby.us/')
         elif (action == 'beta'):
             return self.showBeta()
+        
+        # About page can be city-specific
+        elif (action == 'about'):
+            for action in ["%s_about" % Config.get("site").get("city_id"), "about"]:
+                template = os.path.dirname(__file__) + '/../templates/%s.html' % action
+                if os.path.exists(template):
+                    return self.render(action)
+                
+            # If we got here, the template was not found
+            return self.not_found()
+            
         else:
             # This is the default for all pages.  We should check
             # if there is a matching template, and if not, throw
             # a 404.
+            
             template = os.path.dirname(__file__) + '/../templates/' + action + '.html'
+            print template
             if not os.path.exists(template):
                 return self.not_found()
             else:
@@ -181,6 +194,9 @@ class Home(Controller):
             return self.render('login')
         else:
             return self.redirect('/')
+        
+    def showFeedback(self):
+        return self.render('feedback')
 
     # if in beta mode and user is not logged in show splash
     # otherwise redirect homepage

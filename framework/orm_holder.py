@@ -45,11 +45,21 @@ class OrmHolder (object):
         The database engine should be a global object in the process.  As such,
         we stick it on ``web.config``.  This way, all the threads share the
         engine and the db connection pool that it maintains.
-
+        
+        See http://docs.sqlalchemy.org/en/latest/core/engines.html for create_engine() params
         """
         if not hasattr(web.config, 'db_engine'):
             db_conn_string = '%(dbn)s://%(user)s:%(password)s@%(host)s/%(db)s' % db_config
-            web.config.db_engine = create_engine(db_conn_string, encoding='latin1', convert_unicode=True, echo=True)
+            # TODO: 
+            #    * encoding "Defaults to utf-8"
+            #    * echo should be configurable based on DEBUG setting, otherwise all
+            #      sql statements will be logged indiscriminately
+            web.config.db_engine = create_engine(db_conn_string, 
+                                                 encoding='utf-8', 
+                                                 convert_unicode=True, 
+                                                 echo=True, echo_pool=True,
+                                                 # Secs between recycling pool connections
+                                                 pool_recycle=600)
         return web.config.db_engine
 
 

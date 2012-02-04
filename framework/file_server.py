@@ -153,7 +153,8 @@ class S3FileServer(FileServer):
         the S3 server.
         
         """
-        return "data/files/%s" % fileid
+        return "%(file_path)s/%(file_id)s" % {'file_path': Config.get('media').get('file_path'),
+                                             'file_id': fileid}
     
     
     def getS3Path(self, fileid):
@@ -161,7 +162,8 @@ class S3FileServer(FileServer):
         Get the path to the file given by the fileid on the S3 server.
         
         """
-        return "data/files/%s" % fileid
+        return "%(file_path)s/%(file_id)s" % {'file_path': Config.get('media').get('file_path'),
+                                             'file_id': fileid}
     
     
     def saveTemporaryLocalFile(self, path, data):

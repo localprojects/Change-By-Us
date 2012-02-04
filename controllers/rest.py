@@ -18,6 +18,7 @@ from giveaminute import models
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
+import jinja2
 
 class NotFoundError (Exception):
     pass
@@ -425,7 +426,12 @@ class RestController (Controller):
         d = {}
         for columnName in row.__mapper__.columns.keys():
             d[columnName] = getattr(row, columnName)
-
+            try:
+                if str(row.__mapper__.columns.get('name').type).startswith('VARCHAR'):
+                    d[columnName] = jinja2.Markup(d[columnName]).unescape()                
+            except Exception, e:
+                log.debug("Exception decoding field %s: %s" % (columnName, e))
+                
         return d
 
     def query_to_list(self, query):
@@ -436,10 +442,19 @@ class RestController (Controller):
         if instance is None:
             Model = self.get_model()
             instance = Model()
-
         for (key, val) in data.iteritems():
             if key.startswith('_'):
                 continue
+            
+            # All non-ascii (ond special) characters should be escaped with char-ref
+            try:
+                if key in Model.__table__.c.keys() and str(Model.__table__.c.get(key).type).startswith('VARCHAR'):
+                    val = jinja2.escape(val).encode('ascii','xmlcharrefreplace')
+                    if len(val) > 0: val = safeuni(val)
+            except Exception, e:
+                log.debug("Exception encoding field %s: %s" % (key, e))
+                pass
+                
             setattr(instance, key, val)
 
         return instance
