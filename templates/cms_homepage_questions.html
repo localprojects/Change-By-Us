@@ -1,0 +1,162 @@
+{#
+ # Copyright (c) 2011 Local Projects. All rights reserved.
+ # Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ #}
+{% extends "./partials/base.html" %}
+
+{% block title %} CMS Admin Settings {% endblock title %}
+
+{% block continent %}
+
+<div class='continent cms cms-questions'>
+
+	<div class='midlands merlin merlin-questions clearfix'>
+		<div id="questions" class="step view">
+			<div class="west"><!-- begin .west -->
+				<div class="add-questions-merlin merlin">
+					<div class="add-questions-main step">
+						<div class="box">
+							<div class="hd">
+								<h2 class="fancy-caps">Add <span>a</span> Question</h2>
+							</div>
+							<div class="bd">
+								<div class="row">
+									<input class='question' type="text"/>
+								</div>
+							</div>
+							<div class="ft">
+								<a class="questions-merlin-next-step rounded-button" href="#">Create New Question</a>
+							</div>
+						</div>
+					</div>
+					<div class="add-questions-error step ">
+						<p class="">There was an error creating the question.</p>
+						<br />
+						<p class=""><a href="">Back.</a></p>
+					</div>
+					<div class="add-questions-finish step spinner-message clearfix">
+						<p class="west">Adding Question...</p>
+						<img class="loading" src='/static/images/loader32x32.gif' />
+					</div>
+				</div>
+			</div><!-- end .west -->
+
+
+			<div class="east">
+				<div class="box active-questions">
+					<div class="hd">
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev questions-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<a class="next questions-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+						<h2 class="fancy-caps">Active Questions</h2>
+					</div>
+					<div class="bd">
+						<div class="carousel questions">
+							<div class="scrollable">
+								<ul class="items">
+									<li class='loaded'>
+										<table class="active-questions-table">
+											<tbody>
+										{% if d.template_data.questions['data'] > 0 %}
+											{% for q in d.template_data.questions['data'] %}
+
+												<tr id='q-{{ q.homepage_question_id }}'>
+													<td>
+														{{ loop.index }}.
+													</td>
+													<td class="project-header">
+													    <div class="question-text mod-inline-edit">
+                                                            <div class="editable-content">
+                                                            {{ q.question }}
+                                                            </div>
+                                                            <div class="inline-edit-controls"></div>
+                                                        </div>
+													</td>
+													<td>
+													   {% if q.is_featured %}
+													   <strong>featured</strong>
+													   {% else %}
+													   <a href="#featureQuestion,{{ q.homepage_question_id }}" class="feature">feature</a>
+													   {% endif %}
+													</td>
+													<td>
+													   <a href="#editQuestion,{{ q.homepage_question_id }}" class="edit">edit</a><br/>
+													   <a href="#deleteQuestion,{{ q.homepage_question_id }}" class="delete">deactivate</a>
+													</td>
+												</tr>
+
+											{% endfor %}
+										{% endif %}
+											</tbody>
+										</table>
+									</li>
+									<li>
+										<table class="active-questions-table">
+											<tbody>
+												<tr>
+													<td><p>Loading...</p></td>
+												</tr>
+											</tbody>
+										</table>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div class="ft">
+						<div class="pagination-controls">
+							<span class="control">
+								<a class="prev questions-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
+								<a class="next questions-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div><!--end .east-->
+		</div><!--end #questions-->
+
+	<div class='foothills'>
+
+	</div>
+
+
+
+</div><!-- end .continent.cms-questions -->
+
+<div class="template-content modal-content confirm-delete remove-question">
+	<div class="step">
+		<h2><strong>Delete</strong> this Question?</h2>
+		<div>
+			<p>This deletes the question from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete Question.</a>
+			<a class="cancel" href="#">No, keep it.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+<div class="template-content modal-content confirm-delete feature-question">
+	<div class="step">
+		<h2><strong>Feature</strong> this Question?</h2>
+		<div>
+			<p>This selects this question to appear on the homepage! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Feature This Question.</a>
+			<a class="cancel" href="#">Cancel</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+{% endblock continent %}
+
+
+{% block page_js %}
+	<script type='text/javascript' src="/static/js/pages/cms.questions.js"></script>
+{% endblock page_js %}
