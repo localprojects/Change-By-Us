@@ -21,7 +21,10 @@
 							</div>
 							<div class="bd">
 								<div class="row">
-									<input class='question' type="text"/>
+									<span class="charlimit question">160</span>
+								</div>
+								<div class="row">
+									<textarea class='question'/></textarea>
 								</div>
 							</div>
 							<div class="ft">
@@ -45,73 +48,53 @@
 			<div class="east">
 				<div class="box active-questions">
 					<div class="hd">
-						<div class="pagination-controls">
-							<span class="control">
-								<a class="prev questions-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
-								<a class="next questions-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
-							</span>
-						</div>
-						<h2 class="fancy-caps">Active Questions</h2>
+						<h2 class="fancy-caps">Available Questions</h2>
 					</div>
 					<div class="bd">
 						<div class="carousel questions">
-							<div class="scrollable">
-								<ul class="items">
-									<li class='loaded'>
-										<table class="active-questions-table">
-											<tbody>
-										{% if d.template_data.questions['data'] > 0 %}
-											{% for q in d.template_data.questions['data'] %}
+							<div>
+								<table class="active-questions-table">
+									<tbody>
+								{% if d.template_data.questions['data'] > 0 %}
+									{% for q in d.template_data.questions['data'] %}
+										<tr>
+											<td class="numeral">
+												<strong>{{ loop.index }}.</strong>
+											</td>
+											<td class="question">
+											    <div id='q-{{ q.homepage_question_id }}' class="question-text mod-inline-edit">
+                                                    <p class="editable-content">
+                                                    {{ q.question }}
+                                                    </p>
+                                                    <div class="inline-edit-controls"></div>
+                                                </div>
+											</td>
+											<td class="feature">
+												<div class="feature-control{% if q.is_featured %} featured{% endif %}">
+													{% if q.is_featured %}
+													<div class="icon"></div>
+													<div class="label">Featured</div>
+													{% else %}	
+													<a href="#featureQuestion,{{ q.homepage_question_id }}" class="feature">
+														<div class="icon"></div>
+														<div class="label">Feature</div>
+													</a>
+													{% endif %}
+											    </div>
+											</td>
+											<td class="tools">
+											   <a href="#editQuestion,{{ q.homepage_question_id }}" class="edit">Edit</a><br/>
+											   {% if not q.is_featured %}
+											   <a href="#deleteQuestion,{{ q.homepage_question_id }}" class="delete">Delete</a>
+											   {% endif %}
+											</td>
+										</tr>
 
-												<tr id='q-{{ q.homepage_question_id }}'>
-													<td>
-														{{ loop.index }}.
-													</td>
-													<td class="project-header">
-													    <div class="question-text mod-inline-edit">
-                                                            <div class="editable-content">
-                                                            {{ q.question }}
-                                                            </div>
-                                                            <div class="inline-edit-controls"></div>
-                                                        </div>
-													</td>
-													<td>
-													   {% if q.is_featured %}
-													   <strong>featured</strong>
-													   {% else %}
-													   <a href="#featureQuestion,{{ q.homepage_question_id }}" class="feature">feature</a>
-													   {% endif %}
-													</td>
-													<td>
-													   <a href="#editQuestion,{{ q.homepage_question_id }}" class="edit">edit</a><br/>
-													   <a href="#deleteQuestion,{{ q.homepage_question_id }}" class="delete">deactivate</a>
-													</td>
-												</tr>
-
-											{% endfor %}
-										{% endif %}
-											</tbody>
-										</table>
-									</li>
-									<li>
-										<table class="active-questions-table">
-											<tbody>
-												<tr>
-													<td><p>Loading...</p></td>
-												</tr>
-											</tbody>
-										</table>
-									</li>
-								</ul>
+									{% endfor %}
+								{% endif %}
+									</tbody>
+								</table>
 							</div>
-						</div>
-					</div>
-					<div class="ft">
-						<div class="pagination-controls">
-							<span class="control">
-								<a class="prev questions-carousel-prev" href="#"><span class="sm-arrow-back light"></span><span>Previous</span></a>
-								<a class="next questions-carousel-next" href="#"><span>Next</span><span class="sm-arrow-forward light"></span></a>
-							</span>
 						</div>
 					</div>
 				</div>
@@ -140,7 +123,7 @@
 	<a class='close' href="#"><span>close</span></a>
 </div>
 
-<div class="template-content modal-content confirm-delete feature-question">
+<div class="template-content modal-content merlin feature-question">
 	<div class="step">
 		<h2><strong>Feature</strong> this Question?</h2>
 		<div>
