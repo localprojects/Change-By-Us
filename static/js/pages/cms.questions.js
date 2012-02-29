@@ -207,11 +207,11 @@ app_page.features.push(function(app){
 			service: {
 				url: "/cms/questions/edit",
 				param: "question",
-				charlimit: 160,
 				post_data: {
 					question_id: $el.attr('id').split('-')[1] 
 				}
-			}
+			},
+			charlimit: 160
 		})
 	});
 	
