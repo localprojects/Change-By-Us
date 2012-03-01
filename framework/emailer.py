@@ -17,7 +17,7 @@ from email import Encoders
 from lib.web.contrib.template import render_jinja
 from lib.jinja2.exceptions import TemplateNotFound
 from framework.log import log
-from framework.controller import *
+#from framework.controller import *
 import lib.web.utils as webpyutils
 import lib.web.webapi as webapi
 
