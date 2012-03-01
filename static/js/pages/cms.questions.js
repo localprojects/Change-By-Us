@@ -156,10 +156,10 @@ app_page.features.push(function(app){
 				inputs:{
 					question:{
 						selector:'textarea.question',
-						validators: ['min-3','max-160','required'],
+						validators: ['min-3','max-60','required'],
 						counter: {
 	                      selector:'.charlimit.question',
-	                      limit:160
+	                      limit:60
 	                    }
 					}
 				},
@@ -211,7 +211,7 @@ app_page.features.push(function(app){
 					question_id: $el.attr('id').split('-')[1] 
 				}
 			},
-			charlimit: 160
+			charlimit: 60
 		})
 	});
 	
