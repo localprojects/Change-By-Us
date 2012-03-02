@@ -22,7 +22,7 @@
                         <a href="#" class="contact"></a>
                     {% endif %}
                 </div>
-                <h3>Project Leader</h3>
+                <h3>Project Leaders</h3>
             </div>
 
             {% for admin in d.template_data.project.admins %}
@@ -42,6 +42,24 @@
                         <span class="serif">Created by <br/> <strong><a href='/useraccount/{{ admin.id }}'>{{ admin.display_name }}</a></strong></span>
                     </span>
                 </div>
+                {% else %}
+                    {% if (loop.index0 %  6) == 1 %}
+                    <div class="clearfix">
+                        <ul>
+                    {% endif %}
+                            <li style="display:block;float:left;padding-right:8px;">
+                                <a href='/useraccount/{{ admin.id }}'>
+                                  {% if admin.avatar_path %}
+                                  <img width="35" src="{{ d.template_data.media_root }}{{ admin.avatar_path }}" alt="{{ admin.display_name }}">
+                                  {% else %}
+                                  <img width='35' src="/static/images/thumb_genAvatar50.png" alt="{{ admin.display_name }}">
+                                  {% endif %}
+                                </a>
+                            </li>
+                    {% if ((loop.index0 %  6) == 0) or loop.last %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
         </div>

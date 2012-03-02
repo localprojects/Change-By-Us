@@ -16,7 +16,7 @@ import re
 import datetime
 
 class Project(Controller):
-    def GET(self, action=None, param0=None):
+    def GET(self, action=None, param0=None, param1=None):
         if (action == 'resource'):
             if (param0 == 'info'):
                 return self.getResourceInfo()
@@ -38,7 +38,7 @@ class Project(Controller):
         else:
             return self.showProject(action)
 
-    def POST(self, action=None, param0=None):
+    def POST(self, action=None, param0=None, param1=None):
         if (action == 'join'):
             return self.join()
         elif (action == 'endorse'):
@@ -81,6 +81,13 @@ class Project(Controller):
         elif (action == 'user'):
             if (param0 == 'remove'):
                 return self.removeUser()
+            elif (param0 == 'admin'):
+                if (param1 == 'add'):
+                    return self.setAdmin(True)
+                elif (param1 == 'remove'):
+                    return self.setAdmin(False)
+                else:
+                    return self.not_found()
             else:
                 return self.not_found()
         elif (action == 'photo'):
@@ -530,3 +537,20 @@ class Project(Controller):
         self.orm.commit()
 
         return True
+
+    def setAdmin(self, b):
+        projectId = self.request('project_id')
+        userId = self.request('user_id')
+        
+        projectUser = self.orm.query(models.ProjectMember).get((userId, projectId))
+        
+        # TODO prevent last admin from being deleted
+        
+        if projectUser:
+            projectUser.is_project_admin = b
+            self.orm.commit()
+            
+            return True
+        else:
+            return False
+        
