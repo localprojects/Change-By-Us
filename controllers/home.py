@@ -34,6 +34,7 @@ class Home(Controller):
         project_user = dict(is_member = True,
                               is_project_admin = True)
         self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
+        self.template_data['homepage_question'] = self.getHomepageQuestion()
 
         if (not action or action == 'home'):
             return self.showHome()
@@ -515,6 +516,21 @@ class Home(Controller):
                 log.error(e)
 
         return data
+        
+    def getHomepageQuestion(self):
+        q = None
+    
+        if (Config.get('homepage').get('is_question_from_cms')):
+            sql = "select question from homepage_question where is_active = 1 and is_featured = 1"
+            data = list(self.db.query(sql))
+            
+            if (len(data) == 1):
+                q = data[0].question
+                
+        if (not q):
+            q = Config.get('homepage').get('question')
+            
+        return q
 
     def submitFeedback(self):
         name = self.request('name')
