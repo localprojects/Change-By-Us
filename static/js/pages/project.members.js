@@ -13,6 +13,25 @@ tc.gam.project_widgets.members = function(options){
         self = {};
 
     var handlers = {
+    	toggle_admin: function(e) {
+    		var uid = tc.jQ(e.currentTarget).attr('for').replace('toggle-admin-', '');
+    		var action = (tc.jQ(e.currentTarget).hasClass('checked')) 
+    			? 'add'
+    			: 'remove';
+    			
+    		tc.jQ.ajax({
+    			type: 'POST',
+    			url: '/project/user/admin/' + action,
+    			data: {
+    				project_id: options.project_data.project_id,
+    				user_id: uid
+    			},
+    			dataType: 'text',
+    			success: function(data, ts, xhr) {
+    				console.log(data);
+    			}
+    		});
+    	},
         remove_member:function(e){
             e.preventDefault();
 
@@ -55,6 +74,7 @@ tc.gam.project_widgets.members = function(options){
     };
 
     dom.find('a.close').unbind('click').bind('click', handlers.remove_member);
+    dom.find('label.toggle-admin').bind('click', handlers.toggle_admin);
 
     var components = {
         email_merlin:null,
