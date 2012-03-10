@@ -78,9 +78,12 @@
                                 <a class="name" href="/useraccount/{{ member.id }}">{{ member.display_name }}</a>
                                 <div class="serif location">{{ member.location.name }}</div>
                             </div>
-                            {% if d.template_data.project_user.data.is_project_admin and d.template_data.user.data.u_id != member.id %}
+                            {% if (d.template_data.project_user.data.is_project_admin or 
+                                    d.template_data and d.template_data.user and 
+                                    d.template_data.user.is_admin) and 
+                                    d.template_data.user.data.u_id != member.id %}
                             <div class="tools">
-                            	<input type='checkbox' id='toggle-admin-{{ member.id }}' name="toggle-admin-{{ member.id }}" class="toggle-admin-{{ member.id }}" checked='{% if member in project_admins %}true{% else %}false{% endif %}' />
+                            	<input type='checkbox' id='toggle-admin-{{ member.id }}' name="toggle-admin-{{ member.id }}" class="toggle-admin-{{ member.id }}" {% if member in project_admins %}checked='true'{% endif %} />
 								<label class="toggle-admin toggle-admin-{{ member.id }}-label" for="toggle-admin-{{ member.id }}">Admin</label>
                             </div>
                             {% endif %}

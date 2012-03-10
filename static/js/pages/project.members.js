@@ -28,7 +28,7 @@ tc.gam.project_widgets.members = function(options){
     			},
     			dataType: 'text',
     			success: function(data, ts, xhr) {
-    				console.log(data);
+    				//window.location.reload(true);
     			}
     		});
     	},
