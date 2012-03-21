@@ -173,7 +173,6 @@ class Project(Controller):
 
     def join(self):
         projectId = self.request('project_id')
-        #description = self.request('message')
 
         if (not self.user):
             log.error("*** join submitted w/o logged in user")
@@ -181,9 +180,7 @@ class Project(Controller):
         elif (not projectId):
             log.error("*** join submitted w/o logged project id")
             return False
-        #elif (util.strNullOrEmpty(description)):
-        #    log.error("*** join submitted w/o idea")
-        #    return False
+        
         else:
             isJoined = mProject.join(self.db, projectId, self.user.id)
 

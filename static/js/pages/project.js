@@ -138,15 +138,7 @@ app_page.features.push(function(app) {
         user: {
             source_element: tc.jQ('.modal-content.introduce-yourself'),
             init: function(modal, event_target, callback) {
-            	/*
-                var modal_merlin = new tc.merlin(app, tc.app.merlin_join_modal(modal, event_target, callback));
-                
-                if(tc.jQ.isFunction(callback)){
-                    callback(modal);
-                }
-                */
-               tc.util.log('WTF')
-                tc.jQ.ajax({
+            	tc.jQ.ajax({
                     type: 'POST',
                     url: '/project/join',
                     data: {
