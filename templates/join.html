@@ -262,6 +262,7 @@
 		app_page.data.account_create_url = '/facebook/create';
 	{% elif d.is_email_auth_attempt %}
 		{% if d.is_email_auth_attempt_successful %}
+			app_page.data.post_auth_redirect_link = '{{ d.post_auth_redirect_link }}';
 			app_page.data.first_join_step = 'email-authentication-success';
 		{% else %}
 			app_page.data.first_join_step = 'email-authentication-error';
