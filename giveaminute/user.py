@@ -292,7 +292,7 @@ where u.user_id = $id and u.is_active = 1"""
             sql = """select p.project_id, p.title, pu.is_project_admin
                     from project p
                     inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id
-                    inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1
+                    inner join project__user o on o.project_id = p.project_id and o.is_project_creator = 1
                     where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
         except Exception,e:
@@ -335,7 +335,7 @@ where u.user_id = $id and u.is_active = 1"""
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members
                 from project p
                 inner join project_endorsement pe on pe.project_id = p.project_id and pe.user_id = $id
-                inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin = 1
+                inner join project__user pu on pu.project_id = p.project_id and pu.is_project_creator = 1
                 inner join user o on o.user_id = pu.user_id
                  where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
