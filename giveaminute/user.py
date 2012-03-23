@@ -559,11 +559,12 @@ def createUserFromAuthGuid(db, authGuid):
     userId = None
 
     try:
-        sql = "select email, password, salt, phone, first_name, last_name from unauthenticated_user where auth_guid = $guid limit 1"
+        sql = "select email, password, salt, phone, first_name, last_name, redirect_link from unauthenticated_user where auth_guid = $guid limit 1"
         data = list(db.query(sql, {'guid':authGuid}))
-
+        
         if (len(data) == 1):
             userData = data[0]
+            redirectLink = userData.redirect_link
             userId = db.insert('user', email = userData.email,
                                         password = userData.password,
                                         salt = userData.salt,
@@ -575,9 +576,9 @@ def createUserFromAuthGuid(db, authGuid):
         log.info("*** problem creating user from auth guid %s" % authGuid)
         log.error(e)
 
-    return userId
+    return userId, redirectLink
 
-def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
+def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None, redirectLink = None):
     encrypted_password, salt = makePassword(password)
 
     if (findUserByEmail(db, email)):
@@ -590,7 +591,8 @@ def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, l
                                     salt=salt,
                                     phone=phone,
                                     first_name=firstName,
-                                    last_name=lastName)
+                                    last_name=lastName,
+                                    redirect_link=redirectLink)
 
         return True
     except Exception, e:
