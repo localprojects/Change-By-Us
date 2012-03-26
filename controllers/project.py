@@ -523,6 +523,7 @@ class Project(Controller):
         projectUser = self.orm.query(models.ProjectMember).get((userId, projectId))
         
         # TODO prevent last admin from being deleted
+        # TODO on delete of creator, make oldest admin creator
         
         if projectUser:
             projectUser.is_project_admin = b
