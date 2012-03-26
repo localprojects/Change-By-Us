@@ -489,6 +489,7 @@ CREATE TABLE `project__user` (
   `project_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `is_project_admin` tinyint(1) NOT NULL DEFAULT '0',
+  `is_project_creator` tinyint(1) NOT NULL DEFAULT '0',
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`user_id`)
 ) ENGINE=MyISAM;
