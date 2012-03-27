@@ -427,7 +427,8 @@ class RestController (Controller):
         for columnName in row.__mapper__.columns.keys():
             d[columnName] = getattr(row, columnName)
             try:
-                if str(row.__mapper__.columns.get('name').type).startswith('VARCHAR'):
+                col = row.__mapper__.columns.get('name')
+                if col and str(col.type).startswith('VARCHAR'):
                     d[columnName] = jinja2.Markup(d[columnName]).unescape()                
             except Exception, e:
                 log.debug("Exception decoding field %s: %s" % (columnName, e))
