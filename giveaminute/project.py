@@ -69,6 +69,9 @@ limit 1"""
             return None
 
     def getFullDictionary(self):
+        if self.data is None:
+            return None
+
         members = self.getMembers()
         endorsements = self.getEndorsements()
         links = self.getLinks()
