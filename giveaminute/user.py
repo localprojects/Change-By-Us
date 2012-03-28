@@ -556,7 +556,7 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
     return userId
 
 def createUserFromAuthGuid(db, authGuid):
-    userId = None
+    userId = redirectLink = None
 
     try:
         sql = "select email, password, salt, phone, first_name, last_name, redirect_link from unauthenticated_user where auth_guid = $guid limit 1"
