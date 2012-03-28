@@ -1,0 +1,9 @@
+# m h  dom mon dow   command
+# @weekly        Run once a week, "0 0 * * 0".
+
+# Run digest processor daily
+25 6    * * *     cd %(etc_path)s/cron.daily && ./daily_digest
+
+# Move the log files to archive weekly
+@weekly    mv %(log_path)s/*.gz /mnt/var/log/
+

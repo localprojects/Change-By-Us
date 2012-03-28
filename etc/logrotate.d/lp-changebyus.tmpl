@@ -1,0 +1,28 @@
+%(log_path)s/*.log {
+    # rotate files daily
+    daily
+    # keep 10 days worth of backlogs
+    rotate 30
+    # compress logfiles
+    compress
+    # ignore missing files, go to next one
+    missingok
+    # don't rotate if empty
+    notifempty
+    # Add date extension (log-yyyymmdd)
+    dateext
+    # Truncate existing log
+    copytruncate
+
+    # post-rotate archive the files on a mount-point
+    postrotate
+       if [ -f %(run_path)s/lighttpd.pid ] && ps --pid $(cat %(run_path)s/lighttpd.pid) > /dev/null 2>&1; then \
+         if [ -x /usr/sbin/invoke-rc.d ]; then \
+            invoke-rc.d lighttpd reload > /dev/null 2>&1; \
+         else \
+            /etc/init.d/lighttpd reload %(app_path)s > /dev/null 2>&1; \
+         fi; \
+       fi;
+    endscript
+}
+
