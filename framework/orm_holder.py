@@ -55,7 +55,6 @@ class OrmHolder (object):
             #    * echo should be configurable based on DEBUG setting, otherwise all
             #      sql statements will be logged indiscriminately
             web.config.db_engine = create_engine(db_conn_string, 
-                                                 charset='utf8',
                                                  encoding='utf-8', 
                                                  convert_unicode=False, 
                                                  echo=True, echo_pool=True,
