@@ -392,7 +392,7 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
                                     organization = organization)
 
         if (projectId):
-            join(db, projectId, ownerUserId, True)
+            join(db, projectId, userId=ownerUserId, isAdmin=True, isProjectCreator=True)
         else:
             log.error("*** no project id returned, probably no project created")
     except Exception, e:
@@ -487,9 +487,12 @@ def updateProjectDescription(db, projectId, description):
         log.error(e)
         return False
 
-def join(db, projectId, userId, isAdmin = False):
+def join(db, projectId, userId, isAdmin = False, isProjectCreator=False):
     if (not isUserInProject(db, projectId, userId)):
-        db.insert('project__user', project_id = projectId, user_id = userId, is_project_admin = (1 if isAdmin else 0))
+        db.insert('project__user', project_id = projectId, user_id = userId, 
+                    is_project_admin = (1 if isAdmin else 0),
+                    is_project_creator = (1 if isProjectCreator else 0)
+                 )
 
         return True
     else:
