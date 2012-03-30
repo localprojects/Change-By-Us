@@ -15,6 +15,7 @@ from framework.util import local_utcoffset
 import giveaminute.idea
 import giveaminute.messaging
 import helpers.censor
+import jinja2 
 
 class Project():
     def __init__(self, db, projectId):
@@ -340,7 +341,7 @@ def userNameDisplay(first, last, affiliation = None, isFullLast = False):
         else:
             name = affiliation
 
-    return name
+    return jinja2.Markup(name).unescape()
 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
     return dict(idea_id = ideaId,
@@ -1008,14 +1009,14 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
 
         for item in data:
             betterData.append(dict(project_id = item.project_id,
-                            title = item.title,
-                            description = item.description,
+                            title = jinja2.Markup(item.title).unescape(),
+                            description = jinja2.Markup(item.description).unescape(),
                             image_id = item.image_id,
                             location_id = item.location_id,
                             owner = smallUserDisplay(item.owner_user_id,
-                                                     userNameDisplay(item.owner_first_name,
+                                                     userNameDisplay(item.owner_first_name, 
                                                                      item.owner_last_name,
-                                                                     item.owner_affiliation,
+                                                                     item.owner_affiliation, 
                                                                      isFullLastName(item.owner_group_membership_bitmask)),
                                                      item.owner_image_id),
                             num_members = item.num_members))
