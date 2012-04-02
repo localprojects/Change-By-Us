@@ -1,0 +1,111 @@
+{#
+ # Copyright (c) 2011 Local Projects. All rights reserved.
+ # Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ #}
+{% extends "./partials/base.html" %}
+
+{% block title %} Events {% endblock title %}
+
+{% block continent %}
+<div class='continent'>
+	<div class='headlands'>
+		<span class="above-h1">{{ d.config.site.name }}</span>
+		<h1>Events</h1>
+	</div>
+
+	<div class='midlands clearfix'>
+		<div class="east">
+            <div class="box main-section calendar events">            
+                <!-- carousel controls -->
+				<div class="pagination-controls members clearfix">
+					<span class="control">
+						<a class="prev members-carousel-prev" href="/calendar/show/monthly/{{ d.template_data.calendar.prev_month }}">
+						  <span class="sm-arrow-back light"></span><span>Previous</span>
+				        </a>
+						<a class="next members-carousel-next" href="/calendar/show/monthly/{{ d.template_data.calendar.next_month }}">
+						  <span>Next</span><span class="sm-arrow-forward light"></span>
+				        </a>
+					</span>
+				</div>            
+                <ol class="event-stack">
+                    {% for event in d.template_data.calendar.events %}
+                    <li class="event" data-id="{{ event.id }}">
+                        <div class="bd clearfix">
+                    
+                            <div class="wrapper"  style="width:600px;">
+                                <div class="event-datetime">
+                                    <span class="month">{{ event.start_datetime|datetime('%b') }}</span>
+                                    <span class="day">{{ event.start_datetime.day }}</span>
+                                    <span class="time">{{ event.start_datetime|neattime }}</span>
+                                </div>
+                    
+                                <div class="event-body">
+                                    <div class="project-link">
+                                        <a href="/project/{{ event.project_id }}">{{ event.project.title }}</a>
+                                    </div>
+                                    <div class="event-title serif">
+                                        <a href="/project/{{event.project_id}}#show,event-detail,{{ event.id }}">{{ event.name }}</a>
+                                    </div>
+                    
+                                    <div class="event-loc-title serif">
+                                        at <a href="#">{{ event.address }}</a>
+                                    </div>
+                    
+                                    <div class="event-description">
+                                        <p class="serif">
+                                            {{ event.details|truncate(130) }}
+                                            {% if event.details|length > 130 %}
+                                                <a href="/project/{{event.project_id}}#show,event-detail,{{ event.id }}" class="read-more">Read More</a>
+                                            {% endif%}
+                                        </p>
+                                    </div>
+                                </div>
+                    
+                                <div class="event-rsvp">
+                                    {% if event.rsvp_url|length > 0 %}
+                                        <a href="{{ event.rsvp_url }}" target="_blank" class="rsvp-link">RSVP{% if event.rsvp_service_name %} <span class="rsvp-site">on <span class="rsvp-site-name">{{ event.rsvp_service_name }}</span></span>{% endif %}</a>
+                                    {% endif %}
+                    
+                                    {% if event.needs|length > 0 %}
+                                        {% with need=event.needs[0] %}
+                                            <span class="event-need serif">We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a></span>
+                                            <span class="more-event-needs"><a href="#show,event-needs,{{ event.id }}">Show all needs for this event<span class="sm-arrow-forward dark"></span></a></span>
+                                        {% endwith %}
+                                    {% endif %}
+                                </div>
+                    
+                    
+                                <div class="empty-state-box" style="display:none;">
+                                    <!--<a class="close" href="#"><span>Close</span></a>-->
+                                    <p>No events found.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    {% else %}
+                        {#% include "project/empty_events_list.html" %#}
+                    {% endfor %}
+                </ol>
+            </div>          
+		</div>
+	    <div class="west">
+    	    <div class="box calendar">
+                <div class="hd clearfix">
+    	            <div class="wrapper" style="width:300px;">
+        	        I would like to put a short, descriptive paragraph about Change By Us events 
+        	        and how users can get involved.
+                    </div>
+                </div>
+            </div>
+	    </div>
+	</div>
+
+	<div class='foothills'>
+	</div>
+</div>
+{% endblock continent %}
+
+{% block page_js %}
+	<script type='text/javascript' src="/static/js/pages/tou.js"></script>
+{% endblock page_js %}
