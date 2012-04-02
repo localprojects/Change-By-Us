@@ -1,0 +1,16 @@
+[program:cbu]
+command=/usr/local/bin/uwsgi
+  --socket %(app_path)s/run/uwsgi.sock
+  --logto %(app_path)s/var/log/uwsgi.log
+  --pythonpath %(app_path)s/current
+  --wsgi-file %(app_path)s/current/wsgi.py
+  --callable application
+  --max-requests 1000
+  --master
+  --processes 1
+  --chmod
+directory=%(app_path)s/current
+user=giveaminute
+autostart=true
+autorestart=true
+stopsignal=QUIT
