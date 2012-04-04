@@ -29,6 +29,7 @@ from lib import web
 
 # Define all the routes for the applications
 ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
+            r'/calendar/?([^/.]*)/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.calendar.Calendar',
             r'/cms/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/create/?([^/.]*)', 'controllers.createProject.CreateProject',
             r'/idea/?([^/.]*)', 'controllers.idea.Idea',
