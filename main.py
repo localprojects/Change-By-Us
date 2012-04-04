@@ -221,13 +221,13 @@ def main():
     # Load SQLAlchemy
     app.add_processor(load_sqla)
 
-    # Finally, run the web.py app!    
-    app.run()
+    return app
 
 # Main logic for the CBU application.  Does some basic configuration,
 # then starts the web.py application.
 if __name__ == "__main__":
     try:
-        main()
+        app = main()
+        app.run()
     except Exception, e:
         log.info("ERROR: %s" % e)

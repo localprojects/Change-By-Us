@@ -915,6 +915,10 @@ def _webserver_do(action=''):
                 sudo_as('/usr/sbin/apachectl %(action)s' % params)
             elif env.os_name == 'ubuntu10':
                 sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
+        elif env.webserver == 'nginx':
+            sudo_as('/etc/init.d/%(webserver)s %(action)s' % params, shell=False, pty=False)
+            params['application'] = env.application
+            sudo_as('supervisorctl %(action)s %(application)s' % params, shell=False, pty=False)
                 
 def secure_website():
     """
