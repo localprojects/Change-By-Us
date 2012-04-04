@@ -349,8 +349,8 @@ class Controller (object):
         # default text if not found.
         return gettext.translation('messages', locale_dir, [locale_id], fallback=True)
 
-    def json(self, data):
-        output = json.dumps(data)
+    def json(self, data, encoder=None):
+        output = json.dumps(data, cls=encoder)
         web.header("Content-Type", "text/plain")
         log.info("200: text/plain (JSON)")
 

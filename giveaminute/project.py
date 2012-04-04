@@ -340,8 +340,8 @@ def userNameDisplay(first, last, affiliation = None, isFullLast = False):
             name = "%s, %s" % (name, affiliation)
         else:
             name = affiliation
-
-    return jinja2.Markup(name).unescape()
+    return name
+    #return jinja2.Markup(name).unescape()
 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
     return dict(idea_id = ideaId,
@@ -1009,8 +1009,10 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
 
         for item in data:
             betterData.append(dict(project_id = item.project_id,
-                            title = jinja2.Markup(item.title).unescape(),
-                            description = jinja2.Markup(item.description).unescape(),
+                            #title = jinja2.Markup(item.title).unescape(),
+                            title = item.title,
+                            #description = jinja2.Markup(item.description).unescape(),
+                            description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
                             owner = smallUserDisplay(item.owner_user_id,
