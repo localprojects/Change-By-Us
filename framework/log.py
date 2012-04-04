@@ -54,7 +54,10 @@ class Info():
 formatter = logging.Formatter("%(asctime)s %(ip)s |%(levelname)s| %(message)s <%(filename)s:%(lineno)d>")        
 
 # Log identifier/file will be the same as the file being run
-name = os.path.basename(__main__.__file__).split('.')[0]
+try:
+    name = os.path.basename(__main__.__file__).split('.')[0]
+except:
+    name = 'main'
 log = logging.getLogger(name)
 
 # Set log level to Debug (TODO: This should be pulled from config file)
