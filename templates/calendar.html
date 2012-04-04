@@ -26,7 +26,7 @@
 						  <span>Next</span><span class="sm-arrow-forward light"></span>
 				        </a>
 					</span>
-				</div>            
+				</div>          
                 <ol class="event-stack">
                     {% for event in d.template_data.calendar.events %}
                     <li class="event" data-id="{{ event.id }}">
@@ -61,30 +61,21 @@
                                     </div>
                                 </div>
                     
-                                <div class="event-rsvp">
-                                    {% if event.rsvp_url|length > 0 %}
-                                        <a href="{{ event.rsvp_url }}" target="_blank" class="rsvp-link">RSVP{% if event.rsvp_service_name %} <span class="rsvp-site">on <span class="rsvp-site-name">{{ event.rsvp_service_name }}</span></span>{% endif %}</a>
-                                    {% endif %}
-                    
-                                    {% if event.needs|length > 0 %}
-                                        {% with need=event.needs[0] %}
-                                            <span class="event-need serif">We need <a href="#show,need-detail,{{ need.id }}" class="vol-need"><span class="vol-count">{{ need.quantity }}</span> volunteer {{ need.request }}</a></span>
-                                            <span class="more-event-needs"><a href="#show,event-needs,{{ event.id }}">Show all needs for this event<span class="sm-arrow-forward dark"></span></a></span>
-                                        {% endwith %}
-                                    {% endif %}
-                                </div>
-                    
-                    
-                                <div class="empty-state-box" style="display:none;">
-                                    <!--<a class="close" href="#"><span>Close</span></a>-->
-                                    <p>No events found.</p>
-                                </div>
                             </div>
                         </div>
                     </li>
 
                     {% else %}
-                        {#% include "project/empty_events_list.html" %#}
+                    <li class="box event">
+                        <div class="clearfix">
+                            <div class="empty-state-box big">
+                                    <p>There are no Change By Us events in this month.</a>
+                                    {% if (d.template_data.calendar.is_active_month) %}
+                                    <p>Contact your project admins to see how you can help!</p>
+                                    {% endif %}
+                            </div>
+                        </div>
+                    </li>
                     {% endfor %}
                 </ol>
             </div>          
