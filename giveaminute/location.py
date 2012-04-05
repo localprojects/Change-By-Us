@@ -18,9 +18,9 @@ select l.location_id,
     l.name,
     l.lat,
     l.lon,
-    count(distinct p.project_id) as np,
-    count(distinct i.idea_id) as ni,
-    count(distinct r.project_resource_id) as npr
+    count(distinct p.project_id) as num_projects,
+    count(distinct i.idea_id) as num_ideas,
+    count(distinct r.project_resource_id) as num_project_resources
 from location l 
 	left join project p on p.location_id = l.location_id and p.is_active=1
     left join project__user pu on p.project_id=pu.project_id and pu.is_project_admin = 1 and p.is_active=1
