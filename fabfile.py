@@ -89,6 +89,9 @@ env.clean_build = False
 
 # SSH Key configuration
 env.key_filename = os.path.expanduser(env.key_filename)
+while not os.path.exists(env.key_filename):
+    env.key_filename = prompt("Keffile %s not found. Provide valid SSH keyfile (eg. ~/.ssh/ChangeByUs.pem: " % env.key_filename)
+    env.key_filename = os.path.expanduser(env.key_filename)
 env.ssh_port = 48022
 
 # We need to make the hosts into a list
