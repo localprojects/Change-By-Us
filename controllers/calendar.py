@@ -10,10 +10,13 @@ from sqlalchemy import and_
 
 class Calendar(Controller):
     def GET(self, action=None, param0=None, param1=None, param2=None):
-        if (action == 'show'):
-            return self.showCalendar(param0, param1)
-        elif (action == 'get'):
-            return self.getCalendar(param0, param1)    
+        if (Config.get('features').get('is_calendar_enabled')):
+            if (action == 'show'):
+                return self.showCalendar(param0, param1)
+            elif (action == 'get'):
+                return self.getCalendar(param0, param1)    
+            else:
+                return self.not_found()
         else:
             return self.not_found()
         
