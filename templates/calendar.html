@@ -1,0 +1,102 @@
+{#
+ # Copyright (c) 2011 Local Projects. All rights reserved.
+ # Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ #}
+{% extends "./partials/base.html" %}
+
+{% block title %} Events {% endblock title %}
+
+{% block continent %}
+<div class='continent calendar'>
+	<div class='headlands'>
+		<span class="above-h1">{{ d.config.site.name }}</span>
+		<h1>Events</h1>
+	</div>
+
+	<div class='midlands clearfix'>
+		<div class="east">
+            <div class="box main-section calendar events">            
+                <!-- carousel controls -->
+				<div class="pagination-controls calendar clearfix">
+					<span class="control">
+						<a class="prev calendar-carousel-prev" href="/calendar/show/monthly/{{ d.template_data.calendar.prev_month }}">
+						  <span class="sm-arrow-back light"></span><span>Previous</span>
+				        </a>
+						<a class="next calendar-carousel-next" href="/calendar/show/monthly/{{ d.template_data.calendar.next_month }}">
+						  <span>Next</span><span class="sm-arrow-forward light"></span>
+				        </a>
+					</span>
+				</div>          
+                <ol class="event-stack">
+                    {% for event in d.template_data.calendar.events %}
+                    <li class="event" data-id="{{ event.id }}">
+                        <div class="bd clearfix">
+                    
+                            <div class="wrapper">
+                                <div class="event-datetime">
+                                    <span class="month">{{ event.start_datetime|datetime('%b') }}</span>
+                                    <span class="day">{{ event.start_datetime.day }}</span>
+                                    <span class="time">{{ event.start_datetime|neattime }}</span>
+                                </div>
+                    
+                                <div class="event-body">
+                                    <div class="project-link">
+                                        <a href="/project/{{ event.project_id }}">{{ event.project.title }}</a>
+                                    </div>
+                                    <div class="event-title serif">
+                                        <a href="/project/{{event.project_id}}#show,event-detail,{{ event.id }}">{{ event.name }}</a>
+                                    </div>
+                    
+                                    <div class="event-loc-title serif">
+                                        at <a href="#">{{ event.address }}</a>
+                                    </div>
+                    
+                                    <div class="event-description">
+                                        <p class="serif">
+                                            {{ event.details|truncate(130) }}
+                                            {% if event.details|length > 130 %}
+                                                <a href="/project/{{event.project_id}}#show,event-detail,{{ event.id }}" class="read-more">Read More</a>
+                                            {% endif%}
+                                        </p>
+                                    </div>
+                                </div>
+                    
+                            </div>
+                        </div>
+                    </li>
+
+                    {% else %}
+                    <li class="box event">
+                        <div class="clearfix">
+                            <div class="empty-state-box big">
+                                    <p>There are no Change By Us events in this month.</a>
+                                    {% if (d.template_data.calendar.is_active_month) %}
+                                    <p>Contact your project admins to see how you can help!</p>
+                                    {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>          
+		</div>
+	    <div class="west">
+    	    <div class="box calendar">
+                <div class="hd clearfix">
+                    <div class="wrapper">
+    	            I would like to put a short, descriptive paragraph about Change By Us events 
+        	        and how users can get involved.
+        	        </div>
+                </div>
+            </div>
+	    </div>
+	</div>
+
+	<div class='foothills'>
+	</div>
+</div>
+{% endblock continent %}
+
+{% block page_js %}
+	<script type='text/javascript' src="/static/js/pages/tou.js"></script>
+{% endblock page_js %}

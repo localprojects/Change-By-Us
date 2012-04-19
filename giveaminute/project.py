@@ -15,6 +15,7 @@ from framework.util import local_utcoffset
 import giveaminute.idea
 import giveaminute.messaging
 import helpers.censor
+import jinja2 
 
 class Project():
     def __init__(self, db, projectId):
@@ -50,7 +51,7 @@ select p.project_id
     ,u.group_membership_bitmask as owner_group_membership_bitmask
 from project p
 inner join location l on l.location_id = p.location_id
-inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin
+inner join project__user pu on pu.project_id = p.project_id and pu.is_project_creator
 inner join user u on u.user_id = pu.user_id
 left join featured_project fp on fp.project_id = p.project_id
 where p.project_id = $id and p.is_active = 1
@@ -69,6 +70,9 @@ limit 1"""
             return None
 
     def getFullDictionary(self):
+        if self.data is None:
+            return None
+
         members = self.getMembers()
         endorsements = self.getEndorsements()
         links = self.getLinks()
@@ -336,8 +340,8 @@ def userNameDisplay(first, last, affiliation = None, isFullLast = False):
             name = "%s, %s" % (name, affiliation)
         else:
             name = affiliation
-
     return name
+    #return jinja2.Markup(name).unescape()
 
 def smallIdea(ideaId, description, firstName, lastName, submissionType):
     return dict(idea_id = ideaId,
@@ -389,7 +393,7 @@ def createProject(db, ownerUserId, title, description, keywords, locationId, ima
                                     organization = organization)
 
         if (projectId):
-            join(db, projectId, ownerUserId, True)
+            join(db, projectId, userId=ownerUserId, isAdmin=True, isProjectCreator=True)
         else:
             log.error("*** no project id returned, probably no project created")
     except Exception, e:
@@ -450,7 +454,7 @@ def deleteItemsByUser(db, table, userId):
 def deleteProjectsByUser(db, userId):
     try:
         sql = """update project p, project__user pu set p.is_active = 1
-                    where p.project_id = pu.project_id and pu.is_project_admin = 1 and pu.user_id = $userId"""
+                    where p.project_id = pu.project_id and pu.is_project_creator = 1 and pu.user_id = $userId"""
         db.query(sql, { 'userId':userId })
     except:
         log.info("*** couldn't delete projects for user_id = %s" % userId)
@@ -484,9 +488,12 @@ def updateProjectDescription(db, projectId, description):
         log.error(e)
         return False
 
-def join(db, projectId, userId, isAdmin = False):
+def join(db, projectId, userId, isAdmin = False, isProjectCreator=False):
     if (not isUserInProject(db, projectId, userId)):
-        db.insert('project__user', project_id = projectId, user_id = userId, is_project_admin = (1 if isAdmin else 0))
+        db.insert('project__user', project_id = projectId, user_id = userId, 
+                    is_project_admin = (1 if isAdmin else 0),
+                    is_project_creator = (1 if isProjectCreator else 0)
+                 )
 
         return True
     else:
@@ -788,7 +795,7 @@ def getFeaturedProjects(db, limit = 6):
                         where npu.project_id = p.project_id)  as num_members
                 from project p
                 inner join featured_project fp on fp.project_id = p.project_id
-                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_creator = 1
                 inner join user o on o.user_id = opu.user_id
                 where p.is_active = 1
                 order by fp.ordinal
@@ -844,7 +851,7 @@ def getFeaturedProjectsDictionary(db):
                         where e.project_id = p.project_id) as num_endorsements
                 from project p
                 inner join featured_project fp on fp.project_id = p.project_id
-                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_creator = 1
                 inner join user o on o.user_id = opu.user_id
                 where p.is_active = 1
                 order by fp.ordinal"""
@@ -890,7 +897,7 @@ def getProjectsByLocation(db, locationId, limit = 100):
                         o.image_id as owner_image_id,
                     (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
                     from project p
-                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_creator = 1
                     inner join user o on o.user_id = opu.user_id where p.is_active = 1 and p.location_id = $locationId
                     limit $limit"""
         data = list(db.query(sql, {'locationId':locationId, 'limit':limit}))
@@ -918,7 +925,7 @@ def getProjectsByUser(db, userId, limit = 100):
                         o.image_id as owner_image_id,
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members
                 from project p
-                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                inner join project__user opu on opu.project_id = p.project_id and opu.is_project_creator = 1
                 inner join user o on o.user_id = opu.user_id
                 inner join project__user pu on pu.user_id = $userId and pu.project_id = p.project_id
                  where p.is_active = 1
@@ -951,7 +958,7 @@ def searchProjectsCount(db, terms, locationId):
     try:
         sql = """select count(*) as count
                     from project p
-                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    -- inner join project__user opu on opu.project_id = p.project_id and opu.is_project_creator = 1
                     where
                     p.is_active = 1
                     and ($locationId is null or p.location_id = $locationId)
@@ -988,27 +995,30 @@ def searchProjects(db, terms, locationId, limit=1000, offset=0):
                         o.image_id as owner_image_id,
                     (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members
                     from project p
-                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
+                    inner join project__user opu on opu.project_id = p.project_id and opu.is_project_creator = 1
                     inner join user o on o.user_id = opu.user_id
                     where
                     p.is_active = 1
                     and ($locationId is null or p.location_id = $locationId)
                     and ($match = '' or match(p.title, p.keywords, p.description) against ($match in boolean mode))
-                    order by p.created_datetime desc
+                    -- order by p.created_datetime desc
+                    order by num_members desc
                     limit $limit offset $offset"""
 
         data = list(db.query(sql, {'match':match, 'locationId':locationId, 'limit':limit, 'offset':offset}))
 
         for item in data:
             betterData.append(dict(project_id = item.project_id,
+                            #title = jinja2.Markup(item.title).unescape(),
                             title = item.title,
+                            #description = jinja2.Markup(item.description).unescape(),
                             description = item.description,
                             image_id = item.image_id,
                             location_id = item.location_id,
                             owner = smallUserDisplay(item.owner_user_id,
-                                                     userNameDisplay(item.owner_first_name,
+                                                     userNameDisplay(item.owner_first_name, 
                                                                      item.owner_last_name,
-                                                                     item.owner_affiliation,
+                                                                     item.owner_affiliation, 
                                                                      isFullLastName(item.owner_group_membership_bitmask)),
                                                      item.owner_image_id),
                             num_members = item.num_members))
@@ -1035,7 +1045,7 @@ def getLeaderboardProjects(db, limit = 10, offset = 0):
                         as user_count
                 from project p
                 inner join (select @rownum := 0) r
-                inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1
+                inner join project__user o on o.project_id = p.project_id and o.is_project_creator = 1
                 inner join user u on u.user_id = o.user_id and u.is_active = 1
                 where p.is_active = 1
                 order by (user_count * 5) desc

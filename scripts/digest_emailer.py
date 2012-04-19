@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
+
 """
     :copyright: (c) 2011 Local Projects, all rights reserved
     :license: Affero GNU GPL v3, see LICENSE for more details.
 """
-
-
-
 #------------------------------------------------------------------------------
 #
 # Get a list of posts for the day
@@ -448,7 +447,6 @@ order by pu.project_id, u.created_datetime desc
             project_feed[projId]['recipients'] = recipients_by_project.get(projId)
             project_feed[projId]['title'] = projects.get(projId).get('title')
             project_feed[projId]['num_members'] = projects.get(projId).get('num_members')
-            project_feed[projId]['active_goal_description'] = projects.get(projId).get('active_goal_description')
 
         return project_feed
 
@@ -487,7 +485,6 @@ order by pu.project_id, u.created_datetime desc
             digests[projId]['title'] = resp[projId].get('title')
             digests[projId]['project_id'] = projId
             digests[projId]['num_members'] = resp[projId].get('num_members')
-            digests[projId]['active_goal_description'] = resp[projId].get('active_goal_description')
             digests[projId]['link'] = "<a href='%sproject/%s'>%s</a>" % (self.Config.get('default_host'), projId, resp[projId].get('title'))
 
             if resp[projId].get('members') is not None and len(resp[projId].get('members')) > 0:
@@ -530,11 +527,9 @@ order by pu.project_id, u.created_datetime desc
 select distinct
     pm.project_id,
     p.title,
-    pg.description as active_goal_description,
     (select count(*) from project__user pu where pu.project_id = p.project_id) as num_members 
 from project_message pm
     join project p on pm.project_id = p.project_id and p.is_active = 1
-    left join project_goal pg on pg.project_id = p.project_id and pg.is_featured = 1 and pg.is_active = 1
 where pm.message_type='member_comment'
     and (pm.created_datetime between $fromDate and $toDate or pm.project_id in $projects)
     order by pm.project_id
@@ -678,10 +673,6 @@ def main():
         print "Try -h for help"
         exit(0)
 
-    description = """
-Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -h for help
-    """
-
     parser = OptionParser()
     parser.add_option("-c", "--config_file", help="Configuration Yaml file", default="config.yaml")
     parser.add_option("-f", "--from_date", help="Date to use as start-point for digest generation, in mysql-compatible format")
@@ -714,7 +705,8 @@ Deploy Freshplanet Games to AppEngine. Only works for the games right now. See -
             if not gamDigest.reserveTask(int(task.task_id)):
                 raise Exception("cannot reserve a task slot. Can't continue")
             # Ok, we're good to create a digest since nobody else is doing it
-            gamDigest.createDigests(mark=task.updated_datetime)
+            # Set mark from when script is running, not last ran
+            gamDigest.createDigests(mark=datetime.now())
             gamDigest.storeDigestsToDB()
             gamDigest.releaseTask(int(task.task_id))
 

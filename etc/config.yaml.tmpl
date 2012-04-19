@@ -31,6 +31,7 @@
 # htaccess -- Yes or no.  Is the site behind htaccess.
 # loglevel -- [optional, but recommended] Standard logging loglevel for logfile. 
 #             Default = DEBUG
+# log_archive_path -- Path to store old log files
 #
 #--------------------------------------------------------------------
 dev: %(dev)s
@@ -39,6 +40,7 @@ app_env: %(app_env)s
 instance: %(instance)s
 htaccess: %(htaccess)s
 logfile: %(logfile)s
+log_archive_path: %(log_archive_path)s
 
 # Locations
 #--------------------------------------------------------------------
@@ -114,13 +116,17 @@ features:
     is_feedback_form_available: %(feature_is_feedback_form_available)s
     is_community_leaders_displayed: %(feature_is_community_leaders_displayed)s
     is_show_beta_splash: %(feature_is_show_beta_splash)s
+    is_calendar_enabled: %(feature_is_calendar_enabled)s
 
 
 # Homepage
 #--------------------------------------------------------------------
 # Home page specific settings
 #
-# question         -- The main marquee question on the homepage.
+# is_question_from_cms -- Is the homepage question determined by the 
+#                        CMS
+# question         -- The main marquee question on the homepage if 
+#                     is_question_from_cms = False.
 # who_is_listening -- Yes or No.  Enable this feature on homepage;
 #                     currently the content is not configurable.
 # news             -- Yes or No.  Enable this feature on homepage;
@@ -137,6 +143,7 @@ features:
 homepage:
     num_featured_projects: %(homepage_num_featured_projects)s
     num_recent_ideas: %(homepage_num_recent_ideas)s
+    is_question_from_cms: %(homepage_is_question_from_cms)s
     question: %(homepage_question)s
     who_is_listening: %(homepage_who_is_listening)s
     news: %(homepage_news)s

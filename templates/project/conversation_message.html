@@ -34,7 +34,12 @@
 
                                 {% if message.message_type == 'join' %}
                                     <blockquote class="serif">
-                                        <p class='message-text'>{{ message.idea.text }}</p>
+                                        <p class='message-text'>
+                                        {%- if message.idea.text %}
+                                            {{ message.idea.text }}
+                                        {% else %}
+                                            New Member!
+                                        {% endif -%}</p>
                                     </blockquote>
                                 {% else %}
                                     {% if message.attachment %}

@@ -27,6 +27,8 @@ class Admin(Controller):
             return self.showContent()
         elif (action == 'users'):
             return self.getAdminUsers()
+        elif (action == 'questions'):
+            return self.showHomepageQuestions()
         elif (action == 'all'):
             if (param0 == 'getflagged'):
                 if (param1 == 'counts'):
@@ -156,6 +158,17 @@ class Admin(Controller):
                 return self.approveProjectResource()
             else:
                 return self.not_found()
+        elif (action == 'questions'):
+            if (param0 == 'add'):
+                return self.addHomepageQuestion()
+            elif (param0 == 'delete'):
+                return self.deleteHomepageQuestion()
+            elif (param0 == 'feature'):
+                return self.featureHomepageQuestion()
+            elif (param0 == 'edit'):
+                return self.updateHomepageQuestion()
+            else:
+                return self.not_found()
         else:
             return self.not_found()
 
@@ -178,6 +191,14 @@ class Admin(Controller):
         self.template_data['featured_projects'] = dict(data = featuredProjects, json = json.dumps(featuredProjects))
 
         return self.render('cms_content')
+        
+    def showHomepageQuestions(self):
+        questions = self.getHomepageQuestions()
+        
+        self.template_data['questions'] = {'data': questions,
+                                           'json': json.dumps(questions)}
+    
+        return self.render('cms_homepage_questions')
 
     def deleteProject(self):
         projectId = self.request('project_id')
@@ -336,7 +357,92 @@ class Admin(Controller):
             log.error(e)
 
         return self.json(obj)
+    
+    # BEGIN homepage question methods    
+    def getHomepageQuestions(self):
+        data = []
+        
+        sql = """select homepage_question_id, 
+                        question,
+                        is_featured
+                from homepage_question
+                where is_active = 1"""
+                
+        try:
+            data = list(self.db.query(sql))
+        except Exception, e:
+            log.info("*** couldn't get homepage questions")
+            log.error(e)
+        
+        return data
+        
+    def addHomepageQuestion(self):
+        q = self.request('question')
+    
+        if (util.strNullOrEmpty(q)):
+            log.error("*** attempt to add question with no question content")
+            return False
+        else:
+            try:
+                self.db.insert('homepage_question', question = q, created_datetime = None)
+                return True
+            except Exception, e:
+                log.info("*** error inserting new question")
+                log.error(e)
+                return False
+                
+    def deleteHomepageQuestion(self):
+        id = self.request('question_id')
+        
+        log.debug("*** deleting homepage question %s" % id)
 
+        try:
+            self.db.update('homepage_question', 
+                            where = "homepage_question_id = $id", 
+                            is_active = 0, 
+                            vars = {'id': id})
+            return True
+        except Exception, e:
+            log.info("*** there was a problem deleting homepage question id = %s" % id)
+            log.error(e)
+            
+            return False        
+        
+    def updateHomepageQuestion(self):
+        id = self.request('question_id')
+        q = self.request('question')
+
+        try:
+            self.db.update('homepage_question', 
+                            where = "homepage_question_id = $id", 
+                            question = q, 
+                            vars = {'id': id})
+            return True
+        except Exception, e:
+            log.info("*** there was a problem updating homepage question id = %s" % id)
+            log.error(e)
+            
+            return False        
+    
+    def featureHomepageQuestion(self):
+        id = self.request('question_id')
+        
+        try:
+            self.db.update('homepage_question', 
+                            where = "is_featured = 1",
+                            is_featured = 0)
+            self.db.update('homepage_question', 
+                            where = "homepage_question_id = $id", 
+                            is_featured = 1, 
+                            vars = {'id': id})
+            return True
+        except Exception, e:
+            log.info("*** there was a problem featuring homepage question id = %s" % id)
+            log.error(e)
+            
+            return False
+        
+    # END homepage question methods    
 
     def getUnreviewedResources(self):
         limit = util.try_f(int, self.request('n_limit'), 10)
@@ -599,4 +705,3 @@ class Admin(Controller):
             log.error(e)
 
         return words
-

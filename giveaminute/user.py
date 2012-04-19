@@ -292,7 +292,7 @@ where u.user_id = $id and u.is_active = 1"""
             sql = """select p.project_id, p.title, pu.is_project_admin
                     from project p
                     inner join project__user pu on pu.project_id = p.project_id and pu.user_id = $id
-                    inner join project__user o on o.project_id = p.project_id and o.is_project_admin = 1
+                    inner join project__user o on o.project_id = p.project_id and o.is_project_creator = 1
                     where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
         except Exception,e:
@@ -335,7 +335,7 @@ where u.user_id = $id and u.is_active = 1"""
                     (select count(cpu.user_id) from project__user cpu where cpu.project_id = p.project_id) as num_members
                 from project p
                 inner join project_endorsement pe on pe.project_id = p.project_id and pe.user_id = $id
-                inner join project__user pu on pu.project_id = p.project_id and pu.is_project_admin = 1
+                inner join project__user pu on pu.project_id = p.project_id and pu.is_project_creator = 1
                 inner join user o on o.user_id = pu.user_id
                  where p.is_active = 1"""
             data  = list(self.db.query(sql, { 'id': self.id }))
@@ -556,14 +556,15 @@ def createUser(db, email, password, firstName = None, lastName = None, phone = N
     return userId
 
 def createUserFromAuthGuid(db, authGuid):
-    userId = None
+    userId = redirectLink = None
 
     try:
-        sql = "select email, password, salt, phone, first_name, last_name from unauthenticated_user where auth_guid = $guid limit 1"
+        sql = "select email, password, salt, phone, first_name, last_name, redirect_link from unauthenticated_user where auth_guid = $guid limit 1"
         data = list(db.query(sql, {'guid':authGuid}))
-
+        
         if (len(data) == 1):
             userData = data[0]
+            redirectLink = userData.redirect_link
             userId = db.insert('user', email = userData.email,
                                         password = userData.password,
                                         salt = userData.salt,
@@ -575,9 +576,9 @@ def createUserFromAuthGuid(db, authGuid):
         log.info("*** problem creating user from auth guid %s" % authGuid)
         log.error(e)
 
-    return userId
+    return userId, redirectLink
 
-def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None):
+def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, lastName = None, phone = None, imageId = None, locationId = None, redirectLink = None):
     encrypted_password, salt = makePassword(password)
 
     if (findUserByEmail(db, email)):
@@ -590,7 +591,8 @@ def createUnauthenticatedUser(db, authGuid, email, password, firstName = None, l
                                     salt=salt,
                                     phone=phone,
                                     first_name=firstName,
-                                    last_name=lastName)
+                                    last_name=lastName,
+                                    redirect_link=redirectLink)
 
         return True
     except Exception, e:

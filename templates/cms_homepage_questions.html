@@ -1,0 +1,141 @@
+{#
+ # Copyright (c) 2011 Local Projects. All rights reserved.
+ # Licensed under the Affero GNU GPL v3, see LICENSE for more details.
+ #}
+{% extends "./partials/base.html" %}
+
+{% block title %} CMS Admin Settings {% endblock title %}
+
+{% block continent %}
+
+<div class='continent cms cms-questions'>
+
+	<div class='midlands merlin merlin-questions clearfix'>
+		<div id="questions" class="step view">
+			<div class="west"><!-- begin .west -->
+				<div class="add-questions-merlin merlin">
+					<div class="add-questions-main step">
+						<div class="box">
+							<div class="hd">
+								<h2 class="fancy-caps">Add <span>a</span> Question</h2>
+							</div>
+							<div class="bd">
+								<span class="charlimit question">160</span>
+								<textarea class='question'/></textarea>
+							</div>
+							<div class="ft">
+								<a class="questions-merlin-next-step rounded-button" href="#">Create New Question</a>
+							</div>
+						</div>
+					</div>
+					<div class="add-questions-error step ">
+						<p class="">There was an error creating the question.</p>
+						<br />
+						<p class=""><a href="">Back.</a></p>
+					</div>
+					<div class="add-questions-finish step spinner-message clearfix">
+						<p class="west">Adding Question...</p>
+						<img class="loading" src='/static/images/loader32x32.gif' />
+					</div>
+				</div>
+			</div><!-- end .west -->
+
+
+			<div class="east">
+				<div class="box active-questions">
+					<div class="hd">
+						<h2 class="fancy-caps">Available Questions</h2>
+					</div>
+					<div class="bd">
+						<div class="carousel questions">
+							<div>
+								<table class="active-questions-table">
+									<tbody>
+								{% if d.template_data.questions['data'] > 0 %}
+									{% for q in d.template_data.questions['data'] %}
+										<tr>
+											<td class="numeral">
+												<strong>{{ loop.index }}.</strong>
+											</td>
+											<td class="question">
+											    <div id='q-{{ q.homepage_question_id }}' class="question-text mod-inline-edit">
+                                                    <p class="editable-content">
+                                                    {{ q.question }}
+                                                    </p>
+                                                    <div class="inline-edit-controls"></div>
+                                                </div>
+											</td>
+											<td class="feature">
+												<div class="feature-control{% if q.is_featured %} featured{% endif %}">
+													{% if q.is_featured %}
+													<div class="icon"></div>
+													<div class="label">Featured</div>
+													{% else %}	
+													<a href="#featureQuestion,{{ q.homepage_question_id }}" class="feature">
+														<div class="icon"></div>
+														<div class="label">Feature</div>
+													</a>
+													{% endif %}
+											    </div>
+											</td>
+											<td class="tools">
+											   <a href="#editQuestion,{{ q.homepage_question_id }}" class="edit">Edit</a><br/>
+											   {% if not q.is_featured %}
+											   <a href="#deleteQuestion,{{ q.homepage_question_id }}" class="delete">Delete</a>
+											   {% endif %}
+											</td>
+										</tr>
+
+									{% endfor %}
+								{% endif %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div><!--end .east-->
+		</div><!--end #questions-->
+
+	<div class='foothills'>
+
+	</div>
+
+
+
+</div><!-- end .continent.cms-questions -->
+
+<div class="template-content modal-content confirm-delete remove-question">
+	<div class="step">
+		<h2><strong>Delete</strong> this Question?</h2>
+		<div>
+			<p>This deletes the question from the system permanently! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Delete Question.</a>
+			<a class="cancel" href="#">No, keep it.</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+<div class="template-content modal-content merlin feature-question">
+	<div class="step">
+		<h2><strong>Feature</strong> this Question?</h2>
+		<div>
+			<p>This selects this question to appear on the homepage! <br/>Are you sure?</p>
+		</div>
+		<div class="actions">
+			<a class="submit rounded-button" href="#">Yes, Feature This Question.</a>
+			<a class="cancel" href="#">Cancel</a>
+		</div>
+	</div>
+	<a class='close' href="#"><span>close</span></a>
+</div>
+
+{% endblock continent %}
+
+
+{% block page_js %}
+	<script type='text/javascript' src="/static/js/pages/cms.questions.js"></script>
+{% endblock page_js %}

@@ -16,7 +16,7 @@ import re
 import datetime
 
 class Project(Controller):
-    def GET(self, action=None, param0=None):
+    def GET(self, action=None, param0=None, param1=None):
         if (action == 'resource'):
             if (param0 == 'info'):
                 return self.getResourceInfo()
@@ -38,7 +38,7 @@ class Project(Controller):
         else:
             return self.showProject(action)
 
-    def POST(self, action=None, param0=None):
+    def POST(self, action=None, param0=None, param1=None):
         if (action == 'join'):
             return self.join()
         elif (action == 'endorse'):
@@ -81,6 +81,13 @@ class Project(Controller):
         elif (action == 'user'):
             if (param0 == 'remove'):
                 return self.removeUser()
+            elif (param0 == 'admin'):
+                if (param1 == 'add'):
+                    return self.setAdmin(True)
+                elif (param1 == 'remove'):
+                    return self.setAdmin(False)
+                else:
+                    return self.not_found()
             else:
                 return self.not_found()
         elif (action == 'photo'):
@@ -173,7 +180,6 @@ class Project(Controller):
 
     def join(self):
         projectId = self.request('project_id')
-        description = self.request('message')
 
         if (not self.user):
             log.error("*** join submitted w/o logged in user")
@@ -181,33 +187,13 @@ class Project(Controller):
         elif (not projectId):
             log.error("*** join submitted w/o logged project id")
             return False
-        elif (util.strNullOrEmpty(description)):
-            log.error("*** join submitted w/o idea")
-            return False
+        
         else:
             isJoined = mProject.join(self.db, projectId, self.user.id)
 
             if (isJoined):
                 project = mProject.Project(self.db, projectId)
-
-                # create the user's "hello there" idea and add to project
-                newIdeaId = mIdea.createIdea(self.db,
-                                            description,
-                                            project.data.location_id,
-                                            'web',
-                                            self.user.id,
-                                            self.user.email)
-
-                if (newIdeaId):
-                    if (not mIdea.addIdeaToProject(self.db, newIdeaId, projectId)):
-                        log.error("*** new idea not created for user %s on joining project %s" % (self.user.id, projectId))
-                else:
-                    log.error("*** new idea not created for user %s on joining project %s" % (self.user.id, projectId))
-
-                # automatically insert any ideas attached to invites for this user and this project
-                if (not mIdea.addInvitedIdeaToProject(self.db, projectId, self.user.id)):
-                    log.error("*** couldn't add invited idea to project for user %s on joining project %s" % (self.user.id, projectId))
-
+                
                 # add a message to the queue about the join
                 message = 'New Member! Your project now has %s total!' % project.data.num_members
 
@@ -226,8 +212,7 @@ class Project(Controller):
                                             projectId,
                                             message,
                                             'join',
-                                            self.user.id,
-                                            newIdeaId)):
+                                            self.user.id)):
                     log.error("*** new message not created for user %s on joining project %s" % (self.user.id, projectId))
 
         return isJoined
@@ -530,3 +515,21 @@ class Project(Controller):
         self.orm.commit()
 
         return True
+
+    def setAdmin(self, b):
+        projectId = self.request('project_id')
+        userId = self.request('user_id')
+        
+        projectUser = self.orm.query(models.ProjectMember).get((userId, projectId))
+        
+        # TODO prevent last admin from being deleted
+        # TODO on delete of creator, make oldest admin creator
+        
+        if projectUser:
+            projectUser.is_project_admin = b
+            self.orm.commit()
+            
+            return True
+        else:
+            return False
+        

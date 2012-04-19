@@ -89,6 +89,9 @@ env.clean_build = False
 
 # SSH Key configuration
 env.key_filename = os.path.expanduser(env.key_filename)
+while not os.path.exists(env.key_filename):
+    env.key_filename = prompt("Keffile %s not found. Provide valid SSH keyfile (eg. ~/.ssh/ChangeByUs.pem: " % env.key_filename)
+    env.key_filename = os.path.expanduser(env.key_filename)
 env.ssh_port = 48022
 
 # We need to make the hosts into a list
@@ -334,7 +337,7 @@ def create_config_files():
 
     # Make sure that the code is the latest in the build_path
     with lcd(env.build_path):
-        local('git fetch && git checkout %(branch)s' % env)
+        local('/usr/local/bin/git fetch && /usr/local/bin/git checkout %(branch)s' % env)
     for item in env.config_files:
         if not os.path.exists(item.get('local_config_template')):
             raise Exception("Unable to find configuration template file (%s) to create config from" % item.get('local_config_template'))
@@ -611,41 +614,41 @@ def bundle_code():
     if env.scm == 'git':
         if not os.path.exists(env.build_path):
             "Create an archive from the current Git master branch and upload it"
-            local('git clone --depth 0 %(repository)s %(build_path)s' % env)
+            local('/usr/local/bin/git clone --depth 0 %(repository)s %(build_path)s' % env)
         else:
             with lcd(env.build_path):
-                local('if [ $(git config --get remote.origin.url) != "%(repository)s" ];then echo "Existing repository is not the one requested. Deleting build path."; rm -rf %(build_path)s; fi' % env)
+                local('if [ $(/usr/local/bin/git config --get remote.origin.url) != "%(repository)s" ];then echo "Existing repository is not the one requested. Deleting build path."; rm -rf %(build_path)s; fi' % env)
             
         try:
             with lcd(env.build_path):
-                local('git clean -d -x -f' % env)
+                local('/usr/local/bin/git clean -d -x -f' % env)
         except:
             local('rm -rf %(build_path)s' % env)
             "Create an archive from the current Git master branch and upload it"
-            local('git clone --depth 0 %(repository)s %(build_path)s' % env)
+            local('/usr/local/bin/git clone --depth 0 %(repository)s %(build_path)s' % env)
             
         with lcd(env.build_path):
-            local('git clean -d -x -f && git fetch && git checkout %(branch)s' % env)
-            local('git submodule init && git submodule update' % env)
-            env.release = local('git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
+            local('/usr/local/bin/git clean -d -x -f && /usr/local/bin/git fetch && /usr/local/bin/git checkout %(branch)s' % env)
+            local('/usr/local/bin/git submodule init && /usr/local/bin/git submodule update' % env)
+            env.release = local('/usr/local/bin/git rev-parse %(branch)s | cut -c 1-9' % env, capture=True)
             # Save the revision information to a file for post-deployment info
-            local('git rev-parse %(branch)s > REVISION.txt' % env)
+            local('/usr/local/bin/git rev-parse %(branch)s > REVISION.txt' % env)
             # To be safe, remove any newline characters
             env.release = re.sub('[\r\n]', '', env.release)
             # Archive the bundle for upload
-            local('git archive --format=tar %(branch)s > %(build_path)s/%(release)s.tar' % env)
+            local('/usr/local/bin/git archive --format=tar %(branch)s > %(build_path)s/%(release)s.tar' % env)
 
             if env.run_minifier == True and env.get('minifier_cmd') is not None: 
                 with settings(warn_only=True):
                     # If minification fails, we only want to warn about it, not crash
                     local(env.minifier_cmd) # 'python %(build_path)s/scripts/minifier/minifier.py -v -c %(build_path)s/scripts/minifier.conf --force' % env)
-                    local('git status -s | grep -i "^ M" | tr -s " " | cut -d\  -f 3 | xargs tar -v --append --file=%(release)s.tar ' % env)
+                    local('/usr/local/bin/git status -s | grep -i "^ M" | tr -s " " | cut -d\  -f 3 | xargs tar -v --append --file=%(release)s.tar ' % env)
 
             # Add any updated files
             local('tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == "git-svn":
         # Get repo information and store it to REVISION.txt
-        local('cd %(repository)s && git svn info > %(build_path)s/REVISION.txt' % env)
+        local('cd %(repository)s && /usr/local/bin/git svn info > %(build_path)s/REVISION.txt' % env)
         local('cd %(build_path)s && tar --append --file=%(release)s.tar REVISION.txt' % env)
     elif env.scm == 'svn':
         local('svn export %(repository)s/%(branch)s %(build_path)s' % env)
@@ -915,6 +918,10 @@ def _webserver_do(action=''):
                 sudo_as('/usr/sbin/apachectl %(action)s' % params)
             elif env.os_name == 'ubuntu10':
                 sudo_as('/usr/sbin/apache2ctl %(action)s' % params)
+        elif env.webserver == 'nginx':
+            sudo_as('/etc/init.d/%(webserver)s %(action)s' % params, shell=False, pty=False)
+            params['application'] = env.application
+            sudo_as('supervisorctl %(action)s %(application)s' % params, shell=False, pty=False)
                 
 def secure_website():
     """

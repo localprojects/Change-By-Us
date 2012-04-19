@@ -4,8 +4,43 @@
 """
 
 # generally try not to import things up here
-import re, base64, string, urlparse, datetime
+import re, base64, string, urlparse, datetime, json, jinja2
 from framework.log import log
+
+_TO_UNICODE_TYPES = (unicode, type(None))
+def to_unicode(value):
+    """Converts a string argument to a unicode string.
+
+    If the argument is already a unicode string or None, it is returned
+    unchanged.  Otherwise it must be a byte string and is decoded as utf8.
+    """
+    if isinstance(value, _TO_UNICODE_TYPES):
+        return value
+    assert isinstance(value, bytes)
+    return value.decode("utf-8")
+
+def recursive_unicode(obj):
+    """Walks a simple data structure, converting byte strings to unicode.
+
+    Supports lists, tuples, and dictionaries.
+    """
+    if isinstance(obj, dict):
+        return dict((recursive_unicode(k), recursive_unicode(v)) for (k,v) in obj.iteritems())
+    elif isinstance(obj, list):
+        return list(recursive_unicode(i) for i in obj)
+    elif isinstance(obj, tuple):
+        return tuple(recursive_unicode(i) for i in obj)
+    elif isinstance(obj, bytes):
+        return to_unicode(obj)
+    else:
+        if isinstance(obj, unicode) or isinstance(obj, basestring):
+            obj = jinja2.Markup(obj).unescape()
+        return obj
+
+class EscapingJSONEncoder(json.JSONEncoder):
+    def encode(self, obj):
+        return json.JSONEncoder.encode(self, recursive_unicode(obj))
+
 
 def try_f(f, data, default=None):
     """
