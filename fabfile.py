@@ -208,7 +208,7 @@ def common_config(func):
 
         # Configuration Template Files and config files
         env.etc_path = '%(app_path)s/etc' % env
-        env.log_path = '%(app_path)s/var/log' % env
+        env.log_path = env.log_path or '%(app_path)s/var/log' % env
         env.local_etc_path = '%(build_path)s/etc' % env
 
         # Todo: these might need to be moved to a common location
