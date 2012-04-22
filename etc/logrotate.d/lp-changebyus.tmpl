@@ -23,6 +23,7 @@
             /etc/init.d/lighttpd reload %(app_path)s > /dev/null 2>&1; \
          fi; \
        fi;
+       [ -f %(run_path)s/uwsgi.sock ] && sudo supervisorctl restart %(application)s
     endscript
 }
 
