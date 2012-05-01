@@ -1,7 +1,7 @@
 [program:%(application)s]
 command=/usr/local/bin/uwsgi
   --socket %(app_path)s/run/uwsgi.sock
-  --logto %(app_path)s/var/log/uwsgi.log
+  --logto %(log_path)s/uwsgi.log
   --pythonpath %(app_path)s/current
   --wsgi-file %(app_path)s/current/wsgi.py
   --callable application
@@ -10,7 +10,7 @@ command=/usr/local/bin/uwsgi
   --processes 4
   --chmod
 directory=%(app_path)s/current
-user=giveaminute
+user=%(user)s
 autostart=true
 autorestart=true
 stopsignal=QUIT
