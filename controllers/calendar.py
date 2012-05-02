@@ -46,7 +46,8 @@ class Calendar(Controller):
         
     def getEvents(self, start, end):
         events = self.orm.query(models.Event).filter(and_(models.Event.start_datetime > start, 
-                                                          models.Event.start_datetime < end))                                                    
+                                                          models.Event.start_datetime < end)).\
+                                              order_by("start_datetime")                                                    
         return events
         
     def getCurrentYearMonth(self):
