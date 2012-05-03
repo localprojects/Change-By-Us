@@ -148,7 +148,10 @@ def main():
     web.config.logfile = Config.get('logfile')
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
     if Config.get('dev'):
-        web.config.debug = True        
+        web.config.debug = True 
+    else:
+        web.config.debug = False        
+
     log.info("Debug: %s" % web.config.debug)
     web.config.session_parameters['cookie_name'] = 'gam'
 
