@@ -121,8 +121,8 @@ class Join(Controller):
     def authenticateUser(self, authGuid):
         # kill existing session
         # self.session.kill()
-    
-        userId = mUser.createUserFromAuthGuid(self.db, authGuid)
+        
+        userId, redirectLink = mUser.createUserFromAuthGuid(self.db, authGuid)
         isSuccess = False
         
         if (userId):
@@ -140,7 +140,9 @@ class Join(Controller):
             if (user.phone and len(user.phone) > 0):
                 mIdea.attachIdeasByPhone(self.db, user.phone)            
     
-        return self.render('join', {'is_email_auth_attempt':True, 'is_email_auth_attempt_successful': isSuccess})
+        return self.render('join', { 'is_email_auth_attempt':True, 
+                                     'is_email_auth_attempt_successful': isSuccess,
+                                     'post_auth_redirect_link': redirectLink })
                 
     def newUnauthenticatedUser(self):  
         if (self.request('main_text')): return False
@@ -150,7 +152,8 @@ class Join(Controller):
         email = self.request('email')
         password = self.request('password')
         phone = util.cleanUSPhone(self.request('sms_phone'))
-        code = self.request('beta_code')        
+        code = self.request('beta_code')
+        redirectLink = self.request('redirect_link')
                 
         if (self.appMode == 'beta' and not self.verifyBetaCode(code)):
             log.error("*** beta user attempted register w/ invalid code")
@@ -171,7 +174,7 @@ class Join(Controller):
             #create unauth data record and email user
             authGuid = uuid.uuid4()
             
-            if (mUser.createUnauthenticatedUser(self.db, authGuid, email, password, firstName, lastName, phone)):
+            if (mUser.createUnauthenticatedUser(self.db, authGuid, email, password, firstName, lastName, phone, redirectLink=redirectLink)):
                 return mMessaging.emailUnauthenticatedUser(email, authGuid)
             else:
                 return False

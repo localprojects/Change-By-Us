@@ -29,11 +29,12 @@ from lib import web
 
 # Define all the routes for the applications
 ROUTES = (  r'/admin/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
-            r'/cms/?([^/.]*)', 'controllers.admin.Admin',
+            r'/calendar/?([^/.]*)/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.calendar.Calendar',
+            r'/cms/?([^/.]*)/?([^/.]*)', 'controllers.admin.Admin',
             r'/create/?([^/.]*)', 'controllers.createProject.CreateProject',
             r'/idea/?([^/.]*)', 'controllers.idea.Idea',
             r'/join/?([^/.]*)/?([^/.]*)', 'controllers.join.Join',
-            r'/project/?([^/.]*)/?([^/.]*)', 'controllers.project.Project',
+            r'/project/?([^/.]*)/?([^/.]*)/?([^/.]*)', 'controllers.project.Project',
             r'/resource/?([^/.]*)/?([^/.]*)', 'controllers.resource.Resource',
             r'/search/?([^/.]*)', 'controllers.search.Search',
             r'/twilio/?([^/.]*)', 'controllers.sms.twilio.Twilio',
@@ -147,7 +148,10 @@ def main():
     web.config.logfile = Config.get('logfile')
     log.info("|||||||||||||||||||||||||||||||||||| SERVER START |||||||||||||||||||||||||||||||||||||||||||")
     if Config.get('dev'):
-        web.config.debug = True        
+        web.config.debug = True 
+    else:
+        web.config.debug = False        
+
     log.info("Debug: %s" % web.config.debug)
     web.config.session_parameters['cookie_name'] = 'gam'
 
@@ -213,17 +217,21 @@ def main():
     db = sessionDB()
     SessionHolder.set(web.session.Session(app, web.session.DBStore(db, 'web_session')))
 
+    # WARNING:
+    #    Adding new processors may cause duplicate insertions!
+    #    The basic_processor has been disabled for this reason
+    # app.add_processor(basic_processor)
+    
     # Load SQLAlchemy
-    app.add_processor(basic_processor)
     app.add_processor(load_sqla)
 
-    # Finally, run the web.py app!    
-    app.run()
+    return app
 
 # Main logic for the CBU application.  Does some basic configuration,
 # then starts the web.py application.
 if __name__ == "__main__":
     try:
-        main()
+        app = main()
+        app.run()
     except Exception, e:
         log.info("ERROR: %s" % e)

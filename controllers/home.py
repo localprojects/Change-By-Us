@@ -34,6 +34,7 @@ class Home(Controller):
         project_user = dict(is_member = True,
                               is_project_admin = True)
         self.template_data['project_user'] = dict(data = project_user, json = json.dumps(project_user))
+        self.template_data['homepage_question'] = self.getHomepageQuestion()
 
         if (not action or action == 'home'):
             return self.showHome()
@@ -48,7 +49,7 @@ class Home(Controller):
         # TODO: This should be consolidated with the twitter & facebook actions
         elif (action == 'login'):
             return self.showLogin()
-
+        
         # Twetter-related actions
         elif action == 'twitter':
             return self._twitter_action(action=param0)
@@ -77,7 +78,9 @@ class Home(Controller):
             # This is the default for all pages.  We should check
             # if there is a matching template, and if not, throw
             # a 404.
-            template = os.path.dirname(__file__) + '/../templates/%s' + action + '.html'
+            
+            template = os.path.dirname(__file__) + '/../templates/' + action + '.html'
+            print template
             if not os.path.exists(template):
                 return self.not_found()
             else:
@@ -192,6 +195,9 @@ class Home(Controller):
             return self.render('login')
         else:
             return self.redirect('/')
+        
+    def showFeedback(self):
+        return self.render('feedback')
 
     # if in beta mode and user is not logged in show splash
     # otherwise redirect homepage
@@ -510,6 +516,21 @@ class Home(Controller):
                 log.error(e)
 
         return data
+        
+    def getHomepageQuestion(self):
+        q = None
+    
+        if (Config.get('homepage').get('is_question_from_cms')):
+            sql = "select question from homepage_question where is_active = 1 and is_featured = 1"
+            data = list(self.db.query(sql))
+            
+            if (len(data) == 1):
+                q = data[0].question
+                
+        if (not q):
+            q = Config.get('homepage').get('question')
+            
+        return q
 
     def submitFeedback(self):
         name = self.request('name')

@@ -143,6 +143,30 @@ LOCK TABLES `community_leader` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `digests`
+--
+
+DROP TABLE IF EXISTS `digests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `digests` (
+  `digest_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sender` varchar(255) DEFAULT NULL,
+  `send_to` varchar(255) DEFAULT NULL,
+  `recipients` text,
+  `subject` varchar(255) DEFAULT NULL,
+  `body` text,
+  `start_datetime` datetime DEFAULT NULL,
+  `end_datetime` datetime DEFAULT NULL,
+  `sent_datetime` datetime DEFAULT NULL,
+  `status` char(1) DEFAULT NULL,
+  `worker_id` varchar(255) DEFAULT NULL,
+  `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`digest_id`)
+) ENGINE=MyISAM;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `direct_message`
 --
 
@@ -215,6 +239,24 @@ LOCK TABLES `featured_project` WRITE;
 /*!40000 ALTER TABLE `featured_project` DISABLE KEYS */;
 /*!40000 ALTER TABLE `featured_project` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `homepage_question`
+--
+
+DROP TABLE IF EXISTS `homepage_question`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `homepage_question` (
+  `homepage_question_id` int(11) NOT NULL AUTO_INCREMENT,
+  `question` varchar(200) DEFAULT NULL,
+  `is_featured` tinyint(1) NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_datetime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `updated_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`homepage_question_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `idea`
@@ -447,6 +489,7 @@ CREATE TABLE `project__user` (
   `project_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `is_project_admin` tinyint(1) NOT NULL DEFAULT '0',
+  `is_project_creator` tinyint(1) NOT NULL DEFAULT '0',
   `created_datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`user_id`)
 ) ENGINE=MyISAM;
@@ -649,6 +692,7 @@ CREATE TABLE `project_need` (
   `duration` varchar(64) DEFAULT NULL,
   `address` varchar(256) DEFAULT NULL,
   `event_id` int(11) DEFAULT NULL,
+  `subtype` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `project_id` (`project_id`),
   KEY `event_id` (`event_id`)

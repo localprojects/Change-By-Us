@@ -56,8 +56,8 @@ class OrmHolder (object):
             #      sql statements will be logged indiscriminately
             web.config.db_engine = create_engine(db_conn_string, 
                                                  encoding='utf-8', 
-                                                 convert_unicode=True, 
-                                                 echo=True, echo_pool=True,
+                                                 convert_unicode=False, 
+                                                 echo=False, echo_pool=False,
                                                  # Secs between recycling pool connections
                                                  pool_recycle=600)
         return web.config.db_engine

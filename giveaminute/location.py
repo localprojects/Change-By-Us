@@ -14,26 +14,22 @@ def getLocationsWithScoring(db):
         # TODO
         # this is temporary until actual scoring is determined
         sql = """
-select l.location_id
-    ,l.name
-    ,l.lat
-    ,l.lon
-    ,(select count(*) as count
-            from project p
-            inner join project__user opu on opu.project_id = p.project_id and opu.is_project_admin = 1
-            where
-            p.is_active = 1 
-            and p.location_id = l.location_id) as num_projects
-    ,(select count(*) as count
-            from idea i
-            where
-            i.is_active = 1
-            and i.location_id = l.location_id) as num_ideas
-    ,(select count(*) as count
-            from project_resource r
-            where
-            r.is_active = 1 and r.is_hidden = 0 and r.location_id = l.location_id) as num_project_resources
-from location l where l.location_id > 0""";
+select l.location_id,
+    l.name,
+    l.lat,
+    l.lon,
+    count(distinct p.project_id) as num_projects,
+    count(distinct i.idea_id) as num_ideas,
+    count(distinct r.project_resource_id) as num_project_resources
+from location l 
+	left join project p on p.location_id = l.location_id and p.is_active=1
+    left join project__user pu on p.project_id=pu.project_id and pu.is_project_admin = 1 and p.is_active=1
+	left join idea i on l.location_id = i.location_id and i.is_active=1
+	left join project_resource r on l.location_id = r.location_id and r.is_active=1 and r.is_hidden=0
+where l.location_id > 0
+group by l.location_id+l.lat+l.lon
+order by l.location_id""";
+
         data = list(db.query(sql))
     except Exception, e:
         log.info("*** couldn't get locations")

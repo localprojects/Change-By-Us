@@ -164,9 +164,12 @@
 
                         <li class="news-about">
                             {% if d.config.blog_host %}
-                                <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
+                            <a href="{{ d.config.blog_host }}">{{ _('News') }}</a>
                             {% endif %}
                             <a href="/about">{{ _('About') }}</a>
+                            {% if d.config.features.is_calendar_enabled %}
+                            <a href="/calendar/show">{{ _('Calendar') }}</a>
+                            {% endif %}
                         </li>
 
                         <li class="userland">
@@ -257,6 +260,7 @@
                         <ul class="adminbar">
                             <li class="content"><a href="/cms/content">{{ _('Content') }}</a></li>
                             <li class="admin-settings"><a href="/cms/admin">{{ _('Admin Settings') }}</a></li>
+                            <li class="homepage-questions"><a href="/cms/questions">{{ _('Homepage Questions') }}</a></li>
                             {% block project_admin %}{% endblock %}
                         </ul>
                     {% endif %}
@@ -291,7 +295,9 @@
                 <span class="supported fancy-caps">{{ _('Supported <span>by</span>') }}</span>
                 <a href='http://www.rockefellerfoundation.org' target='_blank'><img src='/static/images/footer-rockefeller.png' alt='The Rockefeller Foundation' /></a>
                 <a href='http://www.knightfoundation.org/' target='_blank'><img src='/static/images/footer-knight.png' alt='The Knight Foundation' /></a>
-<!--                <a href='http://www.casefoundation.org/' target='_blank' class="taller"><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>-->
+                {% if d.config.site.city_id == 'nyc' %}
+                <a href='http://www.casefoundation.org/' target='_blank'><img src='/static/images/footer-case.png' alt='The Case Foundation' /></a>
+                {% endif %}
             </div>
 
             <!-- Basic links and search -->

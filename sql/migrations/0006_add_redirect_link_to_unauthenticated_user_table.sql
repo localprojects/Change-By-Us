@@ -1,0 +1,1 @@
+ALTER TABLE `unauthenticated_user` ADD `redirect_link` VARCHAR( 255 ) AFTER `last_name`;

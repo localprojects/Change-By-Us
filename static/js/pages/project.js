@@ -54,7 +54,7 @@ app_page.features.push(function(app) {
     tc.randomNoteCardBg(tc.jQ('.ideas-invite .items'));
     
     // add 'official resource' tags to resources
-    tc.addOfficialResourceTags(tc.jQ('.box.resources .organizations table.resources-list'));
+    //tc.addOfficialResourceTags(tc.jQ('.box.resources .organizations table.resources-list'));
 });
 
 /**
@@ -138,11 +138,18 @@ app_page.features.push(function(app) {
         user: {
             source_element: tc.jQ('.modal-content.introduce-yourself'),
             init: function(modal, event_target, callback) {
-                var modal_merlin = new tc.merlin(app, tc.app.merlin_join_modal(modal, event_target, callback));
-                
-                if(tc.jQ.isFunction(callback)){
-                    callback(modal);
-                }
+            	tc.jQ.ajax({
+                    type: 'POST',
+                    url: '/project/join',
+                    data: {
+                    	project_id: app.app_page.data.project.project_id
+                    },
+                    context: app,
+                    dataType: 'text',
+                    success: function(data,ts,xhr) {
+                        window.location.reload(true);
+                    }
+                });
             }
         }
     },

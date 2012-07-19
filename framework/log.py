@@ -54,7 +54,11 @@ class Info():
 formatter = logging.Formatter("%(asctime)s %(ip)s |%(levelname)s| %(message)s <%(filename)s:%(lineno)d>")        
 
 # Log identifier/file will be the same as the file being run
-name = os.path.basename(__main__.__file__).split('.')[0]
+try:
+    name = os.path.basename(__main__.__file__).split('.')[0]
+except AttributeError, e:
+    name = 'main'
+    
 log = logging.getLogger(name)
 
 # Set log level to Debug (TODO: This should be pulled from config file)
@@ -64,14 +68,20 @@ try:
     log.setLevel(logging.__getattribute__(loglevel))
 except:
     print "Unable to set loglevel to %s. Defaulting to DEBUG" % loglevel
-    log.setLevel(logging.DEBUG)
+    loglevel = "debug"
+    log.setLevel(logging.__getattribute__(loglevel))
 
 logfile = Config.get('logfile') # %s/../logs/%s.log' % (os.path.dirname(os.path.realpath(__file__)), name)
 
 fh = logging.handlers.TimedRotatingFileHandler(logfile, 'midnight')
-fh.setLevel(logging.DEBUG)
+fh.setLevel(logging.__getattribute__(loglevel))
 fh.setFormatter(formatter)
 log.addHandler(fh)
 
+# Set the orm logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.__getattribute__(loglevel))
+
 # Extend log module with Info class defined above.
 log = logging.LoggerAdapter(log, Info())
+print "LogLevel has been set to %s." % loglevel

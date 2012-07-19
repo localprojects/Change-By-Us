@@ -5,7 +5,10 @@
 
 app_page.features.push(tc.user_handler({
 	user_handler:function(){
-		window.location = '/useraccount';
+		var redirect_link = (app_page.data.post_auth_redirect_link.indexOf('/project') > -1)
+				? app_page.data.post_auth_redirect_link
+				: '/useraccount';
+		window.location = redirect_link;
 	}
 }));
 
@@ -121,7 +124,8 @@ app_page.features.push(function(app){
 						email:merlin.current_step.inputs.email.dom.val(),
 						main_text:merlin.current_step.inputs.main_text.dom.val(),
 						password:merlin.current_step.inputs.password.dom.val(),
-						beta_code:merlin.current_step.inputs.invite.dom.val()
+						beta_code:merlin.current_step.inputs.invite.dom.val(),
+						redirect_link:app_page.data.redir_from || null
 					});
 					
 					if(merlin.app.app_page.data.app_mode == 'beta'){
@@ -406,7 +410,7 @@ app_page.features.push(function(app){
 				prev_step:null,
 				next_step:null,
 				init:function(merlin,dom){
-				    tc.jQ('strong.email').text(merlin.options.data.email);
+					tc.jQ('strong.email').text(merlin.options.data.email);
 					tc.jQ.ajax({
 						type:'POST',
 						url:merlin.app.app_page.data.account_create_url,

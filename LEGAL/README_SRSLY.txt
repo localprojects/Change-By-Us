@@ -17,7 +17,7 @@ Ideally the attributions that we have in the About page should remain, and the
 front-page shoud retain the credits block.
 
 If you would like to change or remove the attribution, please contact
-info+cbu@localprojects.net and perhaps let us know why, so that we can
+info@changeby.us and perhaps let us know why, so that we can
 potentially apply that change across the Change By Us network.
 
 DESIGN GUIDELINES
@@ -32,18 +32,18 @@ that users across cities feel like there's a consistent storyline to the Change
 By Us experience. The Us in Change By Us should be a growing body of people.
 Retaining a consistent design between cities and implementations allows people
 to migrate as they will and feel like there's still a community that they can
-fit into. So Seattle's Change By Us and New York's Change By Us may have
+fit into. So Philly's Change By Us and New York's Change By Us may have
 different characters, but ultimately the Us is still ... um ... Us :)
 
 To this end we request that any changes you make try to be within the
 implemented design. Local Projects' design team is also available to help
 structure your design, so please feel free to reach out to us at
-info+cbu@localprojects.net
+help@changeby.us
 
 We also recognize that there are design patterns that we may not have considered
 or functionality that is not satisfied by our current implementation. If you
 have a new design idea or significant changes to our design we'd like to work
 with you to incorporate the design across the different Change By Us
 implementations. Again this is to keep the consistency of the complete
-experience. Please reach out to us at info+cbu@localprojects.net and we'll work
+experience. Please reach out to us at help@changeby.us and we'll work
 with you to create a great user experience. 
