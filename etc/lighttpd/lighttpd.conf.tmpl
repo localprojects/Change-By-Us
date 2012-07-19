@@ -74,22 +74,38 @@ server.modules = (
     )
 
 
+# Static files not to pass to fastcgi
+#--------------------------------------------------------------------
+# Settings for Static resources
+#
+#--------------------------------------------------------------------
+# Serve static content via lighttpd directly
+alias.url = (
+    "/favicon.ico" => var.docroot + "static/favicon.ico",
+    "/js/"         => var.docroot + "static/js/",
+    "/css/"        => var.docroot + "static/css/",
+    "/images/"     => var.docroot + "static/images/",
+    "/fonts/"      => var.docroot + "static/fonts/",
+    "/files/"      => var.docroot + "static/files/",
+)
+
 # Fast CGI settings
 #--------------------------------------------------------------------
 # Settings for Fast CGI.
 #
 #--------------------------------------------------------------------
-fastcgi.server = ("/main.py" =>
-    ((  "socket" => "/tmp/fastcgi.socket",
-        "bin-path" => var.binpath,
-        "max-procs" => 1,
-        "bin-environment" => (
-            "REAL_SCRIPT_NAME" => ""
-        ),
-        "check-local" => "disable"
-    ))
-)
-
+$HTTP["url"] !~ "^/(favicon.ico$|js/|css/|images|static/)" {
+    fastcgi.server = ("/main.py" =>
+        ((  "socket" => "/tmp/fastcgi.socket",
+            "bin-path" => var.binpath,
+            "max-procs" => 1,
+            "bin-environment" => (
+                "REAL_SCRIPT_NAME" => ""
+            ),
+            "check-local" => "disable"
+        ))
+    )
+}
 
 # Authentication
 #--------------------------------------------------------------------
