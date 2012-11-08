@@ -99,8 +99,11 @@ env.hosts = env.hosts.split(',')
 
 # Interpolate the build_path if necessary
 env.build_path = env.build_path % env
-# if len(env.build_path) == 0 or not os.path.exists(env.build_path):
-#     raise Exception("Option build_path (%(build_path)s is incorrect, or the target folder does not exist. Please correct it before proceeding" % env)
+if not env.build_path: 
+    raise Exception("Option build_path (%(build_path)s is incorrect, or does not exist. Please correct it before proceeding" % env)
+
+if not os.path.exists(env.build_path):
+    os.makedirs(env.build_path)
 
 if not env.get('home_path'):
     env.home_path = "/home"
@@ -208,7 +211,7 @@ def common_config(func):
 
         # Configuration Template Files and config files
         env.etc_path = '%(app_path)s/etc' % env
-        env.log_path = env.log_path or '%(app_path)s/var/log' % env
+        env.log_path = env.get('log_path') or '%(app_path)s/var/log' % env
         env.local_etc_path = '%(build_path)s/etc' % env
 
         # Todo: these might need to be moved to a common location
@@ -260,6 +263,9 @@ def get_remote_host_info():
     elif re.search('Ubuntu', uname):
         env.os_name = 'ubuntu10'
         env.webuser = 'www-data'
+    elif re.search('Darwin', uname):
+        env.os_name = 'osx'
+        env.webuser = '_www'
     else:
         raise Exception("Cannot proceed with platform %s. This platform is currently not supported" % uname)
     
