@@ -620,7 +620,7 @@ def bundle_code():
     if env.scm == 'git':
         if not os.path.exists(env.build_path):
             "Create an archive from the current Git master branch and upload it"
-            local('/usr/local/bin/git clone --depth 0 %(repository)s %(build_path)s' % env)
+            local('/usr/local/bin/git clone %(repository)s %(build_path)s' % env)
         else:
             with lcd(env.build_path):
                 local('if [ $(/usr/local/bin/git config --get remote.origin.url) != "%(repository)s" ];then echo "Existing repository is not the one requested. Deleting build path."; rm -rf %(build_path)s; fi' % env)
@@ -631,7 +631,7 @@ def bundle_code():
         except:
             local('rm -rf %(build_path)s' % env)
             "Create an archive from the current Git master branch and upload it"
-            local('/usr/local/bin/git clone --depth 0 %(repository)s %(build_path)s' % env)
+            local('/usr/local/bin/git clone %(repository)s %(build_path)s' % env)
             
         with lcd(env.build_path):
             local('/usr/local/bin/git clean -d -x -f && /usr/local/bin/git fetch && /usr/local/bin/git checkout %(branch)s' % env)
