@@ -162,7 +162,7 @@ env.minifier_cmd = 'python %(build_path)s/scripts/minifier/minifier.py -v -c %(b
 # env.asConn  = AutoScaleConnection(env.aws_access_key_id, env.aws_secret_access_key)
 
 # Production Alias is the alias/tag that all production instances use
-env.production_alias = '911memorial_names_'
+env.production_alias = 'openhamilton_'
 
 # Security groups that are given access to newly generated production AMIs
 env.aws = { 'security_groups': ['ns11_multiplatform_prod'],
